@@ -342,7 +342,14 @@ button:hover {
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  background: var(--bg-color);
+  /* Padrão quadriculado para evidenciar transparência em PNGs */
+  background-image: linear-gradient(45deg, #cbd5e0 25%, transparent 25%), 
+                    linear-gradient(-45deg, #cbd5e0 25%, transparent 25%), 
+                    linear-gradient(45deg, transparent 75%, #cbd5e0 75%), 
+                    linear-gradient(-45deg, transparent 75%, #cbd5e0 75%);
+  background-size: 16px 16px;
+  background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+  background-color: var(--bg-color);
   margin-top: 10px;
 }
 .logo-preview-box img {
@@ -388,50 +395,103 @@ button:hover {
 .modal-close-btn:hover {
   color: #e53e3e;
 }
+
+/* Estilos para a Tela de Login em Duas Colunas */
+.login-container-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  width: 90%;
+  max-width: 850px;
+  background: var(--card-bg);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  border: 1px solid var(--border-color);
+}
+.login-left-pane {
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.login-right-pane {
+  background: var(--primary-color);
+  color: white;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+.login-right-pane img {
+  max-width: 120px;
+  max-height: 100px;
+  object-fit: contain;
+  margin-bottom: 20px;
+  background: transparent; /* Removido fundo branco opaco para respeitar transparência do PNG */
+  padding: 5px;
+  border-radius: 8px;
+}
+@media (max-width: 768px) {
+  .login-container-split {
+    grid-template-columns: 1fr;
+    max-width: 450px;
+  }
+  .login-right-pane {
+    padding: 25px;
+  }
+}
 </style>
 </head>
 <body>
 
-<!-- MODAL DE LOGIN (Também usado para Bloqueio por Inatividade) -->
-<div id="login-modal" class="modal-overlay" style="display: flex; z-index: 2000; background: var(--primary-color); flex-direction: column; justify-content: space-between; padding: 20px; box-sizing: border-box;">
-  <div></div>
-  <div class="modal-card" style="max-width: 400px; text-align: center; margin: auto;">
-    <div id="login-view-main">
-      <h2 style="color: var(--primary-color); margin-bottom: 5px;">Acesso Institucional</h2>
-      <p id="login-subtitle-text" style="font-size: 0.85rem; color: #718096; margin-bottom: 20px;">Entre com suas credenciais para acessar o sistema.</p>
-      <div class="form-group" style="text-align: left;">
-        <label>E-mail ou Usuário:</label>
-        <input type="text" id="login-user" placeholder="ex: secretaria@admin.com">
+<!-- MODAL DE LOGIN (Em duas colunas: Esquerda = Acesso | Direita = Info Institucional) -->
+<div id="login-modal" class="modal-overlay" style="display: flex; z-index: 2000; background: rgba(0,0,0,0.7); flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;">
+  <div class="login-container-split">
+    <!-- Lado Esquerdo: Formulário de Acesso -->
+    <div class="login-left-pane">
+      <div id="login-view-main">
+        <h2 style="color: var(--primary-color); margin-bottom: 5px;" id="login-box-title">Acesso Institucional</h2>
+        <p id="login-subtitle-text" style="font-size: 0.85rem; color: #718096; margin-bottom: 20px;">Entre com suas credenciais para acessar o sistema.</p>
+        <div class="form-group" style="text-align: left;">
+          <label>E-mail ou Usuário:</label>
+          <input type="text" id="login-user" placeholder="ex: secretaria@admin.com">
+        </div>
+        <div class="form-group" style="text-align: left;">
+          <label>Senha:</label>
+          <input type="password" id="login-pass" placeholder="........">
+        </div>
+        <button type="button" style="width: 100%; border-radius: 20px; margin-top: 10px;" onclick="fazerLogin()">Entrar no Sistema</button>
+        <div style="margin-top: 15px; text-align: center;">
+          <a href="#" onclick="alternarTelaRecuperacao(true)" style="font-size: 0.85rem; color: var(--secondary-color); text-decoration: none;">Esqueci minha senha</a>
+        </div>
       </div>
-      <div class="form-group" style="text-align: left;">
-        <label>Senha:</label>
-        <input type="password" id="login-pass" placeholder="........">
-      </div>
-      <button type="button" style="width: 100%; border-radius: 20px; margin-top: 10px;" onclick="fazerLogin()">Entrar no Sistema</button>
-      <div style="margin-top: 15px;">
-        <a href="#" onclick="alternarTelaRecuperacao(true)" style="font-size: 0.85rem; color: var(--secondary-color); text-decoration: none;">Esqueci minha senha</a>
+      <div id="login-view-forgot" style="display: none; text-align: left;">
+        <h2 style="color: var(--primary-color); margin-bottom: 5px;">Recuperação de Acesso</h2>
+        <p style="font-size: 0.85rem; color: #718096; margin-bottom: 20px;">Informe seu e-mail cadastrado para redefinir sua senha.</p>
+        <div class="form-group">
+          <label>E-mail Cadastrado:</label>
+          <input type="text" id="forgot-user-email" placeholder="ex: secretaria@admin.com">
+        </div>
+        <div class="form-group">
+          <label>Nova Senha:</label>
+          <input type="password" id="forgot-new-pass" placeholder="Mínimo de caracteres">
+        </div>
+        <button type="button" style="width: 100%; border-radius: 20px; margin-top: 10px; background-color: #2f855a;" onclick="executarRedefinicaoSenha()">Atualizar Senha</button>
+        <div style="margin-top: 15px; text-align: center;">
+          <a href="#" onclick="alternarTelaRecuperacao(false)" style="font-size: 0.85rem; color: #718096; text-decoration: none;">Voltar para o Login</a>
+        </div>
       </div>
     </div>
-    <div id="login-view-forgot" style="display: none; text-align: left;">
-      <h2 style="color: var(--primary-color); text-align: center; margin-bottom: 5px;">Recuperação de Acesso</h2>
-      <p style="font-size: 0.85rem; color: #718096; margin-bottom: 20px; text-align: center;">Informe seu e-mail cadastrado para redefinir sua senha.</p>
-      <div class="form-group">
-        <label>E-mail Cadastrado:</label>
-        <input type="text" id="forgot-user-email" placeholder="ex: secretaria@admin.com">
-      </div>
-      <div class="form-group">
-        <label>Nova Senha:</label>
-        <input type="password" id="forgot-new-pass" placeholder="Mínimo de caracteres">
-      </div>
-      <button type="button" style="width: 100%; border-radius: 20px; margin-top: 10px; background-color: #2f855a;" onclick="executarRedefinicaoSenha()">Atualizar Senha</button>
-      <div style="margin-top: 15px; text-align: center;">
-        <a href="#" onclick="alternarTelaRecuperacao(false)" style="font-size: 0.85rem; color: #718096; text-decoration: none;">Voltar para o Login</a>
-      </div>
+
+    <!-- Lado Direito: Informações da Instituição e Logomarca de Login -->
+    <div class="login-right-pane">
+      <img id="login-logo-img" alt="Logo Instituição" style="display: none;">
+      <h3 id="login-info-title" style="margin: 0 0 10px 0; font-size: 1.2rem;">SE7 Gestão Educacional</h3>
+      <p id="login-info-desc" style="font-size: 0.85rem; opacity: 0.9; line-height: 1.4; margin: 0 0 15px 0;">Plataforma integrada de ensino técnico, controle acadêmico e auditoria em nuvem.</p>
+      <p style="margin: 0; font-size: 0.75rem; opacity: 0.7;" id="login-info-version">Versão 1.0.0 Cloud</p>
     </div>
-  </div>
-  <div style="text-align: center; color: white; width: 100%; margin-bottom: 10px;">
-    <p style="margin: 0; font-size: 13px; font-weight: 500; letter-spacing: 0.5px;">SE7 Gestão Educacional</p>
-    <p style="margin: 4px 0 0 0; font-size: 11px; opacity: 0.8;">Versão 1.0.0 Cloud</p>
   </div>
 </div>
 
@@ -827,41 +887,48 @@ button:hover {
 
       <!-- SUBABA 7: INSTITUIÇÃO -->
       <div id="subtab-institution" class="subtab-content">
-        <h3 class="section-title">Identidade Visual, Cores e Dados Jurídicos (Salvo na Nuvem)</h3>
+        <h3 class="section-title">Identidade Visual, Cores e Dados da Instituição (Salvo na Nuvem)</h3>
         
-        <!-- Bloco de Paleta de Cores Personalizada -->
+        <!-- Bloco de Identidade Visual Unificada (Sistema + Tela de Login) -->
         <div style="background-color: var(--bg-color); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 20px;">
-          <h4 style="margin-top: 0; color: var(--secondary-color);">Customização de Paleta de Cores do Sistema</h4>
-          <p style="font-size: 0.8rem; color: #718096; margin-top: -5px;">Escolha a cor principal do cabeçalho e dos botões/destaques ou retorne ao padrão do sistema.</p>
+          <h4 style="margin-top: 0; color: var(--secondary-color);">Gerenciamento de Identidade Visual (Sistema & Tela de Acesso)</h4>
+          <p style="font-size: 0.8rem; color: #718096; margin-top: -5px;">Personalize a logo, as cores e as informações institucionais exibidas tanto no sistema interno quanto na tela de login.</p>
+          
           <div class="grid-2">
             <div class="form-group">
-              <label>Cor Principal (Cabeçalho):</label>
+              <label>Cor Principal:</label>
               <input type="color" id="input-color-primary" value="#1a365d" style="height: 40px; cursor: pointer;">
             </div>
             <div class="form-group">
-              <label>Cor Secundária (Botões / Destaques):</label>
+              <label>Cor Secundária:</label>
               <input type="color" id="input-color-secondary" value="#2b6cb0" style="height: 40px; cursor: pointer;">
             </div>
           </div>
-          <div style="display: flex; gap: 10px; margin-top: 5px;">
+          <div style="display: flex; gap: 10px; margin-top: 5px; margin-bottom: 15px;">
             <button type="button" style="background-color: #2f855a; border-radius: 20px; font-size: 0.85rem;" onclick="aplicarPaletaCores(true)">Aplicar & Salvar Cores</button>
-            <button type="button" class="btn-danger" style="border-radius: 20px; font-size: 0.85rem;" onclick="restaurarCorPadraoSistema()">Voltar Cor Padrão do Sistema</button>
+            <button type="button" class="btn-danger" style="border-radius: 20px; font-size: 0.85rem;" onclick="restaurarCorPadraoSistema()">Restaurar Cores Padrão</button>
+          </div>
+
+          <div class="grid-2">
+            <div class="form-group">
+              <label>Upload da Logomarca (Sistema & Login):</label>
+              <input type="file" id="input-logo-file" accept="image/*" onchange="handleLogoUpload(event)">
+            </div>
+            <div class="form-group">
+              <label>Pré-visualização da Logomarca:</label>
+              <div class="logo-preview-box" id="logo-preview">
+                <span style="font-size: 0.8rem; color: #a0aec0;">Sem logo</span>
+              </div>
+              <button type="button" class="btn-danger" style="margin-top:5px; border-radius: 15px;" onclick="removeLogo()">Remover Logo</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Texto Descritivo do Lado Direito do Login:</label>
+            <textarea id="input-login-desc" rows="3" placeholder="Plataforma integrada de ensino técnico, controle acadêmico e auditoria em nuvem."></textarea>
           </div>
         </div>
 
-        <div class="grid-2">
-          <div class="form-group">
-            <label>Upload da Logomarca (PNG/JPG):</label>
-            <input type="file" id="input-logo-file" accept="image/*" onchange="handleLogoUpload(event)">
-          </div>
-          <div class="form-group">
-            <label>Pré-visualização da Logo:</label>
-            <div class="logo-preview-box" id="logo-preview">
-              <span style="font-size: 0.8rem; color: #a0aec0;">Sem logo</span>
-            </div>
-            <button type="button" class="btn-danger" style="margin-top:5px; border-radius: 15px;" onclick="removeLogo()">Remover Logo</button>
-          </div>
-        </div>
         <div class="grid-2">
           <div class="form-group">
             <label>Nome da Instituição:</label>
@@ -1467,6 +1534,7 @@ button:hover {
         document.getElementById('input-inst-email').value = data.email || '';
         document.getElementById('input-inst-tel').value = data.tel || '';
         document.getElementById('input-inst-end').value = data.end || '';
+        if (data.loginDesc) document.getElementById('input-login-desc').value = data.loginDesc;
         
         if (data.primaryColor) document.getElementById('input-color-primary').value = data.primaryColor;
         if (data.secondaryColor) document.getElementById('input-color-secondary').value = data.secondaryColor;
@@ -1483,6 +1551,10 @@ button:hover {
         document.getElementById('header-inst-name').innerText = data.name || "Sistema de Ensino Técnico e de Transporte – SE7";
         document.getElementById('header-inst-razao').innerText = data.razao || "JS & SS Serviços Educacionais e Cia Ltda";
         document.getElementById('header-inst-detalhes').innerText = `CNPJ: ${data.cnpj || '31.535.516/0001-64'} | Tel: ${data.tel || '(91) 98566-9449'}`;
+
+        // Atualizar textos e logo na Tela de Login
+        document.getElementById('login-info-title').innerText = data.name || "SE7 Gestão Educacional";
+        document.getElementById('login-info-desc').innerText = data.loginDesc || "Plataforma integrada de ensino técnico, controle acadêmico e auditoria em nuvem.";
       }
     });
 
@@ -1664,12 +1736,9 @@ button:hover {
     });
   }
 
-  // ==========================================
-  // LÓGICA DE GERAÇÃO AUTOMÁTICA DE TURMAS (2023 - 2031)
-  // ==========================================
   function atualizarPreviewTurmaAutomatica() {
     const courseId = document.getElementById('input-class-course').value;
-    const semestreInput = document.getElementById('input-class-semester').value; // ex: "2026.1"
+    const semestreInput = document.getElementById('input-class-semester').value;
     const inputCodeAuto = document.getElementById('input-class-code-auto');
     const inputNameAuto = document.getElementById('input-class-name-auto');
 
@@ -1683,13 +1752,12 @@ button:hover {
     if (!curso) return;
 
     const siglaCurso = (curso.sigla || curso.name.substring(0, 3)).toUpperCase();
-    const anoSemestreCompacto = semestreInput.replace('.', ''); // "20261"
+    const anoSemestreCompacto = semestreInput.replace('.', '');
 
-    // Conta quantas turmas já existem para esse mesmo curso e semestre
     const turmasNoSemestre = classes.filter(c => c.courseId == courseId && c.semestre === semestreInput);
     const sequencialNum = turmasNoSemestre.length + 1;
-    const sequencialStr = String(sequencialNum).padStart(2, '0'); // "01", "02"...
-    const letraTurma = String.fromCharCode(64 + sequencialNum); // A, B, C...
+    const sequencialStr = String(sequencialNum).padStart(2, '0');
+    const letraTurma = String.fromCharCode(64 + sequencialNum);
 
     const codigoGerado = `${siglaCurso}-${anoSemestreCompacto}-${sequencialStr}`;
     const [ano, sem] = semestreInput.split('.');
@@ -2255,6 +2323,8 @@ button:hover {
   async function handleLogoUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
+    
+    // Leitor mantido puro para capturar o canal alfa (transparência) do PNG original
     const reader = new FileReader();
     reader.onload = async function(e) {
       currentLogoDataUrl = e.target.result;
@@ -2273,20 +2343,39 @@ button:hover {
   function updateLogoPreview(src) {
     const previewBox = document.getElementById('logo-preview');
     const headerImg = document.getElementById('header-logo-img');
-    if (!previewBox || !headerImg) return;
-    if (src) {
-      previewBox.innerHTML = `<img src="${src}" alt="Logo">`;
-      headerImg.src = src;
-      headerImg.style.display = 'block';
-    } else {
-      previewBox.innerHTML = '<span style="font-size: 0.8rem; color: #a0aec0;">Sem logo</span>';
-      headerImg.style.display = 'none';
+    const loginImg = document.getElementById('login-logo-img');
+
+    if (previewBox) {
+      if (src) {
+        previewBox.innerHTML = `<img src="${src}" alt="Logo">`;
+      } else {
+        previewBox.innerHTML = '<span style="font-size: 0.8rem; color: #a0aec0;">Sem logo</span>';
+      }
+    }
+
+    if (headerImg) {
+      if (src) {
+        headerImg.src = src;
+        headerImg.style.display = 'block';
+      } else {
+        headerImg.style.display = 'none';
+      }
+    }
+
+    if (loginImg) {
+      if (src) {
+        loginImg.src = src;
+        loginImg.style.display = 'block';
+      } else {
+        loginImg.style.display = 'none';
+      }
     }
   }
 
   async function salvarBrandingNaNuvem(showAlert = true) {
     const primaryColor = document.getElementById('input-color-primary').value;
     const secondaryColor = document.getElementById('input-color-secondary').value;
+    const loginDesc = document.getElementById('input-login-desc').value.trim();
 
     const brandingData = {
       name: document.getElementById('input-inst-name').value.trim(),
@@ -2297,7 +2386,8 @@ button:hover {
       end: document.getElementById('input-inst-end').value.trim(),
       logo: currentLogoDataUrl,
       primaryColor,
-      secondaryColor
+      secondaryColor,
+      loginDesc
     };
 
     try {
