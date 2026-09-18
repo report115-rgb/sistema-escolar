@@ -94,7 +94,7 @@ header {
   gap: 8px;
   align-items: center;
 }
-.theme-toggle-btn, .access-control-btn, .logout-btn {
+.theme-toggle-btn, .access-control-btn, .switch-user-btn, .logout-btn {
   background-color: rgba(255, 255, 255, 0.2);
   color: white;
   border: 1px solid rgba(255, 255, 255, 0.4);
@@ -108,7 +108,7 @@ header {
   display: inline-flex;
   align-items: center;
 }
-.theme-toggle-btn:hover, .access-control-btn:hover, .logout-btn:hover {
+.theme-toggle-btn:hover, .access-control-btn:hover, .switch-user-btn:hover, .logout-btn:hover {
   background-color: rgba(255, 255, 255, 0.3);
 }
 .usuario-logado-header-box {
@@ -527,6 +527,7 @@ button:hover {
       <div class="header-right-actions">
         <button type="button" class="theme-toggle-btn" id="theme-toggle-btn" onclick="toggleDarkMode()">Modo Escuro</button>
         <button type="button" class="access-control-btn" id="btn-access-control" onclick="abrirModalControleAcesso()" style="display:none;">Controle de Acesso</button>
+        <button type="button" class="switch-user-btn" id="btn-switch-user" onclick="abrirModalAlternarUsuario()" style="display:none;">Alternar</button>
         <button type="button" class="logout-btn" onclick="fazerLogout()">Sair</button>
       </div>
       <div class="usuario-logado-header-box">
@@ -544,8 +545,8 @@ button:hover {
     <button class="tab-button" onclick="openTab(event, 'tab-grades')">Lançamento de Notas</button>
     <button class="tab-button" onclick="openTab(event, 'tab-student-finance')">Financeiro do Aluno</button>
     <button class="tab-button" onclick="openTab(event, 'tab-history')">Emissão de Documentos</button>
-    <button class="tab-button" onclick="openTab(event, 'tab-settings')">Configurações do Sistema</button>
-    <button class="tab-button" onclick="openTab(event, 'tab-audit')">Auditoria & Logs</button>
+    <button class="tab-button" id="nav-btn-settings" onclick="openTab(event, 'tab-settings')">Configurações do Sistema</button>
+    <button class="tab-button" id="nav-btn-audit" onclick="openTab(event, 'tab-audit')">Auditoria & Logs</button>
   </nav>
 </div>
 
@@ -1134,6 +1135,19 @@ button:hover {
   </div>
 </div>
 
+<!-- MODAL DE ALTERNAR USUÁRIO -->
+<div id="switch-user-modal" class="modal-overlay">
+  <div class="modal-card" style="max-width: 480px;">
+    <button type="button" class="modal-close-btn" onclick="fecharModalAlternarUsuario()" title="Fechar">&times;</button>
+    <h2 style="color: var(--primary-color);">Alternar Usuário</h2>
+    <p style="font-size: 0.85rem; color: #718096; margin-top: -8px;">Selecione a conta para alternar instantaneamente:</p>
+    <ul class="data-list" id="switch-users-list" style="margin-top: 15px; max-height: 300px; overflow-y: auto;"></ul>
+    <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
+      <button type="button" style="border-radius: 20px; background-color: #718096;" onclick="fecharModalAlternarUsuario()">Fechar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL DE DETALHES DA DISCIPLINA -->
 <div id="subject-details-modal" class="modal-overlay">
   <div class="modal-card" style="max-width: 500px;">
@@ -1406,17 +1420,97 @@ button:hover {
     location.reload();
   }
 
+  // ==========================================
+  // FUNÇÕES DE ALTERNÂNCIA RÁPIDA DE USUÁRIOS
+  // ==========================================
+  function abrirModalAlternarUsuario() {
+    const sessaoAtual = JSON.parse(sessionStorage.getItem('usuario_logado'));
+    // Validação de segurança reforçada: apenas perfis master podem abrir o modal de alternância
+    if (!sessaoAtual || sessaoAtual.perfil !== 'master') {
+      alert("Acesso negado: Apenas contas com perfil Master podem alternar entre usuários.");
+      return;
+    }
+
+    const listEl = document.getElementById('switch-users-list');
+    if (!listEl) return;
+    listEl.innerHTML = '';
+    
+    let dbUsers = JSON.parse(localStorage.getItem('app_users_system')) || usuariosPadrao;
+
+    dbUsers.forEach(u => {
+      const isAtual = sessaoAtual && sessaoAtual.email === u.email;
+      listEl.innerHTML += `
+        <li class="data-item">
+          <div>
+            <strong>${u.nome}</strong> (${u.email})<br>
+            <small style="color:var(--secondary-color);">Perfil: <b>${u.perfil.toUpperCase()}</b></small>
+            ${isAtual ? '<br><span style="color: #2f855a; font-weight: bold; font-size: 0.75rem;">(Conta Atual)</span>' : ''}
+          </div>
+          <div>
+            ${isAtual ? '<span style="color: #a0aec0; font-size: 0.85rem;">Ativo</span>' : `<button type="button" style="padding: 6px 12px; border-radius: 15px; font-size: 0.8rem;" onclick="alternarParaUsuario('${u.email}')">Alternar</button>`}
+          </div>
+        </li>`;
+    });
+
+    document.getElementById('switch-user-modal').style.display = 'flex';
+  }
+
+  function fecharModalAlternarUsuario() {
+    document.getElementById('switch-user-modal').style.display = 'none';
+  }
+
+  function alternarParaUsuario(emailAlvo) {
+    const sessaoAtual = JSON.parse(sessionStorage.getItem('usuario_logado'));
+    if (!sessaoAtual || sessaoAtual.perfil !== 'master') {
+      alert("Acesso negado.");
+      return;
+    }
+
+    let dbUsers = JSON.parse(localStorage.getItem('app_users_system')) || usuariosPadrao;
+    let userFound = dbUsers.find(u => u.email === emailAlvo);
+    if (!userFound) return alert("Usuário não encontrado.");
+
+    sessionStorage.setItem('usuario_logado', JSON.stringify(userFound));
+    fecharModalAlternarUsuario();
+    aplicarPermissoesPorPerfil(userFound.perfil);
+    atualizarDisplayUsuarioLogado();
+    reiniciarTemporizadorInatividade();
+    registrarLogAuditoria(`Alternou rapidamente para o usuário: ${userFound.nome}`, "Autenticação");
+    alert(`Conta alternada com sucesso para: ${userFound.nome}!`);
+  }
+
   function aplicarPermissoesPorPerfil(perfil) {
     const tabsNav = document.querySelector('.tabs-nav');
     const btnAccessControl = document.getElementById('btn-access-control');
+    const btnSwitchUser = document.getElementById('btn-switch-user');
+    const navBtnSettings = document.getElementById('nav-btn-settings');
+    const navBtnAudit = document.getElementById('nav-btn-audit');
+
     if (!tabsNav) return;
+
+    // Botões restritos exclusivamente ao perfil 'master'
     if (btnAccessControl) btnAccessControl.style.display = (perfil === 'master') ? 'inline-flex' : 'none';
+    if (btnSwitchUser) btnSwitchUser.style.display = (perfil === 'master') ? 'inline-flex' : 'none';
+
+    // Ocultar Configurações e Auditoria para Secretaria e Professor
+    if (navBtnSettings) navBtnSettings.style.display = (perfil === 'master') ? 'inline-block' : 'none';
+    if (navBtnAudit) navBtnAudit.style.display = (perfil === 'master') ? 'inline-block' : 'none';
+
     const botoesAba = tabsNav.getElementsByClassName('tab-button');
-    for (let btn of botoesAba) btn.style.display = 'block';
+    for (let btn of botoesAba) {
+      if (btn.style.display !== 'none') {
+        // Garante que se mantêm visíveis conforme o perfil
+      }
+    }
+
     if (perfil === 'professor') {
       for (let btn of botoesAba) {
-        if (!btn.getAttribute('onclick').includes('attendance') && !btn.getAttribute('onclick').includes('grades')) btn.style.display = 'none';
+        if (!btn.getAttribute('onclick').includes('attendance') && !btn.getAttribute('onclick').includes('grades')) {
+          btn.style.display = 'none';
+        }
       }
+    } else if (perfil === 'secretaria') {
+      // Secretaria mantém acesso às abas acadêmicas e financeiras básicas
     }
   }
 
@@ -2029,7 +2123,6 @@ button:hover {
     });
   }
 
-  // NOVA FUNÇÃO PARA EXCLUIR LANÇAMENTO FINANCEIRO / COBRANÇA
   async function excluirLancamentoFinanceiro(logId, alunoNome) {
     if (!confirm(`Deseja realmente excluir este lançamento financeiro de ${alunoNome}?`)) return;
     try {
