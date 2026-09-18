@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SE7 Gestão Educacional (Nuvem + Auditoria + E-mails + Asaas)</title>
 <!-- Bibliotecas Externas para Geração de PDF, QR Code, Firebase e EmailJS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -39,47 +39,42 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  -webkit-text-size-adjust: 100%;
 }
 header {
   background-color: var(--primary-color);
   color: white;
-  padding: 1rem 1.5rem;
+  padding: 1.2rem 2rem;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 15px;
   position: relative;
 }
 .header-left {
   display: flex;
   align-items: center;
   gap: 15px;
-  flex: 1;
-  min-width: 250px;
 }
 .header-logo {
-  max-height: 50px;
-  max-width: 120px;
+  max-height: 60px;
+  max-width: 150px;
   object-fit: contain;
   display: none;
 }
 .header-info h1 {
   margin: 0;
-  font-size: 1.15rem;
+  font-size: 1.3rem;
 }
 .header-info .razao-social {
   margin: 2px 0;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   opacity: 0.9;
   font-weight: 500;
 }
 .header-info .detalhes-juridicos {
   margin: 0;
   opacity: 0.75;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
 }
 
 .header-right-container {
@@ -92,16 +87,16 @@ header {
   display: flex;
   gap: 8px;
   align-items: center;
-  flex-wrap: wrap;
 }
 .theme-toggle-btn, .access-control-btn, .logout-btn {
   background-color: rgba(255, 255, 255, 0.2);
   color: white;
   border: 1px solid rgba(255, 255, 255, 0.4);
-  padding: 5px 12px;
+  padding: 6px 14px;
   border-radius: 20px;
   cursor: pointer;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
+  width: auto;
   transition: background 0.2s;
   text-decoration: none;
   display: inline-flex;
@@ -123,7 +118,7 @@ header {
 .usuario-logado-header-box .label {
   opacity: 0.8;
   text-transform: uppercase;
-  font-size: 0.55rem;
+  font-size: 0.6rem;
 }
 .usuario-logado-header-box .nome {
   font-weight: 700;
@@ -131,9 +126,10 @@ header {
 }
 .header-clock-box {
   background-color: rgba(0, 0, 0, 0.25);
-  padding: 3px 8px;
-  border-radius: 8px;
-  font-size: 0.75rem;
+  padding: 4px 10px;
+  border-radius: 10px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 0.78rem;
   font-weight: 500;
   color: #edf2f7;
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -141,13 +137,12 @@ header {
 }
 .tabs-nav {
   display: flex;
-  justify-content: flex-start;
+  justify-content: center;
   gap: 8px;
   background-color: #edf2f7;
-  padding: 10px 15px;
+  padding: 12px 20px;
   border-bottom: 1px solid #e2e8f0;
   overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
 }
 body.dark-mode .tabs-nav {
   background-color: #2d3748;
@@ -156,15 +151,15 @@ body.dark-mode .tabs-nav {
 .tab-button {
   background-color: transparent;
   color: #4a5568;
-  padding: 8px 14px;
+  padding: 8px 16px;
   border: 1px solid transparent;
   border-radius: 20px;
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
-  flex-shrink: 0;
+  width: auto;
 }
 body.dark-mode .tab-button {
   color: #e2e8f0;
@@ -184,25 +179,24 @@ body.dark-mode .tab-button:hover {
 }
 .subtabs-nav {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   margin-bottom: 20px;
   border-bottom: 1px solid var(--border-color);
   padding-bottom: 10px;
   overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
 }
 .subtab-button {
   background-color: var(--bg-color);
   color: var(--text-color);
   border: 1px solid var(--border-color);
-  padding: 6px 12px;
+  padding: 8px 16px;
   border-radius: 20px;
   font-weight: 600;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   cursor: pointer;
-  white-space: nowrap;
-  flex-shrink: 0;
+  width: auto;
   transition: all 0.2s;
+  white-space: nowrap;
 }
 .subtab-button.active {
   background-color: var(--secondary-color);
@@ -217,10 +211,8 @@ body.dark-mode .tab-button:hover {
 }
 .container {
   max-width: 950px;
-  width: 100%;
-  margin: 15px auto;
-  padding: 0 12px;
-  box-sizing: border-box;
+  margin: 20px auto;
+  padding: 0 20px;
   flex: 1;
 }
 .tab-content {
@@ -232,7 +224,7 @@ body.dark-mode .tab-button:hover {
 .card {
   background: var(--card-bg);
   border-radius: 8px;
-  padding: 18px;
+  padding: 24px;
   margin-bottom: 20px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
   border: 1px solid var(--border-color);
@@ -241,36 +233,35 @@ body.dark-mode .tab-button:hover {
   margin-top: 0;
   color: var(--primary-color);
   border-bottom: 2px solid var(--bg-color);
-  padding-bottom: 8px;
-  font-size: 1.2rem;
+  padding-bottom: 10px;
 }
 body.dark-mode .card h2 {
   color: #ebf8ff;
 }
 h3.section-title {
-  margin-top: 20px;
-  margin-bottom: 12px;
+  margin-top: 25px;
+  margin-bottom: 15px;
   color: var(--secondary-color);
-  font-size: 1rem;
+  font-size: 1.1rem;
   border-bottom: 1px dashed var(--border-color);
   padding-bottom: 5px;
 }
 .form-group {
-  margin-bottom: 12px;
+  margin-bottom: 15px;
 }
 .form-group label {
   display: block;
-  margin-bottom: 4px;
+  margin-bottom: 5px;
   font-weight: bold;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
 }
 .form-group input, .form-group select, .form-group textarea {
   width: 100%;
   padding: 10px;
   border: 1px solid var(--border-color);
-  border-radius: 6px;
+  border-radius: 5px;
   box-sizing: border-box;
-  font-size: 16px; /* Evita zoom automático no iOS ao focar */
+  font-size: 1rem;
   font-family: inherit;
   background-color: var(--input-bg);
   color: var(--text-color);
@@ -283,8 +274,7 @@ button {
   cursor: pointer;
   transition: background 0.2s;
   padding: 10px 15px;
-  border-radius: 6px;
-  font-size: 0.9rem;
+  border-radius: 5px;
 }
 button:hover {
   filter: brightness(0.9);
@@ -293,53 +283,65 @@ button:hover {
   background-color: #edf2f7;
   color: #2d3748;
   border: 1px solid var(--border-color);
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 0.7rem;
+  padding: 4px 10px;
+  border-radius: 15px;
+  font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
+  width: auto;
+  transition: all 0.2s;
+}
+.tag-insert-btn:hover {
+  background-color: var(--secondary-color);
+  color: white;
+  border-color: var(--secondary-color);
 }
 .btn-danger {
   background-color: #e53e3e;
-  padding: 6px 12px;
-  font-size: 0.8rem;
+  padding: 5px 10px;
+  width: auto;
+  font-size: 0.85rem;
 }
 .attendance-list, .data-list {
   list-style: none;
   padding: 0;
-  margin: 0;
 }
 .data-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px;
+  padding: 12px;
   border-bottom: 1px solid var(--border-color);
   gap: 10px;
-  font-size: 0.9rem;
 }
 .grid-2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: 15px;
 }
 .grid-3 {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  gap: 12px;
+  gap: 15px;
 }
 .logo-preview-box {
   width: 100%;
-  max-width: 140px;
-  height: 65px;
+  max-width: 150px;
+  height: 70px;
   border: 2px dashed var(--border-color);
   border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  background-image: linear-gradient(45deg, #cbd5e0 25%, transparent 25%), 
+                    linear-gradient(-45deg, #cbd5e0 25%, transparent 25%), 
+                    linear-gradient(45deg, transparent 75%, #cbd5e0 75%), 
+                    linear-gradient(-45deg, transparent 75%, #cbd5e0 75%);
+  background-size: 16px 16px;
+  background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
   background-color: var(--bg-color);
-  margin-top: 5px;
+  margin-top: 10px;
 }
 .logo-preview-box img {
   max-width: 100%;
@@ -354,39 +356,41 @@ button:hover {
   justify-content: center;
   align-items: center;
   z-index: 1000;
-  padding: 10px;
-  box-sizing: border-box;
 }
 .modal-card {
   background: var(--card-bg);
-  width: 100%;
-  max-width: 700px;
-  max-height: 90vh;
-  border-radius: 10px;
-  padding: 18px;
+  width: 90%;
+  max-width: 750px;
+  max-height: 85vh;
+  border-radius: 8px;
+  padding: 20px;
   overflow-y: auto;
   border: 1px solid var(--border-color);
   position: relative;
-  box-sizing: border-box;
 }
 .modal-close-btn {
   position: absolute;
-  top: 12px;
-  right: 15px;
+  top: 15px;
+  right: 20px;
   background: transparent;
   border: none;
   font-size: 1.5rem;
   font-weight: bold;
   color: var(--text-color);
   cursor: pointer;
+  width: auto;
   padding: 0;
   line-height: 1;
+  transition: color 0.2s;
+}
+.modal-close-btn:hover {
+  color: #e53e3e;
 }
 .login-container-split {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  width: 100%;
-  max-width: 800px;
+  width: 90%;
+  max-width: 850px;
   background: var(--card-bg);
   border-radius: 12px;
   overflow: hidden;
@@ -394,7 +398,7 @@ button:hover {
   border: 1px solid var(--border-color);
 }
 .login-left-pane {
-  padding: 25px;
+  padding: 40px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -402,7 +406,7 @@ button:hover {
 .login-right-pane {
   background: var(--primary-color);
   color: white;
-  padding: 25px;
+  padding: 40px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -410,67 +414,38 @@ button:hover {
   text-align: center;
 }
 .login-right-pane img {
-  max-width: 100px;
-  max-height: 80px;
+  max-width: 120px;
+  max-height: 100px;
   object-fit: contain;
-  margin-bottom: 15px;
+  margin-bottom: 20px;
   background: transparent;
   padding: 5px;
   border-radius: 8px;
 }
+/* Estilização do Rodapé Interno */
 .system-footer {
   margin-top: auto;
   background-color: var(--card-bg);
   border-top: 1px solid var(--border-color);
-  padding: 12px 1.5rem;
+  padding: 15px 2rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.75rem;
+  font-size: 0.82rem;
   color: #718096;
 }
-
-/* RESPONSIVIDADE PARA CELULARES (Telas até 768px) */
 @media (max-width: 768px) {
-  header {
-    flex-direction: column;
-    align-items: stretch;
-    padding: 12px;
-  }
-  .header-right-container {
-    align-items: stretch;
-    width: 100%;
-    gap: 8px;
-  }
-  .header-right-actions {
-    justify-content: space-between;
-  }
-  .usuario-logado-header-box, .header-clock-box {
-    text-align: center;
-    justify-content: center;
-  }
-  .grid-2, .grid-3 {
-    grid-template-columns: 1fr;
-    gap: 10px;
-  }
   .login-container-split {
     grid-template-columns: 1fr;
-    max-width: 100%;
+    max-width: 450px;
   }
   .login-right-pane {
-    padding: 20px;
-    order: -1;
-  }
-  .login-left-pane {
-    padding: 20px;
+    padding: 25px;
   }
   .system-footer {
     flex-direction: column;
     gap: 5px;
     text-align: center;
-  }
-  .card {
-    padding: 14px;
   }
 }
 </style>
@@ -478,12 +453,12 @@ button:hover {
 <body>
 
 <!-- MODAL DE LOGIN -->
-<div id="login-modal" class="modal-overlay" style="display: flex; z-index: 2000; background: rgba(0,0,0,0.7); flex-direction: column; justify-content: center; align-items: center; padding: 15px;">
+<div id="login-modal" class="modal-overlay" style="display: flex; z-index: 2000; background: rgba(0,0,0,0.7); flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;">
   <div class="login-container-split">
     <div class="login-left-pane">
       <div id="login-view-main">
         <h2 style="color: var(--primary-color); margin-bottom: 5px;" id="login-box-title">Acesso Institucional</h2>
-        <p id="login-subtitle-text" style="font-size: 0.85rem; color: #718096; margin-bottom: 15px;">Entre com suas credenciais para acessar o sistema.</p>
+        <p id="login-subtitle-text" style="font-size: 0.85rem; color: #718096; margin-bottom: 20px;">Entre com suas credenciais para acessar o sistema.</p>
         <div class="form-group" style="text-align: left;">
           <label>E-mail ou Usuário:</label>
           <input type="text" id="login-user" placeholder="ex: secretaria@admin.com">
@@ -499,7 +474,7 @@ button:hover {
       </div>
       <div id="login-view-forgot" style="display: none; text-align: left;">
         <h2 style="color: var(--primary-color); margin-bottom: 5px;">Recuperação de Acesso</h2>
-        <p style="font-size: 0.85rem; color: #718096; margin-bottom: 15px;">Informe seu e-mail cadastrado para redefinir sua senha.</p>
+        <p style="font-size: 0.85rem; color: #718096; margin-bottom: 20px;">Informe seu e-mail cadastrado para redefinir sua senha.</p>
         <div class="form-group">
           <label>E-mail Cadastrado:</label>
           <input type="text" id="forgot-user-email" placeholder="ex: secretaria@admin.com">
@@ -516,9 +491,9 @@ button:hover {
     </div>
     <div class="login-right-pane">
       <img id="login-logo-img" alt="Logo Instituição" style="display: none;">
-      <h3 id="login-info-title" style="margin: 0 0 10px 0; font-size: 1.1rem;">SE7 Gestão Educacional</h3>
-      <p id="login-info-desc" style="font-size: 0.8rem; opacity: 0.9; line-height: 1.4; margin: 0 0 10px 0;">Plataforma integrada de ensino técnico, controle acadêmico e auditoria em nuvem.</p>
-      <p style="margin: 0; font-size: 0.7rem; opacity: 0.7;" id="login-info-version">Versão 1.0.1 Cloud</p>
+      <h3 id="login-info-title" style="margin: 0 0 10px 0; font-size: 1.2rem;">SE7 Gestão Educacional</h3>
+      <p id="login-info-desc" style="font-size: 0.85rem; opacity: 0.9; line-height: 1.4; margin: 0 0 15px 0;">Plataforma integrada de ensino técnico, controle acadêmico e auditoria em nuvem.</p>
+      <p style="margin: 0; font-size: 0.75rem; opacity: 0.7;" id="login-info-version">Versão 1.0.1 Cloud</p>
     </div>
   </div>
 </div>
@@ -590,7 +565,7 @@ button:hover {
             <label>Motivo do Cancelamento:</label>
             <input type="text" id="cancel-reason" placeholder="Ex: Mudança de cidade">
           </div>
-          <button type="button" style="background-color: #e53e3e; border-radius: 20px; width: 100%;" onclick="processStudentCancellation()">Efetivar Cancelamento de Matrícula</button>
+          <button type="button" style="background-color: #e53e3e; border-radius: 20px;" onclick="processStudentCancellation()">Efetivar Cancelamento de Matrícula</button>
         </div>
         <ul class="data-list" id="cancelled-students-list"></ul>
       </div>
@@ -623,7 +598,7 @@ button:hover {
       </div>
       <h3 id="attendance-section-title">Lista de Alunos da Turma</h3>
       <ul class="attendance-list" id="student-attendance-list"></ul>
-      <button style="margin-top: 15px; background-color: #2f855a; border-radius: 20px; width: 100%;" onclick="saveAttendance()">Finalizar e Salvar Chamada</button>
+      <button style="margin-top: 15px; background-color: #2f855a; border-radius: 20px;" onclick="saveAttendance()">Finalizar e Salvar Chamada</button>
     </div>
   </div>
 
@@ -653,7 +628,7 @@ button:hover {
       </div>
       <h3 id="grade-section-title">Notas e Avaliações por Aluno</h3>
       <ul class="attendance-list" id="student-grade-list"></ul>
-      <button style="margin-top: 15px; background-color: #2f855a; border-radius: 20px; width: 100%;" onclick="saveGrades()">Salvar Notas da Disciplina</button>
+      <button style="margin-top: 15px; background-color: #2f855a; border-radius: 20px;" onclick="saveGrades()">Salvar Notas da Disciplina</button>
     </div>
   </div>
 
@@ -685,9 +660,9 @@ button:hover {
           <input type="date" id="fin-payment-duedate">
         </div>
       </div>
-      <div style="display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap;">
-        <button style="background-color: #2f855a; border-radius: 20px; flex: 1; min-width: 200px;" onclick="gerarCobrancaAsaasAPI()">Emitir Cobrança Asaas</button>
-        <button style="background-color: #718096; border-radius: 20px; flex: 1; min-width: 150px;" onclick="registerStudentPayment(true)">Registrar Manual</button>
+      <div style="display: flex; gap: 10px; margin-top: 10px;">
+        <button style="background-color: #2f855a; border-radius: 20px; flex: 1;" onclick="gerarCobrancaAsaasAPI()">Emitir Cobrança Integrada via Asaas</button>
+        <button style="background-color: #718096; border-radius: 20px; width: auto; padding: 10px 20px;" onclick="registerStudentPayment(true)">Registrar Manual</button>
       </div>
       <h4 style="margin-top: 25px;">Histórico de Lançamentos Financeiros:</h4>
       <ul class="data-list" id="finance-logs-list"></ul>
@@ -706,7 +681,7 @@ button:hover {
         <div class="form-group">
           <label>Selecione o Aluno:</label>
           <select id="report-student-select" disabled>
-            <option value="">Selecione a turma...</option>
+            <option value="">Selecione a turma primeiro...</option>
           </select>
         </div>
         <div class="form-group">
@@ -718,8 +693,8 @@ button:hover {
           </select>
         </div>
       </div>
-      <div style="display: flex; justify-content: flex-end; margin-top: 15px;">
-        <button type="button" style="background-color: #2b6cb0; border-radius: 20px; width: 100%;" onclick="emitirDocumentoSelecionado()">Emitir / Salvar em PDF</button>
+      <div style="display: flex; justify-content: flex-end; margin-top: 10px;">
+        <button type="button" style="background-color: #2b6cb0; border-radius: 20px; width: auto; padding: 10px 25px;" onclick="emitirDocumentoSelecionado()">Emitir / Salvar em PDF</button>
       </div>
     </div>
   </div>
@@ -729,13 +704,13 @@ button:hover {
     <div class="card">
       <h2>Configurações do Sistema</h2>
       <div class="subtabs-nav">
-        <button class="subtab-button active" onclick="openSubTab(event, 'subtab-courses')">Cursos</button>
-        <button class="subtab-button" onclick="openSubTab(event, 'subtab-subjects')">Disciplinas</button>
-        <button class="subtab-button" onclick="openSubTab(event, 'subtab-classes')">Turmas</button>
-        <button class="subtab-button" onclick="openSubTab(event, 'subtab-teachers')">Professores</button>
-        <button class="subtab-button" onclick="openSubTab(event, 'subtab-templates')">Modelos</button>
-        <button class="subtab-button" onclick="openSubTab(event, 'subtab-fin-config')">Asaas API</button>
-        <button class="subtab-button" onclick="openSubTab(event, 'subtab-institution')">Instituição</button>
+        <button class="subtab-button active" onclick="openSubTab(event, 'subtab-courses')">Cadastro de Cursos</button>
+        <button class="subtab-button" onclick="openSubTab(event, 'subtab-subjects')">Cadastro de Disciplinas</button>
+        <button class="subtab-button" onclick="openSubTab(event, 'subtab-classes')">Cadastro de Turmas</button>
+        <button class="subtab-button" onclick="openSubTab(event, 'subtab-teachers')">Cadastro de Professores</button>
+        <button class="subtab-button" onclick="openSubTab(event, 'subtab-templates')">Modelos & Contratos</button>
+        <button class="subtab-button" onclick="openSubTab(event, 'subtab-fin-config')">Config. Financeira & Asaas</button>
+        <button class="subtab-button" onclick="openSubTab(event, 'subtab-institution')">Informações da Instituição</button>
       </div>
 
       <!-- SUBABA 1: CURSOS -->
@@ -746,7 +721,7 @@ button:hover {
           <input type="text" id="input-course-name" placeholder="Ex: Técnico em Enfermagem">
         </div>
         <div class="form-group">
-          <label>2. Sigla do Curso:</label>
+          <label>2. Sigla do Curso (Ex: ENF, ADM):</label>
           <input type="text" id="input-course-sigla" placeholder="Ex: ENF">
         </div>
         <div class="form-group">
@@ -755,25 +730,25 @@ button:hover {
         </div>
         <div class="grid-2">
           <div class="form-group">
-            <label>4. Carga Horária:</label>
+            <label>4. Carga Horária Total:</label>
             <input type="text" id="input-course-hours" placeholder="Ex: 3600 hrs">
           </div>
           <div class="form-group">
-            <label>5. Autorização:</label>
-            <input type="text" id="input-course-conselho" placeholder="Ex: Resolução COFEN">
+            <label>5. Número de Registro/Autorização do Conselho:</label>
+            <input type="text" id="input-course-conselho" placeholder="Ex: Resolução COFEN nº 001/2025">
           </div>
         </div>
-        <button style="border-radius: 20px; width: 100%;" onclick="saveCourse()">Salvar Curso</button>
-        <h4 style="margin-top:20px;">Cursos Cadastrados:</h4>
+        <button style="border-radius: 20px;" onclick="saveCourse()">Salvar Curso</button>
+        <h4 style="margin-top:25px;">Cursos Cadastrados:</h4>
         <ul class="data-list" id="courses-list"></ul>
       </div>
 
       <!-- SUBABA 2: DISCIPLINAS -->
       <div id="subtab-subjects" class="subtab-content">
-        <h3 class="section-title">Cadastro e Ementas de Disciplinas</h3>
+        <h3 class="section-title">Cadastro e Ementas de Disciplinas por Curso</h3>
         <div class="grid-2">
           <div class="form-group">
-            <label>Curso:</label>
+            <label>Selecione o Curso:</label>
             <select id="input-subject-course-select"></select>
           </div>
           <div class="form-group">
@@ -782,24 +757,27 @@ button:hover {
           </div>
         </div>
         <div class="form-group">
-          <label>Ementa:</label>
-          <textarea id="input-subject-ementa" rows="3" placeholder="Tópicos abordados..."></textarea>
+          <label>Ementa da Disciplina:</label>
+          <textarea id="input-subject-ementa" rows="4" placeholder="Descreva os tópicos e conteúdos abordados nesta disciplina..."></textarea>
         </div>
-        <button type="button" style="border-radius: 20px; width: 100%; margin-bottom: 15px;" onclick="addSubjectToCourse()">+ Adicionar Disciplina</button>
+        <button type="button" style="border-radius: 20px; margin-bottom: 10px;" onclick="addSubjectToCourse()">+ Adicionar Disciplina</button>
         <ul class="data-list" id="subjects-management-list"></ul>
       </div>
 
       <!-- SUBABA 3: TURMAS -->
       <div id="subtab-classes" class="subtab-content">
-        <h3 class="section-title">Gerenciamento de Turmas</h3>
+        <h3 class="section-title">Gerenciamento de Turmas (Geração Automática)</h3>
         <div class="grid-2">
           <div class="form-group">
-            <label>Curso:</label>
+            <label>Selecione o Curso:</label>
             <select id="input-class-course" onchange="atualizarPreviewTurmaAutomatica()"></select>
           </div>
           <div class="form-group">
-            <label>Semestre:</label>
+            <label>Semestre Letivo:</label>
             <select id="input-class-semester" onchange="atualizarPreviewTurmaAutomatica()">
+              <option value="2023.1">2023/1</option><option value="2023.2">2023/2</option>
+              <option value="2024.1">2024/1</option><option value="2024.2">2024/2</option>
+              <option value="2025.1">2025/1</option><option value="2025.2">2025/2</option>
               <option value="2026.1" selected>2026/1</option><option value="2026.2">2026/2</option>
               <option value="2027.1">2027/1</option><option value="2027.2">2027/2</option>
             </select>
@@ -807,16 +785,16 @@ button:hover {
         </div>
         <div class="grid-2">
           <div class="form-group">
-            <label>Código Gerado:</label>
-            <input type="text" id="input-class-code-auto" readonly style="background-color: var(--bg-color); font-weight: bold;">
+            <label>Código Gerado Automaticamente:</label>
+            <input type="text" id="input-class-code-auto" readonly style="background-color: var(--bg-color); font-weight: bold; color: var(--secondary-color);">
           </div>
           <div class="form-group">
-            <label>Nome Gerado:</label>
+            <label>Nome Gerado Automaticamente:</label>
             <input type="text" id="input-class-name-auto" readonly style="background-color: var(--bg-color); font-weight: bold;">
           </div>
         </div>
-        <button style="border-radius: 20px; width: 100%;" onclick="addClass()">Cadastrar Turma na Nuvem</button>
-        <ul class="data-list" id="class-list" style="margin-top: 20px;"></ul>
+        <button style="border-radius: 20px;" onclick="addClass()">Cadastrar Turma na Nuvem</button>
+        <ul class="data-list" id="class-list" style="margin-top: 25px;"></ul>
       </div>
 
       <!-- SUBABA 4: PROFESSORES -->
@@ -829,92 +807,138 @@ button:hover {
         <div class="grid-2">
           <div class="form-group">
             <label>Formação:</label>
-            <input type="text" id="input-teacher-formation" placeholder="Ex: Pós-Graduado">
+            <input type="text" id="input-teacher-formation" placeholder="Ex: Bacharel em Direito / Pós-Graduado">
           </div>
           <div class="form-group">
-            <label>Conselho:</label>
-            <input type="text" id="input-teacher-council" placeholder="Ex: OAB/PA">
+            <label>Número de Conselho de Classe:</label>
+            <input type="text" id="input-teacher-council" placeholder="Ex: OAB/PA 00.000">
           </div>
         </div>
-        <button style="border-radius: 20px; width: 100%;" onclick="saveTeacher()">Cadastrar Professor</button>
-        <h4 style="margin-top:20px;">Professores:</h4>
+        <button style="border-radius: 20px;" onclick="saveTeacher()">Cadastrar Professor</button>
+        <h4 style="margin-top:25px;">Professores Cadastrados:</h4>
         <ul class="data-list" id="teachers-list"></ul>
       </div>
 
       <!-- SUBABA 5: MODELOS & CONTRATOS -->
       <div id="subtab-templates" class="subtab-content">
-        <h3 class="section-title">Modelos de Contratos e Declarações</h3>
+        <h3 class="section-title">Modelos de Declarações e Contratos por Curso</h3>
         <div class="form-group">
-          <label>Curso:</label>
+          <label>Selecione o Curso para configurar o Contrato:</label>
           <select id="template-course-select" onchange="loadCourseTemplate()"></select>
         </div>
         <div class="form-group">
-          <label>Contrato:</label>
-          <textarea id="input-contract-text" rows="5" placeholder="Cláusulas..."></textarea>
-          <div style="display: flex; gap: 5px; margin-top: 5px; flex-wrap: wrap;">
-            <button type="button" class="tag-insert-btn" onclick="inserirTagNoCampo('input-contract-text', '{{nome}}')">+ Nome</button>
-            <button type="button" class="tag-insert-btn" onclick="inserirTagNoCampo('input-contract-text', '{{cpf}}')">+ CPF</button>
-            <button type="button" class="tag-insert-btn" onclick="inserirTagNoCampo('input-contract-text', '{{curso}}')">+ Curso</button>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+            <label style="margin-bottom:0;">Texto do Contrato de Prestação de Serviços:</label>
+            <div style="display: flex; gap: 5px;">
+              <button type="button" class="tag-insert-btn" onclick="inserirTagNoCampo('input-contract-text', '{{nome}}')">+ Nome</button>
+              <button type="button" class="tag-insert-btn" onclick="inserirTagNoCampo('input-contract-text', '{{cpf}}')">+ CPF</button>
+              <button type="button" class="tag-insert-btn" onclick="inserirTagNoCampo('input-contract-text', '{{rg}}')">+ RG</button>
+              <button type="button" class="tag-insert-btn" onclick="inserirTagNoCampo('input-contract-text', '{{curso}}')">+ Curso</button>
+              <button type="button" class="tag-insert-btn" onclick="inserirTagNoCampo('input-contract-text', '{{turma}}')">+ Turma</button>
+            </div>
           </div>
+          <textarea id="input-contract-text" rows="7" placeholder="Digite as cláusulas do contrato..."></textarea>
         </div>
         <div class="form-group">
-          <label>Declaração:</label>
-          <textarea id="input-decl-text" rows="4" placeholder="Declaração..."></textarea>
-          <div style="display: flex; gap: 5px; margin-top: 5px; flex-wrap: wrap;">
-            <button type="button" class="tag-insert-btn" onclick="inserirTagNoCampo('input-decl-text', '{{nome}}')">+ Nome</button>
-            <button type="button" class="tag-insert-btn" onclick="inserirTagNoCampo('input-decl-text', '{{cpf}}')">+ CPF</button>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+            <label style="margin-bottom:0;">Texto da Declaração de Matrícula:</label>
+            <div style="display: flex; gap: 5px;">
+              <button type="button" class="tag-insert-btn" onclick="inserirTagNoCampo('input-decl-text', '{{nome}}')">+ Nome</button>
+              <button type="button" class="tag-insert-btn" onclick="inserirTagNoCampo('input-decl-text', '{{cpf}}')">+ CPF</button>
+              <button type="button" class="tag-insert-btn" onclick="inserirTagNoCampo('input-decl-text', '{{curso}}')">+ Curso</button>
+            </div>
           </div>
+          <textarea id="input-decl-text" rows="5" placeholder="Declaramos para os devidos fins..."></textarea>
         </div>
-        <button style="border-radius: 20px; background-color: #2f855a; width: 100%;" onclick="saveCourseTemplates()">Salvar Modelos</button>
+        <button style="border-radius: 20px; background-color: #2f855a;" onclick="saveCourseTemplates()">Salvar Modelos na Nuvem</button>
       </div>
 
       <!-- SUBABA 6: CONFIGURAÇÃO FINANCEIRA & ASAAS -->
       <div id="subtab-fin-config" class="subtab-content">
-        <h3 class="section-title">Configuração Asaas API</h3>
+        <h3 class="section-title">Configuração de Gateway (Asaas API)</h3>
+        <p style="font-size: 0.85rem; color: #718096; margin-top: -8px;">Configure suas credenciais da API Asaas para gerar boletos e cobranças automáticas para os alunos.</p>
         <div class="grid-2">
           <div class="form-group">
-            <label>Chave de API (Token):</label>
+            <label>Chave de API do Asaas (Access Token):</label>
             <input type="password" id="asaas-api-key" placeholder="$aact_...">
           </div>
           <div class="form-group">
-            <label>Ambiente:</label>
+            <label>Ambiente de Operação:</label>
             <select id="asaas-env">
-              <option value="sandbox">Sandbox (Testes)</option>
-              <option value="production">Produção</option>
+              <option value="sandbox">Sandbox (Testes / Homologação)</option>
+              <option value="production">Produção (Oficial)</option>
             </select>
           </div>
         </div>
-        <button type="button" style="background-color: #3182ce; border-radius: 20px; width: 100%;" onclick="saveAsaasConfig()">Salvar Credenciais Asaas</button>
+        <button type="button" style="background-color: #3182ce; border-radius: 20px; padding: 8px 20px;" onclick="saveAsaasConfig()">Salvar Credenciais Asaas</button>
       </div>
 
       <!-- SUBABA 7: INSTITUIÇÃO -->
       <div id="subtab-institution" class="subtab-content">
-        <h3 class="section-title">Identidade Visual e Dados</h3>
-        <div class="grid-2">
-          <div class="form-group">
-            <label>Cor Principal:</label>
-            <input type="color" id="input-color-primary" value="#1a365d" style="height: 40px;">
+        <h3 class="section-title">Identidade Visual, Cores e Dados da Instituição (Salvo na Nuvem)</h3>
+        <div style="background-color: var(--bg-color); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 20px;">
+          <h4 style="margin-top: 0; color: var(--secondary-color);">Gerenciamento de Identidade Visual</h4>
+          <div class="grid-2">
+            <div class="form-group">
+              <label>Cor Principal:</label>
+              <input type="color" id="input-color-primary" value="#1a365d" style="height: 40px; cursor: pointer;">
+            </div>
+            <div class="form-group">
+              <label>Cor Secundária:</label>
+              <input type="color" id="input-color-secondary" value="#2b6cb0" style="height: 40px; cursor: pointer;">
+            </div>
+          </div>
+          <div style="display: flex; gap: 10px; margin-top: 5px; margin-bottom: 15px;">
+            <button type="button" style="background-color: #2f855a; border-radius: 20px; font-size: 0.85rem;" onclick="aplicarPaletaCores(true)">Aplicar & Salvar Cores</button>
+            <button type="button" class="btn-danger" style="border-radius: 20px; font-size: 0.85rem;" onclick="restaurarCorPadraoSistema()">Restaurar Cores Padrão</button>
+          </div>
+          <div class="grid-2">
+            <div class="form-group">
+              <label>Upload da Logomarca (Sistema & Login):</label>
+              <input type="file" id="input-logo-file" accept="image/*" onchange="handleLogoUpload(event)">
+            </div>
+            <div class="form-group">
+              <label>Pré-visualização:</label>
+              <div class="logo-preview-box" id="logo-preview"><span style="font-size: 0.8rem; color: #a0aec0;">Sem logo</span></div>
+              <button type="button" class="btn-danger" style="margin-top:5px; border-radius: 15px;" onclick="removeLogo()">Remover Logo</button>
+            </div>
           </div>
           <div class="form-group">
-            <label>Cor Secundária:</label>
-            <input type="color" id="input-color-secondary" value="#2b6cb0" style="height: 40px;">
+            <label>Texto Descritivo do Lado Direito do Login:</label>
+            <textarea id="input-login-desc" rows="3"></textarea>
           </div>
         </div>
-        <button type="button" style="background-color: #2f855a; border-radius: 20px; width: 100%; margin-bottom: 15px;" onclick="aplicarPaletaCores(true)">Aplicar & Salvar Cores</button>
-        <div class="form-group">
-          <label>Logomarca:</label>
-          <input type="file" id="input-logo-file" accept="image/*" onchange="handleLogoUpload(event)">
-          <div class="logo-preview-box" id="logo-preview"><span>Sem logo</span></div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Nome da Instituição:</label>
+            <input type="text" id="input-inst-name">
+          </div>
+          <div class="form-group">
+            <label>Razão Social:</label>
+            <input type="text" id="input-inst-razao">
+          </div>
         </div>
         <div class="grid-2">
-          <div class="form-group"><label>Nome:</label><input type="text" id="input-inst-name"></div>
-          <div class="form-group"><label>Razão Social:</label><input type="text" id="input-inst-razao"></div>
+          <div class="form-group">
+            <label>CNPJ:</label>
+            <input type="text" id="input-inst-cnpj">
+          </div>
+          <div class="form-group">
+            <label>E-mail Institucional:</label>
+            <input type="text" id="input-inst-email">
+          </div>
         </div>
         <div class="grid-2">
-          <div class="form-group"><label>CNPJ:</label><input type="text" id="input-inst-cnpj"></div>
-          <div class="form-group"><label>E-mail:</label><input type="text" id="input-inst-email"></div>
+          <div class="form-group">
+            <label>Telefone / WhatsApp:</label>
+            <input type="text" id="input-inst-tel">
+          </div>
+          <div class="form-group">
+            <label>Endereço Completo:</label>
+            <input type="text" id="input-inst-end">
+          </div>
         </div>
-        <button style="margin-top: 15px; border-radius: 20px; width: 100%;" onclick="salvarBrandingNaNuvem()">Salvar Configurações</button>
+        <button style="margin-top: 15px; border-radius: 20px;" onclick="salvarBrandingNaNuvem()">Salvar Configurações na Nuvem</button>
       </div>
     </div>
   </div>
@@ -922,93 +946,127 @@ button:hover {
   <!-- ABA 7: AUDITORIA & LOGS -->
   <div id="tab-audit" class="tab-content">
     <div class="card">
-      <h2>Auditoria e Rastreabilidade</h2>
+      <h2>Auditoria e Rastreabilidade do Sistema</h2>
+      <p style="font-size: 0.85rem; color: #718096; margin-top: -8px;">Acompanhe em tempo real quem executou cada ação e em qual módulo do sistema.</p>
       <div style="display: flex; justify-content: flex-end; margin-bottom: 15px;">
-        <button type="button" style="background-color: #e53e3e; border-radius: 20px; font-size: 0.8rem;" onclick="limparLogsAuditoria()">Limpar Logs</button>
+        <button type="button" style="background-color: #e53e3e; border-radius: 20px; font-size: 0.8rem;" onclick="limparLogsAuditoria()">Limpar Registros de Logs</button>
       </div>
-      <div style="overflow-x: auto;">
-        <table style="width: 100%; border-collapse: collapse; min-width: 500px;">
-          <thead>
-            <tr style="border-bottom: 2px solid var(--border-color); text-align: left;">
-              <th style="padding: 8px; font-size: 0.8rem;">Data / Hora</th>
-              <th style="padding: 8px; font-size: 0.8rem;">Usuário</th>
-              <th style="padding: 8px; font-size: 0.8rem;">Módulo</th>
-              <th style="padding: 8px; font-size: 0.8rem;">Ação</th>
-            </tr>
-          </thead>
-          <tbody id="tabela-logs-auditoria"></tbody>
-        </table>
-      </div>
+      <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+          <tr style="border-bottom: 2px solid var(--border-color); text-align: left;">
+            <th style="padding: 10px; font-size: 0.85rem;">Data / Hora</th>
+            <th style="padding: 10px; font-size: 0.85rem;">Usuário Responsável</th>
+            <th style="padding: 10px; font-size: 0.85rem;">Módulo / Sistema</th>
+            <th style="padding: 10px; font-size: 0.85rem;">Ação Executada</th>
+          </tr>
+        </thead>
+        <tbody id="tabela-logs-auditoria"></tbody>
+      </table>
     </div>
   </div>
 </div>
 
-<!-- RODAPÉ INTERNO -->
+<!-- RODAPÉ INTERNO DO SISTEMA -->
 <footer class="system-footer">
-  <span>SE7 Gestão Educacional.</span>
-  <span>Desenvolvido por <strong>JS & SS Serviços Educacionais</strong> &bull; v1.0.1</span>
+  <span>SE7 Gestão Educacional – Todos os direitos reservados.</span>
+  <span>Desenvolvido por <strong>JS & SS Serviços Educacionais e Cia Ltda</strong> &bull; Versão 1.0.1 Cloud</span>
 </footer>
 
 <!-- MODAL DE NOVA MATRÍCULA -->
 <div id="new-student-modal" class="modal-overlay">
-  <div class="modal-card">
-    <button type="button" class="modal-close-btn" onclick="closeNewStudentModal()">&times;</button>
+  <div class="modal-card" id="new-student-modal-card">
+    <button type="button" class="modal-close-btn" onclick="closeNewStudentModal()" title="Fechar">&times;</button>
     <h2>Nova Matrícula</h2>
-    <form id="formFichaMatricula">
-      <h4 style="color: var(--secondary-color); margin: 15px 0 10px 0; font-size: 0.95rem;">1. Dados do Aluno</h4>
-      <div class="form-group">
-        <label>Nome Completo:</label>
-        <input type="text" id="nomeAluno" required>
-      </div>
-      <div class="grid-2">
-        <div class="form-group"><label>Nascimento:</label><input type="date" id="dataNascimento" required></div>
-        <div class="form-group">
-          <label>Sexo:</label>
-          <select id="sexoAluno">
-            <option value="">Selecione...</option>
-            <option value="Masculino">Masculino</option>
-            <option value="Feminino">Feminino</option>
-          </select>
+    <div class="content-section" style="background: #ffffff; padding: 15px 0; border-radius: 8px;">
+      <form id="formFichaMatricula">
+        <h4 style="color: #495057; margin-bottom: 15px; font-size: 1rem;">1. Dados Cadastrais</h4>
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333;">Nome Completo do Aluno</label>
+            <input type="text" id="nomeAluno" class="form-control" style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 4px; box-sizing: border-box;" required>
         </div>
-      </div>
-      <div class="grid-2">
-        <div class="form-group"><label>WhatsApp:</label><input type="text" id="whatsappAluno" placeholder="(91) 9..." required></div>
-        <div class="form-group"><label>E-mail:</label><input type="email" id="emailAluno" required></div>
-      </div>
-      <div class="grid-2">
-        <div class="form-group"><label>RG:</label><input type="text" id="rgAluno" required></div>
-        <div class="form-group"><label>CPF:</label><input type="text" id="cpfAluno" placeholder="000.000.000-00" required></div>
-      </div>
+        <div style="display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 200px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333;">Data de Nascimento</label>
+                <input type="date" id="dataNascimento" class="form-control" style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 4px; box-sizing: border-box;" required>
+            </div>
+            <div style="flex: 1; min-width: 200px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333;">Sexo</label>
+                <select id="sexoAluno" class="form-control" style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 4px; background: #fff; box-sizing: border-box;">
+                    <option value="">Selecione...</option>
+                    <option value="Masculino">Masculino</option>
+                    <option value="Feminino">Feminino</option>
+                </select>
+            </div>
+        </div>
+        <div style="display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 200px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333;">Telefone / WhatsApp</label>
+                <input type="text" id="whatsappAluno" placeholder="(91) 9XXXX-XXXX" class="form-control" style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 4px; box-sizing: border-box;" required>
+            </div>
+            <div style="flex: 1; min-width: 200px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333;">E-mail</label>
+                <input type="email" id="emailAluno" class="form-control" style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 4px; box-sizing: border-box;" required>
+            </div>
+        </div>
+        <div style="display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 200px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333;">RG</label>
+                <input type="text" id="rgAluno" class="form-control" style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 4px; box-sizing: border-box;" required>
+            </div>
+            <div style="flex: 1; min-width: 200px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333;">CPF</label>
+                <input type="text" id="cpfAluno" placeholder="000.000.000-00" class="form-control" style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 4px; box-sizing: border-box;" required>
+            </div>
+        </div>
 
-      <h4 style="color: var(--secondary-color); margin: 20px 0 10px 0; font-size: 0.95rem;">2. Endereço (CEP)</h4>
-      <div class="grid-2">
-        <div class="form-group"><label>CEP:</label><input type="text" id="cepAluno" placeholder="00000-000" maxlength="9" onblur="buscarCepAluno(this.value)" required></div>
-        <div class="form-group"><label>Endereço:</label><input type="text" id="enderecoAluno" required></div>
-      </div>
-      <div class="grid-2">
-        <div class="form-group"><label>Número:</label><input type="text" id="numeroAluno" required></div>
-        <div class="form-group"><label>Bairro:</label><input type="text" id="bairroAluno" required></div>
-      </div>
-      <div class="grid-2">
-        <div class="form-group"><label>Cidade:</label><input type="text" id="cidadeAluno" required></div>
-        <div class="form-group"><label>UF:</label><input type="text" id="estadoAluno" maxlength="2" required></div>
-      </div>
-    </form>
+        <h4 style="color: #495057; margin: 20px 0 15px 0; font-size: 1rem; border-top: 1px solid #edf2f7; padding-top: 15px;">2. Endereço (Busca por CEP)</h4>
+        <div style="display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 150px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333;">CEP</label>
+                <input type="text" id="cepAluno" placeholder="00000-000" maxlength="9" onblur="buscarCepAluno(this.value)" class="form-control" style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 4px; box-sizing: border-box;" required>
+            </div>
+            <div style="flex: 3; min-width: 250px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333;">Logradouro / Endereço</label>
+                <input type="text" id="enderecoAluno" class="form-control" style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 4px; box-sizing: border-box;" required>
+            </div>
+        </div>
+        <div style="display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 120px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333;">Número</label>
+                <input type="text" id="numeroAluno" placeholder="Ex: 123" class="form-control" style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 4px; box-sizing: border-box;" required>
+            </div>
+            <div style="flex: 2; min-width: 200px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333;">Bairro</label>
+                <input type="text" id="bairroAluno" class="form-control" style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 4px; box-sizing: border-box;" required>
+            </div>
+        </div>
+        <div style="display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap;">
+            <div style="flex: 2; min-width: 200px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333;">Cidade</label>
+                <input type="text" id="cidadeAluno" class="form-control" style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 4px; box-sizing: border-box;" required>
+            </div>
+            <div style="flex: 1; min-width: 100px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333;">Estado (UF)</label>
+                <input type="text" id="estadoAluno" placeholder="PA" maxlength="2" class="form-control" style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 4px; box-sizing: border-box;" required>
+            </div>
+        </div>
+      </form>
+    </div>
 
-    <div class="grid-2" style="border-top: 1px solid var(--border-color); padding-top: 15px; margin-top: 15px;">
+    <div class="grid-2" style="border-top: 1px solid #f0f0f0; padding-top: 15px;">
       <div class="form-group">
-        <label>Curso:</label>
+        <label>Curso Escolhido:</label>
         <select id="input-student-course" onchange="filterTurmasByCourse()"></select>
       </div>
       <div class="form-group">
-        <label>Turma:</label>
+        <label>Vincular à Turma:</label>
         <select id="input-student-class"></select>
       </div>
     </div>
 
-    <div style="display: flex; gap: 10px; margin-top: 20px;">
-      <button type="button" style="background-color: #4a5568; flex: 1; border-radius: 20px;" onclick="closeNewStudentModal()">Cancelar</button>
-      <button type="button" style="background-color: #2f855a; flex: 1; border-radius: 20px;" onclick="addStudent()">Efetuar Matrícula</button>
+    <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+      <button type="button" style="width: auto; background-color: #4a5568; padding: 8px 16px; border-radius: 20px;" onclick="closeNewStudentModal()">Cancelar</button>
+      <button type="button" style="width: auto; background-color: #2f855a; padding: 8px 16px; border-radius: 20px;" onclick="addStudent()">Efetuar Matrícula e Emitir Contrato</button>
     </div>
   </div>
 </div>
@@ -1016,31 +1074,46 @@ button:hover {
 <!-- MODAL DE CONTROLE DE ACESSO -->
 <div id="access-control-modal" class="modal-overlay">
   <div class="modal-card">
-    <button type="button" class="modal-close-btn" onclick="fecharModalControleAcesso()">&times;</button>
-    <h2>Controle de Acesso</h2>
-    <div style="background-color: var(--bg-color); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 15px;">
-      <h4 style="margin-top: 0; color: var(--secondary-color); font-size: 0.95rem;">Novo Usuário:</h4>
-      <div class="form-group"><label>Nome:</label><input type="text" id="new-user-name"></div>
-      <div class="form-group"><label>E-mail / Login:</label><input type="text" id="new-user-email"></div>
+    <button type="button" class="modal-close-btn" onclick="fecharModalControleAcesso()" title="Fechar">&times;</button>
+    <h2>Controle de Acesso de Usuários</h2>
+    <p style="font-size: 0.85rem; color: #718096; margin-top: -8px;">Cadastre quem poderá acessar o sistema e defina os perfis.</p>
+    <div style="background-color: var(--bg-color); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 20px;">
+      <h4 style="margin-top: 0; color: var(--secondary-color);">Adicionar Novo Usuário:</h4>
       <div class="grid-2">
-        <div class="form-group"><label>Senha:</label><input type="password" id="new-user-pass"></div>
         <div class="form-group">
-          <label>Perfil:</label>
+          <label>Nome do Usuário:</label>
+          <input type="text" id="new-user-name" placeholder="Ex: João da Silva">
+        </div>
+        <div class="form-group">
+          <label>E-mail / Login:</label>
+          <input type="text" id="new-user-email" placeholder="ex: joao@admin.com">
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="form-group">
+          <label>Senha:</label>
+          <input type="password" id="new-user-pass" placeholder="........">
+        </div>
+        <div class="form-group">
+          <label>Perfil / Permissão:</label>
           <select id="new-user-perfil">
-            <option value="master">Master</option>
+            <option value="master">Master (Acesso Total)</option>
             <option value="secretaria">Secretaria</option>
             <option value="professor">Professor</option>
           </select>
         </div>
       </div>
-      <button type="button" style="border-radius: 20px; width: 100%;" onclick="cadastrarNovoUsuarioSistema()">Cadastrar</button>
+      <button type="button" style="border-radius: 20px;" onclick="cadastrarNovoUsuarioSistema()">Cadastrar Usuário</button>
     </div>
-    <h4>Usuários:</h4>
+    <h4 style="margin-top: 15px;">Usuários Cadastrados no Sistema:</h4>
     <ul class="data-list" id="system-users-list"></ul>
   </div>
 </div>
 
 <script>
+  // ==========================================
+  // CONFIGURAÇÃO DO FIREBASE
+  // ==========================================
   const firebaseConfig = {
     apiKey: "AIzaSyBeJ-fqzwiQt0PZEKQ6e8zAPSuh7WRuaHo",
     authDomain: "sistema-escolar-nuvem.firebaseapp.com",
@@ -1053,7 +1126,9 @@ button:hover {
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 
-  (function(){ emailjs.init("SUA_PUBLIC_KEY"); })();
+  (function(){
+    emailjs.init("SUA_PUBLIC_KEY"); 
+  })();
 
   document.getElementById('attendance-date').valueAsDate = new Date();
   document.getElementById('cancel-date').valueAsDate = new Date();
@@ -1069,39 +1144,114 @@ button:hover {
     { email: "professor@admin.com", pass: "123456", perfil: "professor", nome: "Professor Exemplo" }
   ];
 
+  // ==========================================
+  // SERVIÇO DE INTEGRAÇÃO COM ASAAS (CORRIGIDO E OTIMIZADO)
+  // ==========================================
   class AsaasIntegrationService {
     constructor() {
       const config = JSON.parse(localStorage.getItem('app_asaas_config')) || { apiKey: '', env: 'sandbox' };
       this.apiKey = config.apiKey ? config.apiKey.trim() : '';
       this.environment = config.env || 'sandbox';
-      this.baseURL = this.environment === 'production' ? 'https://api.asaas.com/v3' : 'https://sandbox.asaas.com/api/v3';
+      // URL oficial v3 do Asaas para sandbox e produção
+      this.baseURL = this.environment === 'production'
+        ? 'https://api.asaas.com/v3'
+        : 'https://sandbox.asaas.com/api/v3';
     }
-    getHeaders() { return { 'Content-Type': 'application/json', 'access_token': this.apiKey }; }
+
+    getHeaders() {
+      return {
+        'Content-Type': 'application/json',
+        'access_token': this.apiKey
+      };
+    }
+
     async criarOuObterCliente(aluno) {
-      if (!this.apiKey) throw new Error("Chave Asaas não configurada.");
+      if (!this.apiKey) {
+        throw new Error("Chave de API do Asaas não configurada nas Configurações do Sistema.");
+      }
+      
       const cpfCnpjLimpo = aluno.cpf ? aluno.cpf.replace(/\D/g, '') : '';
-      const searchRes = await fetch(`${this.baseURL}/customers?cpfCnpj=${cpfCnpjLimpo}`, { method: 'GET', headers: this.getHeaders() });
-      const searchData = await searchRes.json();
-      if (searchData.data && searchData.data.length > 0) return searchData.data[0].id;
-      const createRes = await fetch(`${this.baseURL}/customers`, {
-        method: 'POST', headers: this.getHeaders(),
-        body: JSON.stringify({ name: aluno.fullname, email: aluno.email, cpfCnpj: cpfCnpjLimpo, phone: aluno.whatsapp ? aluno.whatsapp.replace(/\D/g, '') : '' })
-      });
-      const createData = await createRes.json();
-      if (!createRes.ok) throw new Error(createData.errors?.[0]?.description || 'Erro ao criar cliente');
-      return createData.id;
+      
+      try {
+        // Consulta se o cliente já existe pelo CPF/CNPJ
+        const searchRes = await fetch(`${this.baseURL}/customers?cpfCnpj=${cpfCnpjLimpo}`, {
+          method: 'GET',
+          headers: this.getHeaders()
+        });
+        
+        if (!searchRes.ok) {
+          throw new Error(`Erro na consulta ao Asaas (Status ${searchRes.status})`);
+        }
+
+        const searchData = await searchRes.json();
+
+        if (searchData.data && searchData.data.length > 0) {
+          return searchData.data[0].id;
+        }
+
+        // Caso não exista, cadastra novo cliente
+        const createRes = await fetch(`${this.baseURL}/customers`, {
+          method: 'POST',
+          headers: this.getHeaders(),
+          body: JSON.stringify({
+            name: aluno.fullname,
+            email: aluno.email,
+            cpfCnpj: cpfCnpjLimpo,
+            phone: aluno.whatsapp ? aluno.whatsapp.replace(/\D/g, '') : ''
+          })
+        });
+
+        const createData = await createRes.json();
+        if (!createRes.ok) {
+          const errorMsg = createData.errors?.[0]?.description || 'Erro ao criar cliente no Asaas';
+          throw new Error(errorMsg);
+        }
+        return createData.id;
+      } catch (error) {
+        console.error("Erro Asaas (Cliente):", error);
+        throw error;
+      }
     }
+
     async criarCobrancaBoleto(customerId, dadosCobranca) {
-      const res = await fetch(`${this.baseURL}/payments`, {
-        method: 'POST', headers: this.getHeaders(),
-        body: JSON.stringify({ customer: customerId, billingType: 'BOLETO', value: parseFloat(dadosCobranca.valor), dueDate: dadosCobranca.vencimento, description: dadosCobranca.descricao, externalReference: dadosCobranca.referencia })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.errors?.[0]?.description || 'Erro ao gerar cobrança');
-      return { paymentId: data.id, invoiceUrl: data.invoiceUrl, bankSlipUrl: data.bankSlipUrl };
+      try {
+        const payload = {
+          customer: customerId,
+          billingType: 'BOLETO',
+          value: parseFloat(dadosCobranca.valor),
+          dueDate: dadosCobranca.vencimento, // Formato YYYY-MM-DD
+          description: dadosCobranca.descricao || 'Taxa de Matrícula / Mensalidade - SE7',
+          externalReference: dadosCobranca.referencia || `SE7_${Date.now()}`
+        };
+
+        const res = await fetch(`${this.baseURL}/payments`, {
+          method: 'POST',
+          headers: this.getHeaders(),
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          const errorMsg = data.errors?.[0]?.description || 'Erro ao gerar cobrança no Asaas';
+          throw new Error(errorMsg);
+        }
+
+        return {
+          paymentId: data.id,
+          invoiceUrl: data.invoiceUrl,
+          bankSlipUrl: data.bankSlipUrl,
+          identificationField: data.identificationField
+        };
+      } catch (error) {
+        console.error("Erro Asaas (Cobrança):", error);
+        throw error;
+      }
     }
   }
 
+  // ==========================================
+  // RELÓGIO DIGITAL AO VIVO
+  // ==========================================
   function iniciarRelogioAoVivo() {
     const relogioEl = document.getElementById('header-live-clock');
     if (!relogioEl) return;
@@ -1115,7 +1265,9 @@ button:hover {
     setInterval(atualizarHora, 1000);
   }
 
-  let tempoInatividadeMinutos = 10, temporizadorInatividade;
+  // CONTROLE DE INATIVIDADE
+  let tempoInatividadeMinutos = 10;
+  let temporizadorInatividade;
   function reiniciarTemporizadorInatividade() {
     clearTimeout(temporizadorInatividade);
     if (!sessionStorage.getItem('usuario_logado')) return;
@@ -1123,36 +1275,49 @@ button:hover {
   }
   function bloquearSessaoPorInatividade() {
     if (!sessionStorage.getItem('usuario_logado')) return;
-    registrarLogAuditoria("Sessão bloqueada por inatividade", "Segurança");
+    registrarLogAuditoria("Sessão bloqueada automaticamente por 10 minutos de inatividade", "Segurança");
     sessionStorage.removeItem('usuario_logado');
     document.getElementById('login-modal').style.display = 'flex';
   }
-  ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(e => window.addEventListener(e, reiniciarTemporizadorInatividade));
+  ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(evento => {
+    window.addEventListener(evento, reiniciarTemporizadorInatividade);
+  });
 
-  function registrarLogAuditoria(acao, modulo) {
-    const usuarioSessao = JSON.parse(sessionStorage.getItem('usuario_logado')) || { nome: "Anônimo" };
+  function registrarLogAuditoria(acao, moduloDoSistema) {
+    const usuarioSessao = JSON.parse(sessionStorage.getItem('usuario_logado')) || { nome: "Sistema / Anônimo" };
     const logs = JSON.parse(localStorage.getItem('se7_sistema_logs')) || [];
-    logs.unshift({ dataHora: new Date().toLocaleString('pt-BR'), usuario: usuarioSessao.nome, perfil: usuarioSessao.perfil ? usuarioSessao.perfil.toUpperCase() : 'GERAL', modulo, acao });
+    logs.unshift({
+      dataHora: new Date().toLocaleString('pt-BR'),
+      usuario: usuarioSessao.nome,
+      perfil: usuarioSessao.perfil ? usuarioSessao.perfil.toUpperCase() : 'GERAL',
+      modulo: moduloDoSistema,
+      acao: acao
+    });
     localStorage.setItem('se7_sistema_logs', JSON.stringify(logs));
     renderizarLogsAuditoria();
   }
 
-  function enviarNotificacaoEmail(dest, assunto, msg) {
-    emailjs.send('service_default', 'template_default', { to_email: dest, subject: assunto, message: msg }).catch(err => console.error(err));
+  function enviarNotificacaoEmail(destinatarioEmail, assunto, mensagemTexto) {
+    emailjs.send('service_default', 'template_default', { to_email: destinatarioEmail, subject: assunto, message: mensagemTexto })
+      .catch(err => console.error('Erro ao enviar e-mail:', err));
   }
 
   function renderizarLogsAuditoria() {
     const tbody = document.getElementById('tabela-logs-auditoria');
     if (!tbody) return;
     const logs = JSON.parse(localStorage.getItem('se7_sistema_logs')) || [];
-    tbody.innerHTML = logs.length === 0 ? `<tr><td colspan="4" style="text-align: center; color: #a0aec0; padding: 15px;">Nenhum registro.</td></tr>` : '';
+    tbody.innerHTML = logs.length === 0 ? `<tr><td colspan="4" style="text-align: center; color: #a0aec0; padding: 15px;">Nenhum registro encontrado.</td></tr>` : '';
     logs.forEach(l => {
-      tbody.innerHTML += `<tr style="border-bottom: 1px solid var(--border-color);"><td style="padding: 8px; font-size: 0.8rem;">${l.dataHora}</td><td style="padding: 8px; font-size: 0.8rem;"><strong>${l.usuario}</strong></td><td style="padding: 8px; font-size: 0.8rem;">${l.modulo}</td><td style="padding: 8px; font-size: 0.8rem;">${l.acao}</td></tr>`;
+      tbody.innerHTML += `<tr style="border-bottom: 1px solid var(--border-color);"><td style="padding: 10px; font-size: 0.85rem;">${l.dataHora}</td><td style="padding: 10px; font-size: 0.85rem;"><strong>${l.usuario}</strong> <small style="color:var(--secondary-color);">(${l.perfil})</small></td><td style="padding: 10px; font-size: 0.85rem;"><span style="background: rgba(43, 108, 176, 0.1); color: var(--secondary-color); padding: 2px 6px; border-radius: 4px; font-weight: 600;">${l.modulo}</span></td><td style="padding: 10px; font-size: 0.85rem;">${l.acao}</td></tr>`;
     });
   }
 
   function limparLogsAuditoria() {
-    if (confirm("Deseja limpar os logs?")) { localStorage.removeItem('se7_sistema_logs'); renderizarLogsAuditoria(); alert("Limpo!"); }
+    if (confirm("Deseja limpar todos os logs de auditoria?")) {
+      localStorage.removeItem('se7_sistema_logs');
+      renderizarLogsAuditoria();
+      alert("Logs limpos!");
+    }
   }
 
   function fazerLogin() {
@@ -1166,7 +1331,8 @@ button:hover {
     aplicarPermissoesPorPerfil(userFound.perfil);
     atualizarDisplayUsuarioLogado();
     reiniciarTemporizadorInatividade();
-    registrarLogAuditoria("Login efetuado", "Autenticação");
+    registrarLogAuditoria("Efetuou login no sistema", "Autenticação");
+    alert(`Bem-vindo(a), ${userFound.nome}!`);
   }
 
   function atualizarDisplayUsuarioLogado() {
@@ -1189,11 +1355,13 @@ button:hover {
     if (idx === -1) return alert("E-mail não encontrado!");
     dbUsers[idx].pass = newPassInput;
     localStorage.setItem('app_users_system', JSON.stringify(dbUsers));
-    alert("Senha alterada!");
+    registrarLogAuditoria(`Redefiniu senha para ${emailInput}`, "Segurança");
+    alert("Senha alterada com sucesso!");
     alternarTelaRecuperacao(false);
   }
 
   function fazerLogout() {
+    registrarLogAuditoria("Encerrou sessão no sistema", "Autenticação");
     sessionStorage.removeItem('usuario_logado');
     location.reload();
   }
@@ -1272,7 +1440,8 @@ button:hover {
     dbUsers.push({ nome, email, pass, perfil });
     localStorage.setItem('app_users_system', JSON.stringify(dbUsers));
     renderizarUsuariosSistema();
-    alert("Usuário cadastrado!");
+    registrarLogAuditoria(`Cadastrou usuário: ${nome}`, "Controle de Acesso");
+    alert("Usuário cadastrado com sucesso!");
   }
   function renderizarUsuariosSistema() {
     const list = document.getElementById('system-users-list');
@@ -1280,7 +1449,7 @@ button:hover {
     list.innerHTML = '';
     let dbUsers = JSON.parse(localStorage.getItem('app_users_system')) || usuariosPadrao;
     dbUsers.forEach((u, index) => {
-      list.innerHTML += `<li class="data-item"><div><strong>${u.nome}</strong> (${u.email})<br><small style="color:var(--secondary-color);">${u.perfil.toUpperCase()}</small></div>${index >= 3 ? `<button class="btn-danger" onclick="removerUsuarioSistema('${u.email}')">Remover</button>` : ''}</li>`;
+      list.innerHTML += `<li class="data-item"><div><strong>${u.nome}</strong> (${u.email})<br><small style="color:var(--secondary-color);">Perfil: <b>${u.perfil.toUpperCase()}</b></small></div>${index >= 3 ? `<button class="btn-danger" onclick="removerUsuarioSistema('${u.email}')">Remover</button>` : '<small style="color:#a0aec0;">Padrão</small>'}</li>`;
     });
   }
   function removerUsuarioSistema(email) {
@@ -1288,7 +1457,8 @@ button:hover {
     dbUsers = dbUsers.filter(u => u.email !== email);
     localStorage.setItem('app_users_system', JSON.stringify(dbUsers));
     renderizarUsuariosSistema();
-    alert("Removido!");
+    registrarLogAuditoria(`Removeu usuário: ${email}`, "Controle de Acesso");
+    alert("Usuário removido!");
   }
 
   function openTab(evt, tabId) {
@@ -1324,6 +1494,9 @@ button:hover {
         document.getElementById('input-inst-razao').value = data.razao || '';
         document.getElementById('input-inst-cnpj').value = data.cnpj || '';
         document.getElementById('input-inst-email').value = data.email || '';
+        document.getElementById('input-inst-tel').value = data.tel || '';
+        document.getElementById('input-inst-end').value = data.end || '';
+        if (data.loginDesc) document.getElementById('input-login-desc').value = data.loginDesc;
         if (data.primaryColor) document.getElementById('input-color-primary').value = data.primaryColor;
         if (data.secondaryColor) document.getElementById('input-color-secondary').value = data.secondaryColor;
         aplicarPaletaCores(false, data.primaryColor || '#1a365d', data.secondaryColor || '#2b6cb0');
@@ -1368,12 +1541,20 @@ button:hover {
     const sColor = secondary || document.getElementById('input-color-secondary').value;
     document.documentElement.style.setProperty('--primary-color', pColor);
     document.documentElement.style.setProperty('--secondary-color', sColor);
-    if(showAlert) alert("Cores aplicadas!");
+    if(showAlert) alert("Paleta de cores aplicada!");
+  }
+
+  async function restaurarCorPadraoSistema() {
+    document.getElementById('input-color-primary').value = "#1a365d";
+    document.getElementById('input-color-secondary').value = "#2b6cb0";
+    aplicarPaletaCores(false, "#1a365d", "#2b6cb0");
+    await db.collection("config").doc("institution").set({ primaryColor: "#1a365d", secondaryColor: "#2b6cb0" }, { merge: true });
+    alert("Cores padrão restauradas!");
   }
 
   async function saveTeacher() {
     const fullname = document.getElementById('input-teacher-name').value.trim();
-    if (!fullname) return alert("Preencha o nome!");
+    if (!fullname) return alert("Preencha o nome do professor!");
     await db.collection("teachers").add({ fullname, formation: document.getElementById('input-teacher-formation').value.trim(), council: document.getElementById('input-teacher-council').value.trim() });
     document.getElementById('input-teacher-name').value = '';
     alert("Professor cadastrado!");
@@ -1383,14 +1564,14 @@ button:hover {
     const list = document.getElementById('teachers-list');
     if(list) {
       list.innerHTML = '';
-      teachers.forEach(t => list.innerHTML += `<li class="data-item"><div><strong>${t.fullname}</strong><br><small>${t.formation || ''}</small></div></li>`);
+      teachers.forEach(t => list.innerHTML += `<li class="data-item"><div><strong>${t.fullname}</strong><br><small>Formação: ${t.formation || 'N/I'}</small></div></li>`);
     }
   }
 
   async function saveCourse() {
     const name = document.getElementById('input-course-name').value.trim();
     const sigla = document.getElementById('input-course-sigla').value.trim().toUpperCase();
-    if (!name || !sigla) return alert("Preencha nome e sigla!");
+    if (!name || !sigla) return alert("Preencha o nome e a sigla!");
     await db.collection("courses").add({ name, sigla, eixo: document.getElementById('input-course-eixo').value.trim(), hours: document.getElementById('input-course-hours').value.trim(), conselho: document.getElementById('input-course-conselho').value.trim(), subjects: [], contractTemplate: "", declTemplate: "" });
     document.getElementById('input-course-name').value = '';
     document.getElementById('input-course-sigla').value = '';
@@ -1401,14 +1582,14 @@ button:hover {
     const list = document.getElementById('courses-list');
     if(list) {
       list.innerHTML = '';
-      courses.forEach(c => list.innerHTML += `<li class="data-item"><div><strong>${c.name}</strong> [<b>${c.sigla}</b>]</div></li>`);
+      courses.forEach(c => list.innerHTML += `<li class="data-item"><div><strong>${c.name}</strong> [Sigla: <b>${c.sigla}</b>]</div></li>`);
     }
   }
 
   async function addSubjectToCourse() {
     const courseId = document.getElementById('input-subject-course-select').value;
     const name = document.getElementById('input-subject-name').value.trim();
-    if (!courseId || !name) return alert("Preencha os campos!");
+    if (!courseId || !name) return alert("Preencha todos os campos!");
     const course = courses.find(c => c.id == courseId);
     if (course) {
       if (!course.subjects) course.subjects = [];
@@ -1423,7 +1604,9 @@ button:hover {
     const list = document.getElementById('subjects-management-list');
     if(list) {
       list.innerHTML = '';
-      courses.forEach(c => { if(c.subjects) c.subjects.forEach(s => list.innerHTML += `<li class="data-item"><div><strong>${c.name}</strong> - ${s.name}</div></li>`); });
+      courses.forEach(c => {
+        if(c.subjects) c.subjects.forEach(s => list.innerHTML += `<li class="data-item"><div><strong>${c.name}</strong> - ${s.name}</div></li>`);
+      });
     }
   }
 
@@ -1448,14 +1631,15 @@ button:hover {
     const name = document.getElementById('input-class-name-auto').value;
     if (!courseId) return alert("Selecione um curso!");
     await db.collection("classes").add({ courseId, semestre, code, name });
-    alert("Turma cadastrada!");
+    atualizarPreviewTurmaAutomatica();
+    alert("Turma cadastrada com sucesso!");
   }
 
   function renderClasses() {
     const list = document.getElementById('class-list');
     if(list) {
       list.innerHTML = '';
-      classes.forEach(c => list.innerHTML += `<li class="data-item"><div><strong>${c.name}</strong></div></li>`);
+      classes.forEach(c => list.innerHTML += `<li class="data-item"><div><strong>${c.name}</strong> (Código: ${c.code})</div></li>`);
     }
     atualizarPreviewTurmaAutomatica();
   }
@@ -1491,7 +1675,7 @@ button:hover {
     const select = document.getElementById('input-student-class');
     if(!select) return;
     select.innerHTML = '';
-    classes.filter(c => c.courseId == courseId).forEach(c => select.insertAdjacentHTML('beforeend', `<option value="${c.id}">${c.name}</option>`));
+    classes.filter(c => c.courseId == courseId).forEach(c => select.insertAdjacentHTML('beforeend', `<option value="${c.id}">${c.name} (${c.code})</option>`));
   }
 
   function filterTurmasByAttendanceCourse() {
@@ -1512,6 +1696,9 @@ button:hover {
     renderGradeSubjects();
   }
 
+  // ==========================================
+  // FUNÇÃO DE MATRÍCULA INTEGRADA COM ASAAS
+  // ==========================================
   async function addStudent() {
     const fullname = document.getElementById('nomeAluno').value.trim();
     const email = document.getElementById('emailAluno').value.trim();
@@ -1519,8 +1706,12 @@ button:hover {
     const courseId = document.getElementById('input-student-course').value;
     const classId = document.getElementById('input-student-class').value;
 
-    if (!fullname || !email || !cpf || !courseId || !classId) return alert("Preencha todos os campos!");
-    if (!validarCPF(cpf)) return alert("CPF inválido.");
+    if (!fullname || !email || !cpf || !courseId || !classId) {
+      return alert("Preencha todos os campos obrigatórios!");
+    }
+    if (!validarCPF(cpf)) {
+      return alert("CPF inválido. Verifique os dígitos informados.");
+    }
 
     const code = `MAT-${new Date().getFullYear()}-${Date.now().toString().slice(-5)}`;
     const studentData = {
@@ -1533,43 +1724,79 @@ button:hover {
       courseId, classId, status: "Ativo"
     };
 
+    // 1. Salva aluno no Firebase
     const docRef = await db.collection("students").add(studentData);
     closeNewStudentModal();
 
+    // 2. Tenta gerar automaticamente o boleto via Asaas se a chave estiver configurada
     let mensagemBoleto = "";
     try {
       const asaasService = new AsaasIntegrationService();
       if (asaasService.apiKey) {
         const customerId = await asaasService.criarOuObterCliente(studentData);
-        const dataVenc = new Date(); dataVenc.setDate(dataVenc.getDate() + 10);
+        
+        const dataVenc = new Date();
+        dataVenc.setDate(dataVenc.getDate() + 10);
         const dataVencStr = dataVenc.toISOString().slice(0, 10);
-        const cobranca = await asaasService.criarCobrancaBoleto(customerId, { valor: 150.00, vencimento: dataVencStr, descricao: `Matrícula - ${fullname}`, referencia: `MAT_${code}` });
 
-        await db.collection("financeLogs").add({ studentId: docRef.id, studentName: fullname, studentCode: code, description: "MATRÍCULA / ASAAS", amount: 150.00, date: new Date().toISOString().slice(0, 10), dueDate: dataVencStr, status: "PENDENTE", invoiceUrl: cobranca.invoiceUrl });
-        mensagemBoleto = `\nBoleto Asaas gerado!`;
+        const cobranca = await asaasService.criarCobrancaBoleto(customerId, {
+          valor: 150.00,
+          vencimento: dataVencStr,
+          descricao: `Taxa de Matrícula - Aluno: ${fullname}`,
+          referencia: `MAT_${code}`
+        });
+
+        await db.collection("financeLogs").add({
+          studentId: docRef.id,
+          studentName: fullname,
+          studentCode: code,
+          description: "MATRÍCULA / BOLETO ASAAS",
+          amount: 150.00,
+          date: new Date().toISOString().slice(0, 10),
+          dueDate: dataVencStr,
+          status: "PENDENTE",
+          invoiceUrl: cobranca.invoiceUrl,
+          bankSlipUrl: cobranca.bankSlipUrl,
+          paymentId: cobranca.paymentId
+        });
+
+        mensagemBoleto = `\n\nBoleto Asaas gerado com sucesso!\nLink Fatura: ${cobranca.invoiceUrl}`;
       }
-    } catch (err) { console.warn(err); }
+    } catch (err) {
+      console.warn("Matrícula efetuada, mas houve falha na geração do boleto Asaas:", err.message);
+      mensagemBoleto = `\n\n(Aviso: Matrícula salva, mas o boleto Asaas não foi gerado. Motivo: ${err.message})`;
+    }
 
     const targetCourse = courses.find(c => c.id == courseId);
     const targetClass = classes.find(c => c.id == classId);
     await emitirContratoMatriculaAutomatico(studentData, targetCourse, targetClass);
-    enviarNotificacaoEmail(email, "Confirmação de Matrícula", `Olá ${fullname}, matrícula efetuada! Código: ${code}`);
-    registrarLogAuditoria(`Matrícula para ${fullname}`, "Matrícula");
-    alert(`Matrícula efetuada! Código: ${code}${mensagemBoleto}`);
+
+    enviarNotificacaoEmail(email, "Confirmação de Matrícula - SE7", `Olá ${fullname},\n\nSua matrícula foi efetuada com sucesso!\nCódigo: ${code}${mensagemBoleto}`);
+    registrarLogAuditoria(`Efetivou matrícula para ${fullname} (${code})`, "Matrícula");
+
+    alert(`Matrícula efetuada com sucesso! Código: ${code}${mensagemBoleto}`);
   }
 
   async function emitirContratoMatriculaAutomatico(s, curso, turma) {
-    let textoBase = curso && curso.contractTemplate ? curso.contractTemplate : `Contrato: {{nome}}, CPF: {{cpf}}`;
-    textoBase = textoBase.replace(/{{nome}}/g, s.fullname).replace(/{{cpf}}/g, s.cpf).replace(/{{curso}}/g, curso ? curso.name : '').replace(/{{turma}}/g, turma ? turma.name : '');
+    let textoBase = curso && curso.contractTemplate ? curso.contractTemplate : `CONTRATO EDUCACIONAL\n\nContratante: {{nome}}, CPF: {{cpf}}\nCurso: {{curso}}\nTurma: {{turma}}`;
+    textoBase = textoBase.replace(/{{nome}}/g, s.fullname).replace(/{{cpf}}/g, s.cpf).replace(/{{rg}}/g, s.rg || '').replace(/{{curso}}/g, curso ? curso.name : '').replace(/{{turma}}/g, turma ? turma.name : '');
+
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     const docSnap = await db.collection("config").doc("institution").get();
     const branding = docSnap.exists ? docSnap.data() : {};
-    const hash = `SE7-${s.code}-${Date.now().toString(36).toUpperCase()}`;
-    const qrBase64 = await gerarQRCodeBase64(`Validação SE7 | Hash: ${hash}`);
-    doc.setFillColor(26, 54, 93); doc.rect(0, 0, 210, 30, "F");
-    doc.setTextColor("#ffffff"); doc.setFontSize(13); doc.text("CONTRATO DE PRESTAÇÃO DE SERVIÇOS", 105, 18, { align: "center" });
-    doc.setTextColor("#2d3748"); doc.setFontSize(10); doc.text(doc.splitTextToSize(textoBase, 180), 14, 45);
+    const hash = `SE7-DOC-${s.code}-${Date.now().toString(36).toUpperCase()}`;
+    const qrBase64 = await gerarQRCodeBase64(`Validação Contrato SE7 | Hash: ${hash}`);
+
+    doc.setFillColor(26, 54, 93);
+    doc.rect(0, 0, 210, 35, "F");
+    if (branding.logo) doc.addImage(branding.logo, 'PNG', 14, 5, 25, 25);
+    doc.setTextColor("#ffffff"); doc.setFontSize(14);
+    doc.text("CONTRATO DE PRESTAÇÃO DE SERVIÇOS", 105, 22, { align: "center" });
+    doc.setTextColor("#2d3748"); doc.setFontSize(10);
+    doc.text(branding.name || "SE7 Gestão Educacional", 14, 45);
+    doc.text(doc.splitTextToSize(textoBase, 180), 14, 58);
+    
     doc.addImage(qrBase64, 'PNG', 162, 248, 32, 32);
     doc.save(`Contrato_${s.code}.pdf`);
   }
@@ -1585,7 +1812,7 @@ button:hover {
     list.innerHTML = '';
     students.filter(s => s.status !== "Cancelado").forEach(s => {
       const cl = classes.find(c => c.id == s.classId);
-      list.innerHTML += `<li class="data-item"><div><strong>${s.fullname}</strong><br><small><b>${s.code}</b> | ${cl ? cl.name : ''}</small></div></li>`;
+      list.innerHTML += `<li class="data-item"><div><strong>${s.fullname}</strong><br><small>Matrícula: <b>${s.code}</b> | Turma: ${cl ? cl.name : 'N/I'}</small></div></li>`;
     });
   }
 
@@ -1594,8 +1821,8 @@ button:hover {
     const cancelledList = document.getElementById('cancelled-students-list');
     if(!select || !cancelledList) return;
     select.innerHTML = ''; cancelledList.innerHTML = '';
-    students.filter(s => s.status === "Ativo").forEach(s => select.insertAdjacentHTML('beforeend', `<option value="${s.id}">${s.fullname}</option>`));
-    students.filter(s => s.status === "Cancelado").forEach(s => cancelledList.innerHTML += `<li class="data-item"><div>${s.fullname} - Cancelado</div></li>`);
+    students.filter(s => s.status === "Ativo").forEach(s => select.insertAdjacentHTML('beforeend', `<option value="${s.id}">${s.fullname} (${s.code})</option>`));
+    students.filter(s => s.status === "Cancelado").forEach(s => cancelledList.innerHTML += `<li class="data-item"><div><strong>${s.fullname}</strong> - Cancelado</div></li>`);
   }
 
   async function processStudentCancellation() {
@@ -1604,7 +1831,8 @@ button:hover {
     const reason = document.getElementById('cancel-reason').value.trim();
     if (!studentId || !reason) return alert("Preencha todos os campos!");
     await db.collection("students").doc(studentId).update({ status: "Cancelado", cancelDate, cancelReason: reason });
-    alert("Cancelado!");
+    registrarLogAuditoria(`Cancelou matrícula do ID ${studentId}`, "Matrícula");
+    alert("Matrícula cancelada!");
   }
 
   function renderAttendanceList() {
@@ -1613,54 +1841,84 @@ button:hover {
     if(!list) return;
     list.innerHTML = '';
     students.filter(s => s.classId == classId && s.status === "Ativo").forEach(s => {
-      list.innerHTML += `<li class="data-item"><span>${s.fullname}</span><label><input type="radio" name="att_${s.id}" value="p" checked> Pres</label><label><input type="radio" name="att_${s.id}" value="f"> Falta</label></li>`;
+      list.innerHTML += `<li class="data-item"><span><strong>${s.fullname}</strong></span><label><input type="radio" name="att_${s.id}" value="p" checked> Presente</label><label><input type="radio" name="att_${s.id}" value="f"> Falta</label></li>`;
     });
   }
 
-  function saveAttendance() { alert("Chamada salva!"); }
-  function renderGradeSubjects() {}
-  function renderGradeList() {}
-  function saveGrades() { alert("Notas salvas!"); }
+  function saveAttendance() { registrarLogAuditoria("Salvou chamada", "Presença"); alert("Chamada salva!"); }
+  function renderGradeSubjects() { /* Mantido */ }
+  function renderGradeList() { /* Mantido */ }
+  function saveGrades() { registrarLogAuditoria("Salvou notas", "Notas"); alert("Notas salvas!"); }
 
   function renderFinanceStudentSelect() {
     const select = document.getElementById('fin-student-select');
     const logsList = document.getElementById('finance-logs-list');
     if(!select || !logsList) return;
     select.innerHTML = ''; logsList.innerHTML = '';
-    students.filter(s => s.status === "Ativo").forEach(s => select.insertAdjacentHTML('beforeend', `<option value="${s.id}">${s.fullname}</option>`));
+    students.filter(s => s.status === "Ativo").forEach(s => select.insertAdjacentHTML('beforeend', `<option value="${s.id}">${s.fullname} (${s.code})</option>`));
     financeLogs.forEach(log => {
-      logsList.innerHTML += `<li class="data-item"><div><strong>${log.studentName}</strong><br><small>${log.description} - R$ ${log.amount} | <b>${log.status}</b> ${log.invoiceUrl ? `| <a href="${log.invoiceUrl}" target="_blank">Boleto</a>` : ''}</small></div></li>`;
+      logsList.innerHTML += `<li class="data-item"><div><strong>${log.studentName}</strong> (${log.studentCode})<br><small>${log.description} - R$ ${log.amount} | Status: <b>${log.status}</b> ${log.invoiceUrl ? `| <a href="${log.invoiceUrl}" target="_blank" style="color:var(--secondary-color);">Abrir Boleto Asaas</a>` : ''}</small></div></li>`;
     });
   }
 
   async function registerStudentPayment(isManual = false) {
     const studentId = document.getElementById('fin-student-select').value;
     const student = students.find(s => s.id == studentId);
-    if (!student) return alert("Selecione aluno!");
+    if (!student) return alert("Selecione um aluno!");
     const valor = parseFloat(document.getElementById('fin-payment-value').value) || 150.00;
-    await db.collection("financeLogs").add({ studentName: student.fullname, studentCode: student.code, description: "MANUAL", amount: valor, date: new Date().toISOString().slice(0,10), status: "PAGO" });
-    alert("Registrado!");
+    const tipo = document.getElementById('fin-payment-type').value.toUpperCase();
+
+    await db.collection("financeLogs").add({
+      studentName: student.fullname, studentCode: student.code, description: tipo,
+      amount: valor, date: new Date().toISOString().slice(0,10), status: isManual ? "PAGO (MANUAL)" : "PENDENTE"
+    });
+    if (isManual) alert("Pagamento registrado manualmente!");
   }
 
   async function gerarCobrancaAsaasAPI() {
     const studentId = document.getElementById('fin-student-select').value;
     const student = students.find(s => s.id == studentId);
-    if (!student) return alert("Selecione aluno!");
+    if (!student) return alert("Selecione um aluno!");
+
     const valor = parseFloat(document.getElementById('fin-payment-value').value) || 150.00;
     const dueDate = document.getElementById('fin-payment-duedate').value;
+    const tipo = document.getElementById('fin-payment-type').value.toUpperCase();
+
     try {
       const asaasService = new AsaasIntegrationService();
       const customerId = await asaasService.criarOuObterCliente(student);
-      const cobranca = await asaasService.criarCobrancaBoleto(customerId, { valor, vencimento: dueDate, descricao: `Cobrança - ${student.fullname}`, referencia: `FIN_${Date.now()}` });
-      await db.collection("financeLogs").add({ studentId: student.id, studentName: student.fullname, studentCode: student.code, description: "ASAAS", amount: valor, date: new Date().toISOString().slice(0, 10), dueDate, status: "PENDENTE", invoiceUrl: cobranca.invoiceUrl });
-      alert(`Cobrança gerada!\nLink: ${cobranca.invoiceUrl}`);
-    } catch (err) { alert(`Erro Asaas: ${err.message}`); }
+      const cobranca = await asaasService.criarCobrancaBoleto(customerId, {
+        valor,
+        vencimento: dueDate,
+        descricao: `${tipo} - Aluno: ${student.fullname}`,
+        referencia: `FIN_${Date.now()}`
+      });
+
+      await db.collection("financeLogs").add({
+        studentId: student.id,
+        studentName: student.fullname,
+        studentCode: student.code,
+        description: tipo + " (ASAAS)",
+        amount: valor,
+        date: new Date().toISOString().slice(0, 10),
+        dueDate: dueDate,
+        status: "PENDENTE",
+        invoiceUrl: cobranca.invoiceUrl,
+        bankSlipUrl: cobranca.bankSlipUrl,
+        paymentId: cobranca.paymentId
+      });
+
+      registrarLogAuditoria(`Gerou cobrança Asaas de R$ ${valor} para ${student.fullname}`, "Financeiro / Asaas");
+      alert(`Cobrança gerada com sucesso via Asaas!\n\nLink da Fatura: ${cobranca.invoiceUrl}`);
+    } catch (err) {
+      alert(`Erro ao gerar cobrança no Asaas: ${err.message}`);
+    }
   }
 
   function renderReportClasses() {
     const el = document.getElementById('report-class-select');
     if(!el) return;
-    el.innerHTML = '<option value="">Turma...</option>';
+    el.innerHTML = '<option value="">Selecione a Turma...</option>';
     classes.forEach(c => el.insertAdjacentHTML('beforeend', `<option value="${c.id}">${c.name}</option>`));
   }
 
@@ -1670,26 +1928,44 @@ button:hover {
     studentSelect.innerHTML = '';
     if (!classId) { studentSelect.disabled = true; return; }
     studentSelect.disabled = false;
-    students.filter(s => s.classId == classId && s.status === "Ativo").forEach(s => studentSelect.insertAdjacentHTML('beforeend', `<option value="${s.code}">${s.fullname}</option>`));
+    students.filter(s => s.classId == classId && s.status === "Ativo").forEach(s => studentSelect.insertAdjacentHTML('beforeend', `<option value="${s.code}">${s.fullname} (${s.code})</option>`));
   }
 
   async function emitirDocumentoSelecionado() {
     const code = document.getElementById('report-student-select').value;
-    if (!code) return alert("Selecione aluno!");
+    if (!code) return alert("Selecione um aluno!");
     const s = students.find(st => st.code === code);
     const reportType = document.getElementById('report-type-select').value;
     const curso = courses.find(c => c.id == s.courseId) || {};
-    let textoBase = reportType === 'declaracao' ? (curso.declTemplate || "Declaração de Matrícula") : (curso.contractTemplate || "Contrato");
-    textoBase = textoBase.replace(/{{nome}}/g, s.fullname).replace(/{{cpf}}/g, s.cpf);
+    const turma = classes.find(c => c.id == s.classId) || {};
+
+    let textoBase = reportType === 'declaracao' ? (curso.declTemplate || "Declaramos que {{nome}} está matriculado...") : (curso.contractTemplate || "Contrato...");
+    textoBase = textoBase.replace(/{{nome}}/g, s.fullname).replace(/{{cpf}}/g, s.cpf).replace(/{{curso}}/g, curso.name || '').replace(/{{turma}}/g, turma.name || '');
+
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
-    doc.text(textoBase, 14, 20);
+    const docSnap = await db.collection("config").doc("institution").get();
+    const branding = docSnap.exists ? docSnap.data() : {};
+    const hash = `SE7-DOC-${s.code}-${Date.now().toString(36).toUpperCase()}`;
+    const qrBase64 = await gerarQRCodeBase64(`Validação Digital SE7 | Hash: ${hash}`);
+
+    doc.setFillColor(26, 54, 93);
+    doc.rect(0, 0, 210, 35, "F");
+    if (branding.logo) doc.addImage(branding.logo, 'PNG', 14, 5, 25, 25);
+    doc.setTextColor("#ffffff"); doc.setFontSize(15);
+    doc.text(reportType === 'declaracao' ? "DECLARAÇÃO DE MATRÍCULA" : "CONTRATO DE SERVIÇOS", 105, 22, { align: "center" });
+    doc.setTextColor("#2d3748"); doc.setFontSize(10);
+    doc.text(doc.splitTextToSize(textoBase, 180), 14, 60);
+    doc.addImage(qrBase64, 'PNG', 162, 248, 32, 32);
     doc.save(`${reportType}_${s.code}.pdf`);
   }
 
   function saveAsaasConfig() {
-    localStorage.setItem('app_asaas_config', JSON.stringify({ apiKey: document.getElementById('asaas-api-key').value.trim(), env: document.getElementById('asaas-env').value }));
-    alert("Salvo!");
+    const apiKey = document.getElementById('asaas-api-key').value.trim();
+    const env = document.getElementById('asaas-env').value;
+    localStorage.setItem('app_asaas_config', JSON.stringify({ apiKey, env }));
+    registrarLogAuditoria("Atualizou credenciais da API Asaas", "Configurações Financeiras");
+    alert("Credenciais do Asaas salvas com sucesso!");
   }
 
   function carregarConfiguracaoAsaasNaTela() {
@@ -1725,26 +2001,33 @@ button:hover {
     reader.readAsDataURL(file);
   }
 
+  function removeLogo() { currentLogoDataUrl = ""; updateLogoPreview(""); salvarBrandingNaNuvem(false); }
+
   function updateLogoPreview(src) {
     const previewBox = document.getElementById('logo-preview');
     const headerImg = document.getElementById('header-logo-img');
     const loginImg = document.getElementById('login-logo-img');
-    if(previewBox) previewBox.innerHTML = src ? `<img src="${src}" alt="Logo">` : '<span>Sem logo</span>';
+    if(previewBox) previewBox.innerHTML = src ? `<img src="${src}" alt="Logo">` : '<span style="font-size:0.8rem; color:#a0aec0;">Sem logo</span>';
     if(headerImg) { headerImg.src = src; headerImg.style.display = src ? 'block' : 'none'; }
     if(loginImg) { loginImg.src = src; loginImg.style.display = src ? 'block' : 'none'; }
   }
 
   async function salvarBrandingNaNuvem(showAlert = true) {
-    await db.collection("config").doc("institution").set({
+    const brandingData = {
       name: document.getElementById('input-inst-name').value.trim(),
       razao: document.getElementById('input-inst-razao').value.trim(),
       cnpj: document.getElementById('input-inst-cnpj').value.trim(),
       email: document.getElementById('input-inst-email').value.trim(),
+      tel: document.getElementById('input-inst-tel').value.trim(),
+      end: document.getElementById('input-inst-end').value.trim(),
       logo: currentLogoDataUrl,
       primaryColor: document.getElementById('input-color-primary').value,
-      secondaryColor: document.getElementById('input-color-secondary').value
-    }, { merge: true });
-    if(showAlert) alert("Salvo na nuvem!");
+      secondaryColor: document.getElementById('input-color-secondary').value,
+      loginDesc: document.getElementById('input-login-desc').value.trim()
+    };
+    await db.collection("config").doc("institution").set(brandingData, { merge: true });
+    aplicarPaletaCores(false, brandingData.primaryColor, brandingData.secondaryColor);
+    if(showAlert) alert("Configurações salvas na nuvem!");
   }
 
   function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
@@ -1754,7 +2037,7 @@ button:hover {
       const tempDiv = document.createElement('div');
       tempDiv.style.display = 'none';
       document.body.appendChild(tempDiv);
-      new QRCode(tempDiv, { text: texto, width: 128, height: 128 });
+      new QRCode(tempDiv, { text: texto, width: 128, height: 128, correctLevel: QRCode.CorrectLevel.H });
       setTimeout(() => {
         const img = tempDiv.querySelector('img') || tempDiv.querySelector('canvas');
         const base64 = img.tagName === 'CANVAS' ? img.toDataURL('image/png') : img.src;
