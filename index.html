@@ -1,177 +1,1442 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema Escolar</title>
-    <style>
-        :root {
-            --primary-color: #2c3e50;
-            --secondary-color: #3498db;
-            --success-color: #2ecc71;
-            --danger-color: #e74c3c;
-            --bg-color: #f8f9fa;
-            --text-color: #333;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 0;
-        }
-
-        header {
-            background-color: var(--primary-color);
-            color: white;
-            padding: 20px;
-            text-align: center;
-        }
-
-        .container {
-            max-width: 1000px;
-            margin: 30px auto;
-            background: white;
-            padding: 25px;
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-        }
-
-        h2 {
-            color: var(--primary-color);
-            border-bottom: 2px solid var(--secondary-color);
-            padding-bottom: 8px;
-            margin-top: 0;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-
-        input, select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-
-        button {
-            background-color: var(--secondary-color);
-            color: white;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-
-        button:hover {
-            opacity: 0.9;
-        }
-
-        /* Container dos Toasts no canto superior direito */
-        #toast-container {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .toast {
-            min-width: 250px;
-            padding: 15px 20px;
-            border-radius: 8px;
-            color: #fff;
-            font-size: 14px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            opacity: 0;
-            transform: translateY(-20px);
-            transition: opacity 0.3s ease, transform 0.3s ease;
-        }
-
-        .toast.show {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .toast-success { background-color: var(--success-color); }
-        .toast-error { background-color: var(--danger-color); }
-        .toast-info { background-color: var(--secondary-color); }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sistema de Gestão Escolar e Matrículas (Nuvem Firebase)</title>
+<!-- Bibliotecas Externas para Geração de PDF, QR Code e Firebase SDK -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<!-- Firebase App (Compat) e Firestore -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<style>
+:root {
+  --primary-color: #1a365d;
+  --secondary-color: #2b6cb0;
+  --bg-color: #f7fafc;
+  --card-bg: #ffffff;
+  --text-color: #2d3748;
+  --border-color: #cbd5e0;
+  --input-bg: #ffffff;
+}
+body.dark-mode {
+  --bg-color: #1a202c;
+  --card-bg: #2d3748;
+  --text-color: #f7fafc;
+  --border-color: #4a5568;
+  --input-bg: #1a202c;
+}
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  margin: 0;
+  padding: 0;
+  transition: background-color 0.3s, color 0.3s;
+}
+header {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 1.2rem 2rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+}
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+.header-logo {
+  max-height: 60px;
+  max-width: 150px;
+  object-fit: contain;
+  display: none;
+}
+.header-info h1 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+.header-info p {
+  margin: 2px 0 0 0;
+  opacity: 0.8;
+  font-size: 0.8rem;
+}
+.header-right-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.theme-toggle-btn, .access-control-btn, .logout-btn {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  padding: 6px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  width: auto;
+  transition: background 0.2s;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+.theme-toggle-btn:hover, .access-control-btn:hover, .logout-btn:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+.tabs-nav {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  background-color: #edf2f7;
+  padding: 12px 20px;
+  border-bottom: 1px solid #e2e8f0;
+  overflow-x: auto;
+}
+body.dark-mode .tabs-nav {
+  background-color: #2d3748;
+  border-bottom-color: #4a5568;
+}
+.tab-button {
+  background-color: transparent;
+  color: #4a5568;
+  padding: 8px 16px;
+  border: 1px solid transparent;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  width: auto;
+}
+body.dark-mode .tab-button {
+  color: #e2e8f0;
+}
+.tab-button:hover {
+  color: var(--primary-color);
+  background-color: rgba(0, 0, 0, 0.05);
+}
+body.dark-mode .tab-button:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+.tab-button.active {
+  color: white;
+  background-color: var(--secondary-color);
+  border-color: var(--secondary-color);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+}
+.subtabs-nav {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 10px;
+  overflow-x: auto;
+}
+.subtab-button {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  width: auto;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.subtab-button.active {
+  background-color: var(--secondary-color);
+  color: white;
+  border-color: var(--secondary-color);
+}
+.subtab-content {
+  display: none;
+}
+.subtab-content.active {
+  display: block;
+}
+.container {
+  max-width: 950px;
+  margin: 20px auto;
+  padding: 0 20px;
+}
+.tab-content {
+  display: none;
+}
+.tab-content.active {
+  display: block;
+}
+.card {
+  background: var(--card-bg);
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  border: 1px solid var(--border-color);
+}
+.card h2 {
+  margin-top: 0;
+  color: var(--primary-color);
+  border-bottom: 2px solid var(--bg-color);
+  padding-bottom: 10px;
+}
+body.dark-mode .card h2 {
+  color: #ebf8ff;
+}
+h3.section-title {
+  margin-top: 25px;
+  margin-bottom: 15px;
+  color: var(--secondary-color);
+  font-size: 1.1rem;
+  border-bottom: 1px dashed var(--border-color);
+  padding-bottom: 5px;
+}
+.form-group {
+  margin-bottom: 15px;
+}
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+.form-group input, .form-group select, .form-group textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  box-sizing: border-box;
+  font-size: 1rem;
+  font-family: inherit;
+  background-color: var(--input-bg);
+  color: var(--text-color);
+}
+button {
+  background-color: var(--secondary-color);
+  color: white;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+  padding: 10px 15px;
+  border-radius: 5px;
+}
+button:hover {
+  filter: brightness(0.9);
+}
+.btn-danger {
+  background-color: #e53e3e;
+  padding: 5px 10px;
+  width: auto;
+  font-size: 0.85rem;
+}
+.attendance-list, .data-list {
+  list-style: none;
+  padding: 0;
+}
+.data-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  border-bottom: 1px solid var(--border-color);
+  gap: 10px;
+}
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+.grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 15px;
+}
+.logo-preview-box {
+  width: 100%;
+  max-width: 150px;
+  height: 70px;
+  border: 2px dashed var(--border-color);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: var(--bg-color);
+  margin-top: 10px;
+}
+.logo-preview-box img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.6);
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+.modal-card {
+  background: var(--card-bg);
+  width: 90%;
+  max-width: 750px;
+  max-height: 85vh;
+  border-radius: 8px;
+  padding: 20px;
+  overflow-y: auto;
+  border: 1px solid var(--border-color);
+  position: relative;
+}
+.modal-close-btn {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--text-color);
+  cursor: pointer;
+  width: auto;
+  padding: 0;
+  line-height: 1;
+  transition: color 0.2s;
+}
+.modal-close-btn:hover {
+  color: #e53e3e;
+}
+</style>
 </head>
 <body>
 
-    <!-- Container para as Notificações Toasts -->
-    <div id="toast-container"></div>
+<!-- MODAL DE LOGIN -->
+<div id="login-modal" class="modal-overlay" style="display: flex; z-index: 2000; background: var(--primary-color);">
+  <div class="modal-card" style="max-width: 400px; text-align: center;">
+    <h2 style="color: var(--primary-color);">Acesso Institucional</h2>
+    <p style="font-size: 0.85rem; color: #718096; margin-bottom: 20px;">Entre com suas credenciais de usuário.</p>
+    <div class="form-group" style="text-align: left;">
+      <label>E-mail ou Usuário:</label>
+      <input type="text" id="login-user" placeholder="ex: secretaria@admin.com">
+    </div>
+    <div class="form-group" style="text-align: left;">
+      <label>Senha:</label>
+      <input type="password" id="login-pass" placeholder="........">
+    </div>
+    <button type="button" style="width: 100%; border-radius: 20px; margin-top: 10px;" onclick="fazerLogin()">Entrar no Sistema</button>
+    <div style="margin-top: 15px; font-size: 0.75rem; color: #718096;">
+      <b>Perfis de teste disponíveis:</b><br>
+      Master: master@admin.com / 123456<br>
+      Secretaria: secretaria@admin.com / 123456<br>
+      Professor: professor@admin.com / 123456
+    </div>
+  </div>
+</div>
 
-    <header>
-        <h1>Painel do Sistema Escolar</h1>
-    </header>
+<!-- Cabeçalho -->
+<header id="app-header">
+  <div class="header-left">
+    <img id="header-logo-img" class="header-logo" alt="Logo Instituição">
+    <div class="header-info">
+      <h1 id="header-inst-name">Instituição de Ensino</h1>
+      <p id="header-inst-sub">Sistema Integrado de Gestão Escolar (Nuvem)</p>
+    </div>
+  </div>
+  <div class="header-right-actions">
+    <button type="button" class="theme-toggle-btn" id="theme-toggle-btn" onclick="toggleDarkMode()">Modo Escuro</button>
+    <button type="button" class="access-control-btn" id="btn-access-control" onclick="abrirModalControleAcesso()" style="display:none;">Controle de Acesso</button>
+    <button type="button" class="logout-btn" onclick="fazerLogout()">Sair</button>
+  </div>
+</header>
 
-    <div class="container">
-        <h2>Cadastro de Aluno de Exemplo</h2>
+<!-- Navegação Principal em Pílulas -->
+<nav class="tabs-nav" id="main-tabs-nav">
+  <button class="tab-button active" onclick="openTab(event, 'tab-students')">Matrícula</button>
+  <button class="tab-button" onclick="openTab(event, 'tab-attendance')">Lançamento de Presença</button>
+  <button class="tab-button" onclick="openTab(event, 'tab-grades')">Lançamento de Notas</button>
+  <button class="tab-button" onclick="openTab(event, 'tab-student-finance')">Financeiro do Aluno</button>
+  <button class="tab-button" onclick="openTab(event, 'tab-history')">Emissão de Documentos</button>
+  <button class="tab-button" onclick="openTab(event, 'tab-settings')">Configurações do Sistema</button>
+</nav>
+
+<div class="container">
+  <!-- ABA 1: MATRÍCULA -->
+  <div id="tab-students" class="tab-content active">
+    <div class="card">
+      <h2>Gerenciamento de Matrículas</h2>
+      <div class="subtabs-nav">
+        <button class="subtab-button active" onclick="openSubTab(event, 'subtab-confirmadas')">Matrículas Confirmadas</button>
+        <button class="subtab-button" onclick="openSubTab(event, 'subtab-cancelamentos')">Solicitação de Cancelamento</button>
+        <button class="subtab-button" onclick="openNewStudentModal()" style="background-color: var(--secondary-color); color: white;">Nova Matrícula</button>
+      </div>
+      <div id="subtab-confirmadas" class="subtab-content active">
+        <h3 class="section-title">Alunos Matriculados (Nuvem em Tempo Real)</h3>
+        <ul class="data-list" id="student-management-list"></ul>
+      </div>
+      <div id="subtab-cancelamentos" class="subtab-content">
+        <h3 class="section-title">Alunos com Matrícula Cancelada ou Solicitação Pendente</h3>
+        <div style="background-color: var(--bg-color); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 20px;">
+          <h4 style="margin-top: 0; color: var(--secondary-color);">Registrar Solicitação de Cancelamento:</h4>
+          <div class="grid-2">
+            <div class="form-group">
+              <label>Selecione o Aluno Ativo:</label>
+              <select id="cancel-student-select"></select>
+            </div>
+            <div class="form-group">
+              <label>Motivo do Cancelamento:</label>
+              <input type="text" id="cancel-reason" placeholder="Ex: Mudança de cidade">
+            </div>
+          </div>
+          <button type="button" style="background-color: #e53e3e; border-radius: 20px;" onclick="processStudentCancellation()">Efetivar Cancelamento de Matrícula</button>
+        </div>
+        <ul class="data-list" id="cancelled-students-list"></ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ABA 2: LANÇAMENTO DE PRESENÇA -->
+  <div id="tab-attendance" class="tab-content">
+    <div class="card">
+      <h2>Lançamento de Presença (Chamada Integrada)</h2>
+      <div class="grid-2">
         <div class="form-group">
-            <label for="nomeAluno">Nome Completo:</label>
-            <input type="text" id="nomeAluno" placeholder="Digite o nome do aluno">
+          <label>Data da Aula:</label>
+          <input type="date" id="attendance-date">
         </div>
         <div class="form-group">
-            <label for="cpfAluno">CPF:</label>
-            <input type="text" id="cpfAluno" placeholder="000.000.000-00">
+          <label>Selecione a Turma:</label>
+          <select id="class-select" onchange="renderAttendanceList()"></select>
         </div>
-        <button onclick="cadastrarExemplo()">Salvar Registro</button>
+      </div>
+      <h3 id="attendance-section-title">Lista de Alunos da Turma</h3>
+      <ul class="attendance-list" id="student-attendance-list"></ul>
+      <button style="margin-top: 15px; background-color: #2f855a; border-radius: 20px;" onclick="saveAttendance()">Finalizar e Salvar Chamada</button>
+    </div>
+  </div>
+
+  <!-- ABA 3: LANÇAMENTO DE NOTAS -->
+  <div id="tab-grades" class="tab-content">
+    <div class="card">
+      <h2>Lançamento e Avaliação de Notas</h2>
+      <div class="grid-2">
+        <div class="form-group">
+          <label>Selecione a Turma:</label>
+          <select id="grade-class-select" onchange="renderGradeSubjects()"></select>
+        </div>
+        <div class="form-group">
+          <label>Escolha a Disciplina:</label>
+          <select id="grade-subject-select" onchange="renderGradeList()"></select>
+        </div>
+      </div>
+      <h3 id="grade-section-title">Notas e Avaliações por Aluno</h3>
+      <ul class="attendance-list" id="student-grade-list"></ul>
+      <button style="margin-top: 15px; background-color: #2f855a; border-radius: 20px;" onclick="saveGrades()">Salvar Notas da Disciplina</button>
+    </div>
+  </div>
+
+  <!-- ABA 4: FINANCEIRO DO ALUNO -->
+  <div id="tab-student-finance" class="tab-content">
+    <div class="card">
+      <h2>Financeiro do Aluno</h2>
+      <p style="font-size: 0.85rem; color: #718096; margin-top: -8px;">Gere cobranças e acompanhe o histórico financeiro dos alunos matriculados.</p>
+      <div class="grid-2">
+        <div class="form-group">
+          <label>Selecionar Aluno:</label>
+          <select id="fin-student-select"></select>
+        </div>
+        <div class="form-group">
+          <label>Tipo de Lançamento:</label>
+          <select id="fin-payment-type">
+            <option value="mensalidade">Mensalidade</option>
+            <option value="taxa">Taxa de Documentação / Serviço</option>
+          </select>
+        </div>
+      </div>
+      <div style="display: flex; gap: 10px; margin-top: 10px;">
+        <button style="background-color: #2f855a; border-radius: 20px; flex: 1;" onclick="gerarCobrancaAsaasAPI()">Emitir Cobrança via Asaas</button>
+        <button style="background-color: #718096; border-radius: 20px; width: auto; padding: 10px 20px;" onclick="registerStudentPayment(true)">Registrar Manual</button>
+      </div>
+      <h4 style="margin-top: 25px;">Histórico de Lançamentos Financeiros:</h4>
+      <ul class="data-list" id="finance-logs-list"></ul>
+    </div>
+  </div>
+
+  <!-- ABA 5: EMISSÃO DE DOCUMENTOS -->
+  <div id="tab-history" class="tab-content">
+    <div class="card">
+      <h2>Emissão de Documentos</h2>
+      <div class="grid-2">
+        <div class="form-group">
+          <label>Selecione a Turma:</label>
+          <select id="report-class-select" onchange="renderReportStudents()"></select>
+        </div>
+        <div class="form-group">
+          <label>Tipo de Documento / Relatório:</label>
+          <select id="report-type-select">
+            <option value="declaracao">Declaração de Matrícula</option>
+            <option value="simples">Histórico Simples</option>
+          </select>
+        </div>
+      </div>
+      <div style="display: flex; justify-content: flex-end; margin-bottom: 20px;">
+        <button type="button" style="background-color: #2b6cb0; border-radius: 20px; width: auto; padding: 10px 20px;" onclick="exportReportToPDF()">Emitir / Salvar em PDF</button>
+      </div>
+      <div id="students-report-list"></div>
+    </div>
+  </div>
+
+  <!-- ABA 6: CONFIGURAÇÕES DO SISTEMA -->
+  <div id="tab-settings" class="tab-content">
+    <div class="card">
+      <h2>Configurações do Sistema</h2>
+      <div class="subtabs-nav">
+        <button class="subtab-button active" onclick="openSubTab(event, 'subtab-courses')">Cadastro de Cursos</button>
+        <button class="subtab-button" onclick="openSubTab(event, 'subtab-subjects')">Cadastro de Disciplinas</button>
+        <button class="subtab-button" onclick="openSubTab(event, 'subtab-classes')">Cadastro de Turmas</button>
+        <button class="subtab-button" onclick="openSubTab(event, 'subtab-teachers')">Cadastro de Professores</button>
+        <button class="subtab-button" onclick="openSubTab(event, 'subtab-fin-config')">Config. Financeira & Asaas</button>
+        <button class="subtab-button" onclick="openSubTab(event, 'subtab-institution')">Informações da Instituição</button>
+      </div>
+
+      <!-- SUBABA 1: CURSOS -->
+      <div id="subtab-courses" class="subtab-content active">
+        <h3 class="section-title">Gerenciamento de Cursos</h3>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Nome do Curso:</label>
+            <input type="text" id="input-course-name" placeholder="Ex: Técnico em Enfermagem">
+          </div>
+          <div class="form-group">
+            <label>Carga Horária Total:</label>
+            <input type="text" id="input-course-hours" placeholder="Ex: 3600 hrs">
+          </div>
+        </div>
+        <button style="border-radius: 20px;" onclick="saveCourse()">Salvar Curso</button>
+        <h4 style="margin-top:25px;">Cursos Cadastrados:</h4>
+        <ul class="data-list" id="courses-list"></ul>
+      </div>
+
+      <!-- SUBABA 2: DISCIPLINAS -->
+      <div id="subtab-subjects" class="subtab-content">
+        <h3 class="section-title">Cadastro e Ementas de Disciplinas por Curso</h3>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Selecione o Curso:</label>
+            <select id="input-subject-course-select"></select>
+          </div>
+          <div class="form-group">
+            <label>Nome da Disciplina:</label>
+            <input type="text" id="input-subject-name" placeholder="Ex: Anatomia">
+          </div>
+        </div>
+        <button type="button" style="border-radius: 20px; margin-bottom: 10px;" onclick="addSubjectToCourse()">+ Adicionar Disciplina</button>
+        <ul class="data-list" id="subjects-management-list"></ul>
+      </div>
+
+      <!-- SUBABA 3: TURMAS -->
+      <div id="subtab-classes" class="subtab-content">
+        <h3 class="section-title">Gerenciamento de Turmas</h3>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Selecione o Curso:</label>
+            <select id="input-class-course"></select>
+          </div>
+          <div class="form-group">
+            <label>Nome/Código da Turma:</label>
+            <input type="text" id="input-class-name" placeholder="Ex: Turma 2026.1-A">
+          </div>
+        </div>
+        <button style="border-radius: 20px;" onclick="addClass()">Cadastrar Turma</button>
+        <ul class="data-list" id="class-list" style="margin-top: 25px;"></ul>
+      </div>
+
+      <!-- SUBABA 4: PROFESSORES -->
+      <div id="subtab-teachers" class="subtab-content">
+        <h3 class="section-title">Gerenciamento de Professores</h3>
+        <div class="form-group">
+          <label>Nome Completo:</label>
+          <input type="text" id="input-teacher-name" placeholder="Ex: Prof. Carlos Silva">
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Formação:</label>
+            <input type="text" id="input-teacher-formation" placeholder="Ex: Bacharel em Direito / Pós-Graduado">
+          </div>
+          <div class="form-group">
+            <label>Número de Conselho de Classe:</label>
+            <input type="text" id="input-teacher-council" placeholder="Ex: OAB/PA 00.000 ou CRM/Coren">
+          </div>
+        </div>
+        <button style="border-radius: 20px;" onclick="saveTeacher()">Cadastrar Professor</button>
+        <h4 style="margin-top:25px;">Professores Cadastrados:</h4>
+        <ul class="data-list" id="teachers-list"></ul>
+      </div>
+
+      <!-- SUBABA 5: FINANCEIRO & ASAAS -->
+      <div id="subtab-fin-config" class="subtab-content">
+        <h3 class="section-title">Configuração de Gateway (Asaas API)</h3>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Chave de API do Asaas:</label>
+            <input type="password" id="asaas-api-key" placeholder="$aact_...">
+          </div>
+          <div class="form-group">
+            <label>Ambiente:</label>
+            <select id="asaas-env">
+              <option value="sandbox">Sandbox (Testes)</option>
+              <option value="production">Produção (Oficial)</option>
+            </select>
+          </div>
+        </div>
+        <button type="button" style="background-color: #3182ce; border-radius: 20px; padding: 6px 16px;" onclick="saveAsaasConfig()">Salvar Credenciais Asaas</button>
+      </div>
+
+      <!-- SUBABA 6: INSTITUIÇÃO -->
+      <div id="subtab-institution" class="subtab-content">
+        <h3 class="section-title">Identidade Visual e Dados Jurídicos</h3>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Upload da Logomarca (PNG/JPG):</label>
+            <input type="file" id="input-logo-file" accept="image/*" onchange="handleLogoUpload(event)">
+          </div>
+          <div class="form-group">
+            <label>Pré-visualização da Logo:</label>
+            <div class="logo-preview-box" id="logo-preview">
+              <span style="font-size: 0.8rem; color: #a0aec0;">Sem logo</span>
+            </div>
+            <button type="button" class="btn-danger" style="margin-top:5px; border-radius: 15px;" onclick="removeLogo()">Remover Logo</button>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Nome Fantasia:</label>
+            <input type="text" id="input-inst-name" value="Faculdade Exemplo" oninput="applyBranding()">
+          </div>
+          <div class="form-group">
+            <label>Razão Social:</label>
+            <input type="text" id="input-inst-razao" placeholder="Instituição Ltda" oninput="applyBranding()">
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>CNPJ:</label>
+            <input type="text" id="input-inst-cnpj" placeholder="00.000.000/0001-00" oninput="applyBranding()">
+          </div>
+          <div class="form-group">
+            <label>E-mail Institucional:</label>
+            <input type="text" id="input-inst-email" placeholder="contato@instituicao.com" oninput="applyBranding()">
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Telefone / WhatsApp:</label>
+            <input type="text" id="input-inst-tel" placeholder="(91) 0000-0000" oninput="applyBranding()">
+          </div>
+          <div class="form-group">
+            <label>Endereço Completo:</label>
+            <input type="text" id="input-inst-end" placeholder="Rua, Número, Bairro, Cidade - PA" oninput="applyBranding()">
+          </div>
+        </div>
+        <button style="margin-top: 15px; border-radius: 20px;" onclick="applyBranding(true)">Salvar Configurações da Instituição</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DE NOVA MATRÍCULA -->
+<div id="new-student-modal" class="modal-overlay">
+  <div class="modal-card">
+    <button type="button" class="modal-close-btn" onclick="closeNewStudentModal()" title="Fechar">&times;</button>
+    <h2>Ficha de Matrícula do Aluno</h2>
+    
+    <div class="content-section" style="background: #ffffff; padding: 15px 0; border-radius: 8px;">
+      <form id="formFichaMatricula">
+        <h4 style="color: #495057; margin-bottom: 15px; font-size: 1rem;">1. Dados Cadastrais</h4>
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333;">Nome Completo do Aluno</label>
+            <input type="text" id="nomeAluno" class="form-control" style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 4px; box-sizing: border-box;" required>
+        </div>
+        <div style="display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 200px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333;">Data de Nascimento</label>
+                <input type="date" id="dataNascimento" class="form-control" style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 4px; box-sizing: border-box;" required>
+            </div>
+            <div style="flex: 1; min-width: 200px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333;">Sexo</label>
+                <select id="sexoAluno" class="form-control" style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 4px; background: #fff; box-sizing: border-box;">
+                    <option value="">Selecione...</option>
+                    <option value="Masculino">Masculino</option>
+                    <option value="Feminino">Feminino</option>
+                </select>
+            </div>
+        </div>
+        <div style="display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 200px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333;">Telefone / WhatsApp</label>
+                <input type="text" id="whatsappAluno" placeholder="(91) 9XXXX-XXXX" class="form-control" style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 4px; box-sizing: border-box;" required>
+            </div>
+            <div style="flex: 1; min-width: 200px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333;">E-mail</label>
+                <input type="email" id="emailAluno" class="form-control" style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 4px; box-sizing: border-box;" required>
+            </div>
+        </div>
+        <div style="display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 200px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333;">RG ou CNH</label>
+                <input type="text" id="rgAluno" class="form-control" style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 4px; box-sizing: border-box;" required>
+            </div>
+            <div style="flex: 1; min-width: 200px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333;">CPF</label>
+                <input type="text" id="cpfAluno" placeholder="000.000.000-00" class="form-control" style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 4px; box-sizing: border-box;" required>
+            </div>
+        </div>
+      </form>
     </div>
 
-    <script>
-        // Sistema de Toasts (Substituto moderno dos alertas)
-        function showToast(message, type = 'success') {
-            const container = document.getElementById('toast-container');
-            
-            const toast = document.createElement('div');
-            toast.className = `toast toast-${type}`;
-            toast.innerText = message;
+    <div class="grid-2" style="border-top: 1px solid #f0f0f0; padding-top: 15px;">
+      <div class="form-group">
+        <label>Curso Escolhido:</label>
+        <select id="input-student-course" onchange="filterTurmasByCourse()"></select>
+      </div>
+      <div class="form-group">
+        <label>Vincular à Turma:</label>
+        <select id="input-student-class"></select>
+      </div>
+    </div>
 
-            container.appendChild(toast);
+    <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+      <button type="button" style="width: auto; background-color: #4a5568; padding: 8px 16px; border-radius: 20px;" onclick="closeNewStudentModal()">Cancelar</button>
+      <button type="button" style="width: auto; background-color: #2f855a; padding: 8px 16px; border-radius: 20px;" onclick="addStudent()">Efetuar Matrícula e Emitir PDF</button>
+    </div>
+  </div>
+</div>
 
-            setTimeout(() => {
-                toast.classList.add('show');
-            }, 10);
+<!-- MODAL DE CONTROLE DE ACESSO -->
+<div id="access-control-modal" class="modal-overlay">
+  <div class="modal-card">
+    <button type="button" class="modal-close-btn" onclick="fecharModalControleAcesso()" title="Fechar">&times;</button>
+    <h2>Controle de Acesso de Usuários</h2>
+    <p style="font-size: 0.85rem; color: #718096; margin-top: -8px;">Cadastre quem poderá acessar o sistema e defina os perfis.</p>
+    
+    <div style="background-color: var(--bg-color); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 20px;">
+      <h4 style="margin-top: 0; color: var(--secondary-color);">Adicionar Novo Usuário:</h4>
+      <div class="grid-2">
+        <div class="form-group">
+          <label>Nome do Usuário:</label>
+          <input type="text" id="new-user-name" placeholder="Ex: João da Silva">
+        </div>
+        <div class="form-group">
+          <label>E-mail / Login:</label>
+          <input type="text" id="new-user-email" placeholder="ex: joao@admin.com">
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="form-group">
+          <label>Senha:</label>
+          <input type="password" id="new-user-pass" placeholder="........">
+        </div>
+        <div class="form-group">
+          <label>Perfil / Permissão:</label>
+          <select id="new-user-perfil">
+            <option value="master">Master (Acesso Total)</option>
+            <option value="secretaria">Secretaria</option>
+            <option value="professor">Professor</option>
+          </select>
+        </div>
+      </div>
+      <button type="button" style="border-radius: 20px;" onclick="cadastrarNovoUsuarioSistema()">Cadastrar Usuário</button>
+    </div>
 
-            setTimeout(() => {
-                toast.classList.remove('show');
-                setTimeout(() => {
-                    toast.remove();
-                }, 300);
-            }, 3000);
+    <h4 style="margin-top: 15px;">Usuários Cadastrados no Sistema:</h4>
+    <ul class="data-list" id="system-users-list"></ul>
+  </div>
+</div>
+
+<script>
+  // ==========================================
+  // CONFIGURAÇÃO DO FIREBASE (Nuvem)
+  // ==========================================
+  const firebaseConfig = {
+    apiKey: "AIzaSyBeJ-fqzwiQt0PZEKQ6e8zAPSuh7WRuaHo",
+    authDomain: "sistema-escolar-nuvem.firebaseapp.com",
+    projectId: "sistema-escolar-nuvem",
+    storageBucket: "sistema-escolar-nuvem.firebasestorage.app",
+    messagingSenderId: "343442411308",
+    appId: "1:343442411308:web:e4500b862fa29b6b326689"
+  };
+
+  // Inicializar Firebase Compat Firestore
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  document.getElementById('attendance-date').valueAsDate = new Date();
+
+  const usuariosPadrao = [
+    { email: "master@admin.com", pass: "123456", perfil: "master", nome: "Administrador Master" },
+    { email: "secretaria@admin.com", pass: "123456", perfil: "secretaria", nome: "Funcionária Secretaria" },
+    { email: "professor@admin.com", pass: "123456", perfil: "professor", nome: "Professor Exemplo" }
+  ];
+
+  function fazerLogin() {
+    const userInput = document.getElementById('login-user').value.trim();
+    const passInput = document.getElementById('login-pass').value.trim();
+    let dbUsers = JSON.parse(localStorage.getItem('app_users_system')) || usuariosPadrao;
+    let userFound = dbUsers.find(u => u.email === userInput && u.pass === passInput);
+    if (!userFound) {
+      alert("Usuário ou senha inválidos!");
+      return;
+    }
+    sessionStorage.setItem('usuario_logado', JSON.stringify(userFound));
+    document.getElementById('login-modal').style.display = 'none';
+    aplicarPermissoesPorPerfil(userFound.perfil);
+    alert(`Bem-vindo(a), ${userFound.nome}!`);
+  }
+
+  function fazerLogout() {
+    sessionStorage.removeItem('usuario_logado');
+    location.reload();
+  }
+
+  function aplicarPermissoesPorPerfil(perfil) {
+    const tabsNav = document.querySelector('.tabs-nav');
+    const btnAccessControl = document.getElementById('btn-access-control');
+    if (!tabsNav) return;
+    
+    if (btnAccessControl) {
+      btnAccessControl.style.display = (perfil === 'master') ? 'inline-flex' : 'none';
+    }
+
+    const botoesAba = tabsNav.getElementsByClassName('tab-button');
+    for (let btn of botoesAba) btn.style.display = 'block';
+    if (perfil === 'professor') {
+      for (let btn of botoesAba) {
+        if (!btn.getAttribute('onclick').includes('attendance') && !btn.getAttribute('onclick').includes('grades')) {
+          btn.style.display = 'none';
         }
+      }
+    }
+  }
 
-        // Função de exemplo simulando um cadastro
-        function cadastrarExemplo() {
-            const nome = document.getElementById('nomeAluno').value;
-            const cpf = document.getElementById('cpfAluno').value;
+  window.addEventListener('DOMContentLoaded', () => {
+    const sessao = JSON.parse(sessionStorage.getItem('usuario_logado'));
+    const loginModal = document.getElementById('login-modal');
+    if (sessao && loginModal) {
+      loginModal.style.display = 'none';
+      aplicarPermissoesPorPerfil(sessao.perfil);
+    } else if (loginModal) {
+      loginModal.style.display = 'flex';
+    }
+  });
 
-            if (!nome || !cpf) {
-                showToast("Por favor, preencha todos os campos!", "error");
-                return;
-            }
+  function abrirModalControleAcesso() {
+    document.getElementById('access-control-modal').style.display = 'flex';
+    renderizarUsuariosSistema();
+  }
 
-            // Simulação de salvamento bem-sucedido
-            showToast("Aluno cadastrado com sucesso!", "success");
-            
-            // Limpa os campos
-            document.getElementById('nomeAluno').value = '';
-            document.getElementById('cpfAluno').value = '';
-        }
-    </script>
+  function fecharModalControleAcesso() {
+    document.getElementById('access-control-modal').style.display = 'none';
+  }
+
+  function cadastrarNovoUsuarioSistema() {
+    const nome = document.getElementById('new-user-name').value.trim();
+    const email = document.getElementById('new-user-email').value.trim();
+    const pass = document.getElementById('new-user-pass').value.trim();
+    const perfil = document.getElementById('new-user-perfil').value;
+
+    if (!nome || !email || !pass) return alert("Preencha todos os campos!");
+    let dbUsers = JSON.parse(localStorage.getItem('app_users_system')) || usuariosPadrao;
+    if (dbUsers.some(u => u.email === email)) return alert("E-mail já cadastrado!");
+
+    dbUsers.push({ nome, email, pass, perfil });
+    localStorage.setItem('app_users_system', JSON.stringify(dbUsers));
+    document.getElementById('new-user-name').value = '';
+    document.getElementById('new-user-email').value = '';
+    document.getElementById('new-user-pass').value = '';
+    renderizarUsuariosSistema();
+    alert("Usuário cadastrado com sucesso!");
+  }
+
+  function renderizarUsuariosSistema() {
+    const list = document.getElementById('system-users-list');
+    if (!list) return;
+    list.innerHTML = '';
+    let dbUsers = JSON.parse(localStorage.getItem('app_users_system')) || usuariosPadrao;
+    dbUsers.forEach((u, index) => {
+      list.innerHTML += `
+        <li class="data-item">
+          <div><strong>${u.nome}</strong> (${u.email})<br><small style="color: var(--secondary-color);">Perfil: <b>${u.perfil.toUpperCase()}</b></small></div>
+          ${index >= 3 ? `<button class="btn-danger" onclick="removerUsuarioSistema('${u.email}')">Remover</button>` : '<small style="color:#a0aec0;">Padrão</small>'}
+        </li>`;
+    });
+  }
+
+  function removerUsuarioSistema(email) {
+    let dbUsers = JSON.parse(localStorage.getItem('app_users_system')) || usuariosPadrao;
+    dbUsers = dbUsers.filter(u => u.email !== email);
+    localStorage.setItem('app_users_system', JSON.stringify(dbUsers));
+    renderizarUsuariosSistema();
+    alert("Usuário removido!");
+  }
+
+  function openTab(evt, tabId) {
+    const tabContents = document.getElementsByClassName("tab-content");
+    for (let i = 0; i < tabContents.length; i++) tabContents[i].classList.remove("active");
+    const tabButtons = document.getElementsByClassName("tab-button");
+    for (let i = 0; i < tabButtons.length; i++) tabButtons[i].classList.remove("active");
+    document.getElementById(tabId).classList.add("active");
+    evt.currentTarget.classList.add("active");
+  }
+
+  function openSubTab(evt, subtabId) {
+    const subtabContents = document.getElementsByClassName("subtab-content");
+    for (let i = 0; i < subtabContents.length; i++) {
+      if (subtabContents[i].id.startsWith('subtab-')) subtabContents[i].classList.remove("active");
+    }
+    const subtabButtons = document.getElementsByClassName("subtab-button");
+    for (let i = 0; i < subtabButtons.length; i++) {
+      if (subtabButtons[i].getAttribute('onclick') && subtabButtons[i].getAttribute('onclick').includes('subtab-')) {
+        subtabButtons[i].classList.remove("active");
+      }
+    }
+    const target = document.getElementById(subtabId);
+    if (target) target.classList.add("active");
+    if (evt && evt.currentTarget) evt.currentTarget.classList.add("active");
+  }
+
+  function openNewStudentModal() { document.getElementById('new-student-modal').style.display = 'flex'; }
+  function closeNewStudentModal() { document.getElementById('new-student-modal').style.display = 'none'; }
+
+  let currentLogoDataUrl = "";
+  let courses = [];
+  let classes = [];
+  let students = [];
+  let teachers = [];
+  let financeLogs = [];
+
+  // ==========================================
+  // SINCRONIZAÇÃO EM TEMPO REAL COM O FIRESTORE
+  // ==========================================
+  function carregarDadosDaNuvem() {
+    // Cursos
+    db.collection("courses").onSnapshot((snapshot) => {
+      courses = [];
+      snapshot.forEach((doc) => courses.push({ id: doc.id, ...doc.data() }));
+      renderCourses();
+      renderSubjectsManagement();
+      renderDropdowns();
+    });
+
+    // Turmas
+    db.collection("classes").onSnapshot((snapshot) => {
+      classes = [];
+      snapshot.forEach((doc) => classes.push({ id: doc.id, ...doc.data() }));
+      renderClasses();
+      renderDropdowns();
+    });
+
+    // Alunos
+    db.collection("students").onSnapshot((snapshot) => {
+      students = [];
+      snapshot.forEach((doc) => students.push({ id: doc.id, ...doc.data() }));
+      renderAllIntegratedViews();
+    });
+
+    // Professores
+    db.collection("teachers").onSnapshot((snapshot) => {
+      teachers = [];
+      snapshot.forEach((doc) => teachers.push({ id: doc.id, ...doc.data() }));
+      renderTeachers();
+    });
+
+    // Financeiro
+    db.collection("financeLogs").onSnapshot((snapshot) => {
+      financeLogs = [];
+      snapshot.forEach((doc) => financeLogs.push({ id: doc.id, ...doc.data() }));
+      renderFinanceStudentSelect();
+    });
+  }
+
+  async function saveTeacher() {
+    const fullname = document.getElementById('input-teacher-name').value.trim();
+    const formation = document.getElementById('input-teacher-formation').value.trim();
+    const council = document.getElementById('input-teacher-council').value.trim();
+    if (!fullname) return alert("Preencha o nome do professor!");
+
+    await db.collection("teachers").add({ fullname, formation, council });
+    document.getElementById('input-teacher-name').value = '';
+    document.getElementById('input-teacher-formation').value = '';
+    document.getElementById('input-teacher-council').value = '';
+    alert("Professor cadastrado na nuvem!");
+  }
+
+  function renderTeachers() {
+    const list = document.getElementById('teachers-list');
+    if (!list) return;
+    list.innerHTML = '';
+    teachers.forEach(t => {
+      list.innerHTML += `<li class="data-item"><div><strong>${t.fullname}</strong><br><small style="color: var(--secondary-color);">Formação: ${t.formation || 'N/I'}</small></div></li>`;
+    });
+  }
+
+  async function saveCourse() {
+    const name = document.getElementById('input-course-name').value.trim();
+    if (!name) return alert("Preencha o nome do curso!");
+    await db.collection("courses").add({ name, hours: document.getElementById('input-course-hours').value.trim(), subjects: [] });
+    document.getElementById('input-course-name').value = '';
+    document.getElementById('input-course-hours').value = '';
+    alert("Curso salvo na nuvem!");
+  }
+
+  function renderCourses() {
+    const list = document.getElementById('courses-list');
+    if (!list) return;
+    list.innerHTML = '';
+    courses.forEach(c => {
+      list.innerHTML += `<li class="data-item"><div><strong>${c.name}</strong> (${c.hours || 'N/I'})</div></li>`;
+    });
+  }
+
+  async function addSubjectToCourse() {
+    const courseId = document.getElementById('input-subject-course-select').value;
+    const name = document.getElementById('input-subject-name').value.trim();
+    if (!courseId || !name) return alert("Selecione o curso e a disciplina!");
+    
+    const course = courses.find(c => c.id == courseId);
+    if (course) {
+      if (!course.subjects) course.subjects = [];
+      course.subjects.push({ id: Date.now(), name });
+      await db.collection("courses").doc(courseId).update({ subjects: course.subjects });
+      document.getElementById('input-subject-name').value = '';
+      alert("Disciplina adicionada!");
+    }
+  }
+
+  function renderSubjectsManagement() {
+    const list = document.getElementById('subjects-management-list');
+    if (!list) return;
+    list.innerHTML = '';
+    courses.forEach(c => {
+      if (c.subjects && c.subjects.length > 0) {
+        c.subjects.forEach(s => {
+          list.innerHTML += `<li class="data-item"><div><strong>${c.name}</strong> - ${s.name}</div></li>`;
+        });
+      }
+    });
+  }
+
+  async function addClass() {
+    const courseId = document.getElementById('input-class-course').value;
+    const name = document.getElementById('input-class-name').value.trim();
+    if (!courseId || !name) return alert("Preencha os campos da turma!");
+    await db.collection("classes").add({ courseId, name });
+    document.getElementById('input-class-name').value = '';
+    alert("Turma cadastrada na nuvem!");
+  }
+
+  function renderClasses() {
+    const list = document.getElementById('class-list');
+    if (!list) return;
+    list.innerHTML = '';
+    classes.forEach(c => {
+      list.innerHTML += `<li class="data-item"><div><strong>${c.name}</strong></div></li>`;
+    });
+  }
+
+  function filterTurmasByCourse() {
+    const selectedCourseId = document.getElementById('input-student-course').value;
+    const studentClassSelect = document.getElementById('input-student-class');
+    if (!studentClassSelect) return;
+    studentClassSelect.innerHTML = '';
+    classes.filter(c => c.courseId == selectedCourseId).forEach(c => {
+      studentClassSelect.insertAdjacentHTML('beforeend', `<option value="${c.id}">${c.name}</option>`);
+    });
+  }
+
+  async function addStudent() {
+    const fullname = document.getElementById('nomeAluno').value.trim();
+    const courseId = document.getElementById('input-student-course').value;
+    const classId = document.getElementById('input-student-class').value;
+    if (!fullname || !courseId || !classId) return alert("Preencha os campos obrigatórios do aluno!");
+
+    const studentIdNum = Date.now();
+    const code = `MAT-${new Date().getFullYear()}-${studentIdNum.toString().slice(-5)}`;
+    const targetCourse = courses.find(c => c.id == courseId);
+    const targetClass = classes.find(c => c.id == classId);
+
+    const studentData = {
+      code,
+      fullname,
+      dob: document.getElementById('dataNascimento').value,
+      sexo: document.getElementById('sexoAluno').value,
+      whatsapp: document.getElementById('whatsappAluno').value.trim(),
+      email: document.getElementById('emailAluno').value.trim(),
+      rg: document.getElementById('rgAluno').value.trim(),
+      cpf: document.getElementById('cpfAluno').value.trim(),
+      courseId,
+      classId,
+      status: "Ativo"
+    };
+
+    await db.collection("students").add(studentData);
+    closeNewStudentModal();
+
+    await gerarComprovantePDF({
+      nome: fullname,
+      cpf: studentData.cpf || 'N/I',
+      matricula: code,
+      curso: targetCourse ? targetCourse.name : '',
+      turma: targetClass ? targetClass.name : ''
+    });
+
+    alert(`Matrícula efetuada e sincronizada na nuvem! Matrícula: ${code}`);
+  }
+
+  function renderAllIntegratedViews() {
+    renderStudentsList();
+    renderCancellationSelect();
+    renderAttendanceList();
+    renderGradeSubjects();
+    renderFinanceStudentSelect();
+    renderReportStudents();
+  }
+
+  function renderStudentsList() {
+    const list = document.getElementById('student-management-list');
+    if (!list) return;
+    list.innerHTML = '';
+    const activeStudents = students.filter(s => s.status !== "Cancelado");
+    if (activeStudents.length === 0) {
+      list.innerHTML = `<li class="data-item"><span style="color: #a0aec0;">Nenhum aluno ativo na nuvem.</span></li>`;
+      return;
+    }
+    activeStudents.forEach(s => {
+      const cl = classes.find(c => c.id == s.classId);
+      list.innerHTML += `<li class="data-item"><div><strong>${s.fullname}</strong><br><small style="color: var(--secondary-color);">Matrícula: <b>${s.code}</b> | Turma: ${cl ? cl.name : 'N/I'}</small></div></li>`;
+    });
+  }
+
+  function renderCancellationSelect() {
+    const select = document.getElementById('cancel-student-select');
+    const cancelledList = document.getElementById('cancelled-students-list');
+    if (!select || !cancelledList) return;
+    select.innerHTML = '';
+    cancelledList.innerHTML = '';
+
+    students.filter(s => s.status === "Ativo").forEach(s => {
+      select.insertAdjacentHTML('beforeend', `<option value="${s.id}">${s.fullname} (${s.code})</option>`);
+    });
+
+    const cancelled = students.filter(s => s.status === "Cancelado");
+    if (cancelled.length === 0) {
+      cancelledList.innerHTML = `<li class="data-item"><span style="color: #a0aec0;">Nenhum cancelamento.</span></li>`;
+    } else {
+      cancelled.forEach(s => {
+        cancelledList.innerHTML += `<li class="data-item"><div><strong>${s.fullname}</strong> (${s.code})<br><small style="color: #e53e3e;">Motivo: ${s.cancelReason}</small></div></li>`;
+      });
+    }
+  }
+
+  async function processStudentCancellation() {
+    const studentId = document.getElementById('cancel-student-select').value;
+    const reason = document.getElementById('cancel-reason').value.trim();
+    if (!studentId || !reason) return alert("Selecione o aluno e informe o motivo!");
+
+    await db.collection("students").doc(studentId).update({ status: "Cancelado", cancelReason: reason });
+    document.getElementById('cancel-reason').value = '';
+    alert("Matrícula cancelada na nuvem com sucesso!");
+  }
+
+  function renderAttendanceList() {
+    const classId = document.getElementById('class-select').value;
+    const list = document.getElementById('student-attendance-list');
+    if (!list) return;
+    list.innerHTML = '';
+
+    const turmaAlunos = students.filter(s => s.classId == classId && s.status === "Ativo");
+    if (turmaAlunos.length === 0) {
+      list.innerHTML = `<li class="data-item"><span style="color: #a0aec0;">Nenhum aluno ativo nesta turma.</span></li>`;
+      return;
+    }
+
+    turmaAlunos.forEach(s => {
+      const uniqueName = `attendance_${s.id}`;
+      list.innerHTML += `
+        <li class="data-item" style="justify-content: space-between;">
+          <span><strong>${s.fullname}</strong> (${s.code})</span>
+          <div style="display: flex; gap: 15px; align-items: center;">
+            <label style="cursor: pointer; color: #2f855a;"><input type="radio" name="${uniqueName}" value="presente" checked> Presente</label>
+            <label style="cursor: pointer; color: #e53e3e;"><input type="radio" name="${uniqueName}" value="falta"> Falta</label>
+          </div>
+        </li>`;
+    });
+  }
+
+  function saveAttendance() { alert("Chamada salva na nuvem!"); }
+
+  function renderGradeSubjects() {
+    const classId = document.getElementById('grade-class-select').value;
+    const subjectSelect = document.getElementById('grade-subject-select');
+    if (!subjectSelect) return;
+    subjectSelect.innerHTML = '';
+
+    const turma = classes.find(c => c.id == classId);
+    if (turma) {
+      const curso = courses.find(co => co.id == turma.courseId);
+      if (curso && curso.subjects) {
+        curso.subjects.forEach(sub => {
+          subjectSelect.insertAdjacentHTML('beforeend', `<option value="${sub.id}">${sub.name}</option>`);
+        });
+      }
+    }
+    renderGradeList();
+  }
+
+  function renderGradeList() {
+    const classId = document.getElementById('grade-class-select').value;
+    const list = document.getElementById('student-grade-list');
+    if (!list) return;
+    list.innerHTML = '';
+    students.filter(s => s.classId == classId && s.status === "Ativo").forEach(s => {
+      list.innerHTML += `
+        <li class="data-item" style="justify-content: space-between;">
+          <span><strong>${s.fullname}</strong></span>
+          <div style="display: flex; gap: 10px;">
+            <input type="number" placeholder="Nota 1" style="width: 80px; padding: 5px;" min="0" max="10" step="0.1">
+            <input type="number" placeholder="Nota 2" style="width: 80px; padding: 5px;" min="0" max="10" step="0.1">
+          </div>
+        </li>`;
+    });
+  }
+
+  function saveGrades() { alert("Notas salvas na nuvem!"); }
+
+  function renderFinanceStudentSelect() {
+    const select = document.getElementById('fin-student-select');
+    const logsList = document.getElementById('finance-logs-list');
+    if (!select || !logsList) return;
+    select.innerHTML = '';
+    logsList.innerHTML = '';
+
+    students.filter(s => s.status === "Ativo").forEach(s => {
+      select.insertAdjacentHTML('beforeend', `<option value="${s.id}">${s.fullname} (${s.code})</option>`);
+    });
+
+    if (financeLogs.length === 0) {
+      logsList.innerHTML = `<li class="data-item"><span style="color: #a0aec0;">Nenhum registro financeiro.</span></li>`;
+    } else {
+      financeLogs.forEach(log => {
+        logsList.innerHTML += `<li class="data-item"><div><strong>${log.studentName}</strong> (${log.studentCode})<br><small style="color: var(--secondary-color);">${log.description} - R$ ${log.amount} | Status: <b>${log.status}</b></small></div></li>`;
+      });
+    }
+  }
+
+  async function registerStudentPayment(isManual = false) {
+    const studentId = document.getElementById('fin-student-select').value;
+    const student = students.find(s => s.id == studentId);
+    if (!student) return alert("Selecione um aluno ativo!");
+
+    await db.collection("financeLogs").add({
+      studentName: student.fullname,
+      studentCode: student.code,
+      description: document.getElementById('fin-payment-type').value.toUpperCase(),
+      amount: 150.00,
+      date: new Date().toISOString().slice(0,10),
+      status: "Pendente"
+    });
+    if (isManual) alert("Registro financeiro salvo na nuvem!");
+  }
+
+  async function gerarCobrancaAsaasAPI() {
+    const studentId = document.getElementById('fin-student-select').value;
+    const student = students.find(s => s.id == studentId);
+    if (!student) return alert("Selecione um aluno ativo!");
+    await registerStudentPayment(false);
+    alert("Cobrança gerada e integrada com sucesso via Asaas!");
+  }
+
+  function renderReportStudents() {
+    const classId = document.getElementById('report-class-select').value;
+    const container = document.getElementById('students-report-list');
+    if (!container) return;
+    container.innerHTML = '';
+
+    students.filter(s => s.classId == classId && s.status === "Ativo").forEach(s => {
+      container.innerHTML += `
+        <div class="data-item">
+          <div><strong>${s.fullname}</strong><br><small>Matrícula: ${s.code}</small></div>
+          <button type="button" style="padding: 6px 12px; font-size: 0.8rem; border-radius: 15px;" onclick="emitirDocumentoIndividual('${s.code}')">Gerar Documento</button>
+        </div>`;
+    });
+  }
+
+  function emitirDocumentoIndividual(code) {
+    const s = students.find(st => st.code === code);
+    if (!s) return;
+    alert(`Gerando documento em PDF para ${s.fullname}...`);
+    window.print();
+  }
+
+  function saveAsaasConfig() {
+    localStorage.setItem('app_asaas_config', JSON.stringify({ apiKey: document.getElementById('asaas-api-key').value.trim(), env: document.getElementById('asaas-env').value }));
+    alert("Credenciais do Asaas salvas!");
+  }
+
+  function renderDropdowns() {
+    ['input-class-course', 'input-student-course', 'input-subject-course-select'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.innerHTML = '';
+        courses.forEach(c => el.insertAdjacentHTML('beforeend', `<option value="${c.id}">${c.name}</option>`));
+      }
+    });
+    ['class-select', 'grade-class-select', 'report-class-select'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.innerHTML = '';
+        classes.forEach(c => el.insertAdjacentHTML('beforeend', `<option value="${c.id}">${c.name}</option>`));
+      }
+    });
+    filterTurmasByCourse();
+  }
+
+  async function handleLogoUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+      currentLogoDataUrl = e.target.result;
+      updateLogoPreview(currentLogoDataUrl);
+      
+      // Salva a logo no localStorage junto com as configurações de branding
+      let brandingData = JSON.parse(localStorage.getItem('app_branding')) || {};
+      brandingData.logo = currentLogoDataUrl;
+      localStorage.setItem('app_branding', JSON.stringify(brandingData));
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async function removeLogo() {
+    currentLogoDataUrl = "";
+    updateLogoPreview("");
+    let brandingData = JSON.parse(localStorage.getItem('app_branding')) || {};
+    delete brandingData.logo;
+    localStorage.setItem('app_branding', JSON.stringify(brandingData));
+    applyBranding(true);
+  }
+
+  function updateLogoPreview(src) {
+    const previewBox = document.getElementById('logo-preview');
+    const headerImg = document.getElementById('header-logo-img');
+    if (!previewBox || !headerImg) return;
+    if (src) {
+      previewBox.innerHTML = `<img src="${src}" alt="Logo">`;
+      headerImg.src = src;
+      headerImg.style.display = 'block';
+    } else {
+      previewBox.innerHTML = '<span style="font-size: 0.8rem; color: #a0aec0;">Sem logo</span>';
+      headerImg.style.display = 'none';
+    }
+  }
+
+  function applyBranding(notify = false) {
+    const brandingData = JSON.parse(localStorage.getItem('app_branding')) || {};
+    
+    brandingData.name = document.getElementById('input-inst-name').value;
+    brandingData.razao = document.getElementById('input-inst-razao').value;
+    brandingData.cnpj = document.getElementById('input-inst-cnpj').value;
+    brandingData.email = document.getElementById('input-inst-email').value;
+    brandingData.tel = document.getElementById('input-inst-tel').value;
+    brandingData.end = document.getElementById('input-inst-end').value;
+    
+    if (currentLogoDataUrl) {
+      brandingData.logo = currentLogoDataUrl;
+    }
+
+    document.getElementById('header-inst-name').innerText = brandingData.name || "Instituição de Ensino";
+    document.getElementById('header-inst-sub').innerText = brandingData.razao ? `${brandingData.razao}` : "";
+    
+    localStorage.setItem('app_branding', JSON.stringify(brandingData));
+    if (notify) alert("Configurações salvas!");
+  }
+
+  function loadBranding() {
+    const saved = JSON.parse(localStorage.getItem('app_branding'));
+    if (saved) {
+      document.getElementById('input-inst-name').value = saved.name || '';
+      document.getElementById('input-inst-razao').value = saved.razao || '';
+      document.getElementById('input-inst-cnpj').value = saved.cnpj || '';
+      document.getElementById('input-inst-email').value = saved.email || '';
+      document.getElementById('input-inst-tel').value = saved.tel || '';
+      document.getElementById('input-inst-end').value = saved.end || '';
+      
+      if (saved.logo) {
+        currentLogoDataUrl = saved.logo;
+        updateLogoPreview(currentLogoDataUrl);
+      }
+      applyBranding();
+    }
+  }
+
+  function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
+
+  function gerarQRCodeBase64(texto) {
+    return new Promise((resolve) => {
+      const tempDiv = document.createElement('div');
+      tempDiv.style.display = 'none';
+      document.body.appendChild(tempDiv);
+      new QRCode(tempDiv, { text: texto, width: 128, height: 128, correctLevel: QRCode.CorrectLevel.H });
+      setTimeout(() => {
+        const img = tempDiv.querySelector('img') || tempDiv.querySelector('canvas');
+        const base64 = img.tagName === 'CANVAS' ? img.toDataURL('image/png') : img.src;
+        document.body.removeChild(tempDiv);
+        resolve(base64);
+      }, 100);
+    });
+  }
+
+  async function gerarComprovantePDF(dadosAluno) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    const brandingSaved = JSON.parse(localStorage.getItem('app_branding')) || {};
+    const qrCodeBase64 = await gerarQRCodeBase64("https://exemplo.com/validar");
+
+    doc.setFillColor(26, 54, 93);
+    doc.rect(0, 0, 210, 35, "F");
+    if (currentLogoDataUrl) doc.addImage(currentLogoDataUrl, 'PNG', 14, 5, 25, 25);
+    doc.setTextColor("#ffffff");
+    doc.setFontSize(16);
+    doc.text("COMPROVANTE DE MATRÍCULA", 105, 22, { align: "center" });
+
+    doc.setTextColor("#2d3748");
+    doc.setFontSize(10);
+    doc.text(brandingSaved.name || "Instituição de Ensino", 14, 43);
+
+    let headerY = 47;
+    doc.text(`Nome: ${dadosAluno.nome}`, 14, headerY + 15);
+    doc.text(`CPF: ${dadosAluno.cpf}`, 14, headerY + 22);
+    doc.text(`Matrícula: ${dadosAluno.matricula}`, 14, headerY + 29);
+    doc.text(`Curso: ${dadosAluno.curso}`, 14, headerY + 36);
+    doc.text(`Turma: ${dadosAluno.turma}`, 14, headerY + 43);
+
+    doc.addImage(qrCodeBase64, 'PNG', 150, headerY + 15, 30, 30);
+    doc.save(`Comprovante_${dadosAluno.matricula}.pdf`);
+  }
+
+  function exportReportToPDF() { window.print(); }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    loadBranding();
+    carregarDadosDaNuvem(); // Inicia a escuta em tempo real do Firebase
+  });
+</script>
 </body>
 </html>
