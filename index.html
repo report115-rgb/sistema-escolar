@@ -318,7 +318,7 @@ button:hover {
 </head>
 <body>
 
-<!-- MODAL DE LOGIN (Perfis de teste removidos para segurança) -->
+<!-- MODAL DE LOGIN -->
 <div id="login-modal" class="modal-overlay" style="display: flex; z-index: 2000; background: var(--primary-color);">
   <div class="modal-card" style="max-width: 400px; text-align: center;">
     <h2 style="color: var(--primary-color);">Acesso Institucional</h2>
@@ -595,7 +595,7 @@ button:hover {
 
       <!-- SUBABA 6: INSTITUIÇÃO -->
       <div id="subtab-institution" class="subtab-content">
-        <h3 class="section-title">Identidade Visual e Dados Jurídicos</h3>
+        <h3 class="section-title">Identidade Visual e Dados Jurídicos (Salvo na Nuvem)</h3>
         <div class="grid-2">
           <div class="form-group">
             <label>Upload da Logomarca (PNG/JPG):</label>
@@ -612,34 +612,34 @@ button:hover {
         <div class="grid-2">
           <div class="form-group">
             <label>Nome Fantasia:</label>
-            <input type="text" id="input-inst-name" value="Faculdade Exemplo" oninput="applyBranding()">
+            <input type="text" id="input-inst-name" placeholder="Faculdade Exemplo">
           </div>
           <div class="form-group">
             <label>Razão Social:</label>
-            <input type="text" id="input-inst-razao" placeholder="Instituição Ltda" oninput="applyBranding()">
+            <input type="text" id="input-inst-razao" placeholder="Instituição Ltda">
           </div>
         </div>
         <div class="grid-2">
           <div class="form-group">
             <label>CNPJ:</label>
-            <input type="text" id="input-inst-cnpj" placeholder="00.000.000/0001-00" oninput="applyBranding()">
+            <input type="text" id="input-inst-cnpj" placeholder="00.000.000/0001-00">
           </div>
           <div class="form-group">
             <label>E-mail Institucional:</label>
-            <input type="text" id="input-inst-email" placeholder="contato@instituicao.com" oninput="applyBranding()">
+            <input type="text" id="input-inst-email" placeholder="contato@instituicao.com">
           </div>
         </div>
         <div class="grid-2">
           <div class="form-group">
             <label>Telefone / WhatsApp:</label>
-            <input type="text" id="input-inst-tel" placeholder="(91) 0000-0000" oninput="applyBranding()">
+            <input type="text" id="input-inst-tel" placeholder="(91) 0000-0000">
           </div>
           <div class="form-group">
             <label>Endereço Completo:</label>
-            <input type="text" id="input-inst-end" placeholder="Rua, Número, Bairro, Cidade - PA" oninput="applyBranding()">
+            <input type="text" id="input-inst-end" placeholder="Rua, Número, Bairro, Cidade - PA">
           </div>
         </div>
-        <button style="margin-top: 15px; border-radius: 20px;" onclick="applyBranding(true)">Salvar Configurações da Instituição</button>
+        <button style="margin-top: 15px; border-radius: 20px;" onclick="salvarBrandingNaNuvem()">Salvar Configurações na Nuvem</button>
       </div>
 
     </div>
@@ -768,7 +768,6 @@ button:hover {
     appId: "1:343442411308:web:e4500b862fa29b6b326689"
   };
 
-  // Inicializar Firebase Compat Firestore
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 
@@ -916,11 +915,31 @@ button:hover {
   let teachers = [];
   let financeLogs = [];
 
-  // ==========================================
-  // SINCRONIZAÇÃO EM TEMPO REAL COM O FIRESTORE
-  // ==========================================
   function carregarDadosDaNuvem() {
-    // Cursos
+    // Carregar dados institucionais (Branding/Logo) em tempo real do Firestore
+    db.collection("config").doc("institution").onSnapshot((doc) => {
+      if (doc.exists) {
+        const data = doc.data();
+        document.getElementById('input-inst-name').value = data.name || '';
+        document.getElementById('input-inst-razao').value = data.razao || '';
+        document.getElementById('input-inst-cnpj').value = data.cnpj || '';
+        document.getElementById('input-inst-email').value = data.email || '';
+        document.getElementById('input-inst-tel').value = data.tel || '';
+        document.getElementById('input-inst-end').value = data.end || '';
+        
+        if (data.logo) {
+          currentLogoDataUrl = data.logo;
+          updateLogoPreview(currentLogoDataUrl);
+        } else {
+          currentLogoDataUrl = "";
+          updateLogoPreview("");
+        }
+
+        document.getElementById('header-inst-name').innerText = data.name || "Instituição de Ensino";
+        document.getElementById('header-inst-sub').innerText = data.razao ? `${data.razao}` : "";
+      }
+    });
+
     db.collection("courses").onSnapshot((snapshot) => {
       courses = [];
       snapshot.forEach((doc) => courses.push({ id: doc.id, ...doc.data() }));
@@ -929,7 +948,6 @@ button:hover {
       renderDropdowns();
     });
 
-    // Turmas
     db.collection("classes").onSnapshot((snapshot) => {
       classes = [];
       snapshot.forEach((doc) => classes.push({ id: doc.id, ...doc.data() }));
@@ -937,21 +955,18 @@ button:hover {
       renderDropdowns();
     });
 
-    // Alunos
     db.collection("students").onSnapshot((snapshot) => {
       students = [];
       snapshot.forEach((doc) => students.push({ id: doc.id, ...doc.data() }));
       renderAllIntegratedViews();
     });
 
-    // Professores
     db.collection("teachers").onSnapshot((snapshot) => {
       teachers = [];
       snapshot.forEach((doc) => teachers.push({ id: doc.id, ...doc.data() }));
       renderTeachers();
     });
 
-    // Financeiro
     db.collection("financeLogs").onSnapshot((snapshot) => {
       financeLogs = [];
       snapshot.forEach((doc) => financeLogs.push({ id: doc.id, ...doc.data() }));
@@ -1302,6 +1317,7 @@ button:hover {
     filterTurmasByCourse();
   }
 
+  // LOGOMARCA E CONFIGURAÇÕES DITO NO FIRESTORE (Nuvem)
   async function handleLogoUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -1309,7 +1325,7 @@ button:hover {
     reader.onload = async function(e) {
       currentLogoDataUrl = e.target.result;
       updateLogoPreview(currentLogoDataUrl);
-      applyBranding();
+      salvarBrandingNaNuvem(false); // Salva automaticamente ao carregar
     };
     reader.readAsDataURL(file);
   }
@@ -1317,7 +1333,7 @@ button:hover {
   async function removeLogo() {
     currentLogoDataUrl = "";
     updateLogoPreview("");
-    applyBranding();
+    salvarBrandingNaNuvem(false);
   }
 
   function updateLogoPreview(src) {
@@ -1334,31 +1350,23 @@ button:hover {
     }
   }
 
-  function applyBranding(notify = false) {
+  async function salvarBrandingNaNuvem(showAlert = true) {
     const brandingData = {
-      name: document.getElementById('input-inst-name').value,
-      razao: document.getElementById('input-inst-razao').value,
-      cnpj: document.getElementById('input-inst-cnpj').value,
-      email: document.getElementById('input-inst-email').value,
-      tel: document.getElementById('input-inst-tel').value,
-      end: document.getElementById('input-inst-end').value
+      name: document.getElementById('input-inst-name').value.trim(),
+      razao: document.getElementById('input-inst-razao').value.trim(),
+      cnpj: document.getElementById('input-inst-cnpj').value.trim(),
+      email: document.getElementById('input-inst-email').value.trim(),
+      tel: document.getElementById('input-inst-tel').value.trim(),
+      end: document.getElementById('input-inst-end').value.trim(),
+      logo: currentLogoDataUrl
     };
-    document.getElementById('header-inst-name').innerText = brandingData.name || "Instituição de Ensino";
-    document.getElementById('header-inst-sub').innerText = brandingData.razao ? `${brandingData.razao}` : "";
-    localStorage.setItem('app_branding', JSON.stringify(brandingData));
-    if (notify) alert("Configurações salvas!");
-  }
 
-  function loadBranding() {
-    const saved = JSON.parse(localStorage.getItem('app_branding'));
-    if (saved) {
-      document.getElementById('input-inst-name').value = saved.name || '';
-      document.getElementById('input-inst-razao').value = saved.razao || '';
-      document.getElementById('input-inst-cnpj').value = saved.cnpj || '';
-      document.getElementById('input-inst-email').value = saved.email || '';
-      document.getElementById('input-inst-tel').value = saved.tel || '';
-      document.getElementById('input-inst-end').value = saved.end || '';
-      applyBranding();
+    try {
+      await db.collection("config").doc("institution").set(brandingData, { merge: true });
+      if (showAlert) alert("Configurações e logomarca salvas na nuvem com sucesso!");
+    } catch (error) {
+      console.error("Erro ao salvar na nuvem:", error);
+      alert("Erro ao salvar dados na nuvem.");
     }
   }
 
@@ -1382,12 +1390,15 @@ button:hover {
   async function gerarComprovantePDF(dadosAluno) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
-    const brandingSaved = JSON.parse(localStorage.getItem('app_branding')) || {};
+    
+    // Busca os dados institucionais direto do Firestore para o PDF
+    const docSnap = await db.collection("config").doc("institution").get();
+    const brandingSaved = docSnap.exists ? docSnap.data() : {};
     const qrCodeBase64 = await gerarQRCodeBase64("https://exemplo.com/validar");
 
     doc.setFillColor(26, 54, 93);
     doc.rect(0, 0, 210, 35, "F");
-    if (currentLogoDataUrl) doc.addImage(currentLogoDataUrl, 'PNG', 14, 5, 25, 25);
+    if (brandingSaved.logo) doc.addImage(brandingSaved.logo, 'PNG', 14, 5, 25, 25);
     doc.setTextColor("#ffffff");
     doc.setFontSize(16);
     doc.text("COMPROVANTE DE MATRÍCULA", 105, 22, { align: "center" });
@@ -1410,8 +1421,7 @@ button:hover {
   function exportReportToPDF() { window.print(); }
 
   window.addEventListener('DOMContentLoaded', () => {
-    loadBranding();
-    carregarDadosDaNuvem(); // Inicia a escuta em tempo real do Firebase
+    carregarDadosDaNuvem();
   });
 </script>
 </body>
