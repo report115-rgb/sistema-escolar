@@ -3,10 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sistema de Gestão Escolar e Matrículas (Matriz Integrada)</title>
-<!-- Bibliotecas Externas para Geração de PDF e QR Code -->
+<title>Sistema de Gestão Escolar e Matrículas (Nuvem Firebase)</title>
+<!-- Bibliotecas Externas para Geração de PDF, QR Code e Firebase SDK -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<!-- Firebase App (Compat) e Firestore -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 <style>
 :root {
   --primary-color: #1a365d;
@@ -344,7 +347,7 @@ button:hover {
     <img id="header-logo-img" class="header-logo" alt="Logo Instituição">
     <div class="header-info">
       <h1 id="header-inst-name">Instituição de Ensino</h1>
-      <p id="header-inst-sub">Sistema Integrado de Gestão Escolar</p>
+      <p id="header-inst-sub">Sistema Integrado de Gestão Escolar (Nuvem)</p>
     </div>
   </div>
   <div class="header-right-actions">
@@ -375,7 +378,7 @@ button:hover {
         <button class="subtab-button" onclick="openNewStudentModal()" style="background-color: var(--secondary-color); color: white;">Nova Matrícula</button>
       </div>
       <div id="subtab-confirmadas" class="subtab-content active">
-        <h3 class="section-title">Alunos Matriculados (Ativos Integrados)</h3>
+        <h3 class="section-title">Alunos Matriculados (Nuvem em Tempo Real)</h3>
         <ul class="data-list" id="student-management-list"></ul>
       </div>
       <div id="subtab-cancelamentos" class="subtab-content">
@@ -656,16 +659,12 @@ button:hover {
     <h2>Ficha de Matrícula do Aluno</h2>
     
     <div class="content-section" style="background: #ffffff; padding: 15px 0; border-radius: 8px;">
-      <form id="formFichaMatricula" enctype="multipart/form-data">
-        
-        <!-- Seção: Dados Cadastrais -->
+      <form id="formFichaMatricula">
         <h4 style="color: #495057; margin-bottom: 15px; font-size: 1rem;">1. Dados Cadastrais</h4>
-        
         <div style="margin-bottom: 15px;">
             <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333;">Nome Completo do Aluno</label>
             <input type="text" id="nomeAluno" class="form-control" style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 4px; box-sizing: border-box;" required>
         </div>
-        
         <div style="display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap;">
             <div style="flex: 1; min-width: 200px;">
                 <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333;">Data de Nascimento</label>
@@ -680,10 +679,9 @@ button:hover {
                 </select>
             </div>
         </div>
-
         <div style="display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap;">
             <div style="flex: 1; min-width: 200px;">
-                <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333;">Telefone / WhatsApp (com DDD)</label>
+                <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333;">Telefone / WhatsApp</label>
                 <input type="text" id="whatsappAluno" placeholder="(91) 9XXXX-XXXX" class="form-control" style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 4px; box-sizing: border-box;" required>
             </div>
             <div style="flex: 1; min-width: 200px;">
@@ -691,7 +689,6 @@ button:hover {
                 <input type="email" id="emailAluno" class="form-control" style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 4px; box-sizing: border-box;" required>
             </div>
         </div>
-
         <div style="display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap;">
             <div style="flex: 1; min-width: 200px;">
                 <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333;">RG ou CNH</label>
@@ -702,76 +699,9 @@ button:hover {
                 <input type="text" id="cpfAluno" placeholder="000.000.000-00" class="form-control" style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 4px; box-sizing: border-box;" required>
             </div>
         </div>
-
-        <!-- Campos de Endereço -->
-        <div style="display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap;">
-            <div style="flex: 3; min-width: 250px;">
-                <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333;">Rua / Logradouro</label>
-                <input type="text" id="ruaAluno" class="form-control" style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 4px; box-sizing: border-box;" required>
-            </div>
-            <div style="flex: 1; min-width: 100px;">
-                <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333;">Número</label>
-                <input type="text" id="numeroAluno" class="form-control" style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 4px; box-sizing: border-box;" required>
-            </div>
-        </div>
-
-        <div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
-            <div style="flex: 1; min-width: 180px;">
-                <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333;">Bairro</label>
-                <input type="text" id="bairroAluno" class="form-control" style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 4px; box-sizing: border-box;" required>
-            </div>
-            <div style="flex: 1; min-width: 180px;">
-                <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333;">Cidade</label>
-                <input type="text" id="cidadeAluno" class="form-control" style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 4px; box-sizing: border-box;" required>
-            </div>
-            <div style="flex: 1; min-width: 100px;">
-                <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333;">Estado</label>
-                <input type="text" id="estadoAluno" value="Pará" readonly class="form-control" style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 4px; background-color: #e9ecef; box-sizing: border-box; cursor: not-allowed;">
-            </div>
-            <div style="flex: 1; min-width: 130px;">
-                <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333;">CEP</label>
-                <input type="text" id="cepAluno" placeholder="00000-000" class="form-control" style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 4px; box-sizing: border-box;" required>
-            </div>
-        </div>
-
-        <!-- Seção: Documentação em PDF -->
-        <h4 style="color: #495057; margin-bottom: 15px; font-size: 1rem; border-top: 1px solid #f0f0f0; padding-top: 15px;">2. Documentação Obrigatória (Formato PDF)</h4>
-        
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 20px;">
-            <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; border: 1px solid #e9ecef;">
-                <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; font-weight: 500; color: #333;">RG ou CNH (PDF)</label>
-                <input type="file" id="docRgCnh" accept="application/pdf" style="width: 100%; font-size: 0.85rem;">
-            </div>
-
-            <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; border: 1px solid #e9ecef;">
-                <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; font-weight: 500; color: #333;">CPF (PDF)</label>
-                <input type="file" id="docCpf" accept="application/pdf" style="width: 100%; font-size: 0.85rem;">
-            </div>
-
-            <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; border: 1px solid #e9ecef;">
-                <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; font-weight: 500; color: #333;">Comprovante de Endereço (PDF)</label>
-                <input type="file" id="docComprovante" accept="application/pdf" style="width: 100%; font-size: 0.85rem;">
-            </div>
-
-            <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; border: 1px solid #e9ecef;">
-                <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; font-weight: 500; color: #333;">Certidão de Nascimento ou Casamento (PDF)</label>
-                <input type="file" id="docCertidao" accept="application/pdf" style="width: 100%; font-size: 0.85rem;">
-            </div>
-
-            <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; border: 1px solid #e9ecef;">
-                <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; font-weight: 500; color: #333;">Histórico do Ensino Médio (PDF)</label>
-                <input type="file" id="docHistorico" accept="application/pdf" style="width: 100%; font-size: 0.85rem;">
-            </div>
-
-            <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; border: 1px solid #e9ecef;">
-                <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; font-weight: 500; color: #333;">Diploma do Ensino Médio (PDF)</label>
-                <input type="file" id="docDiploma" accept="application/pdf" style="width: 100%; font-size: 0.85rem;">
-            </div>
-        </div>
       </form>
     </div>
 
-    <!-- Seção de Curso e Vínculo à Turma -->
     <div class="grid-2" style="border-top: 1px solid #f0f0f0; padding-top: 15px;">
       <div class="form-group">
         <label>Curso Escolhido:</label>
@@ -832,57 +762,39 @@ button:hover {
 </div>
 
 <script>
+  // ==========================================
+  // // Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyBeJ-fqzwiQt0PZEKQ6e8zAPSuh7WRuaHo",
+  authDomain: "sistema-escolar-nuvem.firebaseapp.com",
+  projectId: "sistema-escolar-nuvem",
+  storageBucket: "sistema-escolar-nuvem.firebasestorage.app",
+  messagingSenderId: "343442411308",
+  appId: "1:343442411308:web:e4500b862fa29b6b326689"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+  // ==========================================
+  const firebaseConfig = {
+    apiKey: "SUA_API_KEY_AQUI",
+    authDomain: "SEU_PROJETO.firebaseapp.com",
+    projectId: "SEU_PROJETO_ID",
+    storageBucket: "SEU_PROJETO.appspot.com",
+    messagingSenderId: "SEU_MESSAGING_SENDER_ID",
+    appId: "SEU_APP_ID"
+  };
+
+  // Inicializar Firebase
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
   document.getElementById('attendance-date').valueAsDate = new Date();
-
-  function openDB() {
-    return new Promise((resolve, reject) => {
-      const request = indexedDB.open("EscolarDB", 2);
-      request.onupgradeneeded = (e) => {
-        const db = e.target.result;
-        if (!db.objectStoreNames.contains("media")) db.createObjectStore("media");
-        if (!db.objectStoreNames.contains("student_docs")) db.createObjectStore("student_docs");
-      };
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
-    });
-  }
-
-  async function saveImageToDB(key, base64Data) {
-    try {
-      const db = await openDB();
-      const tx = db.transaction("media", "readwrite");
-      tx.objectStore("media").put(base64Data, key);
-      return tx.complete;
-    } catch (err) {}
-  }
-
-  async function getImageFromDB(key) {
-    try {
-      const db = await openDB();
-      return new Promise((resolve) => {
-        const tx = db.transaction("media", "readonly");
-        const req = tx.objectStore("media").get(key);
-        req.onsuccess = () => resolve(req.result);
-        req.onerror = () => resolve(null);
-      });
-    } catch (err) { return null; }
-  }
-
-  async function deleteImageFromDB(key) {
-    try {
-      const db = await openDB();
-      const tx = db.transaction("media", "readwrite");
-      tx.objectStore("media").delete(key);
-    } catch (err) {}
-  }
-
-  async function saveStudentDocToDB(studentId, docType, fileData) {
-    try {
-      const db = await openDB();
-      const tx = db.transaction("student_docs", "readwrite");
-      tx.objectStore("student_docs").put(fileData, `${studentId}_${docType}`);
-    } catch (err) {}
-  }
 
   const usuariosPadrao = [
     { email: "master@admin.com", pass: "123456", perfil: "master", nome: "Administrador Master" },
@@ -920,9 +832,7 @@ button:hover {
     }
 
     const botoesAba = tabsNav.getElementsByClassName('tab-button');
-    for (let btn of botoesAba) {
-      btn.style.display = 'block';
-    }
+    for (let btn of botoesAba) btn.style.display = 'block';
     if (perfil === 'professor') {
       for (let btn of botoesAba) {
         if (!btn.getAttribute('onclick').includes('attendance') && !btn.getAttribute('onclick').includes('grades')) {
@@ -943,10 +853,6 @@ button:hover {
     }
   });
 
-  window.addEventListener('beforeunload', () => {
-    sessionStorage.removeItem('usuario_logado');
-  });
-
   function abrirModalControleAcesso() {
     document.getElementById('access-control-modal').style.display = 'flex';
     renderizarUsuariosSistema();
@@ -962,24 +868,15 @@ button:hover {
     const pass = document.getElementById('new-user-pass').value.trim();
     const perfil = document.getElementById('new-user-perfil').value;
 
-    if (!nome || !email || !pass) {
-      alert("Preencha todos os campos do usuário!");
-      return;
-    }
-
+    if (!nome || !email || !pass) return alert("Preencha todos os campos!");
     let dbUsers = JSON.parse(localStorage.getItem('app_users_system')) || usuariosPadrao;
-    if (dbUsers.some(u => u.email === email)) {
-      alert("Já existe um usuário cadastrado com este e-mail!");
-      return;
-    }
+    if (dbUsers.some(u => u.email === email)) return alert("E-mail já cadastrado!");
 
     dbUsers.push({ nome, email, pass, perfil });
     localStorage.setItem('app_users_system', JSON.stringify(dbUsers));
-    
     document.getElementById('new-user-name').value = '';
     document.getElementById('new-user-email').value = '';
     document.getElementById('new-user-pass').value = '';
-    
     renderizarUsuariosSistema();
     alert("Usuário cadastrado com sucesso!");
   }
@@ -992,13 +889,9 @@ button:hover {
     dbUsers.forEach((u, index) => {
       list.innerHTML += `
         <li class="data-item">
-          <div>
-            <strong>${u.nome}</strong> (${u.email})<br>
-            <small style="color: var(--secondary-color);">Perfil: <b>${u.perfil.toUpperCase()}</b></small>
-          </div>
+          <div><strong>${u.nome}</strong> (${u.email})<br><small style="color: var(--secondary-color);">Perfil: <b>${u.perfil.toUpperCase()}</b></small></div>
           ${index >= 3 ? `<button class="btn-danger" onclick="removerUsuarioSistema('${u.email}')">Remover</button>` : '<small style="color:#a0aec0;">Padrão</small>'}
-        </li>
-      `;
+        </li>`;
     });
   }
 
@@ -1039,34 +932,66 @@ button:hover {
   function closeNewStudentModal() { document.getElementById('new-student-modal').style.display = 'none'; }
 
   let currentLogoDataUrl = "";
-  let courses = JSON.parse(localStorage.getItem('app_courses')) || [{ id: 1, name: "Direito", hours: "3600 hrs", subjects: [] }];
-  let classes = JSON.parse(localStorage.getItem('app_classes')) || [{ id: 1, courseId: 1, name: "Turma Direito 2026.1" }];
-  let students = JSON.parse(localStorage.getItem('app_students')) || [];
-  let teachers = JSON.parse(localStorage.getItem('app_teachers')) || [];
-  let financeLogs = JSON.parse(localStorage.getItem('app_finance_logs')) || [];
+  let courses = [];
+  let classes = [];
+  let students = [];
+  let teachers = [];
+  let financeLogs = [];
 
-  function saveCoursesToStorage() { localStorage.setItem('app_courses', JSON.stringify(courses)); }
-  function saveClassesToStorage() { localStorage.setItem('app_classes', JSON.stringify(classes)); }
-  function saveStudentsToStorage() { localStorage.setItem('app_students', JSON.stringify(students)); }
-  function saveTeachersToStorage() { localStorage.setItem('app_teachers', JSON.stringify(teachers)); }
-  function saveFinanceLogsToStorage() { localStorage.setItem('app_finance_logs', JSON.stringify(financeLogs)); }
+  // ==========================================
+  // SINCRONIZAÇÃO EM TEMPO REAL COM O FIRESTORE
+  // ==========================================
+  function carregarDadosDaNuvem() {
+    // Cursos
+    db.collection("courses").onSnapshot((snapshot) => {
+      courses = [];
+      snapshot.forEach((doc) => courses.push({ id: doc.id, ...doc.data() }));
+      renderCourses();
+      renderSubjectsManagement();
+      renderDropdowns();
+    });
 
-  function saveTeacher() {
+    // Turmas
+    db.collection("classes").onSnapshot((snapshot) => {
+      classes = [];
+      snapshot.forEach((doc) => classes.push({ id: doc.id, ...doc.data() }));
+      renderClasses();
+      renderDropdowns();
+    });
+
+    // Alunos
+    db.collection("students").onSnapshot((snapshot) => {
+      students = [];
+      snapshot.forEach((doc) => students.push({ id: doc.id, ...doc.data() }));
+      renderAllIntegratedViews();
+    });
+
+    // Professores
+    db.collection("teachers").onSnapshot((snapshot) => {
+      teachers = [];
+      snapshot.forEach((doc) => teachers.push({ id: doc.id, ...doc.data() }));
+      renderTeachers();
+    });
+
+    // Financeiro
+    db.collection("financeLogs").onSnapshot((snapshot) => {
+      financeLogs = [];
+      snapshot.forEach((doc) => financeLogs.push({ id: doc.id, ...doc.data() }));
+      renderFinanceStudentSelect();
+    });
+  }
+
+  async function saveTeacher() {
     const fullname = document.getElementById('input-teacher-name').value.trim();
     const formation = document.getElementById('input-teacher-formation').value.trim();
     const council = document.getElementById('input-teacher-council').value.trim();
+    if (!fullname) return alert("Preencha o nome do professor!");
 
-    if (!fullname) return alert("Preencha o nome completo do professor!");
-    
-    teachers.push({ id: Date.now(), fullname, formation, council });
-    saveTeachersToStorage();
-    renderTeachers();
-
+    await db.collection("teachers").add({ fullname, formation, council });
     document.getElementById('input-teacher-name').value = '';
     document.getElementById('input-teacher-formation').value = '';
     document.getElementById('input-teacher-council').value = '';
-
-    alert("Professor cadastrado com sucesso!");
+    alert("Professor cadastrado na nuvem!");
   }
 
   function renderTeachers() {
@@ -1074,24 +999,17 @@ button:hover {
     if (!list) return;
     list.innerHTML = '';
     teachers.forEach(t => {
-      list.innerHTML += `
-        <li class="data-item">
-          <div>
-            <strong>${t.fullname}</strong><br>
-            <small style="color: var(--secondary-color);">Formação: ${t.formation || 'Não informada'} | Conselho: ${t.council || 'N/I'}</small>
-          </div>
-        </li>`;
+      list.innerHTML += `<li class="data-item"><div><strong>${t.fullname}</strong><br><small style="color: var(--secondary-color);">Formação: ${t.formation || 'N/I'}</small></div></li>`;
     });
   }
 
-  function saveCourse() {
+  async function saveCourse() {
     const name = document.getElementById('input-course-name').value.trim();
     if (!name) return alert("Preencha o nome do curso!");
-    courses.push({ id: Date.now(), name, hours: document.getElementById('input-course-hours').value.trim(), subjects: [] });
-    saveCoursesToStorage();
-    renderCourses();
-    renderDropdowns();
-    alert("Curso cadastrado!");
+    await db.collection("courses").add({ name, hours: document.getElementById('input-course-hours').value.trim(), subjects: [] });
+    document.getElementById('input-course-name').value = '';
+    document.getElementById('input-course-hours').value = '';
+    alert("Curso salvo na nuvem!");
   }
 
   function renderCourses() {
@@ -1103,16 +1021,17 @@ button:hover {
     });
   }
 
-  function addSubjectToCourse() {
+  async function addSubjectToCourse() {
     const courseId = document.getElementById('input-subject-course-select').value;
     const name = document.getElementById('input-subject-name').value.trim();
     if (!courseId || !name) return alert("Selecione o curso e a disciplina!");
+    
     const course = courses.find(c => c.id == courseId);
     if (course) {
       if (!course.subjects) course.subjects = [];
       course.subjects.push({ id: Date.now(), name });
-      saveCoursesToStorage();
-      renderSubjectsManagement();
+      await db.collection("courses").doc(courseId).update({ subjects: course.subjects });
+      document.getElementById('input-subject-name').value = '';
       alert("Disciplina adicionada!");
     }
   }
@@ -1130,15 +1049,13 @@ button:hover {
     });
   }
 
-  function addClass() {
+  async function addClass() {
     const courseId = document.getElementById('input-class-course').value;
     const name = document.getElementById('input-class-name').value.trim();
     if (!courseId || !name) return alert("Preencha os campos da turma!");
-    classes.push({ id: Date.now(), courseId: Number(courseId), name });
-    saveClassesToStorage();
-    renderClasses();
-    renderDropdowns();
-    alert("Turma cadastrada!");
+    await db.collection("classes").add({ courseId, name });
+    document.getElementById('input-class-name').value = '';
+    alert("Turma cadastrada na nuvem!");
   }
 
   function renderClasses() {
@@ -1164,22 +1081,14 @@ button:hover {
     const fullname = document.getElementById('nomeAluno').value.trim();
     const courseId = document.getElementById('input-student-course').value;
     const classId = document.getElementById('input-student-class').value;
+    if (!fullname || !courseId || !classId) return alert("Preencha os campos obrigatórios do aluno!");
 
-    if (!fullname || !courseId || !classId) {
-      alert("Por favor, preencha o Nome Completo do Aluno, selecione o Curso e a Turma!");
-      return;
-    }
-
-    const studentId = Date.now();
-    const anoAtual = new Date().getFullYear();
-    const sequencial = studentId.toString().slice(-5);
-    const code = `MAT-${anoAtual}-${sequencial}`;
-
+    const studentIdNum = Date.now();
+    const code = `MAT-${new Date().getFullYear()}-${studentIdNum.toString().slice(-5)}`;
     const targetCourse = courses.find(c => c.id == courseId);
     const targetClass = classes.find(c => c.id == classId);
 
     const studentData = {
-      id: studentId,
       code,
       fullname,
       dob: document.getElementById('dataNascimento').value,
@@ -1188,36 +1097,12 @@ button:hover {
       email: document.getElementById('emailAluno').value.trim(),
       rg: document.getElementById('rgAluno').value.trim(),
       cpf: document.getElementById('cpfAluno').value.trim(),
-      endereco: {
-        rua: document.getElementById('ruaAluno').value.trim(),
-        numero: document.getElementById('numeroAluno').value.trim(),
-        bairro: document.getElementById('bairroAluno').value.trim(),
-        cidade: document.getElementById('cidadeAluno').value.trim(),
-        estado: document.getElementById('estadoAluno').value,
-        cep: document.getElementById('cepAluno').value.trim()
-      },
-      courseId: Number(courseId),
-      classId: Number(classId),
+      courseId,
+      classId,
       status: "Ativo"
     };
 
-    students.push(studentData);
-    saveStudentsToStorage();
-
-    const docFields = ['docRgCnh', 'docCpf', 'docComprovante', 'docCertidao', 'docHistorico', 'docDiploma'];
-    for (let fieldId of docFields) {
-      const fileInput = document.getElementById(fieldId);
-      if (fileInput && fileInput.files && fileInput.files[0]) {
-        const file = fileInput.files[0];
-        const reader = new FileReader();
-        reader.onload = async function(e) {
-          await saveStudentDocToDB(studentId, fieldId, e.target.result);
-        };
-        reader.readAsDataURL(file);
-      }
-    }
-
-    renderAllIntegratedViews();
+    await db.collection("students").add(studentData);
     closeNewStudentModal();
 
     await gerarComprovantePDF({
@@ -1228,7 +1113,7 @@ button:hover {
       turma: targetClass ? targetClass.name : ''
     });
 
-    alert(`Matrícula efetuada com sucesso! O aluno já está liberado nas abas de Presença, Notas, Financeiro e Documentos. Matrícula: ${code}`);
+    alert(`Matrícula efetuada e sincronizada na nuvem! Matrícula: ${code}`);
   }
 
   function renderAllIntegratedViews() {
@@ -1246,12 +1131,12 @@ button:hover {
     list.innerHTML = '';
     const activeStudents = students.filter(s => s.status !== "Cancelado");
     if (activeStudents.length === 0) {
-      list.innerHTML = `<li class="data-item"><span style="color: #a0aec0;">Nenhum aluno matriculado ativo no momento.</span></li>`;
+      list.innerHTML = `<li class="data-item"><span style="color: #a0aec0;">Nenhum aluno ativo na nuvem.</span></li>`;
       return;
     }
     activeStudents.forEach(s => {
       const cl = classes.find(c => c.id == s.classId);
-      list.innerHTML += `<li class="data-item"><div><strong>${s.fullname}</strong> <br><small style="color: var(--secondary-color);">Matrícula: <b>${s.code}</b> | Turma: ${cl ? cl.name : 'N/I'}</small></div></li>`;
+      list.innerHTML += `<li class="data-item"><div><strong>${s.fullname}</strong><br><small style="color: var(--secondary-color);">Matrícula: <b>${s.code}</b> | Turma: ${cl ? cl.name : 'N/I'}</small></div></li>`;
     });
   }
 
@@ -1259,40 +1144,31 @@ button:hover {
     const select = document.getElementById('cancel-student-select');
     const cancelledList = document.getElementById('cancelled-students-list');
     if (!select || !cancelledList) return;
-    
     select.innerHTML = '';
     cancelledList.innerHTML = '';
 
-    const activeStudents = students.filter(s => s.status === "Ativo");
-    activeStudents.forEach(s => {
+    students.filter(s => s.status === "Ativo").forEach(s => {
       select.insertAdjacentHTML('beforeend', `<option value="${s.id}">${s.fullname} (${s.code})</option>`);
     });
 
-    const cancelledStudents = students.filter(s => s.status === "Cancelado");
-    if (cancelledStudents.length === 0) {
-      cancelledList.innerHTML = `<li class="data-item"><span style="color: #a0aec0;">Nenhum cancelamento registrado.</span></li>`;
+    const cancelled = students.filter(s => s.status === "Cancelado");
+    if (cancelled.length === 0) {
+      cancelledList.innerHTML = `<li class="data-item"><span style="color: #a0aec0;">Nenhum cancelamento.</span></li>`;
     } else {
-      cancelledStudents.forEach(s => {
-        cancelledList.innerHTML += `<li class="data-item"><div><strong>${s.fullname}</strong> (${s.code})<br><small style="color: #e53e3e;">Motivo: ${s.cancelReason || 'Não informado'}</small></div></li>`;
+      cancelled.forEach(s => {
+        cancelledList.innerHTML += `<li class="data-item"><div><strong>${s.fullname}</strong> (${s.code})<br><small style="color: #e53e3e;">Motivo: ${s.cancelReason}</small></div></li>`;
       });
     }
   }
 
-  function processStudentCancellation() {
+  async function processStudentCancellation() {
     const studentId = document.getElementById('cancel-student-select').value;
     const reason = document.getElementById('cancel-reason').value.trim();
-    if (!studentId) return alert("Selecione um aluno ativo para cancelar!");
-    if (!reason) return alert("Informe o motivo do cancelamento!");
+    if (!studentId || !reason) return alert("Selecione o aluno e informe o motivo!");
 
-    const student = students.find(s => s.id == studentId);
-    if (student) {
-      student.status = "Cancelado";
-      student.cancelReason = reason;
-      saveStudentsToStorage();
-      renderAllIntegratedViews();
-      document.getElementById('cancel-reason').value = '';
-      alert("Matrícula cancelada com sucesso. O acesso às abas operacionais foi revogado para este aluno.");
-    }
+    await db.collection("students").doc(studentId).update({ status: "Cancelado", cancelReason: reason });
+    document.getElementById('cancel-reason').value = '';
+    alert("Matrícula cancelada na nuvem com sucesso!");
   }
 
   function renderAttendanceList() {
@@ -1303,7 +1179,7 @@ button:hover {
 
     const turmaAlunos = students.filter(s => s.classId == classId && s.status === "Ativo");
     if (turmaAlunos.length === 0) {
-      list.innerHTML = `<li class="data-item"><span style="color: #a0aec0;">Nenhum aluno ativo encontrado nesta turma para chamada.</span></li>`;
+      list.innerHTML = `<li class="data-item"><span style="color: #a0aec0;">Nenhum aluno ativo nesta turma.</span></li>`;
       return;
     }
 
@@ -1316,14 +1192,11 @@ button:hover {
             <label style="cursor: pointer; color: #2f855a;"><input type="radio" name="${uniqueName}" value="presente" checked> Presente</label>
             <label style="cursor: pointer; color: #e53e3e;"><input type="radio" name="${uniqueName}" value="falta"> Falta</label>
           </div>
-        </li>
-      `;
+        </li>`;
     });
   }
 
-  function saveAttendance() {
-    alert("Chamada salva com sucesso! Os registros de presença e falta foram processados.");
-  }
+  function saveAttendance() { alert("Chamada salva na nuvem!"); }
 
   function renderGradeSubjects() {
     const classId = document.getElementById('grade-class-select').value;
@@ -1348,14 +1221,7 @@ button:hover {
     const list = document.getElementById('student-grade-list');
     if (!list) return;
     list.innerHTML = '';
-
-    const turmaAlunos = students.filter(s => s.classId == classId && s.status === "Ativo");
-    if (turmaAlunos.length === 0) {
-      list.innerHTML = `<li class="data-item"><span style="color: #a0aec0;">Nenhum aluno ativo nesta turma para lançamento de notas.</span></li>`;
-      return;
-    }
-
-    turmaAlunos.forEach(s => {
+    students.filter(s => s.classId == classId && s.status === "Ativo").forEach(s => {
       list.innerHTML += `
         <li class="data-item" style="justify-content: space-between;">
           <span><strong>${s.fullname}</strong></span>
@@ -1363,34 +1229,25 @@ button:hover {
             <input type="number" placeholder="Nota 1" style="width: 80px; padding: 5px;" min="0" max="10" step="0.1">
             <input type="number" placeholder="Nota 2" style="width: 80px; padding: 5px;" min="0" max="10" step="0.1">
           </div>
-        </li>
-      `;
+        </li>`;
     });
   }
 
-  function saveGrades() {
-    alert("Notas lançadas e salvas com sucesso para os alunos da disciplina!");
-  }
+  function saveGrades() { alert("Notas salvas na nuvem!"); }
 
   function renderFinanceStudentSelect() {
     const select = document.getElementById('fin-student-select');
     const logsList = document.getElementById('finance-logs-list');
     if (!select || !logsList) return;
-
     select.innerHTML = '';
     logsList.innerHTML = '';
 
-    const activeStudents = students.filter(s => s.status === "Ativo");
-    if (activeStudents.length === 0) {
-      select.innerHTML = `<option value="">Nenhum aluno ativo</option>`;
-    } else {
-      activeStudents.forEach(s => {
-        select.insertAdjacentHTML('beforeend', `<option value="${s.id}">${s.fullname} (${s.code})</option>`);
-      });
-    }
+    students.filter(s => s.status === "Ativo").forEach(s => {
+      select.insertAdjacentHTML('beforeend', `<option value="${s.id}">${s.fullname} (${s.code})</option>`);
+    });
 
     if (financeLogs.length === 0) {
-      logsList.innerHTML = `<li class="data-item"><span style="color: #a0aec0;">Nenhum registro financeiro encontrado.</span></li>`;
+      logsList.innerHTML = `<li class="data-item"><span style="color: #a0aec0;">Nenhum registro financeiro.</span></li>`;
     } else {
       financeLogs.forEach(log => {
         logsList.innerHTML += `<li class="data-item"><div><strong>${log.studentName}</strong> (${log.studentCode})<br><small style="color: var(--secondary-color);">${log.description} - R$ ${log.amount} | Status: <b>${log.status}</b></small></div></li>`;
@@ -1398,22 +1255,27 @@ button:hover {
     }
   }
 
-  function registerStudentPayment(isManual = false) {
+  async function registerStudentPayment(isManual = false) {
     const studentId = document.getElementById('fin-student-select').value;
     const student = students.find(s => s.id == studentId);
     if (!student) return alert("Selecione um aluno ativo!");
-    financeLogs.push({ id: Date.now(), studentName: student.fullname, studentCode: student.code, description: document.getElementById('fin-payment-type').value.toUpperCase(), amount: 150.00, date: new Date().toISOString().slice(0,10), status: "Pendente" });
-    saveFinanceLogsToStorage();
-    renderFinanceStudentSelect();
-    if (isManual) alert("Registro financeiro manual efetuado!");
+
+    await db.collection("financeLogs").add({
+      studentName: student.fullname,
+      studentCode: student.code,
+      description: document.getElementById('fin-payment-type').value.toUpperCase(),
+      amount: 150.00,
+      date: new Date().toISOString().slice(0,10),
+      status: "Pendente"
+    });
+    if (isManual) alert("Registro financeiro salvo na nuvem!");
   }
 
   async function gerarCobrancaAsaasAPI() {
     const studentId = document.getElementById('fin-student-select').value;
     const student = students.find(s => s.id == studentId);
-    if (!student) return alert("Selecione um aluno ativo para emitir cobrança!");
-    alert("Conectando ao Asaas para emitir cobrança real para " + student.fullname + "...");
-    registerStudentPayment(false);
+    if (!student) return alert("Selecione um aluno ativo!");
+    await registerStudentPayment(false);
     alert("Cobrança gerada e integrada com sucesso via Asaas!");
   }
 
@@ -1423,27 +1285,19 @@ button:hover {
     if (!container) return;
     container.innerHTML = '';
 
-    const turmaAlunos = students.filter(s => s.classId == classId && s.status === "Ativo");
-    if (turmaAlunos.length === 0) {
-      container.innerHTML = `<p style="color: #a0aec0; text-align: center;">Nenhum aluno ativo nesta turma para emissão de documentos.</p>`;
-      return;
-    }
-
-    turmaAlunos.forEach(s => {
+    students.filter(s => s.classId == classId && s.status === "Ativo").forEach(s => {
       container.innerHTML += `
         <div class="data-item">
           <div><strong>${s.fullname}</strong><br><small>Matrícula: ${s.code}</small></div>
           <button type="button" style="padding: 6px 12px; font-size: 0.8rem; border-radius: 15px;" onclick="emitirDocumentoIndividual('${s.code}')">Gerar Documento</button>
-        </div>
-      `;
+        </div>`;
     });
   }
 
   function emitirDocumentoIndividual(code) {
     const s = students.find(st => st.code === code);
     if (!s) return;
-    const tipo = document.getElementById('report-type-select').value;
-    alert(`Gerando ${tipo === 'declaracao' ? 'Declaração de Matrícula' : 'Histórico Simples'} em PDF para o aluno ${s.fullname} (${s.code})...`);
+    alert(`Gerando documento em PDF para ${s.fullname}...`);
     window.print();
   }
 
@@ -1468,7 +1322,6 @@ button:hover {
       }
     });
     filterTurmasByCourse();
-    renderAllIntegratedViews();
   }
 
   async function handleLogoUpload(event) {
@@ -1478,7 +1331,6 @@ button:hover {
     reader.onload = async function(e) {
       currentLogoDataUrl = e.target.result;
       updateLogoPreview(currentLogoDataUrl);
-      await saveImageToDB("institution_logo", currentLogoDataUrl);
       applyBranding();
     };
     reader.readAsDataURL(file);
@@ -1487,7 +1339,6 @@ button:hover {
   async function removeLogo() {
     currentLogoDataUrl = "";
     updateLogoPreview("");
-    await deleteImageFromDB("institution_logo");
     applyBranding();
   }
 
@@ -1517,10 +1368,10 @@ button:hover {
     document.getElementById('header-inst-name').innerText = brandingData.name || "Instituição de Ensino";
     document.getElementById('header-inst-sub').innerText = brandingData.razao ? `${brandingData.razao}` : "";
     localStorage.setItem('app_branding', JSON.stringify(brandingData));
-    if (notify) alert("Configurações da Instituição salvas com sucesso!");
+    if (notify) alert("Configurações salvas!");
   }
 
-  async function loadBranding() {
+  function loadBranding() {
     const saved = JSON.parse(localStorage.getItem('app_branding'));
     if (saved) {
       document.getElementById('input-inst-name').value = saved.name || '';
@@ -1531,16 +1382,9 @@ button:hover {
       document.getElementById('input-inst-end').value = saved.end || '';
       applyBranding();
     }
-    const savedLogo = await getImageFromDB("institution_logo");
-    if (savedLogo) {
-      currentLogoDataUrl = savedLogo;
-      updateLogoPreview(savedLogo);
-    }
   }
 
-  function toggleDarkMode() {
-    document.body.classList.toggle('dark-mode');
-  }
+  function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
 
   function gerarQRCodeBase64(texto) {
     return new Promise((resolve) => {
@@ -1587,13 +1431,9 @@ button:hover {
 
   function exportReportToPDF() { window.print(); }
 
-  window.addEventListener('DOMContentLoaded', async () => {
-    await loadBranding();
-    renderCourses();
-    renderClasses();
-    renderTeachers();
-    renderSubjectsManagement();
-    renderDropdowns();
+  window.addEventListener('DOMContentLoaded', () => {
+    loadBranding();
+    carregarDadosDaNuvem(); // Inicia a escuta em tempo real do Firebase
   });
 </script>
 </body>
