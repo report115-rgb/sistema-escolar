@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sistema de Gestão Escolar e Matrículas (Nuvem Firebase)</title>
+<title>SE7 Gestão Educacional (Nuvem Firebase)</title>
 <!-- Bibliotecas Externas para Geração de PDF, QR Code e Firebase SDK -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -34,6 +34,9 @@ body {
   margin: 0;
   padding: 0;
   transition: background-color 0.3s, color 0.3s;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 header {
   background-color: var(--primary-color);
@@ -165,6 +168,7 @@ body.dark-mode .tab-button:hover {
   max-width: 950px;
   margin: 20px auto;
   padding: 0 20px;
+  flex: 1;
 }
 .tab-content {
   display: none;
@@ -314,25 +318,69 @@ button:hover {
 .modal-close-btn:hover {
   color: #e53e3e;
 }
+footer.app-footer {
+  text-align: center;
+  padding: 15px;
+  border-top: 1px solid var(--border-color);
+  background-color: var(--card-bg);
+  font-size: 0.75rem;
+  color: #718096;
+}
 </style>
 </head>
 <body>
 
-<!-- MODAL DE LOGIN -->
-<div id="login-modal" class="modal-overlay" style="display: flex; z-index: 2000; background: var(--primary-color);">
-  <div class="modal-card" style="max-width: 400px; text-align: center;">
-    <h2 style="color: var(--primary-color);">Acesso Institucional</h2>
-    <p style="font-size: 0.85rem; color: #718096; margin-bottom: 20px;">Entre com suas credenciais de usuário.</p>
-    <div class="form-group" style="text-align: left;">
-      <label>E-mail ou Usuário:</label>
-      <input type="text" id="login-user" placeholder="ex: secretaria@admin.com">
+<!-- MODAL DE LOGIN COM O RODAPÉ PERSONALIZADO NA PARTE AZUL -->
+<div id="login-modal" class="modal-overlay" style="display: flex; z-index: 2000; background: var(--primary-color); flex-direction: column; justify-content: space-between; padding: 20px; box-sizing: border-box;">
+  
+  <div></div> <!-- Espaçador superior para centralizar o card -->
+
+  <div class="modal-card" style="max-width: 400px; text-align: center; margin: auto;">
+    
+    <!-- TELA 1: LOGIN PADRÃO -->
+    <div id="login-view-main">
+      <h2 style="color: var(--primary-color); margin-bottom: 5px;">Acesso Institucional</h2>
+      <p style="font-size: 0.85rem; color: #718096; margin-bottom: 20px;">Entre com suas credenciais para acessar o sistema.</p>
+      <div class="form-group" style="text-align: left;">
+        <label>E-mail ou Usuário:</label>
+        <input type="text" id="login-user" placeholder="ex: secretaria@admin.com">
+      </div>
+      <div class="form-group" style="text-align: left;">
+        <label>Senha:</label>
+        <input type="password" id="login-pass" placeholder="........">
+      </div>
+      <button type="button" style="width: 100%; border-radius: 20px; margin-top: 10px;" onclick="fazerLogin()">Entrar no Sistema</button>
+      <div style="margin-top: 15px;">
+        <a href="#" onclick="alternarTelaRecuperacao(true)" style="font-size: 0.85rem; color: var(--secondary-color); text-decoration: none;">Esqueci minha senha</a>
+      </div>
     </div>
-    <div class="form-group" style="text-align: left;">
-      <label>Senha:</label>
-      <input type="password" id="login-pass" placeholder="........">
+
+    <!-- TELA 2: ESQUECI MINHA SENHA -->
+    <div id="login-view-forgot" style="display: none; text-align: left;">
+      <h2 style="color: var(--primary-color); text-align: center; margin-bottom: 5px;">Recuperação de Acesso</h2>
+      <p style="font-size: 0.85rem; color: #718096; margin-bottom: 20px; text-align: center;">Informe seu e-mail cadastrado para redefinir sua senha.</p>
+      <div class="form-group">
+        <label>E-mail Cadastrado:</label>
+        <input type="text" id="forgot-user-email" placeholder="ex: secretaria@admin.com">
+      </div>
+      <div class="form-group">
+        <label>Nova Senha:</label>
+        <input type="password" id="forgot-new-pass" placeholder="Mínimo de caracteres">
+      </div>
+      <button type="button" style="width: 100%; border-radius: 20px; margin-top: 10px; background-color: #2f855a;" onclick="executarRedefinicaoSenha()">Atualizar Senha</button>
+      <div style="margin-top: 15px; text-align: center;">
+        <a href="#" onclick="alternarTelaRecuperacao(false)" style="font-size: 0.85rem; color: #718096; text-decoration: none;">Voltar para o Login</a>
+      </div>
     </div>
-    <button type="button" style="width: 100%; border-radius: 20px; margin-top: 10px;" onclick="fazerLogin()">Entrar no Sistema</button>
+
   </div>
+
+  <!-- RODAPÉ CENTRALIZADO NA PARTE AZUL, FORA DO QUADRO -->
+  <div style="text-align: center; color: white; width: 100%; margin-bottom: 10px;">
+    <p style="margin: 0; font-size: 13px; font-weight: 500; letter-spacing: 0.5px;">SE7 Gestão Educacional</p>
+    <p style="margin: 4px 0 0 0; font-size: 11px; opacity: 0.8;">Versão 1.0.0 Cloud</p>
+  </div>
+
 </div>
 
 <!-- Cabeçalho -->
@@ -340,8 +388,8 @@ button:hover {
   <div class="header-left">
     <img id="header-logo-img" class="header-logo" alt="Logo Instituição">
     <div class="header-info">
-      <h1 id="header-inst-name">Instituição de Ensino</h1>
-      <p id="header-inst-sub">Sistema Integrado de Gestão Escolar (Nuvem)</p>
+      <h1 id="header-inst-name">SE7 Gestão Educacional</h1>
+      <p id="header-inst-sub">Versão 1.0.0 Cloud • Sistema Integrado</p>
     </div>
   </div>
   <div class="header-right-actions">
@@ -646,6 +694,11 @@ button:hover {
   </div>
 </div>
 
+<!-- Rodapé Principal da Aplicação -->
+<footer class="app-footer">
+  <span>SE7 Gestão Educacional • Versão 1.0.0 Cloud</span>
+</footer>
+
 <!-- MODAL DE NOVA MATRÍCULA -->
 <div id="new-student-modal" class="modal-overlay">
   <div class="modal-card">
@@ -794,6 +847,44 @@ button:hover {
     alert(`Bem-vindo(a), ${userFound.nome}!`);
   }
 
+  function alternarTelaRecuperacao(mostrar) {
+    const viewMain = document.getElementById('login-view-main');
+    const viewForgot = document.getElementById('login-view-forgot');
+    if (mostrar) {
+      viewMain.style.display = 'none';
+      viewForgot.style.display = 'block';
+    } else {
+      viewMain.style.display = 'block';
+      viewForgot.style.display = 'none';
+    }
+  }
+
+  function executarRedefinicaoSenha() {
+    const emailInput = document.getElementById('forgot-user-email').value.trim();
+    const newPassInput = document.getElementById('forgot-new-pass').value.trim();
+
+    if (!emailInput || !newPassInput) {
+      alert("Por favor, preencha o e-mail e a nova senha.");
+      return;
+    }
+
+    let dbUsers = JSON.parse(localStorage.getItem('app_users_system')) || usuariosPadrao;
+    let userIndex = dbUsers.findIndex(u => u.email === emailInput);
+
+    if (userIndex === -1) {
+      alert("E-mail não encontrado no sistema!");
+      return;
+    }
+
+    dbUsers[userIndex].pass = newPassInput;
+    localStorage.setItem('app_users_system', JSON.stringify(dbUsers));
+    
+    alert("Senha alterada com sucesso! Faça login com sua nova senha.");
+    document.getElementById('forgot-user-email').value = '';
+    document.getElementById('forgot-new-pass').value = '';
+    alternarTelaRecuperacao(false);
+  }
+
   function fazerLogout() {
     sessionStorage.removeItem('usuario_logado');
     location.reload();
@@ -916,7 +1007,6 @@ button:hover {
   let financeLogs = [];
 
   function carregarDadosDaNuvem() {
-    // Carregar dados institucionais (Branding/Logo) em tempo real do Firestore
     db.collection("config").doc("institution").onSnapshot((doc) => {
       if (doc.exists) {
         const data = doc.data();
@@ -934,9 +1024,6 @@ button:hover {
           currentLogoDataUrl = "";
           updateLogoPreview("");
         }
-
-        document.getElementById('header-inst-name').innerText = data.name || "Instituição de Ensino";
-        document.getElementById('header-inst-sub').innerText = data.razao ? `${data.razao}` : "";
       }
     });
 
@@ -1317,7 +1404,6 @@ button:hover {
     filterTurmasByCourse();
   }
 
-  // LOGOMARCA E CONFIGURAÇÕES DITO NO FIRESTORE (Nuvem)
   async function handleLogoUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -1325,7 +1411,7 @@ button:hover {
     reader.onload = async function(e) {
       currentLogoDataUrl = e.target.result;
       updateLogoPreview(currentLogoDataUrl);
-      salvarBrandingNaNuvem(false); // Salva automaticamente ao carregar
+      salvarBrandingNaNuvem(false);
     };
     reader.readAsDataURL(file);
   }
@@ -1391,7 +1477,6 @@ button:hover {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     
-    // Busca os dados institucionais direto do Firestore para o PDF
     const docSnap = await db.collection("config").doc("institution").get();
     const brandingSaved = docSnap.exists ? docSnap.data() : {};
     const qrCodeBase64 = await gerarQRCodeBase64("https://exemplo.com/validar");
@@ -1405,7 +1490,7 @@ button:hover {
 
     doc.setTextColor("#2d3748");
     doc.setFontSize(10);
-    doc.text(brandingSaved.name || "Instituição de Ensino", 14, 43);
+    doc.text(brandingSaved.name || "SE7 Gestão Educacional", 14, 43);
 
     let headerY = 47;
     doc.text(`Nome: ${dadosAluno.nome}`, 14, headerY + 15);
