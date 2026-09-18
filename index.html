@@ -318,7 +318,7 @@ button:hover {
 </head>
 <body>
 
-<!-- MODAL DE LOGIN -->
+<!-- MODAL DE LOGIN (Perfis de teste removidos para segurança) -->
 <div id="login-modal" class="modal-overlay" style="display: flex; z-index: 2000; background: var(--primary-color);">
   <div class="modal-card" style="max-width: 400px; text-align: center;">
     <h2 style="color: var(--primary-color);">Acesso Institucional</h2>
@@ -332,12 +332,6 @@ button:hover {
       <input type="password" id="login-pass" placeholder="........">
     </div>
     <button type="button" style="width: 100%; border-radius: 20px; margin-top: 10px;" onclick="fazerLogin()">Entrar no Sistema</button>
-    <div style="margin-top: 15px; font-size: 0.75rem; color: #718096;">
-      <b>Perfis de teste disponíveis:</b><br>
-      Master: master@admin.com / 123456<br>
-      Secretaria: secretaria@admin.com / 123456<br>
-      Professor: professor@admin.com / 123456
-    </div>
   </div>
 </div>
 
@@ -1315,11 +1309,7 @@ button:hover {
     reader.onload = async function(e) {
       currentLogoDataUrl = e.target.result;
       updateLogoPreview(currentLogoDataUrl);
-      
-      // Salva a logo no localStorage junto com as configurações de branding
-      let brandingData = JSON.parse(localStorage.getItem('app_branding')) || {};
-      brandingData.logo = currentLogoDataUrl;
-      localStorage.setItem('app_branding', JSON.stringify(brandingData));
+      applyBranding();
     };
     reader.readAsDataURL(file);
   }
@@ -1327,10 +1317,7 @@ button:hover {
   async function removeLogo() {
     currentLogoDataUrl = "";
     updateLogoPreview("");
-    let brandingData = JSON.parse(localStorage.getItem('app_branding')) || {};
-    delete brandingData.logo;
-    localStorage.setItem('app_branding', JSON.stringify(brandingData));
-    applyBranding(true);
+    applyBranding();
   }
 
   function updateLogoPreview(src) {
@@ -1348,22 +1335,16 @@ button:hover {
   }
 
   function applyBranding(notify = false) {
-    const brandingData = JSON.parse(localStorage.getItem('app_branding')) || {};
-    
-    brandingData.name = document.getElementById('input-inst-name').value;
-    brandingData.razao = document.getElementById('input-inst-razao').value;
-    brandingData.cnpj = document.getElementById('input-inst-cnpj').value;
-    brandingData.email = document.getElementById('input-inst-email').value;
-    brandingData.tel = document.getElementById('input-inst-tel').value;
-    brandingData.end = document.getElementById('input-inst-end').value;
-    
-    if (currentLogoDataUrl) {
-      brandingData.logo = currentLogoDataUrl;
-    }
-
+    const brandingData = {
+      name: document.getElementById('input-inst-name').value,
+      razao: document.getElementById('input-inst-razao').value,
+      cnpj: document.getElementById('input-inst-cnpj').value,
+      email: document.getElementById('input-inst-email').value,
+      tel: document.getElementById('input-inst-tel').value,
+      end: document.getElementById('input-inst-end').value
+    };
     document.getElementById('header-inst-name').innerText = brandingData.name || "Instituição de Ensino";
     document.getElementById('header-inst-sub').innerText = brandingData.razao ? `${brandingData.razao}` : "";
-    
     localStorage.setItem('app_branding', JSON.stringify(brandingData));
     if (notify) alert("Configurações salvas!");
   }
@@ -1377,11 +1358,6 @@ button:hover {
       document.getElementById('input-inst-email').value = saved.email || '';
       document.getElementById('input-inst-tel').value = saved.tel || '';
       document.getElementById('input-inst-end').value = saved.end || '';
-      
-      if (saved.logo) {
-        currentLogoDataUrl = saved.logo;
-        updateLogoPreview(currentLogoDataUrl);
-      }
       applyBranding();
     }
   }
