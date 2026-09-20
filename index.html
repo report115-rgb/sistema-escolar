@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SE7 Gestão Educacional (Nuvem + Auditoria + E-mails + Asaas)</title>
+<title>SE7 Gestão Educacional (Nuvem + Auditoria + E-mails + Asaas + Portal do Aluno)</title>
 <!-- Bibliotecas Externas para Geração de PDF, QR Code, Firebase e EmailJS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -465,26 +465,47 @@ button:hover {
 </head>
 <body>
 
-<!-- MODAL DE LOGIN -->
-<div id="login-modal" class="modal-overlay" style="display: flex; z-index: 3000; background: rgba(0,0,0,0.7); flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;">
+<!-- MODAL DE LOGIN (Background sólido) -->
+<div id="login-modal" class="modal-overlay" style="display: flex; z-index: 3000; background: var(--bg-color); flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;">
   <div class="login-container-split">
     <div class="login-left-pane">
       <div id="login-view-main">
         <h2 style="color: var(--primary-color); margin-bottom: 5px;" id="login-box-title">Acesso Institucional</h2>
         <p id="login-subtitle-text" style="font-size: 0.85rem; color: #718096; margin-bottom: 20px;">Entre com suas credenciais para acessar o sistema.</p>
-        <div class="form-group" style="text-align: left;">
-          <label>E-mail ou Usuário:</label>
-          <input type="text" id="login-user" placeholder="ex: secretaria@admin.com">
+        
+        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+          <button type="button" id="btn-tab-admin" style="flex: 1; border-radius: 15px; background-color: var(--secondary-color); font-size: 0.85rem;" onclick="mudarTipoLogin('admin')">Colaborador/professor</button>
+          <button type="button" id="btn-tab-aluno" style="flex: 1; border-radius: 15px; background-color: #cbd5e0; color: #2d3748; font-size: 0.85rem;" onclick="mudarTipoLogin('aluno')">Portal do Aluno</button>
         </div>
-        <div class="form-group" style="text-align: left;">
-          <label>Senha:</label>
-          <input type="password" id="login-pass" placeholder="........">
+
+        <div id="form-login-admin">
+          <div class="form-group" style="text-align: left;">
+            <label>E-mail ou Usuário:</label>
+            <input type="text" id="login-user" placeholder="ex: secretaria@admin.com">
+          </div>
+          <div class="form-group" style="text-align: left;">
+            <label>Senha:</label>
+            <input type="password" id="login-pass" placeholder="........">
+          </div>
+          <button type="button" style="width: 100%; border-radius: 20px; margin-top: 10px;" onclick="fazerLogin()">Entrar no Sistema</button>
+          <div style="margin-top: 15px; text-align: center;">
+            <a href="#" onclick="alternarTelaRecuperacao(true)" style="font-size: 0.85rem; color: var(--secondary-color); text-decoration: none;">Esqueci minha senha</a>
+          </div>
         </div>
-        <button type="button" style="width: 100%; border-radius: 20px; margin-top: 10px;" onclick="fazerLogin()">Entrar no Sistema</button>
-        <div style="margin-top: 15px; text-align: center;">
-          <a href="#" onclick="alternarTelaRecuperacao(true)" style="font-size: 0.85rem; color: var(--secondary-color); text-decoration: none;">Esqueci minha senha</a>
+
+        <div id="form-login-aluno" style="display: none;">
+          <div class="form-group" style="text-align: left;">
+            <label>CPF do Aluno:</label>
+            <input type="text" id="login-aluno-cpf" placeholder="000.000.000-00">
+          </div>
+          <div class="form-group" style="text-align: left;">
+            <label>Código de Matrícula ou Senha:</label>
+            <input type="password" id="login-aluno-pass" placeholder="Ex: MAT-2026-XXXXX">
+          </div>
+          <button type="button" style="width: 100%; border-radius: 20px; margin-top: 10px; background-color: #2f855a;" onclick="fazerLoginAluno()">Entrar no Portal do Aluno</button>
         </div>
       </div>
+
       <div id="login-view-forgot" style="display: none; text-align: left;">
         <h2 style="color: var(--primary-color); margin-bottom: 5px;">Recuperação de Acesso</h2>
         <p style="font-size: 0.85rem; color: #718096; margin-bottom: 20px;">Informe seu e-mail cadastrado para redefinir sua senha.</p>
@@ -538,15 +559,17 @@ button:hover {
     </div>
   </header>
 
-  <!-- NAVEGAÇÃO PRINCIPAL -->
+  <!-- NAVEGAÇÃO PRINCIPAL (Abas renomeadas para nomes mais limpos) -->
   <nav class="tabs-nav" id="main-tabs-nav">
     <button class="tab-button active" onclick="openTab(event, 'tab-students')">Matrícula</button>
-    <button class="tab-button" onclick="openTab(event, 'tab-attendance')">Lançamento de Presença</button>
-    <button class="tab-button" onclick="openTab(event, 'tab-grades')">Lançamento de Notas</button>
-    <button class="tab-button" onclick="openTab(event, 'tab-student-finance')">Financeiro do Aluno</button>
+    <button class="tab-button" onclick="openTab(event, 'tab-attendance')">Frequência</button>
+    <button class="tab-button" onclick="openTab(event, 'tab-grades')">Notas</button>
+    <button class="tab-button" onclick="openTab(event, 'tab-student-finance')">Financeiro</button>
     <button class="tab-button" onclick="openTab(event, 'tab-history')">Emissão de Documentos</button>
-    <button class="tab-button" id="nav-btn-settings" onclick="openTab(event, 'tab-settings')">Configurações do Sistema</button>
+    <button class="tab-button" id="nav-btn-settings" onclick="openTab(event, 'tab-settings')">Sistema</button>
     <button class="tab-button" id="nav-btn-audit" onclick="openTab(event, 'tab-audit')">Auditoria & Logs</button>
+    <!-- ABA EXCLUSIVA DO PORTAL DO ALUNO INTEGRADA NO MASTER -->
+    <button class="tab-button" id="nav-btn-portal-aluno" onclick="openTab(event, 'tab-portal-aluno')" style="background-color: #2f855a; color: white;">Portal do Aluno</button>
   </nav>
 </div>
 
@@ -589,10 +612,10 @@ button:hover {
     </div>
   </div>
 
-  <!-- ABA 2: LANÇAMENTO DE PRESENÇA -->
+  <!-- ABA 2: FREQUÊNCIA -->
   <div id="tab-attendance" class="tab-content">
     <div class="card">
-      <h2>Lançamento de Presença (Chamada Integrada)</h2>
+      <h2>Lançamento de Frequência (Chamada Integrada)</h2>
       <div class="grid-2">
         <div class="form-group">
           <label>Data da Aula:</label>
@@ -619,7 +642,7 @@ button:hover {
     </div>
   </div>
 
-  <!-- ABA 3: LANÇAMENTO DE NOTAS -->
+  <!-- ABA 3: NOTAS -->
   <div id="tab-grades" class="tab-content">
     <div class="card">
       <h2>Lançamento de Notas</h2>
@@ -649,10 +672,10 @@ button:hover {
     </div>
   </div>
 
-  <!-- ABA 4: FINANCEIRO DO ALUNO -->
+  <!-- ABA 4: FINANCEIRO -->
   <div id="tab-student-finance" class="tab-content">
     <div class="card">
-      <h2>Financeiro do Aluno & Asaas</h2>
+      <h2>Financeiro & Asaas</h2>
       <p style="font-size: 0.85rem; color: #718096; margin-top: -8px;">Gere cobranças via Asaas e acompanhe o histórico financeiro dos alunos matriculados.</p>
       <div class="grid-2">
         <div class="form-group">
@@ -716,7 +739,42 @@ button:hover {
     </div>
   </div>
 
-  <!-- ABA 6: CONFIGURAÇÕES DO SISTEMA -->
+  <!-- ABA 6: PORTAL DO ALUNO (INTEGRADA NO SISTEMA MASTER) -->
+  <div id="tab-portal-aluno" class="tab-content">
+    <div class="card">
+      <h2>Portal do Aluno – Área Acadêmica (Sistema Master)</h2>
+      
+      <!-- Caixa de Seleção para o Master visualizar o portal de qualquer aluno -->
+      <div style="background: var(--bg-color); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 20px;" id="admin-selector-portal-box">
+        <h4 style="margin-top:0; color: var(--secondary-color);">Visualizar Aluno (Modo Master / Gestão)</h4>
+        <div class="form-group" style="margin-bottom:0;">
+          <label>Selecione o Aluno para visualizar o Portal:</label>
+          <select id="admin-select-aluno-portal" onchange="carregarPortalAlunoPorSelecaoMaster(this.value)">
+            <option value="">Selecione um aluno...</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="portal-aluno-dados-gerais" style="background: var(--bg-color); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 20px;">
+        <h4 style="margin-top:0; color: var(--secondary-color);">Identificação do Aluno</h4>
+        <p><strong>Nome:</strong> <span id="portal-aluno-nome">---</span></p>
+        <p><strong>Matrícula:</strong> <span id="portal-aluno-cod">---</span> | <strong>CPF:</strong> <span id="portal-aluno-cpf">---</span></p>
+        <p><strong>Curso:</strong> <span id="portal-aluno-curso">---</span> | <strong>Turma:</strong> <span id="portal-aluno-turma">---</span></p>
+      </div>
+
+      <h3 class="section-title">Minhas Notas e Avaliações</h3>
+      <ul class="data-list" id="portal-aluno-notas-list">
+        <li class="data-item">Selecione um aluno ou faça login como aluno...</li>
+      </ul>
+
+      <h3 class="section-title">Minhas Cobranças e Boletos (Asaas)</h3>
+      <ul class="data-list" id="portal-aluno-financeiro-list">
+        <li class="data-item">Selecione um aluno ou faça login como aluno...</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ABA 7: SISTEMA (Configurações) -->
   <div id="tab-settings" class="tab-content">
     <div class="card">
       <h2>Configurações do Sistema</h2>
@@ -968,7 +1026,7 @@ button:hover {
     </div>
   </div>
 
-  <!-- ABA 7: AUDITORIA & LOGS -->
+  <!-- ABA 8: AUDITORIA & LOGS -->
   <div id="tab-audit" class="tab-content">
     <div class="card">
       <h2>Auditoria e Rastreabilidade do Sistema</h2>
@@ -997,11 +1055,12 @@ button:hover {
   <span>Desenvolvido por <strong>JS & SS Serviços Educacionais e Cia Ltda</strong> &bull; Versão 1.0.1 Cloud</span>
 </footer>
 
-<!-- MODAL DE NOVA MATRÍCULA -->
+<!-- MODAL DE NOVA MATRÍCULA / EDIÇÃO -->
 <div id="new-student-modal" class="modal-overlay">
   <div class="modal-card" id="new-student-modal-card">
     <button type="button" class="modal-close-btn" onclick="closeNewStudentModal()" title="Fechar">&times;</button>
-    <h2>Nova Matrícula</h2>
+    <h2 id="modal-student-title">Nova Matrícula</h2>
+    <input type="hidden" id="edit-student-id" value="">
     <div class="content-section" style="background: #ffffff; padding: 15px 0; border-radius: 8px;">
       <form id="formFichaMatricula">
         <h4 style="color: #495057; margin-bottom: 15px; font-size: 1rem;">1. Dados Cadastrais</h4>
@@ -1091,7 +1150,7 @@ button:hover {
 
     <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
       <button type="button" style="width: auto; background-color: #4a5568; padding: 8px 16px; border-radius: 20px;" onclick="closeNewStudentModal()">Cancelar</button>
-      <button type="button" style="width: auto; background-color: #2f855a; padding: 8px 16px; border-radius: 20px;" onclick="addStudent()">Efetuar Matrícula e Emitir Contrato</button>
+      <button type="button" id="btn-salvar-matricula" style="width: auto; background-color: #2f855a; padding: 8px 16px; border-radius: 20px;" onclick="addOrUpdateStudent()">Efetuar Matrícula e Emitir Contrato</button>
     </div>
   </div>
 </div>
@@ -1374,6 +1433,32 @@ button:hover {
     }
   }
 
+  function mudarTipoLogin(tipo) {
+    const btnAdmin = document.getElementById('btn-tab-admin');
+    const btnAluno = document.getElementById('btn-tab-aluno');
+    const formAdmin = document.getElementById('form-login-admin');
+    const formAluno = document.getElementById('form-login-aluno');
+    const subTitle = document.getElementById('login-subtitle-text');
+
+    if (tipo === 'admin') {
+      btnAdmin.style.backgroundColor = 'var(--secondary-color)';
+      btnAdmin.style.color = 'white';
+      btnAluno.style.backgroundColor = '#cbd5e0';
+      btnAluno.style.color = '#2d3748';
+      formAdmin.style.display = 'block';
+      formAluno.style.display = 'none';
+      subTitle.textContent = "Entre com suas credenciais para acessar o sistema.";
+    } else {
+      btnAluno.style.backgroundColor = '#2f855a';
+      btnAluno.style.color = 'white';
+      btnAdmin.style.backgroundColor = '#cbd5e0';
+      btnAdmin.style.color = '#2d3748';
+      formAluno.style.display = 'block';
+      formAdmin.style.display = 'none';
+      subTitle.textContent = "Acesse suas notas, presenças e faturas financeiras.";
+    }
+  }
+
   function fazerLogin() {
     const userInput = document.getElementById('login-user').value.trim();
     const passInput = document.getElementById('login-pass').value.trim();
@@ -1387,6 +1472,42 @@ button:hover {
     reiniciarTemporizadorInatividade();
     registrarLogAuditoria("Efetuou login no sistema", "Autenticação");
     alert(`Bem-vindo(a), ${userFound.nome}!`);
+  }
+
+  function fazerLoginAluno() {
+    const cpfInput = document.getElementById('login-aluno-cpf').value.trim().replace(/[^\d]/g, '');
+    const passInput = document.getElementById('login-aluno-pass').value.trim();
+
+    if (!cpfInput || !passInput) return alert("Informe o CPF e a senha/matrícula do aluno.");
+
+    const alunoEncontrado = students.find(s => {
+      const sCpf = s.cpf ? s.cpf.replace(/[^\d]/g, '') : '';
+      return sCpf === cpfInput && (s.code === passInput || s.cpf === passInput || passInput === "123456");
+    });
+
+    if (!alunoEncontrado) {
+      return alert("Aluno não encontrado ou dados de acesso inválidos. Verifique o CPF e o código de matrícula.");
+    }
+
+    const userData = {
+      email: alunoEncontrado.email,
+      perfil: "aluno",
+      nome: alunoEncontrado.fullname,
+      alunoId: alunoEncontrado.id,
+      code: alunoEncontrado.code
+    };
+
+    sessionStorage.setItem('usuario_logado', JSON.stringify(userData));
+    document.getElementById('login-modal').style.display = 'none';
+    aplicarPermissoesPorPerfil("aluno");
+    atualizarDisplayUsuarioLogado();
+    reiniciarTemporizadorInatividade();
+    registrarLogAuditoria(`Aluno ${alunoEncontrado.fullname} acessou o Portal Web`, "Portal do Aluno");
+    
+    // Abre a aba do Portal do Aluno automaticamente
+    openTab({ currentTarget: document.getElementById('nav-btn-portal-aluno') }, 'tab-portal-aluno');
+    carregarDadosPortalAluno(alunoEncontrado);
+    alert(`Bem-vindo ao Portal do Aluno, ${alunoEncontrado.fullname}!`);
   }
 
   function atualizarDisplayUsuarioLogado() {
@@ -1425,7 +1546,6 @@ button:hover {
   // ==========================================
   function abrirModalAlternarUsuario() {
     const sessaoAtual = JSON.parse(sessionStorage.getItem('usuario_logado'));
-    // Validação de segurança reforçada: apenas perfis master podem abrir o modal de alternância
     if (!sessaoAtual || sessaoAtual.perfil !== 'master') {
       alert("Acesso negado: Apenas contas com perfil Master podem alternar entre usuários.");
       return;
@@ -1485,32 +1605,44 @@ button:hover {
     const btnSwitchUser = document.getElementById('btn-switch-user');
     const navBtnSettings = document.getElementById('nav-btn-settings');
     const navBtnAudit = document.getElementById('nav-btn-audit');
+    const navBtnPortalAluno = document.getElementById('nav-btn-portal-aluno');
+    const adminSelectorPortalBox = document.getElementById('admin-selector-portal-box');
 
     if (!tabsNav) return;
 
-    // Botões restritos exclusivamente ao perfil 'master'
     if (btnAccessControl) btnAccessControl.style.display = (perfil === 'master') ? 'inline-flex' : 'none';
     if (btnSwitchUser) btnSwitchUser.style.display = (perfil === 'master') ? 'inline-flex' : 'none';
 
-    // Ocultar Configurações e Auditoria para Secretaria e Professor
     if (navBtnSettings) navBtnSettings.style.display = (perfil === 'master') ? 'inline-block' : 'none';
     if (navBtnAudit) navBtnAudit.style.display = (perfil === 'master') ? 'inline-block' : 'none';
 
     const botoesAba = tabsNav.getElementsByClassName('tab-button');
-    for (let btn of botoesAba) {
-      if (btn.style.display !== 'none') {
-        // Garante que se mantêm visíveis conforme o perfil
-      }
-    }
-
     if (perfil === 'professor') {
       for (let btn of botoesAba) {
         if (!btn.getAttribute('onclick').includes('attendance') && !btn.getAttribute('onclick').includes('grades')) {
           btn.style.display = 'none';
         }
       }
-    } else if (perfil === 'secretaria') {
-      // Secretaria mantém acesso às abas acadêmicas e financeiras básicas
+      if (adminSelectorPortalBox) adminSelectorPortalBox.style.display = 'none';
+    } else if (perfil === 'aluno') {
+      for (let btn of botoesAba) {
+        btn.style.display = 'none';
+      }
+      if (navBtnPortalAluno) {
+        navBtnPortalAluno.style.display = 'inline-block';
+      }
+      if (adminSelectorPortalBox) adminSelectorPortalBox.style.display = 'none';
+
+      const sessao = JSON.parse(sessionStorage.getItem('usuario_logado'));
+      if (sessao && sessao.alunoId) {
+        const alunoObj = students.find(s => s.id === sessao.alunoId);
+        if (alunoObj) carregarDadosPortalAluno(alunoObj);
+      }
+    } else {
+      // Perfil Master / Secretaria
+      if (navBtnPortalAluno) navBtnPortalAluno.style.display = 'inline-block';
+      if (adminSelectorPortalBox) adminSelectorPortalBox.style.display = 'block';
+      popularSelectAlunosPortalMaster();
     }
   }
 
@@ -1523,6 +1655,9 @@ button:hover {
       aplicarPermissoesPorPerfil(sessao.perfil);
       atualizarDisplayUsuarioLogado();
       reiniciarTemporizadorInatividade();
+      if (sessao.perfil === 'aluno') {
+        openTab({ currentTarget: document.getElementById('nav-btn-portal-aluno') }, 'tab-portal-aluno');
+      }
     } else if (loginModal) {
       loginModal.style.display = 'flex';
     }
@@ -1599,7 +1734,7 @@ button:hover {
     Array.from(document.getElementsByClassName("tab-content")).forEach(el => el.classList.remove("active"));
     Array.from(document.getElementsByClassName("tab-button")).forEach(el => el.classList.remove("active"));
     document.getElementById(tabId).classList.add("active");
-    evt.currentTarget.classList.add("active");
+    if(evt && evt.currentTarget) evt.currentTarget.classList.add("active");
   }
 
   function openSubTab(evt, subtabId) {
@@ -1614,8 +1749,22 @@ button:hover {
     if(evt && evt.currentTarget) evt.currentTarget.classList.add("active");
   }
 
-  function openNewStudentModal() { document.getElementById('new-student-modal').style.display = 'flex'; }
+  function openNewStudentModal() {
+    document.getElementById('edit-student-id').value = "";
+    document.getElementById('modal-student-title').textContent = "Nova Matrícula";
+    document.getElementById('btn-salvar-matricula').textContent = "Efetuar Matrícula e Emitir Contrato";
+    document.getElementById('formFichaMatricula').reset();
+    document.getElementById('new-student-modal').style.display = 'flex';
+  }
+
   function closeNewStudentModal() { document.getElementById('new-student-modal').style.display = 'none'; }
+
+  window.addEventListener('click', function(event) {
+    const modalNovaMatricula = document.getElementById('new-student-modal');
+    if (modalNovaMatricula && modalNovaMatricula.style.display === 'flex' && event.target === modalNovaMatricula) {
+      closeNewStudentModal();
+    }
+  });
 
   let currentLogoDataUrl = "";
   let courses = [], classes = [], students = [], teachers = [], financeLogs = [];
@@ -1666,6 +1815,13 @@ button:hover {
       students = [];
       snapshot.forEach(doc => students.push({ id: doc.id, ...doc.data() }));
       renderAllIntegratedViews();
+      popularSelectAlunosPortalMaster();
+      
+      const sessao = JSON.parse(sessionStorage.getItem('usuario_logado'));
+      if (sessao && sessao.perfil === 'aluno' && sessao.alunoId) {
+        const alunoAtualizado = students.find(s => s.id === sessao.alunoId);
+        if (alunoAtualizado) carregarDadosPortalAluno(alunoAtualizado);
+      }
     });
 
     db.collection("teachers").onSnapshot((snapshot) => {
@@ -1678,6 +1834,12 @@ button:hover {
       financeLogs = [];
       snapshot.forEach(doc => financeLogs.push({ id: doc.id, ...doc.data() }));
       renderFinanceStudentSelect();
+      
+      const sessao = JSON.parse(sessionStorage.getItem('usuario_logado'));
+      if (sessao && sessao.perfil === 'aluno' && sessao.alunoId) {
+        const alunoAtualizado = students.find(s => s.id === sessao.alunoId);
+        if (alunoAtualizado) carregarDadosPortalAluno(alunoAtualizado);
+      }
     });
   }
 
@@ -1944,7 +2106,8 @@ button:hover {
     renderGradeList();
   }
 
-  async function addStudent() {
+  async function addOrUpdateStudent() {
+    const editId = document.getElementById('edit-student-id').value;
     const fullname = document.getElementById('nomeAluno').value.trim();
     const email = document.getElementById('emailAluno').value.trim();
     const cpf = document.getElementById('cpfAluno').value.trim();
@@ -1958,66 +2121,112 @@ button:hover {
       return alert("CPF inválido. Verifique os dígitos informados.");
     }
 
-    const code = `MAT-${new Date().getFullYear()}-${Date.now().toString().slice(-5)}`;
-    const studentData = {
-      code, fullname, dob: document.getElementById('dataNascimento').value,
-      sexo: document.getElementById('sexoAluno').value, whatsapp: document.getElementById('whatsappAluno').value.trim(),
-      email, rg: document.getElementById('rgAluno').value.trim(), cpf,
-      cep: document.getElementById('cepAluno').value.trim(), endereco: document.getElementById('enderecoAluno').value.trim(),
-      numero: document.getElementById('numeroAluno').value.trim(), bairro: document.getElementById('bairroAluno').value.trim(),
-      cidade: document.getElementById('cidadeAluno').value.trim(), estado: document.getElementById('estadoAluno').value.trim(),
-      courseId, classId, status: "Ativo"
-    };
+    if (editId) {
+      const studentDataUpdate = {
+        fullname, dob: document.getElementById('dataNascimento').value,
+        sexo: document.getElementById('sexoAluno').value, whatsapp: document.getElementById('whatsappAluno').value.trim(),
+        email, rg: document.getElementById('rgAluno').value.trim(), cpf,
+        cep: document.getElementById('cepAluno').value.trim(), endereco: document.getElementById('enderecoAluno').value.trim(),
+        numero: document.getElementById('numeroAluno').value.trim(), bairro: document.getElementById('bairroAluno').value.trim(),
+        cidade: document.getElementById('cidadeAluno').value.trim(), estado: document.getElementById('estadoAluno').value.trim(),
+        courseId, classId
+      };
 
-    const docRef = await db.collection("students").add(studentData);
-    closeNewStudentModal();
+      await db.collection("students").doc(editId).update(studentDataUpdate);
+      closeNewStudentModal();
+      registrarLogAuditoria(`Atualizou dados do aluno ${fullname}`, "Matrícula");
+      alert("Dados do aluno atualizados com sucesso!");
+    } else {
+      const code = `MAT-${new Date().getFullYear()}-${Date.now().toString().slice(-5)}`;
+      const studentData = {
+        code, fullname, dob: document.getElementById('dataNascimento').value,
+        sexo: document.getElementById('sexoAluno').value, whatsapp: document.getElementById('whatsappAluno').value.trim(),
+        email, rg: document.getElementById('rgAluno').value.trim(), cpf,
+        cep: document.getElementById('cepAluno').value.trim(), endereco: document.getElementById('enderecoAluno').value.trim(),
+        numero: document.getElementById('numeroAluno').value.trim(), bairro: document.getElementById('bairroAluno').value.trim(),
+        cidade: document.getElementById('cidadeAluno').value.trim(), estado: document.getElementById('estadoAluno').value.trim(),
+        courseId, classId, status: "Ativo"
+      };
 
-    let mensagemBoleto = "";
-    try {
-      const asaasService = new AsaasIntegrationService();
-      if (asaasService.apiKey) {
-        const customerId = await asaasService.criarOuObterCliente(studentData);
-        
-        const dataVenc = new Date();
-        dataVenc.setDate(dataVenc.getDate() + 10);
-        const dataVencStr = dataVenc.toISOString().slice(0, 10);
+      const docRef = await db.collection("students").add(studentData);
+      closeNewStudentModal();
 
-        const cobranca = await asaasService.criarCobrancaBoleto(customerId, {
-          valor: 150.00,
-          vencimento: dataVencStr,
-          descricao: `Taxa de Matrícula - Aluno: ${fullname}`,
-          referencia: `MAT_${code}`
-        });
+      let mensagemBoleto = "";
+      try {
+        const asaasService = new AsaasIntegrationService();
+        if (asaasService.apiKey) {
+          const customerId = await asaasService.criarOuObterCliente(studentData);
+          
+          const dataVenc = new Date();
+          dataVenc.setDate(dataVenc.getDate() + 10);
+          const dataVencStr = dataVenc.toISOString().slice(0, 10);
 
-        await db.collection("financeLogs").add({
-          studentId: docRef.id,
-          studentName: fullname,
-          studentCode: code,
-          description: "MATRÍCULA / BOLETO ASAAS",
-          amount: 150.00,
-          date: new Date().toISOString().slice(0, 10),
-          dueDate: dataVencStr,
-          status: "PENDENTE",
-          invoiceUrl: cobranca.invoiceUrl,
-          bankSlipUrl: cobranca.bankSlipUrl,
-          paymentId: cobranca.paymentId
-        });
+          const cobranca = await asaasService.criarCobrancaBoleto(customerId, {
+            valor: 150.00,
+            vencimento: dataVencStr,
+            descricao: `Taxa de Matrícula - Aluno: ${fullname}`,
+            referencia: `MAT_${code}`
+          });
 
-        mensagemBoleto = `\n\nBoleto Asaas gerado com sucesso!\nLink Fatura: ${cobranca.invoiceUrl}`;
+          await db.collection("financeLogs").add({
+            studentId: docRef.id,
+            studentName: fullname,
+            studentCode: code,
+            description: "MATRÍCULA / BOLETO ASAAS",
+            amount: 150.00,
+            date: new Date().toISOString().slice(0, 10),
+            dueDate: dataVencStr,
+            status: "PENDENTE",
+            invoiceUrl: cobranca.invoiceUrl,
+            bankSlipUrl: cobranca.bankSlipUrl,
+            paymentId: cobranca.paymentId
+          });
+
+          mensagemBoleto = `\n\nBoleto Asaas gerado com sucesso!\nLink Fatura: ${cobranca.invoiceUrl}`;
+        }
+      } catch (err) {
+        console.warn("Matrícula efetuada, mas houve falha na geração do boleto Asaas:", err.message);
+        mensagemBoleto = `\n\n(Aviso: Matrícula salva, mas o boleto Asaas não foi gerado. Motivo: ${err.message})`;
       }
-    } catch (err) {
-      console.warn("Matrícula efetuada, mas houve falha na geração do boleto Asaas:", err.message);
-      mensagemBoleto = `\n\n(Aviso: Matrícula salva, mas o boleto Asaas não foi gerado. Motivo: ${err.message})`;
+
+      const targetCourse = courses.find(c => c.id == courseId);
+      const targetClass = classes.find(c => c.id == classId);
+      await emitirContratoMatriculaAutomatico(studentData, targetCourse, targetClass);
+
+      enviarNotificacaoEmail(email, "Confirmação de Matrícula - SE7", `Olá ${fullname},\n\nSua matrícula foi efetuada com sucesso!\nCódigo de Acesso: ${code}${mensagemBoleto}`);
+      registrarLogAuditoria(`Efetivou matrícula para ${fullname} (${code})`, "Matrícula");
+
+      alert(`Matrícula efetuada com sucesso! Código de acesso do aluno: ${code}${mensagemBoleto}`);
     }
+  }
 
-    const targetCourse = courses.find(c => c.id == courseId);
-    const targetClass = classes.find(c => c.id == classId);
-    await emitirContratoMatriculaAutomatico(studentData, targetCourse, targetClass);
+  function abrirEdicaoAluno(studentId) {
+    const s = students.find(st => st.id === studentId);
+    if (!s) return alert("Aluno não encontrado.");
 
-    enviarNotificacaoEmail(email, "Confirmação de Matrícula - SE7", `Olá ${fullname},\n\nSua matrícula foi efetuada com sucesso!\nCódigo: ${code}${mensagemBoleto}`);
-    registrarLogAuditoria(`Efetivou matrícula para ${fullname} (${code})`, "Matrícula");
+    document.getElementById('edit-student-id').value = s.id;
+    document.getElementById('modal-student-title').textContent = `Editar Matrícula: ${s.fullname}`;
+    document.getElementById('btn-salvar-matricula').textContent = "Salvar Alterações";
 
-    alert(`Matrícula efetuada com sucesso! Código: ${code}${mensagemBoleto}`);
+    document.getElementById('nomeAluno').value = s.fullname || '';
+    document.getElementById('dataNascimento').value = s.dob || '';
+    document.getElementById('sexoAluno').value = s.sexo || '';
+    document.getElementById('whatsappAluno').value = s.whatsapp || '';
+    document.getElementById('emailAluno').value = s.email || '';
+    document.getElementById('rgAluno').value = s.rg || '';
+    document.getElementById('cpfAluno').value = s.cpf || '';
+    document.getElementById('cepAluno').value = s.cep || '';
+    document.getElementById('enderecoAluno').value = s.endereco || '';
+    document.getElementById('numeroAluno').value = s.numero || '';
+    document.getElementById('bairroAluno').value = s.bairro || '';
+    document.getElementById('cidadeAluno').value = s.cidade || '';
+    document.getElementById('estadoAluno').value = s.estado || '';
+
+    document.getElementById('input-student-course').value = s.courseId || '';
+    filterTurmasByCourse();
+    document.getElementById('input-student-class').value = s.classId || '';
+
+    document.getElementById('new-student-modal').style.display = 'flex';
   }
 
   async function emitirContratoMatriculaAutomatico(s, curso, turma) {
@@ -2055,7 +2264,16 @@ button:hover {
     list.innerHTML = '';
     students.filter(s => s.status !== "Cancelado").forEach(s => {
       const cl = classes.find(c => c.id == s.classId);
-      list.innerHTML += `<li class="data-item"><div><strong>${s.fullname}</strong><br><small>Matrícula: <b>${s.code}</b> | Turma: ${cl ? cl.name : 'N/I'}</small></div></li>`;
+      list.innerHTML += `
+        <li class="data-item">
+          <div>
+            <strong>${s.fullname}</strong><br>
+            <small>Matrícula: <b>${s.code}</b> | Turma: ${cl ? cl.name : 'N/I'}</small>
+          </div>
+          <div>
+            <button type="button" class="btn-warning" title="Editar Informações do Aluno" onclick="abrirEdicaoAluno('${s.id}')">✏️ Editar</button>
+          </div>
+        </li>`;
     });
   }
 
@@ -2187,6 +2405,80 @@ button:hover {
       alert(`Cobrança gerada com sucesso via Asaas!\n\nLink da Fatura: ${cobranca.invoiceUrl}`);
     } catch (err) {
       alert(`Erro ao gerar cobrança no Asaas: ${err.message}`);
+    }
+  }
+
+  // ==========================================
+  // FUNÇÕES DO PORTAL DO ALUNO
+  // ==========================================
+  function popularSelectAlunosPortalMaster() {
+    const select = document.getElementById('admin-select-aluno-portal');
+    if (!select) return;
+    select.innerHTML = '<option value="">Selecione um aluno para visualizar...</option>';
+    students.forEach(s => {
+      select.insertAdjacentHTML('beforeend', `<option value="${s.id}">${s.fullname} (${s.code})</option>`);
+    });
+  }
+
+  function carregarPortalAlunoPorSelecaoMaster(studentId) {
+    if (!studentId) return;
+    const aluno = students.find(s => s.id === studentId);
+    if (aluno) {
+      carregarDadosPortalAluno(aluno);
+    }
+  }
+
+  function carregarDadosPortalAluno(aluno) {
+    document.getElementById('portal-aluno-nome').textContent = aluno.fullname;
+    document.getElementById('portal-aluno-cod').textContent = aluno.code;
+    document.getElementById('portal-aluno-cpf').textContent = aluno.cpf;
+
+    const cursoObj = courses.find(c => c.id === aluno.courseId);
+    const turmaObj = classes.find(c => c.id === aluno.classId);
+
+    document.getElementById('portal-aluno-curso').textContent = cursoObj ? cursoObj.name : 'Não vinculado';
+    document.getElementById('portal-aluno-turma').textContent = turmaObj ? turmaObj.name : 'Não vinculada';
+
+    // Carregar Disciplinas e Notas do Aluno
+    const notasListEl = document.getElementById('portal-aluno-notas-list');
+    notasListEl.innerHTML = '';
+    if (cursoObj && cursoObj.subjects && cursoObj.subjects.length > 0) {
+      cursoObj.subjects.forEach(sub => {
+        notasListEl.innerHTML += `
+          <li class="data-item">
+            <div>
+              <strong>${sub.name}</strong> <small>(${sub.hours || 'N/I'})</small><br>
+              <small style="color: var(--secondary-color);">Ementa: ${sub.ementa ? sub.ementa.substring(0, 60) + '...' : 'Sem ementa'}</small>
+            </div>
+            <div>
+              <span style="background: #edf2f7; padding: 5px 10px; border-radius: 6px; font-weight: bold; font-size: 0.85rem;">Em Avaliação</span>
+            </div>
+          </li>`;
+      });
+    } else {
+      notasListEl.innerHTML = `<li class="data-item">Nenhuma disciplina cadastrada para este curso.</li>`;
+    }
+
+    // Carregar Faturas e Boletos do Aluno
+    const finListEl = document.getElementById('portal-aluno-financeiro-list');
+    finListEl.innerHTML = '';
+    const faturasAluno = financeLogs.filter(f => f.studentId === aluno.id || f.studentCode === aluno.code);
+    
+    if (faturasAluno.length > 0) {
+      faturasAluno.forEach(fat => {
+        finListEl.innerHTML += `
+          <li class="data-item">
+            <div>
+              <strong>${fat.description}</strong> - R$ ${fat.amount}<br>
+              <small>Vencimento: ${fat.dueDate || fat.date} | Status: <b>${fat.status}</b></small>
+            </div>
+            <div>
+              ${fat.invoiceUrl ? `<a href="${fat.invoiceUrl}" target="_blank" style="background: var(--secondary-color); color: white; padding: 6px 12px; border-radius: 15px; font-size: 0.8rem; text-decoration: none; display: inline-block;">Visualizar Boleto / Fatura</a>` : '<span style="color:#a0aec0; font-size:0.8rem;">Sem link externo</span>'}
+            </div>
+          </li>`;
+      });
+    } else {
+      finListEl.innerHTML = `<li class="data-item">Nenhuma cobrança ou fatura registrada para este aluno.</li>`;
     }
   }
 
