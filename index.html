@@ -121,7 +121,7 @@
                 <img id="login-logo-img" alt="Logo" class="max-h-24 max-w-[220px] object-contain mb-4 bg-transparent border-0 shadow-none outline-none block" style="display: none; background: transparent !important;">
                 <h3 id="login-info-title" class="text-xl font-bold mb-2">Sistema de Ensino Técnico e Transporte – SE7</h3>
                 <p id="login-info-desc" class="text-xs text-blue-100 opacity-90 leading-relaxed mb-4">Plataforma integrada de ensino técnico, controle acadêmico, auditoria em nuvem e portal do aluno.</p>
-                <div class="text-[10px] uppercase tracking-wider text-blue-300 font-semibold" id="login-info-version">SE7 Cloud v1.0.3</div>
+                <div class="text-[10px] uppercase tracking-wider text-blue-300 font-semibold" id="login-info-version">SE7 Cloud v1.0.4</div>
             </div>
         </div>
     </div>
@@ -474,7 +474,18 @@
                 </div>
 
                 <div id="subtab-portal-identificacao" class="subtab-content active space-y-4">
-                    <div class="bg-gray-50 dark:bg-slate-900 p-5 rounded-xl border border-gray-200 dark:border-slate-700 text-sm space-y-3">
+                    <div class="bg-gray-50 dark:bg-slate-900 p-5 rounded-xl border border-gray-200 dark:border-slate-700 text-sm space-y-4">
+                        <div class="flex flex-col md:flex-row items-center gap-6 pb-4 border-b border-gray-200 dark:border-slate-700">
+                            <div class="w-28 h-36 bg-white dark:bg-slate-800 border-2 border-dashed border-gray-300 dark:border-slate-600 rounded-lg flex flex-col items-center justify-center overflow-hidden relative shadow-inner shrink-0" id="portal-foto-preview-box">
+                                <span class="text-[10px] text-gray-400 text-center p-1" id="portal-foto-placeholder">Sem Foto 3x4</span>
+                            </div>
+                            <div class="space-y-2 w-full text-left">
+                                <h4 class="font-bold text-sm text-blue-600 dark:text-blue-400">Foto 3x4 do Aluno (Para Carteirinha)</h4>
+                                <p class="text-xs text-gray-500">Envie uma foto recente de rosto com fundo neutro. Ela aparecerá automaticamente na sua carteirinha estudantil digital e impressa.</p>
+                                <input type="file" id="input-foto-aluno-file" accept="image/*" onchange="handleAlunoFotoUpload(event)" class="text-xs">
+                            </div>
+                        </div>
+
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <p><strong>Nome Completo:</strong> <span id="portal-aluno-nome">---</span></p>
                             <p><strong>Matrícula:</strong> <span id="portal-aluno-cod">---</span></p>
@@ -521,7 +532,7 @@
                     </ul>
                 </div>
 
-                <!-- NOVA SUB-ABA DE CALENDÁRIO ACADÊMICO DO ALUNO -->
+                <!-- CALENDÁRIO ACADÊMICO DO ALUNO -->
                 <div id="subtab-portal-calendario" class="subtab-content space-y-4" style="display: none;">
                     <div class="bg-blue-50 dark:bg-slate-900 p-4 rounded-xl border border-blue-200 dark:border-slate-700 text-xs mb-4">
                         <p class="font-bold text-blue-800 dark:text-blue-300 mb-1"><i class="fa-solid fa-circle-info mr-1"></i> Acompanhamento em Tempo Real</p>
@@ -558,7 +569,9 @@
                             <span class="bg-white/20 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider shrink-0">ESTUDANTE</span>
                         </div>
                         <div class="flex items-center space-x-4">
-                            <div class="w-20 h-24 bg-white/10 border border-white/20 rounded-lg flex items-center justify-center text-blue-100 text-[10px] font-bold shrink-0 text-center p-1">FOTO 3x4</div>
+                            <div class="w-20 h-28 bg-white/10 border border-white/20 rounded-lg flex items-center justify-center text-blue-100 text-[10px] font-bold shrink-0 text-center overflow-hidden relative" id="card-foto-box">
+                                <span id="card-foto-placeholder">FOTO 3x4</span>
+                            </div>
                             <div class="text-xs space-y-1.5 w-full">
                                 <p class="truncate"><strong>Nome:</strong> <span id="card-aluno-nome">---</span></p>
                                 <p><strong>Matrícula:</strong> <span id="card-aluno-mat">---</span></p>
@@ -768,14 +781,13 @@
                     <ul class="data-list divide-y divide-gray-200 dark:divide-slate-700 mt-4" id="teachers-list"></ul>
                 </div>
 
-                <!-- SUBABA EDIÇÃO DE DOCUMENTOS (CONTRATOS, DECLARAÇÕES E HISTÓRICOS EM PDF) -->
+                <!-- SUBABA EDIÇÃO DE DOCUMENTOS -->
                 <div id="subtab-templates" class="subtab-content space-y-4" style="display: none;">
                     <div>
                         <label class="block text-xs font-semibold mb-1">Selecione o Curso</label>
                         <select id="template-course-select" onchange="loadCourseTemplate()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></select>
                     </div>
 
-                    <!-- Caixa de Contrato -->
                     <div>
                         <div class="flex justify-between items-center mb-1">
                             <label class="text-xs font-semibold">Texto do Contrato</label>
@@ -789,7 +801,6 @@
                         <textarea id="input-contract-text" rows="5" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></textarea>
                     </div>
 
-                    <!-- Caixa de Declaração -->
                     <div>
                         <div class="flex justify-between items-center mb-1">
                             <label class="text-xs font-semibold">Texto da Declaração</label>
@@ -803,7 +814,6 @@
                         <textarea id="input-decl-text" rows="4" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></textarea>
                     </div>
 
-                    <!-- Caixa de Histórico Escolar (Com opção de upload de PDF modelo) -->
                     <div>
                         <div class="flex justify-between items-center mb-1">
                             <label class="text-xs font-semibold">Texto do Histórico Escolar</label>
@@ -919,7 +929,7 @@
     <!-- RODAPÉ -->
     <footer class="bg-white dark:bg-slate-800 border-t border-gray-200 dark:border-slate-700 py-4 px-6 text-center text-xs text-gray-500 dark:text-gray-400 flex flex-col sm:flex-row justify-between items-center gap-2">
         <span>SE7 Gestão Educacional – Todos os direitos reservados.</span>
-        <span>Desenvolvido por <strong>JS & SS Serviços Educacionais e Cia Ltda</strong> &bull; Versão 1.0.3 Cloud</span>
+        <span>Desenvolvido por <strong>JS & SS Serviços Educacionais e Cia Ltda</strong> &bull; Versão 1.0.4 Cloud</span>
     </footer>
 
     <!-- MODAL DE NOVA MATRÍCULA / EDIÇÃO DE ALUNO -->
@@ -1427,7 +1437,7 @@
 
         let currentLogoDataUrl = "", courses = [], classes = [], students = [], teachers = [], financeLogs = [], academicCalendars = [];
         let globalInstitutionData = {};
-        let alunoLogadoCache = null; // Armazena o objeto do aluno atualmente visualizado no Portal
+        let alunoLogadoCache = null;
 
         function carregarDadosDaNuvem() {
             db.collection("config").doc("institution").onSnapshot((doc) => {
@@ -1789,6 +1799,7 @@
                 studentData.status = "Ativo";
                 studentData.senhaAluno = code;
                 studentData.documentos = {};
+                studentData.fotoAluno = "";
 
                 const docRef = await db.collection("students").add(studentData);
                 closeNewStudentModal();
@@ -2138,7 +2149,7 @@
         }
 
         function carregarDadosPortalAluno(aluno) {
-            alunoLogadoCache = aluno; // Atualiza o cache do aluno atual
+            alunoLogadoCache = aluno;
 
             document.getElementById('portal-aluno-nome').textContent = aluno.fullname;
             document.getElementById('portal-aluno-cod').textContent = aluno.code;
@@ -2157,6 +2168,17 @@
             document.getElementById('card-aluno-mat').textContent = aluno.code;
             document.getElementById('card-aluno-curso').textContent = curso ? curso.name : '---';
             
+            // Renderizar foto 3x4 no perfil e na carteirinha
+            const previewBox = document.getElementById('portal-foto-preview-box');
+            const cardFotoBox = document.getElementById('card-foto-box');
+            if (aluno.fotoAluno) {
+                previewBox.innerHTML = `<img src="${aluno.fotoAluno}" class="w-full h-full object-cover">`;
+                cardFotoBox.innerHTML = `<img src="${aluno.fotoAluno}" class="w-full h-full object-cover">`;
+            } else {
+                previewBox.innerHTML = `<span class="text-[10px] text-gray-400 text-center p-1">Sem Foto 3x4</span>`;
+                cardFotoBox.innerHTML = `<span id="card-foto-placeholder">FOTO 3x4</span>`;
+            }
+
             const cardInstName = document.getElementById('card-inst-name');
             const cardInstRazao = document.getElementById('card-inst-razao');
             const cardInstLogo = document.getElementById('card-inst-logo');
@@ -2201,12 +2223,25 @@
             }
         }
 
-        // RENDERIZAÇÃO DO CALENDÁRIO ACADÊMICO NO PORTAL DO ALUNO
+        async function handleAlunoFotoUpload(e) {
+            const file = e.target.files[0];
+            if(!file || !alunoLogadoCache) return;
+            if(!file.type.startsWith("image/")) return alert("O arquivo enviado deve ser uma imagem.");
+
+            const reader = new FileReader();
+            reader.onload = async function(evt) {
+                const base64Foto = evt.target.result;
+                alunoLogadoCache.fotoAluno = base64Foto;
+                await db.collection("students").doc(alunoLogadoCache.id).update({ fotoAluno: base64Foto });
+                alert("Foto 3x4 atualizada com sucesso!");
+                carregarDadosPortalAluno(alunoLogadoCache);
+            };
+            reader.readAsDataURL(file);
+        }
+
         function renderizarCalendarioPortalAluno(aluno) {
             const tbody = document.getElementById('tabela-portal-aluno-calendario');
             if (!tbody) return;
-
-            // Filtra os eventos de calendário cadastrados para a turma do aluno
             const eventosTurma = academicCalendars.filter(ev => ev.classId === aluno.classId);
 
             if (eventosTurma.length === 0) {
