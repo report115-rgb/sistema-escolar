@@ -1321,6 +1321,30 @@
             { id: "historico_medio", label: "Histórico do Ensino Médio" }
         ];
 
+        // ==========================================
+        // SISTEMA DE INATIVIDADE ATIVO (10 MINUTOS)
+        // ==========================================
+        let tempoInatividadeMinutos = 10;
+        let temporizadorInatividade;
+
+        function resetarTemporizadorInatividade() {
+            clearTimeout(temporizadorInatividade);
+            const sessao = sessionStorage.getItem('usuario_logado');
+            if (sessao) {
+                temporizadorInatividade = setTimeout(() => {
+                    sessionStorage.removeItem('usuario_logado');
+                    registrarLogAuditoria("Sistema bloqueado por inatividade superior a 10 minutos", "Inatividade");
+                    alert("Sua sessão foi encerrada por inatividade (10 minutos sem interação). Faça login novamente.");
+                    location.reload();
+                }, tempoInatividadeMinutos * 60 * 1000);
+            }
+        }
+
+        ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(evento => {
+            window.addEventListener(evento, resetarTemporizadorInatividade, true);
+        });
+        // ==========================================
+
         class AsaasIntegrationService {
             constructor() {
                 const config = JSON.parse(localStorage.getItem('app_asaas_config')) || { apiKey: '', env: 'sandbox' };
@@ -1418,6 +1442,7 @@
             aplicarPermissoesPorPerfil(userFound.perfil);
             atualizarDisplayUsuarioLogado();
             registrarLogAuditoria("Efetuou login no sistema", "Autenticação");
+            resetarTemporizadorInatividade();
         }
 
         function fazerLoginAluno() {
@@ -1437,6 +1462,7 @@
             registrarLogAuditoria(`Aluno ${alunoEncontrado.fullname} acessou o Portal`, "Portal do Aluno");
             openTab({ currentTarget: document.getElementById('nav-btn-portal-aluno') }, 'tab-portal-aluno');
             carregarDadosPortalAluno(alunoEncontrado);
+            resetarTemporizadorInatividade();
         }
 
         function atualizarDisplayUsuarioLogado() {
@@ -1632,6 +1658,7 @@
                 loginModal.style.display = 'none';
                 aplicarPermissoesPorPerfil(sessao.perfil);
                 atualizarDisplayUsuarioLogado();
+                resetarTemporizadorInatividade();
                 if (sessao.perfil === 'aluno') openTab({ currentTarget: document.getElementById('nav-btn-portal-aluno') }, 'tab-portal-aluno');
             } else if (loginModal) {
                 loginModal.style.display = 'flex';
@@ -2043,7 +2070,6 @@
             if (!course.subjects) course.subjects = [];
 
             if (editSubjectId) {
-                // Editando disciplina existente
                 const index = course.subjects.findIndex(s => s.id == editSubjectId);
                 if (index !== -1) {
                     course.subjects[index] = { id: Number(editSubjectId), name, hours, ementa };
@@ -2052,7 +2078,6 @@
                 cancelarEdicaoDisciplina();
                 alert("Disciplina atualizada com sucesso!");
             } else {
-                // Adicionando nova disciplina
                 course.subjects.push({ id: Date.now(), name, hours, ementa });
                 await db.collection("courses").doc(courseId).update({ subjects: course.subjects });
                 document.getElementById('input-subject-name').value = '';
