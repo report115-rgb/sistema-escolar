@@ -172,7 +172,7 @@
             <div id="tab-documentos" class="space-y-3 tab-pane" style="display: none;">
                 <div class="bg-blue-50 p-3 rounded-2xl border border-blue-200 text-xs text-blue-900 mb-3">
                     <p class="font-bold mb-1"><i class="fa-solid fa-circle-info mr-1"></i> Instruções para Postagem:</p>
-                    <p>Envie cada documento obrigatório rigorosamente em formato <strong>PDF</strong>. Após o envio, a secretaria realizará a validação.</p>
+                    <p>Envie cada documento obrigatório em formato <strong>PDF</strong> (tamanho recomendado abaixo de 800KB para evitar limite do sistema).</p>
                 </div>
                 <h3 class="font-bold text-sm text-slate-700 mb-2">Meus Documentos Obrigatórios</h3>
                 <div id="documents-list" class="space-y-3">
@@ -261,7 +261,6 @@
                     const data = doc.data();
                     const dCpf = data.cpf ? data.cpf.replace(/[^\d]/g, '') : '';
                     
-                    // Validação flexível: confere CPF e valida se a senha bate com a matrícula (code) ou com senhaAluno
                     const matriculaBanco = data.code ? String(data.code).trim() : '';
                     const senhaBanco = data.senhaAluno ? String(data.senhaAluno).trim() : '';
 
@@ -346,6 +345,7 @@
             reader.readAsDataURL(file);
         }
 
+        // Validação e restrição de tamanho para não estourar o limite do Firestore (1MB)
         async function enviarDocumentoPDFAluno(tipoId) {
             const fileInput = document.getElementById(`file_doc_${tipoId}`);
             if(!fileInput || !fileInput.files || fileInput.files.length === 0) return alert("Selecione um arquivo PDF.");
@@ -353,6 +353,11 @@
             
             if(file.type !== "application/pdf") {
                 return alert("Atenção: O documento precisa obrigatoriamente estar em formato PDF.");
+            }
+
+            // Limite de 900KB para garantir que o base64 fique abaixo de 1MB no Firestore
+            if(file.size > 900000) {
+                return alert(`O arquivo é muito grande (${(file.size / 1024 / 1024).toFixed(2)}MB). Por favor, envie um PDF com menos de 900KB para respeitar o limite do banco de dados.`);
             }
 
             const reader = new FileReader();
@@ -518,7 +523,7 @@
 
             db.collection("financeLogs").where("studentId", "==", alunoLogado.id).get().then(snap => {
                 const finList = document.getElementById('finance-list');
-                finList.innerHTML = '';
+                finList.innerHTML = ``;
                 if(snap.empty) {
                     finList.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">Nenhuma fatura encontrada.</p>`;
                     return;
