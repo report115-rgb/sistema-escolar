@@ -34,11 +34,11 @@
         <div class="bg-white text-slate-800 p-6 rounded-3xl shadow-2xl space-y-4">
             <div>
                 <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">CPF do Aluno</label>
-                <input type="text" id="login-cpf" placeholder="000.000.000-00" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-600 focus:outline-none dark:bg-slate-50">
+                <input type="text" id="login-cpf" placeholder="000.000.000-00" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-600 focus:outline-none">
             </div>
             <div>
                 <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Senha ou Código de Matrícula</label>
-                <input type="password" id="login-pass" placeholder="MAT-2026-XXXXX" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-600 focus:outline-none dark:bg-slate-50">
+                <input type="password" id="login-pass" placeholder="MAT-2026-XXXXX" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-600 focus:outline-none">
             </div>
             <button onclick="fazerLoginAluno()" class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 transition">
                 Entrar no Aplicativo
@@ -53,7 +53,7 @@
         </div>
     </div>
 
-    <!-- MODAL / TELA DE ESQUECI MINHA SENHA -->
+    <!-- MODAL DE ESQUECI MINHA SENHA -->
     <div id="modal-esqueci-senha" class="fixed inset-0 z-[60] bg-black/60 flex items-center justify-center p-4" style="display: none;">
         <div class="bg-white text-slate-800 rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4 relative">
             <button onclick="fecharModalEsqueciSenha()" class="absolute top-4 right-4 text-slate-400 hover:text-red-500 text-xl font-bold">&times;</button>
@@ -79,12 +79,17 @@
     </div>
 
     <!-- APLICATIVO PRINCIPAL (DASHBOARD) -->
-    <div id="main-app" class="flex-1 flex flex-col pb-20" style="display: none;">
+    <div id="main-app" class="flex-1 flex flex-col pb-24" style="display: none;">
         <!-- Cabeçalho -->
         <header class="bg-blue-900 text-white p-4 flex justify-between items-center shadow-md sticky top-0 z-40">
             <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center font-bold text-sm overflow-hidden border border-white/20" id="header-avatar-box">
-                    <i class="fa-solid fa-user text-blue-200"></i>
+                <div class="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center font-bold text-sm overflow-hidden border border-white/20 relative cursor-pointer group" onclick="dispararTrocaFoto()" title="Alterar foto">
+                    <div id="header-avatar-box" class="w-full h-full flex items-center justify-center">
+                        <i class="fa-solid fa-user text-blue-200"></i>
+                    </div>
+                    <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition text-[10px]">
+                        <i class="fa-solid fa-camera"></i>
+                    </div>
                 </div>
                 <div>
                     <span class="text-[10px] uppercase tracking-wider text-blue-300 block">Estudante</span>
@@ -95,6 +100,9 @@
                 <i class="fa-solid fa-power-off"></i>
             </button>
         </header>
+
+        <!-- Input oculto para carregar imagem -->
+        <input type="file" id="input-foto-perfil" accept="image/*" style="display: none;" onchange="processarAlteracaoFoto(event)">
 
         <!-- Conteúdo das Abas -->
         <div class="flex-1 p-4 overflow-y-auto space-y-4">
@@ -107,8 +115,13 @@
                         <span class="text-xs font-mono font-semibold" id="card-matricula">MAT----</span>
                     </div>
                     <div class="flex items-center space-x-4">
-                        <div class="w-20 h-24 bg-white/10 rounded-xl border border-white/20 flex items-center justify-center overflow-hidden shrink-0 shadow-inner" id="card-foto-box">
-                            <i class="fa-solid fa-user text-2xl text-blue-200"></i>
+                        <div class="w-20 h-24 bg-white/10 rounded-xl border border-white/20 flex items-center justify-center overflow-hidden shrink-0 shadow-inner relative group cursor-pointer" onclick="dispararTrocaFoto()" title="Clique para alterar foto">
+                            <div id="card-foto-box" class="w-full h-full flex items-center justify-center">
+                                <i class="fa-solid fa-user text-2xl text-blue-200"></i>
+                            </div>
+                            <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition text-[10px] text-white">
+                                <i class="fa-solid fa-camera mr-1"></i> Alterar
+                            </div>
                         </div>
                         <div class="space-y-1 text-xs w-full">
                             <p class="font-bold text-sm truncate" id="card-nome">---</p>
@@ -117,7 +130,7 @@
                         </div>
                     </div>
                     <div class="mt-4 pt-3 border-t border-white/10 flex justify-between items-center">
-                        <span class="text-[9px] text-blue-200">Válido em território nacional</span>
+                        <span class="text-[9px] text-blue-200">Toque na foto para alterá-la</span>
                         <div id="card-qrcode" class="bg-white p-1 rounded-lg"></div>
                     </div>
                 </div>
@@ -139,7 +152,7 @@
                 </div>
             </div>
 
-            <!-- ABA 3: NOTAS E AVALIAÇÕES -->
+            <!-- ABA 3: NOTAS -->
             <div id="tab-notas" class="space-y-3 tab-pane" style="display: none;">
                 <h3 class="font-bold text-sm text-slate-700 mb-2">Acompanhamento Acadêmico</h3>
                 <div id="grades-list" class="space-y-2">
@@ -147,7 +160,29 @@
                 </div>
             </div>
 
-            <!-- ABA 4: CALENDÁRIO -->
+            <!-- ABA 4: FREQUÊNCIA -->
+            <div id="tab-frequencia" class="space-y-3 tab-pane" style="display: none;">
+                <h3 class="font-bold text-sm text-slate-700 mb-2">Controle de Frequência</h3>
+                <div id="frequency-list" class="space-y-2">
+                    <p class="text-xs text-slate-400 text-center py-8">Carregando frequência...</p>
+                </div>
+            </div>
+
+            <!-- ABA 5: DOCUMENTOS -->
+            <div id="tab-documentos" class="space-y-3 tab-pane" style="display: none;">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="font-bold text-sm text-slate-700">Meus Documentos</h3>
+                    <button onclick="document.getElementById('input-novo-doc').click()" class="px-3 py-1.5 bg-blue-600 text-white rounded-xl text-xs font-bold shadow hover:bg-blue-700 transition">
+                        <i class="fa-solid fa-plus mr-1"></i> Enviar Doc
+                    </button>
+                    <input type="file" id="input-novo-doc" style="display: none;" onchange="processarEnvioDocumento(event)">
+                </div>
+                <div id="documents-list" class="space-y-2">
+                    <p class="text-xs text-slate-400 text-center py-8">Nenhum documento enviado.</p>
+                </div>
+            </div>
+
+            <!-- ABA 6: CALENDÁRIO -->
             <div id="tab-calendario" class="space-y-3 tab-pane" style="display: none;">
                 <h3 class="font-bold text-sm text-slate-700 mb-2">Calendário de Aulas</h3>
                 <div id="calendar-list" class="space-y-2">
@@ -158,18 +193,24 @@
         </div>
 
         <!-- Menu Inferior Fixo (Bottom Bar) -->
-        <nav class="bg-white border-t border-slate-200 px-4 py-2 flex justify-around items-center fixed bottom-0 left-0 right-0 shadow-lg z-40">
+        <nav class="bg-white border-t border-slate-200 px-2 py-2 flex justify-around items-center fixed bottom-0 left-0 right-0 shadow-lg z-40">
             <button onclick="mudarAba('home')" id="nav-home" class="flex flex-col items-center text-blue-600 text-[10px] font-bold transition">
-                <i class="fa-solid fa-id-card text-lg mb-0.5"></i> Início
+                <i class="fa-solid fa-id-card text-base mb-0.5"></i> Início
             </button>
             <button onclick="mudarAba('financeiro')" id="nav-financeiro" class="flex flex-col items-center text-slate-400 text-[10px] font-bold transition">
-                <i class="fa-solid fa-wallet text-lg mb-0.5"></i> Financeiro
+                <i class="fa-solid fa-wallet text-base mb-0.5"></i> Financeiro
             </button>
             <button onclick="mudarAba('notas')" id="nav-notas" class="flex flex-col items-center text-slate-400 text-[10px] font-bold transition">
-                <i class="fa-solid fa-star text-lg mb-0.5"></i> Notas
+                <i class="fa-solid fa-star text-base mb-0.5"></i> Notas
+            </button>
+            <button onclick="mudarAba('frequencia')" id="nav-frequencia" class="flex flex-col items-center text-slate-400 text-[10px] font-bold transition">
+                <i class="fa-solid fa-clipboard-user text-base mb-0.5"></i> Presença
+            </button>
+            <button onclick="mudarAba('documentos')" id="nav-documentos" class="flex flex-col items-center text-slate-400 text-[10px] font-bold transition">
+                <i class="fa-solid fa-folder-open text-base mb-0.5"></i> Docs
             </button>
             <button onclick="mudarAba('calendario')" id="nav-calendario" class="flex flex-col items-center text-slate-400 text-[10px] font-bold transition">
-                <i class="fa-solid fa-calendar-days text-lg mb-0.5"></i> Aulas
+                <i class="fa-solid fa-calendar-days text-base mb-0.5"></i> Aulas
             </button>
         </nav>
     </div>
@@ -263,6 +304,88 @@
             }
         }
 
+        function dispararTrocaFoto() {
+            document.getElementById('input-foto-perfil').click();
+        }
+
+        async function processarAlteracaoFoto(event) {
+            const file = event.target.files[0];
+            if(!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const base64Image = e.target.result;
+                try {
+                    await db.collection("students").doc(alunoLogado.id).update({ fotoAluno: base64Image });
+                    alunoLogado.fotoAluno = base64Image;
+                    sessionStorage.setItem('aluno_app_logado', JSON.stringify(alunoLogado));
+                    
+                    // Atualiza visualmente na hora
+                    document.getElementById('card-foto-box').innerHTML = `<img src="${base64Image}" class="w-full h-full object-cover">`;
+                    document.getElementById('header-avatar-box').innerHTML = `<img src="${base64Image}" class="w-full h-full object-cover">`;
+                    alert("Foto de perfil atualizada com sucesso!");
+                } catch(err) {
+                    alert("Erro ao salvar foto: " + err.message);
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function processarEnvioDocumento(event) {
+            const file = event.target.files[0];
+            if(!file) return;
+
+            const nomeDoc = prompt("Nome ou descrição do documento (ex: RG, Comprovante de Residência):", file.name);
+            if(!nomeDoc) return;
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const base64File = e.target.result;
+                const novoDoc = {
+                    name: nomeDoc,
+                    dataUrl: base64File,
+                    date: new Date().toLocaleDateString('pt-BR')
+                };
+
+                try {
+                    let docsAtuais = alunoLogado.documents || [];
+                    docsAtuais.push(novoDoc);
+                    await db.collection("students").doc(alunoLogado.id).update({ documents: docsAtuais });
+                    alunoLogado.documents = docsAtuais;
+                    sessionStorage.setItem('aluno_app_logado', JSON.stringify(alunoLogado));
+                    
+                    renderizarDocumentos();
+                    alert("Documento enviado com sucesso!");
+                } catch(err) {
+                    alert("Erro ao enviar documento: " + err.message);
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function renderizarDocumentos() {
+            const docList = document.getElementById('documents-list');
+            docList.innerHTML = '';
+            const docs = alunoLogado.documents || [];
+            if(docs.length === 0) {
+                docList.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">Nenhum documento enviado.</p>`;
+                return;
+            }
+            docs.forEach((doc, idx) => {
+                docList.innerHTML += `
+                    <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm flex justify-between items-center text-xs">
+                        <div>
+                            <strong class="text-slate-900"><i class="fa-solid fa-file-lines text-blue-600 mr-1.5"></i> ${doc.name}</strong>
+                            <p class="text-[10px] text-slate-500">Enviado em: ${doc.date || 'Data recente'}</p>
+                        </div>
+                        <a href="${doc.dataUrl}" download="${doc.name}" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold text-[10px] transition">
+                            <i class="fa-solid fa-download"></i> Baixar
+                        </a>
+                    </div>
+                `;
+            });
+        }
+
         async function carregarDadosPainel() {
             if(!alunoLogado) return;
             document.getElementById('header-aluno-nome').textContent = alunoLogado.fullname;
@@ -276,6 +399,8 @@
                 document.getElementById('card-foto-box').innerHTML = `<img src="${alunoLogado.fotoAluno}" class="w-full h-full object-cover">`;
                 document.getElementById('header-avatar-box').innerHTML = `<img src="${alunoLogado.fotoAluno}" class="w-full h-full object-cover">`;
             }
+
+            renderizarDocumentos();
 
             if(alunoLogado.courseId) {
                 db.collection("courses").doc(alunoLogado.courseId).get().then(doc => {
@@ -333,6 +458,34 @@
                 });
             }
 
+            // Frequência (Simulada ou baseada em registros se houver)
+            db.collection("frequencies").where("studentId", "==", alunoLogado.id).get().then(snap => {
+                const freqList = document.getElementById('frequency-list');
+                freqList.innerHTML = '';
+                if(snap.empty) {
+                    freqList.innerHTML = `
+                        <div class="bg-emerald-50 border border-emerald-200 p-4 rounded-2xl text-center space-y-1">
+                            <i class="fa-solid fa-circle-check text-emerald-600 text-xl mb-1"></i>
+                            <h4 class="font-bold text-emerald-900 text-sm">Frequência Regular</h4>
+                            <p class="text-[11px] text-emerald-700">Nenhuma falta registrada até o momento. Sua presença está 100% em dia!</p>
+                        </div>
+                    `;
+                    return;
+                }
+                snap.forEach(doc => {
+                    const f = doc.data();
+                    freqList.innerHTML += `
+                        <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm flex justify-between items-center text-xs">
+                            <div>
+                                <strong class="text-slate-900">${f.subject || 'Aula'}</strong>
+                                <p class="text-[10px] text-slate-500">Data: ${f.date || '---'}</p>
+                            </div>
+                            <span class="px-2.5 py-1 bg-red-50 text-red-700 font-bold rounded-lg text-[10px]">${f.status || 'Falta'}</span>
+                        </div>
+                    `;
+                });
+            });
+
             db.collection("financeLogs").where("studentId", "==", alunoLogado.id).get().then(snap => {
                 const finList = document.getElementById('finance-list');
                 finList.innerHTML = '';
@@ -363,8 +516,10 @@
         }
 
         function mudarAba(aba) {
-            ['home', 'financeiro', 'notas', 'calendario'].forEach(a => {
-                document.getElementById(`tab-${a}`).style.display = (a === aba) ? 'block' : 'none';
+            ['home', 'financeiro', 'notas', 'frequencia', 'documentos', 'calendario'].forEach(a => {
+                const el = document.getElementById(`tab-${a}`);
+                if(el) el.style.display = (a === aba) ? 'block' : 'none';
+                
                 const btn = document.getElementById(`nav-${a}`);
                 if(btn) {
                     btn.className = (a === aba) 
