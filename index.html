@@ -667,154 +667,214 @@
                     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-institution')">Instituição</button>
                 </div>
 
-                <!-- SUBABA CURSOS -->
-                <div id="subtab-courses" class="subtab-content active space-y-4">
-                    <input type="hidden" id="edit-course-id" value="">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-semibold mb-1">Nome do Curso</label>
-                            <input type="text" id="input-course-name" placeholder="Técnico em Enfermagem" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold mb-1">Sigla</label>
-                            <input type="text" id="input-course-sigla" placeholder="ENF" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                        </div>
+                <!-- ABA PRINCIPAL CURSOS (DIVIDIDA EM DUAS SUBABAS) -->
+                <div id="subtab-courses" class="subtab-content active space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700">
+                    
+                    <!-- BOTÕES DAS SUBABAS DE CURSOS -->
+                    <div class="flex space-x-2 border-b border-gray-200 dark:border-slate-700 pb-3 mb-4">
+                        <button class="subsubtab-button active px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white shadow" onclick="openSubSubTab(event, 'subsubtab-cursos-cadastrados')"><i class="fa-solid fa-list mr-1"></i> Cursos Cadastrados</button>
+                        <button class="subsubtab-button px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubSubTab(event, 'subsubtab-cadastrar-curso')"><i class="fa-solid fa-plus mr-1"></i> Cadastrar Novo Curso</button>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <label class="block text-xs font-semibold mb-1">Eixo Tecnológico</label>
-                            <input type="text" id="input-course-eixo" placeholder="Ambiente e Saúde" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+
+                    <!-- SUB-SUBABA 1: CURSOS CADASTRADOS -->
+                    <div id="subsubtab-cursos-cadastrados" class="subsubtab-content active space-y-3">
+                        <div class="flex justify-between items-center mb-2">
+                            <h4 class="font-bold text-sm text-gray-800 dark:text-white">Lista de Cursos Cadastrados</h4>
+                            <span class="text-xs text-gray-500 font-semibold" id="total-courses-count">Total: 0 cursos</span>
                         </div>
-                        <div>
-                            <label class="block text-xs font-semibold mb-1">Carga Horária</label>
-                            <input type="text" id="input-course-hours" placeholder="3600 hrs" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+                        <ul class="data-list divide-y divide-gray-200 dark:divide-slate-700" id="courses-list"></ul>
+                    </div>
+
+                    <!-- SUB-SUBABA 2: CADASTRAR NOVO CURSO -->
+                    <div id="subsubtab-cadastrar-curso" class="subsubtab-content space-y-4" style="display: none;">
+                        <input type="hidden" id="edit-course-id" value="">
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold mb-1">Nome do Curso</label>
+                                <input type="text" id="input-course-name" placeholder="Técnico em Enfermagem" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold mb-1">Sigla</label>
+                                <input type="text" id="input-course-sigla" placeholder="ENF" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+                            </div>
                         </div>
-                        <div>
-                            <label class="block text-xs font-semibold mb-1">Resolução / Conselho</label>
-                            <input type="text" id="input-course-conselho" placeholder="Resolução COFEN" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold mb-1">Eixo Tecnológico</label>
+                                <input type="text" id="input-course-eixo" placeholder="Ambiente e Saúde" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold mb-1">Carga Horária</label>
+                                <input type="text" id="input-course-hours" placeholder="3600 hrs" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold mb-1">Resolução / Conselho</label>
+                                <input type="text" id="input-course-conselho" placeholder="Resolução COFEN" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+                            </div>
+                        </div>
+
+                        <!-- SEÇÃO FINANCEIRA DO CURSO & SEMESTRE DE VIGÊNCIA -->
+                        <div class="bg-blue-50 dark:bg-slate-800 p-4 rounded-xl border border-blue-200 dark:border-slate-700 space-y-4">
+                            <h4 class="font-bold text-xs text-blue-700 dark:text-blue-400 uppercase"><i class="fa-solid fa-wallet mr-1"></i> Configuração Financeira e Semestre de Vigência</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-xs font-semibold mb-1">Semestre de Vigência</label>
+                                    <select id="input-course-semestre" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+                                        <option value="2025/1">2025/1 (1º Semestre: Jan-Jun)</option>
+                                        <option value="2025/2">2025/2 (2º Semestre: Jul-Dez)</option>
+                                        <option value="2026/1">2026/1 (1º Semestre: Jan-Jun)</option>
+                                        <option value="2026/2" selected>2026/2 (2º Semestre: Jul-Dez)</option>
+                                        <option value="2027/1">2027/1 (1º Semestre: Jan-Jun)</option>
+                                        <option value="2027/2">2027/2 (2º Semestre: Jul-Dez)</option>
+                                        <option value="2028/1">2028/1 (1º Semestre: Jan-Jun)</option>
+                                        <option value="2028/2">2028/2 (2º Semestre: Jul-Dez)</option>
+                                        <option value="2029/1">2029/1 (1º Semestre: Jan-Jun)</option>
+                                        <option value="2029/2">2029/2 (2º Semestre: Jul-Dez)</option>
+                                        <option value="2030/1">2030/1 (1º Semestre: Jan-Jun)</option>
+                                        <option value="2030/2">2030/2 (2º Semestre: Jul-Dez)</option>
+                                        <option value="2031/1">2031/1 (1º Semestre: Jan-Jun)</option>
+                                        <option value="2031/2">2031/2 (2º Semestre: Jul-Dez)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold mb-1">Qtd. de Parcelas</label>
+                                    <input type="number" id="input-course-parcelas" placeholder="24" value="24" min="1" oninput="calcularTotalCurso()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold mb-1">Valor Normal da Parcela (R$)</label>
+                                    <input type="number" id="input-course-valor-parcela" placeholder="300.00" value="300.00" step="0.01" oninput="calcularTotalCurso()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-semibold mb-1 text-emerald-700 dark:text-emerald-400">Valor com Desconto de Pontualidade (R$)</label>
+                                    <input type="number" id="input-course-valor-desconto" placeholder="280.00" value="280.00" step="0.01" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold mb-1">Dia de Vencimento</label>
+                                    <input type="number" id="input-course-vencimento" placeholder="10" value="10" min="1" max="31" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold mb-1 text-gray-600 dark:text-gray-300">Valor Total do Curso (Calculado)</label>
+                                <input type="text" id="input-course-valor-total" readonly placeholder="R$ 7.200,00" class="w-full md:w-1/3 px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm bg-gray-100 dark:bg-slate-900 font-bold text-emerald-600 dark:text-emerald-400">
+                            </div>
+                        </div>
+
+                        <div class="flex gap-2 pt-2">
+                            <button type="button" id="btn-save-course" onclick="saveCourse()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-xs shadow transition duration-200">Salvar Curso</button>
+                            <button type="button" id="btn-cancel-edit-course" onclick="cancelarEdicaoCurso()" class="px-5 py-2.5 bg-gray-500 hover:bg-gray-600 text-white font-semibold rounded-lg text-xs shadow transition duration-200" style="display: none;">Cancelar Edição</button>
                         </div>
                     </div>
 
-                    <!-- SEÇÃO FINANCEIRA DO CURSO & SEMESTRE DE VIGÊNCIA -->
-                    <div class="bg-blue-50 dark:bg-slate-900 p-4 rounded-xl border border-blue-200 dark:border-slate-700 space-y-4">
-                        <h4 class="font-bold text-xs text-blue-700 dark:text-blue-400 uppercase"><i class="fa-solid fa-wallet mr-1"></i> Configuração Financeira e Semestre de Vigência</h4>
+                </div>
+
+                <!-- SUBABA DISCIPLINAS (REORGANIZADA NO MESMO PADRÃO DE CURSOS) -->
+                <div id="subtab-subjects" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
+                    <input type="hidden" id="edit-subject-id" value="">
+                    
+                    <!-- BOTÕES DAS SUBABAS DE DISCIPLINAS -->
+                    <div class="flex space-x-2 border-b border-gray-200 dark:border-slate-700 pb-3 mb-4">
+                        <button class="subsubtab-subject-button active px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white shadow" onclick="openSubSubTabSubject(event, 'subsubtab-disciplinas-cadastradas')"><i class="fa-solid fa-list mr-1"></i> Disciplinas Cadastradas</button>
+                        <button class="subsubtab-subject-button px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubSubTabSubject(event, 'subsubtab-cadastrar-disciplina')"><i class="fa-solid fa-plus mr-1"></i> Cadastrar Nova Disciplina</button>
+                    </div>
+
+                    <!-- SUB-SUBABA 1: DISCIPLINAS CADASTRADAS -->
+                    <div id="subsubtab-disciplinas-cadastradas" class="subsubtab-subject-content active space-y-3">
+                        <div class="flex justify-between items-center mb-2">
+                            <h4 class="font-bold text-sm text-gray-800 dark:text-white">Lista de Disciplinas Cadastradas</h4>
+                            <span class="text-xs text-gray-500 font-semibold" id="total-subjects-count">Total: 0 disciplinas</span>
+                        </div>
+                        <ul class="data-list divide-y divide-gray-200 dark:divide-slate-700" id="subjects-management-list"></ul>
+                    </div>
+
+                    <!-- SUB-SUBABA 2: CADASTRAR NOVA DISCIPLINA -->
+                    <div id="subsubtab-cadastrar-disciplina" class="subsubtab-subject-content space-y-4" style="display: none;">
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
-                                <label class="block text-xs font-semibold mb-1">Semestre de Vigência</label>
-                                <select id="input-course-semestre" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800">
-                                    <option value="2025/1">2025/1 (1º Semestre: Jan-Jun)</option>
-                                    <option value="2025/2">2025/2 (2º Semestre: Jul-Dez)</option>
-                                    <option value="2026/1">2026/1 (1º Semestre: Jan-Jun)</option>
-                                    <option value="2026/2" selected>2026/2 (2º Semestre: Jul-Dez)</option>
-                                    <option value="2027/1">2027/1 (1º Semestre: Jan-Jun)</option>
-                                    <option value="2027/2">2027/2 (2º Semestre: Jul-Dez)</option>
-                                    <option value="2028/1">2028/1 (1º Semestre: Jan-Jun)</option>
-                                    <option value="2028/2">2028/2 (2º Semestre: Jul-Dez)</option>
-                                    <option value="2029/1">2029/1 (1º Semestre: Jan-Jun)</option>
-                                    <option value="2029/2">2029/2 (2º Semestre: Jul-Dez)</option>
-                                    <option value="2030/1">2030/1 (1º Semestre: Jan-Jun)</option>
-                                    <option value="2030/2">2030/2 (2º Semestre: Jul-Dez)</option>
-                                    <option value="2031/1">2031/1 (1º Semestre: Jan-Jun)</option>
-                                    <option value="2031/2">2031/2 (2º Semestre: Jul-Dez)</option>
+                                <label class="block text-xs font-semibold mb-1">Curso</label>
+                                <select id="input-subject-course-select" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold mb-1">Nome da Disciplina</label>
+                                <input type="text" id="input-subject-name" placeholder="Anatomia" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold mb-1">Carga Horária</label>
+                                <input type="text" id="input-subject-hours" placeholder="80 hrs" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold mb-1">Ementa</label>
+                            <textarea id="input-subject-ementa" rows="3" placeholder="Tópicos abordados..." class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></textarea>
+                        </div>
+                        <div class="flex gap-2">
+                            <button type="button" id="btn-save-subject" onclick="addSubjectToCourse()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow">Salvar Disciplina</button>
+                            <button type="button" id="btn-cancel-edit-subject" onclick="cancelarEdicaoDisciplina()" class="px-4 py-2 bg-gray-500 text-white text-xs font-semibold rounded-lg shadow" style="display: none;">Cancelar Edição</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUBABA TURMAS (REORGANIZADA NO MESMO PADRÃO DE CURSOS) -->
+                <div id="subtab-classes" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
+                    <input type="hidden" id="edit-class-id" value="">
+
+                    <!-- BOTÕES DAS SUBABAS DE TURMAS -->
+                    <div class="flex space-x-2 border-b border-gray-200 dark:border-slate-700 pb-3 mb-4">
+                        <button class="subsubtab-class-button active px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white shadow" onclick="openSubSubTabClass(event, 'subsubtab-turmas-cadastradas')"><i class="fa-solid fa-list mr-1"></i> Turmas Cadastradas</button>
+                        <button class="subsubtab-class-button px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubSubTabClass(event, 'subsubtab-cadastrar-turma')"><i class="fa-solid fa-plus mr-1"></i> Cadastrar Nova Turma</button>
+                    </div>
+
+                    <!-- SUB-SUBABA 1: TURMAS CADASTRADAS -->
+                    <div id="subsubtab-turmas-cadastradas" class="subsubtab-class-content active space-y-3">
+                        <div class="flex justify-between items-center mb-2">
+                            <h4 class="font-bold text-sm text-gray-800 dark:text-white">Lista de Turmas Cadastradas</h4>
+                            <span class="text-xs text-gray-500 font-semibold" id="total-classes-count">Total: 0 turmas</span>
+                        </div>
+                        <ul class="data-list divide-y divide-gray-200 dark:divide-slate-700" id="class-list"></ul>
+                    </div>
+
+                    <!-- SUB-SUBABA 2: CADASTRAR NOVA TURMA -->
+                    <div id="subsubtab-cadastrar-turma" class="subsubtab-class-content space-y-4" style="display: none;">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold mb-1">Curso</label>
+                                <select id="input-class-course" onchange="atualizarPreviewTurmaAutomatica()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold mb-1">Semestre Letivo</label>
+                                <select id="input-class-semester" onchange="atualizarPreviewTurmaAutomatica()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+                                    <option value="2025.1">2025/1 (Jan-Jun)</option><option value="2025.2">2025/2 (Jul-Dez)</option>
+                                    <option value="2026.1">2026/1 (Jan-Jun)</option><option value="2026.2" selected>2026/2 (Jul-Dez)</option>
+                                    <option value="2027.1">2027/1 (Jan-Jun)</option><option value="2027.2">2027/2 (Jul-Dez)</option>
+                                    <option value="2028.1">2028/1 (Jan-Jun)</option><option value="2028.2">2028/2 (Jul-Dez)</option>
+                                    <option value="2029.1">2029/1 (Jan-Jun)</option><option value="2029.2">2029/2 (Jul-Dez)</option>
+                                    <option value="2030.1">2030/1 (Jan-Jun)</option><option value="2030.2">2030/2 (Jul-Dez)</option>
+                                    <option value="2031.1">2031/1 (Jan-Jun)</option><option value="2031.2">2031/2 (Jul-Dez)</option>
                                 </select>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold mb-1">Qtd. de Parcelas</label>
-                                <input type="number" id="input-course-parcelas" placeholder="24" value="24" min="1" oninput="calcularTotalCurso()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold mb-1">Valor Normal da Parcela (R$)</label>
-                                <input type="number" id="input-course-valor-parcela" placeholder="300.00" value="300.00" step="0.01" oninput="calcularTotalCurso()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800">
                             </div>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-xs font-semibold mb-1 text-emerald-700 dark:text-emerald-400">Valor com Desconto de Pontualidade (R$)</label>
-                                <input type="number" id="input-course-valor-desconto" placeholder="280.00" value="280.00" step="0.01" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800">
+                                <label class="block text-xs font-semibold mb-1">Código Automático</label>
+                                <input type="text" id="input-class-code-auto" readonly class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm bg-gray-100 dark:bg-slate-900 font-bold text-blue-600">
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold mb-1">Dia de Vencimento</label>
-                                <input type="number" id="input-course-vencimento" placeholder="10" value="10" min="1" max="31" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800">
+                                <label class="block text-xs font-semibold mb-1">Nome Automático</label>
+                                <input type="text" id="input-class-name-auto" readonly class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm bg-gray-100 dark:bg-slate-900 font-bold">
                             </div>
                         </div>
-                        <div>
-                            <label class="block text-xs font-semibold mb-1 text-gray-600 dark:text-gray-300">Valor Total do Curso (Calculado)</label>
-                            <input type="text" id="input-course-valor-total" readonly placeholder="R$ 7.200,00" class="w-full md:w-1/3 px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm bg-gray-100 dark:bg-slate-800 font-bold text-emerald-600 dark:text-emerald-400">
+                        <div class="flex gap-2">
+                            <button type="button" id="btn-save-class" onclick="addClass()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow">Salvar Turma</button>
+                            <button type="button" id="btn-cancel-edit-class" onclick="cancelarEdicaoTurma()" class="px-4 py-2 bg-gray-500 text-white text-xs font-semibold rounded-lg shadow" style="display: none;">Cancelar Edição</button>
                         </div>
                     </div>
-
-                    <div class="flex gap-2">
-                        <button type="button" id="btn-save-course" onclick="saveCourse()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-xs shadow transition duration-200">Salvar Curso</button>
-                        <button type="button" id="btn-cancel-edit-course" onclick="cancelarEdicaoCurso()" class="px-5 py-2.5 bg-gray-500 hover:bg-gray-600 text-white font-semibold rounded-lg text-xs shadow transition duration-200" style="display: none;">Cancelar Edição</button>
-                    </div>
-
-                    <ul class="data-list divide-y divide-gray-200 dark:divide-slate-700 mt-4" id="courses-list"></ul>
-                </div>
-
-                <!-- SUBABA DISCIPLINAS -->
-                <div id="subtab-subjects" class="subtab-content space-y-4" style="display: none;">
-                    <input type="hidden" id="edit-subject-id" value="">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <label class="block text-xs font-semibold mb-1">Curso</label>
-                            <select id="input-subject-course-select" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold mb-1">Nome da Disciplina</label>
-                            <input type="text" id="input-subject-name" placeholder="Anatomia" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold mb-1">Carga Horária</label>
-                            <input type="text" id="input-subject-hours" placeholder="80 hrs" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold mb-1">Ementa</label>
-                        <textarea id="input-subject-ementa" rows="3" placeholder="Tópicos abordados..." class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></textarea>
-                    </div>
-                    <div class="flex gap-2">
-                        <button type="button" id="btn-save-subject" onclick="addSubjectToCourse()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow">+ Adicionar Disciplina</button>
-                        <button type="button" id="btn-cancel-edit-subject" onclick="cancelarEdicaoDisciplina()" class="px-4 py-2 bg-gray-500 text-white text-xs font-semibold rounded-lg shadow" style="display: none;">Cancelar</button>
-                    </div>
-                    <ul class="data-list divide-y divide-gray-200 dark:divide-slate-700 mt-4" id="subjects-management-list"></ul>
-                </div>
-
-                <!-- SUBABA TURMAS -->
-                <div id="subtab-classes" class="subtab-content space-y-4" style="display: none;">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-semibold mb-1">Curso</label>
-                            <select id="input-class-course" onchange="atualizarPreviewTurmaAutomatica()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold mb-1">Semestre Letivo</label>
-                            <select id="input-class-semester" onchange="atualizarPreviewTurmaAutomatica()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                                <option value="2025.1">2025/1 (Jan-Jun)</option><option value="2025.2">2025/2 (Jul-Dez)</option>
-                                <option value="2026.1">2026/1 (Jan-Jun)</option><option value="2026.2" selected>2026/2 (Jul-Dez)</option>
-                                <option value="2027.1">2027/1 (Jan-Jun)</option><option value="2027.2">2027/2 (Jul-Dez)</option>
-                                <option value="2028.1">2028/1 (Jan-Jun)</option><option value="2028.2">2028/2 (Jul-Dez)</option>
-                                <option value="2029.1">2029/1 (Jan-Jun)</option><option value="2029.2">2029/2 (Jul-Dez)</option>
-                                <option value="2030.1">2030/1 (Jan-Jun)</option><option value="2030.2">2030/2 (Jul-Dez)</option>
-                                <option value="2031.1">2031/1 (Jan-Jun)</option><option value="2031.2">2031/2 (Jul-Dez)</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-semibold mb-1">Código Automático</label>
-                            <input type="text" id="input-class-code-auto" readonly class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm bg-gray-100 dark:bg-slate-900 font-bold text-blue-600">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold mb-1">Nome Automático</label>
-                            <input type="text" id="input-class-name-auto" readonly class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm bg-gray-100 dark:bg-slate-900 font-bold">
-                        </div>
-                    </div>
-                    <button onclick="addClass()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow">Cadastrar Turma</button>
-                    <ul class="data-list divide-y divide-gray-200 dark:divide-slate-700 mt-4" id="class-list"></ul>
                 </div>
 
                 <!-- SUBABA CALENDÁRIO ACADÊMICO SEMESTRAL -->
-                <div id="subtab-calendar" class="subtab-content space-y-4" style="display: none;">
+                <div id="subtab-calendar" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
                     <div class="bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700 space-y-4">
                         <h4 class="font-bold text-sm text-blue-600 dark:text-blue-400">Configurar Calendário Semestral por Turma</h4>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -901,7 +961,7 @@
                 </div>
 
                 <!-- SUBABA PROFESSORES -->
-                <div id="subtab-teachers" class="subtab-content space-y-4" style="display: none;">
+                <div id="subtab-teachers" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
                     <div>
                         <label class="block text-xs font-semibold mb-1">Nome Completo</label>
                         <input type="text" id="input-teacher-name" placeholder="Prof. Carlos Silva" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
@@ -921,7 +981,7 @@
                 </div>
 
                 <!-- SUBABA EDIÇÃO DE DOCUMENTOS -->
-                <div id="subtab-templates" class="subtab-content space-y-4" style="display: none;">
+                <div id="subtab-templates" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
                     <div>
                         <label class="block text-xs font-semibold mb-1">Selecione o Curso</label>
                         <select id="template-course-select" onchange="loadCourseTemplate()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></select>
@@ -976,7 +1036,7 @@
                 </div>
 
                 <!-- SUBABA ASAAS -->
-                <div id="subtab-fin-config" class="subtab-content space-y-4" style="display: none;">
+                <div id="subtab-fin-config" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-semibold mb-1">Chave de API do Asaas</label>
@@ -994,7 +1054,7 @@
                 </div>
 
                 <!-- SUBABA INSTITUIÇÃO -->
-                <div id="subtab-institution" class="subtab-content space-y-4" style="display: none;">
+                <div id="subtab-institution" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-semibold mb-1">Nome da Instituição</label>
@@ -1669,12 +1729,61 @@
             const parent = evt.currentTarget.closest('.bg-white, .dark\\:bg-slate-800');
             if (parent) {
                 parent.querySelectorAll('.subtab-content').forEach(el => el.style.display = 'none');
-                parent.querySelectorAll('.subtab-button').forEach(el => el.classList.remove('bg-blue-600', 'text-white', 'shadow'));
+                parent.querySelectorAll('.subtab-button').forEach(el => {
+                    el.classList.remove('bg-blue-600', 'text-white', 'shadow');
+                    el.classList.add('bg-gray-100', 'dark:bg-slate-700', 'text-gray-700', 'dark:text-gray-300');
+                });
             }
             document.getElementById(subtabId).style.display = 'block';
+            evt.currentTarget.classList.remove('bg-gray-100', 'dark:bg-slate-700', 'text-gray-700', 'dark:text-gray-300');
             evt.currentTarget.classList.add('bg-blue-600', 'text-white', 'shadow');
             if(subtabId === 'subtab-calendar') setTimeout(renderizarCalendarioSemestralAdmin, 200);
             if(subtabId === 'subtab-portal-calendario') setTimeout(renderizarCalendarioSemestralPortalAluno, 200);
+        }
+
+        // FUNÇÃO PARA GERENCIAR AS SUB-SUBABAS DE CURSOS
+        function openSubSubTab(evt, subsubtabId) {
+            const parent = evt.currentTarget.closest('#subtab-courses');
+            if (parent) {
+                parent.querySelectorAll('.subsubtab-content').forEach(el => el.style.display = 'none');
+                parent.querySelectorAll('.subsubtab-button').forEach(el => {
+                    el.classList.remove('bg-blue-600', 'text-white', 'shadow');
+                    el.classList.add('bg-gray-200', 'dark:bg-slate-700', 'text-gray-700', 'dark:text-gray-300');
+                });
+            }
+            document.getElementById(subsubtabId).style.display = 'block';
+            evt.currentTarget.classList.remove('bg-gray-200', 'dark:bg-slate-700', 'text-gray-700', 'dark:text-gray-300');
+            evt.currentTarget.classList.add('bg-blue-600', 'text-white', 'shadow');
+        }
+
+        // FUNÇÃO PARA GERENCIAR AS SUB-SUBABAS DE DISCIPLINAS
+        function openSubSubTabSubject(evt, subsubtabId) {
+            const parent = evt.currentTarget.closest('#subtab-subjects');
+            if (parent) {
+                parent.querySelectorAll('.subsubtab-subject-content').forEach(el => el.style.display = 'none');
+                parent.querySelectorAll('.subsubtab-subject-button').forEach(el => {
+                    el.classList.remove('bg-blue-600', 'text-white', 'shadow');
+                    el.classList.add('bg-gray-200', 'dark:bg-slate-700', 'text-gray-700', 'dark:text-gray-300');
+                });
+            }
+            document.getElementById(subsubtabId).style.display = 'block';
+            evt.currentTarget.classList.remove('bg-gray-200', 'dark:bg-slate-700', 'text-gray-700', 'dark:text-gray-300');
+            evt.currentTarget.classList.add('bg-blue-600', 'text-white', 'shadow');
+        }
+
+        // FUNÇÃO PARA GERENCIAR AS SUB-SUBABAS DE TURMAS
+        function openSubSubTabClass(evt, subsubtabId) {
+            const parent = evt.currentTarget.closest('#subtab-classes');
+            if (parent) {
+                parent.querySelectorAll('.subsubtab-class-content').forEach(el => el.style.display = 'none');
+                parent.querySelectorAll('.subsubtab-class-button').forEach(el => {
+                    el.classList.remove('bg-blue-600', 'text-white', 'shadow');
+                    el.classList.add('bg-gray-200', 'dark:bg-slate-700', 'text-gray-700', 'dark:text-gray-300');
+                });
+            }
+            document.getElementById(subsubtabId).style.display = 'block';
+            evt.currentTarget.classList.remove('bg-gray-200', 'dark:bg-slate-700', 'text-gray-700', 'dark:text-gray-300');
+            evt.currentTarget.classList.add('bg-blue-600', 'text-white', 'shadow');
         }
 
         function openNewStudentModal() {
@@ -1833,8 +1942,15 @@
 
         function renderCourses() {
             const list = document.getElementById('courses-list');
+            const counter = document.getElementById('total-courses-count');
+            if(counter) counter.textContent = `Total: ${courses.length} curso(s)`;
+            
             if(list) {
                 list.innerHTML = '';
+                if(courses.length === 0) {
+                    list.innerHTML = `<li class="py-4 text-center text-xs text-gray-400">Nenhum curso cadastrado.</li>`;
+                    return;
+                }
                 courses.forEach(c => {
                     list.innerHTML += `
                         <li class="py-3 text-xs flex justify-between items-center border-b border-gray-100 dark:border-slate-700">
@@ -1842,9 +1958,9 @@
                                 <strong class="text-sm text-gray-900 dark:text-white">${c.name} [${c.sigla}]</strong><br>
                                 <span class="text-gray-500">Semestre: ${c.semestre || '2026/2'} &bull; ${c.qtdParcelas || 1}x de R$ ${c.valorParcela || 0} (Desc. Pontualidade: R$ ${c.valorDesconto || 0}) &bull; Total: R$ ${c.valorTotal || 0}</span>
                             </div>
-                            <div class="flex gap-2">
-                                <button onclick="editarCurso('${c.id}')" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded font-semibold"><i class="fa-solid fa-pen"></i> Editar</button>
-                                <button onclick="excluirCurso('${c.id}')" class="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white rounded font-semibold"><i class="fa-solid fa-trash"></i> Excluir</button>
+                            <div class="flex gap-2 shrink-0">
+                                <button onclick="editarCurso('${c.id}')" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded font-semibold shadow flex items-center gap-1"><i class="fa-solid fa-pen"></i> Editar</button>
+                                <button onclick="excluirCurso('${c.id}')" class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded font-semibold shadow flex items-center gap-1"><i class="fa-solid fa-trash"></i> Excluir</button>
                             </div>
                         </li>`;
                 });
@@ -1869,6 +1985,9 @@
 
             document.getElementById('btn-save-course').textContent = "Atualizar Curso";
             document.getElementById('btn-cancel-edit-course').style.display = 'inline-block';
+
+            const btnCadastrar = document.querySelector('#subtab-courses .subsubtab-button:nth-child(2)');
+            if(btnCadastrar) openSubSubTab({ currentTarget: btnCadastrar }, 'subsubtab-cadastrar-curso');
         }
 
         function cancelarEdicaoCurso() {
@@ -1880,6 +1999,9 @@
             document.getElementById('input-course-conselho').value = '';
             document.getElementById('btn-save-course').textContent = "Salvar Curso";
             document.getElementById('btn-cancel-edit-course').style.display = 'none';
+
+            const btnLista = document.querySelector('#subtab-courses .subsubtab-button:nth-child(1)');
+            if(btnLista) openSubSubTab({ currentTarget: btnLista }, 'subsubtab-cursos-cadastrados');
         }
 
         async function excluirCurso(id) {
@@ -1908,37 +2030,108 @@
         }
 
         async function addSubjectToCourse() {
+            const editSubjectId = document.getElementById('edit-subject-id').value;
             const courseId = document.getElementById('input-subject-course-select').value;
             const name = document.getElementById('input-subject-name').value.trim();
             const hours = document.getElementById('input-subject-hours').value.trim();
             const ementa = document.getElementById('input-subject-ementa').value.trim();
-            if (!courseId || !name) return alert("Preencha todos os campos!");
+            if (!courseId || !name) return alert("Preencha todos os campos obrigatórios!");
+
             const course = courses.find(c => c.id == courseId);
-            if (course) {
-                if (!course.subjects) course.subjects = [];
+            if (!course) return;
+
+            if (!course.subjects) course.subjects = [];
+
+            if (editSubjectId) {
+                // Editando disciplina existente
+                const index = course.subjects.findIndex(s => s.id == editSubjectId);
+                if (index !== -1) {
+                    course.subjects[index] = { id: Number(editSubjectId), name, hours, ementa };
+                }
+                await db.collection("courses").doc(courseId).update({ subjects: course.subjects });
+                cancelarEdicaoDisciplina();
+                alert("Disciplina atualizada com sucesso!");
+            } else {
+                // Adicionando nova disciplina
                 course.subjects.push({ id: Date.now(), name, hours, ementa });
                 await db.collection("courses").doc(courseId).update({ subjects: course.subjects });
-                alert("Disciplina adicionada!");
+                document.getElementById('input-subject-name').value = '';
+                document.getElementById('input-subject-hours').value = '';
+                document.getElementById('input-subject-ementa').value = '';
+                alert("Disciplina adicionada com sucesso!");
             }
         }
 
         function renderSubjectsManagement() {
             const list = document.getElementById('subjects-management-list');
+            const counter = document.getElementById('total-subjects-count');
+            let totalDisciplinas = 0;
+
             if(list) {
                 list.innerHTML = '';
                 courses.forEach(c => {
-                    if(c.subjects) c.subjects.forEach(s => {
-                        list.innerHTML += `<li class="py-2 text-xs flex justify-between"><span><strong>${c.name}</strong> - ${s.name} (${s.hours || ''})</span><button onclick="removerDisciplina('${c.id}', ${s.id})" class="text-red-500 font-bold">Excluir</button></li>`;
-                    });
+                    if(c.subjects) {
+                        c.subjects.forEach(s => {
+                            totalDisciplinas++;
+                            list.innerHTML += `
+                                <li class="py-3 text-xs flex justify-between items-center border-b border-gray-100 dark:border-slate-700">
+                                    <div>
+                                        <strong class="text-sm text-gray-900 dark:text-white">${s.name}</strong> <span class="text-gray-400 font-semibold">[${s.hours || 'N/I'}]</span><br>
+                                        <span class="text-gray-500">Curso: <strong>${c.name}</strong> &bull; Ementa: ${s.ementa || 'Nenhuma ementa informada'}</span>
+                                    </div>
+                                    <div class="flex gap-2 shrink-0">
+                                        <button onclick="editarDisciplina('${c.id}', ${s.id})" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded font-semibold shadow flex items-center gap-1"><i class="fa-solid fa-pen"></i> Editar</button>
+                                        <button onclick="removerDisciplina('${c.id}', ${s.id})" class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded font-semibold shadow flex items-center gap-1"><i class="fa-solid fa-trash"></i> Excluir</button>
+                                    </div>
+                                </li>`;
+                        });
+                    }
                 });
+                if(totalDisciplinas === 0) {
+                    list.innerHTML = `<li class="py-4 text-center text-xs text-gray-400">Nenhuma disciplina cadastrada.</li>`;
+                }
             }
+            if(counter) counter.textContent = `Total: ${totalDisciplinas} disciplina(s)`;
+        }
+
+        function editarDisciplina(courseId, subjectId) {
+            const course = courses.find(c => c.id === courseId);
+            if (!course || !course.subjects) return;
+            const sub = course.subjects.find(s => s.id === subjectId);
+            if (!sub) return;
+
+            document.getElementById('edit-subject-id').value = sub.id;
+            document.getElementById('input-subject-course-select').value = courseId;
+            document.getElementById('input-subject-name').value = sub.name || '';
+            document.getElementById('input-subject-hours').value = sub.hours || '';
+            document.getElementById('input-subject-ementa').value = sub.ementa || '';
+
+            document.getElementById('btn-save-subject').textContent = "Atualizar Disciplina";
+            document.getElementById('btn-cancel-edit-subject').style.display = 'inline-block';
+
+            const btnCadastrar = document.querySelector('#subtab-subjects .subsubtab-subject-button:nth-child(2)');
+            if(btnCadastrar) openSubSubTabSubject({ currentTarget: btnCadastrar }, 'subsubtab-cadastrar-disciplina');
+        }
+
+        function cancelarEdicaoDisciplina() {
+            document.getElementById('edit-subject-id').value = '';
+            document.getElementById('input-subject-name').value = '';
+            document.getElementById('input-subject-hours').value = '';
+            document.getElementById('input-subject-ementa').value = '';
+            document.getElementById('btn-save-subject').textContent = "Salvar Disciplina";
+            document.getElementById('btn-cancel-edit-subject').style.display = 'none';
+
+            const btnLista = document.querySelector('#subtab-subjects .subsubtab-subject-button:nth-child(1)');
+            if(btnLista) openSubSubTabSubject({ currentTarget: btnLista }, 'subsubtab-disciplinas-cadastradas');
         }
 
         async function removerDisciplina(courseId, subjectId) {
+            if (!confirm("Deseja realmente excluir esta disciplina?")) return;
             const course = courses.find(c => c.id == courseId);
             if (course && course.subjects) {
                 course.subjects = course.subjects.filter(s => s.id !== subjectId);
                 await db.collection("courses").doc(courseId).update({ subjects: course.subjects });
+                alert("Disciplina excluída com sucesso!");
             }
         }
 
@@ -1949,19 +2142,57 @@
             const curso = courses.find(c => c.id == courseId);
             if(!curso) return;
             const sigla = (curso.sigla || "TUR").toUpperCase();
-            const count = classes.filter(c => c.courseId == courseId).length + 1;
+            const editId = document.getElementById('edit-class-id').value;
+            const count = editId ? classes.filter(c => c.courseId == courseId).length : classes.filter(c => c.courseId == courseId).length + 1;
             document.getElementById('input-class-code-auto').value = `${sigla}-${semestre.replace('.','')}-${String(count).padStart(2,'0')}`;
             document.getElementById('input-class-name-auto').value = `${curso.name} - ${semestre}`;
         }
 
         async function addClass() {
+            const editClassId = document.getElementById('edit-class-id').value;
             const courseId = document.getElementById('input-class-course').value;
             const semestre = document.getElementById('input-class-semester').value;
             const code = document.getElementById('input-class-code-auto').value;
             const name = document.getElementById('input-class-name-auto').value;
             if (!courseId) return alert("Selecione um curso!");
-            await db.collection("classes").add({ courseId, semestre, code, name });
-            alert("Turma cadastrada!");
+
+            const classData = { courseId, semestre, code, name };
+
+            if (editClassId) {
+                await db.collection("classes").doc(editClassId).update(classData);
+                cancelarEdicaoTurma();
+                alert("Turma atualizada com sucesso!");
+            } else {
+                await db.collection("classes").add(classData);
+                alert("Turma cadastrada com sucesso!");
+                cancelarEdicaoTurma();
+            }
+        }
+
+        function editarTurma(id) {
+            const t = classes.find(c => c.id === id);
+            if (!t) return;
+            document.getElementById('edit-class-id').value = t.id;
+            document.getElementById('input-class-course').value = t.courseId || '';
+            document.getElementById('input-class-semester').value = t.semestre || '2026.2';
+            document.getElementById('input-class-code-auto').value = t.code || '';
+            document.getElementById('input-class-name-auto').value = t.name || '';
+
+            document.getElementById('btn-save-class').textContent = "Atualizar Turma";
+            document.getElementById('btn-cancel-edit-class').style.display = 'inline-block';
+
+            const btnCadastrar = document.querySelector('#subtab-classes .subsubtab-class-button:nth-child(2)');
+            if(btnCadastrar) openSubSubTabClass({ currentTarget: btnCadastrar }, 'subsubtab-cadastrar-turma');
+        }
+
+        function cancelarEdicaoTurma() {
+            document.getElementById('edit-class-id').value = '';
+            document.getElementById('btn-save-class').textContent = "Salvar Turma";
+            document.getElementById('btn-cancel-edit-class').style.display = 'none';
+            atualizarPreviewTurmaAutomatica();
+
+            const btnLista = document.querySelector('#subtab-classes .subsubtab-class-button:nth-child(1)');
+            if(btnLista) openSubSubTabClass({ currentTarget: btnLista }, 'subsubtab-turmas-cadastradas');
         }
 
         async function excluirTurma(id) {
@@ -1987,20 +2218,26 @@
 
         function renderClasses() {
             const list = document.getElementById('class-list');
+            const counter = document.getElementById('total-classes-count');
+            if(counter) counter.textContent = `Total: ${classes.length} turma(s)`;
+
             if(list) {
                 list.innerHTML = '';
+                if(classes.length === 0) {
+                    list.innerHTML = `<li class="py-4 text-center text-xs text-gray-400">Nenhuma turma cadastrada.</li>`;
+                    return;
+                }
                 classes.forEach(c => {
                     const curso = courses.find(curso => curso.id === c.courseId);
                     list.innerHTML += `
-                        <li class="py-2.5 text-xs flex justify-between items-center border-b border-gray-100 dark:border-slate-700">
+                        <li class="py-3 text-xs flex justify-between items-center border-b border-gray-100 dark:border-slate-700">
                             <div>
                                 <strong class="text-sm text-gray-900 dark:text-white">${c.name}</strong><br>
-                                <span class="text-gray-500">Código: ${c.code} &bull; Curso: ${curso ? curso.name : '---'}</span>
+                                <span class="text-gray-500">Código: ${c.code} &bull; Curso: ${curso ? curso.name : '---'} &bull; Semestre: ${c.semestre || '---'}</span>
                             </div>
-                            <div>
-                                <button onclick="excluirTurma('${c.id}')" class="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white rounded font-semibold shadow" title="Excluir Turma">
-                                    <i class="fa-solid fa-trash-can mr-1"></i> Excluir Turma
-                                </button>
+                            <div class="flex gap-2 shrink-0">
+                                <button onclick="editarTurma('${c.id}')" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded font-semibold shadow flex items-center gap-1"><i class="fa-solid fa-pen"></i> Editar</button>
+                                <button onclick="excluirTurma('${c.id}')" class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded font-semibold shadow flex items-center gap-1"><i class="fa-solid fa-trash"></i> Excluir</button>
                             </div>
                         </li>
                     `;
@@ -2675,7 +2912,6 @@
                         body: JSON.stringify(payload)
                     });
 
-                    // Nota: devido ao comportamento 'no-cors' do Google Apps Script Web App, simulamos o sucesso e registramos o log
                     linkDriveSalvo = `https://drive.google.com`;
                     alert("Documento aprovado e enviado com sucesso para a pasta do aluno no Google Drive!");
                 } catch (e) {
