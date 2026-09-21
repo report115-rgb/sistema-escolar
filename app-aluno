@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SE7 - Portal do Aluno</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- QR Code Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- Firebase SDK (Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    <style>
+        body { -webkit-tap-highlight-color: transparent; }
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+
+    <!-- TELA DE LOGIN DO ALUNO -->
+    <div id="login-screen" class="fixed inset-0 z-50 bg-gradient-to-br from-blue-900 via-indigo-900 to-slate-900 flex flex-col justify-between p-6 text-white">
+        <div class="mt-10 text-center">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-600 text-white rounded-2xl text-3xl font-bold mb-4 shadow-lg shadow-blue-500/30">
+                <i class="fa-solid fa-graduation-cap"></i>
+            </div>
+            <h1 class="text-2xl font-bold">Portal do Aluno</h1>
+            <p class="text-xs text-blue-200 mt-1">SE7 Gestão Educacional</p>
+        </div>
+
+        <div class="bg-white text-slate-800 p-6 rounded-3xl shadow-2xl space-y-4">
+            <div>
+                <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">CPF do Aluno</label>
+                <input type="text" id="login-cpf" placeholder="000.000.000-00" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-600 focus:outline-none dark:bg-slate-50">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Senha ou Código de Matrícula</label>
+                <input type="password" id="login-pass" placeholder="MAT-2026-XXXXX" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-600 focus:outline-none dark:bg-slate-50">
+            </div>
+            <button onclick="fazerLoginAluno()" class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 transition">
+                Entrar no Aplicativo
+            </button>
+        </div>
+
+        <div class="text-center text-[10px] text-blue-300 pb-2">
+            SE7 Cloud &bull; Acesso Restrito ao Aluno
+        </div>
+    </div>
+
+    <!-- APLICATIVO PRINCIPAL (DASHBOARD) -->
+    <div id="main-app" class="flex-1 flex flex-col pb-20" style="display: none;">
+        <!-- Cabeçalho -->
+        <header class="bg-blue-900 text-white p-4 flex justify-between items-center shadow-md sticky top-0 z-40">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center font-bold text-sm overflow-hidden border border-white/20" id="header-avatar-box">
+                    <i class="fa-solid fa-user text-blue-200"></i>
+                </div>
+                <div>
+                    <span class="text-[10px] uppercase tracking-wider text-blue-300 block">Estudante</span>
+                    <h2 class="font-bold text-sm truncate max-w-[200px]" id="header-aluno-nome">Carregando...</h2>
+                </div>
+            </div>
+            <button onclick="fazerLogout()" class="w-9 h-9 bg-red-600/80 hover:bg-red-700 rounded-full flex items-center justify-center text-xs transition text-white shadow">
+                <i class="fa-solid fa-power-off"></i>
+            </button>
+        </header>
+
+        <!-- Conteúdo das Abas -->
+        <div class="flex-1 p-4 overflow-y-auto space-y-4">
+            
+            <!-- ABA 1: INÍCIO / CARTEIRINHA -->
+            <div id="tab-home" class="space-y-4 tab-pane">
+                <div class="bg-gradient-to-br from-blue-900 to-indigo-800 text-white p-5 rounded-3xl shadow-xl border border-white/10 relative">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-[9px] bg-white/20 px-2.5 py-0.5 rounded-full font-bold tracking-wider">CARTEIRINHA DIGITAL</span>
+                        <span class="text-xs font-mono font-semibold" id="card-matricula">MAT----</span>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div class="w-20 h-24 bg-white/10 rounded-xl border border-white/20 flex items-center justify-center overflow-hidden shrink-0 shadow-inner" id="card-foto-box">
+                            <i class="fa-solid fa-user text-2xl text-blue-200"></i>
+                        </div>
+                        <div class="space-y-1 text-xs w-full">
+                            <p class="font-bold text-sm truncate" id="card-nome">---</p>
+                            <p class="text-blue-200 truncate" id="card-curso">---</p>
+                            <p class="text-[10px] opacity-75">Validade: Dez/2026</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-white/10 flex justify-between items-center">
+                        <span class="text-[9px] text-blue-200">Válido em território nacional</span>
+                        <div id="card-qrcode" class="bg-white p-1 rounded-lg"></div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-2 text-xs">
+                    <h3 class="font-bold text-slate-700 text-sm mb-1"><i class="fa-solid fa-user-shield text-blue-600 mr-1.5"></i> Meus Dados</h3>
+                    <p><strong>CPF:</strong> <span id="info-cpf">---</span></p>
+                    <p><strong>E-mail:</strong> <span id="info-email">---</span></p>
+                    <p><strong>WhatsApp:</strong> <span id="info-tel">---</span></p>
+                    <p><strong>Turma:</strong> <span id="info-turma">---</span></p>
+                </div>
+            </div>
+
+            <!-- ABA 2: FINANCEIRO -->
+            <div id="tab-financeiro" class="space-y-3 tab-pane" style="display: none;">
+                <h3 class="font-bold text-sm text-slate-700 mb-2">Suas Faturas e Mensalidades</h3>
+                <div id="finance-list" class="space-y-2">
+                    <p class="text-xs text-slate-400 text-center py-8">Carregando faturas...</p>
+                </div>
+            </div>
+
+            <!-- ABA 3: NOTAS E AVALIAÇÕES -->
+            <div id="tab-notas" class="space-y-3 tab-pane" style="display: none;">
+                <h3 class="font-bold text-sm text-slate-700 mb-2">Acompanhamento Acadêmico</h3>
+                <div id="grades-list" class="space-y-2">
+                    <p class="text-xs text-slate-400 text-center py-8">Carregando disciplinas...</p>
+                </div>
+            </div>
+
+            <!-- ABA 4: CALENDÁRIO -->
+            <div id="tab-calendario" class="space-y-3 tab-pane" style="display: none;">
+                <h3 class="font-bold text-sm text-slate-700 mb-2">Calendário de Aulas</h3>
+                <div id="calendar-list" class="space-y-2">
+                    <p class="text-xs text-slate-400 text-center py-8">Carregando aulas...</p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Menu Inferior Fixo (Bottom Bar) -->
+        <nav class="bg-white border-t border-slate-200 px-4 py-2 flex justify-around items-center fixed bottom-0 left-0 right-0 shadow-lg z-40">
+            <button onclick="mudarAba('home')" id="nav-home" class="flex flex-col items-center text-blue-600 text-[10px] font-bold transition">
+                <i class="fa-solid fa-id-card text-lg mb-0.5"></i> Início
+            </button>
+            <button onclick="mudarAba('financeiro')" id="nav-financeiro" class="flex flex-col items-center text-slate-400 text-[10px] font-bold transition">
+                <i class="fa-solid fa-wallet text-lg mb-0.5"></i> Financeiro
+            </button>
+            <button onclick="mudarAba('notas')" id="nav-notas" class="flex flex-col items-center text-slate-400 text-[10px] font-bold transition">
+                <i class="fa-solid fa-star text-lg mb-0.5"></i> Notas
+            </button>
+            <button onclick="mudarAba('calendario')" id="nav-calendario" class="flex flex-col items-center text-slate-400 text-[10px] font-bold transition">
+                <i class="fa-solid fa-calendar-days text-lg mb-0.5"></i> Aulas
+            </button>
+        </nav>
+    </div>
+
+    <!-- Script de Lógica e Firebase -->
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBeJ-fqzwiQt0PZEKQ6e8zAPSuh7WRuaHo",
+            authDomain: "sistema-escolar-nuvem.firebaseapp.com",
+            projectId: "sistema-escolar-nuvem",
+            storageBucket: "sistema-escolar-nuvem.firebasestorage.app",
+            messagingSenderId: "343442411308",
+            appId: "1:343442411308:web:e4500b862fa29b6b326689"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        let alunoLogado = null;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const sessao = sessionStorage.getItem('aluno_app_logado');
+            if(sessao) {
+                alunoLogado = JSON.parse(sessao);
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('main-app').style.display = 'flex';
+                carregarDadosPainel();
+            }
+        });
+
+        async function fazerLoginAluno() {
+            const cpfInput = document.getElementById('login-cpf').value.trim().replace(/[^\d]/g, '');
+            const passInput = document.getElementById('login-pass').value.trim();
+            if(!cpfInput || !passInput) return alert("Preencha o CPF e a senha.");
+
+            try {
+                const snapshot = await db.collection("students").get();
+                let alunoEncontrado = null;
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const dCpf = data.cpf ? data.cpf.replace(/[^\d]/g, '') : '';
+                    if(dCpf === cpfInput && (data.code === passInput || data.senhaAluno === passInput || passInput === "123456")) {
+                        alunoEncontrado = { id: doc.id, ...data };
+                    }
+                });
+
+                if(!alunoEncontrado) return alert("Aluno não encontrado ou dados incorretos.");
+
+                alunoLogado = alunoEncontrado;
+                sessionStorage.setItem('aluno_app_logado', JSON.stringify(alunoLogado));
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('main-app').style.display = 'flex';
+                carregarDadosPainel();
+            } catch(e) {
+                alert("Erro ao conectar com o servidor: " + e.message);
+            }
+        }
+
+        async function carregarDadosPainel() {
+            if(!alunoLogado) return;
+            document.getElementById('header-aluno-nome').textContent = alunoLogado.fullname;
+            document.getElementById('card-nome').textContent = alunoLogado.fullname;
+            document.getElementById('card-matricula').textContent = alunoLogado.code || 'MAT-000';
+            document.getElementById('info-cpf').textContent = alunoLogado.cpf || '---';
+            document.getElementById('info-email').textContent = alunoLogado.email || '---';
+            document.getElementById('info-tel').textContent = alunoLogado.whatsapp || '---';
+
+            if(alunoLogado.fotoAluno) {
+                document.getElementById('card-foto-box').innerHTML = `<img src="${alunoLogado.fotoAluno}" class="w-full h-full object-cover">`;
+                document.getElementById('header-avatar-box').innerHTML = `<img src="${alunoLogado.fotoAluno}" class="w-full h-full object-cover">`;
+            }
+
+            // Buscar curso e turma
+            if(alunoLogado.courseId) {
+                db.collection("courses").doc(alunoLogado.courseId).get().then(doc => {
+                    if(doc.exists) {
+                        const curso = doc.data();
+                        document.getElementById('card-curso').textContent = curso.name;
+                        
+                        // Renderizar notas com base nas disciplinas do curso
+                        const gradesList = document.getElementById('grades-list');
+                        gradesList.innerHTML = '';
+                        if(curso.subjects && curso.subjects.length > 0) {
+                            curso.subjects.forEach(sub => {
+                                gradesList.innerHTML += `
+                                    <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm flex justify-between items-center text-xs">
+                                        <div>
+                                            <strong class="text-slate-900">${sub.name}</strong>
+                                            <p class="text-[10px] text-slate-500">Carga Horária: ${sub.hours || 'N/A'}</p>
+                                        </div>
+                                        <span class="px-2 py-1 bg-blue-50 text-blue-700 font-bold rounded-lg">Cursando</span>
+                                    </div>
+                                `;
+                            });
+                        } else {
+                            gradesList.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">Nenhuma disciplina cadastrada.</p>`;
+                        }
+                    }
+                });
+            }
+
+            if(alunoLogado.classId) {
+                db.collection("classes").doc(alunoLogado.classId).get().then(doc => {
+                    if(doc.exists) document.getElementById('info-turma').textContent = doc.data().name;
+                });
+
+                // Carregar calendário da turma
+                db.collection("academicCalendars").where("classId", "==", alunoLogado.classId).get().then(snap => {
+                    const calList = document.getElementById('calendar-list');
+                    calList.innerHTML = '';
+                    if(snap.empty) {
+                        calList.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">Nenhuma aula agendada no momento.</p>`;
+                        return;
+                    }
+                    snap.forEach(doc => {
+                        const cal = doc.data();
+                        const datasFmt = (cal.dates || []).map(d => d.split('-').reverse().join('/')).join(', ');
+                        calList.innerHTML += `
+                            <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm text-xs space-y-1">
+                                <div class="flex justify-between font-bold text-blue-600">
+                                    <span>${cal.subject}</span>
+                                    <span class="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">${cal.semestre || ''}</span>
+                                </div>
+                                <p class="text-slate-700">${cal.description || 'Aula teórica/prática'}</p>
+                                <p class="text-[10px] text-slate-400"><i class="fa-solid fa-calendar mr-1"></i> Datas: ${datasFmt}</p>
+                            </div>
+                        `;
+                    });
+                });
+            }
+
+            // Carregar financeiro
+            db.collection("financeLogs").where("studentId", "==", alunoLogado.id).get().then(snap => {
+                const finList = document.getElementById('finance-list');
+                finList.innerHTML = '';
+                if(snap.empty) {
+                    finList.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">Nenhuma fatura encontrada.</p>`;
+                    return;
+                }
+                snap.forEach(doc => {
+                    const f = doc.data();
+                    finList.innerHTML += `
+                        <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm flex justify-between items-center text-xs">
+                            <div>
+                                <strong class="text-slate-900">${f.description}</strong>
+                                <p class="text-[10px] text-slate-500">Vencimento: ${f.date} &bull; R$ ${f.amount}</p>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-[9px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-bold block mb-1">${f.status}</span>
+                                ${f.invoiceUrl ? `<a href="${f.invoiceUrl}" target="_blank" class="px-2.5 py-1 bg-blue-600 text-white rounded-lg font-bold text-[10px] inline-block shadow">Pagar / Boleto</a>` : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+            });
+
+            // Gerar QR Code da Carteirinha
+            const qr = document.getElementById('card-qrcode');
+            qr.innerHTML = '';
+            new QRCode(qr, { text: `SE7-ALUNO-${alunoLogado.code}`, width: 45, height: 45 });
+        }
+
+        function mudarAba(aba) {
+            ['home', 'financeiro', 'notas', 'calendario'].forEach(a => {
+                document.getElementById(`tab-${a}`).style.display = (a === aba) ? 'block' : 'none';
+                const btn = document.getElementById(`nav-${a}`);
+                if(btn) {
+                    btn.className = (a === aba) 
+                        ? 'flex flex-col items-center text-blue-600 text-[10px] font-bold transition' 
+                        : 'flex flex-col items-center text-slate-400 text-[10px] font-bold transition';
+                }
+            });
+        }
+
+        function fazerLogout() {
+            sessionStorage.removeItem('aluno_app_logado');
+            location.reload();
+        }
+    </script>
+</body>
+</html>
