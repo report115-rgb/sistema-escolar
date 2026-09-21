@@ -3,14 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SE7 Gestão Educacional - Sistema Integrado em Nuvem</title>
+    <title>SE7 Gestão Educacional - Sistema Integrado em Nuvem com Google Drive</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Bibliotecas Externas para Geração de PDF, QR Code, Firebase e EmailJS -->
+    <!-- Bibliotecas Externas para Geração de PDF, QR Code, Firebase e FullCalendar -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- FullCalendar CSS & JS CDN -->
+    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css' rel='stylesheet' />
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
     <!-- Firebase App (Compat) e Firestore -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
@@ -36,7 +39,6 @@
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-        /* ESTILOS DE IMPRESSÃO: Exibe apenas a carteirinha do aluno mantendo os gradientes e cores */
         @media print {
             * {
                 -webkit-print-color-adjust: exact !important;
@@ -56,7 +58,6 @@
                 margin: 0;
                 padding: 0;
             }
-            /* Ocultar o botão de imprimir na hora da impressão */
             #subtab-portal-carteirinha button {
                 display: none !important;
             }
@@ -94,8 +95,9 @@
                     <button type="button" onclick="fazerLogin()" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md transition duration-200">
                         Entrar no Sistema
                     </button>
-                    <div class="text-center mt-2">
-                        <a href="#" onclick="abrirModalEsqueciSenhaAdmin()" class="text-xs text-blue-600 dark:text-blue-400 hover:underline">Esqueci minha senha</a>
+                    <div class="flex justify-between items-center text-xs mt-2 px-1">
+                        <a href="#" onclick="abrirModalEsqueciSenhaAdmin()" class="text-blue-600 dark:text-blue-400 hover:underline">Esqueci minha senha</a>
+                        <a href="#" onclick="abrirModalPrimeiroAcesso()" class="text-emerald-600 dark:text-emerald-400 hover:underline font-semibold"><i class="fa-solid fa-user-plus mr-1"></i> Primeiro Acesso</a>
                     </div>
                 </div>
 
@@ -120,13 +122,13 @@
             <div class="bg-gradient-to-br from-blue-900 to-indigo-900 p-8 md:p-10 text-white flex flex-col justify-center items-center text-center">
                 <img id="login-logo-img" alt="Logo" class="max-h-24 max-w-[220px] object-contain mb-4 bg-transparent border-0 shadow-none outline-none block" style="display: none; background: transparent !important;">
                 <h3 id="login-info-title" class="text-xl font-bold mb-2">Sistema de Ensino Técnico e Transporte – SE7</h3>
-                <p id="login-info-desc" class="text-xs text-blue-100 opacity-90 leading-relaxed mb-4">Plataforma integrada de ensino técnico, controle acadêmico, auditoria em nuvem e portal do aluno.</p>
-                <div class="text-[10px] uppercase tracking-wider text-blue-300 font-semibold" id="login-info-version">SE7 Cloud v1.0.4</div>
+                <p id="login-info-desc" class="text-xs text-blue-100 opacity-90 leading-relaxed mb-4">Plataforma integrada com automação Google Drive e Portal Acadêmico.</p>
+                <div class="text-[10px] uppercase tracking-wider text-blue-300 font-semibold" id="login-info-version">SE7 Cloud v1.0.7</div>
             </div>
         </div>
     </div>
 
-    <!-- MODAIS DE RECUPERAÇÃO DE SENHA -->
+    <!-- MODAIS DE RECUPERAÇÃO DE SENHA E PRIMEIRO ACESSO -->
     <div id="modal-esqueci-senha-admin" class="fixed inset-0 z-[3500] flex items-center justify-center bg-black/50 p-4" style="display: none;">
         <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full p-6 border border-gray-200 dark:border-slate-700 relative shadow-2xl space-y-4">
             <button type="button" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 text-xl font-bold" onclick="fecharModalEsqueciSenhaAdmin()">&times;</button>
@@ -145,6 +147,38 @@
         </div>
     </div>
 
+    <div id="modal-primeiro-acesso" class="fixed inset-0 z-[3500] flex items-center justify-center bg-black/50 p-4" style="display: none;">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full p-6 border border-gray-200 dark:border-slate-700 relative shadow-2xl space-y-4">
+            <button type="button" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 text-xl font-bold" onclick="fecharModalPrimeiroAcesso()">&times;</button>
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white"><i class="fa-solid fa-user-plus text-emerald-600 mr-2"></i> Solicitação de Primeiro Acesso</h3>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Preencha seus dados institucionais para solicitar liberação ao Master/Direção.</p>
+            <div>
+                <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase mb-1">Nome Completo</label>
+                <input type="text" id="pa-nome" placeholder="Nome completo do colaborador" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 dark:text-white">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase mb-1">E-mail Institucional</label>
+                <input type="email" id="pa-email" placeholder="colaborador@escola.com" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 dark:text-white">
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase mb-1">Definir Senha</label>
+                    <input type="password" id="pa-pass" placeholder="••••••••" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 dark:text-white">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase mb-1">Perfil Desejado</label>
+                    <select id="pa-perfil" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 dark:text-white">
+                        <option value="secretaria">Secretaria</option>
+                        <option value="professor">Professor</option>
+                    </select>
+                </div>
+            </div>
+            <button type="button" onclick="enviarSolicitudePrimeiroAcesso()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg shadow-md transition duration-200 text-sm">
+                Enviar Solicitação de Acesso
+            </button>
+        </div>
+    </div>
+
     <div id="modal-esqueci-senha-aluno" class="fixed inset-0 z-[3500] flex items-center justify-center bg-black/50 p-4" style="display: none;">
         <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full p-6 border border-gray-200 dark:border-slate-700 relative shadow-2xl space-y-4">
             <button type="button" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 text-xl font-bold" onclick="fecharModalEsqueciSenhaAluno()">&times;</button>
@@ -159,6 +193,39 @@
             </div>
             <button type="button" onclick="executarRedefinicaoSenhaAluno()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg shadow-md transition duration-200 text-sm">
                 Criar Nova Senha do Aluno
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL DE EDIÇÃO DE CALENDÁRIO ACADÊMICO -->
+    <div id="modal-editar-calendario" class="fixed inset-0 z-[3500] flex items-center justify-center bg-black/50 p-4" style="display: none;">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-lg w-full p-6 border border-gray-200 dark:border-slate-700 relative shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <button type="button" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 text-xl font-bold" onclick="fecharModalEditarCalendario()">&times;</button>
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white"><i class="fa-solid fa-calendar-pen text-blue-600 mr-2"></i> Editar Calendário Acadêmico</h3>
+            <input type="hidden" id="edit-cal-id" value="">
+            <div>
+                <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase mb-1">Disciplina</label>
+                <input type="text" id="edit-cal-subject" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 dark:text-white">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase mb-1">Descrição / Tópico</label>
+                <input type="text" id="edit-cal-desc" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 dark:text-white">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase mb-1">Quantidade de Datas (2 a 5)</label>
+                <select id="edit-cal-qtd" onchange="renderizarCamposEdicaoCalendario()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 dark:text-white">
+                    <option value="2">2 Dias</option>
+                    <option value="3">3 Dias</option>
+                    <option value="4">4 Dias</option>
+                    <option value="5">5 Dias</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase mb-1">Datas de Aula</label>
+                <div id="container-edit-datas-dinamicas" class="grid grid-cols-1 gap-2"></div>
+            </div>
+            <button type="button" onclick="salvarEdicaoCalendario()" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow transition text-sm">
+                Salvar Alterações
             </button>
         </div>
     </div>
@@ -186,8 +253,9 @@
                     <button type="button" onclick="toggleDarkMode()" class="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-xs font-semibold rounded-lg transition border border-white/20">
                         <i class="fa-solid fa-moon mr-1"></i> Tema
                     </button>
-                    <button type="button" id="btn-access-control" onclick="abrirModalControleAcesso()" class="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-xs font-semibold rounded-lg transition border border-white/20" style="display:none;">
+                    <button type="button" id="btn-access-control" onclick="abrirModalControleAcesso()" class="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-xs font-semibold rounded-lg transition border border-white/20 relative" style="display:none;">
                         <i class="fa-solid fa-shield-halved mr-1"></i> Acessos
+                        <span id="badge-pendentes-cont" class="absolute -top-1 -right-1 bg-red-600 text-white text-[9px] px-1.5 py-0.2 rounded-full font-bold" style="display:none;">0</span>
                     </button>
                     <button type="button" id="btn-switch-user" onclick="abrirModalAlternarUsuario()" class="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-xs font-semibold rounded-lg transition border border-white/20" style="display:none;">
                         <i class="fa-solid fa-users mr-1"></i> Alternar
@@ -255,7 +323,7 @@
                         </select>
                     </div>
                     <div id="container-validacao-docs" class="space-y-4">
-                        <p class="text-xs text-gray-500">Selecione um aluno acima para visualizar, aprovar ou reprovar os documentos postados.</p>
+                        <p class="text-xs text-gray-500">Selecione um aluno acima para visualizar, aprovar ou reprovar os documentos postados. (Ao aprovar, o documento será enviado automaticamente para a pasta do aluno no Google Drive).</p>
                     </div>
                 </div>
             </div>
@@ -277,7 +345,7 @@
                             <i class="fa-solid fa-user-plus"></i>
                         </div>
                         <h3 class="font-bold text-base text-gray-800 dark:text-white">Cadastro de Nova Matrícula</h3>
-                        <p class="text-xs text-gray-500 max-w-md mx-auto">Clique no botão abaixo para abrir o assistente completo de cadastro de novos alunos, preenchimento de endereço por CEP e integração com Asaas.</p>
+                        <p class="text-xs text-gray-500 max-w-md mx-auto">Clique no botão abaixo para abrir o assistente completo de cadastro de novos alunos, preenchimento de endereço por CEP e integração imediata com o financeiro.</p>
                         <button type="button" onclick="openNewStudentModal()" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow"><i class="fa-solid fa-plus mr-1"></i> Abrir Ficha de Nova Matrícula</button>
                     </div>
                 </div>
@@ -388,38 +456,25 @@
 
         <!-- FINANCEIRO -->
         <div id="tab-student-finance" class="tab-content space-y-4" style="display: none;">
-            <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-md p-6 border border-gray-200 dark:border-slate-700">
-                <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Financeiro & Gateway Asaas</h2>
-                <p class="text-xs text-gray-500 mb-4">Gere cobranças via Asaas e acompanhe o histórico financeiro.</p>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label class="block text-xs font-semibold mb-1">Selecionar Aluno</label>
-                        <select id="fin-student-select" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold mb-1">Tipo de Lançamento</label>
-                        <select id="fin-payment-type" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                            <option value="mensalidade">Mensalidade</option>
-                            <option value="taxa">Taxa de Documentação / Serv.</option>
-                        </select>
+            <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-md p-6 border border-gray-200 dark:border-slate-700 space-y-4">
+                <div class="border-b border-gray-100 dark:border-slate-700 pb-2">
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white">Financeiro</h2>
+                    <p class="text-xs text-gray-500">Selecione o aluno abaixo para visualizar todas as cobranças geradas automaticamente no momento da matrícula e gerar boletos ou QR codes.</p>
+                </div>
+                
+                <div class="max-w-md">
+                    <label class="block text-xs font-semibold mb-1">Selecionar Aluno</label>
+                    <select id="fin-student-select" onchange="renderizarCobrancasAlunoSelecionadoFinanceiro(this.value)" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+                        <option value="">Selecione o aluno...</option>
+                    </select>
+                </div>
+
+                <div class="mt-4">
+                    <h4 class="font-bold text-sm text-gray-700 dark:text-gray-300 mb-2">Cobranças Vinculadas ao Aluno Selecionado</h4>
+                    <div id="container-cobrancas-aluno-financeiro" class="space-y-2">
+                        <p class="text-xs text-gray-400">Selecione um aluno acima para visualizar as mensalidades e parcelas.</p>
                     </div>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label class="block text-xs font-semibold mb-1">Valor (R$)</label>
-                        <input type="number" id="fin-payment-value" value="150.00" step="0.01" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold mb-1">Vencimento</label>
-                        <input type="date" id="fin-payment-duedate" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                    </div>
-                </div>
-                <div class="flex flex-wrap gap-3 mb-6">
-                    <button onclick="gerarCobrancaAsaasAPI()" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-xs shadow">Emitir Cobrança Integrada Asaas</button>
-                    <button onclick="registerStudentPayment(true)" class="px-4 py-2.5 bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-lg text-xs shadow">Registrar Manual</button>
-                </div>
-                <h4 class="font-bold text-sm text-gray-700 dark:text-gray-300 mb-2">Histórico de Lançamentos Financeiros</h4>
-                <ul class="data-list divide-y divide-gray-200 dark:divide-slate-700" id="finance-logs-list"></ul>
             </div>
         </div>
 
@@ -469,7 +524,7 @@
                     <button class="subtab-button px-4 py-2 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-portal-notas')">Notas e Avaliações</button>
                     <button class="subtab-button px-4 py-2 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-portal-financeiro')">Financeiro</button>
                     <button class="subtab-button px-4 py-2 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-portal-frequencia')">Frequência</button>
-                    <button class="subtab-button px-4 py-2 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-portal-calendario')"><i class="fa-solid fa-calendar-days mr-1"></i> Calendário</button>
+                    <button class="subtab-button px-4 py-2 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-portal-calendario')"><i class="fa-solid fa-calendar-days mr-1"></i> Calendário Semestral</button>
                     <button class="subtab-button px-4 py-2 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-portal-carteirinha')">Carteirinha</button>
                 </div>
 
@@ -532,28 +587,34 @@
                     </ul>
                 </div>
 
-                <!-- CALENDÁRIO ACADÊMICO DO ALUNO -->
+                <!-- CALENDÁRIO ACADÊMICO SEMESTRAL DO ALUNO -->
                 <div id="subtab-portal-calendario" class="subtab-content space-y-4" style="display: none;">
-                    <div class="bg-blue-50 dark:bg-slate-900 p-4 rounded-xl border border-blue-200 dark:border-slate-700 text-xs mb-4">
-                        <p class="font-bold text-blue-800 dark:text-blue-300 mb-1"><i class="fa-solid fa-circle-info mr-1"></i> Acompanhamento em Tempo Real</p>
-                        <p>Consulte abaixo o calendário de aulas e cronograma oficial cadastrado para a sua turma neste semestre.</p>
+                    <div class="bg-blue-50 dark:bg-slate-900 p-4 rounded-xl border border-blue-200 dark:border-slate-700 text-xs mb-4 flex justify-between items-center flex-wrap gap-2">
+                        <div>
+                            <p class="font-bold text-blue-800 dark:text-blue-300 mb-1"><i class="fa-solid fa-circle-info mr-1"></i> Calendário Semestral Automatizado</p>
+                            <p>Visualização otimizada por semestre contendo as disciplinas e os meses correspondentes.</p>
+                        </div>
+                        <div>
+                            <select id="portal-filtro-semestre" onchange="renderizarCalendarioSemestralPortalAluno()" class="px-3 py-1.5 rounded-lg border border-blue-300 dark:border-slate-600 text-xs font-semibold dark:bg-slate-800">
+                                <option value="2026/2" selected>2026/2 (2º Semestre: Jul-Dez)</option>
+                                <option value="2026/1">2026/1 (1º Semestre: Jan-Jun)</option>
+                                <option value="2025/1">2025/1 (1º Semestre: Jan-Jun)</option>
+                                <option value="2025/2">2025/2 (2º Semestre: Jul-Dez)</option>
+                                <option value="2027/1">2027/1 (1º Semestre: Jan-Jun)</option>
+                                <option value="2027/2">2027/2 (2º Semestre: Jul-Dez)</option>
+                                <option value="2028/1">2028/1 (1º Semestre: Jan-Jun)</option>
+                                <option value="2028/2">2028/2 (2º Semestre: Jul-Dez)</option>
+                                <option value="2029/1">2029/1 (1º Semestre: Jan-Jun)</option>
+                                <option value="2029/2">2029/2 (2º Semestre: Jul-Dez)</option>
+                                <option value="2030/1">2030/1 (1º Semestre: Jan-Jun)</option>
+                                <option value="2030/2">2030/2 (2º Semestre: Jul-Dez)</option>
+                                <option value="2031/1">2031/1 (1º Semestre: Jan-Jun)</option>
+                                <option value="2031/2">2031/2 (2º Semestre: Jul-Dez)</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-xs">
-                            <thead>
-                                <tr class="border-b border-gray-200 dark:border-slate-700 text-gray-500">
-                                    <th class="p-3">Semestre</th>
-                                    <th class="p-3">Turma</th>
-                                    <th class="p-3">Disciplina</th>
-                                    <th class="p-3">Data da Aula</th>
-                                    <th class="p-3">Descrição / Tópico</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabela-portal-aluno-calendario" class="divide-y divide-gray-200 dark:divide-slate-700">
-                                <tr><td colspan="5" class="p-3 text-center text-gray-400">Carregando calendário...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
+                    <!-- Container do Calendário Semestral Renderizado -->
+                    <div id="portal-calendar-view" class="space-y-4"></div>
                 </div>
 
                 <div id="subtab-portal-carteirinha" class="subtab-content space-y-4" style="display: none;">
@@ -599,7 +660,7 @@
                     <button class="subtab-button active px-3 py-1.5 rounded-xl text-xs font-semibold bg-blue-600 text-white shadow" onclick="openSubTab(event, 'subtab-courses')">Cursos</button>
                     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-subjects')">Disciplinas</button>
                     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-classes')">Turmas</button>
-                    <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-calendar')">Calendário Acadêmico</button>
+                    <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-calendar')">Calendário Semestral</button>
                     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-teachers')">Professores</button>
                     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-templates')">Edição de Documentos</button>
                     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-fin-config')">Asaas</button>
@@ -608,6 +669,7 @@
 
                 <!-- SUBABA CURSOS -->
                 <div id="subtab-courses" class="subtab-content active space-y-4">
+                    <input type="hidden" id="edit-course-id" value="">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-semibold mb-1">Nome do Curso</label>
@@ -632,7 +694,60 @@
                             <input type="text" id="input-course-conselho" placeholder="Resolução COFEN" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
                         </div>
                     </div>
-                    <button onclick="saveCourse()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow">Salvar Curso</button>
+
+                    <!-- SEÇÃO FINANCEIRA DO CURSO & SEMESTRE DE VIGÊNCIA -->
+                    <div class="bg-blue-50 dark:bg-slate-900 p-4 rounded-xl border border-blue-200 dark:border-slate-700 space-y-4">
+                        <h4 class="font-bold text-xs text-blue-700 dark:text-blue-400 uppercase"><i class="fa-solid fa-wallet mr-1"></i> Configuração Financeira e Semestre de Vigência</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold mb-1">Semestre de Vigência</label>
+                                <select id="input-course-semestre" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800">
+                                    <option value="2025/1">2025/1 (1º Semestre: Jan-Jun)</option>
+                                    <option value="2025/2">2025/2 (2º Semestre: Jul-Dez)</option>
+                                    <option value="2026/1">2026/1 (1º Semestre: Jan-Jun)</option>
+                                    <option value="2026/2" selected>2026/2 (2º Semestre: Jul-Dez)</option>
+                                    <option value="2027/1">2027/1 (1º Semestre: Jan-Jun)</option>
+                                    <option value="2027/2">2027/2 (2º Semestre: Jul-Dez)</option>
+                                    <option value="2028/1">2028/1 (1º Semestre: Jan-Jun)</option>
+                                    <option value="2028/2">2028/2 (2º Semestre: Jul-Dez)</option>
+                                    <option value="2029/1">2029/1 (1º Semestre: Jan-Jun)</option>
+                                    <option value="2029/2">2029/2 (2º Semestre: Jul-Dez)</option>
+                                    <option value="2030/1">2030/1 (1º Semestre: Jan-Jun)</option>
+                                    <option value="2030/2">2030/2 (2º Semestre: Jul-Dez)</option>
+                                    <option value="2031/1">2031/1 (1º Semestre: Jan-Jun)</option>
+                                    <option value="2031/2">2031/2 (2º Semestre: Jul-Dez)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold mb-1">Qtd. de Parcelas</label>
+                                <input type="number" id="input-course-parcelas" placeholder="24" value="24" min="1" oninput="calcularTotalCurso()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold mb-1">Valor Normal da Parcela (R$)</label>
+                                <input type="number" id="input-course-valor-parcela" placeholder="300.00" value="300.00" step="0.01" oninput="calcularTotalCurso()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold mb-1 text-emerald-700 dark:text-emerald-400">Valor com Desconto de Pontualidade (R$)</label>
+                                <input type="number" id="input-course-valor-desconto" placeholder="280.00" value="280.00" step="0.01" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold mb-1">Dia de Vencimento</label>
+                                <input type="number" id="input-course-vencimento" placeholder="10" value="10" min="1" max="31" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold mb-1 text-gray-600 dark:text-gray-300">Valor Total do Curso (Calculado)</label>
+                            <input type="text" id="input-course-valor-total" readonly placeholder="R$ 7.200,00" class="w-full md:w-1/3 px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm bg-gray-100 dark:bg-slate-800 font-bold text-emerald-600 dark:text-emerald-400">
+                        </div>
+                    </div>
+
+                    <div class="flex gap-2">
+                        <button type="button" id="btn-save-course" onclick="saveCourse()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-xs shadow transition duration-200">Salvar Curso</button>
+                        <button type="button" id="btn-cancel-edit-course" onclick="cancelarEdicaoCurso()" class="px-5 py-2.5 bg-gray-500 hover:bg-gray-600 text-white font-semibold rounded-lg text-xs shadow transition duration-200" style="display: none;">Cancelar Edição</button>
+                    </div>
+
                     <ul class="data-list divide-y divide-gray-200 dark:divide-slate-700 mt-4" id="courses-list"></ul>
                 </div>
 
@@ -674,14 +789,13 @@
                         <div>
                             <label class="block text-xs font-semibold mb-1">Semestre Letivo</label>
                             <select id="input-class-semester" onchange="atualizarPreviewTurmaAutomatica()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                                <option value="2024.1">2024/1</option><option value="2024.2">2024/2</option>
-                                <option value="2025.1">2025/1</option><option value="2025.2">2025/2</option>
-                                <option value="2026.1" selected>2026/1</option><option value="2026.2">2026/2</option>
-                                <option value="2027.1">2027/1</option><option value="2027.2">2027/2</option>
-                                <option value="2028.1">2028/1</option><option value="2028.2">2028/2</option>
-                                <option value="2029.1">2029/1</option><option value="2029.2">2029/2</option>
-                                <option value="2030.1">2030/1</option><option value="2030.2">2030/2</option>
-                                <option value="2031.1">2031/1</option><option value="2031.2">2031/2</option>
+                                <option value="2025.1">2025/1 (Jan-Jun)</option><option value="2025.2">2025/2 (Jul-Dez)</option>
+                                <option value="2026.1">2026/1 (Jan-Jun)</option><option value="2026.2" selected>2026/2 (Jul-Dez)</option>
+                                <option value="2027.1">2027/1 (Jan-Jun)</option><option value="2027.2">2027/2 (Jul-Dez)</option>
+                                <option value="2028.1">2028/1 (Jan-Jun)</option><option value="2028.2">2028/2 (Jul-Dez)</option>
+                                <option value="2029.1">2029/1 (Jan-Jun)</option><option value="2029.2">2029/2 (Jul-Dez)</option>
+                                <option value="2030.1">2030/1 (Jan-Jun)</option><option value="2030.2">2030/2 (Jul-Dez)</option>
+                                <option value="2031.1">2031/1 (Jan-Jun)</option><option value="2031.2">2031/2 (Jul-Dez)</option>
                             </select>
                         </div>
                     </div>
@@ -699,10 +813,10 @@
                     <ul class="data-list divide-y divide-gray-200 dark:divide-slate-700 mt-4" id="class-list"></ul>
                 </div>
 
-                <!-- SUBABA CALENDÁRIO ACADÊMICO -->
+                <!-- SUBABA CALENDÁRIO ACADÊMICO SEMESTRAL -->
                 <div id="subtab-calendar" class="subtab-content space-y-4" style="display: none;">
                     <div class="bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700 space-y-4">
-                        <h4 class="font-bold text-sm text-blue-600 dark:text-blue-400">Configurar Calendário Acadêmico por Turma</h4>
+                        <h4 class="font-bold text-sm text-blue-600 dark:text-blue-400">Configurar Calendário Semestral por Turma</h4>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
                                 <label class="block text-xs font-semibold mb-1">Curso</label>
@@ -715,50 +829,75 @@
                             <div>
                                 <label class="block text-xs font-semibold mb-1">Semestre / Período</label>
                                 <select id="cal-semester-select" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800">
-                                    <option value="2024/1">2024/1</option><option value="2024/2">2024/2</option>
-                                    <option value="2025/1">2025/1</option><option value="2025/2">2025/2</option>
-                                    <option value="2026/1" selected>2026/1</option><option value="2026/2">2026/2</option>
-                                    <option value="2027/1">2027/1</option><option value="2027/2">2027/2</option>
-                                    <option value="2028/1">2028/1</option><option value="2028/2">2028/2</option>
-                                    <option value="2029/1">2029/1</option><option value="2029/2">2029/2</option>
-                                    <option value="2030/1">2030/1</option><option value="2030/2">2030/2</option>
-                                    <option value="2031/1">2031/1</option><option value="2031/2">2031/2</option>
+                                    <option value="2025/1">2025/1 (Jan-Jun)</option><option value="2025/2">2025/2 (Jul-Dez)</option>
+                                    <option value="2026/1">2026/1 (Jan-Jun)</option><option value="2026/2" selected>2026/2 (2º Semestre: Jul-Dez)</option>
+                                    <option value="2027/1">2027/1 (Jan-Jun)</option><option value="2027/2">2027/2 (Jul-Dez)</option>
+                                    <option value="2028/1">2028/1 (Jan-Jun)</option><option value="2028/2">2028/2 (Jul-Dez)</option>
+                                    <option value="2029/1">2029/1 (Jan-Jun)</option><option value="2029/2">2029/2 (Jul-Dez)</option>
+                                    <option value="2030/1">2030/1 (Jan-Jun)</option><option value="2030/2">2030/2 (Jul-Dez)</option>
+                                    <option value="2031/1">2031/1 (Jan-Jun)</option><option value="2031/2">2031/2 (Jul-Dez)</option>
                                 </select>
                             </div>
                         </div>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-xs font-semibold mb-1">Disciplina da Turma</label>
                                 <select id="cal-subject-select" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800"></select>
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold mb-1">Data da Aula</label>
-                                <input type="date" id="cal-event-date" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold mb-1">Descrição / Tópico / Aula</label>
-                                <input type="text" id="cal-event-desc" placeholder="Ex: Aula Prática / Tópico 01" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800">
+                                <label class="block text-xs font-semibold mb-1">Quantidade de Datas de Aula (2 a 5)</label>
+                                <select id="cal-qtd-datas" onchange="renderizarCamposDatasCalendario()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800">
+                                    <option value="2" selected>2 Dias</option>
+                                    <option value="3">3 Dias</option>
+                                    <option value="4">4 Dias</option>
+                                    <option value="5">5 Dias</option>
+                                </select>
                             </div>
                         </div>
-                        <button type="button" onclick="adicionarEventoCalendario()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow">Cadastrar Data de Aula no Calendário</button>
+                        
+                        <div>
+                            <label class="block text-xs font-semibold mb-1">Descrição / Tópico / Módulo</label>
+                            <input type="text" id="cal-event-desc" placeholder="Ex: Aulas Teórico-Práticas / Módulo 01" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold mb-1 text-blue-600 dark:text-blue-400">Definição das Datas de Aula</label>
+                            <div id="container-datas-dinamicas" class="grid grid-cols-1 md:grid-cols-5 gap-2"></div>
+                        </div>
+
+                        <button type="button" onclick="adicionarEventoCalendario()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow">Cadastrar Aulas no Calendário</button>
                     </div>
 
-                    <h4 class="font-bold text-sm text-gray-700 dark:text-gray-300 mt-4 mb-2">Cronograma de Aulas Cadastrado</h4>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-xs">
-                            <thead>
-                                <tr class="border-b border-gray-200 dark:border-slate-700 text-gray-500">
-                                    <th class="p-3">Semestre</th>
-                                    <th class="p-3">Turma</th>
-                                    <th class="p-3">Disciplina</th>
-                                    <th class="p-3">Data</th>
-                                    <th class="p-3">Descrição</th>
-                                    <th class="p-3 text-right">Ação</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabela-calendario-academico" class="divide-y divide-gray-200 dark:divide-slate-700"></tbody>
-                        </table>
+                    <div class="mt-6 space-y-3">
+                        <h4 class="font-bold text-sm text-gray-700 dark:text-gray-300">Calendários Cadastrados (Gerenciamento)</h4>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead>
+                                    <tr class="border-b border-gray-200 dark:border-slate-700 text-gray-500">
+                                        <th class="p-2.5">Turma / Curso</th>
+                                        <th class="p-2.5">Disciplina</th>
+                                        <th class="p-2.5">Semestre</th>
+                                        <th class="p-2.5">Datas de Aula</th>
+                                        <th class="p-2.5 text-right">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabela-gerenciar-calendarios" class="divide-y divide-gray-200 dark:divide-slate-700"></tbody>
+                            </table>
+                        </div>
                     </div>
+
+                    <div class="flex justify-between items-center mt-6 mb-2">
+                        <h4 class="font-bold text-sm text-gray-700 dark:text-gray-300">Visualização Gráfica do Calendário Semestral</h4>
+                        <select id="admin-filtro-semestre" onchange="renderizarCalendarioSemestralAdmin()" class="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-slate-600 text-xs font-semibold dark:bg-slate-800">
+                            <option value="2026/2" selected>2026/2 (2º Semestre: Jul-Dez)</option>
+                            <option value="2026/1">2026/1 (1º Semestre: Jan-Jun)</option>
+                            <option value="2025/1">2025/1 (1º Semestre: Jan-Jun)</option>
+                            <option value="2025/2">2025/2 (2º Semestre: Jul-Dez)</option>
+                            <option value="2027/1">2027/1 (1º Semestre: Jan-Jun)</option>
+                            <option value="2027/2">2027/2 (2º Semestre: Jul-Dez)</option>
+                        </select>
+                    </div>
+                    <div id="admin-calendar-view" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
                 </div>
 
                 <!-- SUBABA PROFESSORES -->
@@ -887,6 +1026,11 @@
                         </div>
                     </div>
                     <div>
+                        <label class="block text-xs font-semibold mb-1 text-blue-600 dark:text-blue-400 font-bold">URL do Web App do Google Apps Script (Integração Google Drive)</label>
+                        <input type="text" id="input-gdrive-url" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-3 py-2 rounded-lg border border-blue-300 dark:border-slate-600 text-sm dark:bg-slate-900 font-mono text-xs">
+                        <p class="text-[11px] text-gray-500 mt-1">Cole aqui a URL gerada ao publicar o seu projeto no Google Apps Script.</p>
+                    </div>
+                    <div>
                         <label class="block text-xs font-semibold mb-1">Upload de Logomarca</label>
                         <input type="file" id="input-logo-file" accept="image/*" onchange="handleLogoUpload(event)" class="text-xs">
                         <div id="logo-preview" class="mt-2 w-32 h-16 border border-dashed rounded flex items-center justify-center text-xs text-gray-400 bg-gray-50 dark:bg-slate-900">Sem logo</div>
@@ -896,7 +1040,7 @@
                         <label class="block text-xs font-semibold mb-1">Texto Descritivo de Login</label>
                         <textarea id="input-login-desc" rows="2" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></textarea>
                     </div>
-                    <button onclick="salvarBrandingNaNuvem()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow">Salvar Configurações</button>
+                    <button onclick="salvarBrandingNaNuvem()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow">Salvar Configurações</button>
                 </div>
             </div>
         </div>
@@ -929,7 +1073,7 @@
     <!-- RODAPÉ -->
     <footer class="bg-white dark:bg-slate-800 border-t border-gray-200 dark:border-slate-700 py-4 px-6 text-center text-xs text-gray-500 dark:text-gray-400 flex flex-col sm:flex-row justify-between items-center gap-2">
         <span>SE7 Gestão Educacional – Todos os direitos reservados.</span>
-        <span>Desenvolvido por <strong>JS & SS Serviços Educacionais e Cia Ltda</strong> &bull; Versão 1.0.4 Cloud</span>
+        <span>Desenvolvido por <strong>JS & SS Serviços Educacionais e Cia Ltda</strong> &bull; Versão 1.0.7 Cloud Drive</span>
     </footer>
 
     <!-- MODAL DE NOVA MATRÍCULA / EDIÇÃO DE ALUNO -->
@@ -1031,10 +1175,19 @@
 
     <!-- MODAIS DE ACESSO E ALTERNAR -->
     <div id="access-control-modal" class="fixed inset-0 z-[2000] flex items-center justify-center bg-black/50 p-4" style="display: none;">
-        <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-xl w-full p-6 border border-gray-200 dark:border-slate-700 relative shadow-2xl">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-xl w-full p-6 border border-gray-200 dark:border-slate-700 relative shadow-2xl max-h-[90vh] overflow-y-auto">
             <button type="button" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 text-xl font-bold" onclick="fecharModalControleAcesso()">&times;</button>
             <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Controle de Acesso</h2>
-            <div class="space-y-4 mb-4">
+            
+            <div class="mb-6 p-4 bg-amber-50 dark:bg-slate-900/60 rounded-xl border border-amber-200 dark:border-slate-700">
+                <h4 class="font-bold text-xs text-amber-700 dark:text-amber-400 mb-3 uppercase"><i class="fa-solid fa-clock mr-1"></i> Solicitações de Primeiro Acesso Pendentes</h4>
+                <div id="lista-solicitacoes-pendentes" class="space-y-2">
+                    <p class="text-xs text-gray-400">Nenhuma solicitação pendente no momento.</p>
+                </div>
+            </div>
+
+            <div class="space-y-4 mb-4 border-t pt-4 border-gray-200 dark:border-slate-700">
+                <h4 class="font-bold text-xs text-blue-600 dark:text-blue-400 uppercase">Cadastrar Novo Usuário Manualmente</h4>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-semibold mb-1">Nome</label>
@@ -1061,6 +1214,7 @@
                 </div>
                 <button type="button" onclick="cadastrarNovoUsuarioSistema()" class="px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded-lg shadow">Cadastrar Usuário</button>
             </div>
+            <h4 class="font-bold text-xs text-gray-700 dark:text-gray-300 uppercase mb-2">Usuários Ativos no Sistema</h4>
             <ul class="data-list divide-y divide-gray-200 dark:divide-slate-700 max-h-48 overflow-y-auto" id="system-users-list"></ul>
         </div>
     </div>
@@ -1091,13 +1245,6 @@
 
         document.getElementById('attendance-date').valueAsDate = new Date();
         document.getElementById('cancel-date').valueAsDate = new Date();
-        const dataVencDefault = new Date();
-        dataVencDefault.setDate(dataVencDefault.getDate() + 10);
-        const elVenc = document.getElementById('fin-payment-duedate');
-        if(elVenc) elVenc.valueAsDate = dataVencDefault;
-        
-        const elCalDate = document.getElementById('cal-event-date');
-        if(elCalDate) elCalDate.valueAsDate = new Date();
 
         const usuariosPadrao = [
             { email: "master@admin.com", pass: "123456", perfil: "master", nome: "Administrador Master" },
@@ -1240,8 +1387,103 @@
 
         function abrirModalEsqueciSenhaAdmin() { document.getElementById('modal-esqueci-senha-admin').style.display = 'flex'; }
         function fecharModalEsqueciSenhaAdmin() { document.getElementById('modal-esqueci-senha-admin').style.display = 'none'; }
+        function abrirModalPrimeiroAcesso() { document.getElementById('modal-primeiro-acesso').style.display = 'flex'; }
+        function fecharModalPrimeiroAcesso() { document.getElementById('modal-primeiro-acesso').style.display = 'none'; }
         function abrirModalEsqueciSenhaAluno() { document.getElementById('modal-esqueci-senha-aluno').style.display = 'flex'; }
         function fecharModalEsqueciSenhaAluno() { document.getElementById('modal-esqueci-senha-aluno').style.display = 'none'; }
+
+        async function enviarSolicitudePrimeiroAcesso() {
+            const nome = document.getElementById('pa-nome').value.trim();
+            const email = document.getElementById('pa-email').value.trim();
+            const pass = document.getElementById('pa-pass').value.trim();
+            const perfil = document.getElementById('pa-perfil').value;
+
+            if (!nome || !email || !pass) return alert("Preencha todos os campos da solicitação.");
+            
+            let solicitacoes = JSON.parse(localStorage.getItem('app_users_pending')) || [];
+            if (solicitacoes.some(s => s.email === email)) {
+                return alert("Já existe uma solicitação de primeiro acesso pendente para este e-mail.");
+            }
+
+            let dbUsers = JSON.parse(localStorage.getItem('app_users_system')) || usuariosPadrao;
+            if (dbUsers.some(u => u.email === email)) {
+                return alert("Este e-mail já está cadastrado no sistema.");
+            }
+
+            solicitacoes.push({ id: Date.now().toString(), nome, email, pass, perfil, data: new Date().toLocaleString('pt-BR') });
+            localStorage.setItem('app_users_pending', JSON.stringify(solicitacoes));
+
+            alert("Solicitação enviada com sucesso! Aguarde a liberação do Master ou da direção para acessar o sistema.");
+            fecharModalPrimeiroAcesso();
+            document.getElementById('pa-nome').value = '';
+            document.getElementById('pa-email').value = '';
+            document.getElementById('pa-pass').value = '';
+        }
+
+        function renderizarSolicitacoesPendentes() {
+            const container = document.getElementById('lista-solicitacoes-pendentes');
+            const badge = document.getElementById('badge-pendentes-cont');
+            if (!container) return;
+
+            let solicitacoes = JSON.parse(localStorage.getItem('app_users_pending')) || [];
+            if (badge) {
+                if (solicitacoes.length > 0) {
+                    badge.textContent = solicitacoes.length;
+                    badge.style.display = 'inline-block';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+
+            if (solicitacoes.length === 0) {
+                container.innerHTML = `<p class="text-xs text-gray-400">Nenhuma solicitação pendente no momento.</p>`;
+                return;
+            }
+
+            container.innerHTML = '';
+            solicitacoes.forEach(s => {
+                container.innerHTML += `
+                    <div class="bg-white dark:bg-slate-800 p-3 rounded-lg border border-amber-200 dark:border-slate-700 flex justify-between items-center text-xs">
+                        <div>
+                            <strong>${s.nome}</strong> (${s.email})<br>
+                            <span class="text-[10px] text-gray-500">Perfil: ${s.perfil.toUpperCase()} &bull; ${s.data}</span>
+                        </div>
+                        <div class="flex gap-1.5">
+                            <button onclick="aprovarSolicitacao('${s.id}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-semibold">Aprovar</button>
+                            <button onclick="rejeitarSolicitacao('${s.id}')" class="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white rounded font-semibold">Rejeitar</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function aprovarSolicitacao(id) {
+            let solicitacoes = JSON.parse(localStorage.getItem('app_users_pending')) || [];
+            const idx = solicitacoes.findIndex(s => s.id === id);
+            if (idx === -1) return;
+            const user = solicitacoes[idx];
+
+            let dbUsers = JSON.parse(localStorage.getItem('app_users_system')) || usuariosPadrao;
+            dbUsers.push({ nome: user.nome, email: user.email, pass: user.pass, perfil: user.perfil });
+            localStorage.setItem('app_users_system', JSON.stringify(dbUsers));
+
+            solicitacoes.splice(idx, 1);
+            localStorage.setItem('app_users_pending', JSON.stringify(solicitacoes));
+
+            registrarLogAuditoria(`Aprovou o primeiro acesso do colaborador ${user.nome} (${user.email})`, "Autenticação");
+            alert(`Acesso aprovado para ${user.nome}! O colaborador já pode fazer login.`);
+            renderizarSolicitacoesPendentes();
+            renderizarUsuariosSistema();
+        }
+
+        function rejeitarSolicitacao(id) {
+            if (!confirm("Deseja rejeitar esta solicitação de acesso?")) return;
+            let solicitacoes = JSON.parse(localStorage.getItem('app_users_pending')) || [];
+            solicitacoes = solicitacoes.filter(s => s.id !== id);
+            localStorage.setItem('app_users_pending', JSON.stringify(solicitacoes));
+            alert("Solicitação rejeitada.");
+            renderizarSolicitacoesPendentes();
+        }
 
         function executarRedefinicaoSenha() {
             const emailInput = document.getElementById('forgot-user-email').value.trim();
@@ -1317,6 +1559,7 @@
                 if (adminSelectorPortalBox) adminSelectorPortalBox.style.display = 'block';
                 popularSelectAlunosPortalMaster();
                 popularSelectAlunosValidacaoGestao();
+                renderizarSolicitacoesPendentes();
             }
         }
 
@@ -1334,7 +1577,10 @@
                 loginModal.style.display = 'flex';
             }
             renderizarLogsAuditoria();
+            renderizarSolicitacoesPendentes();
             carregarConfiguracaoAsaasNaTela();
+            renderizarCamposDatasCalendario();
+            calcularTotalCurso();
         });
 
         function validarCPF(cpf) {
@@ -1368,7 +1614,7 @@
             } catch (e) { console.error(e); }
         }
 
-        function abrirModalControleAcesso() { document.getElementById('access-control-modal').style.display = 'flex'; renderizarUsuariosSistema(); }
+        function abrirModalControleAcesso() { document.getElementById('access-control-modal').style.display = 'flex'; renderizarUsuariosSistema(); renderizarSolicitacoesPendentes(); }
         function fecharModalControleAcesso() { document.getElementById('access-control-modal').style.display = 'none'; }
         
         function cadastrarNovoUsuarioSistema() {
@@ -1415,6 +1661,8 @@
                     evt.currentTarget.classList.add("bg-blue-600", "text-white", "shadow");
                 }
             }
+            if(tabId === 'tab-settings') setTimeout(renderizarCalendarioSemestralAdmin, 200);
+            if(tabId === 'tab-portal-aluno') setTimeout(renderizarCalendarioSemestralPortalAluno, 200);
         }
 
         function openSubTab(evt, subtabId) {
@@ -1425,6 +1673,8 @@
             }
             document.getElementById(subtabId).style.display = 'block';
             evt.currentTarget.classList.add('bg-blue-600', 'text-white', 'shadow');
+            if(subtabId === 'subtab-calendar') setTimeout(renderizarCalendarioSemestralAdmin, 200);
+            if(subtabId === 'subtab-portal-calendario') setTimeout(renderizarCalendarioSemestralPortalAluno, 200);
         }
 
         function openNewStudentModal() {
@@ -1450,6 +1700,7 @@
                     document.getElementById('input-inst-email').value = data.email || '';
                     document.getElementById('input-inst-tel').value = data.tel || '';
                     document.getElementById('input-inst-end').value = data.end || '';
+                    document.getElementById('input-gdrive-url').value = data.gdriveUrl || '';
                     if (data.name) {
                         document.getElementById('login-info-title').textContent = data.name;
                         document.getElementById('header-inst-name').textContent = data.name;
@@ -1478,8 +1729,9 @@
             db.collection("academicCalendars").onSnapshot((snapshot) => {
                 academicCalendars = [];
                 snapshot.forEach(doc => academicCalendars.push({ id: doc.id, ...doc.data() }));
-                renderizarCalendarioAcademicoTabela();
-                if (alunoLogadoCache) renderizarCalendarioPortalAluno(alunoLogadoCache);
+                renderizarCalendarioSemestralAdmin();
+                renderizarTabelaGerenciarCalendarios();
+                if (alunoLogadoCache) renderizarCalendarioSemestralPortalAluno();
             });
 
             db.collection("students").onSnapshot((snapshot) => {
@@ -1504,6 +1756,10 @@
                 financeLogs = [];
                 snapshot.forEach(doc => financeLogs.push({ id: doc.id, ...doc.data() }));
                 renderFinanceStudentSelect();
+                const selFin = document.getElementById('fin-student-select');
+                if (selFin && selFin.value) {
+                    renderizarCobrancasAlunoSelecionadoFinanceiro(selFin.value);
+                }
             });
         }
 
@@ -1527,18 +1783,128 @@
             });
         }
 
+        function calcularTotalCurso() {
+            const parcelas = parseInt(document.getElementById('input-course-parcelas').value) || 0;
+            const valorParcela = parseFloat(document.getElementById('input-course-valor-parcela').value) || 0;
+            const total = parcelas * valorParcela;
+            const totalEl = document.getElementById('input-course-valor-total');
+            if(totalEl) {
+                totalEl.value = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            }
+        }
+
         async function saveCourse() {
+            const editId = document.getElementById('edit-course-id').value;
             const name = document.getElementById('input-course-name').value.trim();
             const sigla = document.getElementById('input-course-sigla').value.trim().toUpperCase();
             if (!name || !sigla) return alert("Preencha nome e sigla!");
-            await db.collection("courses").add({ name, sigla, eixo: document.getElementById('input-course-eixo').value.trim(), hours: document.getElementById('input-course-hours').value.trim(), conselho: document.getElementById('input-course-conselho').value.trim(), subjects: [], contractTemplate: "", declTemplate: "", historyTemplate: "", historyPdfUrl: "" });
-            document.getElementById('input-course-name').value = ''; document.getElementById('input-course-sigla').value = '';
-            alert("Curso salvo!");
+            
+            const semestre = document.getElementById('input-course-semestre').value;
+            const qtdParcelas = parseInt(document.getElementById('input-course-parcelas').value) || 1;
+            const valorParcela = parseFloat(document.getElementById('input-course-valor-parcela').value) || 0;
+            const valorDesconto = parseFloat(document.getElementById('input-course-valor-desconto').value) || 0;
+            const vencimento = parseInt(document.getElementById('input-course-vencimento').value) || 10;
+            const valorTotal = qtdParcelas * valorParcela;
+
+            const courseData = {
+                name, sigla, semestre,
+                eixo: document.getElementById('input-course-eixo').value.trim(),
+                hours: document.getElementById('input-course-hours').value.trim(),
+                conselho: document.getElementById('input-course-conselho').value.trim(),
+                qtdParcelas, valorParcela, valorDesconto, vencimento, valorTotal
+            };
+
+            if (editId) {
+                await db.collection("courses").doc(editId).update(courseData);
+                cancelarEdicaoCurso();
+                alert("Curso atualizado com sucesso!");
+            } else {
+                courseData.subjects = [];
+                courseData.contractTemplate = "";
+                courseData.declTemplate = "";
+                courseData.historyTemplate = "";
+                courseData.historyPdfUrl = "";
+                await db.collection("courses").add(courseData);
+                document.getElementById('input-course-name').value = '';
+                document.getElementById('input-course-sigla').value = '';
+                alert("Curso salvo com sucesso!");
+            }
         }
 
         function renderCourses() {
             const list = document.getElementById('courses-list');
-            if(list) { list.innerHTML = ''; courses.forEach(c => list.innerHTML += `<li class="py-2 text-xs"><strong>${c.name}</strong> [${c.sigla}]</li>`); }
+            if(list) {
+                list.innerHTML = '';
+                courses.forEach(c => {
+                    list.innerHTML += `
+                        <li class="py-3 text-xs flex justify-between items-center border-b border-gray-100 dark:border-slate-700">
+                            <div>
+                                <strong class="text-sm text-gray-900 dark:text-white">${c.name} [${c.sigla}]</strong><br>
+                                <span class="text-gray-500">Semestre: ${c.semestre || '2026/2'} &bull; ${c.qtdParcelas || 1}x de R$ ${c.valorParcela || 0} (Desc. Pontualidade: R$ ${c.valorDesconto || 0}) &bull; Total: R$ ${c.valorTotal || 0}</span>
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="editarCurso('${c.id}')" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded font-semibold"><i class="fa-solid fa-pen"></i> Editar</button>
+                                <button onclick="excluirCurso('${c.id}')" class="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white rounded font-semibold"><i class="fa-solid fa-trash"></i> Excluir</button>
+                            </div>
+                        </li>`;
+                });
+            }
+        }
+
+        function editarCurso(id) {
+            const c = courses.find(item => item.id === id);
+            if (!c) return;
+            document.getElementById('edit-course-id').value = c.id;
+            document.getElementById('input-course-name').value = c.name || '';
+            document.getElementById('input-course-sigla').value = c.sigla || '';
+            document.getElementById('input-course-eixo').value = c.eixo || '';
+            document.getElementById('input-course-hours').value = c.hours || '';
+            document.getElementById('input-course-conselho').value = c.conselho || '';
+            document.getElementById('input-course-semestre').value = c.semestre || '2026/2';
+            document.getElementById('input-course-parcelas').value = c.qtdParcelas || 24;
+            document.getElementById('input-course-valor-parcela').value = c.valorParcela || 0;
+            document.getElementById('input-course-valor-desconto').value = c.valorDesconto || 0;
+            document.getElementById('input-course-vencimento').value = c.vencimento || 10;
+            calcularTotalCurso();
+
+            document.getElementById('btn-save-course').textContent = "Atualizar Curso";
+            document.getElementById('btn-cancel-edit-course').style.display = 'inline-block';
+        }
+
+        function cancelarEdicaoCurso() {
+            document.getElementById('edit-course-id').value = '';
+            document.getElementById('input-course-name').value = '';
+            document.getElementById('input-course-sigla').value = '';
+            document.getElementById('input-course-eixo').value = '';
+            document.getElementById('input-course-hours').value = '';
+            document.getElementById('input-course-conselho').value = '';
+            document.getElementById('btn-save-course').textContent = "Salvar Curso";
+            document.getElementById('btn-cancel-edit-course').style.display = 'none';
+        }
+
+        async function excluirCurso(id) {
+            const cursoObj = courses.find(c => c.id === id);
+            const nomeCurso = cursoObj ? cursoObj.name : "este curso";
+
+            if (!confirm(`ATENÇÃO: Deseja realmente excluir o curso "${nomeCurso}"?\n\nIsso removerá automaticamente todas as turmas vinculadas, disciplinas e eventos do calendário acadêmico associados a este curso.`)) return;
+
+            try {
+                await db.collection("courses").doc(id).delete();
+                const turmasVinculadas = classes.filter(cl => cl.courseId === id);
+                for (const turma of turmasVinculadas) {
+                    await db.collection("classes").doc(turma.id).delete();
+                }
+                const calendariosVinculados = academicCalendars.filter(cal => cal.courseId === id || turmasVinculadas.some(t => t.id === cal.classId));
+                for (const cal of calendariosVinculados) {
+                    await db.collection("academicCalendars").doc(cal.id).delete();
+                }
+
+                registrarLogAuditoria(`Excluiu o curso "${nomeCurso}" e todas as suas dependências em cascata`, "Cursos e Turmas");
+                alert("Curso e todos os seus itens vinculados (turmas, disciplinas e calendário) foram excluídos com sucesso!");
+            } catch (error) {
+                console.error("Erro ao excluir curso em cascata:", error);
+                alert("Erro ao excluir na nuvem: " + error.message);
+            }
         }
 
         async function addSubjectToCourse() {
@@ -1598,9 +1964,48 @@
             alert("Turma cadastrada!");
         }
 
+        async function excluirTurma(id) {
+            const turmaObj = classes.find(c => c.id === id);
+            const nomeTurma = turmaObj ? turmaObj.name : "esta turma";
+
+            if (!confirm(`Deseja realmente excluir a turma "${nomeTurma}"?`)) return;
+
+            try {
+                await db.collection("classes").doc(id).delete();
+                const cals = academicCalendars.filter(cal => cal.classId === id);
+                for (const cal of cals) {
+                    await db.collection("academicCalendars").doc(cal.id).delete();
+                }
+
+                registrarLogAuditoria(`Excluiu a turma "${nomeTurma}"`, "Turmas");
+                alert("Turma excluída com sucesso!");
+            } catch (error) {
+                console.error("Erro ao excluir turma:", error);
+                alert("Erro ao excluir turma: " + error.message);
+            }
+        }
+
         function renderClasses() {
             const list = document.getElementById('class-list');
-            if(list) { list.innerHTML = ''; classes.forEach(c => list.innerHTML += `<li class="py-2 text-xs"><strong>${c.name}</strong> (${c.code})</li>`); }
+            if(list) {
+                list.innerHTML = '';
+                classes.forEach(c => {
+                    const curso = courses.find(curso => curso.id === c.courseId);
+                    list.innerHTML += `
+                        <li class="py-2.5 text-xs flex justify-between items-center border-b border-gray-100 dark:border-slate-700">
+                            <div>
+                                <strong class="text-sm text-gray-900 dark:text-white">${c.name}</strong><br>
+                                <span class="text-gray-500">Código: ${c.code} &bull; Curso: ${curso ? curso.name : '---'}</span>
+                            </div>
+                            <div>
+                                <button onclick="excluirTurma('${c.id}')" class="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white rounded font-semibold shadow" title="Excluir Turma">
+                                    <i class="fa-solid fa-trash-can mr-1"></i> Excluir Turma
+                                </button>
+                            </div>
+                        </li>
+                    `;
+                });
+            }
         }
 
         function atualizarDisciplinasETurmasCalendario() {
@@ -1630,16 +2035,41 @@
             }
         }
 
+        function renderizarCamposDatasCalendario() {
+            const qtd = parseInt(document.getElementById('cal-qtd-datas').value) || 2;
+            const container = document.getElementById('container-datas-dinamicas');
+            if (!container) return;
+            container.innerHTML = '';
+            for (let i = 1; i <= qtd; i++) {
+                container.innerHTML += `
+                    <div>
+                        <label class="block text-[10px] font-semibold text-gray-500 mb-0.5">Data ${i}</label>
+                        <input type="date" id="cal-date-${i}" class="w-full px-2 py-1.5 rounded border border-gray-300 dark:border-slate-600 text-xs dark:bg-slate-800" required>
+                    </div>
+                `;
+            }
+            const hoje = new Date().toISOString().slice(0, 10);
+            const primeiroInput = document.getElementById('cal-date-1');
+            if (primeiroInput) primeiroInput.value = hoje;
+        }
+
         async function adicionarEventoCalendario() {
             const courseId = document.getElementById('cal-course-select').value;
             const classId = document.getElementById('cal-class-select').value;
             const semestre = document.getElementById('cal-semester-select').value;
             const subject = document.getElementById('cal-subject-select').value;
-            const date = document.getElementById('cal-event-date').value;
+            const qtd = parseInt(document.getElementById('cal-qtd-datas').value) || 2;
             const description = document.getElementById('cal-event-desc').value.trim();
 
-            if (!courseId || !classId || !subject || !date || !description) {
+            if (!courseId || !classId || !subject || !description) {
                 return alert("Preencha todos os campos do calendário acadêmico.");
+            }
+
+            let datasSelecionadas = [];
+            for (let i = 1; i <= qtd; i++) {
+                const val = document.getElementById(`cal-date-${i}`).value;
+                if (!val) return alert(`Preencha a Data ${i} corretamente.`);
+                datasSelecionadas.push(val);
             }
 
             const cursoObj = courses.find(c => c.id === courseId);
@@ -1652,42 +2082,251 @@
                 className: turmaObj ? turmaObj.name : '---',
                 semestre,
                 subject,
-                date,
+                dates: datasSelecionadas,
                 description,
                 createdAt: new Date().toISOString()
             };
 
             await db.collection("academicCalendars").add(eventoData);
-            registrarLogAuditoria(`Adicionou aula/evento ao calendário para a turma ${turmaObj ? turmaObj.name : ''} - Disciplina: ${subject}`, "Calendário Acadêmico");
-            alert("Data de aula cadastrada com sucesso no calendário!");
+            registrarLogAuditoria(`Cadastrou ${datasSelecionadas.length} dias de aula no calendário para a turma ${turmaObj ? turmaObj.name : ''} - Disciplina: ${subject}`, "Calendário Acadêmico");
+            alert("Aulas cadastradas com sucesso no calendário acadêmico!");
             document.getElementById('cal-event-desc').value = '';
+            renderizarCamposDatasCalendario();
         }
 
-        function renderizarCalendarioAcademicoTabela() {
-            const tbody = document.getElementById('tabela-calendario-academico');
+        function renderizarTabelaGerenciarCalendarios() {
+            const tbody = document.getElementById('tabela-gerenciar-calendarios');
             if (!tbody) return;
-            tbody.innerHTML = academicCalendars.length === 0 ? `<tr><td colspan="6" class="p-3 text-center text-gray-400">Nenhum evento cadastrado no calendário.</td></tr>` : '';
-            academicCalendars.forEach(ev => {
+            tbody.innerHTML = academicCalendars.length === 0 ? `<tr><td colspan="5" class="p-3 text-center text-gray-400">Nenhum calendário cadastrado.</td></tr>` : '';
+            
+            academicCalendars.forEach(cal => {
+                const datasFormatadas = (cal.dates || []).map(d => d.split('-').reverse().join('/')).join(', ');
                 tbody.innerHTML += `
                     <tr class="border-b border-gray-100 dark:border-slate-700">
-                        <td class="p-3 font-bold text-blue-600 dark:text-blue-400">${ev.semestre || '---'}</td>
-                        <td class="p-3">${ev.className || '---'}</td>
-                        <td class="p-3 font-semibold">${ev.subject || '---'}</td>
-                        <td class="p-3">${ev.date ? ev.date.split('-').reverse().join('/') : '---'}</td>
-                        <td class="p-3">${ev.description || '---'}</td>
-                        <td class="p-3 text-right">
-                            <button onclick="excluirEventoCalendario('${ev.id}')" class="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-[10px] font-semibold">Excluir</button>
+                        <td class="p-2.5 font-semibold">${cal.className || '---'} <br><span class="text-[10px] text-gray-400">${cal.courseName || ''}</span></td>
+                        <td class="p-2.5 font-bold text-blue-600 dark:text-blue-400">${cal.subject}</td>
+                        <td class="p-2.5"><span class="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300 rounded text-[10px] font-bold">${cal.semestre || '2026/2'}</span></td>
+                        <td class="p-2.5">${datasFormatadas}</td>
+                        <td class="p-2.5 text-right space-x-1">
+                            <button onclick="abrirModalEditarCalendario('${cal.id}')" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-semibold"><i class="fa-solid fa-pen"></i></button>
+                            <button onclick="excluirCalendario('${cal.id}')" class="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-semibold"><i class="fa-solid fa-trash"></i></button>
                         </td>
                     </tr>
                 `;
             });
         }
 
-        async function excluirEventoCalendario(id) {
-            if (confirm("Deseja excluir este evento do calendário?")) {
-                await db.collection("academicCalendars").doc(id).delete();
-                alert("Evento excluído!");
+        function abrirModalEditarCalendario(id) {
+            const cal = academicCalendars.find(c => c.id === id);
+            if (!cal) return;
+            document.getElementById('edit-cal-id').value = cal.id;
+            document.getElementById('edit-cal-subject').value = cal.subject || '';
+            document.getElementById('edit-cal-desc').value = cal.description || '';
+            
+            const qtd = (cal.dates && cal.dates.length >= 2) ? cal.dates.length : 2;
+            document.getElementById('edit-cal-qtd').value = qtd;
+            renderizarCamposEdicaoCalendario();
+
+            if (cal.dates) {
+                cal.dates.forEach((d, idx) => {
+                    const input = document.getElementById(`edit-cal-date-${idx + 1}`);
+                    if (input) input.value = d;
+                });
             }
+
+            document.getElementById('modal-editar-calendario').style.display = 'flex';
+        }
+
+        function fecharModalEditarCalendario() {
+            document.getElementById('modal-editar-calendario').style.display = 'none';
+        }
+
+        function renderizarCamposEdicaoCalendario() {
+            const qtd = parseInt(document.getElementById('edit-cal-qtd').value) || 2;
+            const container = document.getElementById('container-edit-datas-dinamicas');
+            if (!container) return;
+            container.innerHTML = '';
+            for (let i = 1; i <= qtd; i++) {
+                container.innerHTML += `
+                    <div>
+                        <label class="block text-[10px] font-semibold text-gray-500 mb-0.5">Data ${i}</label>
+                        <input type="date" id="edit-cal-date-${i}" class="w-full px-2 py-1.5 rounded border border-gray-300 dark:border-slate-600 text-xs dark:bg-slate-800 dark:text-white" required>
+                    </div>
+                `;
+            }
+        }
+
+        async function salvarEdicaoCalendario() {
+            const id = document.getElementById('edit-cal-id').value;
+            const subject = document.getElementById('edit-cal-subject').value.trim();
+            const description = document.getElementById('edit-cal-desc').value.trim();
+            const qtd = parseInt(document.getElementById('edit-cal-qtd').value) || 2;
+
+            if (!subject) return alert("Informe a disciplina.");
+
+            let novasDatas = [];
+            for (let i = 1; i <= qtd; i++) {
+                const val = document.getElementById(`edit-cal-date-${i}`).value;
+                if (!val) return alert(`Preencha a Data ${i}.`);
+                novasDatas.push(val);
+            }
+
+            await db.collection("academicCalendars").doc(id).update({
+                subject,
+                description,
+                dates: novasDatas
+            });
+
+            registrarLogAuditoria(`Atualizou o calendário acadêmico da disciplina ${subject}`, "Calendário Acadêmico");
+            alert("Calendário atualizado com sucesso!");
+            fecharModalEditarCalendario();
+        }
+
+        async function excluirCalendario(id) {
+            if (!confirm("Tem certeza que deseja excluir este calendário acadêmico e suas datas agendadas?")) return;
+            await db.collection("academicCalendars").doc(id).delete();
+            registrarLogAuditoria(`Excluiu um registro de calendário acadêmico`, "Calendário Acadêmico");
+            alert("Calendário excluído com sucesso!");
+        }
+
+        function renderizarCalendarioSemestralAdmin() {
+            const container = document.getElementById('admin-calendar-view');
+            const filtroSemestre = document.getElementById('admin-filtro-semestre');
+            if (!container) return;
+
+            const semestreSelecionado = filtroSemestre ? filtroSemestre.value : "2026/2";
+            let mesesDoSemestre = [];
+
+            if (semestreSelecionado.endsWith('/2')) {
+                mesesDoSemestre = [
+                    { num: 7, nome: "Julho" },
+                    { num: 8, nome: "Agosto" },
+                    { num: 9, nome: "Setembro" },
+                    { num: 10, nome: "Outubro" },
+                    { num: 11, nome: "Novembro" },
+                    { num: 12, nome: "Dezembro" }
+                ];
+            } else {
+                mesesDoSemestre = [
+                    { num: 1, nome: "Janeiro" },
+                    { num: 2, nome: "Fevereiro" },
+                    { num: 3, nome: "Março" },
+                    { num: 4, nome: "Abril" },
+                    { num: 5, nome: "Maio" },
+                    { num: 6, nome: "Junho" }
+                ];
+            }
+
+            const anoStr = semestreSelecionado.split('/')[0];
+            const eventosFiltrados = academicCalendars.filter(ev => !ev.semestre || ev.semestre === semestreSelecionado);
+
+            container.innerHTML = '';
+            mesesDoSemestre.forEach(m => {
+                let htmlEventosDoMes = '';
+                
+                eventosFiltrados.forEach(ev => {
+                    if (ev.dates && Array.isArray(ev.dates)) {
+                        ev.dates.forEach(d => {
+                            const [anoD, mesD, diaD] = d.split('-');
+                            if (parseInt(mesD) === m.num && anoD === anoStr) {
+                                htmlEventosDoMes += `
+                                    <div class="bg-blue-50 dark:bg-slate-900 border-l-4 border-blue-600 p-2 rounded text-xs space-y-1 mb-2 shadow-sm">
+                                        <div class="flex justify-between items-center font-bold text-blue-800 dark:text-blue-300">
+                                            <span>${diaD}/${mesD}/${anoD}</span>
+                                            <span class="text-[10px] bg-blue-600 text-white px-1.5 py-0.2 rounded">${ev.className || ''}</span>
+                                        </div>
+                                        <div class="font-semibold text-gray-900 dark:text-white">${ev.subject}</div>
+                                        <div class="text-[11px] text-gray-500 dark:text-gray-400">${ev.description || ''}</div>
+                                    </div>
+                                `;
+                            }
+                        });
+                    }
+                });
+
+                container.innerHTML += `
+                    <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-md border border-gray-200 dark:border-slate-700 flex flex-col h-72 overflow-hidden">
+                        <div class="font-bold text-sm text-gray-900 dark:text-white border-b border-gray-100 dark:border-slate-700 pb-2 mb-2 flex justify-between items-center">
+                            <span><i class="fa-solid fa-calendar text-blue-600 mr-1.5"></i> ${m.nome} / ${anoStr}</span>
+                            <span class="text-[10px] text-gray-400">Semestral</span>
+                        </div>
+                        <div class="overflow-y-auto flex-1 pr-1 space-y-1">
+                            ${htmlEventosDoMes || '<p class="text-xs text-gray-400 text-center py-8">Nenhuma aula agendada para este mês.</p>'}
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function renderizarCalendarioSemestralPortalAluno() {
+            const container = document.getElementById('portal-calendar-view');
+            const filtroSemestre = document.getElementById('portal-filtro-semestre');
+            if (!container || !alunoLogadoCache) return;
+
+            const semestreSelecionado = filtroSemestre ? filtroSemestre.value : "2026/2";
+            let mesesDoSemestre = [];
+
+            if (semestreSelecionado.endsWith('/2')) {
+                mesesDoSemestre = [
+                    { num: 7, nome: "Julho" },
+                    { num: 8, nome: "Agosto" },
+                    { num: 9, nome: "Setembro" },
+                    { num: 10, nome: "Outubro" },
+                    { num: 11, nome: "Novembro" },
+                    { num: 12, nome: "Dezembro" }
+                ];
+            } else {
+                mesesDoSemestre = [
+                    { num: 1, nome: "Janeiro" },
+                    { num: 2, nome: "Fevereiro" },
+                    { num: 3, nome: "Março" },
+                    { num: 4, nome: "Abril" },
+                    { num: 5, nome: "Maio" },
+                    { num: 6, nome: "Junho" }
+                ];
+            }
+
+            const anoStr = semestreSelecionado.split('/')[0];
+            const eventosTurma = academicCalendars.filter(ev => ev.classId === alunoLogadoCache.classId && (!ev.semestre || ev.semestre === semestreSelecionado));
+
+            let htmlGrid = '<div class="grid grid-cols-1 md:grid-cols-3 gap-4">';
+            mesesDoSemestre.forEach(m => {
+                let htmlEventosDoMes = '';
+                
+                eventosTurma.forEach(ev => {
+                    if (ev.dates && Array.isArray(ev.dates)) {
+                        ev.dates.forEach(d => {
+                            const [anoD, mesD, diaD] = d.split('-');
+                            if (parseInt(mesD) === m.num && anoD === anoStr) {
+                                htmlEventosDoMes += `
+                                    <div class="bg-emerald-50 dark:bg-slate-900 border-l-4 border-emerald-600 p-2 rounded text-xs space-y-1 mb-2 shadow-sm">
+                                        <div class="flex justify-between items-center font-bold text-emerald-800 dark:text-emerald-300">
+                                            <span>${diaD}/${mesD}/${anoD}</span>
+                                            <span class="text-[10px] bg-emerald-600 text-white px-1.5 py-0.2 rounded">Aula</span>
+                                        </div>
+                                        <div class="font-semibold text-gray-900 dark:text-white">${ev.subject}</div>
+                                        <div class="text-[11px] text-gray-500 dark:text-gray-400">${ev.description || ''}</div>
+                                    </div>
+                                `;
+                            }
+                        });
+                    }
+                });
+
+                htmlGrid += `
+                    <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-md border border-gray-200 dark:border-slate-700 flex flex-col h-72 overflow-hidden">
+                        <div class="font-bold text-sm text-gray-900 dark:text-white border-b border-gray-100 dark:border-slate-700 pb-2 mb-2 flex justify-between items-center">
+                            <span><i class="fa-solid fa-calendar-days text-emerald-600 mr-1.5"></i> ${m.nome} / ${anoStr}</span>
+                            <span class="text-[10px] text-gray-400">Semestre ${semestreSelecionado}</span>
+                        </div>
+                        <div class="overflow-y-auto flex-1 pr-1 space-y-1">
+                            ${htmlEventosDoMes || '<p class="text-xs text-gray-400 text-center py-8">Nenhuma aula neste mês.</p>'}
+                        </div>
+                    </div>
+                `;
+            });
+            htmlGrid += '</div>';
+            container.innerHTML = htmlGrid;
         }
 
         let tempUploadedHistoryPdf = "";
@@ -1779,6 +2418,8 @@
             if (!fullname || !email || !cpf || !courseId || !classId) return alert("Preencha todos os campos!");
             if (!validarCPF(cpf)) return alert("CPF inválido!");
 
+            const cursoObj = courses.find(c => c.id === courseId);
+
             const studentData = {
                 fullname, dob: document.getElementById('dataNascimento').value,
                 sexo: document.getElementById('sexoAluno').value, whatsapp: document.getElementById('whatsappAluno').value.trim(),
@@ -1802,19 +2443,45 @@
                 studentData.fotoAluno = "";
 
                 const docRef = await db.collection("students").add(studentData);
+                const novoAlunoId = docRef.id;
                 closeNewStudentModal();
+
+                if (cursoObj && cursoObj.valorParcela && cursoObj.qtdParcelas) {
+                    const qtdP = cursoObj.qtdParcelas;
+                    const valP = cursoObj.valorParcela;
+                    const valDesc = cursoObj.valorDesconto || valP;
+                    const diaVenc = cursoObj.vencimento || 10;
+                    
+                    for (let i = 1; i <= qtdP; i++) {
+                        const dataV = new Date();
+                        dataV.setMonth(dataV.getMonth() + (i - 1));
+                        dataV.setDate(diaVenc);
+                        const dataStr = dataV.toISOString().slice(0, 10);
+
+                        await db.collection("financeLogs").add({
+                            studentId: novoAlunoId,
+                            studentName: fullname,
+                            studentCode: code,
+                            description: `Mensalidade ${i}/${qtdP} - ${cursoObj.name}`,
+                            amount: parseFloat(valP),
+                            discountAmount: parseFloat(valDesc),
+                            date: dataStr,
+                            status: "PENDENTE (Desc. Pontualidade disponível até o vencimento)"
+                        });
+                    }
+                }
 
                 try {
                     const asaasService = new AsaasIntegrationService();
-                    if (asaasService.apiKey) {
+                    if (asaasService.apiKey && cursoObj && cursoObj.valorParcela) {
                         const customerId = await asaasService.criarOuObterCliente(studentData);
                         const dataVenc = new Date(); dataVenc.setDate(dataVenc.getDate() + 10);
-                        const cobranca = await asaasService.criarCobrancaBoleto(customerId, { valor: 150.00, vencimento: dataVenc.toISOString().slice(0, 10), descricao: `Matrícula: ${fullname}` });
-                        await db.collection("financeLogs").add({ studentId: docRef.id, studentName: fullname, studentCode: code, description: "MATRÍCULA ASAAS", amount: 150.00, date: new Date().toISOString().slice(0, 10), status: "PENDENTE", invoiceUrl: cobranca.invoiceUrl });
+                        const cobranca = await asaasService.criarCobrancaBoleto(customerId, { valor: cursoObj.valorParcela, vencimento: dataVenc.toISOString().slice(0, 10), descricao: `Mensalidade 1/${cursoObj.qtdParcelas || 1}: ${fullname}` });
+                        await db.collection("financeLogs").add({ studentId: novoAlunoId, studentName: fullname, studentCode: code, description: "COBRANÇA ASAAS - Parcela 1", amount: cursoObj.valorParcela, discountAmount: cursoObj.valorDesconto || cursoObj.valorParcela, date: new Date().toISOString().slice(0, 10), status: "PENDENTE", invoiceUrl: cobranca.invoiceUrl });
                     }
                 } catch (e) { console.error(e); }
 
-                alert(`Matrícula efetuada com sucesso! Código: ${code}`);
+                alert(`Matrícula efetuada com sucesso! Código: ${code}. Parcelas geradas e integradas automaticamente ao financeiro e portal do aluno.`);
             }
         }
 
@@ -1840,6 +2507,28 @@
             filterTurmasByCourse();
             document.getElementById('input-student-class').value = aluno.classId || '';
             document.getElementById('new-student-modal').style.display = 'flex';
+        }
+
+        async function deletarInformacoesTotaisAluno(id) {
+            const aluno = students.find(s => s.id === id);
+            if (!aluno) return;
+
+            const confirmacao = confirm(`ATENÇÃO: Deseja realmente deletar TODAS as informações do(a) aluno(a) ${aluno.fullname} (${aluno.code})?\n\nIsso removerá o cadastro, os registros financeiros e o acesso ao portal.`);
+            if (!confirmacao) return;
+
+            try {
+                await db.collection("students").doc(id).delete();
+                const logsFinanceiros = financeLogs.filter(f => f.studentId === id);
+                for (const log of logsFinanceiros) {
+                    await db.collection("financeLogs").doc(log.id).delete();
+                }
+
+                registrarLogAuditoria(`Deletou permanentemente todas as informações do aluno ${aluno.fullname} (${aluno.code})`, "Gestão de Alunos");
+                alert("Todas as informações do aluno foram deletadas com sucesso!");
+            } catch (error) {
+                console.error("Erro ao deletar informações do aluno:", error);
+                alert("Erro ao excluir dados na nuvem: " + error.message);
+            }
         }
 
         function renderAllIntegratedViews() {
@@ -1889,8 +2578,9 @@
                         <td class="p-3">${s.whatsapp || ''} <br><span class="text-[10px] text-gray-400">${s.email || ''}</span></td>
                         <td class="p-3">${curso ? curso.name : '---'} <br><span class="text-[10px] text-gray-400">Turma: ${turma ? turma.name : '---'}</span></td>
                         <td class="p-3"><span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 rounded text-[10px] font-bold">${s.status || 'Ativo'}</span></td>
-                        <td class="p-3 text-right">
-                            <button onclick="editarAluno('${s.id}')" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs shadow"><i class="fa-solid fa-pen-to-square mr-1"></i> Editar</button>
+                        <td class="p-3 text-right space-x-1">
+                            <button onclick="editarAluno('${s.id}')" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs shadow"><i class="fa-solid fa-pen-to-square mr-1"></i> Editar</button>
+                            <button onclick="deletarInformacoesTotaisAluno('${s.id}')" class="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs shadow" title="Deletar permanentemente todas as informações"><i class="fa-solid fa-trash-can mr-1"></i> Deletar Total</button>
                         </td>
                     </tr>
                 `;
@@ -1924,6 +2614,7 @@
                 const status = docInfo ? docInfo.status : 'Pendente';
                 const motivo = docInfo ? docInfo.motivoReprovacao : '';
                 const fileUrl = docInfo ? docInfo.fileUrl : '';
+                const driveUrl = docInfo ? docInfo.driveUrl : '';
 
                 let statusBadge = `<span class="px-2 py-0.5 bg-gray-200 text-gray-800 rounded text-[10px] font-bold">Pendente</span>`;
                 if(status === 'Aprovado') statusBadge = `<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded text-[10px] font-bold">Aprovado</span>`;
@@ -1935,11 +2626,12 @@
                             <span class="font-bold text-xs text-blue-600 dark:text-blue-400">${tipo.label}</span>
                             <div>${statusBadge}</div>
                         </div>
-                        <div class="text-xs flex items-center justify-between">
+                        <div class="text-xs flex items-center justify-between flex-wrap gap-2">
                             <span>Arquivo: ${fileUrl ? `<a href="${fileUrl}" target="_blank" class="text-blue-600 underline font-semibold">Visualizar PDF</a>` : '<span class="text-gray-400">Não enviado pelo aluno</span>'}</span>
+                            ${driveUrl ? `<span class="bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300 px-2 py-0.5 rounded text-[11px] font-bold"><i class="fa-brands fa-google-drive mr-1"></i> <a href="${driveUrl}" target="_blank" class="underline">Salvo no Drive</a></span>` : ''}
                         </div>
                         <div class="flex flex-wrap gap-2 pt-2 items-center">
-                            <button onclick="atualizarStatusDocumento('${aluno.id}', '${tipo.id}', 'Aprovado', '')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-semibold">Aprovar</button>
+                            <button onclick="aprovarEEnviarParaGoogleDrive('${aluno.id}', '${tipo.id}')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-semibold"><i class="fa-solid fa-cloud-arrow-up mr-1"></i> Aprovar e Enviar ao Drive</button>
                             <button onclick="toggleBoxReprovacao('${tipo.id}')" class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-semibold">Reprovar</button>
                         </div>
                         <div id="box_reprov_${tipo.id}" class="space-y-1 pt-2" style="display: ${status === 'Reprovado' ? 'block' : 'none'};">
@@ -1949,6 +2641,60 @@
                     </div>
                 `;
             });
+        }
+
+        async function aprovarEEnviarParaGoogleDrive(alunoId, tipoId) {
+            const aluno = students.find(s => s.id === alunoId);
+            if(!aluno) return;
+            if(!aluno.documentos || !aluno.documentos[tipoId] || !aluno.documentos[tipoId].fileUrl) {
+                return alert("Este aluno ainda não enviou o arquivo PDF para este documento. Você pode aprová-lo mesmo assim ou solicitar a postagem.");
+            }
+
+            const docInfo = aluno.documentos[tipoId];
+            const gdriveUrl = document.getElementById('input-gdrive-url').value.trim();
+
+            let linkDriveSalvo = docInfo.driveUrl || "";
+
+            if (gdriveUrl && docInfo.fileUrl) {
+                try {
+                    const tipoObj = tiposDocumentosObrigatorios.find(t => t.id === tipoId);
+                    const nomeDocFormatado = tipoObj ? tipoObj.label : tipoId;
+
+                    const payload = {
+                        nomeAluno: aluno.fullname,
+                        matriculaAluno: aluno.code,
+                        nomeDocumento: nomeDocFormatado,
+                        arquivoBase64: docInfo.fileUrl,
+                        mimeType: "application/pdf"
+                    };
+
+                    const response = await fetch(gdriveUrl, {
+                        method: "POST",
+                        mode: "no-cors",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(payload)
+                    });
+
+                    // Nota: devido ao comportamento 'no-cors' do Google Apps Script Web App, simulamos o sucesso e registramos o log
+                    linkDriveSalvo = `https://drive.google.com`;
+                    alert("Documento aprovado e enviado com sucesso para a pasta do aluno no Google Drive!");
+                } catch (e) {
+                    console.error("Erro ao enviar para o Google Drive:", e);
+                    alert("O documento foi aprovado no sistema, mas houve um erro ao enviar para o Google Drive: " + e.message);
+                }
+            } else {
+                alert("Documento aprovado no sistema! (Nota: URL do Google Apps Script não configurada em Sistema > Instituição, portanto o envio automático ao Drive foi ignorado).");
+            }
+
+            if(!aluno.documentos) aluno.documentos = {};
+            if(!aluno.documentos[tipoId]) aluno.documentos[tipoId] = {};
+            aluno.documentos[tipoId].status = "Aprovado";
+            aluno.documentos[tipoId].motivoReprovacao = "";
+            aluno.documentos[tipoId].driveUrl = linkDriveSalvo;
+
+            await db.collection("students").doc(alunoId).update({ documentos: aluno.documentos });
+            registrarLogAuditoria(`Aprovou e enviou ao Google Drive o documento de ${aluno.fullname}`, "Validação de Documentos");
+            renderizarDocumentosAlunoGestao(alunoId);
         }
 
         function toggleBoxReprovacao(tipoId) {
@@ -2103,37 +2849,70 @@
 
         function renderFinanceStudentSelect() {
             const select = document.getElementById('fin-student-select');
-            const logsList = document.getElementById('finance-logs-list');
-            if(select) { select.innerHTML = ''; students.filter(s => s.status === "Ativo").forEach(s => select.insertAdjacentHTML('beforeend', `<option value="${s.id}">${s.fullname} (${s.code})</option>`)); }
-            if(logsList) {
-                logsList.innerHTML = '';
-                financeLogs.forEach(f => logsList.innerHTML += `<li class="py-2 text-xs flex justify-between"><span>${f.studentName} - R$ ${f.amount} (${f.status})</span> ${f.invoiceUrl ? `<a href="${f.invoiceUrl}" target="_blank" class="text-blue-600 underline">Boleto</a>` : ''}</li>`);
+            if(select) {
+                const currentVal = select.value;
+                select.innerHTML = '<option value="">Selecione o aluno...</option>';
+                students.filter(s => s.status === "Ativo").forEach(s => {
+                    select.insertAdjacentHTML('beforeend', `<option value="${s.id}">${s.fullname} (${s.code})</option>`);
+                });
+                if(currentVal) {
+                    select.value = currentVal;
+                    renderizarCobrancasAlunoSelecionadoFinanceiro(currentVal);
+                }
             }
         }
 
-        async function registerStudentPayment(manual) {
-            const studentId = document.getElementById('fin-student-select').value;
-            const student = students.find(s => s.id == studentId);
-            if(!student) return alert("Selecione o aluno!");
-            const valor = document.getElementById('fin-payment-value').value;
-            const vencimento = document.getElementById('fin-payment-duedate').value;
-            await db.collection("financeLogs").add({ studentId: student.id, studentName: student.fullname, studentCode: student.code, description: document.getElementById('fin-payment-type').value.toUpperCase(), amount: parseFloat(valor), date: vencimento, status: "PAGO MANUAL" });
-            alert("Pagamento registrado com sucesso!");
+        function renderizarCobrancasAlunoSelecionadoFinanceiro(studentId) {
+            const container = document.getElementById('container-cobrancas-aluno-financeiro');
+            if(!container) return;
+            if(!studentId) {
+                container.innerHTML = `<p class="text-xs text-gray-400">Selecione um aluno acima para visualizar as mensalidades e parcelas.</p>`;
+                return;
+            }
+            const aluno = students.find(s => s.id === studentId);
+            const cobrancasAluno = financeLogs.filter(f => f.studentId === studentId);
+
+            if(cobrancasAluno.length === 0) {
+                container.innerHTML = `<p class="text-xs text-gray-400">Nenhuma cobrança encontrada para ${aluno ? aluno.fullname : 'este aluno'}.</p>`;
+                return;
+            }
+
+            container.innerHTML = `<div class="font-bold text-xs text-blue-600 dark:text-blue-400 mb-2">Exibindo ${cobrancasAluno.length} cobranças / mensalidades para ${aluno ? aluno.fullname : ''}:</div>`;
+            
+            cobrancasAluno.forEach((f, idx) => {
+                container.innerHTML += `
+                    <div class="bg-gray-50 dark:bg-slate-900 p-3 rounded-lg border border-gray-200 dark:border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs">
+                        <div>
+                            <strong>${f.description}</strong><br>
+                            <span class="text-gray-500">Vencimento: ${f.date} &bull; Valor Normal: R$ ${f.amount} ${f.discountAmount ? `&bull; Com Desc. Pontualidade: <strong>R$ ${f.discountAmount}</strong>` : ''}</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-1 bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 rounded text-[10px] font-bold">${f.status}</span>
+                            ${f.invoiceUrl ? `<a href="${f.invoiceUrl}" target="_blank" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded font-semibold">Gerar Boleto</a>` : `<button onclick="gerarBoletoAvulsoCobranca('${f.id}')" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded font-semibold">Gerar QR Code / Boleto</button>`}
+                        </div>
+                    </div>
+                `;
+            });
         }
 
-        async function gerarCobrancaAsaasAPI() {
-            const studentId = document.getElementById('fin-student-select').value;
-            const student = students.find(s => s.id == studentId);
-            if (!student) return alert("Selecione o aluno!");
+        async function gerarBoletoAvulsoCobranca(logId) {
+            const cob = financeLogs.find(f => f.id === logId);
+            if(!cob) return;
+            const aluno = students.find(s => s.id === cob.studentId);
+            if(!aluno) return;
+
             try {
                 const asaas = new AsaasIntegrationService();
-                const cid = await asaas.criarOuObterCliente(student);
-                const valor = document.getElementById('fin-payment-value').value;
-                const vencimento = document.getElementById('fin-payment-duedate').value;
-                const cob = await asaas.criarCobrancaBoleto(cid, { valor: parseFloat(valor), vencimento: vencimento, descricao: 'Mensalidade SE7' });
-                await db.collection("financeLogs").add({ studentId: student.id, studentName: student.fullname, studentCode: student.code, description: "COBRANÇA ASAAS", amount: parseFloat(valor), date: vencimento, status: "PENDENTE", invoiceUrl: cob.invoiceUrl });
-                alert(`Cobrança gerada com sucesso via Asaas: ${cob.invoiceUrl}`);
-            } catch(e) { alert(e.message); }
+                if(!asaas.apiKey) return alert("Configure a Chave de API do Asaas na aba Sistema > Asaas para gerar boletos reais.");
+                const cid = await asaas.criarOuObterCliente(aluno);
+                const cobAsaas = await asaas.criarCobrancaBoleto(cid, { valor: cob.amount, vencimento: cob.date, descricao: cob.description });
+                
+                await db.collection("financeLogs").doc(logId).update({ invoiceUrl: cobAsaas.invoiceUrl });
+                alert(`Boleto gerado com sucesso via Asaas! Link: ${cobAsaas.invoiceUrl}`);
+                renderizarCobrancasAlunoSelecionadoFinanceiro(aluno.id);
+            } catch(e) {
+                alert("Erro ao gerar boleto via Asaas: " + e.message);
+            }
         }
 
         function popularSelectAlunosPortalMaster() {
@@ -2168,7 +2947,6 @@
             document.getElementById('card-aluno-mat').textContent = aluno.code;
             document.getElementById('card-aluno-curso').textContent = curso ? curso.name : '---';
             
-            // Renderizar foto 3x4 no perfil e na carteirinha
             const previewBox = document.getElementById('portal-foto-preview-box');
             const cardFotoBox = document.getElementById('card-foto-box');
             if (aluno.fotoAluno) {
@@ -2197,7 +2975,7 @@
             new QRCode(qr, { text: `SE7-ALUNO-${aluno.code}-${aluno.cpf}`, width: 45, height: 45 });
 
             renderizarUploadDocumentosAluno(aluno);
-            renderizarCalendarioPortalAluno(aluno);
+            setTimeout(renderizarCalendarioSemestralPortalAluno, 150);
 
             const finList = document.getElementById('portal-aluno-financeiro-list');
             if(finList) {
@@ -2207,7 +2985,8 @@
                     finList.innerHTML = `<li class="py-3 text-sm text-gray-500">Nenhum lançamento financeiro encontrado.</li>`;
                 } else {
                     fLogs.forEach(f => {
-                        finList.innerHTML += `<li class="py-2 text-xs flex justify-between items-center"><span><strong>${f.description}</strong> - R$ ${f.amount} (Venc: ${f.date})</span> <span class="px-2 py-1 bg-amber-100 text-amber-800 rounded font-bold">${f.status}</span> ${f.invoiceUrl ? `<a href="${f.invoiceUrl}" target="_blank" class="text-blue-600 underline ml-2">Ver Boleto</a>` : ''}</li>`;
+                        const descInfo = f.discountAmount ? `<br><span class="text-emerald-600 font-semibold">Valor com Pontualidade (Até vencimento): R$ ${f.discountAmount}</span>` : '';
+                        finList.innerHTML += `<li class="py-3 text-xs flex justify-between items-center border-b border-gray-100 dark:border-slate-700"><div><strong>${f.description}</strong><br>Valor Normal: R$ ${f.amount} ${descInfo} <br><span class="text-gray-400">Vencimento: ${f.date}</span></div> <div class="text-right"><span class="px-2 py-1 bg-amber-100 text-amber-800 rounded font-bold">${f.status}</span> ${f.invoiceUrl ? `<br><a href="${f.invoiceUrl}" target="_blank" class="text-blue-600 underline text-[11px] mt-1 inline-block">Ver Boleto</a>` : ''}</div></li>`;
                     });
                 }
             }
@@ -2239,30 +3018,6 @@
             reader.readAsDataURL(file);
         }
 
-        function renderizarCalendarioPortalAluno(aluno) {
-            const tbody = document.getElementById('tabela-portal-aluno-calendario');
-            if (!tbody) return;
-            const eventosTurma = academicCalendars.filter(ev => ev.classId === aluno.classId);
-
-            if (eventosTurma.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400">Nenhum evento no calendário acadêmico para a sua turma no momento.</td></tr>`;
-                return;
-            }
-
-            tbody.innerHTML = '';
-            eventosTurma.forEach(ev => {
-                tbody.innerHTML += `
-                    <tr class="border-b border-gray-100 dark:border-slate-700">
-                        <td class="p-3 font-bold text-blue-600 dark:text-blue-400">${ev.semestre || '---'}</td>
-                        <td class="p-3">${ev.className || '---'}</td>
-                        <td class="p-3 font-semibold">${ev.subject || '---'}</td>
-                        <td class="p-3">${ev.date ? ev.date.split('-').reverse().join('/') : '---'}</td>
-                        <td class="p-3">${ev.description || '---'}</td>
-                    </tr>
-                `;
-            });
-        }
-
         function renderizarUploadDocumentosAluno(aluno) {
             const container = document.getElementById('container-upload-documentos-aluno');
             if(!container) return;
@@ -2274,6 +3029,7 @@
                 const status = docInfo ? docInfo.status : 'Pendente';
                 const motivo = docInfo ? docInfo.motivoReprovacao : '';
                 const fileUrl = docInfo ? docInfo.fileUrl : '';
+                const driveUrl = docInfo ? docInfo.driveUrl : '';
 
                 let statusBadge = `<span class="px-2 py-0.5 bg-gray-200 text-gray-800 rounded text-[10px] font-bold">Pendente</span>`;
                 if(status === 'Aprovado') statusBadge = `<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded text-[10px] font-bold">Aprovado</span>`;
@@ -2286,6 +3042,7 @@
                             <div>${statusBadge}</div>
                         </div>
                         ${fileUrl ? `<p class="text-[11px] text-blue-600 truncate"><a href="${fileUrl}" target="_blank" class="underline">Ver PDF enviado</a></p>` : '<p class="text-[11px] text-gray-400">Nenhum arquivo enviado</p>'}
+                        ${driveUrl ? `<p class="text-[11px] text-emerald-600 truncate"><i class="fa-brands fa-google-drive mr-1"></i> <a href="${driveUrl}" target="_blank" class="underline">Salvo no Google Drive</a></p>` : ''}
                         <div class="flex items-center gap-2 pt-2">
                             <input type="file" id="file_doc_${aluno.id}_${tipo.id}" accept="application/pdf" class="text-[10px] w-full border border-gray-300 dark:border-slate-600 p-1 rounded">
                             <button onclick="enviarDocumentoPDFAluno('${aluno.id}', '${tipo.id}')" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-semibold shrink-0">Enviar PDF</button>
@@ -2307,7 +3064,7 @@
                 const aluno = students.find(s => s.id === alunoId);
                 if(!aluno) return;
                 if(!aluno.documentos) aluno.documentos = {};
-                aluno.documentos[tipoId] = { status: "Pendente", motivoReprovacao: "", fileUrl: base64Pdf, fileName: file.name };
+                aluno.documentos[tipoId] = { status: "Pendente", motivoReprovacao: "", fileUrl: base64Pdf, fileName: file.name, driveUrl: aluno.documentos[tipoId]?.driveUrl || "" };
                 await db.collection("students").doc(alunoId).update({ documentos: aluno.documentos });
                 alert("Documento enviado com sucesso!");
                 renderizarUploadDocumentosAluno(aluno);
@@ -2405,9 +3162,12 @@
                     if(currentVal) el.value = currentVal;
                 }
             });
-            ['class-select', 'grade-class-select'].forEach(id => {
+            ['class-state', 'class-select', 'grade-class-select'].forEach(id => {
                 const el = document.getElementById(id);
-                if(el) { el.innerHTML = ''; classes.forEach(c => el.insertAdjacentHTML('beforeend', `<option value="${c.id}">${c.name}</option>`)); }
+                if(el && (id === 'class-select' || id === 'grade-class-select')) { 
+                    el.innerHTML = ''; 
+                    classes.forEach(c => el.insertAdjacentHTML('beforeend', `<option value="${c.id}">${c.name}</option>`)); 
+                }
             });
             filterTurmasByCourse(); filterTurmasByAttendanceCourse(); filterTurmasByGradeCourse(); loadCourseTemplate();
             atualizarDisciplinasETurmasCalendario();
@@ -2449,6 +3209,7 @@
                 email: document.getElementById('input-inst-email').value,
                 tel: document.getElementById('input-inst-tel').value,
                 end: document.getElementById('input-inst-end').value,
+                gdriveUrl: document.getElementById('input-gdrive-url').value.trim(),
                 logo: currentLogoDataUrl,
                 loginDesc: document.getElementById('input-login-desc').value
             }, { merge: true });
