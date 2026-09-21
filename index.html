@@ -3479,5 +3479,59 @@
 
         function toggleDarkMode() { document.documentElement.classList.toggle('dark'); }
     </script>
+window.enviarDocumentoPortal = async function(alunoId, tipoDocumento) {
+    const fileInput = document.getElementById('input-arquivo-aluno') || 
+                      document.getElementById(`input-doc-${tipoDocumento}`) || 
+                      document.querySelector('input[type="file"]');
+    
+    if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+        alert("Por favor, selecione um arquivo PDF válido.");
+        return;
+    }
+
+    const file = fileInput.files[0];
+    
+    if (file.size > 5 * 1024 * 1024) {
+        alert("O arquivo é muito grande. O tamanho máximo permitido é 5MB.");
+        return;
+    }
+
+    const reader = new FileReader();
+    
+    reader.onload = async function(e) {
+        const base64Data = e.target.result;
+
+        try {
+            await db.collection("student_documents").add({
+                alunoId: alunoId || "James Souza",
+                alunoNome: "James Souza",
+                tipo: tipoDocumento || "RG",
+                fileName: file.name,
+                fileData: base64Data,
+                status: "Pendente",
+                dataEnvio: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            alert("Documento enviado com sucesso e encaminhado para validação!");
+            fileInput.value = "";
+            
+            if (typeof carregarDocumentosPendentes === 'function') {
+                carregarDocumentosPendentes();
+            }
+
+        } catch (error) {
+            console.error("Erro ao salvar documento no Firebase:", error);
+            alert("Erro ao enviar o documento. Verifique sua conexão ou as regras do Firestore.");
+        }
+    };
+
+    reader.onerror = function(error) {
+        console.error("Erro na leitura do arquivo:", error);
+        alert("Não foi possível ler o arquivo selecionado.");
+    };
+
+    reader.readAsDataURL(file);
+};
+</script>
 </body>
 </html>
