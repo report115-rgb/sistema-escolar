@@ -1420,7 +1420,7 @@
             async criarCobrancaBoleto(customerId, dadosCobranca) {
                 const payload = {
                     customer: customerId,
-                    billingType: 'UNDEFINED',
+                    billingType: 'UNDEFINED', // Permite Pix, Boleto e Cartão na fatura do Asaas
                     value: parseFloat(dadosCobranca.valor),
                     dueDate: dadosCobranca.vencimento,
                     description: dadosCobranca.descricao || 'Taxa Educacional SE7',
@@ -1429,11 +1429,13 @@
 
                 const data = await this.fazerRequisicaoAsaas('/payments', 'POST', payload);
 
-                // Garante que se o campo vier nulo ou indefinido, ele salva uma string vazia para evitar erro no Firestore
+                // O Asaas retorna o link da fatura hospedada em 'invoiceUrl' ou 'bankSlipUrl'
+                const linkFatura = data.invoiceUrl || data.bankSlipUrl || (data.id ? `https://sandbox.asaas.com/i/${data.id}` : '');
+
                 return {
                     paymentId: data.id || '',
-                    invoiceUrl: data.invoiceUrl || data.bankSlipUrl || '',
-                    bankSlipUrl: data.bankSlipUrl || data.invoiceUrl || '',
+                    invoiceUrl: linkFatura,
+                    bankSlipUrl: linkFatura,
                     identificationField: data.identificationField || ''
                 };
             }
