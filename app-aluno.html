@@ -179,10 +179,14 @@
 
             <!-- ABA 5: DOCUMENTOS OBRIGATÓRIOS -->
             <div id="tab-documentos" class="space-y-3 tab-pane" style="display: none;">
-                <div class="bg-blue-50 p-3 rounded-2xl border border-blue-200 text-xs text-blue-900 mb-3">
-                    <p class="font-bold mb-1"><i class="fa-solid fa-circle-info mr-1"></i> Instruções para Postagem:</p>
-                    <p>Envie cada documento obrigatório rigorosamente em formato <strong>PDF</strong>. O arquivo será salvo diretamente na sua pasta oficial no Google Drive.</p>
+                <!-- Caixa de Instruções ou Mensagem de Sucesso Dinâmica -->
+                <div id="docs-banner-msg">
+                    <div class="bg-blue-50 p-3 rounded-2xl border border-blue-200 text-xs text-blue-900 mb-3">
+                        <p class="font-bold mb-1"><i class="fa-solid fa-circle-info mr-1"></i> Instruções para Postagem:</p>
+                        <p>Envie cada documento obrigatório rigorosamente em formato <strong>PDF</strong>. O arquivo será salvo diretamente na sua pasta oficial no Google Drive.</p>
+                    </div>
                 </div>
+
                 <h3 class="font-bold text-sm text-slate-700 mb-2">Meus Documentos Obrigatórios</h3>
                 <div id="documents-list" class="space-y-3">
                     <p class="text-xs text-slate-400 text-center py-8">Carregando lista de documentos...</p>
@@ -204,7 +208,6 @@
             <button onclick="mudarAba('home')" id="nav-home" class="flex flex-col items-center text-blue-600 text-[10px] font-bold transition">
                 <i class="fa-solid fa-id-card text-base mb-0.5"></i> Início
             </button>
-            <!-- Botão Financeiro com Alerta -->
             <button onclick="mudarAba('financeiro')" id="nav-financeiro" class="flex flex-col items-center text-slate-400 text-[10px] font-bold transition relative">
                 <div class="relative">
                     <i class="fa-solid fa-wallet text-base mb-0.5"></i>
@@ -212,7 +215,6 @@
                 </div>
                 Financeiro
             </button>
-            <!-- Botão Notas com Alerta -->
             <button onclick="mudarAba('notas')" id="nav-notas" class="flex flex-col items-center text-slate-400 text-[10px] font-bold transition relative">
                 <div class="relative">
                     <i class="fa-solid fa-star text-base mb-0.5"></i>
@@ -223,7 +225,6 @@
             <button onclick="mudarAba('frequencia')" id="nav-frequencia" class="flex flex-col items-center text-slate-400 text-[10px] font-bold transition">
                 <i class="fa-solid fa-clipboard-user text-base mb-0.5"></i> Presença
             </button>
-            <!-- Botão Docs com Alerta Persistente -->
             <button onclick="mudarAba('documentos')" id="nav-documentos" class="flex flex-col items-center text-slate-400 text-[10px] font-bold transition relative">
                 <div class="relative">
                     <i class="fa-solid fa-folder-open text-base mb-0.5"></i>
@@ -298,7 +299,8 @@
 
         function verificarPendenciaDocumentos() {
             const badge = document.getElementById('badge-alerta-docs');
-            if(!badge) return;
+            const banner = document.getElementById('docs-banner-msg');
+            if(!badge || !banner) return;
 
             const docs = alunoLogado.documentos || {};
             let pendenteOuReprovado = false;
@@ -310,14 +312,30 @@
                 }
             });
 
-            badge.style.display = pendenteOuReprovado ? 'flex' : 'none';
+            if (pendenteOuReprovado) {
+                badge.style.display = 'flex';
+                banner.innerHTML = `
+                    <div class="bg-blue-50 p-3 rounded-2xl border border-blue-200 text-xs text-blue-900 mb-3">
+                        <p class="font-bold mb-1"><i class="fa-solid fa-circle-info mr-1"></i> Instruções para Postagem:</p>
+                        <p>Envie cada documento obrigatório rigorosamente em formato <strong>PDF</strong>. O arquivo será salvo diretamente na sua pasta oficial no Google Drive.</p>
+                    </div>
+                `;
+            } else {
+                badge.style.display = 'none';
+                banner.innerHTML = `
+                    <div class="bg-emerald-50 p-4 rounded-2xl border border-emerald-200 text-xs text-emerald-900 mb-3 text-center space-y-1 shadow-sm">
+                        <i class="fa-solid fa-circle-check text-emerald-600 text-xl mb-1"></i>
+                        <p class="font-bold text-sm">Parabéns!</p>
+                        <p>Todos os seus documentos obrigatórios foram enviados e salvos com sucesso na nuvem.</p>
+                    </div>
+                `;
+            }
         }
 
         async function verificarPendenciaFinanceiro() {
             const badge = document.getElementById('badge-alerta-financeiro');
             if(!badge) return;
 
-            // Se o aluno já visualizou o financeiro nesta sessão, não pisca mais até reabrir o app
             const vistoFinanceiro = sessionStorage.getItem(`visto_financeiro_${alunoLogado.id}`);
             if (vistoFinanceiro) {
                 badge.style.display = 'none';
@@ -358,7 +376,6 @@
             const badge = document.getElementById('badge-alerta-notas');
             if(!badge) return;
 
-            // Se o aluno já visualizou as notas nesta sessão, não pisca mais
             const vistoNotas = sessionStorage.getItem(`visto_notas_${alunoLogado.id}`);
             if (vistoNotas) {
                 badge.style.display = 'none';
@@ -608,6 +625,7 @@
             }
 
             renderizarDocumentosObrigatorios();
+            verificarPendenciaDocumentos();
 
             if(alunoLogado.courseId) {
                 db.collection("courses").doc(alunoLogado.courseId).get().then(doc => {
@@ -734,7 +752,6 @@
                 }
             });
 
-            // Gerenciamento inteligente dos alertas ao abrir cada aba
             if (aba === 'documentos' && alunoLogado && alunoLogado.id) {
                 try {
                     const docSnap = await db.collection("students").doc(alunoLogado.id).get();
@@ -750,14 +767,12 @@
             }
 
             if (aba === 'notas' && alunoLogado && alunoLogado.id) {
-                // Ao abrir a aba notas, marca como visto na sessão e para de piscar
                 sessionStorage.setItem(`visto_notas_${alunoLogado.id}`, 'true');
                 const badgeNotas = document.getElementById('badge-alerta-notas');
                 if(badgeNotas) badgeNotas.style.display = 'none';
             }
 
             if (aba === 'financeiro' && alunoLogado && alunoLogado.id) {
-                // Ao abrir a aba financeiro, marca como visto na sessão e para de piscar
                 sessionStorage.setItem(`visto_financeiro_${alunoLogado.id}`, 'true');
                 const badgeFin = document.getElementById('badge-alerta-financeiro');
                 if(badgeFin) badgeFin.style.display = 'none';
