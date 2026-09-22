@@ -204,16 +204,26 @@
             <button onclick="mudarAba('home')" id="nav-home" class="flex flex-col items-center text-blue-600 text-[10px] font-bold transition">
                 <i class="fa-solid fa-id-card text-base mb-0.5"></i> Início
             </button>
-            <button onclick="mudarAba('financeiro')" id="nav-financeiro" class="flex flex-col items-center text-slate-400 text-[10px] font-bold transition">
-                <i class="fa-solid fa-wallet text-base mb-0.5"></i> Financeiro
+            <!-- Botão Financeiro com Alerta -->
+            <button onclick="mudarAba('financeiro')" id="nav-financeiro" class="flex flex-col items-center text-slate-400 text-[10px] font-bold transition relative">
+                <div class="relative">
+                    <i class="fa-solid fa-wallet text-base mb-0.5"></i>
+                    <span id="badge-alerta-financeiro" class="absolute -top-1 -right-2 w-4 h-4 bg-red-500 text-white rounded-full text-[9px] font-black flex items-center justify-center animacao-piscar-alerta shadow-md" style="display: none;" title="Fatura vencendo ou pendente!">!</span>
+                </div>
+                Financeiro
             </button>
-            <button onclick="mudarAba('notas')" id="nav-notas" class="flex flex-col items-center text-slate-400 text-[10px] font-bold transition">
-                <i class="fa-solid fa-star text-base mb-0.5"></i> Notas
+            <!-- Botão Notas com Alerta -->
+            <button onclick="mudarAba('notas')" id="nav-notas" class="flex flex-col items-center text-slate-400 text-[10px] font-bold transition relative">
+                <div class="relative">
+                    <i class="fa-solid fa-star text-base mb-0.5"></i>
+                    <span id="badge-alerta-notas" class="absolute -top-1 -right-2 w-4 h-4 bg-red-500 text-white rounded-full text-[9px] font-black flex items-center justify-center animacao-piscar-alerta shadow-md" style="display: none;" title="Novas notas disponíveis!">!</span>
+                </div>
+                Notas
             </button>
             <button onclick="mudarAba('frequencia')" id="nav-frequencia" class="flex flex-col items-center text-slate-400 text-[10px] font-bold transition">
                 <i class="fa-solid fa-clipboard-user text-base mb-0.5"></i> Presença
             </button>
-            <!-- Botão Docs com container relativo para o alerta piscando -->
+            <!-- Botão Docs com Alerta -->
             <button onclick="mudarAba('documentos')" id="nav-documentos" class="flex flex-col items-center text-slate-400 text-[10px] font-bold transition relative">
                 <div class="relative">
                     <i class="fa-solid fa-folder-open text-base mb-0.5"></i>
@@ -261,7 +271,7 @@
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('main-app').style.display = 'flex';
                 carregarDadosPainel();
-                verificarPendenciaDocumentos();
+                verificarTodasPendencias();
             }
         });
 
@@ -279,10 +289,17 @@
             }
         }
 
-        // Função que verifica se falta enviar ou aprovar documentos e gerencia o ícone piscando
+        // Função mestre que checa todos os alertas do app
+        async function verificarTodasPendencias() {
+            if(!alunoLogado) return;
+            verificarPendenciaDocumentos();
+            await verificarPendenciaFinanceiro();
+            await verificarPendenciaNotas();
+        }
+
         function verificarPendenciaDocumentos() {
             const badge = document.getElementById('badge-alerta-docs');
-            if(!badge || !alunoLogado) return;
+            if(!badge) return;
 
             const docs = alunoLogado.documentos || {};
             let pendenteOuReprovado = false;
@@ -294,10 +311,71 @@
                 }
             });
 
-            if (pendenteOuReprovado) {
-                badge.style.display = 'flex';
-            } else {
-                badge.style.display = 'none';
+            badge.style.display = pendenteOuReprovado ? 'flex' : 'none';
+        }
+
+        async function verificarPendenciaFinanceiro() {
+            const badge = document.getElementById('badge-alerta-financeiro');
+            if(!badge) return;
+
+            try {
+                const snap = await db.collection("financeLogs").where("studentId", "==", alunoLogado.id).get();
+                let temVencendoOuVencida = false;
+                const hoje = new Date();
+                hoje.setHours(0,0,0,0);
+
+                snap.forEach(doc => {
+                    const f = doc.data();
+                    if (f.status && f.status.toLowerCase() !== "pago" && f.date) {
+                        // Data de vencimento no formato AAAA-MM-DD ou DD/MM/AAAA
+                        let dataVencStr = f.date;
+                        if(dataVencStr.includes('/')) {
+                            const partes = dataVencStr.split('/');
+                            dataVencStr = `${partes[2]}-${partes[1]}-${partes[0]}`;
+                        }
+                        const dataVenc = new Date(dataVencStr);
+                        
+                        // Diferença em dias entre hoje e o vencimento
+                        const diffTime = dataVenc - hoje;
+                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                        // Se estiver vencida ou vencendo nos próximos 2 dias
+                        if (diffDays <= 2) {
+                            temVencendoOuVencida = true;
+                        }
+                    }
+                });
+
+                badge.style.display = temVencendoOuVencida ? 'flex' : 'none';
+            } catch(e) {
+                console.error("Erro ao verificar financeiro:", e);
+            }
+        }
+
+        async function verificarPendenciaNotas() {
+            const badge = document.getElementById('badge-alerta-notas');
+            if(!badge) return;
+
+            // Verifica se o aluno já visualizou as notas nesta sessão ou se há novas notas registradas
+            const ultimaVisualizacaoNotas = localStorage.getItem(`visto_notas_${alunoLogado.id}`);
+            
+            if (alunoLogado.courseId) {
+                try {
+                    const courseDoc = await db.collection("courses").doc(alunoLogado.courseId).get();
+                    if (courseDoc.exists) {
+                        const curso = courseDoc.data();
+                        const qtdDisciplinas = curso.subjects ? curso.subjects.length : 0;
+                        
+                        // Se houver disciplinas cadastradas e o aluno ainda não abriu a aba notas para conferir
+                        if (qtdDisciplinas > 0 && !ultimaVisualizacaoNotas) {
+                            badge.style.display = 'flex';
+                        } else {
+                            badge.style.display = 'none';
+                        }
+                    }
+                } catch(e) {
+                    console.error("Erro ao verificar notas:", e);
+                }
             }
         }
 
@@ -331,7 +409,7 @@
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('main-app').style.display = 'flex';
                 carregarDadosPainel();
-                verificarPendenciaDocumentos();
+                verificarTodasPendencias();
             } catch(e) {
                 alert("Erro ao conectar com o servidor: " + e.message);
             }
@@ -652,7 +730,7 @@
                 }
             });
 
-            // Sincroniza o status de aprovação da secretaria em tempo real quando o aluno abre a aba Docs
+            // Ações específicas ao abrir cada aba (para zerar os alertas ao visualizar)
             if (aba === 'documentos' && alunoLogado && alunoLogado.id) {
                 try {
                     const docSnap = await db.collection("students").doc(alunoLogado.id).get();
@@ -665,6 +743,18 @@
                 } catch (e) {
                     console.error("Erro ao sincronizar documentos:", e);
                 }
+            }
+
+            if (aba === 'notas' && alunoLogado && alunoLogado.id) {
+                // Ao abrir a aba notas, marca como visto e remove o alerta
+                localStorage.setItem(`visto_notas_${alunoLogado.id}`, 'true');
+                const badgeNotas = document.getElementById('badge-alerta-notas');
+                if(badgeNotas) badgeNotas.style.display = 'none';
+            }
+
+            if (aba === 'financeiro' && alunoLogado && alunoLogado.id) {
+                // Revalida ou limpa se visualizado
+                verificarPendenciaFinanceiro();
             }
         }
 
