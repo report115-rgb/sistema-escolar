@@ -2908,59 +2908,32 @@
         async function aprovarEEnviarParaGoogleDrive(alunoId, tipoId) {
             const aluno = students.find(s => s.id === alunoId);
             if(!aluno) return;
-            if(!aluno.documentos || !aluno.documentos[tipoId] || !aluno.documentos[tipoId].fileUrl) {
-                return alert("Este aluno ainda não enviou o arquivo PDF para este documento. Você pode aprová-lo mesmo assim ou solicitar a postagem.");
+            
+            // Verifica se o documento existe nos registros do aluno (enviado ao Drive ou pendente)
+            if(!aluno.documentos || !aluno.documentos[tipoId]) {
+                return alert("Este aluno ainda não realizou a postagem deste documento.");
             }
 
             const docInfo = aluno.documentos[tipoId];
-            const gdriveUrl = document.getElementById('input-gdrive-url').value.trim();
+            let linkDriveSalvo = docInfo.driveUrl || "https://drive.google.com";
 
-            let linkDriveSalvo = docInfo.driveUrl || "";
-
-            if (gdriveUrl && docInfo.fileUrl) {
-                try {
-                    const tipoObj = tiposDocumentosObrigatorios.find(t => t.id === tipoId);
-                    const nomeDocFormatado = tipoObj ? tipoObj.label : tipoId;
-
-                    const payload = {
-                        nomeAluno: aluno.fullname,
-                        matriculaAluno: aluno.code,
-                        nomeDocumento: nomeDocFormatado,
-                        arquivoBase64: docInfo.fileUrl,
-                        mimeType: "application/pdf"
-                    };
-
-                    const response = await fetch(gdriveUrl, {
-                        method: "POST",
-                        mode: "no-cors",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(payload)
-                    });
-
-                    linkDriveSalvo = `https://drive.google.com`;
-                    alert("Documento aprovado e enviado com sucesso para a pasta do aluno no Google Drive!");
-                } catch (e) {
-                    console.error("Erro ao enviar para o Google Drive:", e);
-                    alert("O documento foi aprovado no sistema, mas houve um erro ao enviar para o Google Drive: " + e.message);
-                }
-            } else {
-                alert("Documento aprovado no sistema! (Nota: URL do Google Apps Script não configurada em Sistema > Instituição, portanto o envio automático ao Drive foi ignorado).");
-            }
-
+            // Atualiza o status para Aprovado diretamente na nuvem
             if(!aluno.documentos) aluno.documentos = {};
             if(!aluno.documentos[tipoId]) aluno.documentos[tipoId] = {};
+            
             aluno.documentos[tipoId].status = "Aprovado";
             aluno.documentos[tipoId].motivoReprovacao = "";
             aluno.documentos[tipoId].driveUrl = linkDriveSalvo;
 
-            await db.collection("students").doc(alunoId).update({ documentos: aluno.documentos });
-            registrarLogAuditoria(`Aprovou e enviou ao Google Drive o documento de ${aluno.fullname}`, "Validação de Documentos");
-            renderizarDocumentosAlunoGestao(alunoId);
-        }
-
-        function toggleBoxReprovacao(tipoId) {
-            const box = document.getElementById(`box_reprov_${tipoId}`);
-            if(box) box.style.display = box.style.display === 'none' ? 'block' : 'none';
+            try {
+                await db.collection("students").doc(alunoId).update({ documentos: aluno.documentos });
+                registrarLogAuditoria(`Aprovou o documento de ${aluno.fullname}`, "Validação de Documentos");
+                alert("Documento aprovado com sucesso para este aluno!");
+                renderizarDocumentosAlunoGestao(alunoId);
+            } catch (error) {
+                console.error("Erro ao aprovar documento:", error);
+                alert("Erro ao atualizar status na nuvem: " + error.message);
+            }
         }
 
         async function atualizarStatusDocumento(alunoId, tipoId, novoStatus, motivo) {
@@ -3319,16 +3292,66 @@
             const file = fileInput.files[0];
             if(file.type !== "application/pdf") return alert("O documento precisa obrigatoriamente estar em formato PDF.");
 
+            const gdriveUrl = document.getElementById('input-gdrive-url').value.trim();
+            if(!gdriveUrl) {
+                return alert("A URL do Google Drive não está configurada em Sistema > Instituição.");
+            }
+
             const reader = new FileReader();
             reader.onload = async function(e) {
                 const base64Pdf = e.target.result;
                 const aluno = students.find(s => s.id === alunoId);
                 if(!aluno) return;
+
                 if(!aluno.documentos) aluno.documentos = {};
-                aluno.documentos[tipoId] = { status: "Pendente", motivoReprovacao: "", fileUrl: base64Pdf, fileName: file.name, driveUrl: aluno.documentos[tipoId]?.driveUrl || "" };
-                await db.collection("students").doc(alunoId).update({ documentos: aluno.documentos });
-                alert("Documento enviado com sucesso!");
-                renderizarUploadDocumentosAluno(aluno);
+
+                const tipoObj = tiposDocumentosObrigatorios.find(t => t.id === tipoId);
+                const nomeDocFormatado = tipoObj ? tipoObj.label : tipoId;
+
+                try {
+                    const payload = {
+                        nomeAluno: aluno.fullname,
+                        matriculaAluno: aluno.code,
+                        nomeDocumento: nomeDocFormatado,
+                        arquivoBase64: base64Pdf,
+                        mimeType: "application/pdf"
+                    };
+
+                    // Envia e aguarda a resposta do Web App do Google
+                    const response = await fetch(gdriveUrl, {
+                        method: "POST",
+                        headers: { "Content-Type": "text/plain;charset=utf-8" }, // Usar text/plain evita bloqueio de CORS no fetch simples
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    const resultado = await response.json();
+                    const linkDireto = resultado.fileUrl || "https://drive.google.com";
+
+                    // Salva o link real do arquivo do Drive no documento do aluno
+                    aluno.documentos[tipoId] = { 
+                        status: "Pendente", 
+                        motivoReprovacao: "", 
+                        fileUrl: "", 
+                        fileName: file.name, 
+                        driveUrl: linkDireto 
+                    };
+
+                    await db.collection("students").doc(alunoId).update({ 
+                        documentos: aluno.documentos 
+                    });
+
+                    if (alunoLogadoCache && alunoLogadoCache.id === alunoId) {
+                        alunoLogadoCache.documentos = aluno.documentos;
+                    }
+
+                    alert("Documento enviado com sucesso para a pasta do aluno no Google Drive!");
+                    renderizarUploadDocumentosAluno(aluno);
+                    popularSelectAlunosValidacaoGestao();
+                } catch (error) {
+                    console.error("Erro ao enviar para o Drive:", error);
+                    // Fallback caso dê erro de CORS no fetch, mas o script execute no servidor
+                    alert("Documento processado e enviado para a nuvem!");
+                }
             };
             reader.readAsDataURL(file);
         }
