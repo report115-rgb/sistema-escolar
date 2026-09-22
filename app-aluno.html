@@ -33,12 +33,13 @@
     <!-- TELA DE LOGIN DO ALUNO -->
     <div id="login-screen" class="fixed inset-0 z-50 bg-gradient-to-br from-blue-900 via-indigo-900 to-slate-900 flex flex-col justify-between p-6 text-white">
         <div class="mt-8 text-center flex flex-col items-center">
-            <!-- Ícone padrão (Capelo) que agora some automaticamente se houver logo cadastrada no sistema principal -->
-            <div id="login-icon-box" class="inline-flex items-center justify-center w-16 h-16 bg-blue-600 text-white rounded-2xl text-3xl font-bold mb-3 shadow-lg shadow-blue-500/30">
+            <!-- Ícone padrão (Capelo) ocultado por padrão para forçar a exibição da logomarca -->
+            <div id="login-icon-box" style="display: none;" class="inline-flex items-center justify-center w-16 h-16 bg-blue-600 text-white rounded-2xl text-3xl font-bold mb-3 shadow-lg shadow-blue-500/30">
                 <i class="fa-solid fa-graduation-cap"></i>
             </div>
-            <!-- Logomarca da Instituição puxada diretamente do Firestore (configurada no seu sistema principal) -->
-            <img id="login-logo-img" class="max-h-16 max-w-[200px] object-contain mb-3 bg-white/10 p-1.5 rounded-xl border border-white/20 hidden" alt="Logo da Instituição">
+            
+            <!-- Logomarca da Instituição puxada diretamente do Firestore -->
+            <img id="login-logo-img" class="max-h-16 max-w-[200px] object-contain mb-3 bg-white/10 p-1.5 rounded-xl border border-white/20" alt="Logo da Instituição" src="" style="display: none;">
             
             <h1 class="text-2xl font-bold">Portal do Aluno</h1>
         </div>
@@ -279,33 +280,39 @@
             }
         });
 
-        // Função responsável por buscar a logo diretamente do Firestore (configurada no sistema principal)
+        // Função robusta e corrigida para buscar a logo diretamente do Firestore
         async function carregarConfiguracaoInstituicao() {
             try {
                 const instDoc = await db.collection("institution").doc("config").get();
+                const logoEl = document.getElementById('login-logo-img');
+                const iconBox = document.getElementById('login-icon-box');
+
                 if(instDoc.exists) {
                     const data = instDoc.data();
                     if(data.gdriveUrl && data.gdriveUrl.startsWith("http")) {
                         gdriveUrlGlobal = data.gdriveUrl.trim();
                     }
                     
-                    const logoEl = document.getElementById('login-logo-img');
-                    const iconBox = document.getElementById('login-icon-box');
-                    
-                    // Varre possíveis variações do nome do campo de logo gravadas pelo sistema principal
-                    const logoUrl = data.logo || data.logomarca || data.urlLogo || data.logoUrl || '';
+                    // Varre exaustivamente todas as opções possíveis de chaves de imagem vindas do painel principal
+                    const logoUrl = data.logo || data.logomarca || data.urlLogo || data.logoUrl || data.image || data.fileUrl || '';
 
                     if(logoUrl && logoUrl.trim() !== "") {
                         logoEl.src = logoUrl.trim();
-                        logoEl.classList.remove('hidden');
-                        if(iconBox) iconBox.style.display = 'none'; // Remove o capelo de formatura da tela de login
-                    } else {
-                        logoEl.classList.add('hidden');
-                        if(iconBox) iconBox.style.display = 'flex';
+                        logoEl.style.display = 'block'; // Força a exibição da logomarca
+                        if(iconBox) iconBox.style.display = 'none'; // Garante que o capelo some
+                        return;
                     }
                 }
+                
+                // Se cair aqui, é porque não encontrou logo configurada
+                logoEl.style.display = 'none';
+                if(iconBox) iconBox.style.display = 'none'; // Mantém oculto para evitar o chapéu indesejado
             } catch(e) {
                 console.error("Erro ao buscar logo da instituição:", e);
+                const logoEl = document.getElementById('login-logo-img');
+                const iconBox = document.getElementById('login-icon-box');
+                if(logoEl) logoEl.style.display = 'none';
+                if(iconBox) iconBox.style.display = 'none';
             }
         }
 
