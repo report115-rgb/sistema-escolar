@@ -1390,7 +1390,16 @@
                         method: 'GET', 
                         headers: this.getHeaders() 
                     });
-                    const searchData = await searchRes.json();
+                    
+                    const rawSearchText = await searchRes.text();
+                    let searchData;
+                    try {
+                        searchData = JSON.parse(rawSearchText);
+                    } catch (e) {
+                        console.error("Resposta inválida do proxy/Asaas (Busca):", rawSearchText);
+                        throw new Error("O proxy CORS retornou uma página de erro ou bloqueio em vez de dados.");
+                    }
+
                     if (searchData.data && searchData.data.length > 0) {
                         return searchData.data[0].id;
                     }
@@ -1406,12 +1415,18 @@
                             phone: aluno.whatsapp ? aluno.whatsapp.replace(/\D/g, '') : '91999999999' 
                         })
                     });
-                    const createData = await createRes.json();
+
+                    const rawCreateText = await createRes.text();
+                    let createData;
+                    try {
+                        createData = JSON.parse(rawCreateText);
+                    } catch (e) {
+                        console.error("Resposta inválida do proxy/Asaas (Criação):", rawCreateText);
+                        throw new Error("O Asaas recusou a requisição ou o proxy bloqueou o envio dos dados.");
+                    }
                     
                     if (!createRes.ok) {
-                        // Mostra no console e em alerta o erro exato retornado pelo Asaas
-                        const detalheErro = createData.errors ? createData.errors.map(e => e.description).join(', ') : 'Erro desconhecido';
-                        console.error("Retorno completo do Asaas:", createData);
+                        const detalheErro = createData.errors ? createData.errors.map(e => e.description).join(', ') : 'Erro desconhecido do Asaas';
                         throw new Error(`Asaas recusou: ${detalheErro}`);
                     }
                     return createData.id;
@@ -1420,34 +1435,6 @@
                     throw err;
                 }
             }
-
-            async criarCobrancaBoleto(customerId, dadosCobranca) {
-                const payload = { 
-                    customer: customerId, 
-                    billingType: 'UNDEFINED', 
-                    value: parseFloat(dadosCobranca.valor), 
-                    dueDate: dadosCobranca.vencimento, 
-                    description: dadosCobranca.descricao || 'Taxa Educacional SE7', 
-                    externalReference: dadosCobranca.referencia || `SE7_${Date.now()}` 
-                };
-
-                const res = await fetch(this.getURL('/payments'), { 
-                    method: 'POST', 
-                    headers: this.getHeaders(), 
-                    body: JSON.stringify(payload) 
-                });
-                const data = await res.json();
-                if (!res.ok) {
-                    throw new Error(data.errors?.[0]?.description || 'Erro ao gerar cobrança no Asaas');
-                }
-                return { 
-                    paymentId: data.id, 
-                    invoiceUrl: data.invoiceUrl, 
-                    bankSlipUrl: data.bankSlipUrl, 
-                    identificationField: data.identificationField 
-                };
-            }
-        }
 
         function iniciarRelogioAoVivo() {
             const relogioEl = document.getElementById('header-live-clock');
