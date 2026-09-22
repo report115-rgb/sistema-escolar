@@ -33,14 +33,10 @@
     <!-- TELA DE LOGIN DO ALUNO -->
     <div id="login-screen" class="fixed inset-0 z-50 bg-gradient-to-br from-blue-900 via-indigo-900 to-slate-900 flex flex-col justify-between p-6 text-white">
         <div class="mt-8 text-center flex flex-col items-center">
-            <!-- Ícone padrão (Capelo) exibido como fallback caso não haja logo cadastrada -->
             <div id="login-icon-box" class="inline-flex items-center justify-center w-16 h-16 bg-blue-600 text-white rounded-2xl text-3xl font-bold mb-3 shadow-lg shadow-blue-500/30" style="display: none;">
                 <i class="fa-solid fa-graduation-cap"></i>
             </div>
-            
-            <!-- Logomarca da Instituição puxada diretamente do Firestore (Sem fundo) -->
             <img id="login-logo-img" class="max-h-16 max-w-[220px] object-contain mb-3" alt="Logo da Instituição" src="" style="display: none;">
-            
             <h1 class="text-2xl font-bold">Portal do Aluno</h1>
         </div>
 
@@ -61,10 +57,9 @@
             </div>
         </div>
 
-        <!-- Rodapé -->
         <div class="text-center text-[10px] text-blue-300 pb-2 space-y-0.5">
             <div class="font-semibold">SE7 Gestão Educacional</div>
-            <div>v1.0.8 &bull; Acesso Restrito ao Aluno</div>
+            <div>v1.0.9 &bull; Acesso Restrito ao Aluno</div>
         </div>
     </div>
 
@@ -90,6 +85,39 @@
             <button onclick="executarRedefinicaoSenha()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg transition text-sm">
                 Atualizar Senha
             </button>
+        </div>
+    </div>
+
+    <!-- MODAL DA CARTEIRINHA DIGITAL (EXIBIDA VIA ÍCONE) -->
+    <div id="modal-carteirinha" class="fixed inset-0 z-[70] bg-black/70 flex items-center justify-center p-4 backdrop-blur-sm" style="display: none;">
+        <div class="max-w-sm w-full relative">
+            <button onclick="fecharModalCarteirinha()" class="absolute -top-10 right-0 text-white hover:text-blue-300 text-2xl font-bold"><i class="fa-solid fa-xmark"></i> Fechar</button>
+            
+            <div class="bg-gradient-to-br from-blue-900 to-indigo-800 text-white p-5 rounded-3xl shadow-2xl border border-white/20 relative">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-[9px] bg-white/20 px-2.5 py-0.5 rounded-full font-bold tracking-wider">CARTEIRINHA DIGITAL</span>
+                    <span class="text-xs font-mono font-semibold" id="card-matricula">MAT----</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="w-20 h-24 bg-white/10 rounded-xl border border-white/20 flex items-center justify-center overflow-hidden shrink-0 shadow-inner relative group cursor-pointer" onclick="dispararTrocaFoto()" title="Clique para alterar foto">
+                        <div id="card-foto-box" class="w-full h-full flex items-center justify-center">
+                            <i class="fa-solid fa-user text-2xl text-blue-200"></i>
+                        </div>
+                        <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition text-[10px] text-white">
+                            <i class="fa-solid fa-camera mr-1"></i> Alterar
+                        </div>
+                    </div>
+                    <div class="space-y-1 text-xs w-full">
+                        <p class="font-bold text-sm truncate" id="card-nome">---</p>
+                        <p class="text-blue-200 truncate" id="card-curso">---</p>
+                        <p class="text-[10px] opacity-75">Validade: Dez/2026</p>
+                    </div>
+                </div>
+                <div class="mt-4 pt-3 border-t border-white/10 flex justify-between items-center">
+                    <span class="text-[9px] text-blue-200">Toque na foto para alterá-la</span>
+                    <div id="card-qrcode" class="bg-white p-1 rounded-lg"></div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -121,40 +149,34 @@
         <!-- Conteúdo das Abas -->
         <div class="flex-1 p-4 overflow-y-auto space-y-4">
             
-            <!-- ABA 1: INÍCIO / CARTEIRINHA -->
+            <!-- ABA 1: INÍCIO / RESUMO -->
             <div id="tab-home" class="space-y-4 tab-pane">
-                <div class="bg-gradient-to-br from-blue-900 to-indigo-800 text-white p-5 rounded-3xl shadow-xl border border-white/10 relative">
-                    <div class="flex justify-between items-center mb-3">
-                        <span class="text-[9px] bg-white/20 px-2.5 py-0.5 rounded-full font-bold tracking-wider">CARTEIRINHA DIGITAL</span>
-                        <span class="text-xs font-mono font-semibold" id="card-matricula">MAT----</span>
-                    </div>
-                    <div class="flex items-center space-x-4">
-                        <div class="w-20 h-24 bg-white/10 rounded-xl border border-white/20 flex items-center justify-center overflow-hidden shrink-0 shadow-inner relative group cursor-pointer" onclick="dispararTrocaFoto()" title="Clique para alterar foto">
-                            <div id="card-foto-box" class="w-full h-full flex items-center justify-center">
-                                <i class="fa-solid fa-user text-2xl text-blue-200"></i>
-                            </div>
-                            <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition text-[10px] text-white">
-                                <i class="fa-solid fa-camera mr-1"></i> Alterar
-                            </div>
+                
+                <!-- ÍCONE DE ACESSO RÁPIDO À CARTEIRINHA -->
+                <div onclick="abrirModalCarteirinha()" class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 rounded-2xl shadow-md flex items-center justify-between cursor-pointer hover:shadow-lg transition transform active:scale-95">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center text-xl text-white shadow-inner">
+                            <i class="fa-solid fa-id-card"></i>
                         </div>
-                        <div class="space-y-1 text-xs w-full">
-                            <p class="font-bold text-sm truncate" id="card-nome">---</p>
-                            <p class="text-blue-200 truncate" id="card-curso">---</p>
-                            <p class="text-[10px] opacity-75">Validade: Dez/2026</p>
+                        <div>
+                            <h3 class="font-bold text-sm">Carteirinha Digital</h3>
+                            <p class="text-[11px] text-blue-100">Toque para exibir sua identificação e QR Code</p>
                         </div>
                     </div>
-                    <div class="mt-4 pt-3 border-t border-white/10 flex justify-between items-center">
-                        <span class="text-[9px] text-blue-200">Toque na foto para alterá-la</span>
-                        <div id="card-qrcode" class="bg-white p-1 rounded-lg"></div>
-                    </div>
+                    <i class="fa-solid fa-chevron-right text-blue-200 text-sm pr-1"></i>
                 </div>
 
-                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-2 text-xs">
-                    <h3 class="font-bold text-slate-700 text-sm mb-1"><i class="fa-solid fa-user-shield text-blue-600 mr-1.5"></i> Meus Dados</h3>
-                    <p><strong>CPF:</strong> <span id="info-cpf">---</span></p>
-                    <p><strong>E-mail:</strong> <span id="info-email">---</span></p>
-                    <p><strong>WhatsApp:</strong> <span id="info-tel">---</span></p>
-                    <p><strong>Turma:</strong> <span id="info-turma">---</span></p>
+                <!-- DADOS DO ALUNO ORGANIZADOS -->
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-2.5 text-xs">
+                    <h3 class="font-bold text-slate-700 text-sm mb-2 flex items-center">
+                        <i class="fa-solid fa-user-shield text-blue-600 mr-1.5"></i> Meus Dados Cadastrais
+                    </h3>
+                    <div class="grid grid-cols-1 gap-2 border-t border-slate-100 pt-2">
+                        <p class="flex justify-between"><strong class="text-slate-500">CPF:</strong> <span id="info-cpf" class="font-medium text-slate-800">---</span></p>
+                        <p class="flex justify-between"><strong class="text-slate-500">E-mail:</strong> <span id="info-email" class="font-medium text-slate-800">---</span></p>
+                        <p class="flex justify-between"><strong class="text-slate-500">WhatsApp:</strong> <span id="info-tel" class="font-medium text-slate-800">---</span></p>
+                        <p class="flex justify-between"><strong class="text-slate-500">Turma:</strong> <span id="info-turma" class="font-medium text-slate-800">---</span></p>
+                    </div>
                 </div>
             </div>
 
@@ -210,7 +232,7 @@
         <!-- Menu Inferior Fixo (Bottom Bar) com Alertas Piscantes -->
         <nav class="bg-white border-t border-slate-200 px-2 py-2 flex justify-around items-center fixed bottom-0 left-0 right-0 shadow-lg z-40">
             <button onclick="mudarAba('home')" id="nav-home" class="flex flex-col items-center text-blue-600 text-[10px] font-bold transition">
-                <i class="fa-solid fa-id-card text-base mb-0.5"></i> Início
+                <i class="fa-solid fa-house text-base mb-0.5"></i> Início
             </button>
             <button onclick="mudarAba('financeiro')" id="nav-financeiro" class="flex flex-col items-center text-slate-400 text-[10px] font-bold transition relative">
                 <div class="relative">
@@ -279,6 +301,14 @@
                 verificarTodasPendencias();
             }
         });
+
+        function abrirModalCarteirinha() {
+            document.getElementById('modal-carteirinha').style.display = 'flex';
+        }
+
+        function fecharModalCarteirinha() {
+            document.getElementById('modal-carteirinha').style.display = 'none';
+        }
 
         async function carregarConfiguracaoInstituicao() {
             try {
