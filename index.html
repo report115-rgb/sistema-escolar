@@ -3216,40 +3216,64 @@
             container.innerHTML = `<div class="font-bold text-xs text-blue-600 dark:text-blue-400 mb-2">Exibindo ${cobrancasAluno.length} cobranças / mensalidades para ${aluno ? aluno.fullname : ''}:</div>`;
             
             cobrancasAluno.forEach((f, idx) => {
-                container.innerHTML += `
-                    <div class="bg-gray-50 dark:bg-slate-900 p-3 rounded-lg border border-gray-200 dark:border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs">
-                        <div>
-                            <strong>${f.description}</strong><br>
-                            <span class="text-gray-500">Vencimento: ${f.date} &bull; Valor Normal: R$ ${f.amount} ${f.discountAmount ? `&bull; Com Desc. Pontualidade: <strong>R$ ${f.discountAmount}</strong>` : ''}</span>
+                // Define os botões de pagamento de forma funcional para PIX, Boleto e Cartão
+                let acoesPagamentoHtml = '';
+                
+                if (f.invoiceUrl) {
+                    acoesPagamentoHtml = `
+                        <div class="flex flex-wrap gap-1.5 justify-end">
+                            <a href="${f.invoiceUrl}" target="_blank" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-semibold text-[11px] flex items-center gap-1"><i class="fa-solid fa-qrcode"></i> PIX / QR Code</a>
+                            <a href="${f.invoiceUrl}" target="_blank" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded font-semibold text-[11px] flex items-center gap-1"><i class="fa-solid fa-barcode"></i> Boleto</a>
+                            <a href="${f.invoiceUrl}" target="_blank" class="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded font-semibold text-[11px] flex items-center gap-1"><i class="fa-solid fa-credit-card"></i> Cartão</a>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <span class="px-2 py-1 bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 rounded text-[10px] font-bold">${f.status}</span>
-                            ${f.invoiceUrl ? `<a href="${f.invoiceUrl}" target="_blank" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded font-semibold">Gerar Boleto</a>` : `<button onclick="gerarBoletoAvulsoCobranca('${f.id}')" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded font-semibold">Gerar QR Code / Boleto</button>`}
+                    `;
+                } else {
+                    acoesPagamentoHtml = `
+                        <button onclick="gerarOpcoesPagamentoCobranca('${f.id}')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded font-semibold text-[11px] shadow flex items-center gap-1">
+                            <i class="fa-solid fa-file-invoice-dollar"></i> Gerar Fatura (PIX / Boleto / Cartão)
+                        </button>
+                    `;
+                }
+
+                container.innerHTML += `
+                    <div class="bg-gray-50 dark:bg-slate-900 p-3.5 rounded-xl border border-gray-200 dark:border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs">
+                        <div>
+                            <strong class="text-gray-900 dark:text-white text-sm">${f.description}</strong><br>
+                            <span class="text-gray-500">Vencimento: <strong>${f.date}</strong> &bull; Valor Normal: R$ ${f.amount} ${f.discountAmount ? `&bull; Com Desc. Pontualidade: <strong class="text-emerald-600">R$ ${f.discountAmount}</strong>` : ''}</span>
+                        </div>
+                        <div class="flex flex-col items-end gap-1.5 w-full sm:w-auto">
+                            <span class="px-2 py-0.5 bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 rounded text-[10px] font-bold">${f.status}</span>
+                            ${acoesPagamentoHtml}
                         </div>
                     </div>
                 `;
             });
         }
 
-        async function gerarBoletoAvulsoCobranca(logId) {
-            const cob = financeLogs.find(f => f.id === logId);
-            if(!cob) return;
-            const aluno = students.find(s => s.id === cob.studentId);
-            if(!aluno) return;
+        async function gerarOpcoesPagamentoCobranca(logId) {
+    const cob = financeLogs.find(f => f.id === logId);
+    if(!cob) return;
+    const aluno = students.find(s => s.id === cob.studentId);
+    if(!aluno) return;
 
-            try {
-                const asaas = new AsaasIntegrationService();
-                if(!asaas.apiKey) return alert("Configure a Chave de API do Asaas na aba Sistema > Asaas para gerar boletos reais.");
-                const cid = await asaas.criarOuObterCliente(aluno);
-                const cobAsaas = await asaas.criarCobrancaBoleto(cid, { valor: cob.amount, vencimento: cob.date, descricao: cob.description });
-                
-                await db.collection("financeLogs").doc(logId).update({ invoiceUrl: cobAsaas.invoiceUrl });
-                alert(`Boleto gerado com sucesso via Asaas! Link: ${cobAsaas.invoiceUrl}`);
-                renderizarCobrancasAlunoSelecionadoFinanceiro(aluno.id);
-            } catch(e) {
-                alert("Erro ao gerar boleto via Asaas: " + e.message);
-            }
-        }
+    try {
+        const asaas = new AsaasIntegrationService();
+        if(!asaas.apiKey) return alert("Configure a Chave de API do Asaas na aba Sistema > Asaas para gerar cobranças integradas.");
+        
+        const cid = await asaas.criarOuObterCliente(aluno);
+        const cobAsaas = await asaas.criarCobrancaBoleto(cid, { 
+            valor: cob.discountAmount || cob.amount, 
+            vencimento: cob.date, 
+            descricao: cob.description 
+        });
+        
+        await db.collection("financeLogs").doc(logId).update({ invoiceUrl: cobAsaas.invoiceUrl });
+        alert("Fatura gerada com sucesso! Agora as opções de PIX, Boleto e Cartão estão disponíveis.");
+        renderizarCobrancasAlunoSelecionadoFinanceiro(aluno.id);
+    } catch(e) {
+        alert("Erro ao gerar fatura: " + e.message);
+    }
+}
 
         function popularSelectAlunosPortalMaster() {
             const select = document.getElementById('admin-select-aluno-portal');
