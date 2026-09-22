@@ -38,7 +38,7 @@
                 <i class="fa-solid fa-graduation-cap"></i>
             </div>
             <!-- Logomarca da Instituição carregada dinamicamente do Firestore -->
-            <img id="login-logo-img" class="max-h-20 max-w-[220px] object-contain mb-3 bg-transparent border-0 shadow-none outline-none hidden" alt="Logo da Instituição">
+            <img id="login-logo-img" class="max-h-16 max-w-[200px] object-contain mb-3 bg-white/10 p-1.5 rounded-xl border border-white/20 hidden" alt="Logo da Instituição">
             
             <h1 class="text-2xl font-bold">Portal do Aluno</h1>
         </div>
@@ -63,7 +63,7 @@
         <!-- Rodapé com SE7 Gestão Educacional e versão -->
         <div class="text-center text-[10px] text-blue-300 pb-2 space-y-0.5">
             <div class="font-semibold">SE7 Gestão Educacional</div>
-            <div>v1.0.7 &bull; Acesso Restrito ao Aluno</div>
+            <div>v1.0.8 &bull; Acesso Restrito ao Aluno</div>
         </div>
     </div>
 
@@ -106,7 +106,8 @@
                     </div>
                 </div>
                 <div>
-                    <span class="text-[10px] uppercase tracking-wider text-blue-300 block">Estudante</span>
+                    <!-- Espaço para exibir a logo ou nome da instituição no topo -->
+                    <div id="header-institution-brand" class="text-[10px] uppercase tracking-wider text-blue-300 font-semibold truncate max-w-[180px]">Estudante</div>
                     <h2 class="font-bold text-sm truncate max-w-[200px]" id="header-aluno-nome">Carregando...</h2>
                 </div>
             </div>
@@ -280,7 +281,7 @@
             }
         });
 
-        // Método otimizado para sincronizar e carregar a logo institucional em tempo real
+        // Carregamento robusto da logo institucional direto do Firestore
         async function carregarConfiguracaoDrive() {
             try {
                 const instDoc = await db.collection("institution").doc("config").get();
@@ -290,17 +291,27 @@
                         gdriveUrlGlobal = data.gdriveUrl.trim();
                     }
                     
-                    // Sincronização automática da Logomarca cadastrada na aba Sistema > Instituição
                     const logoEl = document.getElementById('login-logo-img');
                     const iconBox = document.getElementById('login-icon-box');
+                    const headerBrand = document.getElementById('header-institution-brand');
                     
-                    if(data.logo && data.logo.trim() !== "") {
-                        logoEl.src = data.logo.trim();
+                    // Verifica diferentes variações possíveis do campo da logo no banco de dados
+                    const logoUrl = data.logo || data.logomarca || data.urlLogo || '';
+
+                    if(logoUrl && logoUrl.trim() !== "") {
+                        // Aplica na tela de login
+                        logoEl.src = logoUrl.trim();
                         logoEl.classList.remove('hidden');
                         if(iconBox) iconBox.style.display = 'none';
+
+                        // Aplica também no cabeçalho logado se houver espaço ou substitui o texto "Estudante"
+                        if(headerBrand) {
+                            headerBrand.innerHTML = `<img src="${logoUrl.trim()}" class="max-h-5 max-w-[120px] object-contain inline-block bg-white/10 px-1 rounded">`;
+                        }
                     } else {
                         logoEl.classList.add('hidden');
                         if(iconBox) iconBox.style.display = 'flex';
+                        if(headerBrand) headerBrand.textContent = "Estudante";
                     }
                 }
             } catch(e) {
