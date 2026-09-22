@@ -1360,22 +1360,38 @@
                 const config = JSON.parse(localStorage.getItem('app_asaas_config')) || { apiKey: '', env: 'sandbox' };
                 this.apiKey = config.apiKey ? config.apiKey.trim() : '';
                 this.environment = config.env || 'sandbox';
-                
-                this.rawBaseURL = this.environment === 'production' 
-                    ? 'https://api.asaas.com/v3' 
-                    : 'https://sandbox.asaas.com/v3';
             }
 
-            getURL(endpoint) {
-                const target = `${this.rawBaseURL}${endpoint}`;
-                return `https://corsproxy.io/?${encodeURIComponent(target)}`;
-            }
+            async fazerRequisicaoAsaas(endpoint, method = 'GET', payload = null) {
+                const gdriveUrl = document.getElementById('input-gdrive-url').value.trim();
+                if (!gdriveUrl) throw new Error("URL do Web App do Google Apps Script não configurada em Sistema > Instituição.");
 
-            getHeaders() { 
-                return { 
-                    'Content-Type': 'application/json', 
-                    'access_token': this.apiKey 
-                }; 
+                const response = await fetch(gdriveUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({
+                        action: "asaas",
+                        apiKey: this.apiKey,
+                        env: this.environment,
+                        endpoint: endpoint,
+                        method: method,
+                        payload: payload
+                    })
+                });
+
+                const text = await response.text();
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (err) {
+                    throw new Error("Falha ao comunicar com o servidor de integração.");
+                }
+
+                if (data.errors) {
+                    const msg = data.errors.map(e => e.description).join(', ');
+                    throw new Error(msg);
+                }
+                return data;
             }
 
             async criarOuObterCliente(aluno) {
@@ -1383,32 +1399,17 @@
                 const cpfCnpjLimpo = aluno.cpf ? aluno.cpf.replace(/\D/g, '') : '';
                 
                 try {
-                    const searchRes = await fetch(this.getURL(`/customers?cpfCnpj=${cpfCnpjLimpo}`), { 
-                        method: 'GET', 
-                        headers: this.getHeaders() 
-                    });
-                    
-                    const searchData = await searchRes.json();
+                    const searchData = await this.fazerRequisicaoAsaas(`/customers?cpfCnpj=${cpfCnpjLimpo}`, 'GET');
                     if (searchData.data && searchData.data.length > 0) {
                         return searchData.data[0].id;
                     }
 
-                    const createRes = await fetch(this.getURL('/customers'), {
-                        method: 'POST', 
-                        headers: this.getHeaders(),
-                        body: JSON.stringify({ 
-                            name: aluno.fullname, 
-                            email: aluno.email || "aluno@se7educacional.com", 
-                            cpfCnpj: cpfCnpjLimpo, 
-                            phone: aluno.whatsapp ? aluno.whatsapp.replace(/\D/g, '') : '91999999999' 
-                        })
+                    const createData = await this.fazerRequisicaoAsaas('/customers', 'POST', {
+                        name: aluno.fullname,
+                        email: aluno.email || "aluno@se7educacional.com",
+                        cpfCnpj: cpfCnpjLimpo,
+                        phone: aluno.whatsapp ? aluno.whatsapp.replace(/\D/g, '') : '91999999999'
                     });
-
-                    const createData = await createRes.json();
-                    if (!createRes.ok || createData.errors) {
-                        const detalheErro = createData.errors ? createData.errors.map(e => e.description).join(', ') : 'Erro ao cadastrar cliente';
-                        throw new Error(detalheErro);
-                    }
                     return createData.id;
                 } catch (err) {
                     console.error("Erro na integração com Asaas (Cliente):", err);
@@ -1417,39 +1418,22 @@
             }
 
             async criarCobrancaBoleto(customerId, dadosCobranca) {
-                const payload = { 
-                    customer: customerId, 
-                    billingType: 'UNDEFINED', 
-                    value: parseFloat(dadosCobranca.valor), 
-                    dueDate: dadosCobranca.vencimento, 
-                    description: dadosCobranca.descricao || 'Taxa Educacional SE7', 
-                    externalReference: dadosCobranca.referencia || `SE7_${Date.now()}` 
+                const payload = {
+                    customer: customerId,
+                    billingType: 'UNDEFINED',
+                    value: parseFloat(dadosCobranca.valor),
+                    dueDate: dadosCobranca.vencimento,
+                    description: dadosCobranca.descricao || 'Taxa Educacional SE7',
+                    externalReference: dadosCobranca.referencia || `SE7_${Date.now()}`
                 };
 
-                const res = await fetch(this.getURL('/payments'), { 
-                    method: 'POST', 
-                    headers: this.getHeaders(), 
-                    body: JSON.stringify(payload) 
-                });
-                
-                const responseText = await res.text();
-                let data;
-                try {
-                    data = JSON.parse(responseText);
-                } catch (err) {
-                    throw new Error("Falha ao interpretar resposta de cobrança do Asaas.");
-                }
+                const data = await this.fazerRequisicaoAsaas('/payments', 'POST', payload);
 
-                if (!res.ok || data.errors) {
-                    const detalheErro = data.errors ? data.errors.map(e => e.description).join(', ') : 'Erro ao gerar cobrança';
-                    throw new Error(detalheErro);
-                }
-
-                return { 
-                    paymentId: data.id, 
-                    invoiceUrl: data.invoiceUrl, 
-                    bankSlipUrl: data.bankSlipUrl, 
-                    identificationField: data.identificationField 
+                return {
+                    paymentId: data.id,
+                    invoiceUrl: data.invoiceUrl,
+                    bankSlipUrl: data.bankSlipUrl,
+                    identificationField: data.identificationField
                 };
             }
         }
