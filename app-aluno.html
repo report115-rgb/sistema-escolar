@@ -236,7 +236,9 @@
         ];
 
         let alunoLogado = null;
-        let gdriveUrlGlobal = ""; 
+        
+        // COLE AQUI ABAIXO A URL DO SEU WEB APP DO GOOGLE APPS SCRIPT ENTRE AS ASPAS:
+        let gdriveUrlGlobal = "COLE_AQUI_A_URL_DO_GOOGLE_APPS_SCRIPT_EX_HTTPS://script.google.com/macros/s/.../exec"; 
 
         window.addEventListener('DOMContentLoaded', async () => {
             await carregarConfiguracaoDrive();
@@ -254,15 +256,13 @@
             try {
                 const instDoc = await db.collection("institution").doc("config").get();
                 if(instDoc.exists && instDoc.data().gdriveUrl) {
-                    gdriveUrlGlobal = instDoc.data().gdriveUrl.trim();
+                    const urlBanco = instDoc.data().gdriveUrl.trim();
+                    if(urlBanco.startsWith("http")) {
+                        gdriveUrlGlobal = urlBanco;
+                    }
                 }
             } catch(e) {
                 console.error("Erro ao buscar config da instituição:", e);
-            }
-
-            // Fallback caso o banco não retorne ou demore: você pode colar sua URL do Apps Script aqui caso queira fixar de vez no app
-            if(!gdriveUrlGlobal) {
-                gdriveUrlGlobal = localStorage.getItem('se7_fallback_gdrive_url') || "";
             }
         }
 
@@ -363,7 +363,7 @@
             reader.readAsDataURL(file);
         }
 
-        // Envio direto para o Google Drive via Apps Script com verificação e fallback
+        // Envio direto para o Google Drive via Apps Script
         async function enviarDocumentoPDFAluno(tipoId) {
             const fileInput = document.getElementById(`file_doc_${tipoId}`);
             if(!fileInput || !fileInput.files || fileInput.files.length === 0) return alert("Selecione um arquivo PDF.");
@@ -373,20 +373,8 @@
                 return alert("Atenção: O documento precisa obrigatoriamente estar em formato PDF.");
             }
 
-            // Garante que tentamos buscar a URL atualizada caso não estivesse carregada
-            if(!gdriveUrlGlobal) {
-                await carregarConfiguracaoDrive();
-            }
-
-            if(!gdriveUrlGlobal) {
-                // Caso ainda não ache no Firestore, permite inserir manualmente para destravar o aluno imediatamente
-                const urlManual = prompt("A URL do Google Drive não foi localizada automaticamente. Por favor, cole aqui a URL do Web App do Google Apps Script gerada no sistema principal:");
-                if(urlManual && urlManual.trim().startsWith("http")) {
-                    gdriveUrlGlobal = urlManual.trim();
-                    localStorage.setItem('se7_fallback_gdrive_url', gdriveUrlGlobal);
-                } else {
-                    return alert("Erro: A URL do Google Drive precisa estar configurada em Sistema > Instituição no painel principal.");
-                }
+            if(!gdriveUrlGlobal || gdriveUrlGlobal.includes("COLE_AQUI")) {
+                return alert("Erro: A URL do Google Apps Script não foi configurada no código do aplicativo do aluno. Cole a URL no arquivo app-aluno.html.");
             }
 
             const tipoObj = tiposDocumentosObrigatorios.find(t => t.id === tipoId);
