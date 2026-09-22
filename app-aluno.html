@@ -39,7 +39,7 @@
             </div>
             
             <!-- Logomarca da Instituição puxada diretamente do Firestore -->
-            <img id="login-logo-img" class="max-h-16 max-w-[200px] object-contain mb-3 bg-white/10 p-1.5 rounded-xl border border-white/25 shadow" alt="Logo da Instituição" src="" style="display: none;">
+            <img id="login-logo-img" class="max-h-16 max-w-[200px] object-contain mb-3 bg-white/10 p-1.5 rounded-xl border border-white/20" alt="Logo da Instituição" src="" style="display: none;">
             
             <h1 class="text-2xl font-bold">Portal do Aluno</h1>
         </div>
@@ -280,10 +280,11 @@
             }
         });
 
-        // Função robusta para buscar a logo diretamente do Firestore com fallback adequado
+        // Função robusta ajustada para buscar a logo na coleção correta do Firestore
         async function carregarConfiguracaoInstituicao() {
             try {
-                const instDoc = await db.collection("institution").doc("config").get();
+                // CORRIGIDO: Busca na coleção "config" o documento "institution" conforme estruturado no Firebase
+                const instDoc = await db.collection("config").doc("institution").get();
                 const logoEl = document.getElementById('login-logo-img');
                 const iconBox = document.getElementById('login-icon-box');
 
