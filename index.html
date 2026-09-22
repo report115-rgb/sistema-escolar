@@ -688,6 +688,16 @@
                     <!-- SUB-SUBABA 2: CADASTRAR NOVO CURSO -->
                     <div id="subsubtab-cadastrar-curso" class="subsubtab-content space-y-4" style="display: none;">
                         <input type="hidden" id="edit-course-id" value="">
+
+    <div>
+        <label class="block text-xs font-semibold mb-1">Nível do Curso</label>
+        <select id="input-course-nivel" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900" required>
+            <option value="">Selecione o nível...</option>
+            <option value="Técnico">Técnico</option>
+            <option value="Graduação">Graduação</option>
+            <option value="Supletivo">Supletivo</option>
+        </select>
+    </div>
                         
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
@@ -1930,42 +1940,48 @@
         }
 
         async function saveCourse() {
-            const editId = document.getElementById('edit-course-id').value;
-            const name = document.getElementById('input-course-name').value.trim();
-            const sigla = document.getElementById('input-course-sigla').value.trim().toUpperCase();
-            if (!name || !sigla) return alert("Preencha nome e sigla!");
-            
-            const semestre = document.getElementById('input-course-semestre').value;
-            const qtdParcelas = parseInt(document.getElementById('input-course-parcelas').value) || 1;
-            const valorParcela = parseFloat(document.getElementById('input-course-valor-parcela').value) || 0;
-            const valorDesconto = parseFloat(document.getElementById('input-course-valor-desconto').value) || 0;
-            const vencimento = parseInt(document.getElementById('input-course-vencimento').value) || 10;
-            const valorTotal = qtdParcelas * valorParcela;
+    const editId = document.getElementById('edit-course-id').value;
+    const name = document.getElementById('input-course-name').value.trim();
+    const sigla = document.getElementById('input-course-sigla').value.trim().toUpperCase();
+    const nivel = document.getElementById('input-course-nivel').value;
+    
+    if (!name || !sigla || !nivel) return alert("Preencha o nome, a sigla e selecione o nível do curso!");
+    
+    const semestre = document.getElementById('input-course-semestre').value;
+    const qtdParcelas = parseInt(document.getElementById('input-course-parcelas').value) || 1;
+    const valorParcela = parseFloat(document.getElementById('input-course-valor-parcela').value) || 0;
+    const valorDesconto = parseFloat(document.getElementById('input-course-valor-desconto').value) || 0;
+    const vencimento = parseInt(document.getElementById('input-course-vencimento').value) || 10;
+    const valorTotal = qtdParcelas * valorParcela;
 
-            const courseData = {
-                name, sigla, semestre,
-                eixo: document.getElementById('input-course-eixo').value.trim(),
-                hours: document.getElementById('input-course-hours').value.trim(),
-                conselho: document.getElementById('input-course-conselho').value.trim(),
-                qtdParcelas, valorParcela, valorDesconto, vencimento, valorTotal
-            };
+    const courseData = {
+        name, 
+        sigla, 
+        nivel, 
+        semestre,
+        eixo: document.getElementById('input-course-eixo').value.trim(),
+        hours: document.getElementById('input-course-hours').value.trim(),
+        conselho: document.getElementById('input-course-conselho').value.trim(),
+        qtdParcelas, valorParcela, valorDesconto, vencimento, valorTotal
+    };
 
-            if (editId) {
-                await db.collection("courses").doc(editId).update(courseData);
-                cancelarEdicaoCurso();
-                alert("Curso atualizado com sucesso!");
-            } else {
-                courseData.subjects = [];
-                courseData.contractTemplate = "";
-                courseData.declTemplate = "";
-                courseData.historyTemplate = "";
-                courseData.historyPdfUrl = "";
-                await db.collection("courses").add(courseData);
-                document.getElementById('input-course-name').value = '';
-                document.getElementById('input-course-sigla').value = '';
-                alert("Curso salvo com sucesso!");
-            }
-        }
+    if (editId) {
+        await db.collection("courses").doc(editId).update(courseData);
+        cancelarEdicaoCurso();
+        alert("Curso atualizado com sucesso!");
+    } else {
+        courseData.subjects = [];
+        courseData.contractTemplate = "";
+        courseData.declTemplate = "";
+        courseData.historyTemplate = "";
+        courseData.historyPdfUrl = "";
+        await db.collection("courses").add(courseData);
+        document.getElementById('input-course-name').value = '';
+        document.getElementById('input-course-sigla').value = '';
+        document.getElementById('input-course-nivel').value = '';
+        alert("Curso salvo com sucesso!");
+    }
+}
 
         function renderCourses() {
             const list = document.getElementById('courses-list');
@@ -1982,7 +1998,10 @@
                     list.innerHTML += `
                         <li class="py-3 text-xs flex justify-between items-center border-b border-gray-100 dark:border-slate-700">
                             <div>
-                                <strong class="text-sm text-gray-900 dark:text-white">${c.name} [${c.sigla}]</strong><br>
+                                <strong class="text-sm text-gray-900 dark:text-white">${c.name} [${c.sigla}]</strong>
+                                <!-- LINHA ADICIONADA PARA MOSTRAR O NÍVEL -->
+                                <span class="px-2 py-0.5 bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 rounded text-[10px] font-bold ml-2">${c.nivel || 'Não definido'}</span><br>
+                                
                                 <span class="text-gray-500">Semestre: ${c.semestre || '2026/2'} &bull; ${c.qtdParcelas || 1}x de R$ ${c.valorParcela || 0} (Desc. Pontualidade: R$ ${c.valorDesconto || 0}) &bull; Total: R$ ${c.valorTotal || 0}</span>
                             </div>
                             <div class="flex gap-2 shrink-0">
@@ -2000,6 +2019,7 @@
             document.getElementById('edit-course-id').value = c.id;
             document.getElementById('input-course-name').value = c.name || '';
             document.getElementById('input-course-sigla').value = c.sigla || '';
+            document.getElementById('input-course-nivel').value = c.nivel || '';            
             document.getElementById('input-course-eixo').value = c.eixo || '';
             document.getElementById('input-course-hours').value = c.hours || '';
             document.getElementById('input-course-conselho').value = c.conselho || '';
