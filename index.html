@@ -1366,9 +1366,10 @@
                     : 'https://sandbox.asaas.com/v3';
             }
 
+            // Substituído pelo AllOrigins para evitar o bloqueio de proxy anônimo
             getURL(endpoint) {
                 const target = `${this.rawBaseURL}${endpoint}`;
-                return `https://corsproxy.io/?${encodeURIComponent(target)}`;
+                return `https://api.allorigins.win/raw?url=${encodeURIComponent(target)}`;
             }
 
             getHeaders() { 
@@ -1383,7 +1384,6 @@
                 const cpfCnpjLimpo = aluno.cpf ? aluno.cpf.replace(/\D/g, '') : '';
                 
                 try {
-                    // 1. Busca cliente pelo CPF
                     const searchRes = await fetch(this.getURL(`/customers?cpfCnpj=${cpfCnpjLimpo}`), { 
                         method: 'GET', 
                         headers: this.getHeaders() 
@@ -1394,37 +1394,20 @@
                         return searchData.data[0].id;
                     }
 
-                    // 2. Se não existir, cadastra o cliente enviando um objeto limpo
-                    const payloadCliente = { 
-                        name: aluno.fullname, 
-                        email: aluno.email || "aluno@se7educacional.com", 
-                        cpfCnpj: cpfCnpjLimpo, 
-                        phone: aluno.whatsapp ? aluno.whatsapp.replace(/\D/g, '') : '91999999999' 
-                    };
-
                     const createRes = await fetch(this.getURL('/customers'), {
                         method: 'POST', 
                         headers: this.getHeaders(),
-                        body: JSON.stringify(payloadCliente)
+                        body: JSON.stringify({ 
+                            name: aluno.fullname, 
+                            email: aluno.email || "aluno@se7educacional.com", 
+                            cpfCnpj: cpfCnpjLimpo, 
+                            phone: aluno.whatsapp ? aluno.whatsapp.replace(/\D/g, '') : '91999999999' 
+                        })
                     });
 
-                    const responseText = await createRes.text();
-                    console.log("RESPOSTA BRUTA DO ASAAS:", responseText); // <-- Adicione este log para ver o que o Asaas realmente respondeu
-                    
-                    let createData;
-                    try {
-                        createData = JSON.parse(responseText);
-                    } catch (err) {
-                        throw new Error(`Asaas retornou HTML/Texto em vez de JSON: ${responseText.substring(0, 100)}`);
-                    }
-                    
+                    const createData = await createRes.json();
                     if (!createRes.ok || createData.errors) {
-                        const detalheErro = createData.errors ? createData.errors.map(e => e.description).join(', ') : JSON.stringify(createData);
-                        throw new Error(`Asaas recusou: ${detalheErro}`);
-                    }
-                    
-                    if (!createRes.ok || createData.errors) {
-                        const detalheErro = createData.errors ? createData.errors.map(e => e.description).join(', ') : 'Erro desconhecido ao cadastrar cliente';
+                        const detalheErro = createData.errors ? createData.errors.map(e => e.description).join(', ') : 'Erro ao cadastrar cliente';
                         throw new Error(detalheErro);
                     }
                     return createData.id;
@@ -1433,6 +1416,37 @@
                     throw err;
                 }
             }
+
+            async criarCobrancaBoleto(customerId, dadosCobranca) {
+                const payload = { 
+                    customer: customerId, 
+                    billingType: 'UNDEFINED', 
+                    value: parseFloat(dadosCobranca.valor), 
+                    dueDate: dadosCobranca.vencimento, 
+                    description: dadosCobranca.descricao || 'Taxa Educacional SE7', 
+                    externalReference: dadosCobranca.referencia || `SE7_${Date.now()}` 
+                };
+
+                const res = await fetch(this.getURL('/payments'), { 
+                    method: 'POST', 
+                    headers: this.getHeaders(), 
+                    body: JSON.stringify(payload) 
+                });
+                
+                const data = await res.json();
+                if (!res.ok || data.errors) {
+                    const detalheErro = data.errors ? data.errors.map(e => e.description).join(', ') : 'Erro ao gerar cobrança';
+                    throw new Error(detalheErro);
+                }
+
+                return { 
+                    paymentId: data.id, 
+                    invoiceUrl: data.invoiceUrl, 
+                    bankSlipUrl: data.bankSlipUrl, 
+                    identificationField: data.identificationField 
+                };
+            }
+        }
 
             async criarCobrancaBoleto(customerId, dadosCobranca) {
                 const payload = { 
