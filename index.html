@@ -1429,14 +1429,14 @@
 
                 const data = await this.fazerRequisicaoAsaas('/payments', 'POST', payload);
 
+                // Garante que se o campo vier nulo ou indefinido, ele salva uma string vazia para evitar erro no Firestore
                 return {
-                    paymentId: data.id,
-                    invoiceUrl: data.invoiceUrl,
-                    bankSlipUrl: data.bankSlipUrl,
-                    identificationField: data.identificationField
+                    paymentId: data.id || '',
+                    invoiceUrl: data.invoiceUrl || data.bankSlipUrl || '',
+                    bankSlipUrl: data.bankSlipUrl || data.invoiceUrl || '',
+                    identificationField: data.identificationField || ''
                 };
             }
-        }
 
         function iniciarRelogioAoVivo() {
             const relogioEl = document.getElementById('header-live-clock');
