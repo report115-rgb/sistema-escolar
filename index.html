@@ -1360,17 +1360,23 @@
                 const config = JSON.parse(localStorage.getItem('app_asaas_config')) || { apiKey: '', env: 'sandbox' };
                 this.apiKey = config.apiKey ? config.apiKey.trim() : '';
                 this.environment = config.env || 'sandbox';
-                // URL corrigida para Produção e Sandbox oficiais do Asaas
-                this.baseURL = this.environment === 'production' 
+                
+                // URL base oficial do Asaas
+                this.rawBaseURL = this.environment === 'production' 
                     ? 'https://api.asaas.com/v3' 
                     : 'https://sandbox.asaas.com/v3';
+            }
+
+            // Utiliza um proxy CORS público para contornar o bloqueio do navegador em aplicações client-side
+            getURL(endpoint) {
+                const target = `${this.rawBaseURL}${endpoint}`;
+                return `https://corsproxy.io/?${encodeURIComponent(target)}`;
             }
 
             getHeaders() { 
                 return { 
                     'Content-Type': 'application/json', 
-                    'access_token': this.apiKey,
-                    'User-Agent': 'SE7-Gestao-Educacional' 
+                    'access_token': this.apiKey 
                 }; 
             }
 
@@ -1379,8 +1385,8 @@
                 const cpfCnpjLimpo = aluno.cpf ? aluno.cpf.replace(/\D/g, '') : '';
                 
                 try {
-                    // Busca cliente pelo CPF
-                    const searchRes = await fetch(`${this.baseURL}/customers?cpfCnpj=${cpfCnpjLimpo}`, { 
+                    // Busca cliente pelo CPF usando o proxy
+                    const searchRes = await fetch(this.getURL(`/customers?cpfCnpj=${cpfCnpjLimpo}`), { 
                         method: 'GET', 
                         headers: this.getHeaders() 
                     });
@@ -1390,14 +1396,14 @@
                     }
 
                     // Se não existir, cadastra o cliente no Asaas
-                    const createRes = await fetch(`${this.baseURL}/customers`, {
+                    const createRes = await fetch(this.getURL('/customers'), {
                         method: 'POST', 
                         headers: this.getHeaders(),
                         body: JSON.stringify({ 
                             name: aluno.fullname, 
                             email: aluno.email || "aluno@se7educacional.com", 
                             cpfCnpj: cpfCnpjLimpo, 
-                            phone: aluno.whatsapp ? aluno.whatsapp.replace(/\D/g, '') : '91999999999' 
+                    phone: aluno.whatsapp ? aluno.whatsapp.replace(/\D/g, '') : '91999999999' 
                         })
                     });
                     const createData = await createRes.json();
@@ -1414,14 +1420,14 @@
             async criarCobrancaBoleto(customerId, dadosCobranca) {
                 const payload = { 
                     customer: customerId, 
-                    billingType: 'UNDEFINED', // Permite boleto ou Pix na fatura gerada
+                    billingType: 'UNDEFINED', 
                     value: parseFloat(dadosCobranca.valor), 
                     dueDate: dadosCobranca.vencimento, 
                     description: dadosCobranca.descricao || 'Taxa Educacional SE7', 
                     externalReference: dadosCobranca.referencia || `SE7_${Date.now()}` 
                 };
 
-                const res = await fetch(`${this.baseURL}/payments`, { 
+                const res = await fetch(this.getURL('/payments'), { 
                     method: 'POST', 
                     headers: this.getHeaders(), 
                     body: JSON.stringify(payload) 
