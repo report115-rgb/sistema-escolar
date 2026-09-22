@@ -2877,10 +2877,47 @@
                 const motivo = docInfo ? docInfo.motivoReprovacao : '';
                 const fileUrl = docInfo ? docInfo.fileUrl : '';
                 const driveUrl = docInfo ? docInfo.driveUrl : '';
+                const fileName = docInfo && docInfo.fileName ? docInfo.fileName : 'Documento em PDF';
 
                 let statusBadge = `<span class="px-2 py-0.5 bg-gray-200 text-gray-800 rounded text-[10px] font-bold">Pendente</span>`;
                 if(status === 'Aprovado') statusBadge = `<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded text-[10px] font-bold">Aprovado</span>`;
                 if(status === 'Reprovado') statusBadge = `<span class="px-2 py-0.5 bg-red-100 text-red-800 rounded text-[10px] font-bold">Reprovado</span>`;
+
+                let linkArquivoHtml = '<span class="text-gray-400">Não enviado pelo aluno</span>';
+                if (driveUrl) {
+                    linkArquivoHtml = `<a href="${driveUrl}" target="_blank" class="text-blue-600 dark:text-blue-400 underline font-semibold flex items-center gap-1"><i class="fa-brands fa-google-drive"></i> Arquivo Enviado: ${fileName} (Abrir no Drive)</a>`;
+                } else if (fileUrl) {
+                    linkArquivoHtml = `<a href="${fileUrl}" target="_blank" class="text-blue-600 dark:text-blue-400 underline font-semibold">Visualizar PDF (${fileName})</a>`;
+                }
+
+                // CONTROLE DOS BOTÕES CONFORME O STATUS
+                let botoesAcaoHtml = '';
+                
+                if (status === 'Aprovado') {
+                    // Se já foi aprovado, bloqueia as ações permanentemente
+                    botoesAcaoHtml = `
+                        <div class="text-xs text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
+                            <i class="fa-solid fa-circle-check"></i> Documento validado e aprovado com sucesso.
+                        </div>
+                    `;
+                } else if (!driveUrl && !fileUrl) {
+                    // Se o aluno ainda não enviou nada
+                    botoesAcaoHtml = `
+                        <span class="text-xs text-gray-400 italic">Aguardando o envio do documento pelo aluno.</span>
+                    `;
+                } else {
+                    // Se foi enviado (Pendente) ou Reprovado (permite reavaliar após nova ação)
+                    botoesAcaoHtml = `
+                        <div class="flex flex-wrap gap-2 pt-2 items-center">
+                            <button onclick="aprovarEEnviarParaGoogleDrive('${aluno.id}', '${tipo.id}')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-semibold"><i class="fa-solid fa-check mr-1"></i> Aprovar Documento</button>
+                            <button onclick="toggleBoxReprovacao('${tipo.id}')" class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-semibold"><i class="fa-solid fa-xmark mr-1"></i> Reprovar</button>
+                        </div>
+                        <div id="box_reprov_${tipo.id}" class="space-y-1 pt-2" style="display: ${status === 'Reprovado' ? 'block' : 'none'};">
+                            <input type="text" id="motivo_${tipo.id}" value="${motivo}" placeholder="Informe o motivo da reprovação..." class="w-full px-3 py-1.5 rounded border text-xs dark:bg-slate-800 dark:text-white">
+                            <button onclick="salvarReprovacaoDocumento('${aluno.id}', '${tipo.id}')" class="px-3 py-1 bg-gray-700 hover:bg-gray-800 text-white rounded text-[10px] font-semibold">Salvar Reprovação e Motivo</button>
+                        </div>
+                    `;
+                }
 
                 container.innerHTML += `
                     <div class="bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700 space-y-2">
@@ -2888,18 +2925,10 @@
                             <span class="font-bold text-xs text-blue-600 dark:text-blue-400">${tipo.label}</span>
                             <div>${statusBadge}</div>
                         </div>
-                        <div class="text-xs flex items-center justify-between flex-wrap gap-2">
-                            <span>Arquivo: ${fileUrl ? `<a href="${fileUrl}" target="_blank" class="text-blue-600 underline font-semibold">Visualizar PDF</a>` : '<span class="text-gray-400">Não enviado pelo aluno</span>'}</span>
-                            ${driveUrl ? `<span class="bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300 px-2 py-0.5 rounded text-[11px] font-bold"><i class="fa-brands fa-google-drive mr-1"></i> <a href="${driveUrl}" target="_blank" class="underline">Salvo no Drive</a></span>` : ''}
+                        <div class="text-xs py-1">
+                            ${linkArquivoHtml}
                         </div>
-                        <div class="flex flex-wrap gap-2 pt-2 items-center">
-                            <button onclick="aprovarEEnviarParaGoogleDrive('${aluno.id}', '${tipo.id}')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-semibold"><i class="fa-solid fa-cloud-arrow-up mr-1"></i> Aprovar e Enviar ao Drive</button>
-                            <button onclick="toggleBoxReprovacao('${tipo.id}')" class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-semibold">Reprovar</button>
-                        </div>
-                        <div id="box_reprov_${tipo.id}" class="space-y-1 pt-2" style="display: ${status === 'Reprovado' ? 'block' : 'none'};">
-                            <input type="text" id="motivo_${tipo.id}" value="${motivo}" placeholder="Informe o motivo da reprovação..." class="w-full px-3 py-1.5 rounded border text-xs dark:bg-slate-800">
-                            <button onclick="salvarReprovacaoDocumento('${aluno.id}', '${tipo.id}')" class="px-3 py-1 bg-gray-700 hover:bg-gray-800 text-white rounded text-[10px] font-semibold">Salvar Reprovação e Motivo</button>
-                        </div>
+                        ${botoesAcaoHtml}
                     </div>
                 `;
             });
