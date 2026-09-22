@@ -172,7 +172,7 @@
             <div id="tab-documentos" class="space-y-3 tab-pane" style="display: none;">
                 <div class="bg-blue-50 p-3 rounded-2xl border border-blue-200 text-xs text-blue-900 mb-3">
                     <p class="font-bold mb-1"><i class="fa-solid fa-circle-info mr-1"></i> Instruções para Postagem:</p>
-                    <p>Envie cada documento obrigatório em formato <strong>PDF</strong>. O arquivo será enviado diretamente para a sua pasta oficial no Google Drive.</p>
+                    <p>Envie cada documento obrigatório rigorosamente em formato <strong>PDF</strong>. O arquivo será salvo diretamente na sua pasta oficial no Google Drive.</p>
                 </div>
                 <h3 class="font-bold text-sm text-slate-700 mb-2">Meus Documentos Obrigatórios</h3>
                 <div id="documents-list" class="space-y-3">
@@ -356,7 +356,7 @@
             reader.readAsDataURL(file);
         }
 
-        // Envio direto para o Google Drive via Apps Script (Sem estourar limite de 1MB do Firestore)
+        // Envio direto para o Google Drive via Apps Script (Sincronizado com o sistema principal)
         async function enviarDocumentoPDFAluno(tipoId) {
             const fileInput = document.getElementById(`file_doc_${tipoId}`);
             if(!fileInput || !fileInput.files || fileInput.files.length === 0) return alert("Selecione um arquivo PDF.");
@@ -372,6 +372,12 @@
 
             const tipoObj = tiposDocumentosObrigatorios.find(t => t.id === tipoId);
             const nomeDocFormatado = tipoObj ? tipoObj.label : tipoId;
+
+            // Feedback visual de carregamento
+            const btnEnviar = event.target;
+            const textoOriginal = btnEnviar.textContent;
+            btnEnviar.disabled = true;
+            btnEnviar.textContent = "Enviando...";
 
             const reader = new FileReader();
             reader.onload = async function(e) {
@@ -412,6 +418,9 @@
                 } catch(err) {
                     console.error("Erro no envio:", err);
                     alert("Documento processado e enviado para a nuvem com sucesso!");
+                } finally {
+                    btnEnviar.disabled = false;
+                    btnEnviar.textContent = textoOriginal;
                 }
             };
             reader.readAsDataURL(file);
