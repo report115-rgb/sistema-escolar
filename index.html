@@ -1409,12 +1409,18 @@
                     });
 
                     const responseText = await createRes.text();
+                    console.log("RESPOSTA BRUTA DO ASAAS:", responseText); // <-- Adicione este log para ver o que o Asaas realmente respondeu
+                    
                     let createData;
                     try {
                         createData = JSON.parse(responseText);
                     } catch (err) {
-                        console.error("Retorno bruto não JSON do Asaas/Proxy:", responseText);
-                        throw new Error("O servidor intermediário bloqueou a resposta do Asaas.");
+                        throw new Error(`Asaas retornou HTML/Texto em vez de JSON: ${responseText.substring(0, 100)}`);
+                    }
+                    
+                    if (!createRes.ok || createData.errors) {
+                        const detalheErro = createData.errors ? createData.errors.map(e => e.description).join(', ') : JSON.stringify(createData);
+                        throw new Error(`Asaas recusou: ${detalheErro}`);
                     }
                     
                     if (!createRes.ok || createData.errors) {
