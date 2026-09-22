@@ -33,8 +33,8 @@
     <!-- TELA DE LOGIN DO ALUNO -->
     <div id="login-screen" class="fixed inset-0 z-50 bg-gradient-to-br from-blue-900 via-indigo-900 to-slate-900 flex flex-col justify-between p-6 text-white">
         <div class="mt-8 text-center flex flex-col items-center">
-            <!-- Ícone padrão (Capelo) ocultado por padrão para forçar a exibição da logomarca -->
-            <div id="login-icon-box" style="display: none;" class="inline-flex items-center justify-center w-16 h-16 bg-blue-600 text-white rounded-2xl text-3xl font-bold mb-3 shadow-lg shadow-blue-500/30">
+            <!-- Ícone padrão (Capelo) exibido como fallback caso não haja logo cadastrada -->
+            <div id="login-icon-box" class="inline-flex items-center justify-center w-16 h-16 bg-blue-600 text-white rounded-2xl text-3xl font-bold mb-3 shadow-lg shadow-blue-500/30" style="display: none;">
                 <i class="fa-solid fa-graduation-cap"></i>
             </div>
             
@@ -280,7 +280,7 @@
             }
         });
 
-        // Função robusta e corrigida para buscar a logo diretamente do Firestore
+        // Função robusta para buscar a logo diretamente do Firestore com fallback adequado
         async function carregarConfiguracaoInstituicao() {
             try {
                 const instDoc = await db.collection("institution").doc("config").get();
@@ -293,26 +293,25 @@
                         gdriveUrlGlobal = data.gdriveUrl.trim();
                     }
                     
-                    // Varre exaustivamente todas as opções possíveis de chaves de imagem vindas do painel principal
                     const logoUrl = data.logo || data.logomarca || data.urlLogo || data.logoUrl || data.image || data.fileUrl || '';
 
                     if(logoUrl && logoUrl.trim() !== "") {
                         logoEl.src = logoUrl.trim();
-                        logoEl.style.display = 'block'; // Força a exibição da logomarca
-                        if(iconBox) iconBox.style.display = 'none'; // Garante que o capelo some
+                        logoEl.style.display = 'block'; 
+                        if(iconBox) iconBox.style.display = 'none'; 
                         return;
                     }
                 }
                 
-                // Se cair aqui, é porque não encontrou logo configurada
+                // Fallback: se não houver logo configurada, exibe o capelo clássico
                 logoEl.style.display = 'none';
-                if(iconBox) iconBox.style.display = 'none'; // Mantém oculto para evitar o chapéu indesejado
+                if(iconBox) iconBox.style.display = 'inline-flex'; 
             } catch(e) {
                 console.error("Erro ao buscar logo da instituição:", e);
                 const logoEl = document.getElementById('login-logo-img');
                 const iconBox = document.getElementById('login-icon-box');
                 if(logoEl) logoEl.style.display = 'none';
-                if(iconBox) iconBox.style.display = 'none';
+                if(iconBox) iconBox.style.display = 'inline-flex';
             }
         }
 
