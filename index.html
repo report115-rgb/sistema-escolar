@@ -1368,7 +1368,7 @@
 
             getURL(endpoint) {
                 const target = `${this.rawBaseURL}${endpoint}`;
-                return `https://api.allorigins.win/raw?url=${encodeURIComponent(target)}`;
+                return `https://corsproxy.io/?${encodeURIComponent(target)}`;
             }
 
             getHeaders() { 
