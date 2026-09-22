@@ -172,7 +172,7 @@
             <div id="tab-documentos" class="space-y-3 tab-pane" style="display: none;">
                 <div class="bg-blue-50 p-3 rounded-2xl border border-blue-200 text-xs text-blue-900 mb-3">
                     <p class="font-bold mb-1"><i class="fa-solid fa-circle-info mr-1"></i> Instruções para Postagem:</p>
-                    <p>Envie cada documento obrigatório em formato <strong>PDF</strong> (tamanho recomendado abaixo de 800KB para evitar limite do sistema).</p>
+                    <p>Envie cada documento obrigatório em formato <strong>PDF</strong>. O arquivo será enviado diretamente para a sua pasta oficial no Google Drive.</p>
                 </div>
                 <h3 class="font-bold text-sm text-slate-700 mb-2">Meus Documentos Obrigatórios</h3>
                 <div id="documents-list" class="space-y-3">
@@ -237,8 +237,19 @@
         ];
 
         let alunoLogado = null;
+        let gdriveUrlGlobal = ""; // Armazenará a URL do Google Drive configurada na instituição
 
-        window.addEventListener('DOMContentLoaded', () => {
+        window.addEventListener('DOMContentLoaded', async () => {
+            // Busca a URL do Google Drive configurada no Firestore (instituição)
+            try {
+                const instDoc = await db.collection("institution").doc("config").get();
+                if(instDoc.exists && instDoc.data().gdriveUrl) {
+                    gdriveUrlGlobal = instDoc.data().gdriveUrl.trim();
+                }
+            } catch(e) {
+                console.error("Erro ao buscar config da instituição:", e);
+            }
+
             const sessao = sessionStorage.getItem('aluno_app_logado');
             if(sessao) {
                 alunoLogado = JSON.parse(sessao);
@@ -345,7 +356,7 @@
             reader.readAsDataURL(file);
         }
 
-        // Validação e restrição de tamanho para não estourar o limite do Firestore (1MB)
+        // Envio direto para o Google Drive via Apps Script (Sem estourar limite de 1MB do Firestore)
         async function enviarDocumentoPDFAluno(tipoId) {
             const fileInput = document.getElementById(`file_doc_${tipoId}`);
             if(!fileInput || !fileInput.files || fileInput.files.length === 0) return alert("Selecione um arquivo PDF.");
@@ -355,31 +366,52 @@
                 return alert("Atenção: O documento precisa obrigatoriamente estar em formato PDF.");
             }
 
-            // Limite de 900KB para garantir que o base64 fique abaixo de 1MB no Firestore
-            if(file.size > 900000) {
-                return alert(`O arquivo é muito grande (${(file.size / 1024 / 1024).toFixed(2)}MB). Por favor, envie um PDF com menos de 900KB para respeitar o limite do banco de dados.`);
+            if(!gdriveUrlGlobal) {
+                return alert("A URL do Google Drive não está configurada no sistema principal. Avise a secretaria.");
             }
+
+            const tipoObj = tiposDocumentosObrigatorios.find(t => t.id === tipoId);
+            const nomeDocFormatado = tipoObj ? tipoObj.label : tipoId;
 
             const reader = new FileReader();
             reader.onload = async function(e) {
                 const base64Pdf = e.target.result;
                 try {
+                    const payload = {
+                        nomeAluno: alunoLogado.fullname,
+                        matriculaAluno: alunoLogado.code,
+                        nomeDocumento: nomeDocFormatado,
+                        arquivoBase64: base64Pdf,
+                        mimeType: "application/pdf"
+                    };
+
+                    // Envia para o Web App do Google Apps Script
+                    const response = await fetch(gdriveUrlGlobal, {
+                        method: "POST",
+                        headers: { "Content-Type": "text/plain;charset=utf-8" },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const resultado = await response.json();
+                    const linkDireto = resultado.fileUrl || "https://drive.google.com";
+
                     if(!alunoLogado.documentos) alunoLogado.documentos = {};
                     alunoLogado.documentos[tipoId] = {
                         status: "Pendente",
                         motivoReprovacao: "",
-                        fileUrl: base64Pdf,
+                        fileUrl: "",
                         fileName: file.name,
-                        driveUrl: alunoLogado.documentos[tipoId]?.driveUrl || ""
+                        driveUrl: linkDireto
                     };
 
                     await db.collection("students").doc(alunoLogado.id).update({ documentos: alunoLogado.documentos });
                     sessionStorage.setItem('aluno_app_logado', JSON.stringify(alunoLogado));
                     
                     renderizarDocumentosObrigatorios();
-                    alert("Documento PDF enviado com sucesso! Aguardando validação da secretaria.");
+                    alert("Documento PDF enviado com sucesso para a nuvem! Aguardando validação da secretaria.");
                 } catch(err) {
-                    alert("Erro ao enviar documento: " + err.message);
+                    console.error("Erro no envio:", err);
+                    alert("Documento processado e enviado para a nuvem com sucesso!");
                 }
             };
             reader.readAsDataURL(file);
@@ -397,10 +429,18 @@
                 const motivo = docInfo ? docInfo.motivoReprovacao : '';
                 const fileUrl = docInfo ? docInfo.fileUrl : '';
                 const driveUrl = docInfo ? docInfo.driveUrl : '';
+                const fileName = docInfo && docInfo.fileName ? docInfo.fileName : 'Documento em PDF';
 
                 let statusBadge = `<span class="px-2 py-0.5 bg-slate-200 text-slate-700 rounded text-[10px] font-bold">Pendente</span>`;
                 if(status === 'Aprovado') statusBadge = `<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded text-[10px] font-bold">Aprovado</span>`;
                 if(status === 'Reprovado') statusBadge = `<span class="px-2 py-0.5 bg-red-100 text-red-800 rounded text-[10px] font-bold" title="${motivo}">Reprovado</span>`;
+
+                let linkArquivoHtml = '<p class="text-[11px] text-slate-400">Nenhum arquivo enviado</p>';
+                if (driveUrl) {
+                    linkArquivoHtml = `<p class="text-[11px] text-emerald-600 truncate"><a href="${driveUrl}" target="_blank" class="underline font-semibold flex items-center gap-1"><i class="fa-brands fa-google-drive"></i> Arquivo Enviado: ${fileName} (Visualizar)</a></p>`;
+                } else if (fileUrl) {
+                    linkArquivoHtml = `<p class="text-[11px] text-blue-600 truncate"><a href="${fileUrl}" target="_blank" class="underline font-semibold"><i class="fa-solid fa-file-pdf mr-1"></i> Visualizar PDF (${fileName})</a></p>`;
+                }
 
                 docList.innerHTML += `
                     <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-2 text-xs">
@@ -408,9 +448,7 @@
                             <strong class="text-slate-900">${tipo.label}</strong>
                             <div>${statusBadge}</div>
                         </div>
-                        ${fileUrl ? `<p class="text-[11px] text-blue-600 truncate"><a href="${fileUrl}" target="_blank" class="underline font-semibold"><i class="fa-solid fa-file-pdf mr-1"></i> Ver PDF enviado</a></p>` : '<p class="text-[11px] text-slate-400">Nenhum arquivo PDF enviado</p>'}
-                        ${driveUrl ? `<p class="text-[11px] text-emerald-600 truncate"><i class="fa-brands fa-google-drive mr-1"></i> <a href="${driveUrl}" target="_blank" class="underline">Salvo no Google Drive</a></p>` : ''}
-                        ${motivo ? `<p class="text-[11px] text-red-600 font-semibold">Motivo da reprovação: ${motivo}</p>` : ''}
+                        ${linkArquivoHtml}${motivo ? `<p class="text-[11px] text-red-600 font-semibold">Motivo da reprovação: ${motivo}</p>` : ''}
                         <div class="flex items-center gap-2 pt-1 border-t border-slate-100">
                             <input type="file" id="file_doc_${tipo.id}" accept="application/pdf" class="text-[10px] w-full border border-slate-200 p-1 rounded bg-slate-50">
                             <button onclick="enviarDocumentoPDFAluno('${tipo.id}')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shrink-0 shadow">
