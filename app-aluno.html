@@ -33,11 +33,11 @@
     <!-- TELA DE LOGIN DO ALUNO -->
     <div id="login-screen" class="fixed inset-0 z-50 bg-gradient-to-br from-blue-900 via-indigo-900 to-slate-900 flex flex-col justify-between p-6 text-white">
         <div class="mt-8 text-center flex flex-col items-center">
-            <!-- Ícone padrão que será ocultado caso haja logomarca cadastrada -->
+            <!-- Ícone padrão (Capelo) que agora some automaticamente se houver logo cadastrada no sistema principal -->
             <div id="login-icon-box" class="inline-flex items-center justify-center w-16 h-16 bg-blue-600 text-white rounded-2xl text-3xl font-bold mb-3 shadow-lg shadow-blue-500/30">
                 <i class="fa-solid fa-graduation-cap"></i>
             </div>
-            <!-- Logomarca da Instituição carregada dinamicamente do Firestore -->
+            <!-- Logomarca da Instituição puxada diretamente do Firestore (configurada no seu sistema principal) -->
             <img id="login-logo-img" class="max-h-16 max-w-[200px] object-contain mb-3 bg-white/10 p-1.5 rounded-xl border border-white/20 hidden" alt="Logo da Instituição">
             
             <h1 class="text-2xl font-bold">Portal do Aluno</h1>
@@ -60,7 +60,7 @@
             </div>
         </div>
 
-        <!-- Rodapé com SE7 Gestão Educacional e versão -->
+        <!-- Rodapé -->
         <div class="text-center text-[10px] text-blue-300 pb-2 space-y-0.5">
             <div class="font-semibold">SE7 Gestão Educacional</div>
             <div>v1.0.8 &bull; Acesso Restrito ao Aluno</div>
@@ -106,9 +106,8 @@
                     </div>
                 </div>
                 <div>
-                    <!-- Espaço para exibir a logo ou nome da instituição no topo -->
-                    <div id="header-institution-brand" class="text-[10px] uppercase tracking-wider text-blue-300 font-semibold truncate max-w-[180px]">Estudante</div>
                     <h2 class="font-bold text-sm truncate max-w-[200px]" id="header-aluno-nome">Carregando...</h2>
+                    <span class="text-[10px] text-blue-300">Portal do Aluno</span>
                 </div>
             </div>
             <button onclick="fazerLogout()" class="w-9 h-9 bg-red-600/80 hover:bg-red-700 rounded-full flex items-center justify-center text-xs transition text-white shadow">
@@ -116,7 +115,6 @@
             </button>
         </header>
 
-        <!-- Input oculto para carregar foto de perfil -->
         <input type="file" id="input-foto-perfil" accept="image/*" style="display: none;" onchange="processarAlteracaoFoto(event)">
 
         <!-- Conteúdo das Abas -->
@@ -208,7 +206,7 @@
 
         </div>
 
-        <!-- Menu Inferior Fixo (Bottom Bar) -->
+        <!-- Menu Inferior Fixo (Bottom Bar) com Alertas Piscantes -->
         <nav class="bg-white border-t border-slate-200 px-2 py-2 flex justify-around items-center fixed bottom-0 left-0 right-0 shadow-lg z-40">
             <button onclick="mudarAba('home')" id="nav-home" class="flex flex-col items-center text-blue-600 text-[10px] font-bold transition">
                 <i class="fa-solid fa-id-card text-base mb-0.5"></i> Início
@@ -243,7 +241,7 @@
         </nav>
     </div>
 
-    <!-- Script de Lógica e Firebase -->
+    <!-- Script de Lógica e Integração -->
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyBeJ-fqzwiQt0PZEKQ6e8zAPSuh7WRuaHo",
@@ -269,7 +267,7 @@
         let gdriveUrlGlobal = "https://script.google.com/macros/s/AKfycbwPL9G9q--46vYhuyCfqSwZ9IKm2tEvlfvlH18TvD0FJXqYrDnyLOyKqtp6mT7LdH5XOA/exec"; 
 
         window.addEventListener('DOMContentLoaded', async () => {
-            await carregarConfiguracaoDrive();
+            await carregarConfiguracaoInstituicao();
 
             const sessao = sessionStorage.getItem('aluno_app_logado');
             if(sessao) {
@@ -281,8 +279,8 @@
             }
         });
 
-        // Carregamento robusto da logo institucional direto do Firestore
-        async function carregarConfiguracaoDrive() {
+        // Função responsável por buscar a logo diretamente do Firestore (configurada no sistema principal)
+        async function carregarConfiguracaoInstituicao() {
             try {
                 const instDoc = await db.collection("institution").doc("config").get();
                 if(instDoc.exists) {
@@ -293,29 +291,21 @@
                     
                     const logoEl = document.getElementById('login-logo-img');
                     const iconBox = document.getElementById('login-icon-box');
-                    const headerBrand = document.getElementById('header-institution-brand');
                     
-                    // Verifica diferentes variações possíveis do campo da logo no banco de dados
-                    const logoUrl = data.logo || data.logomarca || data.urlLogo || '';
+                    // Varre possíveis variações do nome do campo de logo gravadas pelo sistema principal
+                    const logoUrl = data.logo || data.logomarca || data.urlLogo || data.logoUrl || '';
 
                     if(logoUrl && logoUrl.trim() !== "") {
-                        // Aplica na tela de login
                         logoEl.src = logoUrl.trim();
                         logoEl.classList.remove('hidden');
-                        if(iconBox) iconBox.style.display = 'none';
-
-                        // Aplica também no cabeçalho logado se houver espaço ou substitui o texto "Estudante"
-                        if(headerBrand) {
-                            headerBrand.innerHTML = `<img src="${logoUrl.trim()}" class="max-h-5 max-w-[120px] object-contain inline-block bg-white/10 px-1 rounded">`;
-                        }
+                        if(iconBox) iconBox.style.display = 'none'; // Remove o capelo de formatura da tela de login
                     } else {
                         logoEl.classList.add('hidden');
                         if(iconBox) iconBox.style.display = 'flex';
-                        if(headerBrand) headerBrand.textContent = "Estudante";
                     }
                 }
             } catch(e) {
-                console.error("Erro ao buscar config da instituição:", e);
+                console.error("Erro ao buscar logo da instituição:", e);
             }
         }
 
@@ -343,19 +333,13 @@
 
             if (pendenteOuReprovado) {
                 badge.style.display = 'flex';
-                banner.innerHTML = `
-                    <div class="bg-blue-50 p-3 rounded-2xl border border-blue-200 text-xs text-blue-900 mb-3">
-                        <p class="font-bold mb-1"><i class="fa-solid fa-circle-info mr-1"></i> Instruções para Postagem:</p>
-                        <p>Envie cada documento obrigatório rigorosamente em formato <strong>PDF</strong>. O arquivo será salvo diretamente na sua pasta oficial no Google Drive.</p>
-                    </div>
-                `;
             } else {
                 badge.style.display = 'none';
                 banner.innerHTML = `
                     <div class="bg-emerald-50 p-4 rounded-2xl border border-emerald-200 text-xs text-emerald-900 mb-3 text-center space-y-1 shadow-sm">
                         <i class="fa-solid fa-circle-check text-emerald-600 text-xl mb-1"></i>
                         <p class="font-bold text-sm">Parabéns!</p>
-                        <p>Todos os seus documentos obrigatórios foram enviados e salvos com sucesso na nuvem.</p>
+                        <p>Todos os seus documentos obrigatórios foram aprovados.</p>
                     </div>
                 `;
             }
@@ -417,7 +401,6 @@
                     if (courseDoc.exists) {
                         const curso = courseDoc.data();
                         const qtdDisciplinas = curso.subjects ? curso.subjects.length : 0;
-                        
                         if (qtdDisciplinas > 0) {
                             badge.style.display = 'flex';
                         } else {
@@ -442,7 +425,6 @@
                 snapshot.forEach(doc => {
                     const data = doc.data();
                     const dCpf = data.cpf ? data.cpf.replace(/[^\d]/g, '') : '';
-                    
                     const matriculaBanco = data.code ? String(data.code).trim() : '';
                     const senhaBanco = data.senhaAluno ? String(data.senhaAluno).trim() : '';
 
@@ -537,10 +519,6 @@
                 return alert("Atenção: O documento precisa obrigatoriamente estar em formato PDF.");
             }
 
-            if(!gdriveUrlGlobal || gdriveUrlGlobal.includes("COLE_AQUI")) {
-                return alert("Erro: A URL do Google Apps Script não foi configurada no código do aplicativo do aluno.");
-            }
-
             const tipoObj = tiposDocumentosObrigatorios.find(t => t.id === tipoId);
             const nomeDocFormatado = tipoObj ? tipoObj.label : tipoId;
 
@@ -584,7 +562,7 @@
                     
                     renderizarDocumentosObrigatorios();
                     verificarPendenciaDocumentos();
-                    alert("Documento PDF enviado com sucesso para a nuvem! Aguardando validação da secretaria.");
+                    alert("Documento PDF enviado com sucesso para a nuvem!");
                 } catch(err) {
                     console.error("Erro no envio:", err);
                     alert("Documento processado e enviado para a nuvem com sucesso!");
@@ -616,9 +594,9 @@
 
                 let linkArquivoHtml = '<p class="text-[11px] text-slate-400">Nenhum arquivo enviado</p>';
                 if (driveUrl) {
-                    linkArquivoHtml = `<p class="text-[11px] text-emerald-600 truncate"><a href="${driveUrl}" target="_blank" class="underline font-semibold flex items-center gap-1"><i class="fa-brands fa-google-drive"></i> Arquivo Enviado: ${fileName} (Visualizar)</a></p>`;
+                    linkArquivoHtml = `<p class="text-[11px] text-emerald-600 truncate"><a href="${driveUrl}" target="_blank" class="underline font-semibold flex items-center gap-1"><i class="fa-brands fa-google-drive"></i> Arquivo: ${fileName}</a></p>`;
                 } else if (fileUrl) {
-                    linkArquivoHtml = `<p class="text-[11px] text-blue-600 truncate"><a href="${fileUrl}" target="_blank" class="underline font-semibold"><i class="fa-solid fa-file-pdf mr-1"></i> Visualizar PDF (${fileName})</a></p>`;
+                    linkArquivoHtml = `<p class="text-[11px] text-blue-600 truncate"><a href="${fileUrl}" target="_blank" class="underline font-semibold"><i class="fa-solid fa-file-pdf mr-1"></i> Visualizar PDF</a></p>`;
                 }
 
                 docList.innerHTML += `
@@ -627,7 +605,7 @@
                             <strong class="text-slate-900">${tipo.label}</strong>
                             <div>${statusBadge}</div>
                         </div>
-                        ${linkArquivoHtml}${motivo ? `<p class="text-[11px] text-red-600 font-semibold">Motivo da reprovação: ${motivo}</p>` : ''}
+                        ${linkArquivoHtml}${motivo ? `<p class="text-[11px] text-red-600 font-semibold">Reprovado: ${motivo}</p>` : ''}
                         <div class="flex items-center gap-2 pt-1 border-t border-slate-100">
                             <input type="file" id="file_doc_${tipo.id}" accept="application/pdf" class="text-[10px] w-full border border-slate-200 p-1 rounded bg-slate-50">
                             <button onclick="enviarDocumentoPDFAluno('${tipo.id}')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shrink-0 shadow">
@@ -692,7 +670,7 @@
                     const calList = document.getElementById('calendar-list');
                     calList.innerHTML = '';
                     if(snap.empty) {
-                        calList.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">Nenhuma aula agendada no momento.</p>`;
+                        calList.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">Nenhuma aula agendada.</p>`;
                         return;
                     }
                     snap.forEach(doc => {
@@ -720,7 +698,7 @@
                         <div class="bg-emerald-50 border border-emerald-200 p-4 rounded-2xl text-center space-y-1">
                             <i class="fa-solid fa-circle-check text-emerald-600 text-xl mb-1"></i>
                             <h4 class="font-bold text-emerald-900 text-sm">Frequência Regular</h4>
-                            <p class="text-[11px] text-emerald-700">Nenhuma falta registrada até o momento. Sua presença está 100% em dia!</p>
+                            <p class="text-[11px] text-emerald-700">Nenhuma falta registrada até o momento.</p>
                         </div>
                     `;
                     return;
@@ -756,7 +734,7 @@
                             </div>
                             <div class="text-right">
                                 <span class="text-[9px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-bold block mb-1">${f.status}</span>
-                                ${f.invoiceUrl ? `<a href="${f.invoiceUrl}" target="_blank" class="px-2.5 py-1 bg-blue-600 text-white rounded-lg font-bold text-[10px] inline-block shadow">Pagar / Boleto</a>` : ''}
+                                ${f.invoiceUrl ? `<a href="${f.invoiceUrl}" target="_blank" class="px-2.5 py-1 bg-blue-600 text-white rounded-lg font-bold text-[10px] inline-block shadow">Pagar</a>` : ''}
                             </div>
                         </div>
                     `;
