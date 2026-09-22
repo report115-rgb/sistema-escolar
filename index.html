@@ -1366,7 +1366,6 @@
                     : 'https://sandbox.asaas.com/v3';
             }
 
-            // Substituído pelo AllOrigins para evitar o bloqueio de proxy anônimo
             getURL(endpoint) {
                 const target = `${this.rawBaseURL}${endpoint}`;
                 return `https://api.allorigins.win/raw?url=${encodeURIComponent(target)}`;
@@ -1414,6 +1413,43 @@
                 } catch (err) {
                     console.error("Erro na integração com Asaas (Cliente):", err);
                     throw err;
+                }
+            }
+
+            async criarCobrancaBoleto(customerId, dadosCobranca) {
+                const payload = { 
+                    customer: customerId, 
+                    billingType: 'UNDEFINED', 
+                    value: parseFloat(dadosCobranca.valor), 
+                    dueDate: dadosCobranca.vencimento, 
+                    description: dadosCobranca.descricao || 'Taxa Educacional SE7', 
+                    externalReference: dadosCobranca.referencia || `SE7_${Date.now()}` 
+                };
+
+                const res = await fetch(this.getURL('/payments'), { 
+                    method: 'POST', 
+                    headers: this.getHeaders(), 
+                    body: JSON.stringify(payload) 
+                });
+                
+                const responseText = await res.text();
+                let data;
+                try {
+                    data = JSON.parse(responseText);
+                } catch (err) {
+                    throw new Error("Falha ao interpretar resposta de cobrança do Asaas.");
+                }
+
+                if (!res.ok || data.errors) {
+                    const detalheErro = data.errors ? data.errors.map(e => e.description).join(', ') : 'Erro ao gerar cobrança';
+                    throw new Error(detalheErro);
+                }
+
+                return { 
+                    paymentId: data.id, 
+                    invoiceUrl: data.invoiceUrl, 
+                    bankSlipUrl: data.bankSlipUrl, 
+                    identificationField: data.identificationField 
                 };
             }
         }
