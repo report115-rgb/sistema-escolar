@@ -30,15 +30,9 @@
 </head>
 <body class="bg-slate-100 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
 
-    <!-- TELA DE LOGIN DO ALUNO (Com fundo fotográfico de estudantes e sobreposição azulada) -->
-    <div id="login-screen" class="fixed inset-0 z-50 flex flex-col justify-between p-6 text-white relative bg-slate-900 overflow-hidden">
-        <!-- Imagem de fundo de estudantes com opacidade ajustada -->
-        <div class="absolute inset-0 bg-cover bg-center mix-blend-overlay opacity-25" style="background-image: url('https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1200&auto=format&fit=crop');"></div>
-        <!-- Gradiente de suporte para garantir leitura -->
-        <div class="absolute inset-0 bg-gradient-to-br from-blue-950/90 via-indigo-950/90 to-slate-950/90"></div>
-
-        <!-- Conteúdo do Login -->
-        <div class="mt-8 text-center flex flex-col items-center relative z-10">
+    <!-- TELA DE LOGIN DO ALUNO -->
+    <div id="login-screen" class="fixed inset-0 z-50 bg-gradient-to-br from-blue-900 via-indigo-900 to-slate-900 flex flex-col justify-between p-6 text-white">
+        <div class="mt-8 text-center flex flex-col items-center">
             <!-- Ícone padrão (Capelo) exibido como fallback caso não haja logo cadastrada -->
             <div id="login-icon-box" class="inline-flex items-center justify-center w-16 h-16 bg-blue-600 text-white rounded-2xl text-3xl font-bold mb-3 shadow-lg shadow-blue-500/30" style="display: none;">
                 <i class="fa-solid fa-graduation-cap"></i>
@@ -50,7 +44,7 @@
             <h1 class="text-2xl font-bold">Portal do Aluno</h1>
         </div>
 
-        <div class="bg-white text-slate-800 p-6 rounded-3xl shadow-2xl space-y-4 relative z-10">
+        <div class="bg-white text-slate-800 p-6 rounded-3xl shadow-2xl space-y-4">
             <div>
                 <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">CPF do Aluno</label>
                 <input type="text" id="login-cpf" placeholder="000.000.000-00" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-600 focus:outline-none">
@@ -68,7 +62,7 @@
         </div>
 
         <!-- Rodapé -->
-        <div class="text-center text-[10px] text-blue-300 pb-2 space-y-0.5 relative z-10">
+        <div class="text-center text-[10px] text-blue-300 pb-2 space-y-0.5">
             <div class="font-semibold">SE7 Gestão Educacional</div>
             <div>v1.0.8 &bull; Acesso Restrito ao Aluno</div>
         </div>
@@ -129,35 +123,29 @@
             
             <!-- ABA 1: INÍCIO / CARTEIRINHA -->
             <div id="tab-home" class="space-y-4 tab-pane">
-                <!-- Card com Fundo Fotográfico de Estudantes Estilizado -->
-                <div class="text-white p-5 rounded-3xl shadow-xl border border-white/10 relative overflow-hidden bg-blue-950">
-                    <div class="absolute inset-0 bg-cover bg-center mix-blend-overlay opacity-20" style="background-image: url('https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=800&auto=format&fit=crop');"></div>
-                    <div class="absolute inset-0 bg-gradient-to-br from-blue-900/90 to-indigo-900/90"></div>
-
-                    <div class="relative z-10">
-                        <div class="flex justify-between items-center mb-3">
-                            <span class="text-[9px] bg-white/20 px-2.5 py-0.5 rounded-full font-bold tracking-wider">CARTEIRINHA DIGITAL</span>
-                            <span class="text-xs font-mono font-semibold" id="card-matricula">MAT----</span>
-                        </div>
-                        <div class="flex items-center space-x-4">
-                            <div class="w-20 h-24 bg-white/10 rounded-xl border border-white/20 flex items-center justify-center overflow-hidden shrink-0 shadow-inner relative group cursor-pointer" onclick="dispararTrocaFoto()" title="Clique para alterar foto">
-                                <div id="card-foto-box" class="w-full h-full flex items-center justify-center">
-                                    <i class="fa-solid fa-user text-2xl text-blue-200"></i>
-                                </div>
-                                <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition text-[10px] text-white">
-                                    <i class="fa-solid fa-camera mr-1"></i> Alterar
-                                </div>
+                <div class="bg-gradient-to-br from-blue-900 to-indigo-800 text-white p-5 rounded-3xl shadow-xl border border-white/10 relative">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-[9px] bg-white/20 px-2.5 py-0.5 rounded-full font-bold tracking-wider">CARTEIRINHA DIGITAL</span>
+                        <span class="text-xs font-mono font-semibold" id="card-matricula">MAT----</span>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div class="w-20 h-24 bg-white/10 rounded-xl border border-white/20 flex items-center justify-center overflow-hidden shrink-0 shadow-inner relative group cursor-pointer" onclick="dispararTrocaFoto()" title="Clique para alterar foto">
+                            <div id="card-foto-box" class="w-full h-full flex items-center justify-center">
+                                <i class="fa-solid fa-user text-2xl text-blue-200"></i>
                             </div>
-                            <div class="space-y-1 text-xs w-full">
-                                <p class="font-bold text-sm truncate" id="card-nome">---</p>
-                                <p class="text-blue-200 truncate" id="card-curso">---</p>
-                                <p class="text-[10px] opacity-75">Validade: Dez/2026</p>
+                            <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition text-[10px] text-white">
+                                <i class="fa-solid fa-camera mr-1"></i> Alterar
                             </div>
                         </div>
-                        <div class="mt-4 pt-3 border-t border-white/10 flex justify-between items-center">
-                            <span class="text-[9px] text-blue-200">Toque na foto para alterá-la</span>
-                            <div id="card-qrcode" class="bg-white p-1 rounded-lg"></div>
+                        <div class="space-y-1 text-xs w-full">
+                            <p class="font-bold text-sm truncate" id="card-nome">---</p>
+                            <p class="text-blue-200 truncate" id="card-curso">---</p>
+                            <p class="text-[10px] opacity-75">Validade: Dez/2026</p>
                         </div>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-white/10 flex justify-between items-center">
+                        <span class="text-[9px] text-blue-200">Toque na foto para alterá-la</span>
+                        <div id="card-qrcode" class="bg-white p-1 rounded-lg"></div>
                     </div>
                 </div>
 
