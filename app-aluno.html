@@ -226,7 +226,6 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // Lista oficial idêntica à do sistema matriz
         const tiposDocumentosObrigatorios = [
             { id: "rg_cnh", label: "RG ou CNH" },
             { id: "cpf", label: "CPF" },
@@ -237,18 +236,10 @@
         ];
 
         let alunoLogado = null;
-        let gdriveUrlGlobal = ""; // Armazenará a URL do Google Drive configurada na instituição
+        let gdriveUrlGlobal = ""; 
 
         window.addEventListener('DOMContentLoaded', async () => {
-            // Busca a URL do Google Drive configurada no Firestore (instituição)
-            try {
-                const instDoc = await db.collection("institution").doc("config").get();
-                if(instDoc.exists && instDoc.data().gdriveUrl) {
-                    gdriveUrlGlobal = instDoc.data().gdriveUrl.trim();
-                }
-            } catch(e) {
-                console.error("Erro ao buscar config da instituição:", e);
-            }
+            await carregarConfiguracaoDrive();
 
             const sessao = sessionStorage.getItem('aluno_app_logado');
             if(sessao) {
@@ -258,6 +249,22 @@
                 carregarDadosPainel();
             }
         });
+
+        async function carregarConfiguracaoDrive() {
+            try {
+                const instDoc = await db.collection("institution").doc("config").get();
+                if(instDoc.exists && instDoc.data().gdriveUrl) {
+                    gdriveUrlGlobal = instDoc.data().gdriveUrl.trim();
+                }
+            } catch(e) {
+                console.error("Erro ao buscar config da instituição:", e);
+            }
+
+            // Fallback caso o banco não retorne ou demore: você pode colar sua URL do Apps Script aqui caso queira fixar de vez no app
+            if(!gdriveUrlGlobal) {
+                gdriveUrlGlobal = localStorage.getItem('se7_fallback_gdrive_url') || "";
+            }
+        }
 
         async function fazerLoginAluno() {
             const cpfInput = document.getElementById('login-cpf').value.trim().replace(/[^\d]/g, '');
@@ -356,7 +363,7 @@
             reader.readAsDataURL(file);
         }
 
-        // Envio direto para o Google Drive via Apps Script (Sincronizado com o sistema principal)
+        // Envio direto para o Google Drive via Apps Script com verificação e fallback
         async function enviarDocumentoPDFAluno(tipoId) {
             const fileInput = document.getElementById(`file_doc_${tipoId}`);
             if(!fileInput || !fileInput.files || fileInput.files.length === 0) return alert("Selecione um arquivo PDF.");
@@ -366,14 +373,25 @@
                 return alert("Atenção: O documento precisa obrigatoriamente estar em formato PDF.");
             }
 
+            // Garante que tentamos buscar a URL atualizada caso não estivesse carregada
             if(!gdriveUrlGlobal) {
-                return alert("A URL do Google Drive não está configurada no sistema principal. Avise a secretaria.");
+                await carregarConfiguracaoDrive();
+            }
+
+            if(!gdriveUrlGlobal) {
+                // Caso ainda não ache no Firestore, permite inserir manualmente para destravar o aluno imediatamente
+                const urlManual = prompt("A URL do Google Drive não foi localizada automaticamente. Por favor, cole aqui a URL do Web App do Google Apps Script gerada no sistema principal:");
+                if(urlManual && urlManual.trim().startsWith("http")) {
+                    gdriveUrlGlobal = urlManual.trim();
+                    localStorage.setItem('se7_fallback_gdrive_url', gdriveUrlGlobal);
+                } else {
+                    return alert("Erro: A URL do Google Drive precisa estar configurada em Sistema > Instituição no painel principal.");
+                }
             }
 
             const tipoObj = tiposDocumentosObrigatorios.find(t => t.id === tipoId);
             const nomeDocFormatado = tipoObj ? tipoObj.label : tipoId;
 
-            // Feedback visual de carregamento
             const btnEnviar = event.target;
             const textoOriginal = btnEnviar.textContent;
             btnEnviar.disabled = true;
@@ -391,7 +409,6 @@
                         mimeType: "application/pdf"
                     };
 
-                    // Envia para o Web App do Google Apps Script
                     const response = await fetch(gdriveUrlGlobal, {
                         method: "POST",
                         headers: { "Content-Type": "text/plain;charset=utf-8" },
