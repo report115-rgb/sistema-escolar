@@ -17,6 +17,15 @@
         body { -webkit-tap-highlight-color: transparent; }
         ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
+
+        @keyframes piscarAlerta {
+            0% { background-color: #ef4444; opacity: 1; transform: scale(1); }
+            50% { background-color: #3b82f6; opacity: 0.6; transform: scale(1.2); }
+            100% { background-color: #ef4444; opacity: 1; transform: scale(1); }
+        }
+        .animacao-piscar-alerta {
+            animation: piscarAlerta 1.2s infinite ease-in-out;
+        }
     </style>
 </head>
 <body class="bg-slate-100 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
@@ -204,8 +213,13 @@
             <button onclick="mudarAba('frequencia')" id="nav-frequencia" class="flex flex-col items-center text-slate-400 text-[10px] font-bold transition">
                 <i class="fa-solid fa-clipboard-user text-base mb-0.5"></i> Presença
             </button>
-            <button onclick="mudarAba('documentos')" id="nav-documentos" class="flex flex-col items-center text-slate-400 text-[10px] font-bold transition">
-                <i class="fa-solid fa-folder-open text-base mb-0.5"></i> Docs
+            <!-- Botão Docs com container relativo para o alerta piscando -->
+            <button onclick="mudarAba('documentos')" id="nav-documentos" class="flex flex-col items-center text-slate-400 text-[10px] font-bold transition relative">
+                <div class="relative">
+                    <i class="fa-solid fa-folder-open text-base mb-0.5"></i>
+                    <span id="badge-alerta-docs" class="absolute -top-1 -right-2 w-4 h-4 bg-red-500 text-white rounded-full text-[9px] font-black flex items-center justify-center animacao-piscar-alerta shadow-md" style="display: none;" title="Documentação pendente!">!</span>
+                </div>
+                Docs
             </button>
             <button onclick="mudarAba('calendario')" id="nav-calendario" class="flex flex-col items-center text-slate-400 text-[10px] font-bold transition">
                 <i class="fa-solid fa-calendar-days text-base mb-0.5"></i> Aulas
@@ -236,7 +250,6 @@
         ];
 
         let alunoLogado = null;
-        
         let gdriveUrlGlobal = "https://script.google.com/macros/s/AKfycbwPL9G9q--46vYhuyCfqSwZ9IKm2tEvlfvlH18TvD0FJXqYrDnyLOyKqtp6mT7LdH5XOA/exec"; 
 
         window.addEventListener('DOMContentLoaded', async () => {
@@ -248,6 +261,7 @@
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('main-app').style.display = 'flex';
                 carregarDadosPainel();
+                verificarPendenciaDocumentos();
             }
         });
 
@@ -262,6 +276,28 @@
                 }
             } catch(e) {
                 console.error("Erro ao buscar config da instituição:", e);
+            }
+        }
+
+        // Função que verifica se falta enviar ou aprovar documentos e gerencia o ícone piscando
+        function verificarPendenciaDocumentos() {
+            const badge = document.getElementById('badge-alerta-docs');
+            if(!badge || !alunoLogado) return;
+
+            const docs = alunoLogado.documentos || {};
+            let pendenteOuReprovado = false;
+
+            tiposDocumentosObrigatorios.forEach(tipo => {
+                const info = docs[tipo.id];
+                if (!info || info.status !== 'Aprovado') {
+                    pendenteOuReprovado = true;
+                }
+            });
+
+            if (pendenteOuReprovado) {
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
             }
         }
 
@@ -295,6 +331,7 @@
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('main-app').style.display = 'flex';
                 carregarDadosPainel();
+                verificarPendenciaDocumentos();
             } catch(e) {
                 alert("Erro ao conectar com o servidor: " + e.message);
             }
@@ -418,6 +455,7 @@
                     sessionStorage.setItem('aluno_app_logado', JSON.stringify(alunoLogado));
                     
                     renderizarDocumentosObrigatorios();
+                    verificarPendenciaDocumentos();
                     alert("Documento PDF enviado com sucesso para a nuvem! Aguardando validação da secretaria.");
                 } catch(err) {
                     console.error("Erro no envio:", err);
@@ -622,6 +660,7 @@
                         alunoLogado = { id: docSnap.id, ...docSnap.data() };
                         sessionStorage.setItem('aluno_app_logado', JSON.stringify(alunoLogado));
                         renderizarDocumentosObrigatorios();
+                        verificarPendenciaDocumentos();
                     }
                 } catch (e) {
                     console.error("Erro ao sincronizar documentos:", e);
