@@ -37,8 +37,8 @@
             <div id="login-icon-box" class="inline-flex items-center justify-center w-16 h-16 bg-blue-600 text-white rounded-2xl text-3xl font-bold mb-3 shadow-lg shadow-blue-500/30">
                 <i class="fa-solid fa-graduation-cap"></i>
             </div>
-            <!-- Logomarca da Instituição carregada dinamicamente -->
-            <img id="login-logo-img" class="max-h-16 max-w-[200px] object-contain mb-3 bg-transparent border-0 shadow-none outline-none" style="display: none;" alt="Logo da Instituição">
+            <!-- Logomarca da Instituição carregada dinamicamente do Firestore -->
+            <img id="login-logo-img" class="max-h-20 max-w-[220px] object-contain mb-3 bg-transparent border-0 shadow-none outline-none hidden" alt="Logo da Instituição">
             
             <h1 class="text-2xl font-bold">Portal do Aluno</h1>
         </div>
@@ -60,7 +60,7 @@
             </div>
         </div>
 
-        <!-- Rodapé atualizado com SE7 Gestão Educacional e versão -->
+        <!-- Rodapé com SE7 Gestão Educacional e versão -->
         <div class="text-center text-[10px] text-blue-300 pb-2 space-y-0.5">
             <div class="font-semibold">SE7 Gestão Educacional</div>
             <div>v1.0.7 &bull; Acesso Restrito ao Aluno</div>
@@ -184,7 +184,6 @@
 
             <!-- ABA 5: DOCUMENTOS OBRIGATÓRIOS -->
             <div id="tab-documentos" class="space-y-3 tab-pane" style="display: none;">
-                <!-- Caixa de Instruções ou Mensagem de Sucesso Dinâmica -->
                 <div id="docs-banner-msg">
                     <div class="bg-blue-50 p-3 rounded-2xl border border-blue-200 text-xs text-blue-900 mb-3">
                         <p class="font-bold mb-1"><i class="fa-solid fa-circle-info mr-1"></i> Instruções para Postagem:</p>
@@ -281,6 +280,7 @@
             }
         });
 
+        // Método otimizado para sincronizar e carregar a logo institucional em tempo real
         async function carregarConfiguracaoDrive() {
             try {
                 const instDoc = await db.collection("institution").doc("config").get();
@@ -289,14 +289,18 @@
                     if(data.gdriveUrl && data.gdriveUrl.startsWith("http")) {
                         gdriveUrlGlobal = data.gdriveUrl.trim();
                     }
-                    if(data.logo) {
-                        const logoEl = document.getElementById('login-logo-img');
-                        const iconBox = document.getElementById('login-icon-box');
-                        if(logoEl && data.logo) {
-                            logoEl.src = data.logo;
-                            logoEl.style.display = 'block';
-                            if(iconBox) iconBox.style.display = 'none';
-                        }
+                    
+                    // Sincronização automática da Logomarca cadastrada na aba Sistema > Instituição
+                    const logoEl = document.getElementById('login-logo-img');
+                    const iconBox = document.getElementById('login-icon-box');
+                    
+                    if(data.logo && data.logo.trim() !== "") {
+                        logoEl.src = data.logo.trim();
+                        logoEl.classList.remove('hidden');
+                        if(iconBox) iconBox.style.display = 'none';
+                    } else {
+                        logoEl.classList.add('hidden');
+                        if(iconBox) iconBox.style.display = 'flex';
                     }
                 }
             } catch(e) {
@@ -523,7 +527,7 @@
             }
 
             if(!gdriveUrlGlobal || gdriveUrlGlobal.includes("COLE_AQUI")) {
-                return alert("Erro: A URL do Google Apps Script não foi configurada no código do aplicativo do aluno. Cole a URL no arquivo app-aluno.html.");
+                return alert("Erro: A URL do Google Apps Script não foi configurada no código do aplicativo do aluno.");
             }
 
             const tipoObj = tiposDocumentosObrigatorios.find(t => t.id === tipoId);
