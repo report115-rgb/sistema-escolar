@@ -1414,8 +1414,9 @@
                 } catch (err) {
                     console.error("Erro na integração com Asaas (Cliente):", err);
                     throw err;
-                }
+                };
             }
+        }
 
             async criarCobrancaBoleto(customerId, dadosCobranca) {
                 const payload = { 
