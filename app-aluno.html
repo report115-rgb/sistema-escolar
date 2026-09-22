@@ -601,7 +601,7 @@
             new QRCode(qr, { text: `SE7-ALUNO-${alunoLogado.code}`, width: 45, height: 45 });
         }
 
-        function mudarAba(aba) {
+        async function mudarAba(aba) {
             ['home', 'financeiro', 'notas', 'frequencia', 'documentos', 'calendario'].forEach(a => {
                 const el = document.getElementById(`tab-${a}`);
                 if(el) el.style.display = (a === aba) ? 'block' : 'none';
@@ -613,6 +613,20 @@
                         : 'flex flex-col items-center text-slate-400 text-[10px] font-bold transition';
                 }
             });
+
+            // Sincroniza o status de aprovação da secretaria em tempo real quando o aluno abre a aba Docs
+            if (aba === 'documentos' && alunoLogado && alunoLogado.id) {
+                try {
+                    const docSnap = await db.collection("students").doc(alunoLogado.id).get();
+                    if (docSnap.exists) {
+                        alunoLogado = { id: docSnap.id, ...docSnap.data() };
+                        sessionStorage.setItem('aluno_app_logado', JSON.stringify(alunoLogado));
+                        renderizarDocumentosObrigatorios();
+                    }
+                } catch (e) {
+                    console.error("Erro ao sincronizar documentos:", e);
+                }
+            }
         }
 
         function fazerLogout() {
