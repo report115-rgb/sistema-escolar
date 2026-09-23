@@ -270,6 +270,7 @@
         <!-- NAVEGAÇÃO PRINCIPAL (ABAS) -->
         <nav class="tabs-nav bg-gray-200 dark:bg-slate-700 px-4 py-2 flex space-x-2 overflow-x-auto border-b border-gray-300 dark:border-slate-600" id="main-tabs-nav">
             <button class="tab-button active px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap bg-blue-600 text-white shadow" onclick="openTab(event, 'tab-gestion-students')"><i class="fa-solid fa-users-gear mr-1.5"></i> Gestão de Alunos</button>
+	    <button class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-slate-600" onclick="openTab(event, 'tab-gestao-eja')"><i class="fa-solid fa-graduation-cap mr-1.5"></i> Gestão EJA</button>
             <button class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-slate-600" onclick="openTab(event, 'tab-students')"><i class="fa-solid fa-user-graduate mr-1.5"></i> Matrícula</button>
             <button class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-slate-600" onclick="openTab(event, 'tab-attendance')"><i class="fa-solid fa-clipboard-user mr-1.5"></i> Frequência</button>
             <button class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-slate-600" onclick="openTab(event, 'tab-grades')"><i class="fa-solid fa-star mr-1.5"></i> Notas</button>
@@ -1115,7 +1116,81 @@
             </div>
         </div>
 
-        <!-- AUDITORIA & LOGS -->
+        <!-- ABA GESTÃO EJA -->
+<div id="tab-gestao-eja" class="tab-content space-y-4" style="display: none;">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-md p-6 border border-gray-200 dark:border-slate-700 space-y-6">
+        <div class="border-b border-gray-100 dark:border-slate-700 pb-3 flex justify-between items-center">
+            <div>
+                <h2 class="text-xl font-bold text-gray-900 dark:text-white">Painel Administrativo – EJA (Supletivo)</h2>
+                <p class="text-xs text-gray-500">Gerencie apostilas, provas online e acompanhe os alunos matriculados na modalidade.</p>
+            </div>
+            <span class="px-3 py-1 bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 rounded-full text-xs font-bold">Módulo Ativo</span>
+        </div>
+
+        <div class="flex space-x-2 border-b border-gray-200 dark:border-slate-700 pb-3">
+            <button class="subtab-eja-btn active px-4 py-2 rounded-xl text-xs font-semibold bg-emerald-600 text-white shadow" onclick="openSubTabEJA(event, 'subeja-alunos')"><i class="fa-solid fa-users mr-1"></i> Alunos EJA</button>
+            <button class="subtab-eja-btn px-4 py-2 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTabEJA(event, 'subeja-apostila')"><i class="fa-solid fa-file-pdf mr-1"></i> Enviar Apostila PDF</button>
+            <button class="subtab-eja-btn px-4 py-2 rounded-xl text-xs font-semibold bg-gray-100 dark:text-gray-300" onclick="openSubTabEJA(event, 'subeja-prova')"><i class="fa-solid fa-laptop-file mr-1"></i> Prova Online & Status</button>
+        </div>
+
+        <div id="subeja-alunos" class="subeja-content space-y-3">
+            <h4 class="font-bold text-sm text-gray-800 dark:text-white">Estudantes da Modalidade EJA</h4>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead>
+                        <tr class="border-b border-gray-200 dark:border-slate-700 text-gray-500">
+                            <th class="p-3">Matrícula</th>
+                            <th class="p-3">Nome Completo</th>
+                            <th class="p-3">CPF</th>
+                            <th class="p-3">WhatsApp</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabela-alunos-eja" class="divide-y divide-gray-200 dark:divide-slate-700"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="subeja-apostila" class="subeja-content space-y-4" style="display: none;">
+            <div class="bg-emerald-50 dark:bg-slate-900 p-4 rounded-xl border border-emerald-200 dark:border-slate-700 space-y-3 max-w-xl">
+                <h4 class="font-bold text-xs text-emerald-800 dark:text-emerald-300 uppercase">Disponibilizar Apostila Oficial (PDF)</h4>
+                <p class="text-xs text-gray-600 dark:text-gray-400">Cole abaixo o link do PDF da apostila (Google Drive).</p>
+                <div>
+                    <label class="block text-xs font-semibold mb-1">URL do PDF da Apostila</label>
+                    <input type="text" id="input-eja-apostila-url" placeholder="https://drive.google.com/file/d/.../view" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800">
+                </div>
+                <button onclick="salvarApostilaEJAAdmin()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow">Salvar Apostila para os Alunos</button>
+            </div>
+        </div>
+
+        <div id="subeja-prova" class="subeja-content space-y-4" style="display: none;">
+            <div class="bg-gray-50 dark:bg-slate-900 p-5 rounded-xl border border-gray-200 dark:border-slate-700 space-y-4 max-w-2xl">
+                <div class="flex justify-between items-center border-b border-gray-200 dark:border-slate-700 pb-3">
+                    <h4 class="font-bold text-sm text-blue-600 dark:text-blue-400">Controle de Liberação da Prova Online</h4>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xs font-semibold" id="lbl-status-prova">Status: Desativada</span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="switch-ativar-prova-eja" onchange="alternarAtivacaoProvaEJA(this)" class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-emerald-600"></div>
+                        </label>
+                    </div>
+                </div>
+                <div class="space-y-3 text-xs">
+                    <div>
+                        <label class="block font-semibold mb-1">Instruções da Prova</label>
+                        <textarea id="input-eja-instrucoes" rows="2" placeholder="Ex: Leia com atenção antes de responder." class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 dark:bg-slate-800"></textarea>
+                    </div>
+                    <div>
+                        <label class="block font-semibold mb-1">Enunciado da Questão / Pergunta</label>
+                        <input type="text" id="input-eja-q1" placeholder="Ex: Qual a diretriz da EJA?" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 dark:bg-slate-800">
+                    </div>
+                    <button onclick="salvarConfiguracaoProvaEJA()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow">Salvar Configurações da Prova</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+	<!-- AUDITORIA & LOGS -->
         <div id="tab-audit" class="tab-content space-y-4" style="display: none;">
             <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-md p-6 border border-gray-200 dark:border-slate-700">
                 <div class="flex justify-between items-center mb-4 pb-2 border-b border-gray-100 dark:border-slate-700">
@@ -3664,6 +3739,63 @@
         }
 
         function toggleDarkMode() { document.documentElement.classList.toggle('dark'); }
+
+	function openSubTabEJA(evt, subId) {
+            document.querySelectorAll('.subeja-content').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.subtab-eja-btn').forEach(el => {
+                el.classList.remove('bg-emerald-600', 'text-white', 'shadow');
+                el.classList.add('bg-gray-100', 'dark:bg-slate-700', 'text-gray-700', 'dark:text-gray-300');
+            });
+            document.getElementById(subId).style.display = 'block';
+            evt.currentTarget.classList.remove('bg-gray-100', 'dark:bg-slate-700', 'text-gray-700', 'dark:text-gray-300');
+            evt.currentTarget.classList.add('bg-emerald-600', 'text-white', 'shadow');
+            if(subId === 'subeja-alunos') renderizarAlunosEJAAdmin();
+        }
+
+        function renderizarAlunosEJAAdmin() {
+            const tbody = document.getElementById('tabela-alunos-eja');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            const alunosEJA = students.filter(s => {
+                const curso = courses.find(c => c.id === s.courseId);
+                return curso && (curso.nivel === 'Supletivo' || curso.sigla === 'EJA' || (curso.name && curso.name.toUpperCase().includes('EJA')));
+            });
+            if (alunosEJA.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-400">Nenhum aluno EJA matriculado.</td></tr>`;
+                return;
+            }
+            alunosEJA.forEach(s => {
+                tbody.innerHTML += `
+                    <tr class="border-b border-gray-100 dark:border-slate-700">
+                        <td class="p-3 font-bold text-emerald-600">${s.code || '---'}</td>
+                        <td class="p-3 font-semibold">${s.fullname}</td>
+                        <td class="p-3">${s.cpf || '---'}</td>
+                        <td class="p-3">${s.whatsapp || '---'}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        async function salvarApostilaEJAAdmin() {
+            const url = document.getElementById('input-eja-apostila-url').value.trim();
+            if (!url) return alert("Informe o link da apostila.");
+            await db.collection("config").doc("ejaSettings").set({ apostilaUrl: url }, { merge: true });
+            alert("Apostila atualizada com sucesso!");
+        }
+
+        async function alternarAtivacaoProvaEJA(checkbox) {
+            const ativo = checkbox.checked;
+            document.getElementById('lbl-status-prova').textContent = ativo ? "Status: Ativada" : "Status: Desativada";
+            await db.collection("config").doc("ejaSettings").set({ provaAtiva: ativo }, { merge: true });
+        }
+
+        async function salvarConfiguracaoProvaEJA() {
+            await db.collection("config").doc("ejaSettings").set({
+                instrucoesProva: document.getElementById('input-eja-instrucoes').value.trim(),
+                perguntaExemplo: document.getElementById('input-eja-q1').value.trim()
+            }, { merge: true });
+            alert("Prova configurada com sucesso!");
+        }
     </script>
 </body>
 </html>
