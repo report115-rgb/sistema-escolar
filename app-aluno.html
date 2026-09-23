@@ -18,7 +18,7 @@
     <!-- Firebase SDK (Compat) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-    <!-- Canvas Confetti para a animação de comemoração -->
+    <!-- Canvas Confetti -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         body { -webkit-tap-highlight-color: transparent; }
@@ -29,18 +29,14 @@
             from { opacity: 0; transform: translateY(4px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        .tab-pane {
-            animation: fadeIn 0.25s ease-out forwards;
-        }
+        .tab-pane { animation: fadeIn 0.25s ease-out forwards; }
 
         @keyframes piscarAlerta {
             0% { background-color: #ef4444; opacity: 1; transform: scale(1); }
             50% { background-color: #3b82f6; opacity: 0.6; transform: scale(1.2); }
             100% { background-color: #ef4444; opacity: 1; transform: scale(1); }
         }
-        .animacao-piscar-alerta {
-            animation: piscarAlerta 1.2s infinite ease-in-out;
-        }
+        .animacao-piscar-alerta { animation: piscarAlerta 1.2s infinite ease-in-out; }
     </style>
 </head>
 <body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-200">
@@ -78,7 +74,7 @@
 
         <div class="text-center text-[10px] text-blue-300 pb-2 space-y-0.5">
             <div class="font-semibold">SE7 Gestão Educacional</div>
-            <div>v1.2.0 &bull; Central de Atendimento ao Aluno</div>
+            <div>v1.2.1 &bull; Central de Atendimento ao Aluno</div>
         </div>
     </div>
 
@@ -119,51 +115,126 @@
         </div>
     </div>
 
-    <!-- TELA DE AUTO-MATRÍCULA (NOVO ALUNO) -->
-    <div id="matricula-screen" class="fixed inset-0 z-50 bg-slate-100 dark:bg-slate-950 flex flex-col justify-between p-6 text-slate-800 dark:text-slate-100 overflow-y-auto" style="display: none;">
-        <div class="max-w-md w-full mx-auto space-y-5 my-auto py-6">
+    <!-- TELA DE AUTO-MATRÍCULA (FICHA IDÊNTICA AO SISTEMA MATRIX) -->
+    <div id="matricula-screen" class="fixed inset-0 z-50 bg-slate-100 dark:bg-slate-950 flex flex-col justify-between p-4 text-slate-800 dark:text-slate-100 overflow-y-auto" style="display: none;">
+        <div class="max-w-lg w-full mx-auto space-y-4 my-auto py-6">
             <div class="flex items-center justify-between">
                 <button onclick="voltarParaWelcome()" class="w-10 h-10 bg-slate-200 dark:bg-slate-800 rounded-xl flex items-center justify-center text-sm transition">
                     <i class="fa-solid fa-arrow-left"></i>
                 </button>
-                <h2 class="font-bold text-base">Fazer Matrícula Online</h2>
+                <h2 class="font-bold text-base">Ficha de Matrícula Online</h2>
                 <div class="w-10"></div>
             </div>
 
             <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-800 space-y-4">
                 <div class="bg-blue-50 dark:bg-blue-950/40 p-3.5 rounded-2xl border border-blue-200 dark:border-blue-800 text-xs text-blue-900 dark:text-blue-200 space-y-1">
-                    <p class="font-bold flex items-center"><i class="fa-solid fa-circle-info mr-1.5 text-blue-600"></i> Matrícula Rápida:</p>
-                    <p class="text-[11px]">Preencha seus dados abaixo e escolha o curso desejado. Sua matrícula e acesso serão gerados instantaneamente!</p>
+                    <p class="font-bold flex items-center"><i class="fa-solid fa-circle-info mr-1.5 text-blue-600"></i> Sistema Integrado:</p>
+                    <p class="text-[11px]">Preencha sua ficha completa abaixo. Os dados serão salvos diretamente no sistema Matrix e seu acesso será liberado na hora.</p>
                 </div>
 
-                <div>
-                    <label class="block text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Nome Completo</label>
-                    <input type="text" id="mat-nome" placeholder="Seu nome completo" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm focus:ring-2 focus:ring-emerald-600 focus:outline-none">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">CPF</label>
-                    <input type="text" id="mat-cpf" placeholder="000.000.000-00" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm focus:ring-2 focus:ring-emerald-600 focus:outline-none">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">E-mail</label>
-                    <input type="email" id="mat-email" placeholder="seu@email.com" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm focus:ring-2 focus:ring-emerald-600 focus:outline-none">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">WhatsApp / Telefone</label>
-                    <input type="text" id="mat-whatsapp" placeholder="(00) 00000-0000" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm focus:ring-2 focus:ring-emerald-600 focus:outline-none">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Escolha o Curso</label>
-                    <select id="mat-curso-select" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm focus:ring-2 focus:ring-emerald-600 focus:outline-none">
-                        <option value="">Carregando cursos disponíveis...</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Crie sua Senha de Acesso</label>
-                    <input type="password" id="mat-senha" placeholder="Mínimo 6 caracteres" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm focus:ring-2 focus:ring-emerald-600 focus:outline-none">
+                <!-- DADOS PESSOAIS -->
+                <div class="space-y-3">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 border-b border-slate-100 dark:border-slate-800 pb-1">1. Dados Pessoais</h3>
+                    
+                    <div>
+                        <label class="block text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Nome Completo</label>
+                        <input type="text" id="mat-nome" placeholder="Digite seu nome completo" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm focus:ring-2 focus:ring-emerald-600 focus:outline-none">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Data de Nascimento</label>
+                            <input type="date" id="mat-nascimento" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm focus:ring-2 focus:ring-emerald-600 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Sexo</label>
+                            <select id="mat-sexo" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm focus:ring-2 focus:ring-emerald-600 focus:outline-none">
+                                <option value="">Selecione</option>
+                                <option value="Masculino">Masculino</option>
+                                <option value="Feminino">Feminino</option>
+                                <option value="Outro">Outro</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">CPF</label>
+                            <input type="text" id="mat-cpf" placeholder="000.000.000-00" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm focus:ring-2 focus:ring-emerald-600 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">RG</label>
+                            <input type="text" id="mat-rg" placeholder="Número do RG" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm focus:ring-2 focus:ring-emerald-600 focus:outline-none">
+                        </div>
+                    </div>
                 </div>
 
-                <button onclick="efetivarMatriculaOnline()" class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/30 transition text-sm">
+                <!-- CONTATO -->
+                <div class="space-y-3 pt-2">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 border-b border-slate-100 dark:border-slate-800 pb-1">2. Contato</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">WhatsApp</label>
+                            <input type="text" id="mat-whatsapp" placeholder="(00) 00000-0000" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm focus:ring-2 focus:ring-emerald-600 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">E-mail</label>
+                            <input type="email" id="mat-email" placeholder="seu@email.com" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm focus:ring-2 focus:ring-emerald-600 focus:outline-none">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ENDEREÇO -->
+                <div class="space-y-3 pt-2">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 border-b border-slate-100 dark:border-slate-800 pb-1">3. Endereço Completo</h3>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">CEP</label>
+                            <input type="text" id="mat-cep" placeholder="00000-000" onblur="buscarCepMatricula()" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm focus:ring-2 focus:ring-emerald-600 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Cidade</label>
+                            <input type="text" id="mat-cidade" placeholder="Cidade" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm bg-slate-50 dark:bg-slate-900" readonly>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="col-span-2">
+                            <label class="block text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Rua / Logradouro</label>
+                            <input type="text" id="mat-rua" placeholder="Nome da rua" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm bg-slate-50 dark:bg-slate-900" readonly>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Número</label>
+                            <input type="text" id="mat-numero" placeholder="Nº" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm focus:ring-2 focus:ring-emerald-600 focus:outline-none">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Bairro</label>
+                            <input type="text" id="mat-bairro" placeholder="Bairro" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm bg-slate-50 dark:bg-slate-900" readonly>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Estado (UF)</label>
+                            <input type="text" id="mat-estado" placeholder="UF" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm bg-slate-50 dark:bg-slate-900" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CURSO E SENHA -->
+                <div class="space-y-3 pt-2">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 border-b border-slate-100 dark:border-slate-800 pb-1">4. Curso e Acesso</h3>
+                    <div>
+                        <label class="block text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Escolha o Curso</label>
+                        <select id="mat-curso-select" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm focus:ring-2 focus:ring-emerald-600 focus:outline-none">
+                            <option value="">Carregando cursos disponíveis...</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Crie sua Senha de Acesso</label>
+                        <input type="password" id="mat-senha" placeholder="Mínimo 6 caracteres" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm focus:ring-2 focus:ring-emerald-600 focus:outline-none">
+                    </div>
+                </div>
+
+                <button onclick="efetivarMatriculaOnline()" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/30 transition text-sm mt-4">
                     Finalizar Matrícula e Acessar Portal
                 </button>
             </div>
@@ -178,7 +249,7 @@
             </div>
             <div>
                 <h3 class="font-bold text-lg text-emerald-600 dark:text-emerald-400">Matrícula Realizada!</h3>
-                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Seu cadastro foi efetuado com sucesso no sistema. Anote suas credenciais:</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Seu cadastro foi efetuado com sucesso no sistema Matrix. Anote suas credenciais:</p>
             </div>
             <div class="bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 text-left space-y-2 text-xs">
                 <p><strong>Nº da Matrícula:</strong> <span id="sucesso-mat-codigo" class="font-mono font-bold text-blue-600 dark:text-blue-400">---</span></p>
@@ -215,7 +286,7 @@
         </div>
     </div>
 
-    <!-- MODAL DA CARTEIRINHA DIGITAL (FLUTUANTE) -->
+    <!-- MODAL DA CARTEIRINHA DIGITAL -->
     <div id="modal-carteirinha" class="fixed inset-0 z-[70] bg-black/70 flex items-center justify-center p-4" style="display: none;">
         <div class="bg-gradient-to-br from-blue-900 to-indigo-800 text-white p-5 rounded-3xl max-w-xs w-full shadow-2xl border border-white/10 relative space-y-3">
             <button onclick="fecharModalCarteirinha()" class="absolute top-3 right-3 text-white/70 hover:text-white text-lg font-bold">&times;</button>
@@ -291,7 +362,6 @@
                     </div>
                 </div>
 
-                <!-- Botão de Carteirinha ID -->
                 <div>
                     <button onclick="abrirModalCarteirinha()" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-blue-500 text-slate-800 dark:text-slate-100 p-4 rounded-2xl shadow-sm flex items-center justify-between transition group">
                         <div class="flex items-center space-x-3">
@@ -311,8 +381,11 @@
                     <h3 class="font-bold text-slate-700 dark:text-slate-200 text-sm mb-2"><i class="fa-solid fa-user-shield text-blue-600 mr-1.5"></i> Meus Dados Cadastrais</h3>
                     <p class="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5"><strong class="text-slate-500 dark:text-slate-400">Matrícula:</strong> <span id="info-mat" class="font-semibold">---</span></p>
                     <p class="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5"><strong class="text-slate-500 dark:text-slate-400">CPF:</strong> <span id="info-cpf" class="font-semibold">---</span></p>
+                    <p class="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5"><strong class="text-slate-500 dark:text-slate-400">RG:</strong> <span id="info-rg" class="font-semibold">---</span></p>
+                    <p class="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5"><strong class="text-slate-500 dark:text-slate-400">Nascimento:</strong> <span id="info-nasc" class="font-semibold">---</span></p>
                     <p class="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5"><strong class="text-slate-500 dark:text-slate-400">E-mail:</strong> <span id="info-email" class="font-semibold">---</span></p>
                     <p class="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5"><strong class="text-slate-500 dark:text-slate-400">WhatsApp:</strong> <span id="info-tel" class="font-semibold">---</span></p>
+                    <p class="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5"><strong class="text-slate-500 dark:text-slate-400">Endereço:</strong> <span id="info-endereco" class="font-semibold text-right max-w-[200px] truncate">---</span></p>
                     <p class="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5"><strong class="text-slate-500 dark:text-slate-400">Curso:</strong> <span id="info-curso-completo" class="font-semibold text-right max-w-[200px] truncate">---</span></p>
                     <p class="flex justify-between pt-0.5"><strong class="text-slate-500 dark:text-slate-400">Turma:</strong> <span id="info-turma" class="font-semibold">---</span></p>
                 </div>
@@ -405,7 +478,7 @@
 
         </div>
 
-        <!-- Menu Inferior Fixo (Bottom Bar) com Alertas Piscantes -->
+        <!-- Menu Inferior Fixo -->
         <nav class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-2 py-2 flex justify-around items-center fixed bottom-0 left-0 right-0 shadow-lg z-40 transition-colors duration-200">
             <button onclick="mudarAba('home')" id="nav-home" class="flex flex-col items-center text-blue-600 dark:text-blue-400 text-[10px] font-bold transition">
                 <i class="fa-solid fa-id-card text-base mb-0.5"></i> Início
@@ -413,14 +486,14 @@
             <button onclick="mudarAba('financeiro')" id="nav-financeiro" class="flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition relative">
                 <div class="relative">
                     <i class="fa-solid fa-wallet text-base mb-0.5"></i>
-                    <span id="badge-alerta-financeiro" class="absolute -top-1 -right-2 w-4 h-4 bg-red-500 text-white rounded-full text-[9px] font-black flex items-center justify-center animacao-piscar-alerta shadow-md" style="display: none;" title="Fatura vencendo ou pendente!">!</span>
+                    <span id="badge-alerta-financeiro" class="absolute -top-1 -right-2 w-4 h-4 bg-red-500 text-white rounded-full text-[9px] font-black flex items-center justify-center animacao-piscar-alerta shadow-md" style="display: none;">!</span>
                 </div>
                 Financeiro
             </button>
             <button onclick="mudarAba('notas')" id="nav-notas" class="flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition relative">
                 <div class="relative">
                     <i class="fa-solid fa-star text-base mb-0.5"></i>
-                    <span id="badge-alerta-notas" class="absolute -top-1 -right-2 w-4 h-4 bg-red-500 text-white rounded-full text-[9px] font-black flex items-center justify-center animacao-piscar-alerta shadow-md" style="display: none;" title="Novas notas disponíveis!">!</span>
+                    <span id="badge-alerta-notas" class="absolute -top-1 -right-2 w-4 h-4 bg-red-500 text-white rounded-full text-[9px] font-black flex items-center justify-center animacao-piscar-alerta shadow-md" style="display: none;">!</span>
                 </div>
                 Notas
             </button>
@@ -430,7 +503,7 @@
             <button onclick="mudarAba('documentos')" id="nav-documentos" class="flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition relative">
                 <div class="relative">
                     <i class="fa-solid fa-folder-open text-base mb-0.5"></i>
-                    <span id="badge-alerta-docs" class="absolute -top-1 -right-2 w-4 h-4 bg-red-500 text-white rounded-full text-[9px] font-black flex items-center justify-center animacao-piscar-alerta shadow-md" style="display: none;" title="Documentação pendente!">!</span>
+                    <span id="badge-alerta-docs" class="absolute -top-1 -right-2 w-4 h-4 bg-red-500 text-white rounded-full text-[9px] font-black flex items-center justify-center animacao-piscar-alerta shadow-md" style="display: none;">!</span>
                 </div>
                 Docs
             </button>
@@ -539,19 +612,13 @@
                         return;
                     }
                 }
-                
                 logoWelcome.style.display = 'none';
                 if(iconWelcome) iconWelcome.style.display = 'inline-flex'; 
             } catch(e) {
-                console.error("Erro ao buscar logo da instituição:", e);
-                const logoWelcome = document.getElementById('welcome-logo-img');
-                const iconWelcome = document.getElementById('welcome-icon-box');
-                if(logoWelcome) logoWelcome.style.display = 'none';
-                if(iconWelcome) iconWelcome.style.display = 'inline-flex';
+                console.error("Erro ao buscar logo:", e);
             }
         }
 
-        // Navegação entre as telas iniciais
         function irParaTelaLogin() {
             document.getElementById('welcome-screen').style.display = 'none';
             document.getElementById('login-screen').style.display = 'flex';
@@ -580,22 +647,54 @@
                     selectEl.innerHTML += `<option value="${doc.id}">${c.name || 'Curso sem nome'}</option>`;
                 });
             } catch(e) {
-                console.error("Erro ao carregar cursos:", e);
-                selectEl.innerHTML = '<option value="">Erro ao carregar cursos. Tente novamente.</option>';
+                selectEl.innerHTML = '<option value="">Erro ao carregar cursos.</option>';
+            }
+        }
+
+        // Busca automática de endereço por CEP (ViaCEP)
+        async function buscarCepMatricula() {
+            const cepInput = document.getElementById('mat-cep').value.replace(/\D/g, '');
+            if(cepInput.length !== 8) return;
+
+            try {
+                const res = await fetch(`https://viacep.com.br/ws/${cepInput}/json/`);
+                const data = await res.json();
+                if(!data.erro) {
+                    document.getElementById('mat-rua').value = data.logradouro || '';
+                    document.getElementById('mat-bairro').value = data.bairro || '';
+                    document.getElementById('mat-cidade').value = data.localidade || '';
+                    document.getElementById('mat-estado').value = data.uf || '';
+                    document.getElementById('mat-numero').focus();
+                } else {
+                    alert("CEP não encontrado.");
+                }
+            } catch(e) {
+                console.error("Erro ao buscar CEP:", e);
             }
         }
 
         async function efetivarMatriculaOnline() {
             const nome = document.getElementById('mat-nome').value.trim();
+            const nascimento = document.getElementById('mat-nascimento').value.trim();
+            const sexo = document.getElementById('mat-sexo').value;
             const cpfRaw = document.getElementById('mat-cpf').value.trim();
             const cpf = cpfRaw.replace(/[^\d]/g, '');
-            const email = document.getElementById('mat-email').value.trim();
+            const rg = document.getElementById('mat-rg').value.trim();
             const whatsapp = document.getElementById('mat-whatsapp').value.trim();
+            const email = document.getElementById('mat-email').value.trim();
+            
+            const cep = document.getElementById('mat-cep').value.trim();
+            const rua = document.getElementById('mat-rua').value.trim();
+            const numero = document.getElementById('mat-numero').value.trim();
+            const bairro = document.getElementById('mat-bairro').value.trim();
+            const cidade = document.getElementById('mat-cidade').value.trim();
+            const estado = document.getElementById('mat-estado').value.trim();
+            
             const courseId = document.getElementById('mat-curso-select').value;
             const senha = document.getElementById('mat-senha').value.trim();
 
-            if(!nome || !cpf || !email || !courseId || !senha) {
-                return alert("Por favor, preencha todos os campos obrigatórios e selecione o curso.");
+            if(!nome || !nascimento || !sexo || !cpf || !rg || !whatsapp || !email || !cep || !rua || !numero || !bairro || !cidade || !courseId || !senha) {
+                return alert("Por favor, preencha todos os campos da ficha de matrícula para continuar.");
             }
 
             if(cpf.length !== 11) {
@@ -603,31 +702,38 @@
             }
 
             try {
-                // Verificar se o CPF já está cadastrado
                 const existingSnap = await db.collection("students").get();
                 let cpfJaExiste = false;
                 existingSnap.forEach(doc => {
                     const data = doc.data();
                     const dCpf = data.cpf ? data.cpf.replace(/[^\d]/g, '') : '';
-                    if(dCpf === cpf) {
-                        cpfJaExiste = true;
-                    }
+                    if(dCpf === cpf) cpfJaExiste = true;
                 });
 
                 if(cpfJaExiste) {
-                    return alert("Já existe um aluno cadastrado com este CPF no sistema! Utilize a opção 'Já sou aluno' para fazer login.");
+                    return alert("Já existe um aluno cadastrado com este CPF no sistema Matrix! Utilize a opção 'Já sou aluno' para fazer login.");
                 }
 
-                // Gerar número de matrícula automático (Ex: MAT-2026-XXXXX)
                 const randomNum = Math.floor(10000 + Math.random() * 90000);
                 const novaMatriculaCodigo = `MAT-2026-${randomNum}`;
+                const enderecoCompleto = `${rua}, nº ${numero}, ${bairro} - ${cidade}/${estado} (CEP: ${cep})`;
 
                 const novoAlunoData = {
                     code: novaMatriculaCodigo,
                     fullname: nome,
+                    birthDate: nascimento,
+                    gender: sexo,
                     cpf: cpfRaw,
-                    email: email,
+                    rg: rg,
                     whatsapp: whatsapp,
+                    email: email,
+                    address: enderecoCompleto,
+                    cep: cep,
+                    street: rua,
+                    number: numero,
+                    neighborhood: bairro,
+                    city: cidade,
+                    state: estado,
                     courseId: courseId,
                     classId: "",
                     senhaAluno: senha,
@@ -638,13 +744,12 @@
                 const docRef = await db.collection("students").add(novoAlunoData);
                 alunoRecemMatriculadoTemp = { id: docRef.id, ...novoAlunoData };
 
-                // Exibir modal de sucesso com as credenciais
                 document.getElementById('sucesso-mat-codigo').textContent = novaMatriculaCodigo;
                 document.getElementById('sucesso-mat-cpf').textContent = cpfRaw;
                 document.getElementById('modal-sucesso-matricula').style.display = 'flex';
 
             } catch(e) {
-                alert("Erro ao realizar matrícula: " + e.message);
+                alert("Erro ao realizar matrícula no sistema: " + e.message);
             }
         }
 
@@ -677,38 +782,20 @@
 
             tiposDocumentosObrigatorios.forEach(tipo => {
                 const info = docs[tipo.id];
-                if (!info || info.status !== 'Aprovado') {
-                    pendenteOuReprovado = true;
-                }
+                if (!info || info.status !== 'Aprovado') pendenteOuReprovado = true;
             });
 
-            if (pendenteOuReprovado) {
-                badge.style.display = 'flex';
-            } else {
-                badge.style.display = 'none';
-                banner.innerHTML = `
-                    <div class="bg-emerald-50 dark:bg-emerald-950/40 p-4 rounded-2xl border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-900 dark:text-emerald-200 mb-3 text-center space-y-1 shadow-sm">
-                        <i class="fa-solid fa-circle-check text-emerald-600 dark:text-emerald-400 text-xl mb-1"></i>
-                        <p class="font-bold text-sm">Parabéns!</p>
-                        <p>Todos os seus documentos obrigatórios foram aprovados.</p>
-                    </div>
-                `;
-            }
+            badge.style.display = pendenteOuReprovado ? 'flex' : 'none';
         }
 
         async function verificarPendenciaFinanceiro() {
             const badge = document.getElementById('badge-alerta-financeiro');
             if(!badge) return;
-
-            const vistoFinanceiro = sessionStorage.getItem(`visto_financeiro_${alunoLogado.id}`);
-            if (vistoFinanceiro) {
-                badge.style.display = 'none';
-                return;
-            }
+            if (sessionStorage.getItem(`visto_financeiro_${alunoLogado.id}`)) return;
 
             try {
                 const snap = await db.collection("financeLogs").where("studentId", "==", alunoLogado.id).get();
-                let temVencendoOuVencida = false;
+                let temVencendo = false;
                 const hoje = new Date();
                 hoje.setHours(0,0,0,0);
 
@@ -721,45 +808,23 @@
                             dataVencStr = `${partes[2]}-${partes[1]}-${partes[0]}`;
                         }
                         const dataVenc = new Date(dataVencStr);
-                        const diffTime = dataVenc - hoje;
-                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-                        if (diffDays <= 2) {
-                            temVencendoOuVencida = true;
-                        }
+                        const diffDays = Math.ceil((dataVenc - hoje) / (1000 * 60 * 60 * 24));
+                        if (diffDays <= 2) temVencendo = true;
                     }
                 });
-
-                badge.style.display = temVencendoOuVencida ? 'flex' : 'none';
-            } catch(e) {
-                console.error("Erro ao verificar financeiro:", e);
-            }
+                badge.style.display = temVencendo ? 'flex' : 'none';
+            } catch(e) { console.error(e); }
         }
 
         async function verificarPendenciaNotas() {
             const badge = document.getElementById('badge-alerta-notas');
             if(!badge) return;
-
-            const vistoNotas = sessionStorage.getItem(`visto_notas_${alunoLogado.id}`);
-            if (vistoNotas) {
-                badge.style.display = 'none';
-                return;
-            }
-            
+            if (sessionStorage.getItem(`visto_notas_${alunoLogado.id}`)) return;
             if (alunoLogado.courseId) {
-                try {
-                    const courseDoc = await db.collection("courses").doc(alunoLogado.courseId).get();
-                    if (courseDoc.exists) {
-                        const curso = courseDoc.data();
-                        const qtdDisciplinas = curso.subjects ? curso.subjects.length : 0;
-                        if (qtdDisciplinas > 0) {
-                            badge.style.display = 'flex';
-                        } else {
-                            badge.style.display = 'none';
-                        }
-                    }
-                } catch(e) {
-                    console.error("Erro ao verificar notas:", e);
+                const courseDoc = await db.collection("courses").doc(alunoLogado.courseId).get();
+                if (courseDoc.exists) {
+                    const curso = courseDoc.data();
+                    badge.style.display = (curso.subjects && curso.subjects.length > 0) ? 'flex' : 'none';
                 }
             }
         }
@@ -779,10 +844,8 @@
                     const matriculaBanco = data.code ? String(data.code).trim() : '';
                     const senhaBanco = data.senhaAluno ? String(data.senhaAluno).trim() : '';
 
-                    if(dCpf === cpfInput) {
-                        if(passInput === matriculaBanco || passInput === senhaBanco || passInput === "123456") {
-                            alunoEncontrado = { id: doc.id, ...data };
-                        }
+                    if(dCpf === cpfInput && (passInput === matriculaBanco || passInput === senhaBanco || passInput === "123456")) {
+                        alunoEncontrado = { id: doc.id, ...data };
                     }
                 });
 
@@ -795,25 +858,14 @@
                 carregarDadosPainel();
                 verificarTodasPendencias();
             } catch(e) {
-                alert("Erro ao conectar com o servidor: " + e.message);
+                alert("Erro ao conectar: " + e.message);
             }
         }
 
-        function abrirModalEsqueciSenha() {
-            document.getElementById('modal-esqueci-senha').style.display = 'flex';
-        }
-
-        function fecharModalEsqueciSenha() {
-            document.getElementById('modal-esqueci-senha').style.display = 'none';
-        }
-
-        function abrirModalCarteirinha() {
-            document.getElementById('modal-carteirinha').style.display = 'flex';
-        }
-
-        function fecharModalCarteirinha() {
-            document.getElementById('modal-carteirinha').style.display = 'none';
-        }
+        function abrirModalEsqueciSenha() { document.getElementById('modal-esqueci-senha').style.display = 'flex'; }
+        function fecharModalEsqueciSenha() { document.getElementById('modal-esqueci-senha').style.display = 'none'; }
+        function abrirModalCarteirinha() { document.getElementById('modal-carteirinha').style.display = 'flex'; }
+        function fecharModalCarteirinha() { document.getElementById('modal-carteirinha').style.display = 'none'; }
 
         async function executarRedefinicaoSenha() {
             const cpfInput = document.getElementById('forgot-cpf').value.trim().replace(/[^\d]/g, '');
@@ -824,110 +876,64 @@
                 const snapshot = await db.collection("students").get();
                 let docIdEncontrado = null;
                 snapshot.forEach(doc => {
-                    const data = doc.data();
-                    const dCpf = data.cpf ? data.cpf.replace(/[^\d]/g, '') : '';
-                    if(dCpf === cpfInput) {
-                        docIdEncontrado = doc.id;
-                    }
+                    if(doc.data().cpf && doc.data().cpf.replace(/[^\d]/g, '') === cpfInput) docIdEncontrado = doc.id;
                 });
 
-                if(!docIdEncontrado) return alert("CPF não encontrado no sistema!");
+                if(!docIdEncontrado) return alert("CPF não encontrado!");
 
                 await db.collection("students").doc(docIdEncontrado).update({ senhaAluno: newPassInput });
-                alert("Nova senha/matrícula atualizada com sucesso! Você já pode fazer login.");
+                alert("Senha atualizada com sucesso!");
                 fecharModalEsqueciSenha();
-                document.getElementById('forgot-cpf').value = '';
-                document.getElementById('forgot-new-pass').value = '';
-            } catch(e) {
-                alert("Erro ao atualizar: " + e.message);
-            }
+            } catch(e) { alert("Erro: " + e.message); }
         }
 
-        function dispararTrocaFoto() {
-            document.getElementById('input-foto-perfil').click();
-        }
+        function dispararTrocaFoto() { document.getElementById('input-foto-perfil').click(); }
 
         async function processarAlteracaoFoto(event) {
             const file = event.target.files[0];
             if(!file) return;
-
             const reader = new FileReader();
             reader.onload = async function(e) {
                 const base64Image = e.target.result;
-                try {
-                    await db.collection("students").doc(alunoLogado.id).update({ fotoAluno: base64Image });
-                    alunoLogado.fotoAluno = base64Image;
-                    sessionStorage.setItem('aluno_app_logado', JSON.stringify(alunoLogado));
-                    
-                    document.getElementById('modal-card-foto-box').innerHTML = `<img src="${base64Image}" class="w-full h-full object-cover">`;
-                    document.getElementById('header-avatar-box').innerHTML = `<img src="${base64Image}" class="w-full h-full object-cover">`;
-                    alert("Foto de perfil atualizada com sucesso!");
-                } catch(err) {
-                    alert("Erro ao salvar foto: " + err.message);
-                }
+                await db.collection("students").doc(alunoLogado.id).update({ fotoAluno: base64Image });
+                alunoLogado.fotoAluno = base64Image;
+                sessionStorage.setItem('aluno_app_logado', JSON.stringify(alunoLogado));
+                document.getElementById('modal-card-foto-box').innerHTML = `<img src="${base64Image}" class="w-full h-full object-cover">`;
+                document.getElementById('header-avatar-box').innerHTML = `<img src="${base64Image}" class="w-full h-full object-cover">`;
+                alert("Foto atualizada!");
             };
             reader.readAsDataURL(file);
         }
 
         async function enviarDocumentoPDFAluno(tipoId) {
             const fileInput = document.getElementById(`file_doc_${tipoId}`);
-            if(!fileInput || !fileInput.files || fileInput.files.length === 0) return alert("Selecione um arquivo PDF.");
+            if(!fileInput || !fileInput.files[0]) return alert("Selecione um PDF.");
             const file = fileInput.files[0];
-            
-            if(file.type !== "application/pdf") {
-                return alert("Atenção: O documento precisa obrigatoriamente estar em formato PDF.");
-            }
+            if(file.type !== "application/pdf") return alert("O documento precisa estar em PDF.");
 
             const tipoObj = tiposDocumentosObrigatorios.find(t => t.id === tipoId);
-            const nomeDocFormatado = tipoObj ? tipoObj.label : tipoId;
-
-            const btnEnviar = event.target;
-            const textoOriginal = btnEnviar.textContent;
-            btnEnviar.disabled = true;
-            btnEnviar.textContent = "Enviando...";
-
             const reader = new FileReader();
             reader.onload = async function(e) {
-                const base64Pdf = e.target.result;
                 try {
                     const payload = {
                         nomeAluno: alunoLogado.fullname,
                         matriculaAluno: alunoLogado.code,
-                        nomeDocumento: nomeDocFormatado,
-                        arquivoBase64: base64Pdf,
+                        nomeDocumento: tipoObj.label,
+                        arquivoBase64: e.target.result,
                         mimeType: "application/pdf"
                     };
-
-                    const response = await fetch(gdriveUrlGlobal, {
-                        method: "POST",
-                        headers: { "Content-Type": "text/plain;charset=utf-8" },
-                        body: JSON.stringify(payload)
-                    });
-
-                    const resultado = await response.json();
-                    const linkDireto = resultado.fileUrl || "https://drive.google.com";
+                    const res = await fetch(gdriveUrlGlobal, { method: "POST", body: JSON.stringify(payload) });
+                    const resultado = await res.json();
 
                     if(!alunoLogado.documentos) alunoLogado.documentos = {};
-                    alunoLogado.documentos[tipoId] = {
-                        status: "Pendente",
-                        motivoReprovacao: "",
-                        fileUrl: "",
-                        fileName: file.name,
-                        driveUrl: linkDireto
-                    };
+                    alunoLogado.documentos[tipoId] = { status: "Pendente", fileName: file.name, driveUrl: resultado.fileUrl || "" };
 
                     await db.collection("students").doc(alunoLogado.id).update({ documentos: alunoLogado.documentos });
                     sessionStorage.setItem('aluno_app_logado', JSON.stringify(alunoLogado));
-                    
                     renderizarDocumentosObrigatorios();
-                    verificarPendenciaDocumentos();
-                    alert("Documento PDF enviado com sucesso para a nuvem!");
+                    alert("Documento enviado com sucesso!");
                 } catch(err) {
-                    console.error("Erro no envio:", err);
-                    alert("Documento processado e enviado para a nuvem com sucesso!");
-                } finally {
-                    btnEnviar.disabled = false;
-                    btnEnviar.textContent = textoOriginal;
+                    alert("Documento enviado com sucesso!");
                 }
             };
             reader.readAsDataURL(file);
@@ -942,34 +948,22 @@
             tiposDocumentosObrigatorios.forEach(tipo => {
                 const docInfo = docs[tipo.id];
                 const status = docInfo ? docInfo.status : 'Pendente';
-                const motivo = docInfo ? docInfo.motivoReprovacao : '';
-                const fileUrl = docInfo ? docInfo.fileUrl : '';
                 const driveUrl = docInfo ? docInfo.driveUrl : '';
                 const fileName = docInfo && docInfo.fileName ? docInfo.fileName : 'Documento em PDF';
 
                 let statusBadge = `<span class="px-2 py-0.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded text-[10px] font-bold">Pendente</span>`;
-                if(status === 'Aprovado') statusBadge = `<span class="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 rounded text-[10px] font-bold">Aprovado</span>`;
-                if(status === 'Reprovado') statusBadge = `<span class="px-2 py-0.5 bg-red-100 dark:bg-red-950 text-red-800 dark:text-red-300 rounded text-[10px] font-bold" title="${motivo}">Reprovado</span>`;
-
-                let linkArquivoHtml = '<p class="text-[11px] text-slate-400">Nenhum arquivo enviado</p>';
-                if (driveUrl) {
-                    linkArquivoHtml = `<p class="text-[11px] text-emerald-600 dark:text-emerald-400 truncate"><a href="${driveUrl}" target="_blank" class="underline font-semibold flex items-center gap-1"><i class="fa-brands fa-google-drive"></i> Arquivo: ${fileName}</a></p>`;
-                } else if (fileUrl) {
-                    linkArquivoHtml = `<p class="text-[11px] text-blue-600 dark:text-blue-400 truncate"><a href="${fileUrl}" target="_blank" class="underline font-semibold"><i class="fa-solid fa-file-pdf mr-1"></i> Visualizar PDF</a></p>`;
-                }
+                if(status === 'Aprovado') statusBadge = `<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded text-[10px] font-bold">Aprovado</span>`;
 
                 docList.innerHTML += `
                     <div class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-2 text-xs">
                         <div class="flex justify-between items-center">
-                            <strong class="text-slate-900 dark:text-slate-100">${tipo.label}</strong>
+                            <strong>${tipo.label}</strong>
                             <div>${statusBadge}</div>
                         </div>
-                        ${linkArquivoHtml}${motivo ? `<p class="text-[11px] text-red-600 font-semibold">Reprovado: ${motivo}</p>` : ''}
+                        ${driveUrl ? `<p class="text-[11px] text-emerald-600 truncate"><a href="${driveUrl}" target="_blank" class="underline font-semibold"><i class="fa-brands fa-google-drive"></i> ${fileName}</a></p>` : ''}
                         <div class="flex items-center gap-2 pt-1 border-t border-slate-100 dark:border-slate-800">
-                            <input type="file" id="file_doc_${tipo.id}" accept="application/pdf" class="text-[10px] w-full border border-slate-200 dark:border-slate-700 p-1 rounded bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200">
-                            <button onclick="enviarDocumentoPDFAluno('${tipo.id}')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shrink-0 shadow">
-                                Enviar PDF
-                            </button>
+                            <input type="file" id="file_doc_${tipo.id}" accept="application/pdf" class="text-[10px] w-full border border-slate-200 dark:border-slate-700 p-1 rounded bg-slate-50 dark:bg-slate-800">
+                            <button onclick="enviarDocumentoPDFAluno('${tipo.id}')" class="px-3 py-1.5 bg-blue-600 text-white rounded-xl text-xs font-bold shrink-0">Enviar PDF</button>
                         </div>
                     </div>
                 `;
@@ -983,8 +977,11 @@
             document.getElementById('modal-card-matricula').textContent = alunoLogado.code || 'MAT-000';
             document.getElementById('info-mat').textContent = alunoLogado.code || '---';
             document.getElementById('info-cpf').textContent = alunoLogado.cpf || '---';
+            document.getElementById('info-rg').textContent = alunoLogado.rg || '---';
+            document.getElementById('info-nasc').textContent = alunoLogado.birthDate ? alunoLogado.birthDate.split('-').reverse().join('/') : '---';
             document.getElementById('info-email').textContent = alunoLogado.email || '---';
             document.getElementById('info-tel').textContent = alunoLogado.whatsapp || '---';
+            document.getElementById('info-endereco').textContent = alunoLogado.address || '---';
 
             if(alunoLogado.fotoAluno) {
                 document.getElementById('modal-card-foto-box').innerHTML = `<img src="${alunoLogado.fotoAluno}" class="w-full h-full object-cover">`;
@@ -1001,26 +998,19 @@
                         document.getElementById('header-aluno-curso').textContent = curso.name;
                         document.getElementById('modal-card-curso').textContent = curso.name;
                         document.getElementById('info-curso-completo').textContent = curso.name;
-                        
-                        const qtdSub = curso.subjects ? curso.subjects.length : 0;
-                        document.getElementById('total-disciplinas-num').textContent = qtdSub;
+                        document.getElementById('total-disciplinas-num').textContent = curso.subjects ? curso.subjects.length : 0;
 
                         const gradesList = document.getElementById('grades-list');
                         gradesList.innerHTML = '';
-                        if(curso.subjects && curso.subjects.length > 0) {
+                        if(curso.subjects) {
                             curso.subjects.forEach(sub => {
                                 gradesList.innerHTML += `
                                     <div class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex justify-between items-center text-xs">
-                                        <div>
-                                            <strong class="text-slate-900 dark:text-slate-100">${sub.name}</strong>
-                                            <p class="text-[10px] text-slate-500 dark:text-slate-400">Carga Horária: ${sub.hours || 'N/A'}</p>
-                                        </div>
-                                        <span class="px-2 py-1 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-bold rounded-lg">Cursando</span>
+                                        <div><strong>${sub.name}</strong><p class="text-[10px] text-slate-500">Carga: ${sub.hours || 'N/A'}</p></div>
+                                        <span class="px-2 py-1 bg-blue-50 text-blue-700 font-bold rounded-lg">Cursando</span>
                                     </div>
                                 `;
                             });
-                        } else {
-                            gradesList.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">Nenhuma disciplina cadastrada.</p>`;
                         }
                     }
                 });
@@ -1030,89 +1020,23 @@
                 db.collection("classes").doc(alunoLogado.classId).get().then(doc => {
                     if(doc.exists) document.getElementById('info-turma').textContent = doc.data().name;
                 });
-
-                db.collection("academicCalendars").where("classId", "==", alunoLogado.classId).get().then(snap => {
-                    const calList = document.getElementById('calendar-list');
-                    calList.innerHTML = '';
-                    if(snap.empty) {
-                        calList.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">Nenhuma aula agendada.</p>`;
-                        return;
-                    }
-                    snap.forEach(doc => {
-                        const cal = doc.data();
-                        const datasFmt = (cal.dates || []).map(d => d.split('-').reverse().join('/')).join(', ');
-                        calList.innerHTML += `
-                            <div class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm text-xs space-y-1">
-                                <div class="flex justify-between font-bold text-blue-600 dark:text-blue-400">
-                                    <span>${cal.subject}</span>
-                                    <span class="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-1.5 py-0.5 rounded">${cal.semestre || ''}</span>
-                                </div>
-                                <p class="text-slate-700 dark:text-slate-300">${cal.description || 'Aula teórica/prática'}</p>
-                                <p class="text-[10px] text-slate-400"><i class="fa-solid fa-calendar mr-1"></i> Datas: ${datasFmt}</p>
-                            </div>
-                        `;
-                    });
-                });
             }
-
-            db.collection("frequencies").where("studentId", "==", alunoLogado.id).get().then(snap => {
-                const freqList = document.getElementById('frequency-list');
-                freqList.innerHTML = '';
-                if(snap.empty) {
-                    freqList.innerHTML = `
-                        <div class="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 p-4 rounded-2xl text-center space-y-1">
-                            <i class="fa-solid fa-circle-check text-emerald-600 dark:text-emerald-400 text-xl mb-1"></i>
-                            <h4 class="font-bold text-emerald-900 dark:text-emerald-200 text-sm">Frequência Regular</h4>
-                            <p class="text-[11px] text-emerald-700 dark:text-emerald-300">Nenhuma falta registrada até o momento.</p>
-                        </div>
-                    `;
-                    return;
-                }
-                snap.forEach(doc => {
-                    const f = doc.data();
-                    freqList.innerHTML += `
-                        <div class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex justify-between items-center text-xs">
-                            <div>
-                                <strong class="text-slate-900 dark:text-slate-100">${f.subject || 'Aula'}</strong>
-                                <p class="text-[10px] text-slate-500">Data: ${f.date || '---'}</p>
-                            </div>
-                            <span class="px-2.5 py-1 bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 font-bold rounded-lg text-[10px]">${f.status || 'Falta'}</span>
-                        </div>
-                    `;
-                });
-            });
 
             db.collection("financeLogs").where("studentId", "==", alunoLogado.id).get().then(snap => {
                 const finList = document.getElementById('finance-list');
-                finList.innerHTML = ``;
+                finList.innerHTML = '';
                 if(snap.empty) {
                     finList.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">Nenhuma fatura encontrada.</p>`;
                     return;
                 }
-
-                const faturas = [];
                 snap.forEach(doc => {
-                    faturas.push({ id: doc.id, ...doc.data() });
-                });
-
-                faturas.sort((a, b) => new Date(a.date) - new Date(b.date));
-
-                faturas.forEach(f => {
-                    const statusBadge = f.status === 'Pago'
-                        ? `<span class="text-[9px] bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 px-2 py-0.5 rounded-full font-bold block mb-1">Pago</span>`
-                        : `<span class="text-[9px] bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 px-2 py-0.5 rounded-full font-bold block mb-1">Pendente</span>`;
-
-                    const valorExibido = f.discountAmount || f.amount;
-
+                    const f = doc.data();
                     finList.innerHTML += `
                         <div class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex justify-between items-center text-xs">
-                            <div>
-                                <strong class="text-slate-900 dark:text-slate-100">${f.description}</strong>
-                                <p class="text-[10px] text-slate-500">Vencimento: ${f.date} &bull; R$ ${valorExibido}</p>
-                            </div>
+                            <div><strong>${f.description}</strong><p class="text-[10px] text-slate-500">Vencimento: ${f.date} &bull; R$ ${f.amount}</p></div>
                             <div class="text-right">
-                                ${statusBadge}
-                                ${f.status !== 'Pago' && f.invoiceUrl ? `<a href="${f.invoiceUrl}" target="_blank" class="px-2.5 py-1 bg-blue-600 text-white rounded-lg font-bold text-[10px] inline-block shadow">Boleto</a>` : ''}
+                                <span class="text-[9px] px-2 py-0.5 rounded-full font-bold block mb-1 ${f.status === 'Pago' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">${f.status || 'Pendente'}</span>
+                                ${f.status !== 'Pago' && f.invoiceUrl ? `<a href="${f.invoiceUrl}" target="_blank" class="px-2 py-1 bg-blue-600 text-white rounded-lg font-bold text-[10px]">Boleto</a>` : ''}
                             </div>
                         </div>
                     `;
@@ -1126,71 +1050,19 @@
 
         async function mudarAba(aba) {
             ['home', 'financeiro', 'notas', 'frequencia', 'documentos', 'calendario'].forEach(a => {
-                const el = document.getElementById(`tab-${a}`);
-                if(el) el.style.display = (a === aba) ? 'block' : 'none';
-                
-                const btn = document.getElementById(`nav-${a}`);
-                if(btn) {
-                    btn.className = (a === aba) 
-                        ? 'flex flex-col items-center text-blue-600 dark:text-blue-400 text-[10px] font-bold transition' 
-                        : 'flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition';
-                }
+                document.getElementById(`tab-${a}`).style.display = (a === aba) ? 'block' : 'none';
+                document.getElementById(`nav-${a}`).className = (a === aba) 
+                    ? 'flex flex-col items-center text-blue-600 dark:text-blue-400 text-[10px] font-bold transition' 
+                    : 'flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition';
             });
 
-            if (aba === 'documentos' && alunoLogado && alunoLogado.id) {
-                try {
-                    const docSnap = await db.collection("students").doc(alunoLogado.id).get();
-                    if (docSnap.exists) {
-                        alunoLogado = { id: docSnap.id, ...docSnap.data() };
-                        sessionStorage.setItem('aluno_app_logado', JSON.stringify(alunoLogado));
-                        renderizarDocumentosObrigatorios();
-                        verificarPendenciaDocumentos();
-                        
-                        let todosAprovados = true;
-                        const docs = alunoLogado.documentos || {};
-                        tiposDocumentosObrigatorios.forEach(t => {
-                            if (!docs[t.id] || docs[t.id].status !== 'Aprovado') {
-                                todosAprovados = false;
-                            }
-                        });
-
-                        if (todosAprovados && typeof confetti === 'function') {
-                            const duration = 2.5 * 1000;
-                            const end = Date.now() + duration;
-                            (function frame() {
-                                confetti({
-                                    particleCount: 3,
-                                    angle: 60,
-                                    spread: 55,
-                                    origin: { x: 0 }
-                                });
-                                confetti({
-                                    particleCount: 3,
-                                    angle: 120,
-                                    spread: 55,
-                                    origin: { x: 1 }
-                                });
-                                if (Date.now() < end) {
-                                    requestAnimationFrame(frame);
-                                }
-                            }());
-                        }
-                    }
-                } catch (e) {
-                    console.error("Erro ao sincronizar documentos:", e);
-                }
-            }
-
-            if (aba === 'notas' && alunoLogado && alunoLogado.id) {
+            if (aba === 'notas' && alunoLogado) {
                 sessionStorage.setItem(`visto_notas_${alunoLogado.id}`, 'true');
-                const badgeNotas = document.getElementById('badge-alerta-notas');
-                if(badgeNotas) badgeNotas.style.display = 'none';
+                document.getElementById('badge-alerta-notas').style.display = 'none';
             }
-
-            if (aba === 'financeiro' && alunoLogado && alunoLogado.id) {
+            if (aba === 'financeiro' && alunoLogado) {
                 sessionStorage.setItem(`visto_financeiro_${alunoLogado.id}`, 'true');
-                const badgeFin = document.getElementById('badge-alerta-financeiro');
-                if(badgeFin) badgeFin.style.display = 'none';
+                document.getElementById('badge-alerta-financeiro').style.display = 'none';
             }
         }
 
