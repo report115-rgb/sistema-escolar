@@ -52,7 +52,7 @@
             <div id="welcome-icon-box" class="inline-flex items-center justify-center w-20 h-20 bg-blue-600 text-white rounded-3xl text-4xl font-bold mb-4 shadow-xl shadow-blue-500/30" style="display: none;">
                 <i class="fa-solid fa-graduation-cap"></i>
             </div>
-            <img id="welcome-logo-img" class="max-h-24 max-w-[260px] object-contain mb-2" alt="Logo da Instituição" src="" style="display: none;">
+            <img id="welcome-logo-img" class="max-h-20 max-w-[220px] object-contain mb-2" alt="Logo da Instituição" src="" style="display: none;">
         </div>
 
         <div class="bg-white/15 backdrop-blur-md border border-white/20 text-white p-6 rounded-3xl shadow-2xl space-y-4">
@@ -71,6 +71,7 @@
         </div>
 
         <div class="text-center text-[10px] text-blue-300 pb-2 space-y-0.5">
+            <div class="font-semibold text-blue-200">SE7 - Sistema de Gestão Acadêmica</div>
             <div>v1.2.1 &bull; Central de Atendimento ao Aluno</div>
         </div>
     </div>
@@ -648,7 +649,6 @@
             }
         }
 
-        // Busca automática de endereço por CEP (ViaCEP)
         async function buscarCepMatricula() {
             const cepInput = document.getElementById('mat-cep').value.replace(/\D/g, '');
             if(cepInput.length !== 8) return;
