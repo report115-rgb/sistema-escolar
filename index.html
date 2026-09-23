@@ -1925,30 +1925,30 @@
         }
 
         function openSubTab(evt, subtabId) {
-    // Localiza o container pai da aba ativa atual (seja Gestão de Alunos ou Sistema)
-    const parentContainer = evt.currentTarget.closest('.tab-content');
-    if (parentContainer) {
-        parentContainer.querySelectorAll('.subtab-content').forEach(el => el.style.display = 'none');
-        parentContainer.querySelectorAll('.subtab-button').forEach(el => {
-            el.classList.remove('bg-blue-600', 'text-white', 'shadow');
-            el.classList.add('bg-gray-100', 'dark:bg-slate-700', 'text-gray-700', 'dark:text-gray-300');
-        });
-    }
-    
-    const targetSubTab = document.getElementById(subtabId);
-    if (targetSubTab) {
-        targetSubTab.style.display = 'block';
-    }
-    
-    evt.currentTarget.classList.remove('bg-gray-100', 'dark:bg-slate-700', 'text-gray-700', 'dark:text-gray-300');
-    evt.currentTarget.classList.add('bg-blue-600', 'text-white', 'shadow');
+            // Localiza o container pai da aba ativa atual (seja Gestão de Alunos, Sistema, etc.)
+            const parentContainer = evt.currentTarget.closest('.tab-content');
+            if (parentContainer) {
+                parentContainer.querySelectorAll('.subtab-content').forEach(el => el.style.display = 'none');
+                parentContainer.querySelectorAll('.subtab-button').forEach(el => {
+                    el.classList.remove('bg-blue-600', 'text-white', 'shadow');
+                    el.classList.add('bg-gray-100', 'dark:bg-slate-700', 'text-gray-700', 'dark:text-gray-300');
+                });
+            }
+            
+            const targetSubTab = document.getElementById(subtabId);
+            if (targetSubTab) {
+                targetSubTab.style.display = 'block';
+            }
+            
+            evt.currentTarget.classList.remove('bg-gray-100', 'dark:bg-slate-700', 'text-gray-700', 'dark:text-gray-300');
+            evt.currentTarget.classList.add('bg-blue-600', 'text-white', 'shadow');
 
-    // Inicializações específicas ao abrir certas subabas
-    if(subtabId === 'subtab-calendar') setTimeout(renderizarCalendarioSemestralAdmin, 200);
-    if(subtabId === 'subtab-portal-calendario') setTimeout(renderizarCalendarioSemestralPortalAluno, 200);
-    if(subtabId === 'subtab-subjects') renderSubjectsManagement();
-    if(subtabId === 'subtab-classes') renderClasses();
-}
+            // Inicializações específicas ao abrir certas subabas para garantir o carregamento
+            if(subtabId === 'subtab-calendar') setTimeout(renderizarCalendarioSemestralAdmin, 200);
+            if(subtabId === 'subtab-portal-calendario') setTimeout(renderizarCalendarioSemestralPortalAluno, 200);
+            if(subtabId === 'subtab-subjects') renderSubjectsManagement();
+            if(subtabId === 'subtab-classes') renderClasses();
+        }
 
         // FUNÇÃO PARA GERENCIAR AS SUB-SUBABAS DE CURSOS
         function openSubSubTab(evt, subsubtabId) {
