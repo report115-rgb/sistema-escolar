@@ -368,16 +368,16 @@
                 </div>
 
                 <div id="subeja-apostila" class="subeja-content space-y-4" style="display: none;">
-                    <div class="bg-emerald-50 dark:bg-slate-900 p-4 rounded-xl border border-emerald-200 dark:border-slate-700 space-y-3 max-w-xl">
-                        <h4 class="font-bold text-xs text-emerald-800 dark:text-emerald-300 uppercase">Disponibilizar Apostila Oficial (PDF)</h4>
-                        <p class="text-xs text-gray-600 dark:text-gray-400">Cole abaixo o link do PDF da apostila (Google Drive).</p>
-                        <div>
-                            <label class="block text-xs font-semibold mb-1">URL do PDF da Apostila</label>
-                            <input type="text" id="input-eja-apostila-url" placeholder="https://drive.google.com/file/d/.../view" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800">
-                        </div>
-                        <button onclick="salvarApostilaEJAAdmin()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow">Salvar Apostila para os Alunos</button>
-                    </div>
-                </div>
+    <div class="bg-emerald-50 dark:bg-slate-900 p-4 rounded-xl border border-emerald-200 dark:border-slate-700 space-y-3 max-w-xl">
+        <h4 class="font-bold text-xs text-emerald-800 dark:text-emerald-300 uppercase">Disponibilizar Apostila Oficial (PDF)</h4>
+        <p class="text-xs text-gray-600 dark:text-gray-400">Cole abaixo o link do PDF da apostila (Google Drive). O sistema converterá automaticamente para download direto no celular do aluno.</p>
+        <div>
+            <label class="block text-xs font-semibold mb-1">URL do PDF da Apostila</label>
+            <input type="text" id="input-eja-apostila-url" placeholder="https://drive.google.com/file/d/.../view" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800">
+        </div>
+        <button onclick="salvarApostilaEJAAdmin()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow">Salvar Apostila para os Alunos</button>
+    </div>
+</div>
 
                 <div id="subeja-prova" class="subeja-content space-y-4" style="display: none;">
                     <div class="bg-gray-50 dark:bg-slate-900 p-5 rounded-xl border border-gray-200 dark:border-slate-700 space-y-4">
@@ -3986,11 +3986,26 @@
         }
 
         async function salvarApostilaEJAAdmin() {
-            const url = document.getElementById('input-eja-apostila-url').value.trim();
-            if (!url) return alert("Informe o link da apostila.");
-            await db.collection("config").doc("ejaSettings").set({ apostilaUrl: url }, { merge: true });
-            alert("Apostila atualizada com sucesso!");
+    let url = document.getElementById('input-eja-apostila-url').value.trim();
+    if (!url) return alert("Informe o link da apostila.");
+
+    // Conversão automática inteligente para link de download direto do Google Drive
+    if (url.includes("drive.google.com")) {
+        let fileId = "";
+        if (url.includes("/file/d/")) {
+            fileId = url.split("/file/d/")[1].split("/")[0];
+        } else if (url.includes("id=")) {
+            fileId = url.split("id=")[1].split("&")[0];
         }
+
+        if (fileId) {
+            url = `https://drive.google.com/uc?export=download&id=${fileId}`;
+        }
+    }
+
+    await db.collection("config").doc("ejaSettings").set({ apostilaUrl: url }, { merge: true });
+    alert("Apostila atualizada com link de download direto configurado com sucesso!");
+}
 
         async function alternarAtivacaoProvaEJA(checkbox) {
             const ativo = checkbox.checked;
