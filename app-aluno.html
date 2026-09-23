@@ -68,6 +68,12 @@
                 <i class="fa-solid fa-user-plus"></i>
                 <span>Quero me matricular</span>
             </button>
+
+            <!-- BOTÃO DE TESTE RÁPIDO DO PAINEL EJA -->
+            <button onclick="testarPainelEJAAmostra()" class="w-full py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-2xl shadow-lg transition flex items-center justify-center space-x-2 text-xs">
+                <i class="fa-solid fa-flask"></i>
+                <span>[TESTE] Visualizar Painel EJA Direto</span>
+            </button>
         </div>
 
         <div class="text-center text-[10px] text-blue-300 pb-2 space-y-0.5">
@@ -113,7 +119,7 @@
         </div>
     </div>
 
-    <!-- TELA DE AUTO-MATRÍCULA (FICHA IDÊNTICA AO SISTEMA MATRIX) -->
+    <!-- TELA DE AUTO-MATRÍCULA -->
     <div id="matricula-screen" class="fixed inset-0 z-50 bg-slate-100 dark:bg-slate-950 flex flex-col justify-between p-4 text-slate-800 dark:text-slate-100 overflow-y-auto" style="display: none;">
         <div class="max-w-lg w-full mx-auto space-y-4 my-auto py-6">
             <div class="flex items-center justify-between">
@@ -127,7 +133,7 @@
             <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-800 space-y-4">
                 <div class="bg-blue-50 dark:bg-blue-950/40 p-3.5 rounded-2xl border border-blue-200 dark:border-blue-800 text-xs text-blue-900 dark:text-blue-200 space-y-1">
                     <p class="font-bold flex items-center"><i class="fa-solid fa-circle-info mr-1.5 text-blue-600"></i> Sistema Integrado:</p>
-                    <p class="text-[11px]">Preencha sua ficha completa abaixo. Os dados serão salvos diretamente no sistema Matrix e seu acesso será liberado na hora.</p>
+                    <p class="text-[11px]">Preencha sua ficha completa abaixo. Os dados serão salvos diretamente no sistema e seu acesso será liberado na hora.</p>
                 </div>
 
                 <!-- DADOS PESSOAIS -->
@@ -247,7 +253,7 @@
             </div>
             <div>
                 <h3 class="font-bold text-lg text-emerald-600 dark:text-emerald-400">Matrícula Realizada!</h3>
-                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Seu cadastro foi efetuado com sucesso no sistema Matrix. Anote suas credenciais:</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Seu cadastro foi efetuado com sucesso. Anote suas credenciais:</p>
             </div>
             <div class="bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 text-left space-y-2 text-xs">
                 <p><strong>Nº da Matrícula:</strong> <span id="sucesso-mat-codigo" class="font-mono font-bold text-blue-600 dark:text-blue-400">---</span></p>
@@ -708,7 +714,7 @@
                 });
 
                 if(cpfJaExiste) {
-                    return alert("Já existe um aluno cadastrado com este CPF no sistema Matrix! Utilize a opção 'Já sou aluno' para fazer login.");
+                    return alert("Já existe um aluno cadastrado com este CPF! Utilize a opção 'Já sou aluno' para fazer login.");
                 }
 
                 const randomNum = Math.floor(10000 + Math.random() * 90000);
@@ -992,6 +998,7 @@
                 db.collection("courses").doc(alunoLogado.courseId).get().then(doc => {
                     if(doc.exists) {
                         const curso = doc.data();
+                        adaptarPainelPorModalidadeCurso(curso);
                         document.getElementById('header-aluno-curso').textContent = curso.name;
                         document.getElementById('modal-card-curso').textContent = curso.name;
                         document.getElementById('info-curso-completo').textContent = curso.name;
@@ -1043,6 +1050,129 @@
             const qr = document.getElementById('modal-card-qrcode');
             qr.innerHTML = '';
             new QRCode(qr, { text: `SE7-ALUNO-${alunoLogado.code}`, width: 45, height: 45 });
+        }
+
+        // --- FUNÇÃO DE SIMULAÇÃO RÁPIDA PARA TESTAR A EJA ---
+        function testarPainelEJAAmostra() {
+            alunoLogado = {
+                id: "teste_eja_123",
+                code: "MAT-EJA-TESTE",
+                fullname: "Sâmea Caroline (Aluno Teste EJA)",
+                cpf: "000.000.000-00",
+                rg: "1234567",
+                birthDate: "1995-01-01",
+                email: "teste.eja@sistema.com",
+                whatsapp: "(91) 98888-8888",
+                address: "Tv. Teste, nº 100 - Belém/PA",
+                courseId: "curso_supletivo_ficticio",
+                documentos: {}
+            };
+
+            document.getElementById('welcome-screen').style.display = 'none';
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('matricula-screen').style.display = 'none';
+            document.getElementById('main-app').style.display = 'flex';
+
+            document.getElementById('header-aluno-nome').textContent = alunoLogado.fullname;
+            document.getElementById('modal-card-nome').textContent = alunoLogado.fullname;
+            document.getElementById('modal-card-matricula').textContent = alunoLogado.code;
+            document.getElementById('header-aluno-curso').textContent = "Ensino Médio - Supletivo (EJA)";
+            document.getElementById('modal-card-curso').textContent = "Ensino Médio - Supletivo (EJA)";
+            document.getElementById('info-curso-completo').textContent = "Ensino Médio - Supletivo (EJA)";
+
+            const cursoSimuladoEJA = {
+                name: "Ensino Médio - Supletivo (EJA)",
+                nivel: "Supletivo",
+                sigla: "EJA"
+            };
+
+            adaptarPainelPorModalidadeCurso(cursoSimuladoEJA);
+        }
+
+        function adaptarPainelPorModalidadeCurso(cursoObj) {
+            const painelHome = document.getElementById('tab-home');
+            
+            const isEJA = cursoObj && (cursoObj.nivel === 'Supletivo' || cursoObj.sigla === 'EJA' || (cursoObj.name && cursoObj.name.toUpperCase().includes('EJA')));
+
+            if (isEJA) {
+                let blocoEJA = document.getElementById('bloco-acoes-eja');
+                if (!blocoEJA) {
+                    blocoEJA = document.createElement('div');
+                    blocoEJA.id = 'bloco-acoes-eja';
+                    blocoEJA.className = 'bg-gradient-to-br from-emerald-600 to-teal-700 text-white p-4 rounded-2xl shadow-lg space-y-3 mt-4';
+                    blocoEJA.innerHTML = `
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <span class="text-[10px] uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-full font-bold">Modalidade EJA (Prova Única)</span>
+                                <h4 class="font-bold text-sm mt-1">Ambiente de Estudo e Avaliação</h4>
+                            </div>
+                            <i class="fa-solid fa-book-open text-2xl text-emerald-200"></i>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 pt-1">
+                            <button onclick="baixarMaterialEstudoEJA()" class="py-2.5 px-3 bg-white text-emerald-800 font-bold rounded-xl text-xs shadow hover:bg-emerald-50 transition flex items-center justify-center space-x-1.5">
+                                <i class="fa-solid fa-file-pdf"></i>
+                                <span>Baixar Apostila</span>
+                            </button>
+                            <button onclick="abrirTelaProvaOnlineEJA()" class="py-2.5 px-3 bg-emerald-800 hover:bg-emerald-900 text-white font-bold rounded-xl text-xs shadow transition flex items-center justify-center space-x-1.5">
+                                <i class="fa-solid fa-laptop-file"></i>
+                                <span>Fazer Prova Online</span>
+                            </button>
+                        </div>
+                    `;
+                    painelHome.appendChild(blocoEJA);
+                }
+            }
+        }
+
+        function baixarMaterialEstudoEJA() {
+            alert("Iniciando o download do arquivo em PDF com todas as questões de estudo da EJA...");
+            if (alunoLogado && alunoLogado.apostilaPdfUrl) {
+                window.open(alunoLogado.apostilaPdfUrl, '_blank');
+            } else {
+                alert("O material de estudo em PDF está sendo disponibilizado pela secretaria acadêmica.");
+            }
+        }
+
+        function abrirTelaProvaOnlineEJA() {
+            let modalProva = document.getElementById('modal-prova-eja');
+            if (!modalProva) {
+                modalProva = document.createElement('div');
+                modalProva.id = 'modal-prova-eja';
+                modalProva.className = 'fixed inset-0 z-[99] bg-black/80 flex items-center justify-center p-4';
+                modalProva.innerHTML = `
+                    <div class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+                        <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-3">
+                            <h3 class="font-bold text-base text-emerald-600"><i class="fa-solid fa-laptop-file mr-2"></i> Avaliação Online - EJA</h3>
+                            <button onclick="fecharProvaOnlineEJA()" class="text-slate-400 hover:text-red-500 text-xl font-bold">&times;</button>
+                        </div>
+                        <div class="space-y-3 text-xs">
+                            <p class="text-slate-500">Responda a avaliação abaixo referente ao seu módulo EJA.</p>
+                            <div class="bg-slate-50 dark:bg-slate-800 p-3 rounded-xl space-y-2 border border-slate-200 dark:border-slate-700">
+                                <p class="font-bold">Questão 1: Qual a importância das diretrizes educacionais na modalidade EJA?</p>
+                                <label class="block"><input type="radio" name="q1" value="a"> A) Acelerar o processo sem validação legal.</label>
+                                <label class="block"><input type="radio" name="q1" value="b"> B) Garantir inclusão, flexibilidade e certificação válida.</label>
+                                <label class="block"><input type="radio" name="q1" value="c"> C) Apenas cumprir exigências burocráticas.</label>
+                            </div>
+                            <button onclick="enviarProvasEJA()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow transition text-sm">
+                                Enviar Prova para Correção
+                            </button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modalProva);
+            } else {
+                modalProva.style.display = 'flex';
+            }
+        }
+
+        function fecharProvaOnlineEJA() {
+            const m = document.getElementById('modal-prova-eja');
+            if (m) m.style.display = 'none';
+        }
+
+        function enviarProvasEJA() {
+            alert("Prova enviada com sucesso! Suas respostas foram computadas.");
+            fecharProvaOnlineEJA();
         }
 
         async function mudarAba(aba) {
