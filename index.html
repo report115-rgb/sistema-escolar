@@ -3218,24 +3218,8 @@
             container.innerHTML = `<div class="font-bold text-xs text-blue-600 dark:text-blue-400 mb-2">Exibindo ${cobrancasAluno.length} cobranças / mensalidades para ${aluno ? aluno.fullname : ''}:</div>`;
             
             cobrancasAluno.forEach((f, idx) => {
-                // Define os botões de pagamento de forma funcional para PIX, Boleto e Cartão
-                let acoesPagamentoHtml = '';
-                
-                if (f.invoiceUrl) {
-                    acoesPagamentoHtml = `
-                        <div class="flex flex-wrap gap-1.5 justify-end">
-                            <a href="${f.invoiceUrl}" target="_blank" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-semibold text-[11px] flex items-center gap-1"><i class="fa-solid fa-qrcode"></i> PIX / QR Code</a>
-                            <a href="${f.invoiceUrl}" target="_blank" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded font-semibold text-[11px] flex items-center gap-1"><i class="fa-solid fa-barcode"></i> Boleto</a>
-                            <a href="${f.invoiceUrl}" target="_blank" class="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded font-semibold text-[11px] flex items-center gap-1"><i class="fa-solid fa-credit-card"></i> Cartão</a>
-                        </div>
-                    `;
-                } else {
-                    acoesPagamentoHtml = `
-                        <button onclick="gerarOpcoesPagamentoCobranca('${f.id}')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded font-semibold text-[11px] shadow flex items-center gap-1">
-                            <i class="fa-solid fa-file-invoice-dollar"></i> Gerar Fatura (PIX / Boleto / Cartão)
-                        </button>
-                    `;
-                }
+                // Define a URL de destino (se não existir, usa um link padrão ou o painel do Asaas para testes)
+                const linkPagamento = f.invoiceUrl || "https://sandbox.asaas.com";
 
                 container.innerHTML += `
                     <div class="bg-gray-50 dark:bg-slate-900 p-3.5 rounded-xl border border-gray-200 dark:border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs">
@@ -3245,7 +3229,11 @@
                         </div>
                         <div class="flex flex-col items-end gap-1.5 w-full sm:w-auto">
                             <span class="px-2 py-0.5 bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 rounded text-[10px] font-bold">${f.status}</span>
-                            ${acoesPagamentoHtml}
+                            <div class="flex flex-wrap gap-1.5 justify-end">
+                                <a href="${linkPagamento}" target="_blank" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-semibold text-[11px] flex items-center gap-1 shadow"><i class="fa-solid fa-qrcode"></i> PIX / QR Code</a>
+                                <a href="${linkPagamento}" target="_blank" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded font-semibold text-[11px] flex items-center gap-1 shadow"><i class="fa-solid fa-barcode"></i> Boleto</a>
+                                <a href="${linkPagamento}" target="_blank" class="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded font-semibold text-[11px] flex items-center gap-1 shadow"><i class="fa-solid fa-credit-card"></i> Cartão</a>
+                            </div>
                         </div>
                     </div>
                 `;
