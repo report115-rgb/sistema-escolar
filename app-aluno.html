@@ -210,7 +210,17 @@
 
             <!-- ABA 2: FINANCEIRO -->
             <div id="tab-financeiro" class="space-y-3 tab-pane" style="display: none;">
-                <h3 class="font-bold text-sm text-slate-700 dark:text-slate-200 mb-2">Suas Faturas e Mensalidades</h3>
+                <!-- Aviso explicativo em cima -->
+                <div class="bg-blue-50 dark:bg-blue-950/40 p-3.5 rounded-2xl border border-blue-200 dark:border-blue-800 text-xs text-blue-900 dark:text-blue-200 space-y-1 shadow-sm">
+                    <p class="font-bold flex items-center"><i class="fa-solid fa-circle-info mr-1.5 text-blue-600 dark:text-blue-400"></i> Informação Importante:</p>
+                    <p class="text-[11px] leading-relaxed">As suas mensalidades pagas no boleto enviado pelo financeiro serão registradas aqui.</p>
+                </div>
+
+                <!-- Título Centralizado -->
+                <div class="text-center pt-1 pb-1">
+                    <h3 class="font-bold text-sm text-slate-700 dark:text-slate-200 uppercase tracking-wide">Suas Faturas e Mensalidades</h3>
+                </div>
+
                 <div id="finance-list" class="space-y-2">
                     <div class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 animate-pulse space-y-2">
                         <div class="h-3 bg-slate-200 dark:bg-slate-800 rounded w-3/4"></div>
@@ -221,7 +231,6 @@
 
             <!-- ABA 3: NOTAS -->
             <div id="tab-notas" class="space-y-3 tab-pane" style="display: none;">
-                <!-- Card de Resumo e Desempenho Acadêmico -->
                 <div class="bg-gradient-to-r from-blue-800 to-indigo-900 text-white p-4 rounded-2xl shadow-md space-y-2">
                     <div class="flex justify-between items-center">
                         <span class="text-[9px] uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-full font-bold">Panorama Acadêmico</span>
