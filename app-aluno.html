@@ -41,6 +41,29 @@
         .animacao-piscar-alerta {
             animation: piscarAlerta 1.2s infinite ease-in-out;
         }
+
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #modal-declaracao-conteudo, #modal-declaracao-conteudo * {
+                visibility: visible;
+            }
+            #modal-declaracao-conteudo {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                margin: 0;
+                padding: 20px;
+                background: white !important;
+                color: black !important;
+                box-shadow: none !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
     </style>
 </head>
 <body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-200">
@@ -79,7 +102,7 @@
 
         <div class="text-center text-[10px] text-blue-300 pb-2 space-y-0.5">
             <div class="font-semibold">SE7 Gestão Educacional</div>
-            <div>v1.0.8 &bull; Acesso Restrito ao Aluno</div>
+            <div>v1.0.9 &bull; Acesso Restrito ao Aluno</div>
         </div>
     </div>
 
@@ -138,6 +161,63 @@
         </div>
     </div>
 
+    <!-- MODAL DE DECLARAÇÃO DE MATRÍCULA -->
+    <div id="modal-declaracao" class="fixed inset-0 z-[80] bg-black/70 flex items-center justify-center p-3 sm:p-6 overflow-y-auto" style="display: none;">
+        <div id="modal-declaracao-conteudo" class="bg-white text-slate-800 rounded-2xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl relative space-y-5 my-auto">
+            <!-- Botão fechar (some na impressão) -->
+            <button onclick="fecharModalDeclaracao()" class="no-print absolute top-4 right-4 text-slate-400 hover:text-red-500 text-xl font-bold">&times;</button>
+            
+            <!-- Cabeçalho Institucional Oficial -->
+            <div class="flex flex-col sm:flex-row items-center sm:items-start border-b border-slate-200 pb-4 gap-4 text-center sm:text-left">
+                <div id="decl-logo-container" class="shrink-0 flex items-center justify-center w-16 h-16 bg-slate-100 rounded-xl overflow-hidden border">
+                    <i class="fa-solid fa-graduation-cap text-2xl text-blue-600"></i>
+                </div>
+                <div class="space-y-0.5 w-full text-xs text-slate-600">
+                    <h3 id="decl-inst-nome" class="font-bold text-sm sm:text-base text-slate-900 uppercase">Nome da Instituição</h3>
+                    <p id="decl-inst-razao" class="text-[11px]">Razão Social: ---</p>
+                    <p id="decl-inst-cnpj" class="text-[11px]">CNPJ: --- &bull; Inscrição Estadual: <span id="decl-inst-ie">---</span></p>
+                    <p id="decl-inst-endereco" class="text-[11px]">Endereço: ---</p>
+                    <p id="decl-inst-contato" class="text-[11px]">Telefone: --- &bull; E-mail: ---</p>
+                </div>
+            </div>
+
+            <!-- Título do Documento -->
+            <div class="text-center py-2">
+                <h2 class="font-bold text-base sm:text-lg uppercase tracking-wider text-blue-900 underline underline-offset-4">Declaração de Matrícula</h2>
+            </div>
+
+            <!-- Texto Corpo da Declaração -->
+            <div class="text-xs sm:text-sm text-slate-700 leading-relaxed space-y-4 text-justify pt-1">
+                <p>
+                    Declaramos para os devidos fins de direito, a quem possa interessar, que o(a) aluno(a) <strong id="decl-aluno-nome" class="text-slate-900 uppercase">---</strong>, portador(a) da cédula de identidade RG nº <span id="decl-aluno-rg">---</span> e inscrito(a) no CPF sob o nº <strong id="decl-aluno-cpf" class="text-slate-900">---</strong>, encontrando-se regularmente matriculado(a) e frequente no período letivo vigente, neste estabelecimento de ensino.
+                </p>
+                <p>
+                    O(A) referido(a) estudante está vinculado(a) ao curso <strong id="decl-aluno-curso" class="text-slate-900">---</strong>, turma <strong id="decl-aluno-turma" class="text-slate-900">---</strong>, sob o número de matrícula <strong id="decl-aluno-mat" class="text-slate-900 font-mono">---</strong>, modalidade presencial/regular, cumprindo integralmente as normativas acadêmicas da instituição.
+                </p>
+                <p id="decl-data-atual" class="text-center pt-2 font-medium">
+                    Belém - PA, [Data Atual].
+                </p>
+            </div>
+
+            <!-- Área de Assinatura -->
+            <div class="pt-8 pb-4 text-center space-y-2">
+                <div class="w-64 mx-auto border-b border-slate-400 pb-1"></div>
+                <p class="text-xs font-bold text-slate-800 uppercase">Direção / Secretaria Acadêmica</p>
+                <p id="decl-assinatura-inst" class="text-[10px] text-slate-500">SE7 Gestão Educacional</p>
+            </div>
+
+            <!-- Ações do Rodapé (some na impressão) -->
+            <div class="no-print pt-3 border-t border-slate-100 flex flex-col sm:flex-row gap-2 justify-end">
+                <button onclick="fecharModalDeclaracao()" class="px-4 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs transition">
+                    Fechar
+                </button>
+                <button onclick="window.print()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-lg transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-print"></i> Imprimir / Salvar em PDF
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- APLICATIVO PRINCIPAL (DASHBOARD) -->
     <div id="main-app" class="flex-1 flex flex-col pb-24" style="display: none;">
         <!-- Cabeçalho -->
@@ -184,18 +264,33 @@
                     </div>
                 </div>
 
-                <button onclick="abrirModalCarteirinha()" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-blue-500 text-slate-800 dark:text-slate-100 p-4 rounded-2xl shadow-sm flex items-center justify-between transition group">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center text-lg group-hover:scale-105 transition">
-                            <i class="fa-solid fa-id-card"></i>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <button onclick="abrirModalCarteirinha()" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-blue-500 text-slate-800 dark:text-slate-100 p-4 rounded-2xl shadow-sm flex items-center justify-between transition group">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center text-lg group-hover:scale-105 transition">
+                                <i class="fa-solid fa-id-card"></i>
+                            </div>
+                            <div class="text-left">
+                                <h4 class="font-bold text-sm">Carteirinha ID</h4>
+                                <p class="text-[10px] text-slate-500 dark:text-slate-400">Exibir QR Code</p>
+                            </div>
                         </div>
-                        <div class="text-left">
-                            <h4 class="font-bold text-sm">Carteirinha Digital</h4>
-                            <p class="text-[10px] text-slate-500 dark:text-slate-400">Toque para exibir sua ID estudantil e QR Code</p>
+                        <i class="fa-solid fa-chevron-right text-xs text-slate-400 mr-1"></i>
+                    </button>
+
+                    <button onclick="abrirModalDeclaracao()" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-emerald-500 text-slate-800 dark:text-slate-100 p-4 rounded-2xl shadow-sm flex items-center justify-between transition group">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 rounded-xl flex items-center justify-center text-lg group-hover:scale-105 transition">
+                                <i class="fa-solid fa-file-lines"></i>
+                            </div>
+                            <div class="text-left">
+                                <h4 class="font-bold text-sm">Declaração</h4>
+                                <p class="text-[10px] text-slate-500 dark:text-slate-400">Emitir comprovante</p>
+                            </div>
                         </div>
-                    </div>
-                    <i class="fa-solid fa-chevron-right text-xs text-slate-400 mr-1"></i>
-                </button>
+                        <i class="fa-solid fa-chevron-right text-xs text-slate-400 mr-1"></i>
+                    </button>
+                </div>
 
                 <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 space-y-2 text-xs">
                     <h3 class="font-bold text-slate-700 dark:text-slate-200 text-sm mb-2"><i class="fa-solid fa-user-shield text-blue-600 mr-1.5"></i> Meus Dados Cadastrais</h3>
@@ -210,13 +305,11 @@
 
             <!-- ABA 2: FINANCEIRO -->
             <div id="tab-financeiro" class="space-y-3 tab-pane" style="display: none;">
-                <!-- Aviso explicativo em cima -->
                 <div class="bg-blue-50 dark:bg-blue-950/40 p-3.5 rounded-2xl border border-blue-200 dark:border-blue-800 text-xs text-blue-900 dark:text-blue-200 space-y-1 shadow-sm">
                     <p class="font-bold flex items-center"><i class="fa-solid fa-circle-info mr-1.5 text-blue-600 dark:text-blue-400"></i> Informação Importante:</p>
                     <p class="text-[11px] leading-relaxed">As suas mensalidades pagas no boleto enviado pelo financeiro serão registradas aqui.</p>
                 </div>
 
-                <!-- Título Centralizado -->
                 <div class="text-center pt-1 pb-1">
                     <h3 class="font-bold text-sm text-slate-700 dark:text-slate-200 uppercase tracking-wide">Suas Faturas e Mensalidades</h3>
                 </div>
@@ -355,6 +448,7 @@
         ];
 
         let alunoLogado = null;
+        let dadosInstituicaoGlobal = {};
         let gdriveUrlGlobal = "https://script.google.com/macros/s/AKfycbwPL9G9q--46vYhuyCfqSwZ9IKm2tEvlfvlH18TvD0FJXqYrDnyLOyKqtp6mT7LdH5XOA/exec"; 
 
         window.addEventListener('DOMContentLoaded', async () => {
@@ -413,12 +507,12 @@
                 const iconBox = document.getElementById('login-icon-box');
 
                 if(instDoc.exists) {
-                    const data = instDoc.data();
-                    if(data.gdriveUrl && data.gdriveUrl.startsWith("http")) {
-                        gdriveUrlGlobal = data.gdriveUrl.trim();
+                    dadosInstituicaoGlobal = instDoc.data();
+                    if(dadosInstituicaoGlobal.gdriveUrl && dadosInstituicaoGlobal.gdriveUrl.startsWith("http")) {
+                        gdriveUrlGlobal = dadosInstituicaoGlobal.gdriveUrl.trim();
                     }
                     
-                    const logoUrl = data.logo || data.logomarca || data.urlLogo || data.logoUrl || data.image || data.fileUrl || '';
+                    const logoUrl = dadosInstituicaoGlobal.logo || dadosInstituicaoGlobal.logomarca || dadosInstituicaoGlobal.urlLogo || dadosInstituicaoGlobal.logoUrl || dadosInstituicaoGlobal.image || dadosInstituicaoGlobal.fileUrl || '';
 
                     if(logoUrl && logoUrl.trim() !== "") {
                         logoEl.src = logoUrl.trim();
@@ -592,6 +686,55 @@
 
         function fecharModalCarteirinha() {
             document.getElementById('modal-carteirinha').style.display = 'none';
+        }
+
+        function abrirModalDeclaracao() {
+            if(!alunoLogado) return;
+            
+            // Preenche dados institucionais oficiais
+            const nomeInst = dadosInstituicaoGlobal.name || dadosInstituicaoGlobal.nome || "SE7 Instituição de Ensino";
+            const razaoInst = dadosInstituicaoGlobal.razaoSocial || dadosInstituicaoGlobal.razao || "SE7 Serviços Educacionais LTDA";
+            const cnpjInst = dadosInstituicaoGlobal.cnpj || "00.000.000/0001-00";
+            const ieInst = dadosInstituicaoGlobal.inscricaoEstadual || dadosInstituicaoGlobal.ie || "Isento";
+            const endInst = dadosInstituicaoGlobal.address || dadosInstituicaoGlobal.endereco || "Belém - PA";
+            const telInst = dadosInstituicaoGlobal.phone || dadosInstituicaoGlobal.telefone || "(91) 0000-0000";
+            const emailInst = dadosInstituicaoGlobal.email || "contato@instituicao.com";
+            const logoInst = dadosInstituicaoGlobal.logo || dadosInstituicaoGlobal.logomarca || dadosInstituicaoGlobal.urlLogo || "";
+
+            document.getElementById('decl-inst-nome').textContent = nomeInst;
+            document.getElementById('decl-inst-razao').textContent = `Razão Social: ${razaoInst}`;
+            document.getElementById('decl-inst-cnpj').textContent = `CNPJ: ${cnpjInst}`;
+            document.getElementById('decl-inst-ie').textContent = ieInst;
+            document.getElementById('decl-inst-endereco').textContent = `Endereço: ${endInst}`;
+            document.getElementById('decl-inst-contato').textContent = `Telefone: ${telInst} \vert{} E-mail:${emailInst}`;
+            document.getElementById('decl-assinatura-inst').textContent = nomeInst;
+
+            const logoContainer = document.getElementById('decl-logo-container');
+            if(logoInst) {
+                logoContainer.innerHTML = `<img src="${logoInst}" class="w-full h-full object-contain">`;
+            } else {
+                logoContainer.innerHTML = `<i class="fa-solid fa-graduation-cap text-2xl text-blue-600"></i>`;
+            }
+
+            // Preenche dados do aluno
+            document.getElementById('decl-aluno-nome').textContent = alunoLogado.fullname || "---";
+            document.getElementById('decl-aluno-rg').textContent = alunoLogado.rg || "Não informado";
+            document.getElementById('decl-aluno-cpf').textContent = alunoLogado.cpf || "---";
+            document.getElementById('decl-aluno-curso').textContent = document.getElementById('info-curso-completo').textContent || "---";
+            document.getElementById('decl-aluno-turma').textContent = document.getElementById('info-turma').textContent || "---";
+            document.getElementById('decl-aluno-mat').textContent = alunoLogado.code || "---";
+
+            // Data atual formatada por extenso
+            const hoje = new Date();
+            const meses = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
+            const dataExtenso = `${hoje.getDate()} de ${meses[hoje.getMonth()]} de${hoje.getFullYear()}`;
+            document.getElementById('decl-data-atual').textContent = `Belém - PA, ${dataExtenso}.`;
+
+            document.getElementById('modal-declaracao').style.display = 'flex';
+        }
+
+        function fecharModalDeclaracao() {
+            document.getElementById('modal-declaracao').style.display = 'none';
         }
 
         async function executarRedefinicaoSenha() {
