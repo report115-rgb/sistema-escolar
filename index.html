@@ -687,100 +687,111 @@
                     </div>
 
                     <!-- SUB-SUBABA 2: CADASTRAR NOVO CURSO -->
-                    <div id="subsubtab-cadastrar-curso" class="subsubtab-content space-y-4" style="display: none;">
-                        <input type="hidden" id="edit-course-id" value="">
+                    <!-- NOVO CÓDIGO HTML COM OS IDs DE CONTROLE DINÂMICO -->
+<div id="subsubtab-cadastrar-curso" class="subsubtab-content space-y-4" style="display: none;">
+    <input type="hidden" id="edit-course-id" value="">
 
     <div>
         <label class="block text-xs font-semibold mb-1">Nível do Curso</label>
-        <select id="input-course-nivel" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900" required>
+        <select id="input-course-nivel" onchange="alternarCamposNivelCurso(this.value)" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900" required>
             <option value="">Selecione o nível...</option>
             <option value="Técnico">Técnico</option>
             <option value="Graduação">Graduação</option>
             <option value="Supletivo">Supletivo</option>
         </select>
     </div>
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-semibold mb-1">Nome do Curso</label>
-                                <input type="text" id="input-course-name" placeholder="Técnico em Enfermagem" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold mb-1">Sigla</label>
-                                <input type="text" id="input-course-sigla" placeholder="ENF" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                            </div>
-                        </div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="md:col-span-2">
+            <label class="block text-xs font-semibold mb-1">Nome do Curso</label>
+            <input type="text" id="input-course-name" placeholder="Ex: Técnico em Enfermagem ou Educação de Jovens e Adultos" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+        </div>
+        <div>
+            <label class="block text-xs font-semibold mb-1">Sigla</label>
+            <input type="text" id="input-course-sigla" placeholder="ENF ou EJA" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+        </div>
+    </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div>
-                                <label class="block text-xs font-semibold mb-1">Eixo Tecnológico</label>
-                                <input type="text" id="input-course-eixo" placeholder="Ambiente e Saúde" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold mb-1">Carga Horária</label>
-                                <input type="text" id="input-course-hours" placeholder="3600 hrs" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold mb-1">Resolução / Conselho</label>
-                                <input type="text" id="input-course-conselho" placeholder="Resolução COFEN" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                            </div>
-                        </div>
+    <!-- CAMPO DE MODALIDADE (EXCLUSIVO / RELEVANTE PARA SUPLETIVO) -->
+    <div id="container-modalidade-curso" style="display: none;">
+        <label class="block text-xs font-semibold mb-1">Modalidade</label>
+        <select id="input-course-modalidade" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+            <option value="Prova Única">Prova Única</option>
+            <option value="Modular">Modular</option>
+        </select>
+    </div>
 
-                        <!-- SEÇÃO FINANCEIRA DO CURSO & SEMESTRE DE VIGÊNCIA -->
-                        <div class="bg-blue-50 dark:bg-slate-800 p-4 rounded-xl border border-blue-200 dark:border-slate-700 space-y-4">
-                            <h4 class="font-bold text-xs text-blue-700 dark:text-blue-400 uppercase"><i class="fa-solid fa-wallet mr-1"></i> Configuração Financeira e Semestre de Vigência</h4>
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div>
-                                    <label class="block text-xs font-semibold mb-1">Semestre de Vigência</label>
-                                    <select id="input-course-semestre" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                                        <option value="2025/1">2025/1 (1º Semestre: Jan-Jun)</option>
-                                        <option value="2025/2">2025/2 (2º Semestre: Jul-Dez)</option>
-                                        <option value="2026/1">2026/1 (1º Semestre: Jan-Jun)</option>
-                                        <option value="2026/2" selected>2026/2 (2º Semestre: Jul-Dez)</option>
-                                        <option value="2027/1">2027/1 (1º Semestre: Jan-Jun)</option>
-                                        <option value="2027/2">2027/2 (2º Semestre: Jul-Dez)</option>
-                                        <option value="2028/1">2028/1 (1º Semestre: Jan-Jun)</option>
-                                        <option value="2028/2">2028/2 (2º Semestre: Jul-Dez)</option>
-                                        <option value="2029/1">2029/1 (1º Semestre: Jan-Jun)</option>
-                                        <option value="2029/2">2029/2 (2º Semestre: Jul-Dez)</option>
-                                        <option value="2030/1">2030/1 (1º Semestre: Jan-Jun)</option>
-                                        <option value="2030/2">2030/2 (2º Semestre: Jul-Dez)</option>
-                                        <option value="2031/1">2031/1 (1º Semestre: Jan-Jun)</option>
-                                        <option value="2031/2">2031/2 (2º Semestre: Jul-Dez)</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-semibold mb-1">Qtd. de Parcelas</label>
-                                    <input type="number" id="input-course-parcelas" placeholder="24" value="24" min="1" oninput="calcularTotalCurso()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-semibold mb-1">Valor Normal da Parcela (R$)</label>
-                                    <input type="number" id="input-course-valor-parcela" placeholder="300.00" value="300.00" step="0.01" oninput="calcularTotalCurso()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                                </div>
-                            </div>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-xs font-semibold mb-1 text-emerald-700 dark:text-emerald-400">Valor com Desconto de Pontualidade (R$)</label>
-                                    <input type="number" id="input-course-valor-desconto" placeholder="280.00" value="280.00" step="0.01" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-semibold mb-1">Dia de Vencimento</label>
-                                    <input type="number" id="input-course-vencimento" placeholder="10" value="10" min="1" max="31" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                                </div>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold mb-1 text-gray-600 dark:text-gray-300">Valor Total do Curso (Calculado)</label>
-                                <input type="text" id="input-course-valor-total" readonly placeholder="R$ 7.200,00" class="w-full md:w-1/3 px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm bg-gray-100 dark:bg-slate-900 font-bold text-emerald-600 dark:text-emerald-400">
-                            </div>
-                        </div>
+    <!-- CAMPOS QUE SERÃO OCULTADOS QUANDO FOR SUPLETIVO -->
+    <div id="container-campos-tecnico" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div id="div-eixo">
+            <label class="block text-xs font-semibold mb-1">Eixo Tecnológico</label>
+            <input type="text" id="input-course-eixo" placeholder="Ambiente e Saúde" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+        </div>
+        <div id="div-hours">
+            <label class="block text-xs font-semibold mb-1">Carga Horária</label>
+            <input type="text" id="input-course-hours" placeholder="3600 hrs" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+        </div>
+        <div id="div-conselho">
+            <label class="block text-xs font-semibold mb-1">Resolução / Conselho</label>
+            <input type="text" id="input-course-conselho" placeholder="Resolução COFEN" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+        </div>
+    </div>
 
-                        <div class="flex gap-2 pt-2">
-                            <button type="button" id="btn-save-course" onclick="saveCourse()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-xs shadow transition duration-200">Salvar Curso</button>
-                            <button type="button" id="btn-cancel-edit-course" onclick="cancelarEdicaoCurso()" class="px-5 py-2.5 bg-gray-500 hover:bg-gray-600 text-white font-semibold rounded-lg text-xs shadow transition duration-200" style="display: none;">Cancelar Edição</button>
-                        </div>
-                    </div>
+    <!-- SEÇÃO FINANCEIRA DO CURSO & SEMESTRE DE VIGÊNCIA -->
+    <div class="bg-blue-50 dark:bg-slate-800 p-4 rounded-xl border border-blue-200 dark:border-slate-700 space-y-4">
+        <h4 class="font-bold text-xs text-blue-700 dark:text-blue-400 uppercase"><i class="fa-solid fa-wallet mr-1"></i> Configuração Financeira e Semestre de Vigência</h4>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <label class="block text-xs font-semibold mb-1">Semestre de Vigência</label>
+                <select id="input-course-semestre" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+                    <option value="2025/1">2025/1 (1º Semestre: Jan-Jun)</option>
+                    <option value="2025/2">2025/2 (2º Semestre: Jul-Dez)</option>
+                    <option value="2026/1">2026/1 (1º Semestre: Jan-Jun)</option>
+                    <option value="2026/2" selected>2026/2 (2º Semestre: Jul-Dez)</option>
+                    <option value="2027/1">2027/1 (1º Semestre: Jan-Jun)</option>
+                    <option value="2027/2">2027/2 (2º Semestre: Jul-Dez)</option>
+                    <option value="2028/1">2028/1 (1º Semestre: Jan-Jun)</option>
+                    <option value="2028/2">2028/2 (2º Semestre: Jul-Dez)</option>
+                    <option value="2029/1">2029/1 (1º Semestre: Jan-Jun)</option>
+                    <option value="2029/2">2029/2 (2º Semestre: Jul-Dez)</option>
+                    <option value="2030/1">2030/1 (1º Semestre: Jan-Jun)</option>
+                    <option value="2030/2">2030/2 (2º Semestre: Jul-Dez)</option>
+                    <option value="2031/1">2031/1 (1º Semestre: Jan-Jun)</option>
+                    <option value="2031/2">2031/2 (2º Semestre: Jul-Dez)</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold mb-1">Qtd. de Parcelas</label>
+                <input type="number" id="input-course-parcelas" placeholder="24" value="24" min="1" oninput="calcularTotalCurso()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold mb-1" id="label-valor-parcela">Valor Normal da Parcela (R$)</label>
+                <input type="number" id="input-course-valor-parcela" placeholder="300.00" value="300.00" step="0.01" oninput="calcularTotalCurso()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="container-pontualidade-vencimento">
+            <div id="div-desconto">
+                <label class="block text-xs font-semibold mb-1 text-emerald-700 dark:text-emerald-400">Valor com Desconto de Pontualidade (R$)</label>
+                <input type="number" id="input-course-valor-desconto" placeholder="280.00" value="280.00" step="0.01" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+            </div>
+            <div id="div-vencimento">
+                <label class="block text-xs font-semibold mb-1">Dia de Vencimento</label>
+                <input type="number" id="input-course-vencimento" placeholder="10" value="10" min="1" max="31" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+            </div>
+        </div>
 
-                </div>
+        <div id="container-valor-total-curso">
+            <label class="block text-xs font-semibold mb-1 text-gray-600 dark:text-gray-300">Valor Total do Curso (Calculado)</label>
+            <input type="text" id="input-course-valor-total" readonly placeholder="R$ 7.200,00" class="w-full md:w-1/3 px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm bg-gray-100 dark:bg-slate-900 font-bold text-emerald-600 dark:text-emerald-400">
+        </div>
+    </div>
+
+    <div class="flex gap-2 pt-2">
+        <button type="button" id="btn-save-course" onclick="saveCourse()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-xs shadow transition duration-200">Salvar Curso</button>
+        <button type="button" id="btn-cancel-edit-course" onclick="cancelarEdicaoCurso()" class="px-5 py-2.5 bg-gray-500 hover:bg-gray-600 text-white font-semibold rounded-lg text-xs shadow transition duration-200" style="display: none;">Cancelar Edição</button>
+    </div>
+</div>
 
                 <!-- SUBABA DISCIPLINAS (REORGANIZADA NO MESMO PADRÃO DE CURSOS) -->
                 <div id="subtab-subjects" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
@@ -2098,50 +2109,102 @@
             }
         }
 
+        // --- PASSO 3.1: FUNÇÃO DE DINAMISMO DO NÍVEL DO CURSO ---
+        function alternarCamposNivelCurso(nivel) {
+            const containerModalidade = document.getElementById('container-modalidade-curso');
+            const containerCamposTecnico = document.getElementById('container-campos-tecnico');
+            const inputNomeCurso = document.getElementById('input-course-name');
+            const selectModalidade = document.getElementById('input-course-modalidade');
+            
+            const inputQtdParcelas = document.getElementById('input-course-parcelas');
+            const labelValorParcela = document.getElementById('label-valor-parcela');
+            const containerPontualidadeVencimento = document.getElementById('container-pontualidade-vencimento');
+            const containerValorTotalCurso = document.getElementById('container-valor-total-curso');
+
+            if (nivel === 'Supletivo') {
+                if (inputNomeCurso) inputNomeCurso.value = 'Educação de Jovens e Adultos';
+                if (selectModalidade) selectModalidade.value = 'Prova Única';
+
+                if (containerModalidade) containerModalidade.style.display = 'block';
+                if (containerCamposTecnico) containerCamposTecnico.style.display = 'none';
+
+                if (inputQtdParcelas) {
+                    inputQtdParcelas.value = 1;
+                    inputQtdParcelas.setAttribute('readonly', true);
+                }
+                if (labelValorParcela) labelValorParcela.innerText = 'Valor Total do Curso (R$)';
+                if (containerPontualidadeVencimento) containerPontualidadeVencimento.style.display = 'none';
+                if (containerValorTotalCurso) containerValorTotalCurso.style.display = 'none';
+
+            } else {
+                if (containerModalidade) containerModalidade.style.display = 'none';
+                if (containerCamposTecnico) containerCamposTecnico.style.display = 'grid';
+
+                if (inputQtdParcelas) {
+                    inputQtdParcelas.value = 24;
+                    inputQtdParcelas.removeAttribute('readonly');
+                }
+                if (labelValorParcela) labelValorParcela.innerText = 'Valor Normal da Parcela (R$)';
+                if (containerPontualidadeVencimento) containerPontualidadeVencimento.style.display = 'grid';
+                if (containerValorTotalCurso) containerValorTotalCurso.style.display = 'block';
+            }
+        }
+
+        // --- PASSO 3.2: FUNÇÃO DE SALVAR CURSO ATUALIZADA ---
         async function saveCourse() {
-    const editId = document.getElementById('edit-course-id').value;
-    const name = document.getElementById('input-course-name').value.trim();
-    const sigla = document.getElementById('input-course-sigla').value.trim().toUpperCase();
-    const nivel = document.getElementById('input-course-nivel').value;
-    
-    if (!name || !sigla || !nivel) return alert("Preencha o nome, a sigla e selecione o nível do curso!");
-    
-    const semestre = document.getElementById('input-course-semestre').value;
-    const qtdParcelas = parseInt(document.getElementById('input-course-parcelas').value) || 1;
-    const valorParcela = parseFloat(document.getElementById('input-course-valor-parcela').value) || 0;
-    const valorDesconto = parseFloat(document.getElementById('input-course-valor-desconto').value) || 0;
-    const vencimento = parseInt(document.getElementById('input-course-vencimento').value) || 10;
-    const valorTotal = qtdParcelas * valorParcela;
+            const editId = document.getElementById('edit-course-id').value;
+            const name = document.getElementById('input-course-name').value.trim();
+            const sigla = document.getElementById('input-course-sigla').value.trim().toUpperCase();
+            const nivel = document.getElementById('input-course-nivel').value;
+            
+            if (!name || !sigla || !nivel) return alert("Preencha o nome, a sigla e selecione o nível do curso!");
+            
+            const semestre = document.getElementById('input-course-semestre').value;
+            const qtdParcelas = parseInt(document.getElementById('input-course-parcelas').value) || 1;
+            const valorParcela = parseFloat(document.getElementById('input-course-valor-parcela').value) || 0;
+            
+            const valorDesconto = nivel === 'Supletivo' ? 0 : (parseFloat(document.getElementById('input-course-valor-desconto').value) || 0);
+            const vencimento = nivel === 'Supletivo' ? 10 : (parseInt(document.getElementById('input-course-vencimento').value) || 10);
+            const valorTotal = nivel === 'Supletivo' ? valorParcela : (qtdParcelas * valorParcela);
+            const modalidade = nivel === 'Supletivo' ? document.getElementById('input-course-modalidade').value : '';
 
-    const courseData = {
-        name, 
-        sigla, 
-        nivel, 
-        semestre,
-        eixo: document.getElementById('input-course-eixo').value.trim(),
-        hours: document.getElementById('input-course-hours').value.trim(),
-        conselho: document.getElementById('input-course-conselho').value.trim(),
-        qtdParcelas, valorParcela, valorDesconto, vencimento, valorTotal
-    };
+            const courseData = {
+                name, 
+                sigla, 
+                nivel, 
+                semestre,
+                modalidade,
+                eixo: nivel === 'Supletivo' ? '' : (document.getElementById('input-course-eixo').value.trim()),
+                hours: nivel === 'Supletivo' ? '' : (document.getElementById('input-course-hours').value.trim()),
+                conselho: nivel === 'Supletivo' ? '' : (document.getElementById('input-course-conselho').value.trim()),
+                qtdParcelas, 
+                valorParcela, 
+                valorDesconto, 
+                vencimento, 
+                valorTotal
+            };
 
-    if (editId) {
-        await db.collection("courses").doc(editId).update(courseData);
-        cancelarEdicaoCurso();
-        alert("Curso atualizado com sucesso!");
-    } else {
-        courseData.subjects = [];
-        courseData.contractTemplate = "";
-        courseData.declTemplate = "";
-        courseData.historyTemplate = "";
-        courseData.historyPdfUrl = "";
-        await db.collection("courses").add(courseData);
-        document.getElementById('input-course-name').value = '';
-        document.getElementById('input-course-sigla').value = '';
-        document.getElementById('input-course-nivel').value = '';
-        alert("Curso salvo com sucesso!");
-    }
-}
+            if (editId) {
+                await db.collection("courses").doc(editId).update(courseData);
+                cancelarEdicaoCurso();
+                alert("Curso atualizado com sucesso!");
+            } else {
+                courseData.subjects = [];
+                courseData.contractTemplate = "";
+                courseData.declTemplate = "";
+                courseData.historyTemplate = "";
+                courseData.historyPdfUrl = "";
+                await db.collection("courses").add(courseData);
+                
+                document.getElementById('input-course-name').value = '';
+                document.getElementById('input-course-sigla').value = '';
+                document.getElementById('input-course-nivel').value = '';
+                alternarCamposNivelCurso('');
+                alert("Curso salvo com sucesso!");
+            }
+        }
 
+        // --- PASSO 3.4: LISTAGEM DE CURSOS ATUALIZADA ---
         function renderCourses() {
             const list = document.getElementById('courses-list');
             const counter = document.getElementById('total-courses-count');
@@ -2154,14 +2217,17 @@
                     return;
                 }
                 courses.forEach(c => {
+                    let infoFinanceira = `Semestre: ${c.semestre || '2026/2'} &bull; ${c.qtdParcelas || 1}x de R$ ${c.valorParcela || 0} &bull; Total: R$ ${c.valorTotal || 0}`;
+                    if (c.nivel === 'Supletivo') {
+                        infoFinanceira = `Semestre: ${c.semestre || '2026/2'} &bull; Modalidade: ${c.modalidade || 'Prova Única'} &bull; Valor Total: <strong class="text-emerald-600">R$ ${c.valorParcela || 0}</strong>`;
+                    }
+
                     list.innerHTML += `
                         <li class="py-3 text-xs flex justify-between items-center border-b border-gray-100 dark:border-slate-700">
                             <div>
                                 <strong class="text-sm text-gray-900 dark:text-white">${c.name} [${c.sigla}]</strong>
-                                <!-- LINHA ADICIONADA PARA MOSTRAR O NÍVEL -->
                                 <span class="px-2 py-0.5 bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 rounded text-[10px] font-bold ml-2">${c.nivel || 'Não definido'}</span><br>
-                                
-                                <span class="text-gray-500">Semestre: ${c.semestre || '2026/2'} &bull; ${c.qtdParcelas || 1}x de R$ ${c.valorParcela || 0} (Desc. Pontualidade: R$ ${c.valorDesconto || 0}) &bull; Total: R$ ${c.valorTotal || 0}</span>
+                                <span class="text-gray-500">${infoFinanceira}</span>
                             </div>
                             <div class="flex gap-2 shrink-0">
                                 <button onclick="editarCurso('${c.id}')" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded font-semibold shadow flex items-center gap-1"><i class="fa-solid fa-pen"></i> Editar</button>
@@ -2172,22 +2238,36 @@
             }
         }
 
+        // --- PASSO 3.3: EDIÇÃO DE CURSO ATUALIZADA ---
         function editarCurso(id) {
             const c = courses.find(item => item.id === id);
             if (!c) return;
             document.getElementById('edit-course-id').value = c.id;
+            document.getElementById('input-course-nivel').value = c.nivel || '';
+            
+            alternarCamposNivelCurso(c.nivel || '');
+
             document.getElementById('input-course-name').value = c.name || '';
             document.getElementById('input-course-sigla').value = c.sigla || '';
-            document.getElementById('input-course-nivel').value = c.nivel || '';            
-            document.getElementById('input-course-eixo').value = c.eixo || '';
-            document.getElementById('input-course-hours').value = c.hours || '';
-            document.getElementById('input-course-conselho').value = c.conselho || '';
+            
+            if (c.nivel === 'Supletivo') {
+                const selectModalidade = document.getElementById('input-course-modalidade');
+                if (selectModalidade) selectModalidade.value = c.modalidade || 'Prova Única';
+            } else {
+                document.getElementById('input-course-eixo').value = c.eixo || '';
+                document.getElementById('input-course-hours').value = c.hours || '';
+                document.getElementById('input-course-conselho').value = c.conselho || '';
+            }
+
             document.getElementById('input-course-semestre').value = c.semestre || '2026/2';
-            document.getElementById('input-course-parcelas').value = c.qtdParcelas || 24;
+            document.getElementById('input-course-parcelas').value = c.qtdParcelas || 1;
             document.getElementById('input-course-valor-parcela').value = c.valorParcela || 0;
-            document.getElementById('input-course-valor-desconto').value = c.valorDesconto || 0;
-            document.getElementById('input-course-vencimento').value = c.vencimento || 10;
-            calcularTotalCurso();
+            
+            if (c.nivel !== 'Supletivo') {
+                document.getElementById('input-course-valor-desconto').value = c.valorDesconto || 0;
+                document.getElementById('input-course-vencimento').value = c.vencimento || 10;
+                calcularTotalCurso();
+            }
 
             document.getElementById('btn-save-course').textContent = "Atualizar Curso";
             document.getElementById('btn-cancel-edit-course').style.display = 'inline-block';
