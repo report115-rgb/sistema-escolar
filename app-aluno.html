@@ -61,10 +61,10 @@
             </div>
         </div>
 
-        <!-- Rodapé -->
+        <!-- Rodapé limpo de referências -->
         <div class="text-center text-[10px] text-blue-300 pb-2 space-y-0.5">
-            <div class="font-semibold">SE7 Gestão Educacional[cite: 2]</div>
-            <div>v1.0.8 &bull; Acesso Restrito ao Aluno[cite: 2]</div>
+            <div class="font-semibold">SE7 Gestão Educacional</div>
+            <div>v1.0.8 &bull; Acesso Restrito ao Aluno</div>
         </div>
     </div>
 
@@ -108,7 +108,7 @@
                 </div>
                 <div>
                     <h2 class="font-bold text-sm truncate max-w-[200px]" id="header-aluno-nome">Carregando...</h2>
-                    <span class="text-[10px] text-blue-300">Portal do Aluno[cite: 2]</span>
+                    <span class="text-[10px] text-blue-300">Portal do Aluno</span>
                 </div>
             </div>
             <button onclick="fazerLogout()" class="w-9 h-9 bg-red-600/80 hover:bg-red-700 rounded-full flex items-center justify-center text-xs transition text-white shadow">
@@ -729,13 +729,11 @@
                     return;
                 }
 
-                // Carrega todas as faturas em um array para ordená-las cronologicamente
                 const faturas = [];
                 snap.forEach(doc => {
                     faturas.push({ id: doc.id, ...doc.data() });
                 });
 
-                // Ordenação cronológica pelo vencimento (da mais antiga para a mais recente)
                 faturas.sort((a, b) => new Date(a.date) - new Date(b.date));
 
                 faturas.forEach(f => {
