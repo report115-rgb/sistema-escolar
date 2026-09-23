@@ -3260,7 +3260,7 @@
 
     try {
         const asaas = new AsaasIntegrationService();
-        if(!asaas.apiKey) return alert("Configure a Chave de API do Asaas na aba Sistema > Asaas para gerar cobranças integradas.");
+        if(!asaas.apiKey) return alert("Configure a Chave de API do Asaas na aba Sistema > Asaas.");
         
         const cid = await asaas.criarOuObterCliente(aluno);
         const cobAsaas = await asaas.criarCobrancaBoleto(cid, { 
@@ -3269,9 +3269,24 @@
             descricao: cob.description 
         });
         
-        await db.collection("financeLogs").doc(logId).update({ invoiceUrl: cobAsaas.invoiceUrl });
-        alert("Fatura gerada com sucesso! Agora as opções de PIX, Boleto e Cartão estão disponíveis.");
+        // Se a API retornar um ID de pagamento mas o link vier vazio, geramos o link padrão do ambiente (Sandbox ou Produção)
+        let linkFinal = cobAsaas.invoiceUrl;
+        if (!linkFinal && cobAsaas.paymentId) {
+            const ambiente = asaas.environment === 'production' ? 'www.asaas.com' : 'sandbox.asaas.com';
+            linkFinal = `https://${ambiente}/i/${cobAsaas.paymentId}`;
+        }
+
+        if (!linkFinal) {
+            throw new Error("O Asaas não retornou o link da fatura. Verifique suas credenciais de API.");
+        }
+
+        await db.collection("financeLogs").doc(logId).update({ invoiceUrl: linkFinal });
+        
+        alert("Fatura gerada com sucesso!");
         renderizarCobrancasAlunoSelecionadoFinanceiro(aluno.id);
+
+        // Abre a página de pagamento automaticamente em uma nova aba para testar
+        window.open(linkFinal, '_blank');
     } catch(e) {
         alert("Erro ao gerar fatura: " + e.message);
     }
