@@ -3210,14 +3210,21 @@
                 return;
             }
             const aluno = students.find(s => s.id === studentId);
-            const cobrancasAluno = financeLogs.filter(f => f.studentId === studentId);
+            
+            // FILTRA E ORDENA CRONOLOGICAMENTE PELO VENCIMENTO (YYYY-MM-DD ou DD/MM/YYYY)
+            const cobrancasAluno = financeLogs
+                .filter(f => f.studentId === studentId)
+                .sort((a, b) => {
+                    // Converte a string de data para o formato comparável (ajuste conforme o formato salvo no banco, ex: YYYY-MM-DD)
+                    return new Date(a.date) - new Date(b.date);
+                });
 
             if(cobrancasAluno.length === 0) {
                 container.innerHTML = `<p class="text-xs text-gray-400">Nenhuma cobrança encontrada para ${aluno ? aluno.fullname : 'este aluno'}.</p>`;
                 return;
             }
 
-            container.innerHTML = `<div class="font-bold text-xs text-blue-600 dark:text-blue-400 mb-2">Exibindo ${cobrancasAluno.length} cobranças para ${aluno ? aluno.fullname : ''}:</div>`;
+            container.innerHTML = `<div class="font-bold text-xs text-blue-600 dark:text-blue-400 mb-2">Exibindo ${cobrancasAluno.length} cobranças em ordem cronológica para ${aluno ? aluno.fullname : ''}:</div>`;
             
             cobrancasAluno.forEach((f, idx) => {
                 const statusBadge = f.status === 'Pago' 
