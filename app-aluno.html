@@ -1123,14 +1123,28 @@
             try {
                 const docSnap = await db.collection("config").doc("ejaSettings").get();
                 if (docSnap.exists && docSnap.data().apostilaUrl) {
-                    let urlApostila = docSnap.data().apostilaUrl.trim();
+                    let urlOriginal = docSnap.data().apostilaUrl.trim();
+                    let urlApostila = urlOriginal;
 
-                    // Ajusta o link do Google Drive para visualização embutida (iframe) se necessário
+                    // Ajusta o link do Google Drive para visualização embutida (iframe)
                     if (urlApostila.includes('drive.google.com') && !urlApostila.includes('preview')) {
                         if (urlApostila.includes('/view')) {
                             urlApostila = urlApostila.replace(/\/view.*$/, '/preview');
                         } else if (urlApostila.includes('id=')) {
                             urlApostila = urlApostila.replace(/id=([^&]+)/, 'id=$1&embedded=true');
+                        }
+                    }
+
+                    // Converte o link do Google Drive para link de DOWNLOAD DIRETO
+                    let urlDownload = urlOriginal;
+                    if (urlDownload.includes('drive.google.com')) {
+                        if (urlDownload.includes('/file/d/')) {
+                            urlDownload = urlDownload.replace(/\/file\/d\/([^\/]+)\/.*/, '/uc?export=download&id=$1');
+                        } else if (urlDownload.includes('id=')) {
+                            const matchId = urlDownload.match(/id=([^&]+)/);
+                            if (matchId) {
+                                urlDownload = `https://drive.google.com/uc?export=download&id=${matchId[1]}`;
+                            }
                         }
                     }
 
@@ -1149,7 +1163,7 @@
                                 <span class="font-bold text-sm truncate">Apostila Oficial de Estudo - EJA</span>
                             </div>
                             <div class="flex items-center space-x-2">
-                                <a href="${docSnap.data().apostilaUrl}" target="_blank" download class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow" title="Baixar Apostila">
+                                <a href="${urlDownload}" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow" title="Baixar Apostila">
                                     <i class="fa-solid fa-download"></i>
                                     <span>Baixar</span>
                                 </a>
