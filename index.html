@@ -1357,9 +1357,10 @@
 
         class AsaasIntegrationService {
             constructor() {
-                const config = JSON.parse(localStorage.getItem('app_asaas_config')) || { apiKey: '', env: 'sandbox' };
+                const config = JSON.parse(localStorage.getItem('app_asaas_config')) || { apiKey: '', env: 'production' };
                 this.apiKey = config.apiKey ? config.apiKey.trim() : '';
-                this.environment = config.env || 'sandbox';
+                // Força 'production' caso esteja vazio ou divergente
+                this.environment = (config.env === 'production' || config.env === 'Produção') ? 'production' : 'sandbox';
             }
 
             async fazerRequisicaoAsaas(endpoint, method = 'GET', payload = null) {
@@ -1384,12 +1385,12 @@
                 try {
                     data = JSON.parse(text);
                 } catch (err) {
-                    throw new Error("Falha ao comunicar com o servidor de integração.");
+                    throw new Error("Falha ao comunicar com o servidor de integração: " + text.substring(0, 100));
                 }
 
                 if (data.errors) {
                     const msg = data.errors.map(e => e.description).join(', ');
-                    throw new Error(msg);
+                    throw new Error("Asaas recusou: " + msg);
                 }
                 return data;
             }
@@ -1420,7 +1421,7 @@
             async criarCobrancaBoleto(customerId, dadosCobranca) {
                 const payload = {
                     customer: customerId,
-                    billingType: 'UNDEFINED', // Permite que o cliente escolha Pix, Boleto ou Cartão na fatura
+                    billingType: 'UNDEFINED',
                     value: parseFloat(dadosCobranca.valor),
                     dueDate: dadosCobranca.vencimento,
                     description: dadosCobranca.descricao || 'Taxa Educacional SE7',
@@ -1429,7 +1430,7 @@
 
                 const data = await this.fazerRequisicaoAsaas('/payments', 'POST', payload);
 
-                // Define o domínio correto com base no ambiente configurado (Produção vs Sandbox)
+                // Garante que o domínio seja estritamente de Produção se o ambiente for production
                 const dominioAsaas = this.environment === 'production' ? 'www.asaas.com' : 'sandbox.asaas.com';
                 const linkFatura = data.invoiceUrl || data.bankSlipUrl || (data.id ? `https://${dominioAsaas}/i/${data.id}` : '');
 
@@ -1440,7 +1441,7 @@
                     identificationField: data.identificationField || ''
                 };
             }
-	}
+        }
 
         function iniciarRelogioAoVivo() {
             const relogioEl = document.getElementById('header-live-clock');
