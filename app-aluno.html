@@ -212,21 +212,34 @@
             <div id="tab-financeiro" class="space-y-3 tab-pane" style="display: none;">
                 <h3 class="font-bold text-sm text-slate-700 dark:text-slate-200 mb-2">Suas Faturas e Mensalidades</h3>
                 <div id="finance-list" class="space-y-2">
-                    <!-- Skeleton Loading -->
                     <div class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 animate-pulse space-y-2">
                         <div class="h-3 bg-slate-200 dark:bg-slate-800 rounded w-3/4"></div>
                         <div class="h-2 bg-slate-200 dark:bg-slate-800 rounded w-1/2"></div>
-                    </div>
-                    <div class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 animate-pulse space-y-2">
-                        <div class="h-3 bg-slate-200 dark:bg-slate-800 rounded w-2/3"></div>
-                        <div class="h-2 bg-slate-200 dark:bg-slate-800 rounded w-1/3"></div>
                     </div>
                 </div>
             </div>
 
             <!-- ABA 3: NOTAS -->
             <div id="tab-notas" class="space-y-3 tab-pane" style="display: none;">
-                <h3 class="font-bold text-sm text-slate-700 dark:text-slate-200 mb-2">Acompanhamento Acadêmico</h3>
+                <!-- Card de Resumo e Desempenho Acadêmico -->
+                <div class="bg-gradient-to-r from-blue-800 to-indigo-900 text-white p-4 rounded-2xl shadow-md space-y-2">
+                    <div class="flex justify-between items-center">
+                        <span class="text-[9px] uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-full font-bold">Panorama Acadêmico</span>
+                        <span id="status-geral-badge" class="text-[10px] bg-emerald-500/80 text-white px-2 py-0.5 rounded-full font-bold">Regular / Cursando</span>
+                    </div>
+                    <div class="flex justify-between items-end pt-1">
+                        <div>
+                            <p class="text-[11px] text-blue-200">Disciplinas Matriculadas</p>
+                            <h4 class="font-bold text-lg" id="total-disciplinas-num">0</h4>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-[11px] text-blue-200">Situação</p>
+                            <h4 class="font-bold text-sm text-emerald-300" id="situacao-geral-txt">Em Acompanhamento</h4>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 class="font-bold text-sm text-slate-700 dark:text-slate-200 mb-2">Disciplinas e AVALIAÇÕES</h3>
                 <div id="grades-list" class="space-y-2">
                     <div class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 animate-pulse space-y-2">
                         <div class="h-3 bg-slate-200 dark:bg-slate-800 rounded w-3/4"></div>
@@ -336,7 +349,6 @@
         let gdriveUrlGlobal = "https://script.google.com/macros/s/AKfycbwPL9G9q--46vYhuyCfqSwZ9IKm2tEvlfvlH18TvD0FJXqYrDnyLOyKqtp6mT7LdH5XOA/exec"; 
 
         window.addEventListener('DOMContentLoaded', async () => {
-            // Monitor de Conexão Online/Offline
             window.addEventListener('online', atualizarStatusConexao);
             window.addEventListener('offline', atualizarStatusConexao);
             atualizarStatusConexao();
@@ -760,6 +772,9 @@
                         document.getElementById('modal-card-curso').textContent = curso.name;
                         document.getElementById('info-curso-completo').textContent = curso.name;
                         
+                        const qtdSub = curso.subjects ? curso.subjects.length : 0;
+                        document.getElementById('total-disciplinas-num').textContent = qtdSub;
+
                         const gradesList = document.getElementById('grades-list');
                         gradesList.innerHTML = '';
                         if(curso.subjects && curso.subjects.length > 0) {
@@ -901,7 +916,6 @@
                         renderizarDocumentosObrigatorios();
                         verificarPendenciaDocumentos();
                         
-                        // ANIMAÇÃO DE FOGOS / CONFETTI SE TODOS OS DOCUMENTOS ESTIVEREM APROVADOS
                         let todosAprovados = true;
                         const docs = alunoLogado.documentos || {};
                         tiposDocumentosObrigatorios.forEach(t => {
