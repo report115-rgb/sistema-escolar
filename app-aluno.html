@@ -1,11 +1,16 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SE7 - Portal do Aluno</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- QR Code Library -->
@@ -18,6 +23,14 @@
         ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
 
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .tab-pane {
+            animation: fadeIn 0.25s ease-out forwards;
+        }
+
         @keyframes piscarAlerta {
             0% { background-color: #ef4444; opacity: 1; transform: scale(1); }
             50% { background-color: #3b82f6; opacity: 0.6; transform: scale(1.2); }
@@ -28,7 +41,7 @@
         }
     </style>
 </head>
-<body class="bg-slate-100 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+<body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-200">
 
     <!-- TELA DE LOGIN DO ALUNO -->
     <div id="login-screen" class="fixed inset-0 z-50 bg-gradient-to-br from-blue-900 via-indigo-900 to-slate-900 flex flex-col justify-between p-6 text-white">
@@ -65,22 +78,22 @@
 
     <!-- MODAL DE ESQUECI MINHA SENHA -->
     <div id="modal-esqueci-senha" class="fixed inset-0 z-[60] bg-black/60 flex items-center justify-center p-4" style="display: none;">
-        <div class="bg-white text-slate-800 rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4 relative">
+        <div class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4 relative">
             <button onclick="fecharModalEsqueciSenha()" class="absolute top-4 right-4 text-slate-400 hover:text-red-500 text-xl font-bold">&times;</button>
             <div class="text-center">
                 <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto text-xl mb-2">
                     <i class="fa-solid fa-key"></i>
                 </div>
                 <h3 class="font-bold text-base">Recuperação de Senha</h3>
-                <p class="text-xs text-slate-500 mt-1">Informe seu CPF e defina uma nova senha de acesso.</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Informe seu CPF e defina uma nova senha de acesso.</p>
             </div>
             <div>
-                <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">CPF do Aluno</label>
-                <input type="text" id="forgot-cpf" placeholder="000.000.000-00" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-600 focus:outline-none">
+                <label class="block text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">CPF do Aluno</label>
+                <input type="text" id="forgot-cpf" placeholder="000.000.000-00" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm focus:ring-2 focus:ring-emerald-600 focus:outline-none">
             </div>
             <div>
-                <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Nova Senha / Matrícula</label>
-                <input type="password" id="forgot-new-pass" placeholder="Mínimo 6 caracteres" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-600 focus:outline-none">
+                <label class="block text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Nova Senha / Matrícula</label>
+                <input type="password" id="forgot-new-pass" placeholder="Mínimo 6 caracteres" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm focus:ring-2 focus:ring-emerald-600 focus:outline-none">
             </div>
             <button onclick="executarRedefinicaoSenha()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg transition text-sm">
                 Atualizar Senha
@@ -132,14 +145,19 @@
                     </div>
                 </div>
                 <div>
-                    <h2 class="font-bold text-sm truncate max-w-[210px]" id="header-aluno-nome">Carregando...</h2>
-                    <!-- Nome do curso exibido abaixo do nome do aluno no cabeçalho -->
-                    <span class="text-[10px] text-blue-200 truncate block max-w-[210px]" id="header-aluno-curso">Carregando curso...</span>
+                    <h2 class="font-bold text-sm truncate max-w-[190px]" id="header-aluno-nome">Carregando...</h2>
+                    <span class="text-[10px] text-blue-200 truncate block max-w-[190px]" id="header-aluno-curso">Carregando curso...</span>
                 </div>
             </div>
-            <button onclick="fazerLogout()" class="w-9 h-9 bg-red-600/80 hover:bg-red-700 rounded-full flex items-center justify-center text-xs transition text-white shadow">
-                <i class="fa-solid fa-power-off"></i>
-            </button>
+            <div class="flex items-center space-x-2">
+                <!-- Botão Modo Escuro / Claro -->
+                <button onclick="alternarDarkMode()" class="w-9 h-9 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-xs transition text-white shadow" title="Alternar Tema">
+                    <i id="theme-icon" class="fa-solid fa-moon"></i>
+                </button>
+                <button onclick="fazerLogout()" class="w-9 h-9 bg-red-600/80 hover:bg-red-700 rounded-full flex items-center justify-center text-xs transition text-white shadow" title="Sair">
+                    <i class="fa-solid fa-power-off"></i>
+                </button>
+            </div>
         </header>
 
         <input type="file" id="input-foto-perfil" accept="image/*" style="display: none;" onchange="processarAlteracaoFoto(event)">
@@ -147,36 +165,49 @@
         <!-- Conteúdo das Abas -->
         <div class="flex-1 p-4 overflow-y-auto space-y-4">
             
-            <!-- ABA 1: INÍCIO / DADOS & CARTEIRINHA FLUTUANTE -->
+            <!-- ABA 1: INÍCIO / RESUMO & CARTEIRINHA FLUTUANTE -->
             <div id="tab-home" class="space-y-4 tab-pane">
+                <!-- Card de Resumo do Semestre -->
+                <div class="bg-gradient-to-r from-indigo-600 to-blue-600 text-white p-4 rounded-2xl shadow-lg flex items-center justify-between">
+                    <div>
+                        <span class="text-[10px] uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-full font-bold">Semestre Letivo</span>
+                        <h4 class="font-bold text-base mt-1">Ambiente Acadêmico Ativo</h4>
+                        <p class="text-xs text-blue-100 mt-0.5">Acompanhe suas notas, faturas e avisos em tempo real.</p>
+                    </div>
+                    <div class="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center text-2xl shrink-0">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                    </div>
+                </div>
+
                 <!-- Botão de Acesso Rápido à Carteirinha Digital -->
-                <button onclick="abrirModalCarteirinha()" class="w-full bg-gradient-to-r from-blue-700 to-indigo-800 hover:from-blue-800 hover:to-indigo-900 text-white p-4 rounded-2xl shadow-md flex items-center justify-between transition group">
+                <button onclick="abrirModalCarteirinha()" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-blue-500 text-slate-800 dark:text-slate-100 p-4 rounded-2xl shadow-sm flex items-center justify-between transition group">
                     <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-lg text-blue-200 group-hover:scale-105 transition">
+                        <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center text-lg group-hover:scale-105 transition">
                             <i class="fa-solid fa-id-card"></i>
                         </div>
                         <div class="text-left">
                             <h4 class="font-bold text-sm">Carteirinha Digital</h4>
-                            <p class="text-[10px] text-blue-200">Toque para exibir sua ID estudantil e QR Code</p>
+                            <p class="text-[10px] text-slate-500 dark:text-slate-400">Toque para exibir sua ID estudantil e QR Code</p>
                         </div>
                     </div>
-                    <i class="fa-solid fa-chevron-right text-xs text-blue-300 mr-1"></i>
+                    <i class="fa-solid fa-chevron-right text-xs text-slate-400 mr-1"></i>
                 </button>
 
-                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-2 text-xs">
-                    <h3 class="font-bold text-slate-700 text-sm mb-1"><i class="fa-solid fa-user-shield text-blue-600 mr-1.5"></i> Meus Dados</h3>
-                    <p><strong>Matrícula:</strong> <span id="info-mat">---</span></p>
-                    <p><strong>CPF:</strong> <span id="info-cpf">---</span></p>
-                    <p><strong>E-mail:</strong> <span id="info-email">---</span></p>
-                    <p><strong>WhatsApp:</strong> <span id="info-tel">---</span></p>
-                    <p><strong>Curso:</strong> <span id="info-curso-completo">---</span></p>
-                    <p><strong>Turma:</strong> <span id="info-turma">---</span></p>
+                <!-- Bloco de Meus Dados -->
+                <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 space-y-2 text-xs">
+                    <h3 class="font-bold text-slate-700 dark:text-slate-200 text-sm mb-2"><i class="fa-solid fa-user-shield text-blue-600 mr-1.5"></i> Meus Dados Cadastrais</h3>
+                    <p class="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5"><strong class="text-slate-500 dark:text-slate-400">Matrícula:</strong> <span id="info-mat" class="font-semibold">---</span></p>
+                    <p class="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5"><strong class="text-slate-500 dark:text-slate-400">CPF:</strong> <span id="info-cpf" class="font-semibold">---</span></p>
+                    <p class="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5"><strong class="text-slate-500 dark:text-slate-400">E-mail:</strong> <span id="info-email" class="font-semibold">---</span></p>
+                    <p class="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5"><strong class="text-slate-500 dark:text-slate-400">WhatsApp:</strong> <span id="info-tel" class="font-semibold">---</span></p>
+                    <p class="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5"><strong class="text-slate-500 dark:text-slate-400">Curso:</strong> <span id="info-curso-completo" class="font-semibold text-right max-w-[200px] truncate">---</span></p>
+                    <p class="flex justify-between pt-0.5"><strong class="text-slate-500 dark:text-slate-400">Turma:</strong> <span id="info-turma" class="font-semibold">---</span></p>
                 </div>
             </div>
 
             <!-- ABA 2: FINANCEIRO -->
             <div id="tab-financeiro" class="space-y-3 tab-pane" style="display: none;">
-                <h3 class="font-bold text-sm text-slate-700 mb-2">Suas Faturas e Mensalidades</h3>
+                <h3 class="font-bold text-sm text-slate-700 dark:text-slate-200 mb-2">Suas Faturas e Mensalidades</h3>
                 <div id="finance-list" class="space-y-2">
                     <p class="text-xs text-slate-400 text-center py-8">Carregando faturas...</p>
                 </div>
@@ -184,7 +215,7 @@
 
             <!-- ABA 3: NOTAS -->
             <div id="tab-notas" class="space-y-3 tab-pane" style="display: none;">
-                <h3 class="font-bold text-sm text-slate-700 mb-2">Acompanhamento Acadêmico</h3>
+                <h3 class="font-bold text-sm text-slate-700 dark:text-slate-200 mb-2">Acompanhamento Acadêmico</h3>
                 <div id="grades-list" class="space-y-2">
                     <p class="text-xs text-slate-400 text-center py-8">Carregando disciplinas...</p>
                 </div>
@@ -192,7 +223,7 @@
 
             <!-- ABA 4: FREQUÊNCIA -->
             <div id="tab-frequencia" class="space-y-3 tab-pane" style="display: none;">
-                <h3 class="font-bold text-sm text-slate-700 mb-2">Controle de Frequência</h3>
+                <h3 class="font-bold text-sm text-slate-700 dark:text-slate-200 mb-2">Controle de Frequência</h3>
                 <div id="frequency-list" class="space-y-2">
                     <p class="text-xs text-slate-400 text-center py-8">Carregando frequência...</p>
                 </div>
@@ -201,13 +232,13 @@
             <!-- ABA 5: DOCUMENTOS OBRIGATÓRIOS -->
             <div id="tab-documentos" class="space-y-3 tab-pane" style="display: none;">
                 <div id="docs-banner-msg">
-                    <div class="bg-blue-50 p-3 rounded-2xl border border-blue-200 text-xs text-blue-900 mb-3">
+                    <div class="bg-blue-50 dark:bg-blue-950/40 p-3 rounded-2xl border border-blue-200 dark:border-blue-800 text-xs text-blue-900 dark:text-blue-200 mb-3">
                         <p class="font-bold mb-1"><i class="fa-solid fa-circle-info mr-1"></i> Instruções para Postagem:</p>
                         <p>Envie cada documento obrigatório rigorosamente em formato <strong>PDF</strong>. O arquivo será salvo diretamente na sua pasta oficial no Google Drive.</p>
                     </div>
                 </div>
 
-                <h3 class="font-bold text-sm text-slate-700 mb-2">Meus Documentos Obrigatórios</h3>
+                <h3 class="font-bold text-sm text-slate-700 dark:text-slate-200 mb-2">Meus Documentos Obrigatórios</h3>
                 <div id="documents-list" class="space-y-3">
                     <p class="text-xs text-slate-400 text-center py-8">Carregando lista de documentos...</p>
                 </div>
@@ -215,7 +246,7 @@
 
             <!-- ABA 6: CALENDÁRIO -->
             <div id="tab-calendario" class="space-y-3 tab-pane" style="display: none;">
-                <h3 class="font-bold text-sm text-slate-700 mb-2">Calendário de Aulas</h3>
+                <h3 class="font-bold text-sm text-slate-700 dark:text-slate-200 mb-2">Calendário de Aulas</h3>
                 <div id="calendar-list" class="space-y-2">
                     <p class="text-xs text-slate-400 text-center py-8">Carregando aulas...</p>
                 </div>
@@ -224,35 +255,35 @@
         </div>
 
         <!-- Menu Inferior Fixo (Bottom Bar) com Alertas Piscantes -->
-        <nav class="bg-white border-t border-slate-200 px-2 py-2 flex justify-around items-center fixed bottom-0 left-0 right-0 shadow-lg z-40">
-            <button onclick="mudarAba('home')" id="nav-home" class="flex flex-col items-center text-blue-600 text-[10px] font-bold transition">
+        <nav class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-2 py-2 flex justify-around items-center fixed bottom-0 left-0 right-0 shadow-lg z-40 transition-colors duration-200">
+            <button onclick="mudarAba('home')" id="nav-home" class="flex flex-col items-center text-blue-600 dark:text-blue-400 text-[10px] font-bold transition">
                 <i class="fa-solid fa-id-card text-base mb-0.5"></i> Início
             </button>
-            <button onclick="mudarAba('financeiro')" id="nav-financeiro" class="flex flex-col items-center text-slate-400 text-[10px] font-bold transition relative">
+            <button onclick="mudarAba('financeiro')" id="nav-financeiro" class="flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition relative">
                 <div class="relative">
                     <i class="fa-solid fa-wallet text-base mb-0.5"></i>
                     <span id="badge-alerta-financeiro" class="absolute -top-1 -right-2 w-4 h-4 bg-red-500 text-white rounded-full text-[9px] font-black flex items-center justify-center animacao-piscar-alerta shadow-md" style="display: none;" title="Fatura vencendo ou pendente!">!</span>
                 </div>
                 Financeiro
             </button>
-            <button onclick="mudarAba('notas')" id="nav-notas" class="flex flex-col items-center text-slate-400 text-[10px] font-bold transition relative">
+            <button onclick="mudarAba('notas')" id="nav-notas" class="flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition relative">
                 <div class="relative">
                     <i class="fa-solid fa-star text-base mb-0.5"></i>
                     <span id="badge-alerta-notas" class="absolute -top-1 -right-2 w-4 h-4 bg-red-500 text-white rounded-full text-[9px] font-black flex items-center justify-center animacao-piscar-alerta shadow-md" style="display: none;" title="Novas notas disponíveis!">!</span>
                 </div>
                 Notas
             </button>
-            <button onclick="mudarAba('frequencia')" id="nav-frequencia" class="flex flex-col items-center text-slate-400 text-[10px] font-bold transition">
+            <button onclick="mudarAba('frequencia')" id="nav-frequencia" class="flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition">
                 <i class="fa-solid fa-clipboard-user text-base mb-0.5"></i> Presença
             </button>
-            <button onclick="mudarAba('documentos')" id="nav-documentos" class="flex flex-col items-center text-slate-400 text-[10px] font-bold transition relative">
+            <button onclick="mudarAba('documentos')" id="nav-documentos" class="flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition relative">
                 <div class="relative">
                     <i class="fa-solid fa-folder-open text-base mb-0.5"></i>
                     <span id="badge-alerta-docs" class="absolute -top-1 -right-2 w-4 h-4 bg-red-500 text-white rounded-full text-[9px] font-black flex items-center justify-center animacao-piscar-alerta shadow-md" style="display: none;" title="Documentação pendente!">!</span>
                 </div>
                 Docs
             </button>
-            <button onclick="mudarAba('calendario')" id="nav-calendario" class="flex flex-col items-center text-slate-400 text-[10px] font-bold transition">
+            <button onclick="mudarAba('calendario')" id="nav-calendario" class="flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition">
                 <i class="fa-solid fa-calendar-days text-base mb-0.5"></i> Aulas
             </button>
         </nav>
@@ -284,6 +315,13 @@
         let gdriveUrlGlobal = "https://script.google.com/macros/s/AKfycbwPL9G9q--46vYhuyCfqSwZ9IKm2tEvlfvlH18TvD0FJXqYrDnyLOyKqtp6mT7LdH5XOA/exec"; 
 
         window.addEventListener('DOMContentLoaded', async () => {
+            // Verificar tema salvo
+            const savedTheme = localStorage.getItem('se7_aluno_theme') || 'light';
+            if(savedTheme === 'dark') {
+                document.documentElement.classList.add('dark');
+                document.getElementById('theme-icon').className = "fa-solid fa-sun";
+            }
+
             await carregarConfiguracaoInstituicao();
 
             const sessao = sessionStorage.getItem('aluno_app_logado');
@@ -295,6 +333,20 @@
                 verificarTodasPendencias();
             }
         });
+
+        function alternarDarkMode() {
+            const htmlEl = document.documentElement;
+            const iconEl = document.getElementById('theme-icon');
+            if(htmlEl.classList.contains('dark')) {
+                htmlEl.classList.remove('dark');
+                localStorage.setItem('se7_aluno_theme', 'light');
+                iconEl.className = "fa-solid fa-moon";
+            } else {
+                htmlEl.classList.add('dark');
+                localStorage.setItem('se7_aluno_theme', 'dark');
+                iconEl.className = "fa-solid fa-sun";
+            }
+        }
 
         async function carregarConfiguracaoInstituicao() {
             try {
@@ -356,8 +408,8 @@
             } else {
                 badge.style.display = 'none';
                 banner.innerHTML = `
-                    <div class="bg-emerald-50 p-4 rounded-2xl border border-emerald-200 text-xs text-emerald-900 mb-3 text-center space-y-1 shadow-sm">
-                        <i class="fa-solid fa-circle-check text-emerald-600 text-xl mb-1"></i>
+                    <div class="bg-emerald-50 dark:bg-emerald-950/40 p-4 rounded-2xl border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-900 dark:text-emerald-200 mb-3 text-center space-y-1 shadow-sm">
+                        <i class="fa-solid fa-circle-check text-emerald-600 dark:text-emerald-400 text-xl mb-1"></i>
                         <p class="font-bold text-sm">Parabéns!</p>
                         <p>Todos os seus documentos obrigatórios foram aprovados.</p>
                     </div>
@@ -616,26 +668,26 @@
                 const driveUrl = docInfo ? docInfo.driveUrl : '';
                 const fileName = docInfo && docInfo.fileName ? docInfo.fileName : 'Documento em PDF';
 
-                let statusBadge = `<span class="px-2 py-0.5 bg-slate-200 text-slate-700 rounded text-[10px] font-bold">Pendente</span>`;
-                if(status === 'Aprovado') statusBadge = `<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded text-[10px] font-bold">Aprovado</span>`;
-                if(status === 'Reprovado') statusBadge = `<span class="px-2 py-0.5 bg-red-100 text-red-800 rounded text-[10px] font-bold" title="${motivo}">Reprovado</span>`;
+                let statusBadge = `<span class="px-2 py-0.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded text-[10px] font-bold">Pendente</span>`;
+                if(status === 'Aprovado') statusBadge = `<span class="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 rounded text-[10px] font-bold">Aprovado</span>`;
+                if(status === 'Reprovado') statusBadge = `<span class="px-2 py-0.5 bg-red-100 dark:bg-red-950 text-red-800 dark:text-red-300 rounded text-[10px] font-bold" title="${motivo}">Reprovado</span>`;
 
                 let linkArquivoHtml = '<p class="text-[11px] text-slate-400">Nenhum arquivo enviado</p>';
                 if (driveUrl) {
-                    linkArquivoHtml = `<p class="text-[11px] text-emerald-600 truncate"><a href="${driveUrl}" target="_blank" class="underline font-semibold flex items-center gap-1"><i class="fa-brands fa-google-drive"></i> Arquivo: ${fileName}</a></p>`;
+                    linkArquivoHtml = `<p class="text-[11px] text-emerald-600 dark:text-emerald-400 truncate"><a href="${driveUrl}" target="_blank" class="underline font-semibold flex items-center gap-1"><i class="fa-brands fa-google-drive"></i> Arquivo: ${fileName}</a></p>`;
                 } else if (fileUrl) {
-                    linkArquivoHtml = `<p class="text-[11px] text-blue-600 truncate"><a href="${fileUrl}" target="_blank" class="underline font-semibold"><i class="fa-solid fa-file-pdf mr-1"></i> Visualizar PDF</a></p>`;
+                    linkArquivoHtml = `<p class="text-[11px] text-blue-600 dark:text-blue-400 truncate"><a href="${fileUrl}" target="_blank" class="underline font-semibold"><i class="fa-solid fa-file-pdf mr-1"></i> Visualizar PDF</a></p>`;
                 }
 
                 docList.innerHTML += `
-                    <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-2 text-xs">
+                    <div class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-2 text-xs">
                         <div class="flex justify-between items-center">
-                            <strong class="text-slate-900">${tipo.label}</strong>
+                            <strong class="text-slate-900 dark:text-slate-100">${tipo.label}</strong>
                             <div>${statusBadge}</div>
                         </div>
                         ${linkArquivoHtml}${motivo ? `<p class="text-[11px] text-red-600 font-semibold">Reprovado: ${motivo}</p>` : ''}
-                        <div class="flex items-center gap-2 pt-1 border-t border-slate-100">
-                            <input type="file" id="file_doc_${tipo.id}" accept="application/pdf" class="text-[10px] w-full border border-slate-200 p-1 rounded bg-slate-50">
+                        <div class="flex items-center gap-2 pt-1 border-t border-slate-100 dark:border-slate-800">
+                            <input type="file" id="file_doc_${tipo.id}" accept="application/pdf" class="text-[10px] w-full border border-slate-200 dark:border-slate-700 p-1 rounded bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200">
                             <button onclick="enviarDocumentoPDFAluno('${tipo.id}')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shrink-0 shadow">
                                 Enviar PDF
                             </button>
@@ -676,12 +728,12 @@
                         if(curso.subjects && curso.subjects.length > 0) {
                             curso.subjects.forEach(sub => {
                                 gradesList.innerHTML += `
-                                    <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm flex justify-between items-center text-xs">
+                                    <div class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex justify-between items-center text-xs">
                                         <div>
-                                            <strong class="text-slate-900">${sub.name}</strong>
-                                            <p class="text-[10px] text-slate-500">Carga Horária: ${sub.hours || 'N/A'}</p>
+                                            <strong class="text-slate-900 dark:text-slate-100">${sub.name}</strong>
+                                            <p class="text-[10px] text-slate-500 dark:text-slate-400">Carga Horária: ${sub.hours || 'N/A'}</p>
                                         </div>
-                                        <span class="px-2 py-1 bg-blue-50 text-blue-700 font-bold rounded-lg">Cursando</span>
+                                        <span class="px-2 py-1 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-bold rounded-lg">Cursando</span>
                                     </div>
                                 `;
                             });
@@ -708,12 +760,12 @@
                         const cal = doc.data();
                         const datasFmt = (cal.dates || []).map(d => d.split('-').reverse().join('/')).join(', ');
                         calList.innerHTML += `
-                            <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm text-xs space-y-1">
-                                <div class="flex justify-between font-bold text-blue-600">
+                            <div class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm text-xs space-y-1">
+                                <div class="flex justify-between font-bold text-blue-600 dark:text-blue-400">
                                     <span>${cal.subject}</span>
-                                    <span class="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">${cal.semestre || ''}</span>
+                                    <span class="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-1.5 py-0.5 rounded">${cal.semestre || ''}</span>
                                 </div>
-                                <p class="text-slate-700">${cal.description || 'Aula teórica/prática'}</p>
+                                <p class="text-slate-700 dark:text-slate-300">${cal.description || 'Aula teórica/prática'}</p>
                                 <p class="text-[10px] text-slate-400"><i class="fa-solid fa-calendar mr-1"></i> Datas: ${datasFmt}</p>
                             </div>
                         `;
@@ -726,10 +778,10 @@
                 freqList.innerHTML = '';
                 if(snap.empty) {
                     freqList.innerHTML = `
-                        <div class="bg-emerald-50 border border-emerald-200 p-4 rounded-2xl text-center space-y-1">
-                            <i class="fa-solid fa-circle-check text-emerald-600 text-xl mb-1"></i>
-                            <h4 class="font-bold text-emerald-900 text-sm">Frequência Regular</h4>
-                            <p class="text-[11px] text-emerald-700">Nenhuma falta registrada até o momento.</p>
+                        <div class="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 p-4 rounded-2xl text-center space-y-1">
+                            <i class="fa-solid fa-circle-check text-emerald-600 dark:text-emerald-400 text-xl mb-1"></i>
+                            <h4 class="font-bold text-emerald-900 dark:text-emerald-200 text-sm">Frequência Regular</h4>
+                            <p class="text-[11px] text-emerald-700 dark:text-emerald-300">Nenhuma falta registrada até o momento.</p>
                         </div>
                     `;
                     return;
@@ -737,12 +789,12 @@
                 snap.forEach(doc => {
                     const f = doc.data();
                     freqList.innerHTML += `
-                        <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm flex justify-between items-center text-xs">
+                        <div class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex justify-between items-center text-xs">
                             <div>
-                                <strong class="text-slate-900">${f.subject || 'Aula'}</strong>
+                                <strong class="text-slate-900 dark:text-slate-100">${f.subject || 'Aula'}</strong>
                                 <p class="text-[10px] text-slate-500">Data: ${f.date || '---'}</p>
                             </div>
-                            <span class="px-2.5 py-1 bg-red-50 text-red-700 font-bold rounded-lg text-[10px]">${f.status || 'Falta'}</span>
+                            <span class="px-2.5 py-1 bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 font-bold rounded-lg text-[10px]">${f.status || 'Falta'}</span>
                         </div>
                     `;
                 });
@@ -765,20 +817,20 @@
 
                 faturas.forEach(f => {
                     const statusBadge = f.status === 'Pago'
-                        ? `<span class="text-[9px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold block mb-1">Pago</span>`
-                        : `<span class="text-[9px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-bold block mb-1">Pendente</span>`;
+                        ? `<span class="text-[9px] bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 px-2 py-0.5 rounded-full font-bold block mb-1">Pago</span>`
+                        : `<span class="text-[9px] bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 px-2 py-0.5 rounded-full font-bold block mb-1">Pendente</span>`;
 
                     const valorExibido = f.discountAmount || f.amount;
 
                     finList.innerHTML += `
-                        <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm flex justify-between items-center text-xs">
+                        <div class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex justify-between items-center text-xs">
                             <div>
-                                <strong class="text-slate-900">${f.description}</strong>
+                                <strong class="text-slate-900 dark:text-slate-100">${f.description}</strong>
                                 <p class="text-[10px] text-slate-500">Vencimento: ${f.date} &bull; R$ ${valorExibido}</p>
                             </div>
                             <div class="text-right">
                                 ${statusBadge}
-                                ${f.status !== 'Pago' && f.invoiceUrl ? `<a href="${f.invoiceUrl}" target="_blank" class="px-2.5 py-1 bg-blue-600 text-white rounded-lg font-bold text-[10px] inline-block shadow">Pagar</a>` : ''}
+                                ${f.status !== 'Pago' && f.invoiceUrl ? `<a href="${f.invoiceUrl}" target="_blank" class="px-2.5 py-1 bg-blue-600 text-white rounded-lg font-bold text-[10px] inline-block shadow">Boleto</a>` : ''}
                             </div>
                         </div>
                     `;
@@ -798,8 +850,8 @@
                 const btn = document.getElementById(`nav-${a}`);
                 if(btn) {
                     btn.className = (a === aba) 
-                        ? 'flex flex-col items-center text-blue-600 text-[10px] font-bold transition' 
-                        : 'flex flex-col items-center text-slate-400 text-[10px] font-bold transition';
+                        ? 'flex flex-col items-center text-blue-600 dark:text-blue-400 text-[10px] font-bold transition' 
+                        : 'flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition';
                 }
             });
 
