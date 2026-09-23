@@ -33,14 +33,10 @@
     <!-- TELA DE LOGIN DO ALUNO -->
     <div id="login-screen" class="fixed inset-0 z-50 bg-gradient-to-br from-blue-900 via-indigo-900 to-slate-900 flex flex-col justify-between p-6 text-white">
         <div class="mt-8 text-center flex flex-col items-center">
-            <!-- Ícone padrão (Capelo) exibido como fallback caso não haja logo cadastrada -->
             <div id="login-icon-box" class="inline-flex items-center justify-center w-16 h-16 bg-blue-600 text-white rounded-2xl text-3xl font-bold mb-3 shadow-lg shadow-blue-500/30" style="display: none;">
                 <i class="fa-solid fa-graduation-cap"></i>
             </div>
-            
-            <!-- Logomarca da Instituição puxada diretamente do Firestore (Sem fundo) -->
             <img id="login-logo-img" class="max-h-16 max-w-[220px] object-contain mb-3" alt="Logo da Instituição" src="" style="display: none;">
-            
             <h1 class="text-2xl font-bold">Portal do Aluno</h1>
         </div>
 
@@ -61,7 +57,6 @@
             </div>
         </div>
 
-        <!-- Rodapé limpo de referências -->
         <div class="text-center text-[10px] text-blue-300 pb-2 space-y-0.5">
             <div class="font-semibold">SE7 Gestão Educacional</div>
             <div>v1.0.8 &bull; Acesso Restrito ao Aluno</div>
@@ -93,6 +88,36 @@
         </div>
     </div>
 
+    <!-- MODAL DA CARTEIRINHA DIGITAL (FLUTUANTE) -->
+    <div id="modal-carteirinha" class="fixed inset-0 z-[70] bg-black/70 flex items-center justify-center p-4" style="display: none;">
+        <div class="bg-gradient-to-br from-blue-900 to-indigo-800 text-white p-5 rounded-3xl max-w-xs w-full shadow-2xl border border-white/10 relative space-y-3">
+            <button onclick="fecharModalCarteirinha()" class="absolute top-3 right-3 text-white/70 hover:text-white text-lg font-bold">&times;</button>
+            <div class="flex justify-between items-center mb-1">
+                <span class="text-[9px] bg-white/20 px-2.5 py-0.5 rounded-full font-bold tracking-wider">CARTEIRINHA DIGITAL</span>
+                <span class="text-xs font-mono font-semibold" id="modal-card-matricula">MAT----</span>
+            </div>
+            <div class="flex items-center space-x-3">
+                <div class="w-20 h-24 bg-white/10 rounded-xl border border-white/20 flex items-center justify-center overflow-hidden shrink-0 shadow-inner relative group cursor-pointer" onclick="dispararTrocaFoto()" title="Alterar foto">
+                    <div id="modal-card-foto-box" class="w-full h-full flex items-center justify-center">
+                        <i class="fa-solid fa-user text-2xl text-blue-200"></i>
+                    </div>
+                    <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition text-[10px] text-white">
+                        <i class="fa-solid fa-camera mr-1"></i> Alterar
+                    </div>
+                </div>
+                <div class="space-y-1 text-xs w-full">
+                    <p class="font-bold text-sm truncate" id="modal-card-nome">---</p>
+                    <p class="text-blue-200 truncate text-[11px]" id="modal-card-curso">---</p>
+                    <p class="text-[10px] opacity-75">Validade: Dez/2026</p>
+                </div>
+            </div>
+            <div class="pt-2 border-t border-white/10 flex justify-between items-center">
+                <span class="text-[9px] text-blue-200">Toque na foto para alterá-la</span>
+                <div id="modal-card-qrcode" class="bg-white p-1 rounded-lg"></div>
+            </div>
+        </div>
+    </div>
+
     <!-- APLICATIVO PRINCIPAL (DASHBOARD) -->
     <div id="main-app" class="flex-1 flex flex-col pb-24" style="display: none;">
         <!-- Cabeçalho -->
@@ -107,8 +132,9 @@
                     </div>
                 </div>
                 <div>
-                    <h2 class="font-bold text-sm truncate max-w-[200px]" id="header-aluno-nome">Carregando...</h2>
-                    <span class="text-[10px] text-blue-300">Portal do Aluno</span>
+                    <h2 class="font-bold text-sm truncate max-w-[210px]" id="header-aluno-nome">Carregando...</h2>
+                    <!-- Nome do curso exibido abaixo do nome do aluno no cabeçalho -->
+                    <span class="text-[10px] text-blue-200 truncate block max-w-[210px]" id="header-aluno-curso">Carregando curso...</span>
                 </div>
             </div>
             <button onclick="fazerLogout()" class="w-9 h-9 bg-red-600/80 hover:bg-red-700 rounded-full flex items-center justify-center text-xs transition text-white shadow">
@@ -121,39 +147,29 @@
         <!-- Conteúdo das Abas -->
         <div class="flex-1 p-4 overflow-y-auto space-y-4">
             
-            <!-- ABA 1: INÍCIO / CARTEIRINHA -->
+            <!-- ABA 1: INÍCIO / DADOS & CARTEIRINHA FLUTUANTE -->
             <div id="tab-home" class="space-y-4 tab-pane">
-                <div class="bg-gradient-to-br from-blue-900 to-indigo-800 text-white p-5 rounded-3xl shadow-xl border border-white/10 relative">
-                    <div class="flex justify-between items-center mb-3">
-                        <span class="text-[9px] bg-white/20 px-2.5 py-0.5 rounded-full font-bold tracking-wider">CARTEIRINHA DIGITAL</span>
-                        <span class="text-xs font-mono font-semibold" id="card-matricula">MAT----</span>
-                    </div>
-                    <div class="flex items-center space-x-4">
-                        <div class="w-20 h-24 bg-white/10 rounded-xl border border-white/20 flex items-center justify-center overflow-hidden shrink-0 shadow-inner relative group cursor-pointer" onclick="dispararTrocaFoto()" title="Clique para alterar foto">
-                            <div id="card-foto-box" class="w-full h-full flex items-center justify-center">
-                                <i class="fa-solid fa-user text-2xl text-blue-200"></i>
-                            </div>
-                            <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition text-[10px] text-white">
-                                <i class="fa-solid fa-camera mr-1"></i> Alterar
-                            </div>
+                <!-- Botão de Acesso Rápido à Carteirinha Digital -->
+                <button onclick="abrirModalCarteirinha()" class="w-full bg-gradient-to-r from-blue-700 to-indigo-800 hover:from-blue-800 hover:to-indigo-900 text-white p-4 rounded-2xl shadow-md flex items-center justify-between transition group">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-lg text-blue-200 group-hover:scale-105 transition">
+                            <i class="fa-solid fa-id-card"></i>
                         </div>
-                        <div class="space-y-1 text-xs w-full">
-                            <p class="font-bold text-sm truncate" id="card-nome">---</p>
-                            <p class="text-blue-200 truncate" id="card-curso">---</p>
-                            <p class="text-[10px] opacity-75">Validade: Dez/2026</p>
+                        <div class="text-left">
+                            <h4 class="font-bold text-sm">Carteirinha Digital</h4>
+                            <p class="text-[10px] text-blue-200">Toque para exibir sua ID estudantil e QR Code</p>
                         </div>
                     </div>
-                    <div class="mt-4 pt-3 border-t border-white/10 flex justify-between items-center">
-                        <span class="text-[9px] text-blue-200">Toque na foto para alterá-la</span>
-                        <div id="card-qrcode" class="bg-white p-1 rounded-lg"></div>
-                    </div>
-                </div>
+                    <i class="fa-solid fa-chevron-right text-xs text-blue-300 mr-1"></i>
+                </button>
 
                 <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-2 text-xs">
                     <h3 class="font-bold text-slate-700 text-sm mb-1"><i class="fa-solid fa-user-shield text-blue-600 mr-1.5"></i> Meus Dados</h3>
+                    <p><strong>Matrícula:</strong> <span id="info-mat">---</span></p>
                     <p><strong>CPF:</strong> <span id="info-cpf">---</span></p>
                     <p><strong>E-mail:</strong> <span id="info-email">---</span></p>
                     <p><strong>WhatsApp:</strong> <span id="info-tel">---</span></p>
+                    <p><strong>Curso:</strong> <span id="info-curso-completo">---</span></p>
                     <p><strong>Turma:</strong> <span id="info-turma">---</span></p>
                 </div>
             </div>
@@ -460,6 +476,14 @@
             document.getElementById('modal-esqueci-senha').style.display = 'none';
         }
 
+        function abrirModalCarteirinha() {
+            document.getElementById('modal-carteirinha').style.display = 'flex';
+        }
+
+        function fecharModalCarteirinha() {
+            document.getElementById('modal-carteirinha').style.display = 'none';
+        }
+
         async function executarRedefinicaoSenha() {
             const cpfInput = document.getElementById('forgot-cpf').value.trim().replace(/[^\d]/g, '');
             const newPassInput = document.getElementById('forgot-new-pass').value.trim();
@@ -504,7 +528,7 @@
                     alunoLogado.fotoAluno = base64Image;
                     sessionStorage.setItem('aluno_app_logado', JSON.stringify(alunoLogado));
                     
-                    document.getElementById('card-foto-box').innerHTML = `<img src="${base64Image}" class="w-full h-full object-cover">`;
+                    document.getElementById('modal-card-foto-box').innerHTML = `<img src="${base64Image}" class="w-full h-full object-cover">`;
                     document.getElementById('header-avatar-box').innerHTML = `<img src="${base64Image}" class="w-full h-full object-cover">`;
                     alert("Foto de perfil atualizada com sucesso!");
                 } catch(err) {
@@ -624,14 +648,15 @@
         async function carregarDadosPainel() {
             if(!alunoLogado) return;
             document.getElementById('header-aluno-nome').textContent = alunoLogado.fullname;
-            document.getElementById('card-nome').textContent = alunoLogado.fullname;
-            document.getElementById('card-matricula').textContent = alunoLogado.code || 'MAT-000';
+            document.getElementById('modal-card-nome').textContent = alunoLogado.fullname;
+            document.getElementById('modal-card-matricula').textContent = alunoLogado.code || 'MAT-000';
+            document.getElementById('info-mat').textContent = alunoLogado.code || '---';
             document.getElementById('info-cpf').textContent = alunoLogado.cpf || '---';
             document.getElementById('info-email').textContent = alunoLogado.email || '---';
             document.getElementById('info-tel').textContent = alunoLogado.whatsapp || '---';
 
             if(alunoLogado.fotoAluno) {
-                document.getElementById('card-foto-box').innerHTML = `<img src="${alunoLogado.fotoAluno}" class="w-full h-full object-cover">`;
+                document.getElementById('modal-card-foto-box').innerHTML = `<img src="${alunoLogado.fotoAluno}" class="w-full h-full object-cover">`;
                 document.getElementById('header-avatar-box').innerHTML = `<img src="${alunoLogado.fotoAluno}" class="w-full h-full object-cover">`;
             }
 
@@ -642,7 +667,9 @@
                 db.collection("courses").doc(alunoLogado.courseId).get().then(doc => {
                     if(doc.exists) {
                         const curso = doc.data();
-                        document.getElementById('card-curso').textContent = curso.name;
+                        document.getElementById('header-aluno-curso').textContent = curso.name;
+                        document.getElementById('modal-card-curso').textContent = curso.name;
+                        document.getElementById('info-curso-completo').textContent = curso.name;
                         
                         const gradesList = document.getElementById('grades-list');
                         gradesList.innerHTML = '';
@@ -758,7 +785,7 @@
                 });
             });
 
-            const qr = document.getElementById('card-qrcode');
+            const qr = document.getElementById('modal-card-qrcode');
             qr.innerHTML = '';
             new QRCode(qr, { text: `SE7-ALUNO-${alunoLogado.code}`, width: 45, height: 45 });
         }
