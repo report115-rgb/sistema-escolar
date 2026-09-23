@@ -890,339 +890,331 @@
     </div>
 </div>
 
-                <!-- SUBABA DISCIPLINAS (REORGANIZADA NO MESMO PADRÃO DE CURSOS) -->
-                <div id="subtab-subjects" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
-                    <input type="hidden" id="edit-subject-id" value="">
-                    
-                    <!-- BOTÕES DAS SUBABAS DE DISCIPLINAS -->
-                    <div class="flex space-x-2 border-b border-gray-200 dark:border-slate-700 pb-3 mb-4">
-                        <button class="subsubtab-subject-button active px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white shadow" onclick="openSubSubTabSubject(event, 'subsubtab-disciplinas-cadastradas')"><i class="fa-solid fa-list mr-1"></i> Disciplinas Cadastradas</button>
-                        <button class="subsubtab-subject-button px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubSubTabSubject(event, 'subsubtab-cadastrar-disciplina')"><i class="fa-solid fa-plus mr-1"></i> Cadastrar Nova Disciplina</button>
-                    </div>
+<!-- SUBABA DISCIPLINAS (REORGANIZADA NO MESMO PADRÃO DE CURSOS) -->
+<div id="subtab-subjects" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
+    <input type="hidden" id="edit-subject-id" value="">
+    
+    <div class="flex space-x-2 border-b border-gray-200 dark:border-slate-700 pb-3 mb-4">
+        <button class="subsubtab-subject-button active px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white shadow" onclick="openSubSubTabSubject(event, 'subsubtab-disciplinas-cadastradas')"><i class="fa-solid fa-list mr-1"></i> Disciplinas Cadastradas</button>
+        <button class="subsubtab-subject-button px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubSubTabSubject(event, 'subsubtab-cadastrar-disciplina')"><i class="fa-solid fa-plus mr-1"></i> Cadastrar Nova Disciplina</button>
+    </div>
 
-                    <!-- SUB-SUBABA 1: DISCIPLINAS CADASTRADAS -->
-                    <div id="subsubtab-disciplinas-cadastradas" class="subsubtab-subject-content active space-y-3">
-                        <div class="flex justify-between items-center mb-2">
-                            <h4 class="font-bold text-sm text-gray-800 dark:text-white">Lista de Disciplinas Cadastradas</h4>
-                            <span class="text-xs text-gray-500 font-semibold" id="total-subjects-count">Total: 0 disciplinas</span>
-                        </div>
-                        <ul class="data-list divide-y divide-gray-200 dark:divide-slate-700" id="subjects-management-list"></ul>
-                    </div>
+    <div id="subsubtab-disciplinas-cadastradas" class="subsubtab-subject-content active space-y-3">
+        <div class="flex justify-between items-center mb-2">
+            <h4 class="font-bold text-sm text-gray-800 dark:text-white">Lista de Disciplinas Cadastradas</h4>
+            <span class="text-xs text-gray-500 font-semibold" id="total-subjects-count">Total: 0 disciplinas</span>
+        </div>
+        <ul class="data-list divide-y divide-gray-200 dark:divide-slate-700" id="subjects-management-list"></ul>
+    </div>
 
-                    <!-- SUB-SUBABA 2: CADASTRAR NOVA DISCIPLINA -->
-                    <div id="subsubtab-cadastrar-disciplina" class="subsubtab-subject-content space-y-4" style="display: none;">
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div>
-                                <label class="block text-xs font-semibold mb-1">Curso</label>
-                                <select id="input-subject-course-select" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></select>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold mb-1">Nome da Disciplina</label>
-                                <input type="text" id="input-subject-name" placeholder="Anatomia" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold mb-1">Carga Horária</label>
-                                <input type="text" id="input-subject-hours" placeholder="80 hrs" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold mb-1">Ementa</label>
-                            <textarea id="input-subject-ementa" rows="3" placeholder="Tópicos abordados..." class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></textarea>
-                        </div>
-                        <div class="flex gap-2">
-                            <button type="button" id="btn-save-subject" onclick="addSubjectToCourse()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow">Salvar Disciplina</button>
-                            <button type="button" id="btn-cancel-edit-subject" onclick="cancelarEdicaoDisciplina()" class="px-4 py-2 bg-gray-500 text-white text-xs font-semibold rounded-lg shadow" style="display: none;">Cancelar Edição</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- SUBABA TURMAS (REORGANIZADA NO MESMO PADRÃO DE CURSOS) -->
-                <div id="subtab-classes" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
-                    <input type="hidden" id="edit-class-id" value="">
-
-                    <!-- BOTÕES DAS SUBABAS DE TURMAS -->
-                    <div class="flex space-x-2 border-b border-gray-200 dark:border-slate-700 pb-3 mb-4">
-                        <button class="subsubtab-class-button active px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white shadow" onclick="openSubSubTabClass(event, 'subsubtab-turmas-cadastradas')"><i class="fa-solid fa-list mr-1"></i> Turmas Cadastradas</button>
-                        <button class="subsubtab-class-button px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubSubTabClass(event, 'subsubtab-cadastrar-turma')"><i class="fa-solid fa-plus mr-1"></i> Cadastrar Nova Turma</button>
-                    </div>
-
-                    <!-- SUB-SUBABA 1: TURMAS CADASTRADAS -->
-                    <div id="subsubtab-turmas-cadastradas" class="subsubtab-class-content active space-y-3">
-                        <div class="flex justify-between items-center mb-2">
-                            <h4 class="font-bold text-sm text-gray-800 dark:text-white">Lista de Turmas Cadastradas</h4>
-                            <span class="text-xs text-gray-500 font-semibold" id="total-classes-count">Total: 0 turmas</span>
-                        </div>
-                        <ul class="data-list divide-y divide-gray-200 dark:divide-slate-700" id="class-list"></ul>
-                    </div>
-
-                    <!-- SUB-SUBABA 2: CADASTRAR NOVA TURMA -->
-                    <div id="subsubtab-cadastrar-turma" class="subsubtab-class-content space-y-4" style="display: none;">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-semibold mb-1">Curso</label>
-                                <select id="input-class-course" onchange="atualizarPreviewTurmaAutomatica()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></select>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold mb-1">Semestre Letivo</label>
-                                <select id="input-class-semester" onchange="atualizarPreviewTurmaAutomatica()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                                    <option value="2025.1">2025/1 (Jan-Jun)</option><option value="2025.2">2025/2 (Jul-Dez)</option>
-                                    <option value="2026.1">2026/1 (Jan-Jun)</option><option value="2026.2" selected>2026/2 (Jul-Dez)</option>
-                                    <option value="2027.1">2027/1 (Jan-Jun)</option><option value="2027.2">2027/2 (Jul-Dez)</option>
-                                    <option value="2028.1">2028/1 (Jan-Jun)</option><option value="2028.2">2028/2 (Jul-Dez)</option>
-                                    <option value="2029.1">2029/1 (Jan-Jun)</option><option value="2029.2">2029/2 (Jul-Dez)</option>
-                                    <option value="2030.1">2030/1 (Jan-Jun)</option><option value="2030.2">2030/2 (Jul-Dez)</option>
-                                    <option value="2031.1">2031/1 (Jan-Jun)</option><option value="2031.2">2031/2 (Jul-Dez)</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-semibold mb-1">Código Automático</label>
-                                <input type="text" id="input-class-code-auto" readonly class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm bg-gray-100 dark:bg-slate-900 font-bold text-blue-600">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold mb-1">Nome Automático</label>
-                                <input type="text" id="input-class-name-auto" readonly class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm bg-gray-100 dark:bg-slate-900 font-bold">
-                            </div>
-                        </div>
-                        <div class="flex gap-2">
-                            <button type="button" id="btn-save-class" onclick="addClass()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow">Salvar Turma</button>
-                            <button type="button" id="btn-cancel-edit-class" onclick="cancelarEdicaoTurma()" class="px-4 py-2 bg-gray-500 text-white text-xs font-semibold rounded-lg shadow" style="display: none;">Cancelar Edição</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- SUBABA CALENDÁRIO ACADÊMICO SEMESTRAL -->
-                <div id="subtab-calendar" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
-                    <div class="bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700 space-y-4">
-                        <h4 class="font-bold text-sm text-blue-600 dark:text-blue-400">Configurar Calendário Semestral por Turma</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div>
-                                <label class="block text-xs font-semibold mb-1">Curso</label>
-                                <select id="cal-course-select" onchange="atualizarDisciplinasETurmasCalendario()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800"></select>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold mb-1">Turma Vinculada</label>
-                                <select id="cal-class-select" onchange="atualizarDisciplinasPorTurmaCalendario()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800"></select>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold mb-1">Semestre / Período</label>
-                                <select id="cal-semester-select" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800">
-                                    <option value="2025/1">2025/1 (Jan-Jun)</option><option value="2025/2">2025/2 (Jul-Dez)</option>
-                                    <option value="2026/1">2026/1 (Jan-Jun)</option><option value="2026/2" selected>2026/2 (2º Semestre: Jul-Dez)</option>
-                                    <option value="2027/1">2027/1 (Jan-Jun)</option><option value="2027/2">2027/2 (Jul-Dez)</option>
-                                    <option value="2028/1">2028/1 (Jan-Jun)</option><option value="2028/2">2028/2 (Jul-Dez)</option>
-                                    <option value="2029/1">2029/1 (Jan-Jun)</option><option value="2029/2">2029/2 (Jul-Dez)</option>
-                                    <option value="2030/1">2030/1 (Jan-Jun)</option><option value="2030/2">2030/2 (Jul-Dez)</option>
-                                    <option value="2031/1">2031/1 (Jan-Jun)</option><option value="2031/2">2031/2 (Jul-Dez)</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-semibold mb-1">Disciplina da Turma</label>
-                                <select id="cal-subject-select" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800"></select>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold mb-1">Quantidade de Datas de Aula (2 a 5)</label>
-                                <select id="cal-qtd-datas" onchange="renderizarCamposDatasCalendario()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800">
-                                    <option value="2" selected>2 Dias</option>
-                                    <option value="3">3 Dias</option>
-                                    <option value="4">4 Dias</option>
-                                    <option value="5">5 Dias</option>
-                                </select>
-                            </div>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-xs font-semibold mb-1">Descrição / Tópico / Módulo</label>
-                            <input type="text" id="cal-event-desc" placeholder="Ex: Aulas Teórico-Práticas / Módulo 01" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800">
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-semibold mb-1 text-blue-600 dark:text-blue-400">Definição das Datas de Aula</label>
-                            <div id="container-datas-dinamicas" class="grid grid-cols-1 md:grid-cols-5 gap-2"></div>
-                        </div>
-
-                        <button type="button" onclick="adicionarEventoCalendario()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow">Cadastrar Aulas no Calendário</button>
-                    </div>
-
-                    <div class="mt-6 space-y-3">
-                        <h4 class="font-bold text-sm text-gray-700 dark:text-gray-300">Calendários Cadastrados (Gerenciamento)</h4>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left text-xs">
-                                <thead>
-                                    <tr class="border-b border-gray-200 dark:border-slate-700 text-gray-500">
-                                        <th class="p-2.5">Turma / Curso</th>
-                                        <th class="p-2.5">Disciplina</th>
-                                        <th class="p-2.5">Semestre</th>
-                                        <th class="p-2.5">Datas de Aula</th>
-                                        <th class="p-2.5 text-right">Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tabela-gerenciar-calendarios" class="divide-y divide-gray-200 dark:divide-slate-700"></tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <div class="flex justify-between items-center mt-6 mb-2">
-                        <h4 class="font-bold text-sm text-gray-700 dark:text-gray-300">Visualização Gráfica do Calendário Semestral</h4>
-                        <select id="admin-filtro-semestre" onchange="renderizarCalendarioSemestralAdmin()" class="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-slate-600 text-xs font-semibold dark:bg-slate-800">
-                            <option value="2026/2" selected>2026/2 (2º Semestre: Jul-Dez)</option>
-                            <option value="2026/1">2026/1 (1º Semestre: Jan-Jun)</option>
-                            <option value="2025/1">2025/1 (1º Semestre: Jan-Jun)</option>
-                            <option value="2025/2">2025/2 (2º Semestre: Jul-Dez)</option>
-                            <option value="2027/1">2027/1 (1º Semestre: Jan-Jun)</option>
-                            <option value="2027/2">2027/2 (2º Semestre: Jul-Dez)</option>
-                        </select>
-                    </div>
-                    <div id="admin-calendar-view" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
-                </div>
-
-                <!-- SUBABA PROFESSORES -->
-                <div id="subtab-teachers" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
-                    <div>
-                        <label class="block text-xs font-semibold mb-1">Nome Completo</label>
-                        <input type="text" id="input-teacher-name" placeholder="Prof. Carlos Silva" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-semibold mb-1">Formação</label>
-                            <input type="text" id="input-teacher-formation" placeholder="Bacharel / Pós" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold mb-1">Conselho de Classe</label>
-                            <input type="text" id="input-teacher-council" placeholder="OAB/PA 00.000" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                        </div>
-                    </div>
-                    <button onclick="saveTeacher()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow">Cadastrar Professor</button>
-                    <ul class="data-list divide-y divide-gray-200 dark:divide-slate-700 mt-4" id="teachers-list"></ul>
-                </div>
-
-                <!-- SUBABA EDIÇÃO DE DOCUMENTOS -->
-                <div id="subtab-templates" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
-                    <div>
-                        <label class="block text-xs font-semibold mb-1">Selecione o Curso</label>
-                        <select id="template-course-select" onchange="loadCourseTemplate()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></select>
-                    </div>
-
-                    <div>
-                        <div class="flex justify-between items-center mb-1">
-                            <label class="text-xs font-semibold">Texto do Contrato</label>
-                            <div class="flex gap-1 flex-wrap">
-                                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-contract-text', '{{nome}}')">+ Nome</button>
-                                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-contract-text', '{{cpf}}')">+ CPF</button>
-                                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-contract-text', '{{curso}}')">+ Curso</button>
-                                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-contract-text', '{{endereco_completo}}')">+ Endereço Completo</button>
-                            </div>
-                        </div>
-                        <textarea id="input-contract-text" rows="5" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></textarea>
-                    </div>
-
-                    <div>
-                        <div class="flex justify-between items-center mb-1">
-                            <label class="text-xs font-semibold">Texto da Declaração</label>
-                            <div class="flex gap-1 flex-wrap">
-                                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-decl-text', '{{nome}}')">+ Nome</button>
-                                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-decl-text', '{{cpf}}')">+ CPF</button>
-                                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-decl-text', '{{curso}}')">+ Curso</button>
-                                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-decl-text', '{{endereco_completo}}')">+ Endereço Completo</button>
-                            </div>
-                        </div>
-                        <textarea id="input-decl-text" rows="4" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></textarea>
-                    </div>
-
-                    <div>
-                        <div class="flex justify-between items-center mb-1">
-                            <label class="text-xs font-semibold">Texto do Histórico Escolar</label>
-                            <div class="flex gap-1 flex-wrap">
-                                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-history-text', '{{nome}}')">+ Nome</button>
-                                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-history-text', '{{cpf}}')">+ CPF</button>
-                                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-history-text', '{{curso}}')">+ Curso</button>
-                                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-history-text', '{{endereco_completo}}')">+ Endereço Completo</button>
-                            </div>
-                        </div>
-                        <textarea id="input-history-text" rows="4" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900" placeholder="Estrutura e layout do histórico escolar..."></textarea>
-                    </div>
-
-                    <div class="bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700 space-y-2">
-                        <label class="block text-xs font-semibold mb-1">Enviar Histórico em Formato PDF (Modelo de Referência)</label>
-                        <input type="file" id="input-history-pdf-file" accept="application/pdf" onchange="handleHistoryPdfUpload(event)" class="text-xs">
-                        <p id="history-pdf-status" class="text-[11px] text-gray-400">Nenhum arquivo PDF de histórico enviado para este curso.</p>
-                    </div>
-
-                    <button onclick="saveCourseTemplates()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow">Salvar Modelos e Edição de Documentos</button>
-                </div>
-
-                <!-- SUBABA ASAAS -->
-                <div id="subtab-fin-config" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-semibold mb-1">Chave de API do Asaas</label>
-                            <input type="password" id="asaas-api-key" placeholder="$aact_..." class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold mb-1">Ambiente</label>
-                            <select id="asaas-env" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                                <option value="sandbox">Sandbox (Testes)</option>
-                                <option value="production">Produção</option>
-                            </select>
-                        </div>
-                    </div>
-                    <button onclick="saveAsaasConfig()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow">Salvar Credenciais Asaas</button>
-                </div>
-
-                <!-- SUBABA INSTITUIÇÃO -->
-                <div id="subtab-institution" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-semibold mb-1">Nome da Instituição</label>
-                            <input type="text" id="input-inst-name" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold mb-1">Razão Social</label>
-                            <input type="text" id="input-inst-razao" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-semibold mb-1">CNPJ</label>
-                            <input type="text" id="input-inst-cnpj" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold mb-1">E-mail</label>
-                            <input type="text" id="input-inst-email" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-semibold mb-1">Telefone / WhatsApp</label>
-                            <input type="text" id="input-inst-tel" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold mb-1">Endereço</label>
-                            <input type="text" id="input-inst-end" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold mb-1 text-blue-600 dark:text-blue-400 font-bold">URL do Web App do Google Apps Script (Integração Google Drive)</label>
-                        <input type="text" id="input-gdrive-url" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-3 py-2 rounded-lg border border-blue-300 dark:border-slate-600 text-sm dark:bg-slate-900 font-mono text-xs">
-                        <p class="text-[11px] text-gray-500 mt-1">Cole aqui a URL gerada ao publicar o seu projeto no Google Apps Script.</p>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold mb-1">Upload de Logomarca</label>
-                        <input type="file" id="input-logo-file" accept="image/*" onchange="handleLogoUpload(event)" class="text-xs">
-                        <div id="logo-preview" class="mt-2 w-32 h-16 border border-dashed rounded flex items-center justify-center text-xs text-gray-400 bg-gray-50 dark:bg-slate-900">Sem logo</div>
-                        <button type="button" onclick="removeLogo()" class="mt-1 px-2 py-1 bg-red-600 text-white text-[10px] rounded">Remover Logo</button>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold mb-1">Texto Descritivo de Login</label>
-                        <textarea id="input-login-desc" rows="2" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></textarea>
-                    </div>
-                    <button onclick="salvarBrandingNaNuvem()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow">Salvar Configurações</button>
-                </div>
+    <div id="subsubtab-cadastrar-disciplina" class="subsubtab-subject-content space-y-4" style="display: none;">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <label class="block text-xs font-semibold mb-1">Curso</label>
+                <select id="input-subject-course-select" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></select>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold mb-1">Nome da Disciplina</label>
+                <input type="text" id="input-subject-name" placeholder="Anatomia" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold mb-1">Carga Horária</label>
+                <input type="text" id="input-subject-hours" placeholder="80 hrs" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
             </div>
         </div>
+        <div>
+            <label class="block text-xs font-semibold mb-1">Ementa</label>
+            <textarea id="input-subject-ementa" rows="3" placeholder="Tópicos abordados..." class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></textarea>
+        </div>
+        <div class="flex gap-2">
+            <button type="button" id="btn-save-subject" onclick="addSubjectToCourse()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow">Salvar Disciplina</button>
+            <button type="button" id="btn-cancel-edit-subject" onclick="cancelarEdicaoDisciplina()" class="px-4 py-2 bg-gray-500 text-white text-xs font-semibold rounded-lg shadow" style="display: none;">Cancelar Edição</button>
+        </div>
+    </div>
+</div>
+
+<!-- SUBABA TURMAS (REORGANIZADA NO MESMO PADRÃO DE CURSOS) -->
+<div id="subtab-classes" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
+    <input type="hidden" id="edit-class-id" value="">
+
+    <div class="flex space-x-2 border-b border-gray-200 dark:border-slate-700 pb-3 mb-4">
+        <button class="subsubtab-class-button active px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white shadow" onclick="openSubSubTabClass(event, 'subsubtab-turmas-cadastradas')"><i class="fa-solid fa-list mr-1"></i> Turmas Cadastradas</button>
+        <button class="subsubtab-class-button px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubSubTabClass(event, 'subsubtab-cadastrar-turma')"><i class="fa-solid fa-plus mr-1"></i> Cadastrar Nova Turma</button>
+    </div>
+
+    <div id="subsubtab-turmas-cadastradas" class="subsubtab-class-content active space-y-3">
+        <div class="flex justify-between items-center mb-2">
+            <h4 class="font-bold text-sm text-gray-800 dark:text-white">Lista de Turmas Cadastradas</h4>
+            <span class="text-xs text-gray-500 font-semibold" id="total-classes-count">Total: 0 turmas</span>
+        </div>
+        <ul class="data-list divide-y divide-gray-200 dark:divide-slate-700" id="class-list"></ul>
+    </div>
+
+    <div id="subsubtab-cadastrar-turma" class="subsubtab-class-content space-y-4" style="display: none;">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-xs font-semibold mb-1">Curso</label>
+                <select id="input-class-course" onchange="atualizarPreviewTurmaAutomatica()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></select>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold mb-1">Semestre Letivo</label>
+                <select id="input-class-semester" onchange="atualizarPreviewTurmaAutomatica()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+                    <option value="2025.1">2025/1 (Jan-Jun)</option><option value="2025.2">2025/2 (Jul-Dez)</option>
+                    <option value="2026.1">2026/1 (Jan-Jun)</option><option value="2026.2" selected>2026/2 (Jul-Dez)</option>
+                    <option value="2027.1">2027/1 (Jan-Jun)</option><option value="2027.2">2027/2 (Jul-Dez)</option>
+                    <option value="2028.1">2028/1 (Jan-Jun)</option><option value="2028.2">2028/2 (Jul-Dez)</option>
+                    <option value="2029.1">2029/1 (Jan-Jun)</option><option value="2029.2">2029/2 (Jul-Dez)</option>
+                    <option value="2030.1">2030/1 (Jan-Jun)</option><option value="2030.2">2030/2 (Jul-Dez)</option>
+                    <option value="2031.1">2031/1 (Jan-Jun)</option><option value="2031.2">2031/2 (Jul-Dez)</option>
+                </select>
+            </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-xs font-semibold mb-1">Código Automático</label>
+                <input type="text" id="input-class-code-auto" readonly class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm bg-gray-100 dark:bg-slate-900 font-bold text-blue-600">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold mb-1">Nome Automático</label>
+                <input type="text" id="input-class-name-auto" readonly class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm bg-gray-100 dark:bg-slate-900 font-bold">
+            </div>
+        </div>
+        <div class="flex gap-2">
+            <button type="button" id="btn-save-class" onclick="addClass()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow">Salvar Turma</button>
+            <button type="button" id="btn-cancel-edit-class" onclick="cancelarEdicaoTurma()" class="px-4 py-2 bg-gray-500 text-white text-xs font-semibold rounded-lg shadow" style="display: none;">Cancelar Edição</button>
+        </div>
+    </div>
+</div>
+
+<!-- SUBABA CALENDÁRIO ACADÊMICO SEMESTRAL -->
+<div id="subtab-calendar" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
+    <div class="bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700 space-y-4">
+        <h4 class="font-bold text-sm text-blue-600 dark:text-blue-400">Configurar Calendário Semestral por Turma</h4>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <label class="block text-xs font-semibold mb-1">Curso</label>
+                <select id="cal-course-select" onchange="atualizarDisciplinasETurmasCalendario()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800"></select>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold mb-1">Turma Vinculada</label>
+                <select id="cal-class-select" onchange="atualizarDisciplinasPorTurmaCalendario()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800"></select>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold mb-1">Semestre / Período</label>
+                <select id="cal-semester-select" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800">
+                    <option value="2025/1">2025/1 (Jan-Jun)</option><option value="2025/2">2025/2 (Jul-Dez)</option>
+                    <option value="2026/1">2026/1 (Jan-Jun)</option><option value="2026/2" selected>2026/2 (2º Semestre: Jul-Dez)</option>
+                    <option value="2027/1">2027/1 (Jan-Jun)</option><option value="2027/2">2027/2 (Jul-Dez)</option>
+                    <option value="2028/1">2028/1 (Jan-Jun)</option><option value="2028/2">2028/2 (Jul-Dez)</option>
+                    <option value="2029/1">2029/1 (Jan-Jun)</option><option value="2029/2">2029/2 (Jul-Dez)</option>
+                    <option value="2030/1">2030/1 (Jan-Jun)</option><option value="2030/2">2030/2 (Jul-Dez)</option>
+                    <option value="2031/1">2031/1 (Jan-Jun)</option><option value="2031/2">2031/2 (Jul-Dez)</option>
+                </select>
+            </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-xs font-semibold mb-1">Disciplina da Turma</label>
+                <select id="cal-subject-select" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800"></select>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold mb-1">Quantidade de Datas de Aula (2 a 5)</label>
+                <select id="cal-qtd-datas" onchange="renderizarCamposDatasCalendario()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800">
+                    <option value="2" selected>2 Dias</option>
+                    <option value="3">3 Dias</option>
+                    <option value="4">4 Dias</option>
+                    <option value="5">5 Dias</option>
+                </select>
+            </div>
+        </div>
+        
+        <div>
+            <label class="block text-xs font-semibold mb-1">Descrição / Tópico / Módulo</label>
+            <input type="text" id="cal-event-desc" placeholder="Ex: Aulas Teórico-Práticas / Módulo 01" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800">
+        </div>
+
+        <div>
+            <label class="block text-xs font-semibold mb-1 text-blue-600 dark:text-blue-400">Definição das Datas de Aula</label>
+            <div id="container-datas-dinamicas" class="grid grid-cols-1 md:grid-cols-5 gap-2"></div>
+        </div>
+
+        <button type="button" onclick="adicionarEventoCalendario()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow">Cadastrar Aulas no Calendário</button>
+    </div>
+
+    <div class="mt-6 space-y-3">
+        <h4 class="font-bold text-sm text-gray-700 dark:text-gray-300">Calendários Cadastrados (Gerenciamento)</h4>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead>
+                    <tr class="border-b border-gray-200 dark:border-slate-700 text-gray-500">
+                        <th class="p-2.5">Turma / Curso</th>
+                        <th class="p-2.5">Disciplina</th>
+                        <th class="p-2.5">Semestre</th>
+                        <th class="p-2.5">Datas de Aula</th>
+                        <th class="p-2.5 text-right">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="tabela-gerenciar-calendarios" class="divide-y divide-gray-200 dark:divide-slate-700"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="flex justify-between items-center mt-6 mb-2">
+        <h4 class="font-bold text-sm text-gray-700 dark:text-gray-300">Visualização Gráfica do Calendário Semestral</h4>
+        <select id="admin-filtro-semestre" onchange="renderizarCalendarioSemestralAdmin()" class="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-slate-600 text-xs font-semibold dark:bg-slate-800">
+            <option value="2026/2" selected>2026/2 (2º Semestre: Jul-Dez)</option>
+            <option value="2026/1">2026/1 (1º Semestre: Jan-Jun)</option>
+            <option value="2025/1">2025/1 (1º Semestre: Jan-Jun)</option>
+            <option value="2025/2">2025/2 (2º Semestre: Jul-Dez)</option>
+            <option value="2027/1">2027/1 (1º Semestre: Jan-Jun)</option>
+            <option value="2027/2">2027/2 (2º Semestre: Jul-Dez)</option>
+        </select>
+    </div>
+    <div id="admin-calendar-view" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+</div>
+
+<!-- SUBABA PROFESSORES -->
+<div id="subtab-teachers" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
+    <div>
+        <label class="block text-xs font-semibold mb-1">Nome Completo</label>
+        <input type="text" id="input-teacher-name" placeholder="Prof. Carlos Silva" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+            <label class="block text-xs font-semibold mb-1">Formação</label>
+            <input type="text" id="input-teacher-formation" placeholder="Bacharel / Pós" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+        </div>
+        <div>
+            <label class="block text-xs font-semibold mb-1">Conselho de Classe</label>
+            <input type="text" id="input-teacher-council" placeholder="OAB/PA 00.000" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+        </div>
+    </div>
+    <button onclick="saveTeacher()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow">Cadastrar Professor</button>
+    <ul class="data-list divide-y divide-gray-200 dark:divide-slate-700 mt-4" id="teachers-list"></ul>
+</div>
+
+<!-- SUBABA EDIÇÃO DE DOCUMENTOS -->
+<div id="subtab-templates" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
+    <div>
+        <label class="block text-xs font-semibold mb-1">Selecione o Curso</label>
+        <select id="template-course-select" onchange="loadCourseTemplate()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></select>
+    </div>
+
+    <div>
+        <div class="flex justify-between items-center mb-1">
+            <label class="text-xs font-semibold">Texto do Contrato</label>
+            <div class="flex gap-1 flex-wrap">
+                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-contract-text', '{{nome}}')">+ Nome</button>
+                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-contract-text', '{{cpf}}')">+ CPF</button>
+                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-contract-text', '{{curso}}')">+ Curso</button>
+                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-contract-text', '{{endereco_completo}}')">+ Endereço Completo</button>
+            </div>
+        </div>
+        <textarea id="input-contract-text" rows="5" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></textarea>
+    </div>
+
+    <div>
+        <div class="flex justify-between items-center mb-1">
+            <label class="text-xs font-semibold">Texto da Declaração</label>
+            <div class="flex gap-1 flex-wrap">
+                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-decl-text', '{{nome}}')">+ Nome</button>
+                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-decl-text', '{{cpf}}')">+ CPF</button>
+                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-decl-text', '{{curso}}')">+ Curso</button>
+                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-decl-text', '{{endereco_completo}}')">+ Endereço Completo</button>
+            </div>
+        </div>
+        <textarea id="input-decl-text" rows="4" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></textarea>
+    </div>
+
+    <div>
+        <div class="flex justify-between items-center mb-1">
+            <label class="text-xs font-semibold">Texto do Histórico Escolar</label>
+            <div class="flex gap-1 flex-wrap">
+                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-history-text', '{{nome}}')">+ Nome</button>
+                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-history-text', '{{cpf}}')">+ CPF</button>
+                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-history-text', '{{curso}}')">+ Curso</button>
+                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-history-text', '{{endereco_completo}}')">+ Endereço Completo</button>
+            </div>
+        </div>
+        <textarea id="input-history-text" rows="4" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900" placeholder="Estrutura e layout do histórico escolar..."></textarea>
+    </div>
+
+    <div class="bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700 space-y-2">
+        <label class="block text-xs font-semibold mb-1">Enviar Histórico em Formato PDF (Modelo de Referência)</label>
+        <input type="file" id="input-history-pdf-file" accept="application/pdf" onchange="handleHistoryPdfUpload(event)" class="text-xs">
+        <p id="history-pdf-status" class="text-[11px] text-gray-400">Nenhum arquivo PDF de histórico enviado para este curso.</p>
+    </div>
+
+    <button onclick="saveCourseTemplates()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow">Salvar Modelos e Edição de Documentos</button>
+</div>
+
+<!-- SUBABA ASAAS -->
+<div id="subtab-fin-config" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+            <label class="block text-xs font-semibold mb-1">Chave de API do Asaas</label>
+            <input type="password" id="asaas-api-key" placeholder="$aact_..." class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+        </div>
+        <div>
+            <label class="block text-xs font-semibold mb-1">Ambiente</label>
+            <select id="asaas-env" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+                <option value="sandbox">Sandbox (Testes)</option>
+                <option value="production">Produção</option>
+            </select>
+        </div>
+    </div>
+    <button onclick="saveAsaasConfig()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow">Salvar Credenciais Asaas</button>
+</div>
+
+<!-- SUBABA INSTITUIÇÃO -->
+<div id="subtab-institution" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+            <label class="block text-xs font-semibold mb-1">Nome da Instituição</label>
+            <input type="text" id="input-inst-name" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+        </div>
+        <div>
+            <label class="block text-xs font-semibold mb-1">Razão Social</label>
+            <input type="text" id="input-inst-razao" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+        </div>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+            <label class="block text-xs font-semibold mb-1">CNPJ</label>
+            <input type="text" id="input-inst-cnpj" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+        </div>
+        <div>
+            <label class="block text-xs font-semibold mb-1">E-mail</label>
+            <input type="text" id="input-inst-email" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+        </div>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+            <label class="block text-xs font-semibold mb-1">Telefone / WhatsApp</label>
+            <input type="text" id="input-inst-tel" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+        </div>
+        <div>
+            <label class="block text-xs font-semibold mb-1">Endereço</label>
+            <input type="text" id="input-inst-end" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+        </div>
+    </div>
+    <div>
+        <label class="block text-xs font-semibold mb-1 text-blue-600 dark:text-blue-400 font-bold">URL do Web App do Google Apps Script (Integração Google Drive)</label>
+        <input type="text" id="input-gdrive-url" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-3 py-2 rounded-lg border border-blue-300 dark:border-slate-600 text-sm dark:bg-slate-900 font-mono text-xs">
+        <p class="text-[11px] text-gray-500 mt-1">Cole aqui a URL gerada ao publicar o seu projeto no Google Apps Script.</p>
+    </div>
+    <div>
+        <label class="block text-xs font-semibold mb-1">Upload de Logomarca</label>
+        <input type="file" id="input-logo-file" accept="image/*" onchange="handleLogoUpload(event)" class="text-xs">
+        <div id="logo-preview" class="mt-2 w-32 h-16 border border-dashed rounded flex items-center justify-center text-xs text-gray-400 bg-gray-50 dark:bg-slate-900">Sem logo</div>
+        <button type="button" onclick="removeLogo()" class="mt-1 px-2 py-1 bg-red-600 text-white text-[10px] rounded">Remover Logo</button>
+    </div>
+    <div>
+        <label class="block text-xs font-semibold mb-1">Texto Descritivo de Login</label>
+        <textarea id="input-login-desc" rows="2" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></textarea>
+    </div>
+    <button onclick="salvarBrandingNaNuvem()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow">Salvar Configurações</button>
+</div>
 
         <!-- ========================================== -->
     <!-- ABA GESTÃO EJA (MÓDULO SUPLETIVO) -->
