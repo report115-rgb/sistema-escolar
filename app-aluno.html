@@ -18,6 +18,8 @@
     <!-- Firebase SDK (Compat) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    <!-- Canvas Confetti para a animação de comemoração -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         body { -webkit-tap-highlight-color: transparent; }
         ::-webkit-scrollbar { width: 4px; height: 4px; }
@@ -42,6 +44,11 @@
     </style>
 </head>
 <body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-200">
+
+    <!-- AVISO DE CONEXÃO OFFLINE -->
+    <div id="offline-banner" class="bg-red-600 text-white text-[11px] font-bold text-center py-1.5 px-4 fixed top-0 left-0 right-0 z-50 shadow-md transition-transform duration-300 transform -translate-y-full" style="display: none;">
+        <i class="fa-solid fa-triangle-exclamation mr-1"></i> Você está offline. As informações podem estar desatualizadas.
+    </div>
 
     <!-- TELA DE LOGIN DO ALUNO -->
     <div id="login-screen" class="fixed inset-0 z-50 bg-gradient-to-br from-blue-900 via-indigo-900 to-slate-900 flex flex-col justify-between p-6 text-white">
@@ -150,7 +157,6 @@
                 </div>
             </div>
             <div class="flex items-center space-x-2">
-                <!-- Botão Modo Escuro / Claro -->
                 <button onclick="alternarDarkMode()" class="w-9 h-9 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-xs transition text-white shadow" title="Alternar Tema">
                     <i id="theme-icon" class="fa-solid fa-moon"></i>
                 </button>
@@ -165,9 +171,8 @@
         <!-- Conteúdo das Abas -->
         <div class="flex-1 p-4 overflow-y-auto space-y-4">
             
-            <!-- ABA 1: INÍCIO / RESUMO & CARTEIRINHA FLUTUANTE -->
+            <!-- ABA 1: INÍCIO -->
             <div id="tab-home" class="space-y-4 tab-pane">
-                <!-- Card de Resumo do Semestre -->
                 <div class="bg-gradient-to-r from-indigo-600 to-blue-600 text-white p-4 rounded-2xl shadow-lg flex items-center justify-between">
                     <div>
                         <span class="text-[10px] uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-full font-bold">Semestre Letivo</span>
@@ -179,7 +184,6 @@
                     </div>
                 </div>
 
-                <!-- Botão de Acesso Rápido à Carteirinha Digital -->
                 <button onclick="abrirModalCarteirinha()" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-blue-500 text-slate-800 dark:text-slate-100 p-4 rounded-2xl shadow-sm flex items-center justify-between transition group">
                     <div class="flex items-center space-x-3">
                         <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center text-lg group-hover:scale-105 transition">
@@ -193,7 +197,6 @@
                     <i class="fa-solid fa-chevron-right text-xs text-slate-400 mr-1"></i>
                 </button>
 
-                <!-- Bloco de Meus Dados -->
                 <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 space-y-2 text-xs">
                     <h3 class="font-bold text-slate-700 dark:text-slate-200 text-sm mb-2"><i class="fa-solid fa-user-shield text-blue-600 mr-1.5"></i> Meus Dados Cadastrais</h3>
                     <p class="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5"><strong class="text-slate-500 dark:text-slate-400">Matrícula:</strong> <span id="info-mat" class="font-semibold">---</span></p>
@@ -209,7 +212,15 @@
             <div id="tab-financeiro" class="space-y-3 tab-pane" style="display: none;">
                 <h3 class="font-bold text-sm text-slate-700 dark:text-slate-200 mb-2">Suas Faturas e Mensalidades</h3>
                 <div id="finance-list" class="space-y-2">
-                    <p class="text-xs text-slate-400 text-center py-8">Carregando faturas...</p>
+                    <!-- Skeleton Loading -->
+                    <div class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 animate-pulse space-y-2">
+                        <div class="h-3 bg-slate-200 dark:bg-slate-800 rounded w-3/4"></div>
+                        <div class="h-2 bg-slate-200 dark:bg-slate-800 rounded w-1/2"></div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 animate-pulse space-y-2">
+                        <div class="h-3 bg-slate-200 dark:bg-slate-800 rounded w-2/3"></div>
+                        <div class="h-2 bg-slate-200 dark:bg-slate-800 rounded w-1/3"></div>
+                    </div>
                 </div>
             </div>
 
@@ -217,7 +228,10 @@
             <div id="tab-notas" class="space-y-3 tab-pane" style="display: none;">
                 <h3 class="font-bold text-sm text-slate-700 dark:text-slate-200 mb-2">Acompanhamento Acadêmico</h3>
                 <div id="grades-list" class="space-y-2">
-                    <p class="text-xs text-slate-400 text-center py-8">Carregando disciplinas...</p>
+                    <div class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 animate-pulse space-y-2">
+                        <div class="h-3 bg-slate-200 dark:bg-slate-800 rounded w-3/4"></div>
+                        <div class="h-2 bg-slate-200 dark:bg-slate-800 rounded w-1/2"></div>
+                    </div>
                 </div>
             </div>
 
@@ -225,7 +239,9 @@
             <div id="tab-frequencia" class="space-y-3 tab-pane" style="display: none;">
                 <h3 class="font-bold text-sm text-slate-700 dark:text-slate-200 mb-2">Controle de Frequência</h3>
                 <div id="frequency-list" class="space-y-2">
-                    <p class="text-xs text-slate-400 text-center py-8">Carregando frequência...</p>
+                    <div class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 animate-pulse space-y-2">
+                        <div class="h-3 bg-slate-200 dark:bg-slate-800 rounded w-2/3"></div>
+                    </div>
                 </div>
             </div>
 
@@ -240,7 +256,10 @@
 
                 <h3 class="font-bold text-sm text-slate-700 dark:text-slate-200 mb-2">Meus Documentos Obrigatórios</h3>
                 <div id="documents-list" class="space-y-3">
-                    <p class="text-xs text-slate-400 text-center py-8">Carregando lista de documentos...</p>
+                    <div class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 animate-pulse space-y-2">
+                        <div class="h-3 bg-slate-200 dark:bg-slate-800 rounded w-1/2"></div>
+                        <div class="h-8 bg-slate-200 dark:bg-slate-800 rounded w-full"></div>
+                    </div>
                 </div>
             </div>
 
@@ -248,7 +267,9 @@
             <div id="tab-calendario" class="space-y-3 tab-pane" style="display: none;">
                 <h3 class="font-bold text-sm text-slate-700 dark:text-slate-200 mb-2">Calendário de Aulas</h3>
                 <div id="calendar-list" class="space-y-2">
-                    <p class="text-xs text-slate-400 text-center py-8">Carregando aulas...</p>
+                    <div class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 animate-pulse space-y-2">
+                        <div class="h-3 bg-slate-200 dark:bg-slate-800 rounded w-3/4"></div>
+                    </div>
                 </div>
             </div>
 
@@ -315,7 +336,11 @@
         let gdriveUrlGlobal = "https://script.google.com/macros/s/AKfycbwPL9G9q--46vYhuyCfqSwZ9IKm2tEvlfvlH18TvD0FJXqYrDnyLOyKqtp6mT7LdH5XOA/exec"; 
 
         window.addEventListener('DOMContentLoaded', async () => {
-            // Verificar tema salvo
+            // Monitor de Conexão Online/Offline
+            window.addEventListener('online', atualizarStatusConexao);
+            window.addEventListener('offline', atualizarStatusConexao);
+            atualizarStatusConexao();
+
             const savedTheme = localStorage.getItem('se7_aluno_theme') || 'light';
             if(savedTheme === 'dark') {
                 document.documentElement.classList.add('dark');
@@ -333,6 +358,18 @@
                 verificarTodasPendencias();
             }
         });
+
+        function atualizarStatusConexao() {
+            const banner = document.getElementById('offline-banner');
+            if(!banner) return;
+            if(!navigator.onLine) {
+                banner.style.display = 'block';
+                banner.classList.remove('-translate-y-full');
+            } else {
+                banner.classList.add('-translate-y-full');
+                setTimeout(() => banner.style.display = 'none', 300);
+            }
+        }
 
         function alternarDarkMode() {
             const htmlEl = document.documentElement;
@@ -863,6 +900,37 @@
                         sessionStorage.setItem('aluno_app_logado', JSON.stringify(alunoLogado));
                         renderizarDocumentosObrigatorios();
                         verificarPendenciaDocumentos();
+                        
+                        // ANIMAÇÃO DE FOGOS / CONFETTI SE TODOS OS DOCUMENTOS ESTIVEREM APROVADOS
+                        let todosAprovados = true;
+                        const docs = alunoLogado.documentos || {};
+                        tiposDocumentosObrigatorios.forEach(t => {
+                            if (!docs[t.id] || docs[t.id].status !== 'Aprovado') {
+                                todosAprovados = false;
+                            }
+                        });
+
+                        if (todosAprovados && typeof confetti === 'function') {
+                            const duration = 2.5 * 1000;
+                            const end = Date.now() + duration;
+                            (function frame() {
+                                confetti({
+                                    particleCount: 3,
+                                    angle: 60,
+                                    spread: 55,
+                                    origin: { x: 0 }
+                                });
+                                confetti({
+                                    particleCount: 3,
+                                    angle: 120,
+                                    spread: 55,
+                                    origin: { x: 1 }
+                                });
+                                if (Date.now() < end) {
+                                    requestAnimationFrame(frame);
+                                }
+                            }());
+                        }
                     }
                 } catch (e) {
                     console.error("Erro ao sincronizar documentos:", e);
