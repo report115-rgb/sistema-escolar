@@ -330,6 +330,103 @@
             </div>
         </div>
 
+        <!-- ========================================== -->
+        <!-- ABA GESTÃO EJA (MÓDULO SUPLETIVO) - POSICIONADA CORRETAMENTE -->
+        <!-- ========================================== -->
+        <div id="tab-gestao-eja" class="tab-content space-y-4" style="display: none;">
+            <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-md p-6 border border-gray-200 dark:border-slate-700 space-y-6">
+                <div class="border-b border-gray-100 dark:border-slate-700 pb-3 flex justify-between items-center">
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-900 dark:text-white">Painel Administrativo – EJA (Supletivo)</h2>
+                        <p class="text-xs text-gray-500">Gerencie apostilas, provas online e acompanhe os alunos matriculados na modalidade.</p>
+                    </div>
+                    <span class="px-3 py-1 bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 rounded-full text-xs font-bold">Módulo Ativo</span>
+                </div>
+
+                <div class="flex space-x-2 border-b border-gray-200 dark:border-slate-700 pb-3 overflow-x-auto">
+                    <button class="subtab-eja-btn active px-4 py-2 rounded-xl text-xs font-semibold bg-emerald-600 text-white shadow" onclick="openSubTabEJA(event, 'subeja-alunos')"><i class="fa-solid fa-users mr-1"></i> Alunos EJA</button>
+                    <button class="subtab-eja-btn px-4 py-2 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTabEJA(event, 'subeja-apostila')"><i class="fa-solid fa-file-pdf mr-1"></i> Enviar Apostila PDF</button>
+                    <button class="subtab-eja-btn px-4 py-2 rounded-xl text-xs font-semibold bg-gray-100 dark:text-gray-300" onclick="openSubTabEJA(event, 'subeja-prova')"><i class="fa-solid fa-laptop-file mr-1"></i> Prova Online & Status</button>
+                    <button class="subtab-eja-btn px-4 py-2 rounded-xl text-xs font-semibold bg-gray-100 dark:text-gray-300" onclick="openSubTabEJA(event, 'subeja-validar-docs')"><i class="fa-solid fa-folder-open mr-1"></i> Validar Documentação</button>
+                </div>
+
+                <div id="subeja-alunos" class="subeja-content space-y-3">
+                    <h4 class="font-bold text-sm text-gray-800 dark:text-white">Estudantes da Modalidade EJA</h4>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead>
+                                <tr class="border-b border-gray-200 dark:border-slate-700 text-gray-500">
+                                    <th class="p-3">Matrícula</th>
+                                    <th class="p-3">Nome Completo</th>
+                                    <th class="p-3">CPF</th>
+                                    <th class="p-3">WhatsApp</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabela-alunos-eja" class="divide-y divide-gray-200 dark:divide-slate-700"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="subeja-apostila" class="subeja-content space-y-4" style="display: none;">
+                    <div class="bg-emerald-50 dark:bg-slate-900 p-4 rounded-xl border border-emerald-200 dark:border-slate-700 space-y-3 max-w-xl">
+                        <h4 class="font-bold text-xs text-emerald-800 dark:text-emerald-300 uppercase">Disponibilizar Apostila Oficial (PDF)</h4>
+                        <p class="text-xs text-gray-600 dark:text-gray-400">Cole abaixo o link do PDF da apostila (Google Drive).</p>
+                        <div>
+                            <label class="block text-xs font-semibold mb-1">URL do PDF da Apostila</label>
+                            <input type="text" id="input-eja-apostila-url" placeholder="https://drive.google.com/file/d/.../view" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800">
+                        </div>
+                        <button onclick="salvarApostilaEJAAdmin()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow">Salvar Apostila para os Alunos</button>
+                    </div>
+                </div>
+
+                <div id="subeja-prova" class="subeja-content space-y-4" style="display: none;">
+                    <div class="bg-gray-50 dark:bg-slate-900 p-5 rounded-xl border border-gray-200 dark:border-slate-700 space-y-4">
+                        <div class="flex justify-between items-center border-b border-gray-200 dark:border-slate-700 pb-3">
+                            <h4 class="font-bold text-sm text-blue-600 dark:text-blue-400">Controle de Liberação e Questões da Prova Online</h4>
+                            <div class="flex items-center space-x-2">
+                                <span class="text-xs font-semibold" id="lbl-status-prova">Status: Desativada</span>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="switch-ativar-prova-eja" onchange="alternarAtivacaoProvaEJA(this)" class="sr-only peer">
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-emerald-600"></div>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="space-y-3 text-xs">
+                            <div>
+                                <label class="block font-semibold mb-1">Instruções Gerais da Prova</label>
+                                <textarea id="input-eja-instrucoes" rows="2" placeholder="Ex: Leia com atenção todas as questões antes de enviar." class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white"></textarea>
+                            </div>
+
+                            <hr class="border-gray-200 dark:border-slate-700 my-4">
+                            <h5 class="font-bold text-sm text-gray-800 dark:text-white">Cadastrar Questões de Múltipla Escolha (5 Alternativas)</h5>
+                            
+                            <div id="container-questoes-admin-eja" class="space-y-4"></div>
+
+                            <div class="flex gap-2 pt-2">
+                                <button type="button" onclick="adicionarQuestaoAdminEJA()" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-lg shadow">+ Adicionar Questão</button>
+                                <button type="button" onclick="salvarConfiguracaoProvaEJA()" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow">Salvar Todas as Questões e Status</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="subeja-validar-docs" class="subeja-content space-y-4" style="display: none;">
+                    <div class="flex justify-between items-center mb-4 pb-2 border-b border-gray-100 dark:border-slate-700">
+                        <div>
+                            <h4 class="font-bold text-sm text-gray-800 dark:text-white">Validação de Documentos – Alunos EJA</h4>
+                            <p class="text-xs text-gray-500">Selecione um aluno da EJA para conferir os PDFs enviados e aprovar ou reprovar.</p>
+                        </div>
+                        <select id="select-aluno-eja-validacao" onchange="renderizarDocumentosEJagestao(this.value)" class="px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+                            <option value="">Selecione o aluno EJA...</option>
+                        </select>
+                    </div>
+                    <div id="container-validacao-docs-eja" class="space-y-4">
+                        <p class="text-xs text-gray-500">Selecione um aluno da EJA acima para visualizar e validar a documentação postada.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- MATRÍCULA -->
         <div id="tab-students" class="tab-content space-y-4" style="display: none;">
             <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-md p-6 border border-gray-200 dark:border-slate-700">
