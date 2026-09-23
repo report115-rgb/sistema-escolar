@@ -1015,7 +1015,7 @@
             });
         }
 
-        // --- FUNÇÃO DE SIMULAÇÃO RÁPIDA PARA TESTAR A EJA ---
+        // --- SIMULAÇÃO RÁPIDA PARA TESTAR A EJA ---
         function testarPainelEJAAmostra() {
             alunoLogado = {
                 id: "teste_eja_123",
@@ -1053,14 +1053,13 @@
             const isEJA = cursoObj && (cursoObj.nivel === 'Supletivo' || cursoObj.sigla === 'EJA' || (cursoObj.name && cursoObj.name.toUpperCase().includes('EJA')));
 
             if (isEJA) {
-                // 1. Substitui o banner azul padrão pelo painel verde esmeralda com o texto limpo em uma linha
                 const bannerPadrao = document.getElementById('banner-padrao-home');
                 if (bannerPadrao) {
                     bannerPadrao.outerHTML = `
                         <div id="bloco-acoes-eja" class="bg-gradient-to-br from-emerald-600 to-teal-700 text-white p-4 rounded-2xl shadow-lg space-y-3">
                             <div class="flex items-center justify-between">
                                 <div class="space-y-0.5">
-                                    <span class="text-[9px] uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-full font-bold">Modalidade EJA &bull; Prova Única</span>
+                                    <span class="text-[9px] uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-full font-bold">Modalidade EJA &bull; Prova Online</span>
                                     <h4 class="font-bold text-sm">Ambiente de Estudo e Avaliação</h4>
                                 </div>
                                 <div class="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-xl text-emerald-200 shrink-0">
@@ -1081,13 +1080,11 @@
                     `;
                 }
 
-                // 2. Oculta o botão da Carteirinha ID na aba Início para alunos EJA
                 const containerCarteirinha = document.getElementById('container-btn-carteirinha');
                 if (containerCarteirinha) {
                     containerCarteirinha.style.display = 'none';
                 }
 
-                // 3. Remove os botões desnecessários do menu inferior para alunos EJA
                 const navBar = document.getElementById('main-nav-bar');
                 if (navBar) {
                     navBar.innerHTML = `
@@ -1120,44 +1117,89 @@
             }
         }
 
-        function baixarMaterialEstudoEJA() {
-            alert("Iniciando o download do arquivo em PDF com todas as questões de estudo da EJA...");
-            if (alunoLogado && alunoLogado.apostilaPdfUrl) {
-                window.open(alunoLogado.apostilaPdfUrl, '_blank');
-            } else {
-                alert("O material de estudo em PDF está sendo disponibilizado pela secretaria acadêmica.");
+        async function baixarMaterialEstudoEJA() {
+            try {
+                const docSnap = await db.collection("config").doc("ejaSettings").get();
+                if (docSnap.exists && docSnap.data().apostilaUrl) {
+                    window.open(docSnap.data().apostilaUrl, '_blank');
+                } else {
+                    alert("A apostila oficial da EJA ainda não foi disponibilizada pela secretaria acadêmica.");
+                }
+            } catch(e) {
+                alert("Erro ao buscar a apostila: " + e.message);
             }
         }
 
-        function abrirTelaProvaOnlineEJA() {
-            let modalProva = document.getElementById('modal-prova-eja');
-            if (!modalProva) {
-                modalProva = document.createElement('div');
-                modalProva.id = 'modal-prova-eja';
-                modalProva.className = 'fixed inset-0 z-[99] bg-black/80 flex items-center justify-center p-4';
+        // --- PROVA ONLINE EJA DINÂMICA (INTEGRADA COM O PAINEL ADMINISTRATIVO) ---
+        async function abrirTelaProvaOnlineEJA() {
+            try {
+                const docSnap = await db.collection("config").doc("ejaSettings").get();
+                if (!docSnap.exists || !docSnap.data().provaAtiva) {
+                    return alert("A prova online ainda não está ativada pela secretaria acadêmica.");
+                }
+
+                const dadosProva = docSnap.data();
+                const instrucoes = dadosProva.instrucoesProva || "Leia com atenção todas as questões antes de enviar.";
+                const questoes = dadosProva.questoes || [];
+
+                if (questoes.length === 0) {
+                    return alert("Nenhuma questão cadastrada para esta prova no momento.");
+                }
+
+                let modalProva = document.getElementById('modal-prova-eja');
+                if (!modalProva) {
+                    modalProva = document.createElement('div');
+                    modalProva.id = 'modal-prova-eja';
+                    modalProva.className = 'fixed inset-0 z-[99] bg-black/80 flex items-center justify-center p-4';
+                    document.body.appendChild(modalProva);
+                }
+
+                let htmlQuestoes = '';
+                questoes.forEach((q, idx) => {
+                    htmlQuestoes += `
+                        <div class="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl space-y-2 border border-slate-200 dark:border-slate-700 questao-item" data-index="${idx}" data-correta="${q.correta}">
+                            <p class="font-bold text-slate-800 dark:text-slate-100">Questão ${idx + 1}: ${q.enunciado}</p>
+                            <div class="space-y-1.5 pl-2 text-xs">
+                    `;
+                    if (q.opcoes && Array.isArray(q.opcoes)) {
+                        q.opcoes.forEach((opt, optIdx) => {
+                            if (opt && opt.trim() !== "") {
+                                htmlQuestoes += `
+                                    <label class="block cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/50 p-1.5 rounded transition">
+                                        <input type="radio" name="pergunta_${idx}" value="${optIdx}" class="accent-emerald-600 mr-2"> 
+                                        <span><strong>${String.fromCharCode(65 + optIdx)})</strong> ${opt}</span>
+                                    </label>
+                                `;
+                            }
+                        });
+                    }
+                    htmlQuestoes += `</div></div>`;
+                });
+
                 modalProva.innerHTML = `
-                    <div class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+                    <div class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-3xl max-w-xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
                         <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-3">
-                            <h3 class="font-bold text-base text-emerald-600"><i class="fa-solid fa-laptop-file mr-2"></i> Avaliação Online - EJA</h3>
+                            <h3 class="font-bold text-base text-emerald-600"><i class="fa-solid fa-laptop-file mr-2"></i> Avaliação Online - EJA (Supletivo)</h3>
                             <button onclick="fecharProvaOnlineEJA()" class="text-slate-400 hover:text-red-500 text-xl font-bold">&times;</button>
                         </div>
-                        <div class="space-y-3 text-xs">
-                            <p class="text-slate-500">Responda a avaliação abaixo referente ao seu módulo EJA.</p>
-                            <div class="bg-slate-50 dark:bg-slate-800 p-3 rounded-xl space-y-2 border border-slate-200 dark:border-slate-700">
-                                <p class="font-bold">Questão 1: Qual a importância das diretrizes educacionais na modalidade EJA?</p>
-                                <label class="block"><input type="radio" name="q1" value="a"> A) Acelerar o processo sem validação legal.</label>
-                                <label class="block"><input type="radio" name="q1" value="b"> B) Garantir inclusão, flexibilidade e certificação válida.</label>
-                                <label class="block"><input type="radio" name="q1" value="c"> C) Apenas cumprir exigências burocráticas.</label>
+                        <div class="space-y-4 text-xs">
+                            <div class="bg-blue-50 dark:bg-blue-950/40 p-3 rounded-xl border border-blue-200 dark:border-blue-800 text-blue-900 dark:text-blue-200">
+                                <strong>Instruções:</strong> ${instrucoes}
                             </div>
-                            <button onclick="enviarProvasEJA()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow transition text-sm">
-                                Enviar Prova para Correção
+                            
+                            <div class="space-y-3" id="container-questoes-aluno">
+                                ${htmlQuestoes}
+                            </div>
+
+                            <button onclick="enviarProvaEJAAluno(${questoes.length})" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg transition text-sm">
+                                Finalizar e Enviar Prova
                             </button>
                         </div>
                     </div>
                 `;
-                document.body.appendChild(modalProva);
-            } else {
                 modalProva.style.display = 'flex';
+            } catch (e) {
+                alert("Erro ao carregar a prova: " + e.message);
             }
         }
 
@@ -1166,8 +1208,35 @@
             if (m) m.style.display = 'none';
         }
 
-        function enviarProvasEJA() {
-            alert("Prova enviada com sucesso! Suas respostas foram computadas.");
+        function enviarProvaEJAAluno(totalQuestoes) {
+            const cards = document.querySelectorAll('.questao-item');
+            let acertos = 0;
+            let respondidas = 0;
+
+            cards.forEach((card, idx) => {
+                const gabaritoCorreto = parseInt(card.getAttribute('data-correta'));
+                const selecionado = card.querySelector(`input[name="pergunta_${idx}"]:checked`);
+                if (selecionado) {
+                    respondidas++;
+                    if (parseInt(selecionado.value) === gabaritoCorreto) {
+                        acertos++;
+                    }
+                }
+            });
+
+            if (respondidas < totalQuestoes) {
+                if (!confirm("Você deixou algumas questões em branco. Deseja enviar mesmo assim?")) return;
+            }
+
+            const notaFinal = ((acertos / totalQuestoes) * 10).toFixed(1);
+            const passou = notaFinal >= 7.0;
+
+            alert(`Prova enviada com sucesso!\n\nQuestões Acertadas: ${acertos} de ${totalQuestoes}\nNota Final: ${notaFinal}\nStatus: ${passou ? 'APROVADO(A) 🎉' : 'REPROVADO(A) - Tente novamente'}`);
+            
+            if (passou && typeof confetti === 'function') {
+                confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+            }
+
             fecharProvaOnlineEJA();
         }
 
