@@ -3264,17 +3264,21 @@
                 
                 const dominioAsaas = asaas.environment === 'production' ? 'www.asaas.com' : 'sandbox.asaas.com';
                 let linkFinal = cobAsaas.invoiceUrl;
+                
+                // Se o Asaas não mandou a invoiceUrl direta, mas mandou o ID, monta o link oficial da fatura
                 if (!linkFinal && cobAsaas.paymentId) {
                     linkFinal = `https://${dominioAsaas}/i/${cobAsaas.paymentId}`;
                 }
 
-                if (!linkFinal) {
-                    throw new Error("O Asaas não retornou o link da fatura. Verifique suas credenciais de API.");
+                // ADICIONE ESTE ALERTA PARA TESTAR:
+                alert("Link gerado pelo Asaas: " + linkFinal);
+
+                if (!linkFinal || linkFinal === `https://${dominioAsaas}`) {
+                    throw new Error("O Asaas não retornou o link da fatura. Verifique se o ID de pagamento foi gerado.");
                 }
 
                 await db.collection("financeLogs").doc(logId).update({ invoiceUrl: linkFinal });
                 
-                alert("Fatura gerada com sucesso em Produção!");
                 renderizarCobrancasAlunoSelecionadoFinanceiro(aluno.id);
 
                 window.open(linkFinal, '_blank');
