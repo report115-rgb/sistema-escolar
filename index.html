@@ -3242,29 +3242,43 @@
         }
 
         async function gerarOpcoesPagamentoCobranca(logId) {
-    const cob = financeLogs.find(f => f.id === logId);
-    if(!cob) return;
-    const aluno = students.find(s => s.id === cob.studentId);
-    if(!aluno) return;
+            const cob = financeLogs.find(f => f.id === logId);
+            if(!cob) return;
+            const aluno = students.find(s => s.id === cob.studentId);
+            if(!aluno) return;
 
-    try {
-        const asaas = new AsaasIntegrationService();
-        if(!asaas.apiKey) return alert("Configure a Chave de API do Asaas na aba Sistema > Asaas para gerar cobranças integradas.");
-        
-        const cid = await asaas.criarOuObterCliente(aluno);
-        const cobAsaas = await asaas.criarCobrancaBoleto(cid, { 
-            valor: cob.discountAmount || cob.amount, 
-            vencimento: cob.date, 
-            descricao: cob.description 
-        });
-        
-        await db.collection("financeLogs").doc(logId).update({ invoiceUrl: cobAsaas.invoiceUrl });
-        alert("Fatura gerada com sucesso! Agora as opções de PIX, Boleto e Cartão estão disponíveis.");
-        renderizarCobrancasAlunoSelecionadoFinanceiro(aluno.id);
-    } catch(e) {
-        alert("Erro ao gerar fatura: " + e.message);
-    }
-}
+            try {
+                const asaas = new AsaasIntegrationService();
+                if(!asaas.apiKey) return alert("Configure a Chave de API do Asaas na aba Sistema > Asaas.");
+                
+                const cid = await asaas.criarOuObterCliente(aluno);
+                const cobAsaas = await asaas.criarCobrancaBoleto(cid, { 
+                    valor: cob.discountAmount || cob.amount, 
+                    vencimento: cob.date, 
+                    descricao: cob.description 
+                });
+                
+                let linkFinal = cobAsaas.invoiceUrl;
+                if (!linkFinal && cobAsaas.paymentId) {
+                    const dominioAsaas = asaas.environment === 'production' ? 'www.asaas.com' : 'sandbox.asaas.com';
+                    linkFinal = `https://${dominioAsaas}/i/${cobAsaas.paymentId}`;
+                }
+
+                if (!linkFinal) {
+                    throw new Error("O Asaas não retornou o link da fatura. Verifique suas credenciais de API.");
+                }
+
+                await db.collection("financeLogs").doc(logId).update({ invoiceUrl: linkFinal });
+                
+                alert("Fatura gerada com sucesso em Produção!");
+                renderizarCobrancasAlunoSelecionadoFinanceiro(aluno.id);
+
+                // Abre a fatura oficial do Asaas em uma nova aba
+                window.open(linkFinal, '_blank');
+            } catch(e) {
+                alert("Erro ao gerar fatura: " + e.message);
+            }
+        }
 
         function popularSelectAlunosPortalMaster() {
             const select = document.getElementById('admin-select-aluno-portal');
