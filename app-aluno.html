@@ -78,7 +78,7 @@
 
         <div class="text-center text-[10px] text-blue-300 pb-2 space-y-0.5">
             <div class="font-semibold text-blue-200">SE7 - Sistema de Gestão Acadêmica</div>
-            <div>v1.2.1 &bull; Central de Atendimento ao Aluno</div>
+            <div>v1.2.2 &bull; Central de Atendimento ao Aluno</div>
         </div>
     </div>
 
@@ -355,7 +355,8 @@
             
             <!-- ABA 1: INÍCIO -->
             <div id="tab-home" class="space-y-4 tab-pane">
-                <div class="bg-gradient-to-r from-indigo-600 to-blue-600 text-white p-4 rounded-2xl shadow-lg flex items-center justify-between">
+                <!-- BANNER PADRÃO (SUBSTITUÍDO DINAMICAMENTE CASO SEJA EJA) -->
+                <div id="banner-padrao-home" class="bg-gradient-to-r from-indigo-600 to-blue-600 text-white p-4 rounded-2xl shadow-lg flex items-center justify-between">
                     <div>
                         <span class="text-[10px] uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-full font-bold">Semestre Letivo</span>
                         <h4 class="font-bold text-base mt-1">Ambiente Acadêmico Ativo</h4>
@@ -442,7 +443,7 @@
                 </div>
             </div>
 
-            <!-- ABA 4: FREQUÊNCIA -->
+            <!-- ABA 4: FREQUÊNCIA (APENAS CURSOS REGULARES) -->
             <div id="tab-frequencia" class="space-y-3 tab-pane" style="display: none;">
                 <h3 class="font-bold text-sm text-slate-700 dark:text-slate-200 mb-2">Controle de Frequência</h3>
                 <div id="frequency-list" class="space-y-2">
@@ -470,7 +471,7 @@
                 </div>
             </div>
 
-            <!-- ABA 6: CALENDÁRIO -->
+            <!-- ABA 6: CALENDÁRIO (APENAS CURSOS REGULARES) -->
             <div id="tab-calendario" class="space-y-3 tab-pane" style="display: none;">
                 <h3 class="font-bold text-sm text-slate-700 dark:text-slate-200 mb-2">Calendário de Aulas</h3>
                 <div id="calendar-list" class="space-y-2">
@@ -482,8 +483,8 @@
 
         </div>
 
-        <!-- Menu Inferior Fixo -->
-        <nav class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-2 py-2 flex justify-around items-center fixed bottom-0 left-0 right-0 shadow-lg z-40 transition-colors duration-200">
+        <!-- Menu Inferior Fixo (Dinâmico conforme modalidade) -->
+        <nav id="main-nav-bar" class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-2 py-2 flex justify-around items-center fixed bottom-0 left-0 right-0 shadow-lg z-40 transition-colors duration-200">
             <button onclick="mudarAba('home')" id="nav-home" class="flex flex-col items-center text-blue-600 dark:text-blue-400 text-[10px] font-bold transition">
                 <i class="fa-solid fa-id-card text-base mb-0.5"></i> Início
             </button>
@@ -1090,36 +1091,64 @@
         }
 
         function adaptarPainelPorModalidadeCurso(cursoObj) {
-            const painelHome = document.getElementById('tab-home');
-            
             const isEJA = cursoObj && (cursoObj.nivel === 'Supletivo' || cursoObj.sigla === 'EJA' || (cursoObj.name && cursoObj.name.toUpperCase().includes('EJA')));
 
             if (isEJA) {
-                let blocoEJA = document.getElementById('bloco-acoes-eja');
-                if (!blocoEJA) {
-                    blocoEJA = document.createElement('div');
-                    blocoEJA.id = 'bloco-acoes-eja';
-                    blocoEJA.className = 'bg-gradient-to-br from-emerald-600 to-teal-700 text-white p-4 rounded-2xl shadow-lg space-y-3 mt-4';
-                    blocoEJA.innerHTML = `
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <span class="text-[10px] uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-full font-bold">Modalidade EJA (Prova Única)</span>
-                                <h4 class="font-bold text-sm mt-1">Ambiente de Estudo e Avaliação</h4>
+                // 1. Substitui o banner azul padrão pelo painel verde esmeralda no topo da aba Início
+                const bannerPadrao = document.getElementById('banner-padrao-home');
+                if (bannerPadrao) {
+                    bannerPadrao.outerHTML = `
+                        <div id="bloco-acoes-eja" class="bg-gradient-to-br from-emerald-600 to-teal-700 text-white p-4 rounded-2xl shadow-lg space-y-3">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <span class="text-[10px] uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-full font-bold">Modalidade EJA (Certificação / Prova Única)</span>
+                                    <h4 class="font-bold text-sm mt-1">Ambiente de Estudo e Avaliação</h4>
+                                </div>
+                                <i class="fa-solid fa-book-open text-2xl text-emerald-200"></i>
                             </div>
-                            <i class="fa-solid fa-book-open text-2xl text-emerald-200"></i>
-                        </div>
-                        <div class="grid grid-cols-2 gap-2 pt-1">
-                            <button onclick="baixarMaterialEstudoEJA()" class="py-2.5 px-3 bg-white text-emerald-800 font-bold rounded-xl text-xs shadow hover:bg-emerald-50 transition flex items-center justify-center space-x-1.5">
-                                <i class="fa-solid fa-file-pdf"></i>
-                                <span>Baixar Apostila</span>
-                            </button>
-                            <button onclick="abrirTelaProvaOnlineEJA()" class="py-2.5 px-3 bg-emerald-800 hover:bg-emerald-900 text-white font-bold rounded-xl text-xs shadow transition flex items-center justify-center space-x-1.5">
-                                <i class="fa-solid fa-laptop-file"></i>
-                                <span>Fazer Prova Online</span>
-                            </button>
+                            <div class="grid grid-cols-2 gap-2 pt-1">
+                                <button onclick="baixarMaterialEstudoEJA()" class="py-2.5 px-3 bg-white text-emerald-800 font-bold rounded-xl text-xs shadow hover:bg-emerald-50 transition flex items-center justify-center space-x-1.5">
+                                    <i class="fa-solid fa-file-pdf"></i>
+                                    <span>Baixar Apostila</span>
+                                </button>
+                                <button onclick="abrirTelaProvaOnlineEJA()" class="py-2.5 px-3 bg-emerald-800 hover:bg-emerald-900 text-white font-bold rounded-xl text-xs shadow transition flex items-center justify-center space-x-1.5">
+                                    <i class="fa-solid fa-laptop-file"></i>
+                                    <span>Fazer Prova Online</span>
+                                </button>
+                            </div>
                         </div>
                     `;
-                    painelHome.appendChild(blocoEJA);
+                }
+
+                // 2. Remove os botões de Presença e Calendário do menu inferior para alunos EJA
+                const navBar = document.getElementById('main-nav-bar');
+                if (navBar) {
+                    navBar.innerHTML = `
+                        <button onclick="mudarAba('home')" id="nav-home" class="flex flex-col items-center text-blue-600 dark:text-blue-400 text-[10px] font-bold transition">
+                            <i class="fa-solid fa-id-card text-base mb-0.5"></i> Início
+                        </button>
+                        <button onclick="mudarAba('financeiro')" id="nav-financeiro" class="flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition relative">
+                            <div class="relative">
+                                <i class="fa-solid fa-wallet text-base mb-0.5"></i>
+                                <span id="badge-alerta-financeiro" class="absolute -top-1 -right-2 w-4 h-4 bg-red-500 text-white rounded-full text-[9px] font-black flex items-center justify-center animacao-piscar-alerta shadow-md" style="display: none;">!</span>
+                            </div>
+                            Financeiro
+                        </button>
+                        <button onclick="mudarAba('notas')" id="nav-notas" class="flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition relative">
+                            <div class="relative">
+                                <i class="fa-solid fa-star text-base mb-0.5"></i>
+                                <span id="badge-alerta-notas" class="absolute -top-1 -right-2 w-4 h-4 bg-red-500 text-white rounded-full text-[9px] font-black flex items-center justify-center animacao-piscar-alerta shadow-md" style="display: none;">!</span>
+                            </div>
+                            Notas
+                        </button>
+                        <button onclick="mudarAba('documentos')" id="nav-documentos" class="flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition relative">
+                            <div class="relative">
+                                <i class="fa-solid fa-folder-open text-base mb-0.5"></i>
+                                <span id="badge-alerta-docs" class="absolute -top-1 -right-2 w-4 h-4 bg-red-500 text-white rounded-full text-[9px] font-black flex items-center justify-center animacao-piscar-alerta shadow-md" style="display: none;">!</span>
+                            </div>
+                            Docs
+                        </button>
+                    `;
                 }
             }
         }
@@ -1176,20 +1205,30 @@
         }
 
         async function mudarAba(aba) {
+            // Verifica se a aba solicitada existe antes de alternar (para evitar erros nas abas ocultas da EJA)
+            const targetTab = document.getElementById(`tab-${aba}`);
+            if (!targetTab) return;
+
             ['home', 'financeiro', 'notas', 'frequencia', 'documentos', 'calendario'].forEach(a => {
-                document.getElementById(`tab-${a}`).style.display = (a === aba) ? 'block' : 'none';
-                document.getElementById(`nav-${a}`).className = (a === aba) 
-                    ? 'flex flex-col items-center text-blue-600 dark:text-blue-400 text-[10px] font-bold transition' 
-                    : 'flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition';
+                const elTab = document.getElementById(`tab-${a}`);
+                const elNav = document.getElementById(`nav-${a}`);
+                if (elTab) elTab.style.display = (a === aba) ? 'block' : 'none';
+                if (elNav) {
+                    elNav.className = (a === aba) 
+                        ? 'flex flex-col items-center text-blue-600 dark:text-blue-400 text-[10px] font-bold transition' 
+                        : 'flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition';
+                }
             });
 
             if (aba === 'notas' && alunoLogado) {
                 sessionStorage.setItem(`visto_notas_${alunoLogado.id}`, 'true');
-                document.getElementById('badge-alerta-notas').style.display = 'none';
+                const badgeNotas = document.getElementById('badge-alerta-notas');
+                if (badgeNotas) badgeNotas.style.display = 'none';
             }
             if (aba === 'financeiro' && alunoLogado) {
                 sessionStorage.setItem(`visto_financeiro_${alunoLogado.id}`, 'true');
-                document.getElementById('badge-alerta-financeiro').style.display = 'none';
+                const badgeFin = document.getElementById('badge-alerta-financeiro');
+                if (badgeFin) badgeFin.style.display = 'none';
             }
         }
 
