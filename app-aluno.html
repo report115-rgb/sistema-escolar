@@ -162,7 +162,7 @@
     </div>
 
     <!-- MODAL DE SELEÇÃO DE DOCUMENTOS (CAIXA SUSPENSA) -->
-    <div id="modal-selecao-documentos" class="fixed inset-0 z-[75] bg-black/70 flex items-center justify-center p-4" style="display: none;">
+    <div id="modal-selecao-documentos" class="fixed inset-0 z-[75] bg-black/70 flex items-center justify-center p-4" style="display: none;" onclick="if(event.target === this) fecharModalSelecaoDocumentos()">
         <div class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4 relative">
             <button onclick="fecharModalSelecaoDocumentos()" class="absolute top-4 right-4 text-slate-400 hover:text-red-500 text-xl font-bold">&times;</button>
             <div class="text-center">
@@ -174,8 +174,8 @@
             </div>
             
             <div class="space-y-2 pt-2">
-                <button onclick="abrirModalDeclaracao()" class="w-full p-3.5 bg-slate-50 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 border border-slate-200 dark:border-slate-700 hover:border-emerald-500 rounded-2xl text-left flex items-center justify-between transition group">
-                    <div class="flex items-center space-x-3">
+                <button type="button" onclick="event.stopPropagation(); abrirModalDeclaracao();" class="w-full p-3.5 bg-slate-50 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 border border-slate-200 dark:border-slate-700 hover:border-emerald-500 rounded-2xl text-left flex items-center justify-between transition group">
+                    <div class="flex items-center space-x-3 pointer-events-none">
                         <div class="w-9 h-9 bg-emerald-100 dark:bg-emerald-900 text-emerald-600 dark:text-emerald-300 rounded-xl flex items-center justify-center text-sm group-hover:scale-105 transition">
                             <i class="fa-solid fa-certificate"></i>
                         </div>
@@ -184,14 +184,14 @@
                             <p class="text-[10px] text-slate-500 dark:text-slate-400">Comprovante de vínculo oficial</p>
                         </div>
                     </div>
-                    <i class="fa-solid fa-chevron-right text-xs text-slate-400"></i>
+                    <i class="fa-solid fa-chevron-right text-xs text-slate-400 pointer-events-none"></i>
                 </button>
             </div>
         </div>
     </div>
 
     <!-- MODAL DE DECLARAÇÃO DE MATRÍCULA -->
-    <div id="modal-declaracao" class="fixed inset-0 z-[80] bg-black/70 flex items-center justify-center p-3 sm:p-6 overflow-y-auto" style="display: none;">
+    <div id="modal-declaracao" class="fixed inset-0 z-[80] bg-black/70 flex items-center justify-center p-3 sm:p-6 overflow-y-auto" style="display: none;" onclick="if(event.target === this) fecharModalDeclaracao()">
         <div id="modal-declaracao-conteudo" class="bg-white text-slate-800 rounded-2xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl relative space-y-5 my-auto">
             <!-- Botão fechar (some na impressão) -->
             <button onclick="fecharModalDeclaracao()" class="no-print absolute top-4 right-4 text-slate-400 hover:text-red-500 text-xl font-bold">&times;</button>
@@ -770,7 +770,9 @@
             const dataExtenso = `${hoje.getDate()} de ${meses[hoje.getMonth()]} de${hoje.getFullYear()}`;
             document.getElementById('decl-data-atual').textContent = `Belém - PA, ${dataExtenso}.`;
 
-            document.getElementById('modal-declaracao').style.display = 'flex';
+            // Exibe explicitamente o modal da declaração
+            const modalDecl = document.getElementById('modal-declaracao');
+            if(modalDecl) modalDecl.style.display = 'flex';
         }
 
         function fecharModalDeclaracao() {
