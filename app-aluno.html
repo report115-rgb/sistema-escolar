@@ -174,7 +174,7 @@
             </div>
             
             <div class="space-y-2 pt-2">
-                <button type="button" onclick="event.stopPropagation(); abrirModalDeclaracao();" class="w-full p-3.5 bg-slate-50 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 border border-slate-200 dark:border-slate-700 hover:border-emerald-500 rounded-2xl text-left flex items-center justify-between transition group">
+                <button type="button" onclick="clicarDeclaracaoMatricula()" class="w-full p-3.5 bg-slate-50 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 border border-slate-200 dark:border-slate-700 hover:border-emerald-500 rounded-2xl text-left flex items-center justify-between transition group">
                     <div class="flex items-center space-x-3 pointer-events-none">
                         <div class="w-9 h-9 bg-emerald-100 dark:bg-emerald-900 text-emerald-600 dark:text-emerald-300 rounded-xl flex items-center justify-center text-sm group-hover:scale-105 transition">
                             <i class="fa-solid fa-certificate"></i>
@@ -725,11 +725,16 @@
             document.getElementById('modal-selecao-documentos').style.display = 'none';
         }
 
+        // Função definitiva com atraso de transição para evitar bloqueio do DOM
+        function clicarDeclaracaoMatricula() {
+            fecharModalSelecaoDocumentos();
+            setTimeout(() => {
+                abrirModalDeclaracao();
+            }, 50);
+        }
+
         function abrirModalDeclaracao() {
             if(!alunoLogado) return;
-            
-            // Fecha a caixa suspensa de seleção primeiro
-            fecharModalSelecaoDocumentos();
             
             // Preenche dados institucionais oficiais
             const nomeInst = dadosInstituicaoGlobal.name || dadosInstituicaoGlobal.nome || "SE7 Instituição de Ensino";
