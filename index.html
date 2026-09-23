@@ -3962,28 +3962,78 @@
         }
 
         function renderizarAlunosEJAAdmin() {
-            const tbody = document.getElementById('tabela-alunos-eja');
-            if (!tbody) return;
-            tbody.innerHTML = '';
-            const alunosEJA = students.filter(s => {
-                const curso = courses.find(c => c.id === s.courseId);
-                return curso && (curso.nivel === 'Supletivo' || curso.sigla === 'EJA' || (curso.name && curso.name.toUpperCase().includes('EJA')));
-            });
-            if (alunosEJA.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-400">Nenhum aluno EJA matriculado.</td></tr>`;
-                return;
-            }
-            alunosEJA.forEach(s => {
-                tbody.innerHTML += `
-                    <tr class="border-b border-gray-100 dark:border-slate-700">
-                        <td class="p-3 font-bold text-emerald-600">${s.code || '---'}</td>
-                        <td class="p-3 font-semibold">${s.fullname}</td>
-                        <td class="p-3">${s.cpf || '---'}</td>
-                        <td class="p-3">${s.whatsapp || '---'}</td>
-                    </tr>
-                `;
-            });
+    const tbody = document.getElementById('tabela-alunos-eja');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    
+    const alunosEJA = students.filter(s => {
+        const curso = courses.find(c => c.id === s.courseId);
+        return curso && (curso.nivel === 'Supletivo' || curso.sigla === 'EJA' || (curso.name && curso.name.toUpperCase().includes('EJA')));
+    });
+
+    if (alunosEJA.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-400">Nenhum aluno EJA matriculado.</td></tr>`;
+        return;
+    }
+
+    alunosEJA.forEach(s => {
+        // Garante que o objeto de controle individual exista para o aluno
+        if (!s.controleEJA) {
+            s.controleEJA = { apostilaAtiva: true, provaAtiva: false };
         }
+
+        tbody.innerHTML += `
+            <tr class="border-b border-gray-100 dark:border-slate-700">
+                <td class="p-3 font-bold text-emerald-600">${s.code || '---'}</td>
+                <td class="p-3 font-semibold">${s.fullname}</td>
+                <td class="p-3">${s.cpf || '---'}</td>
+                <td class="p-3">${s.whatsapp || '---'}</td>
+                <td class="p-3 text-center">
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" ${s.controleEJA.apostilaAtiva ? 'checked' : ''} onchange="alternarApostilaIndividualAluno('${s.id}', this.checked)" class="sr-only peer">
+                        <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+                    </label>
+                </td>
+                <td class="p-3 text-center">
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" ${s.controleEJA.provaAtiva ? 'checked' : ''} onchange="alternarProvaIndividualAluno('${s.id}', this.checked)" class="sr-only peer">
+                        <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                </td>
+            </tr>
+        `;
+    });
+}
+
+async function alternarApostilaIndividualAluno(alunoId, statusAtivo) {
+    const aluno = students.find(s => s.id === alunoId);
+    if (!aluno) return;
+    
+    if (!aluno.controleEJA) aluno.controleEJA = { apostilaAtiva: true, provaAtiva: false };
+    aluno.controleEJA.apostilaAtiva = statusAtivo;
+
+    try {
+        await db.collection("students").doc(alunoId).update({ controleEJA: aluno.controleEJA });
+        registrarLogAuditoria(`Alterou a disponibilidade da Apostila para o aluno ${aluno.fullname}: ${statusAtivo ? 'Ativada' : 'Desativada'}`, "Gestão EJA");
+    } catch (error) {
+        alert("Erro ao atualizar na nuvem: " + error.message);
+    }
+}
+
+async function alternarProvaIndividualAluno(alunoId, statusAtivo) {
+    const aluno = students.find(s => s.id === alunoId);
+    if (!aluno) return;
+    
+    if (!aluno.controleEJA) aluno.controleEJA = { apostilaAtiva: true, provaAtiva: false };
+    aluno.controleEJA.provaAtiva = statusAtivo;
+
+    try {
+        await db.collection("students").doc(alunoId).update({ controleEJA: aluno.controleEJA });
+        registrarLogAuditoria(`Alterou a disponibilidade da Prova Online para o aluno ${aluno.fullname}: ${statusAtivo ? 'Ativada' : 'Desativada'}`, "Gestão EJA");
+    } catch (error) {
+        alert("Erro ao atualizar na nuvem: " + error.message);
+    }
+}
 
         async function salvarApostilaEJAAdmin() {
             const url = document.getElementById('input-eja-apostila-url').value.trim();
