@@ -3217,11 +3217,14 @@
                 return;
             }
 
+            // Descobre o ambiente atual salvo no localStorage
+            const configAsaas = JSON.parse(localStorage.getItem('app_asaas_config')) || { env: 'production' };
+            const dominioAsaas = (configAsaas.env === 'production' || configAsaas.env === 'Produção') ? 'www.asaas.com' : 'sandbox.asaas.com';
+
             container.innerHTML = `<div class="font-bold text-xs text-blue-600 dark:text-blue-400 mb-2">Exibindo ${cobrancasAluno.length} cobranças / mensalidades para ${aluno ? aluno.fullname : ''}:</div>`;
             
             cobrancasAluno.forEach((f, idx) => {
-                // Define a URL de destino (se não existir, usa um link padrão ou o painel do Asaas para testes)
-                const linkPagamento = f.invoiceUrl || "https://sandbox.asaas.com";
+                const linkPagamento = f.invoiceUrl || `https://${dominioAsaas}`;
 
                 container.innerHTML += `
                     <div class="bg-gray-50 dark:bg-slate-900 p-3.5 rounded-xl border border-gray-200 dark:border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs">
@@ -3259,9 +3262,9 @@
                     descricao: cob.description 
                 });
                 
+                const dominioAsaas = asaas.environment === 'production' ? 'www.asaas.com' : 'sandbox.asaas.com';
                 let linkFinal = cobAsaas.invoiceUrl;
                 if (!linkFinal && cobAsaas.paymentId) {
-                    const dominioAsaas = asaas.environment === 'production' ? 'www.asaas.com' : 'sandbox.asaas.com';
                     linkFinal = `https://${dominioAsaas}/i/${cobAsaas.paymentId}`;
                 }
 
@@ -3274,7 +3277,6 @@
                 alert("Fatura gerada com sucesso em Produção!");
                 renderizarCobrancasAlunoSelecionadoFinanceiro(aluno.id);
 
-                // Abre a fatura oficial do Asaas em uma nova aba
                 window.open(linkFinal, '_blank');
             } catch(e) {
                 alert("Erro ao gerar fatura: " + e.message);
