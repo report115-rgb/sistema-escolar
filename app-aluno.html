@@ -309,6 +309,10 @@
                 </div>
             </div>
             <div class="flex items-center space-x-2">
+                <!-- Botão Recarregar / Atualizar Dados sem Fazer Logout -->
+                <button onclick="recarregarDadosAppAluno()" id="btn-refresh-app" class="w-9 h-9 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-xs transition text-white shadow" title="Atualizar Dados">
+                    <i id="refresh-icon" class="fa-solid fa-rotate"></i>
+                </button>
                 <button onclick="alternarDarkMode()" class="w-9 h-9 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-xs transition text-white shadow" title="Alternar Tema">
                     <i id="theme-icon" class="fa-solid fa-moon"></i>
                 </button>
@@ -564,6 +568,34 @@
                 htmlEl.classList.add('dark');
                 localStorage.setItem('se7_aluno_theme', 'dark');
                 iconEl.className = "fa-solid fa-sun";
+            }
+        }
+
+        // --- FUNÇÃO DE RECARREGAR / ATUALIZAR DADOS EM TEMPO REAL ---
+        async function recarregarDadosAppAluno() {
+            if (!alunoLogado || !alunoLogado.id) return;
+
+            const iconEl = document.getElementById('refresh-icon');
+            if (iconEl) iconEl.classList.add('fa-spin');
+
+            try {
+                const docSnap = await db.collection("students").doc(alunoLogado.id).get();
+                if (docSnap.exists) {
+                    alunoLogado = { id: docSnap.id, ...docSnap.data() };
+                    sessionStorage.setItem('aluno_app_logado', JSON.stringify(alunoLogado));
+                }
+
+                await carregarDadosPainel();
+                await verificarTodasPendencias();
+
+                setTimeout(() => {
+                    if (iconEl) iconEl.classList.remove('fa-spin');
+                    alert("Dados atualizados com sucesso!");
+                }, 400);
+
+            } catch (e) {
+                if (iconEl) iconEl.classList.remove('fa-spin');
+                alert("Erro ao atualizar dados: " + e.message);
             }
         }
 
