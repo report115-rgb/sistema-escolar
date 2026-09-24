@@ -444,7 +444,9 @@
                         </div>
                         <h3 class="font-bold text-base text-gray-800 dark:text-white">Cadastro de Nova Matrícula</h3>
                         <p class="text-xs text-gray-500 max-w-md mx-auto">Clique no botão abaixo para abrir o assistente completo de cadastro de novos alunos, preenchimento de endereço por CEP e integração imediata com o financeiro.</p>
-                        <button type="button" onclick="openNewStudentModal()" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow"><i class="fa-solid fa-plus mr-1"></i> Abrir Ficha de Nova Matrícula</button>
+                        <button type="button" onclick="openNewStudentModal()" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow">
+    <i class="fa-solid fa-plus mr-1"></i> Abrir Ficha de Nova Matrícula
+</button>
                     </div>
                 </div>
 
@@ -889,7 +891,6 @@
         <button type="button" id="btn-cancel-edit-course" onclick="cancelarEdicaoCurso()" class="px-5 py-2.5 bg-gray-500 hover:bg-gray-600 text-white font-semibold rounded-lg text-xs shadow transition duration-200" style="display: none;">Cancelar Edição</button>
     </div>
     </div>
-</div>
 
 <!-- SUBABA DISCIPLINAS (REORGANIZADA NO MESMO PADRÃO DE CURSOS) -->
 <div id="subtab-subjects" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
@@ -1996,12 +1997,18 @@
             evt.currentTarget.classList.add('bg-blue-600', 'text-white', 'shadow');
         }
 
-        function openNewStudentModal() {
-            document.getElementById('edit-student-id').value = "";
-            document.getElementById('modal-student-title').textContent = "Nova Matrícula";
-            document.getElementById('formFichaMatricula').reset();
-            document.getElementById('new-student-modal').style.display = 'flex';
-        }
+        // SUBSTITUA A FUNÇÃO ATUAL POR ESTA:
+function openNewStudentModal() {
+    document.getElementById('edit-student-id').value = "";
+    document.getElementById('modal-student-title').textContent = "Nova Matrícula";
+    document.getElementById('formFichaMatricula').reset();
+    
+    // Atualiza/limpa o campo de turmas ao resetar a ficha
+    filterTurmasByCourse(); 
+    
+    // Exibe a janela flutuante
+    document.getElementById('new-student-modal').style.display = 'flex';
+}
         function closeNewStudentModal() { document.getElementById('new-student-modal').style.display = 'none'; }
 
         let currentLogoDataUrl = "", courses = [], classes = [], students = [], teachers = [], financeLogs = [], academicCalendars = [];
