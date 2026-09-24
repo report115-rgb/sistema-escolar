@@ -507,6 +507,7 @@
         let dadosInstituicaoGlobal = {};
         let gdriveUrlGlobal = "https://script.google.com/macros/s/AKfycbwPL9G9q--46vYhuyCfqSwZ9IKm2tEvlfvlH18TvD0FJXqYrDnyLOyKqtp6mT7LdH5XOA/exec"; 
         let alunoRecemMatriculadoTemp = null;
+        let isAlunoEJA = false;
 
         window.addEventListener('DOMContentLoaded', async () => {
             window.addEventListener('online', atualizarStatusConexao);
@@ -529,8 +530,7 @@
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('matricula-screen').style.display = 'none';
                 document.getElementById('main-app').style.display = 'flex';
-                carregarDadosPainel();
-                verificarTodasPendencias();
+                await carregarDadosPainel();
             }
         });
 
@@ -575,7 +575,6 @@
                 }
 
                 await carregarDadosPainel();
-                await verificarTodasPendencias();
 
                 setTimeout(() => {
                     if (iconEl) iconEl.classList.remove('fa-spin');
@@ -751,7 +750,7 @@
             }
         }
 
-        function entrarAposMatricula() {
+        async function entrarAposMatricula() {
             document.getElementById('modal-sucesso-matricula').style.display = 'none';
             document.getElementById('matricula-screen').style.display = 'none';
             
@@ -759,21 +758,32 @@
             sessionStorage.setItem('aluno_app_logado', JSON.stringify(alunoLogado));
             
             document.getElementById('main-app').style.display = 'flex';
-            carregarDadosPainel();
-            verificarTodasPendencias();
+            await carregarDadosPainel();
         }
 
+        // --- VERIFICAÇÃO DE PENDÊNCIAS COM REGRA DIFERENCIADA PARA EJA ---
         async function verificarTodasPendencias() {
             if(!alunoLogado) return;
+            
+            // Checa pendências de documentos obrigatoriamente para todos os alunos
             verificarPendenciaDocumentos();
-            await verificarPendenciaFinanceiro();
-            await verificarPendenciaNotas();
+
+            // Para alunos da EJA, o alerta FICA EXCLUSIVAMENTE em Docs
+            if (isAlunoEJA) {
+                const bFin = document.getElementById('badge-alerta-financeiro');
+                const bNotas = document.getElementById('badge-alerta-notas');
+                if(bFin) bFin.style.display = 'none';
+                if(bNotas) bNotas.style.display = 'none';
+            } else {
+                // Alunos de Cursos Técnicos (Enfermagem, etc.) e Regulares verificam também Financeiro e Notas
+                await verificarPendenciaFinanceiro();
+                await verificarPendenciaNotas();
+            }
         }
 
         function verificarPendenciaDocumentos() {
             const badge = document.getElementById('badge-alerta-docs');
-            const banner = document.getElementById('docs-banner-msg');
-            if(!badge || !banner) return;
+            if(!badge) return;
 
             const docs = alunoLogado.documentos || {};
             let pendenteOuReprovado = false;
@@ -853,8 +863,7 @@
                 sessionStorage.setItem('aluno_app_logado', JSON.stringify(alunoLogado));
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('main-app').style.display = 'flex';
-                carregarDadosPainel();
-                verificarTodasPendencias();
+                await carregarDadosPainel();
             } catch(e) {
                 alert("Erro ao conectar: " + e.message);
             }
@@ -928,6 +937,7 @@
                     await db.collection("students").doc(alunoLogado.id).update({ documentos: alunoLogado.documentos });
                     sessionStorage.setItem('aluno_app_logado', JSON.stringify(alunoLogado));
                     renderizarDocumentosObrigatorios();
+                    await verificarTodasPendencias();
                     alert("Documento enviado com sucesso!");
                 } catch(err) {
                     alert("Documento enviado com sucesso!");
@@ -1006,10 +1016,10 @@
             }
 
             renderizarDocumentosObrigatorios();
-            verificarPendenciaDocumentos();
 
             if(alunoLogado.courseId) {
-                db.collection("courses").doc(alunoLogado.courseId).get().then(doc => {
+                try {
+                    const doc = await db.collection("courses").doc(alunoLogado.courseId).get();
                     if(doc.exists) {
                         const curso = doc.data();
                         adaptarPainelPorModalidadeCurso(curso);
@@ -1030,7 +1040,7 @@
                             });
                         }
                     }
-                });
+                } catch(e) { console.error("Erro ao carregar curso:", e); }
             }
 
             if(alunoLogado.classId) {
@@ -1059,6 +1069,9 @@
                     `;
                 });
             });
+
+            // Dispara a verificação final das pendências após ler a modalidade
+            await verificarTodasPendencias();
         }
 
         // --- SIMULAÇÃO RÁPIDA PARA TESTAR A EJA ---
@@ -1100,9 +1113,9 @@
         }
 
         function adaptarPainelPorModalidadeCurso(cursoObj) {
-            const isEJA = cursoObj && (cursoObj.nivel === 'Supletivo' || cursoObj.sigla === 'EJA' || (cursoObj.name && cursoObj.name.toUpperCase().includes('EJA')));
+            isAlunoEJA = cursoObj && (cursoObj.nivel === 'Supletivo' || cursoObj.sigla === 'EJA' || (cursoObj.name && cursoObj.name.toUpperCase().includes('EJA')));
 
-            if (isEJA) {
+            if (isAlunoEJA) {
                 const controle = alunoLogado.controleEJA || { apostilaAtiva: true, provaAtiva: true };
 
                 const bannerPadrao = document.getElementById('banner-padrao-home');
