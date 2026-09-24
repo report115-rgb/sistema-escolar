@@ -283,7 +283,7 @@
     </div>
 
     <!-- CONTEÚDO PRINCIPAL -->
-    <div class="max-w-7xl w-full mx-auto p-4 pb-20 flex-1">
+    <div class="max-w-7xl w-full mx-auto p-4 flex-1">
         
         <!-- GESTÃO DE ALUNOS -->
         <div id="tab-gestion-students" class="tab-content active space-y-4">
@@ -330,7 +330,7 @@
             </div>
         </div>
 
-        <!-- ========================================== -->
+<!-- ========================================== -->
         <!-- ABA GESTÃO EJA (MÓDULO SUPLETIVO) - POSICIONADA CORRETAMENTE -->
         <!-- ========================================== -->
         <div id="tab-gestao-eja" class="tab-content space-y-4" style="display: none;">
@@ -784,472 +784,465 @@
                     </div>
 
                     <!-- SUB-SUBABA 2: CADASTRAR NOVO CURSO -->
-                    <!-- NOVO CÓDIGO HTML COM OS IDs DE CONTROLE DINÂMICO -->
-<div id="subsubtab-cadastrar-curso" class="subsubtab-content space-y-4" style="display: none;">
-    <input type="hidden" id="edit-course-id" value="">
+                    <div id="subsubtab-cadastrar-curso" class="subsubtab-content space-y-4" style="display: none;">
+                        <input type="hidden" id="edit-course-id" value="">
 
     <div>
         <label class="block text-xs font-semibold mb-1">Nível do Curso</label>
-        <select id="input-course-nivel" onchange="alternarCamposNivelCurso(this.value)" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900" required>
+        <select id="input-course-nivel" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900" required>
             <option value="">Selecione o nível...</option>
             <option value="Técnico">Técnico</option>
             <option value="Graduação">Graduação</option>
             <option value="Supletivo">Supletivo</option>
         </select>
     </div>
-    
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div class="md:col-span-2">
-            <label class="block text-xs font-semibold mb-1">Nome do Curso</label>
-            <input type="text" id="input-course-name" placeholder="Ex: Técnico em Enfermagem ou Educação de Jovens e Adultos" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-        </div>
-        <div>
-            <label class="block text-xs font-semibold mb-1">Sigla</label>
-            <input type="text" id="input-course-sigla" placeholder="ENF ou EJA" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-        </div>
-    </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold mb-1">Nome do Curso</label>
+                                <input type="text" id="input-course-name" placeholder="Técnico em Enfermagem" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold mb-1">Sigla</label>
+                                <input type="text" id="input-course-sigla" placeholder="ENF" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+                            </div>
+                        </div>
 
-    <!-- CAMPO DE MODALIDADE (EXCLUSIVO / RELEVANTE PARA SUPLETIVO) -->
-    <div id="container-modalidade-curso" style="display: none;">
-        <label class="block text-xs font-semibold mb-1">Modalidade</label>
-        <select id="input-course-modalidade" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-            <option value="Prova Única">Prova Única</option>
-            <option value="Modular">Modular</option>
-        </select>
-    </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold mb-1">Eixo Tecnológico</label>
+                                <input type="text" id="input-course-eixo" placeholder="Ambiente e Saúde" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold mb-1">Carga Horária</label>
+                                <input type="text" id="input-course-hours" placeholder="3600 hrs" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold mb-1">Resolução / Conselho</label>
+                                <input type="text" id="input-course-conselho" placeholder="Resolução COFEN" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+                            </div>
+                        </div>
 
-    <!-- CAMPOS QUE SERÃO OCULTADOS QUANDO FOR SUPLETIVO -->
-    <div id="container-campos-tecnico" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div id="div-eixo">
-            <label class="block text-xs font-semibold mb-1">Eixo Tecnológico</label>
-            <input type="text" id="input-course-eixo" placeholder="Ambiente e Saúde" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-        </div>
-        <div id="div-hours">
-            <label class="block text-xs font-semibold mb-1">Carga Horária</label>
-            <input type="text" id="input-course-hours" placeholder="3600 hrs" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-        </div>
-        <div id="div-conselho">
-            <label class="block text-xs font-semibold mb-1">Resolução / Conselho</label>
-            <input type="text" id="input-course-conselho" placeholder="Resolução COFEN" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-        </div>
-    </div>
+                        <!-- SEÇÃO FINANCEIRA DO CURSO & SEMESTRE DE VIGÊNCIA -->
+                        <div class="bg-blue-50 dark:bg-slate-800 p-4 rounded-xl border border-blue-200 dark:border-slate-700 space-y-4">
+                            <h4 class="font-bold text-xs text-blue-700 dark:text-blue-400 uppercase"><i class="fa-solid fa-wallet mr-1"></i> Configuração Financeira e Semestre de Vigência</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-xs font-semibold mb-1">Semestre de Vigência</label>
+                                    <select id="input-course-semestre" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+                                        <option value="2025/1">2025/1 (1º Semestre: Jan-Jun)</option>
+                                        <option value="2025/2">2025/2 (2º Semestre: Jul-Dez)</option>
+                                        <option value="2026/1">2026/1 (1º Semestre: Jan-Jun)</option>
+                                        <option value="2026/2" selected>2026/2 (2º Semestre: Jul-Dez)</option>
+                                        <option value="2027/1">2027/1 (1º Semestre: Jan-Jun)</option>
+                                        <option value="2027/2">2027/2 (2º Semestre: Jul-Dez)</option>
+                                        <option value="2028/1">2028/1 (1º Semestre: Jan-Jun)</option>
+                                        <option value="2028/2">2028/2 (2º Semestre: Jul-Dez)</option>
+                                        <option value="2029/1">2029/1 (1º Semestre: Jan-Jun)</option>
+                                        <option value="2029/2">2029/2 (2º Semestre: Jul-Dez)</option>
+                                        <option value="2030/1">2030/1 (1º Semestre: Jan-Jun)</option>
+                                        <option value="2030/2">2030/2 (2º Semestre: Jul-Dez)</option>
+                                        <option value="2031/1">2031/1 (1º Semestre: Jan-Jun)</option>
+                                        <option value="2031/2">2031/2 (2º Semestre: Jul-Dez)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold mb-1">Qtd. de Parcelas</label>
+                                    <input type="number" id="input-course-parcelas" placeholder="24" value="24" min="1" oninput="calcularTotalCurso()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold mb-1">Valor Normal da Parcela (R$)</label>
+                                    <input type="number" id="input-course-valor-parcela" placeholder="300.00" value="300.00" step="0.01" oninput="calcularTotalCurso()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-semibold mb-1 text-emerald-700 dark:text-emerald-400">Valor com Desconto de Pontualidade (R$)</label>
+                                    <input type="number" id="input-course-valor-desconto" placeholder="280.00" value="280.00" step="0.01" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold mb-1">Dia de Vencimento</label>
+                                    <input type="number" id="input-course-vencimento" placeholder="10" value="10" min="1" max="31" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold mb-1 text-gray-600 dark:text-gray-300">Valor Total do Curso (Calculado)</label>
+                                <input type="text" id="input-course-valor-total" readonly placeholder="R$ 7.200,00" class="w-full md:w-1/3 px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm bg-gray-100 dark:bg-slate-900 font-bold text-emerald-600 dark:text-emerald-400">
+                            </div>
+                        </div>
 
-    <!-- SEÇÃO FINANCEIRA DO CURSO & SEMESTRE DE VIGÊNCIA -->
-    <div class="bg-blue-50 dark:bg-slate-800 p-4 rounded-xl border border-blue-200 dark:border-slate-700 space-y-4">
-        <h4 class="font-bold text-xs text-blue-700 dark:text-blue-400 uppercase"><i class="fa-solid fa-wallet mr-1"></i> Configuração Financeira e Semestre de Vigência</h4>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-                <label class="block text-xs font-semibold mb-1">Semestre de Vigência</label>
-                <select id="input-course-semestre" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                    <option value="2025/1">2025/1 (1º Semestre: Jan-Jun)</option>
-                    <option value="2025/2">2025/2 (2º Semestre: Jul-Dez)</option>
-                    <option value="2026/1">2026/1 (1º Semestre: Jan-Jun)</option>
-                    <option value="2026/2" selected>2026/2 (2º Semestre: Jul-Dez)</option>
-                    <option value="2027/1">2027/1 (1º Semestre: Jan-Jun)</option>
-                    <option value="2027/2">2027/2 (2º Semestre: Jul-Dez)</option>
-                    <option value="2028/1">2028/1 (1º Semestre: Jan-Jun)</option>
-                    <option value="2028/2">2028/2 (2º Semestre: Jul-Dez)</option>
-                    <option value="2029/1">2029/1 (1º Semestre: Jan-Jun)</option>
-                    <option value="2029/2">2029/2 (2º Semestre: Jul-Dez)</option>
-                    <option value="2030/1">2030/1 (1º Semestre: Jan-Jun)</option>
-                    <option value="2030/2">2030/2 (2º Semestre: Jul-Dez)</option>
-                    <option value="2031/1">2031/1 (1º Semestre: Jan-Jun)</option>
-                    <option value="2031/2">2031/2 (2º Semestre: Jul-Dez)</option>
-                </select>
-            </div>
-            <div>
-                <label class="block text-xs font-semibold mb-1">Qtd. de Parcelas</label>
-                <input type="number" id="input-course-parcelas" placeholder="24" value="24" min="1" oninput="calcularTotalCurso()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-            </div>
-            <div>
-                <label class="block text-xs font-semibold mb-1" id="label-valor-parcela">Valor Normal da Parcela (R$)</label>
-                <input type="number" id="input-course-valor-parcela" placeholder="300.00" value="300.00" step="0.01" oninput="calcularTotalCurso()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-            </div>
-        </div>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="container-pontualidade-vencimento">
-            <div id="div-desconto">
-                <label class="block text-xs font-semibold mb-1 text-emerald-700 dark:text-emerald-400">Valor com Desconto de Pontualidade (R$)</label>
-                <input type="number" id="input-course-valor-desconto" placeholder="280.00" value="280.00" step="0.01" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-            </div>
-            <div id="div-vencimento">
-                <label class="block text-xs font-semibold mb-1">Dia de Vencimento</label>
-                <input type="number" id="input-course-vencimento" placeholder="10" value="10" min="1" max="31" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-            </div>
-        </div>
+                        <div class="flex gap-2 pt-2">
+                            <button type="button" id="btn-save-course" onclick="saveCourse()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-xs shadow transition duration-200">Salvar Curso</button>
+                            <button type="button" id="btn-cancel-edit-course" onclick="cancelarEdicaoCurso()" class="px-5 py-2.5 bg-gray-500 hover:bg-gray-600 text-white font-semibold rounded-lg text-xs shadow transition duration-200" style="display: none;">Cancelar Edição</button>
+                        </div>
+                    </div>
 
-        <div id="container-valor-total-curso">
-            <label class="block text-xs font-semibold mb-1 text-gray-600 dark:text-gray-300">Valor Total do Curso (Calculado)</label>
-            <input type="text" id="input-course-valor-total" readonly placeholder="R$ 7.200,00" class="w-full md:w-1/3 px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm bg-gray-100 dark:bg-slate-900 font-bold text-emerald-600 dark:text-emerald-400">
-        </div>
-    </div>
+                </div>
 
-    <div class="flex gap-2 pt-2">
-        <button type="button" id="btn-save-course" onclick="saveCourse()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-xs shadow transition duration-200">Salvar Curso</button>
-        <button type="button" id="btn-cancel-edit-course" onclick="cancelarEdicaoCurso()" class="px-5 py-2.5 bg-gray-500 hover:bg-gray-600 text-white font-semibold rounded-lg text-xs shadow transition duration-200" style="display: none;">Cancelar Edição</button>
-    </div>
-    </div>
+                <!-- SUBABA DISCIPLINAS (REORGANIZADA NO MESMO PADRÃO DE CURSOS) -->
+                <div id="subtab-subjects" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
+                    <input type="hidden" id="edit-subject-id" value="">
+                    
+                    <!-- BOTÕES DAS SUBABAS DE DISCIPLINAS -->
+                    <div class="flex space-x-2 border-b border-gray-200 dark:border-slate-700 pb-3 mb-4">
+                        <button class="subsubtab-subject-button active px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white shadow" onclick="openSubSubTabSubject(event, 'subsubtab-disciplinas-cadastradas')"><i class="fa-solid fa-list mr-1"></i> Disciplinas Cadastradas</button>
+                        <button class="subsubtab-subject-button px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubSubTabSubject(event, 'subsubtab-cadastrar-disciplina')"><i class="fa-solid fa-plus mr-1"></i> Cadastrar Nova Disciplina</button>
+                    </div>
 
-<!-- SUBABA DISCIPLINAS (REORGANIZADA NO MESMO PADRÃO DE CURSOS) -->
-<div id="subtab-subjects" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
-    <input type="hidden" id="edit-subject-id" value="">
-    
-    <div class="flex space-x-2 border-b border-gray-200 dark:border-slate-700 pb-3 mb-4">
-        <button class="subsubtab-subject-button active px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white shadow" onclick="openSubSubTabSubject(event, 'subsubtab-disciplinas-cadastradas')"><i class="fa-solid fa-list mr-1"></i> Disciplinas Cadastradas</button>
-        <button class="subsubtab-subject-button px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubSubTabSubject(event, 'subsubtab-cadastrar-disciplina')"><i class="fa-solid fa-plus mr-1"></i> Cadastrar Nova Disciplina</button>
-    </div>
+                    <!-- SUB-SUBABA 1: DISCIPLINAS CADASTRADAS -->
+                    <div id="subsubtab-disciplinas-cadastradas" class="subsubtab-subject-content active space-y-3">
+                        <div class="flex justify-between items-center mb-2">
+                            <h4 class="font-bold text-sm text-gray-800 dark:text-white">Lista de Disciplinas Cadastradas</h4>
+                            <span class="text-xs text-gray-500 font-semibold" id="total-subjects-count">Total: 0 disciplinas</span>
+                        </div>
+                        <ul class="data-list divide-y divide-gray-200 dark:divide-slate-700" id="subjects-management-list"></ul>
+                    </div>
 
-    <div id="subsubtab-disciplinas-cadastradas" class="subsubtab-subject-content active space-y-3">
-        <div class="flex justify-between items-center mb-2">
-            <h4 class="font-bold text-sm text-gray-800 dark:text-white">Lista de Disciplinas Cadastradas</h4>
-            <span class="text-xs text-gray-500 font-semibold" id="total-subjects-count">Total: 0 disciplinas</span>
-        </div>
-        <ul class="data-list divide-y divide-gray-200 dark:divide-slate-700" id="subjects-management-list"></ul>
-    </div>
+                    <!-- SUB-SUBABA 2: CADASTRAR NOVA DISCIPLINA -->
+                    <div id="subsubtab-cadastrar-disciplina" class="subsubtab-subject-content space-y-4" style="display: none;">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold mb-1">Curso</label>
+                                <select id="input-subject-course-select" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold mb-1">Nome da Disciplina</label>
+                                <input type="text" id="input-subject-name" placeholder="Anatomia" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold mb-1">Carga Horária</label>
+                                <input type="text" id="input-subject-hours" placeholder="80 hrs" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold mb-1">Ementa</label>
+                            <textarea id="input-subject-ementa" rows="3" placeholder="Tópicos abordados..." class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></textarea>
+                        </div>
+                        <div class="flex gap-2">
+                            <button type="button" id="btn-save-subject" onclick="addSubjectToCourse()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow">Salvar Disciplina</button>
+                            <button type="button" id="btn-cancel-edit-subject" onclick="cancelarEdicaoDisciplina()" class="px-4 py-2 bg-gray-500 text-white text-xs font-semibold rounded-lg shadow" style="display: none;">Cancelar Edição</button>
+                        </div>
+                    </div>
+                </div>
 
-    <div id="subsubtab-cadastrar-disciplina" class="subsubtab-subject-content space-y-4" style="display: none;">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-                <label class="block text-xs font-semibold mb-1">Curso</label>
-                <select id="input-subject-course-select" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></select>
-            </div>
-            <div>
-                <label class="block text-xs font-semibold mb-1">Nome da Disciplina</label>
-                <input type="text" id="input-subject-name" placeholder="Anatomia" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-            </div>
-            <div>
-                <label class="block text-xs font-semibold mb-1">Carga Horária</label>
-                <input type="text" id="input-subject-hours" placeholder="80 hrs" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-            </div>
-        </div>
-        <div>
-            <label class="block text-xs font-semibold mb-1">Ementa</label>
-            <textarea id="input-subject-ementa" rows="3" placeholder="Tópicos abordados..." class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></textarea>
-        </div>
-        <div class="flex gap-2">
-            <button type="button" id="btn-save-subject" onclick="addSubjectToCourse()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow">Salvar Disciplina</button>
-            <button type="button" id="btn-cancel-edit-subject" onclick="cancelarEdicaoDisciplina()" class="px-4 py-2 bg-gray-500 text-white text-xs font-semibold rounded-lg shadow" style="display: none;">Cancelar Edição</button>
-        </div>
-    </div>
-</div>
+                <!-- SUBABA TURMAS (REORGANIZADA NO MESMO PADRÃO DE CURSOS) -->
+                <div id="subtab-classes" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
+                    <input type="hidden" id="edit-class-id" value="">
 
-<!-- SUBABA TURMAS (REORGANIZADA NO MESMO PADRÃO DE CURSOS) -->
-<div id="subtab-classes" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
-    <input type="hidden" id="edit-class-id" value="">
+                    <!-- BOTÕES DAS SUBABAS DE TURMAS -->
+                    <div class="flex space-x-2 border-b border-gray-200 dark:border-slate-700 pb-3 mb-4">
+                        <button class="subsubtab-class-button active px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white shadow" onclick="openSubSubTabClass(event, 'subsubtab-turmas-cadastradas')"><i class="fa-solid fa-list mr-1"></i> Turmas Cadastradas</button>
+                        <button class="subsubtab-class-button px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubSubTabClass(event, 'subsubtab-cadastrar-turma')"><i class="fa-solid fa-plus mr-1"></i> Cadastrar Nova Turma</button>
+                    </div>
 
-    <div class="flex space-x-2 border-b border-gray-200 dark:border-slate-700 pb-3 mb-4">
-        <button class="subsubtab-class-button active px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white shadow" onclick="openSubSubTabClass(event, 'subsubtab-turmas-cadastradas')"><i class="fa-solid fa-list mr-1"></i> Turmas Cadastradas</button>
-        <button class="subsubtab-class-button px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubSubTabClass(event, 'subsubtab-cadastrar-turma')"><i class="fa-solid fa-plus mr-1"></i> Cadastrar Nova Turma</button>
-    </div>
+                    <!-- SUB-SUBABA 1: TURMAS CADASTRADAS -->
+                    <div id="subsubtab-turmas-cadastradas" class="subsubtab-class-content active space-y-3">
+                        <div class="flex justify-between items-center mb-2">
+                            <h4 class="font-bold text-sm text-gray-800 dark:text-white">Lista de Turmas Cadastradas</h4>
+                            <span class="text-xs text-gray-500 font-semibold" id="total-classes-count">Total: 0 turmas</span>
+                        </div>
+                        <ul class="data-list divide-y divide-gray-200 dark:divide-slate-700" id="class-list"></ul>
+                    </div>
 
-    <div id="subsubtab-turmas-cadastradas" class="subsubtab-class-content active space-y-3">
-        <div class="flex justify-between items-center mb-2">
-            <h4 class="font-bold text-sm text-gray-800 dark:text-white">Lista de Turmas Cadastradas</h4>
-            <span class="text-xs text-gray-500 font-semibold" id="total-classes-count">Total: 0 turmas</span>
-        </div>
-        <ul class="data-list divide-y divide-gray-200 dark:divide-slate-700" id="class-list"></ul>
-    </div>
+                    <!-- SUB-SUBABA 2: CADASTRAR NOVA TURMA -->
+                    <div id="subsubtab-cadastrar-turma" class="subsubtab-class-content space-y-4" style="display: none;">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold mb-1">Curso</label>
+                                <select id="input-class-course" onchange="atualizarPreviewTurmaAutomatica()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold mb-1">Semestre Letivo</label>
+                                <select id="input-class-semester" onchange="atualizarPreviewTurmaAutomatica()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+                                    <option value="2025.1">2025/1 (Jan-Jun)</option><option value="2025.2">2025/2 (Jul-Dez)</option>
+                                    <option value="2026.1">2026/1 (Jan-Jun)</option><option value="2026.2" selected>2026/2 (Jul-Dez)</option>
+                                    <option value="2027.1">2027/1 (Jan-Jun)</option><option value="2027.2">2027/2 (Jul-Dez)</option>
+                                    <option value="2028.1">2028/1 (Jan-Jun)</option><option value="2028.2">2028/2 (Jul-Dez)</option>
+                                    <option value="2029.1">2029/1 (Jan-Jun)</option><option value="2029.2">2029/2 (Jul-Dez)</option>
+                                    <option value="2030.1">2030/1 (Jan-Jun)</option><option value="2030.2">2030/2 (Jul-Dez)</option>
+                                    <option value="2031.1">2031/1 (Jan-Jun)</option><option value="2031.2">2031/2 (Jul-Dez)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold mb-1">Código Automático</label>
+                                <input type="text" id="input-class-code-auto" readonly class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm bg-gray-100 dark:bg-slate-900 font-bold text-blue-600">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold mb-1">Nome Automático</label>
+                                <input type="text" id="input-class-name-auto" readonly class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm bg-gray-100 dark:bg-slate-900 font-bold">
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button type="button" id="btn-save-class" onclick="addClass()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow">Salvar Turma</button>
+                            <button type="button" id="btn-cancel-edit-class" onclick="cancelarEdicaoTurma()" class="px-4 py-2 bg-gray-500 text-white text-xs font-semibold rounded-lg shadow" style="display: none;">Cancelar Edição</button>
+                        </div>
+                    </div>
+                </div>
 
-    <div id="subsubtab-cadastrar-turma" class="subsubtab-class-content space-y-4" style="display: none;">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-                <label class="block text-xs font-semibold mb-1">Curso</label>
-                <select id="input-class-course" onchange="atualizarPreviewTurmaAutomatica()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></select>
-            </div>
-            <div>
-                <label class="block text-xs font-semibold mb-1">Semestre Letivo</label>
-                <select id="input-class-semester" onchange="atualizarPreviewTurmaAutomatica()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                    <option value="2025.1">2025/1 (Jan-Jun)</option><option value="2025.2">2025/2 (Jul-Dez)</option>
-                    <option value="2026.1">2026/1 (Jan-Jun)</option><option value="2026.2" selected>2026/2 (Jul-Dez)</option>
-                    <option value="2027.1">2027/1 (Jan-Jun)</option><option value="2027.2">2027/2 (Jul-Dez)</option>
-                    <option value="2028.1">2028/1 (Jan-Jun)</option><option value="2028.2">2028/2 (Jul-Dez)</option>
-                    <option value="2029.1">2029/1 (Jan-Jun)</option><option value="2029.2">2029/2 (Jul-Dez)</option>
-                    <option value="2030.1">2030/1 (Jan-Jun)</option><option value="2030.2">2030/2 (Jul-Dez)</option>
-                    <option value="2031.1">2031/1 (Jan-Jun)</option><option value="2031.2">2031/2 (Jul-Dez)</option>
-                </select>
-            </div>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-                <label class="block text-xs font-semibold mb-1">Código Automático</label>
-                <input type="text" id="input-class-code-auto" readonly class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm bg-gray-100 dark:bg-slate-900 font-bold text-blue-600">
-            </div>
-            <div>
-                <label class="block text-xs font-semibold mb-1">Nome Automático</label>
-                <input type="text" id="input-class-name-auto" readonly class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm bg-gray-100 dark:bg-slate-900 font-bold">
-            </div>
-        </div>
-        <div class="flex gap-2">
-            <button type="button" id="btn-save-class" onclick="addClass()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow">Salvar Turma</button>
-            <button type="button" id="btn-cancel-edit-class" onclick="cancelarEdicaoTurma()" class="px-4 py-2 bg-gray-500 text-white text-xs font-semibold rounded-lg shadow" style="display: none;">Cancelar Edição</button>
-        </div>
-    </div>
-</div>
+                <!-- SUBABA CALENDÁRIO ACADÊMICO SEMESTRAL -->
+                <div id="subtab-calendar" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
+                    <div class="bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700 space-y-4">
+                        <h4 class="font-bold text-sm text-blue-600 dark:text-blue-400">Configurar Calendário Semestral por Turma</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold mb-1">Curso</label>
+                                <select id="cal-course-select" onchange="atualizarDisciplinasETurmasCalendario()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800"></select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold mb-1">Turma Vinculada</label>
+                                <select id="cal-class-select" onchange="atualizarDisciplinasPorTurmaCalendario()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800"></select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold mb-1">Semestre / Período</label>
+                                <select id="cal-semester-select" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800">
+                                    <option value="2025/1">2025/1 (Jan-Jun)</option><option value="2025/2">2025/2 (Jul-Dez)</option>
+                                    <option value="2026/1">2026/1 (Jan-Jun)</option><option value="2026/2" selected>2026/2 (2º Semestre: Jul-Dez)</option>
+                                    <option value="2027/1">2027/1 (Jan-Jun)</option><option value="2027/2">2027/2 (Jul-Dez)</option>
+                                    <option value="2028/1">2028/1 (Jan-Jun)</option><option value="2028/2">2028/2 (Jul-Dez)</option>
+                                    <option value="2029/1">2029/1 (Jan-Jun)</option><option value="2029/2">2029/2 (Jul-Dez)</option>
+                                    <option value="2030/1">2030/1 (Jan-Jun)</option><option value="2030/2">2030/2 (Jul-Dez)</option>
+                                    <option value="2031/1">2031/1 (Jan-Jun)</option><option value="2031/2">2031/2 (Jul-Dez)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold mb-1">Disciplina da Turma</label>
+                                <select id="cal-subject-select" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800"></select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold mb-1">Quantidade de Datas de Aula (2 a 5)</label>
+                                <select id="cal-qtd-datas" onchange="renderizarCamposDatasCalendario()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800">
+                                    <option value="2" selected>2 Dias</option>
+                                    <option value="3">3 Dias</option>
+                                    <option value="4">4 Dias</option>
+                                    <option value="5">5 Dias</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-xs font-semibold mb-1">Descrição / Tópico / Módulo</label>
+                            <input type="text" id="cal-event-desc" placeholder="Ex: Aulas Teórico-Práticas / Módulo 01" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800">
+                        </div>
 
-<!-- SUBABA CALENDÁRIO ACADÊMICO SEMESTRAL -->
-<div id="subtab-calendar" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
-    <div class="bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700 space-y-4">
-        <h4 class="font-bold text-sm text-blue-600 dark:text-blue-400">Configurar Calendário Semestral por Turma</h4>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-                <label class="block text-xs font-semibold mb-1">Curso</label>
-                <select id="cal-course-select" onchange="atualizarDisciplinasETurmasCalendario()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800"></select>
-            </div>
-            <div>
-                <label class="block text-xs font-semibold mb-1">Turma Vinculada</label>
-                <select id="cal-class-select" onchange="atualizarDisciplinasPorTurmaCalendario()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800"></select>
-            </div>
-            <div>
-                <label class="block text-xs font-semibold mb-1">Semestre / Período</label>
-                <select id="cal-semester-select" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800">
-                    <option value="2025/1">2025/1 (Jan-Jun)</option><option value="2025/2">2025/2 (Jul-Dez)</option>
-                    <option value="2026/1">2026/1 (Jan-Jun)</option><option value="2026/2" selected>2026/2 (2º Semestre: Jul-Dez)</option>
-                    <option value="2027/1">2027/1 (Jan-Jun)</option><option value="2027/2">2027/2 (Jul-Dez)</option>
-                    <option value="2028/1">2028/1 (Jan-Jun)</option><option value="2028/2">2028/2 (Jul-Dez)</option>
-                    <option value="2029/1">2029/1 (Jan-Jun)</option><option value="2029/2">2029/2 (Jul-Dez)</option>
-                    <option value="2030/1">2030/1 (Jan-Jun)</option><option value="2030/2">2030/2 (Jul-Dez)</option>
-                    <option value="2031/1">2031/1 (Jan-Jun)</option><option value="2031/2">2031/2 (Jul-Dez)</option>
-                </select>
-            </div>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-                <label class="block text-xs font-semibold mb-1">Disciplina da Turma</label>
-                <select id="cal-subject-select" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800"></select>
-            </div>
-            <div>
-                <label class="block text-xs font-semibold mb-1">Quantidade de Datas de Aula (2 a 5)</label>
-                <select id="cal-qtd-datas" onchange="renderizarCamposDatasCalendario()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800">
-                    <option value="2" selected>2 Dias</option>
-                    <option value="3">3 Dias</option>
-                    <option value="4">4 Dias</option>
-                    <option value="5">5 Dias</option>
-                </select>
-            </div>
-        </div>
-        
-        <div>
-            <label class="block text-xs font-semibold mb-1">Descrição / Tópico / Módulo</label>
-            <input type="text" id="cal-event-desc" placeholder="Ex: Aulas Teórico-Práticas / Módulo 01" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800">
-        </div>
+                        <div>
+                            <label class="block text-xs font-semibold mb-1 text-blue-600 dark:text-blue-400">Definição das Datas de Aula</label>
+                            <div id="container-datas-dinamicas" class="grid grid-cols-1 md:grid-cols-5 gap-2"></div>
+                        </div>
 
-        <div>
-            <label class="block text-xs font-semibold mb-1 text-blue-600 dark:text-blue-400">Definição das Datas de Aula</label>
-            <div id="container-datas-dinamicas" class="grid grid-cols-1 md:grid-cols-5 gap-2"></div>
-        </div>
+                        <button type="button" onclick="adicionarEventoCalendario()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow">Cadastrar Aulas no Calendário</button>
+                    </div>
 
-        <button type="button" onclick="adicionarEventoCalendario()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow">Cadastrar Aulas no Calendário</button>
-    </div>
+                    <div class="mt-6 space-y-3">
+                        <h4 class="font-bold text-sm text-gray-700 dark:text-gray-300">Calendários Cadastrados (Gerenciamento)</h4>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead>
+                                    <tr class="border-b border-gray-200 dark:border-slate-700 text-gray-500">
+                                        <th class="p-2.5">Turma / Curso</th>
+                                        <th class="p-2.5">Disciplina</th>
+                                        <th class="p-2.5">Semestre</th>
+                                        <th class="p-2.5">Datas de Aula</th>
+                                        <th class="p-2.5 text-right">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabela-gerenciar-calendarios" class="divide-y divide-gray-200 dark:divide-slate-700"></tbody>
+                            </table>
+                        </div>
+                    </div>
 
-    <div class="mt-6 space-y-3">
-        <h4 class="font-bold text-sm text-gray-700 dark:text-gray-300">Calendários Cadastrados (Gerenciamento)</h4>
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs">
-                <thead>
-                    <tr class="border-b border-gray-200 dark:border-slate-700 text-gray-500">
-                        <th class="p-2.5">Turma / Curso</th>
-                        <th class="p-2.5">Disciplina</th>
-                        <th class="p-2.5">Semestre</th>
-                        <th class="p-2.5">Datas de Aula</th>
-                        <th class="p-2.5 text-right">Ações</th>
-                    </tr>
-                </thead>
-                <tbody id="tabela-gerenciar-calendarios" class="divide-y divide-gray-200 dark:divide-slate-700"></tbody>
-            </table>
-        </div>
-    </div>
+                    <div class="flex justify-between items-center mt-6 mb-2">
+                        <h4 class="font-bold text-sm text-gray-700 dark:text-gray-300">Visualização Gráfica do Calendário Semestral</h4>
+                        <select id="admin-filtro-semestre" onchange="renderizarCalendarioSemestralAdmin()" class="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-slate-600 text-xs font-semibold dark:bg-slate-800">
+                            <option value="2026/2" selected>2026/2 (2º Semestre: Jul-Dez)</option>
+                            <option value="2026/1">2026/1 (1º Semestre: Jan-Jun)</option>
+                            <option value="2025/1">2025/1 (1º Semestre: Jan-Jun)</option>
+                            <option value="2025/2">2025/2 (2º Semestre: Jul-Dez)</option>
+                            <option value="2027/1">2027/1 (1º Semestre: Jan-Jun)</option>
+                            <option value="2027/2">2027/2 (2º Semestre: Jul-Dez)</option>
+                        </select>
+                    </div>
+                    <div id="admin-calendar-view" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+                </div>
 
-    <div class="flex justify-between items-center mt-6 mb-2">
-        <h4 class="font-bold text-sm text-gray-700 dark:text-gray-300">Visualização Gráfica do Calendário Semestral</h4>
-        <select id="admin-filtro-semestre" onchange="renderizarCalendarioSemestralAdmin()" class="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-slate-600 text-xs font-semibold dark:bg-slate-800">
-            <option value="2026/2" selected>2026/2 (2º Semestre: Jul-Dez)</option>
-            <option value="2026/1">2026/1 (1º Semestre: Jan-Jun)</option>
-            <option value="2025/1">2025/1 (1º Semestre: Jan-Jun)</option>
-            <option value="2025/2">2025/2 (2º Semestre: Jul-Dez)</option>
-            <option value="2027/1">2027/1 (1º Semestre: Jan-Jun)</option>
-            <option value="2027/2">2027/2 (2º Semestre: Jul-Dez)</option>
-        </select>
-    </div>
-    <div id="admin-calendar-view" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
-</div>
+                <!-- SUBABA PROFESSORES -->
+                <div id="subtab-teachers" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
+                    <div>
+                        <label class="block text-xs font-semibold mb-1">Nome Completo</label>
+                        <input type="text" id="input-teacher-name" placeholder="Prof. Carlos Silva" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold mb-1">Formação</label>
+                            <input type="text" id="input-teacher-formation" placeholder="Bacharel / Pós" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold mb-1">Conselho de Classe</label>
+                            <input type="text" id="input-teacher-council" placeholder="OAB/PA 00.000" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+                        </div>
+                    </div>
+                    <button onclick="saveTeacher()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow">Cadastrar Professor</button>
+                    <ul class="data-list divide-y divide-gray-200 dark:divide-slate-700 mt-4" id="teachers-list"></ul>
+                </div>
 
-<!-- SUBABA PROFESSORES -->
-<div id="subtab-teachers" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
-    <div>
-        <label class="block text-xs font-semibold mb-1">Nome Completo</label>
-        <input type="text" id="input-teacher-name" placeholder="Prof. Carlos Silva" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-    </div>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-            <label class="block text-xs font-semibold mb-1">Formação</label>
-            <input type="text" id="input-teacher-formation" placeholder="Bacharel / Pós" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-        </div>
-        <div>
-            <label class="block text-xs font-semibold mb-1">Conselho de Classe</label>
-            <input type="text" id="input-teacher-council" placeholder="OAB/PA 00.000" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-        </div>
-    </div>
-    <button onclick="saveTeacher()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow">Cadastrar Professor</button>
-    <ul class="data-list divide-y divide-gray-200 dark:divide-slate-700 mt-4" id="teachers-list"></ul>
-</div>
+                <!-- SUBABA EDIÇÃO DE DOCUMENTOS -->
+                <div id="subtab-templates" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
+                    <div>
+                        <label class="block text-xs font-semibold mb-1">Selecione o Curso</label>
+                        <select id="template-course-select" onchange="loadCourseTemplate()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></select>
+                    </div>
 
-<!-- SUBABA EDIÇÃO DE DOCUMENTOS -->
-<div id="subtab-templates" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
-    <div>
-        <label class="block text-xs font-semibold mb-1">Selecione o Curso</label>
-        <select id="template-course-select" onchange="loadCourseTemplate()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></select>
-    </div>
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-xs font-semibold">Texto do Contrato</label>
+                            <div class="flex gap-1 flex-wrap">
+                                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-contract-text', '{{nome}}')">+ Nome</button>
+                                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-contract-text', '{{cpf}}')">+ CPF</button>
+                                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-contract-text', '{{curso}}')">+ Curso</button>
+                                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-contract-text', '{{endereco_completo}}')">+ Endereço Completo</button>
+                            </div>
+                        </div>
+                        <textarea id="input-contract-text" rows="5" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></textarea>
+                    </div>
 
-    <div>
-        <div class="flex justify-between items-center mb-1">
-            <label class="text-xs font-semibold">Texto do Contrato</label>
-            <div class="flex gap-1 flex-wrap">
-                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-contract-text', '{{nome}}')">+ Nome</button>
-                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-contract-text', '{{cpf}}')">+ CPF</button>
-                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-contract-text', '{{curso}}')">+ Curso</button>
-                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-contract-text', '{{endereco_completo}}')">+ Endereço Completo</button>
-            </div>
-        </div>
-        <textarea id="input-contract-text" rows="5" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></textarea>
-    </div>
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-xs font-semibold">Texto da Declaração</label>
+                            <div class="flex gap-1 flex-wrap">
+                                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-decl-text', '{{nome}}')">+ Nome</button>
+                                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-decl-text', '{{cpf}}')">+ CPF</button>
+                                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-decl-text', '{{curso}}')">+ Curso</button>
+                                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-decl-text', '{{endereco_completo}}')">+ Endereço Completo</button>
+                            </div>
+                        </div>
+                        <textarea id="input-decl-text" rows="4" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></textarea>
+                    </div>
 
-    <div>
-        <div class="flex justify-between items-center mb-1">
-            <label class="text-xs font-semibold">Texto da Declaração</label>
-            <div class="flex gap-1 flex-wrap">
-                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-decl-text', '{{nome}}')">+ Nome</button>
-                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-decl-text', '{{cpf}}')">+ CPF</button>
-                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-decl-text', '{{curso}}')">+ Curso</button>
-                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-decl-text', '{{endereco_completo}}')">+ Endereço Completo</button>
-            </div>
-        </div>
-        <textarea id="input-decl-text" rows="4" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></textarea>
-    </div>
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-xs font-semibold">Texto do Histórico Escolar</label>
+                            <div class="flex gap-1 flex-wrap">
+                                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-history-text', '{{nome}}')">+ Nome</button>
+                                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-history-text', '{{cpf}}')">+ CPF</button>
+                                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-history-text', '{{curso}}')">+ Curso</button>
+                                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-history-text', '{{endereco_completo}}')">+ Endereço Completo</button>
+                            </div>
+                        </div>
+                        <textarea id="input-history-text" rows="4" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900" placeholder="Estrutura e layout do histórico escolar..."></textarea>
+                    </div>
 
-    <div>
-        <div class="flex justify-between items-center mb-1">
-            <label class="text-xs font-semibold">Texto do Histórico Escolar</label>
-            <div class="flex gap-1 flex-wrap">
-                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-history-text', '{{nome}}')">+ Nome</button>
-                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-history-text', '{{cpf}}')">+ CPF</button>
-                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-history-text', '{{curso}}')">+ Curso</button>
-                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-history-text', '{{endereco_completo}}')">+ Endereço Completo</button>
-            </div>
-        </div>
-        <textarea id="input-history-text" rows="4" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900" placeholder="Estrutura e layout do histórico escolar..."></textarea>
-    </div>
+                    <div class="bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700 space-y-2">
+                        <label class="block text-xs font-semibold mb-1">Enviar Histórico em Formato PDF (Modelo de Referência)</label>
+                        <input type="file" id="input-history-pdf-file" accept="application/pdf" onchange="handleHistoryPdfUpload(event)" class="text-xs">
+                        <p id="history-pdf-status" class="text-[11px] text-gray-400">Nenhum arquivo PDF de histórico enviado para este curso.</p>
+                    </div>
 
-    <div class="bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700 space-y-2">
-        <label class="block text-xs font-semibold mb-1">Enviar Histórico em Formato PDF (Modelo de Referência)</label>
-        <input type="file" id="input-history-pdf-file" accept="application/pdf" onchange="handleHistoryPdfUpload(event)" class="text-xs">
-        <p id="history-pdf-status" class="text-[11px] text-gray-400">Nenhum arquivo PDF de histórico enviado para este curso.</p>
-    </div>
+                    <button onclick="saveCourseTemplates()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow">Salvar Modelos e Edição de Documentos</button>
+                </div>
 
-    <button onclick="saveCourseTemplates()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow">Salvar Modelos e Edição de Documentos</button>
-</div>
+                <!-- SUBABA ASAAS -->
+                <div id="subtab-fin-config" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold mb-1">Chave de API do Asaas</label>
+                            <input type="password" id="asaas-api-key" placeholder="$aact_..." class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold mb-1">Ambiente</label>
+                            <select id="asaas-env" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+                                <option value="sandbox">Sandbox (Testes)</option>
+                                <option value="production">Produção</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button onclick="saveAsaasConfig()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow">Salvar Credenciais Asaas</button>
+                </div>
 
-<!-- SUBABA ASAAS -->
-<div id="subtab-fin-config" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-            <label class="block text-xs font-semibold mb-1">Chave de API do Asaas</label>
-            <input type="password" id="asaas-api-key" placeholder="$aact_..." class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-        </div>
-        <div>
-            <label class="block text-xs font-semibold mb-1">Ambiente</label>
-            <select id="asaas-env" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                <option value="sandbox">Sandbox (Testes)</option>
-                <option value="production">Produção</option>
-            </select>
-        </div>
-    </div>
-    <button onclick="saveAsaasConfig()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow">Salvar Credenciais Asaas</button>
-</div>
-
-<!-- SUBABA INSTITUIÇÃO -->
-<div id="subtab-institution" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-            <label class="block text-xs font-semibold mb-1">Nome da Instituição</label>
-            <input type="text" id="input-inst-name" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-        </div>
-        <div>
-            <label class="block text-xs font-semibold mb-1">Razão Social</label>
-            <input type="text" id="input-inst-razao" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-        </div>
-    </div>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-            <label class="block text-xs font-semibold mb-1">CNPJ</label>
-            <input type="text" id="input-inst-cnpj" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-        </div>
-        <div>
-            <label class="block text-xs font-semibold mb-1">E-mail</label>
-            <input type="text" id="input-inst-email" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-        </div>
-    </div>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-            <label class="block text-xs font-semibold mb-1">Telefone / WhatsApp</label>
-            <input type="text" id="input-inst-tel" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-        </div>
-        <div>
-            <label class="block text-xs font-semibold mb-1">Endereço</label>
-            <input type="text" id="input-inst-end" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-        </div>
-    </div>
-    <div>
-        <label class="block text-xs font-semibold mb-1 text-blue-600 dark:text-blue-400 font-bold">URL do Web App do Google Apps Script (Integração Google Drive)</label>
-        <input type="text" id="input-gdrive-url" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-3 py-2 rounded-lg border border-blue-300 dark:border-slate-600 text-sm dark:bg-slate-900 font-mono text-xs">
-        <p class="text-[11px] text-gray-500 mt-1">Cole aqui a URL gerada ao publicar o seu projeto no Google Apps Script.</p>
-    </div>
-    <div>
-        <label class="block text-xs font-semibold mb-1">Upload de Logomarca</label>
-        <input type="file" id="input-logo-file" accept="image/*" onchange="handleLogoUpload(event)" class="text-xs">
-        <div id="logo-preview" class="mt-2 w-32 h-16 border border-dashed rounded flex items-center justify-center text-xs text-gray-400 bg-gray-50 dark:bg-slate-900">Sem logo</div>
-        <button type="button" onclick="removeLogo()" class="mt-1 px-2 py-1 bg-red-600 text-white text-[10px] rounded">Remover Logo</button>
-    </div>
-    <div>
-        <label class="block text-xs font-semibold mb-1">Texto Descritivo de Login</label>
-        <textarea id="input-login-desc" rows="2" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></textarea>
-    </div>
-    <button onclick="salvarBrandingNaNuvem()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow">Salvar Configurações</button>
-</div>
-
-    <!-- ========================================== -->
-    <!-- ABA AUDITORIA & LOGS -->
-    <!-- ========================================== -->
-    <div id="tab-audit" class="tab-content space-y-4" style="display: none;">
-        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-md p-6 border border-gray-200 dark:border-slate-700">
-            <div class="flex justify-between items-center mb-4 pb-2 border-b border-gray-100 dark:border-slate-700">
-                <h2 class="text-xl font-bold text-gray-900 dark:text-white">Auditoria e Rastreabilidade</h2>
-                <button type="button" onclick="limparLogsAuditoria()" class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg shadow">Limpar Logs</button>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-xs">
-                    <thead>
-                        <tr class="border-b border-gray-200 dark:border-slate-700 text-gray-500">
-                            <th class="p-3">Data / Hora</th>
-                            <th class="p-3">Usuário</th>
-                            <th class="p-3">Módulo</th>
-                            <th class="p-3">Ação</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tabela-logs-auditoria" class="divide-y divide-gray-200 dark:divide-slate-700"></tbody>
-                </table>
+                <!-- SUBABA INSTITUIÇÃO -->
+                <div id="subtab-institution" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold mb-1">Nome da Instituição</label>
+                            <input type="text" id="input-inst-name" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold mb-1">Razão Social</label>
+                            <input type="text" id="input-inst-razao" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold mb-1">CNPJ</label>
+                            <input type="text" id="input-inst-cnpj" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold mb-1">E-mail</label>
+                            <input type="text" id="input-inst-email" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold mb-1">Telefone / WhatsApp</label>
+                            <input type="text" id="input-inst-tel" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold mb-1">Endereço</label>
+                            <input type="text" id="input-inst-end" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold mb-1 text-blue-600 dark:text-blue-400 font-bold">URL do Web App do Google Apps Script (Integração Google Drive)</label>
+                        <input type="text" id="input-gdrive-url" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-3 py-2 rounded-lg border border-blue-300 dark:border-slate-600 text-sm dark:bg-slate-900 font-mono text-xs">
+                        <p class="text-[11px] text-gray-500 mt-1">Cole aqui a URL gerada ao publicar o seu projeto no Google Apps Script.</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold mb-1">Upload de Logomarca</label>
+                        <input type="file" id="input-logo-file" accept="image/*" onchange="handleLogoUpload(event)" class="text-xs">
+                        <div id="logo-preview" class="mt-2 w-32 h-16 border border-dashed rounded flex items-center justify-center text-xs text-gray-400 bg-gray-50 dark:bg-slate-900">Sem logo</div>
+                        <button type="button" onclick="removeLogo()" class="mt-1 px-2 py-1 bg-red-600 text-white text-[10px] rounded">Remover Logo</button>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold mb-1">Texto Descritivo de Login</label>
+                        <textarea id="input-login-desc" rows="2" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></textarea>
+                    </div>
+                    <button onclick="salvarBrandingNaNuvem()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow">Salvar Configurações</button>
+                </div>
             </div>
         </div>
+
+        <!-- AUDITORIA & LOGS -->
+        <div id="tab-audit" class="tab-content space-y-4" style="display: none;">
+            <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-md p-6 border border-gray-200 dark:border-slate-700">
+                <div class="flex justify-between items-center mb-4 pb-2 border-b border-gray-100 dark:border-slate-700">
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white">Auditoria e Rastreabilidade</h2>
+                    <button type="button" onclick="limparLogsAuditoria()" class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg shadow">Limpar Logs</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs">
+                        <thead>
+                            <tr class="border-b border-gray-200 dark:border-slate-700 text-gray-500">
+                                <th class="p-3">Data / Hora</th>
+                                <th class="p-3">Usuário</th>
+                                <th class="p-3">Módulo</th>
+                                <th class="p-3">Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-logs-auditoria" class="divide-y divide-gray-200 dark:divide-slate-700"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
     </div>
 
-</div> <!-- Fecha o container principal -->
-
-<!-- ========================================== -->
-<!-- RODAPÉ FIXO GLOBAL (FORA DE QUALQUER ABA) -->
-<!-- ========================================== -->
-<footer class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md border-t border-gray-200 dark:border-slate-700 py-3 px-6 text-center text-xs text-gray-600 dark:text-gray-300 flex flex-col sm:flex-row justify-between items-center gap-2 shadow-lg transition-colors">
-    <span><strong>SE7 Gestão Educacional</strong> – Todos os direitos reservados.</span>
-    <span>Desenvolvido por <strong>JS & SS Serviços Educacionais e Cia Ltda</strong> &bull; Versão 1.0.7 Cloud Drive</span>
-</footer>
+    <!-- RODAPÉ -->
+    <footer class="bg-white dark:bg-slate-800 border-t border-gray-200 dark:border-slate-700 py-4 px-6 text-center text-xs text-gray-500 dark:text-gray-400 flex flex-col sm:flex-row justify-between items-center gap-2">
+        <span>SE7 Gestão Educacional – Todos os direitos reservados.</span>
+        <span>Desenvolvido por <strong>JS & SS Serviços Educacionais e Cia Ltda</strong> &bull; Versão 1.0.7 Cloud Drive</span>
+    </footer>
 
     <!-- MODAL DE NOVA MATRÍCULA / EDIÇÃO DE ALUNO -->
     <div id="new-student-modal" class="fixed inset-0 z-[2000] flex items-center justify-center bg-black/50 p-4" style="display: none;">
@@ -1925,29 +1918,19 @@
         }
 
         function openSubTab(evt, subtabId) {
-            // Localiza o container pai da aba ativa atual (seja Gestão de Alunos, Sistema, etc.)
-            const parentContainer = evt.currentTarget.closest('.tab-content');
-            if (parentContainer) {
-                parentContainer.querySelectorAll('.subtab-content').forEach(el => el.style.display = 'none');
-                parentContainer.querySelectorAll('.subtab-button').forEach(el => {
+            const parent = evt.currentTarget.closest('.bg-white, .dark\\:bg-slate-800');
+            if (parent) {
+                parent.querySelectorAll('.subtab-content').forEach(el => el.style.display = 'none');
+                parent.querySelectorAll('.subtab-button').forEach(el => {
                     el.classList.remove('bg-blue-600', 'text-white', 'shadow');
                     el.classList.add('bg-gray-100', 'dark:bg-slate-700', 'text-gray-700', 'dark:text-gray-300');
                 });
             }
-            
-            const targetSubTab = document.getElementById(subtabId);
-            if (targetSubTab) {
-                targetSubTab.style.display = 'block';
-            }
-            
+            document.getElementById(subtabId).style.display = 'block';
             evt.currentTarget.classList.remove('bg-gray-100', 'dark:bg-slate-700', 'text-gray-700', 'dark:text-gray-300');
             evt.currentTarget.classList.add('bg-blue-600', 'text-white', 'shadow');
-
-            // Inicializações específicas ao abrir certas subabas para garantir o carregamento
             if(subtabId === 'subtab-calendar') setTimeout(renderizarCalendarioSemestralAdmin, 200);
             if(subtabId === 'subtab-portal-calendario') setTimeout(renderizarCalendarioSemestralPortalAluno, 200);
-            if(subtabId === 'subtab-subjects') renderSubjectsManagement();
-            if(subtabId === 'subtab-classes') renderClasses();
         }
 
         // FUNÇÃO PARA GERENCIAR AS SUB-SUBABAS DE CURSOS
@@ -1995,7 +1978,7 @@
             evt.currentTarget.classList.add('bg-blue-600', 'text-white', 'shadow');
         }
 
-      function openNewStudentModal() {
+        function openNewStudentModal() {
             document.getElementById('edit-student-id').value = "";
             document.getElementById('modal-student-title').textContent = "Nova Matrícula";
             document.getElementById('formFichaMatricula').reset();
@@ -2081,7 +2064,6 @@
             });
         }
 
-
         async function saveTeacher() {
             const fullname = document.getElementById('input-teacher-name').value.trim();
             if (!fullname) return alert("Preencha o nome!");
@@ -2112,102 +2094,50 @@
             }
         }
 
-        // --- PASSO 3.1: FUNÇÃO DE DINAMISMO DO NÍVEL DO CURSO ---
-        function alternarCamposNivelCurso(nivel) {
-            const containerModalidade = document.getElementById('container-modalidade-curso');
-            const containerCamposTecnico = document.getElementById('container-campos-tecnico');
-            const inputNomeCurso = document.getElementById('input-course-name');
-            const selectModalidade = document.getElementById('input-course-modalidade');
-            
-            const inputQtdParcelas = document.getElementById('input-course-parcelas');
-            const labelValorParcela = document.getElementById('label-valor-parcela');
-            const containerPontualidadeVencimento = document.getElementById('container-pontualidade-vencimento');
-            const containerValorTotalCurso = document.getElementById('container-valor-total-curso');
-
-            if (nivel === 'Supletivo') {
-                if (inputNomeCurso) inputNomeCurso.value = 'Educação de Jovens e Adultos';
-                if (selectModalidade) selectModalidade.value = 'Prova Única';
-
-                if (containerModalidade) containerModalidade.style.display = 'block';
-                if (containerCamposTecnico) containerCamposTecnico.style.display = 'none';
-
-                if (inputQtdParcelas) {
-                    inputQtdParcelas.value = 1;
-                    inputQtdParcelas.setAttribute('readonly', true);
-                }
-                if (labelValorParcela) labelValorParcela.innerText = 'Valor Total do Curso (R$)';
-                if (containerPontualidadeVencimento) containerPontualidadeVencimento.style.display = 'none';
-                if (containerValorTotalCurso) containerValorTotalCurso.style.display = 'none';
-
-            } else {
-                if (containerModalidade) containerModalidade.style.display = 'none';
-                if (containerCamposTecnico) containerCamposTecnico.style.display = 'grid';
-
-                if (inputQtdParcelas) {
-                    inputQtdParcelas.value = 24;
-                    inputQtdParcelas.removeAttribute('readonly');
-                }
-                if (labelValorParcela) labelValorParcela.innerText = 'Valor Normal da Parcela (R$)';
-                if (containerPontualidadeVencimento) containerPontualidadeVencimento.style.display = 'grid';
-                if (containerValorTotalCurso) containerValorTotalCurso.style.display = 'block';
-            }
-        }
-
-        // --- PASSO 3.2: FUNÇÃO DE SALVAR CURSO ATUALIZADA ---
         async function saveCourse() {
-            const editId = document.getElementById('edit-course-id').value;
-            const name = document.getElementById('input-course-name').value.trim();
-            const sigla = document.getElementById('input-course-sigla').value.trim().toUpperCase();
-            const nivel = document.getElementById('input-course-nivel').value;
-            
-            if (!name || !sigla || !nivel) return alert("Preencha o nome, a sigla e selecione o nível do curso!");
-            
-            const semestre = document.getElementById('input-course-semestre').value;
-            const qtdParcelas = parseInt(document.getElementById('input-course-parcelas').value) || 1;
-            const valorParcela = parseFloat(document.getElementById('input-course-valor-parcela').value) || 0;
-            
-            const valorDesconto = nivel === 'Supletivo' ? 0 : (parseFloat(document.getElementById('input-course-valor-desconto').value) || 0);
-            const vencimento = nivel === 'Supletivo' ? 10 : (parseInt(document.getElementById('input-course-vencimento').value) || 10);
-            const valorTotal = nivel === 'Supletivo' ? valorParcela : (qtdParcelas * valorParcela);
-            const modalidade = nivel === 'Supletivo' ? document.getElementById('input-course-modalidade').value : '';
+    const editId = document.getElementById('edit-course-id').value;
+    const name = document.getElementById('input-course-name').value.trim();
+    const sigla = document.getElementById('input-course-sigla').value.trim().toUpperCase();
+    const nivel = document.getElementById('input-course-nivel').value;
+    
+    if (!name || !sigla || !nivel) return alert("Preencha o nome, a sigla e selecione o nível do curso!");
+    
+    const semestre = document.getElementById('input-course-semestre').value;
+    const qtdParcelas = parseInt(document.getElementById('input-course-parcelas').value) || 1;
+    const valorParcela = parseFloat(document.getElementById('input-course-valor-parcela').value) || 0;
+    const valorDesconto = parseFloat(document.getElementById('input-course-valor-desconto').value) || 0;
+    const vencimento = parseInt(document.getElementById('input-course-vencimento').value) || 10;
+    const valorTotal = qtdParcelas * valorParcela;
 
-            const courseData = {
-                name, 
-                sigla, 
-                nivel, 
-                semestre,
-                modalidade,
-                eixo: nivel === 'Supletivo' ? '' : (document.getElementById('input-course-eixo').value.trim()),
-                hours: nivel === 'Supletivo' ? '' : (document.getElementById('input-course-hours').value.trim()),
-                conselho: nivel === 'Supletivo' ? '' : (document.getElementById('input-course-conselho').value.trim()),
-                qtdParcelas, 
-                valorParcela, 
-                valorDesconto, 
-                vencimento, 
-                valorTotal
-            };
+    const courseData = {
+        name, 
+        sigla, 
+        nivel, 
+        semestre,
+        eixo: document.getElementById('input-course-eixo').value.trim(),
+        hours: document.getElementById('input-course-hours').value.trim(),
+        conselho: document.getElementById('input-course-conselho').value.trim(),
+        qtdParcelas, valorParcela, valorDesconto, vencimento, valorTotal
+    };
 
-            if (editId) {
-                await db.collection("courses").doc(editId).update(courseData);
-                cancelarEdicaoCurso();
-                alert("Curso atualizado com sucesso!");
-            } else {
-                courseData.subjects = [];
-                courseData.contractTemplate = "";
-                courseData.declTemplate = "";
-                courseData.historyTemplate = "";
-                courseData.historyPdfUrl = "";
-                await db.collection("courses").add(courseData);
-                
-                document.getElementById('input-course-name').value = '';
-                document.getElementById('input-course-sigla').value = '';
-                document.getElementById('input-course-nivel').value = '';
-                alternarCamposNivelCurso('');
-                alert("Curso salvo com sucesso!");
-            }
-        }
+    if (editId) {
+        await db.collection("courses").doc(editId).update(courseData);
+        cancelarEdicaoCurso();
+        alert("Curso atualizado com sucesso!");
+    } else {
+        courseData.subjects = [];
+        courseData.contractTemplate = "";
+        courseData.declTemplate = "";
+        courseData.historyTemplate = "";
+        courseData.historyPdfUrl = "";
+        await db.collection("courses").add(courseData);
+        document.getElementById('input-course-name').value = '';
+        document.getElementById('input-course-sigla').value = '';
+        document.getElementById('input-course-nivel').value = '';
+        alert("Curso salvo com sucesso!");
+    }
+}
 
-        // --- PASSO 3.4: LISTAGEM DE CURSOS ATUALIZADA ---
         function renderCourses() {
             const list = document.getElementById('courses-list');
             const counter = document.getElementById('total-courses-count');
@@ -2220,17 +2150,14 @@
                     return;
                 }
                 courses.forEach(c => {
-                    let infoFinanceira = `Semestre: ${c.semestre || '2026/2'} &bull; ${c.qtdParcelas || 1}x de R$ ${c.valorParcela || 0} &bull; Total: R$ ${c.valorTotal || 0}`;
-                    if (c.nivel === 'Supletivo') {
-                        infoFinanceira = `Semestre: ${c.semestre || '2026/2'} &bull; Modalidade: ${c.modalidade || 'Prova Única'} &bull; Valor Total: <strong class="text-emerald-600">R$ ${c.valorParcela || 0}</strong>`;
-                    }
-
                     list.innerHTML += `
                         <li class="py-3 text-xs flex justify-between items-center border-b border-gray-100 dark:border-slate-700">
                             <div>
                                 <strong class="text-sm text-gray-900 dark:text-white">${c.name} [${c.sigla}]</strong>
+                                <!-- LINHA ADICIONADA PARA MOSTRAR O NÍVEL -->
                                 <span class="px-2 py-0.5 bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 rounded text-[10px] font-bold ml-2">${c.nivel || 'Não definido'}</span><br>
-                                <span class="text-gray-500">${infoFinanceira}</span>
+                                
+                                <span class="text-gray-500">Semestre: ${c.semestre || '2026/2'} &bull; ${c.qtdParcelas || 1}x de R$ ${c.valorParcela || 0} (Desc. Pontualidade: R$ ${c.valorDesconto || 0}) &bull; Total: R$ ${c.valorTotal || 0}</span>
                             </div>
                             <div class="flex gap-2 shrink-0">
                                 <button onclick="editarCurso('${c.id}')" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded font-semibold shadow flex items-center gap-1"><i class="fa-solid fa-pen"></i> Editar</button>
@@ -2241,36 +2168,22 @@
             }
         }
 
-        // --- PASSO 3.3: EDIÇÃO DE CURSO ATUALIZADA ---
         function editarCurso(id) {
             const c = courses.find(item => item.id === id);
             if (!c) return;
             document.getElementById('edit-course-id').value = c.id;
-            document.getElementById('input-course-nivel').value = c.nivel || '';
-            
-            alternarCamposNivelCurso(c.nivel || '');
-
             document.getElementById('input-course-name').value = c.name || '';
             document.getElementById('input-course-sigla').value = c.sigla || '';
-            
-            if (c.nivel === 'Supletivo') {
-                const selectModalidade = document.getElementById('input-course-modalidade');
-                if (selectModalidade) selectModalidade.value = c.modalidade || 'Prova Única';
-            } else {
-                document.getElementById('input-course-eixo').value = c.eixo || '';
-                document.getElementById('input-course-hours').value = c.hours || '';
-                document.getElementById('input-course-conselho').value = c.conselho || '';
-            }
-
+            document.getElementById('input-course-nivel').value = c.nivel || '';            
+            document.getElementById('input-course-eixo').value = c.eixo || '';
+            document.getElementById('input-course-hours').value = c.hours || '';
+            document.getElementById('input-course-conselho').value = c.conselho || '';
             document.getElementById('input-course-semestre').value = c.semestre || '2026/2';
-            document.getElementById('input-course-parcelas').value = c.qtdParcelas || 1;
+            document.getElementById('input-course-parcelas').value = c.qtdParcelas || 24;
             document.getElementById('input-course-valor-parcela').value = c.valorParcela || 0;
-            
-            if (c.nivel !== 'Supletivo') {
-                document.getElementById('input-course-valor-desconto').value = c.valorDesconto || 0;
-                document.getElementById('input-course-vencimento').value = c.vencimento || 10;
-                calcularTotalCurso();
-            }
+            document.getElementById('input-course-valor-desconto').value = c.valorDesconto || 0;
+            document.getElementById('input-course-vencimento').value = c.vencimento || 10;
+            calcularTotalCurso();
 
             document.getElementById('btn-save-course').textContent = "Atualizar Curso";
             document.getElementById('btn-cancel-edit-course').style.display = 'inline-block';
@@ -2896,21 +2809,11 @@
         }
 
         function filterTurmasByCourse() {
-            const courseSelect = document.getElementById('input-student-course');
-            const classSelect = document.getElementById('input-student-class');
-            
-            if (!courseSelect || !classSelect) return;
-            
-            const courseId = courseSelect.value || '';
-            classSelect.innerHTML = '<option value="">Selecione a turma...</option>';
-
-            if (typeof classes !== 'undefined' && Array.isArray(classes)) {
-                classes
-                    .filter(c => !courseId || c.courseId == courseId)
-                    .forEach(c => {
-                        classSelect.insertAdjacentHTML('beforeend', `<option value="${c.id}">${c.name}</option>`);
-                    });
-            }
+            const courseId = document.getElementById('input-student-course').value;
+            const select = document.getElementById('input-student-class');
+            if(!select) return;
+            select.innerHTML = '';
+            classes.filter(c => c.courseId == courseId).forEach(c => select.insertAdjacentHTML('beforeend', `<option value="${c.id}">${c.name}</option>`));
         }
 
         function filterTurmasByAttendanceCourse() {
@@ -3405,42 +3308,34 @@
                 return;
             }
             const aluno = students.find(s => s.id === studentId);
-            
-            // FILTRA E ORDENA CRONOLOGICAMENTE PELO VENCIMENTO (YYYY-MM-DD ou DD/MM/YYYY)
-            const cobrancasAluno = financeLogs
-                .filter(f => f.studentId === studentId)
-                .sort((a, b) => {
-                    // Converte a string de data para o formato comparável (ajuste conforme o formato salvo no banco, ex: YYYY-MM-DD)
-                    return new Date(a.date) - new Date(b.date);
-                });
+            const cobrancasAluno = financeLogs.filter(f => f.studentId === studentId);
 
             if(cobrancasAluno.length === 0) {
                 container.innerHTML = `<p class="text-xs text-gray-400">Nenhuma cobrança encontrada para ${aluno ? aluno.fullname : 'este aluno'}.</p>`;
                 return;
             }
 
-            container.innerHTML = `<div class="font-bold text-xs text-blue-600 dark:text-blue-400 mb-2">Exibindo ${cobrancasAluno.length} cobranças em ordem cronológica para ${aluno ? aluno.fullname : ''}:</div>`;
+            // Descobre o ambiente atual salvo no localStorage
+            const configAsaas = JSON.parse(localStorage.getItem('app_asaas_config')) || { env: 'production' };
+            const dominioAsaas = (configAsaas.env === 'production' || configAsaas.env === 'Produção') ? 'www.asaas.com' : 'sandbox.asaas.com';
+
+            container.innerHTML = `<div class="font-bold text-xs text-blue-600 dark:text-blue-400 mb-2">Exibindo ${cobrancasAluno.length} cobranças / mensalidades para ${aluno ? aluno.fullname : ''}:</div>`;
             
             cobrancasAluno.forEach((f, idx) => {
-                const statusBadge = f.status === 'Pago' 
-                    ? `<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 rounded text-[10px] font-bold">Pago</span>`
-                    : `<span class="px-2 py-0.5 bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 rounded text-[10px] font-bold">Pendente</span>`;
+                const linkPagamento = f.invoiceUrl || `https://${dominioAsaas}`;
 
                 container.innerHTML += `
                     <div class="bg-gray-50 dark:bg-slate-900 p-3.5 rounded-xl border border-gray-200 dark:border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs">
                         <div>
                             <strong class="text-gray-900 dark:text-white text-sm">${f.description}</strong><br>
-                            <span class="text-gray-500">Vencimento: <strong>${f.date}</strong> &bull; Valor: R$ ${f.amount} ${f.discountAmount ? `&bull; Com Desc. Pontualidade: <strong class="text-emerald-600">R$ ${f.discountAmount}</strong>` : ''}</span>
+                            <span class="text-gray-500">Vencimento: <strong>${f.date}</strong> &bull; Valor Normal: R$ ${f.amount} ${f.discountAmount ? `&bull; Com Desc. Pontualidade: <strong class="text-emerald-600">R$ ${f.discountAmount}</strong>` : ''}</span>
                         </div>
                         <div class="flex flex-col items-end gap-1.5 w-full sm:w-auto">
-                            ${statusBadge}
+                            <span class="px-2 py-0.5 bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 rounded text-[10px] font-bold">${f.status}</span>
                             <div class="flex flex-wrap gap-1.5 justify-end">
-                                <button onclick="marcarCobrancaComoPaga('${f.id}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-semibold text-[11px] flex items-center gap-1 shadow">
-                                    <i class="fa-solid fa-check"></i> Dar Baixa (Pago)
-                                </button>
-                                <button onclick="copiarDetalhesCobrancaWhatsApp('${f.id}')" class="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded font-semibold text-[11px] flex items-center gap-1 shadow">
-                                    <i class="fa-brands fa-whatsapp"></i> Copiar p/ WhatsApp
-                                </button>
+                                <a href="${linkPagamento}" target="_blank" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-semibold text-[11px] flex items-center gap-1 shadow"><i class="fa-solid fa-qrcode"></i> PIX / QR Code</a>
+                                <a href="${linkPagamento}" target="_blank" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded font-semibold text-[11px] flex items-center gap-1 shadow"><i class="fa-solid fa-barcode"></i> Boleto</a>
+                                <a href="${linkPagamento}" target="_blank" class="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded font-semibold text-[11px] flex items-center gap-1 shadow"><i class="fa-solid fa-credit-card"></i> Cartão</a>
                             </div>
                         </div>
                     </div>
@@ -3448,36 +3343,43 @@
             });
         }
 
-        // Função para dar baixa manual na parcela
-        async function marcarCobrancaComoPaga(logId) {
-            if(!confirm("Deseja marcar esta cobrança como PAGA?")) return;
-            try {
-                await db.collection("financeLogs").doc(logId).update({ status: 'Pago' });
-                // Atualiza o array local
-                const cob = financeLogs.find(f => f.id === logId);
-                if(cob) cob.status = 'Pago';
-                
-                alert("Cobrança atualizada para Paga com sucesso!");
-                renderizarCobrancasAlunoSelecionadoFinanceiro(cob.studentId);
-            } catch(e) {
-                alert("Erro ao atualizar status: " + e.message);
-            }
-        }
-
-        // Função para copiar os dados da cobrança para mandar no WhatsApp do aluno
-        function copiarDetalhesCobrancaWhatsApp(logId) {
+        async function gerarOpcoesPagamentoCobranca(logId) {
             const cob = financeLogs.find(f => f.id === logId);
             if(!cob) return;
             const aluno = students.find(s => s.id === cob.studentId);
-            
-            const valorFinal = cob.discountAmount || cob.amount;
-            const texto = `Olá ${aluno ? aluno.fullname : ''}, segue o resumo da sua mensalidade:\n\n*${cob.description}*\nVencimento: ${cob.date}\nValor: R$ ${valorFinal}\n\nQualquer dúvida estamos à disposição!`;
-            
-            navigator.clipboard.writeText(texto).then(() => {
-                alert("Resumo copiado para a área de transferência! Basta colar no WhatsApp do aluno.");
-            }).catch(() => {
-                alert("Não foi possível copiar automaticamente.");
-            });
+            if(!aluno) return;
+
+            try {
+                const asaas = new AsaasIntegrationService();
+                if(!asaas.apiKey) return alert("Configure a Chave de API do Asaas na aba Sistema > Asaas.");
+                
+                const cid = await asaas.criarOuObterCliente(aluno);
+                const cobAsaas = await asaas.criarCobrancaBoleto(cid, { 
+                    valor: cob.discountAmount || cob.amount, 
+                    vencimento: cob.date, 
+                    descricao: cob.description 
+                });
+                
+                let linkFinal = cobAsaas.invoiceUrl;
+                if (!linkFinal && cobAsaas.paymentId) {
+                    const dominioAsaas = asaas.environment === 'production' ? 'www.asaas.com' : 'sandbox.asaas.com';
+                    linkFinal = `https://${dominioAsaas}/i/${cobAsaas.paymentId}`;
+                }
+
+                if (!linkFinal) {
+                    throw new Error("O Asaas não retornou a URL da fatura.");
+                }
+
+                await db.collection("financeLogs").doc(logId).update({ invoiceUrl: linkFinal });
+                
+                alert("Fatura gerada com sucesso!");
+                renderizarCobrancasAlunoSelecionadoFinanceiro(aluno.id);
+
+                window.open(linkFinal, '_blank');
+            } catch(e) {
+                // EXIBE O ERRO EXATO QUE IMPEDIU A GERAÇÃO NO ASAAS
+                alert("Erro detalhado do Asaas/Apps Script: " + e.message);
+            }
         }
 
         function popularSelectAlunosPortalMaster() {
@@ -3542,45 +3444,18 @@
             renderizarUploadDocumentosAluno(aluno);
             setTimeout(renderizarCalendarioSemestralPortalAluno, 150);
 
-            // SINCRONIZAÇÃO E ORDENAÇÃO CRONOLÓGICA DO FINANCEIRO NO PORTAL DO ALUNO
             const finList = document.getElementById('portal-aluno-financeiro-list');
             if(finList) {
-                db.collection("financeLogs").where("studentId", "==", aluno.id).onSnapshot(snapshot => {
-                    finList.innerHTML = '';
-                    if(snapshot.empty) {
-                        finList.innerHTML = `<li class="py-3 text-sm text-gray-500">Nenhum lançamento financeiro encontrado.</li>`;
-                        return;
-                    }
-
-                    // Coleta os registros e aplica a ordenação cronológica pelo vencimento (da mais antiga para a mais recente)
-                    let faturasAluno = [];
-                    snapshot.forEach(doc => {
-                        faturasAluno.push({ id: doc.id, ...doc.data() });
-                    });
-
-                    faturasAluno.sort((a, b) => new Date(a.date) - new Date(b.date));
-
-                    faturasAluno.forEach(f => {
+                finList.innerHTML = '';
+                const fLogs = financeLogs.filter(f => f.studentId === aluno.id);
+                if(fLogs.length === 0) {
+                    finList.innerHTML = `<li class="py-3 text-sm text-gray-500">Nenhum lançamento financeiro encontrado.</li>`;
+                } else {
+                    fLogs.forEach(f => {
                         const descInfo = f.discountAmount ? `<br><span class="text-emerald-600 font-semibold">Valor com Pontualidade (Até vencimento): R$ ${f.discountAmount}</span>` : '';
-                        
-                        const statusBadge = f.status === 'Pago' 
-                            ? `<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded text-[10px] font-bold">Pago</span>`
-                            : `<span class="px-2 py-0.5 bg-amber-100 text-amber-800 rounded text-[10px] font-bold">Pendente</span>`;
-
-                        finList.innerHTML += `
-                            <li class="py-3 text-xs flex justify-between items-center border-b border-gray-100 dark:border-slate-700">
-                                <div>
-                                    <strong>${f.description}</strong><br>
-                                    Valor Normal: R$ ${f.amount} ${descInfo} <br>
-                                    <span class="text-gray-400">Vencimento: ${f.date}</span>
-                                </div> 
-                                <div class="text-right">
-                                    ${statusBadge} 
-                                    ${f.invoiceUrl ? `<br><a href="${f.invoiceUrl}" target="_blank" class="text-blue-600 underline text-[11px] mt-1 inline-block">Ver Boleto</a>` : ''}
-                                </div>
-                            </li>`;
+                        finList.innerHTML += `<li class="py-3 text-xs flex justify-between items-center border-b border-gray-100 dark:border-slate-700"><div><strong>${f.description}</strong><br>Valor Normal: R$ ${f.amount} ${descInfo} <br><span class="text-gray-400">Vencimento: ${f.date}</span></div> <div class="text-right"><span class="px-2 py-1 bg-amber-100 text-amber-800 rounded font-bold">${f.status}</span> ${f.invoiceUrl ? `<br><a href="${f.invoiceUrl}" target="_blank" class="text-blue-600 underline text-[11px] mt-1 inline-block">Ver Boleto</a>` : ''}</div></li>`;
                     });
-                });
+                }
             }
 
             const notaList = document.getElementById('portal-aluno-notas-list');
@@ -3860,7 +3735,7 @@
 
         function toggleDarkMode() { document.documentElement.classList.toggle('dark'); }
 
-	// --- FUNÇÕES DA PROVA EJA (ADMIN E CORREÇÃO AUTOMÁTICA COM 5 ALTERNATIVAS) ---
+// --- FUNÇÕES DA PROVA EJA (ADMIN E CORREÇÃO AUTOMÁTICA COM 5 ALTERNATIVAS) ---
 
         function openSubTabEJA(evt, subId) {
             document.querySelectorAll('.subeja-content').forEach(el => el.style.display = 'none');
