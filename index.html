@@ -1995,34 +1995,12 @@
             evt.currentTarget.classList.add('bg-blue-600', 'text-white', 'shadow');
         }
 
-       function openNewStudentModal() {
-            try {
-                const editIdInput = document.getElementById('edit-student-id');
-                const titleModal = document.getElementById('modal-student-title');
-                const form = document.getElementById('formFichaMatricula');
-                const modal = document.getElementById('new-student-modal');
-
-                if (editIdInput) editIdInput.value = "";
-                if (titleModal) titleModal.textContent = "Nova Matrícula";
-                if (form) form.reset();
-
-                // Garante que o modal abra primeiro antes de tentar filtrar
-                if (modal) {
-                    modal.style.display = 'flex';
-                } else {
-                    console.error("Modal 'new-student-modal' não encontrado.");
-                }
-
-                if (typeof filterTurmasByCourse === 'function') {
-                    filterTurmasByCourse();
-                }
-            } catch (err) {
-                console.error("Erro ao abrir modal de matrícula:", err);
-                const modal = document.getElementById('new-student-modal');
-                if (modal) modal.style.display = 'flex';
-            }
+      function openNewStudentModal() {
+            document.getElementById('edit-student-id').value = "";
+            document.getElementById('modal-student-title').textContent = "Nova Matrícula";
+            document.getElementById('formFichaMatricula').reset();
+            document.getElementById('new-student-modal').style.display = 'flex';
         }
-
         function closeNewStudentModal() { document.getElementById('new-student-modal').style.display = 'none'; }
 
         let currentLogoDataUrl = "", courses = [], classes = [], students = [], teachers = [], financeLogs = [], academicCalendars = [];
@@ -2102,6 +2080,7 @@
                 }
             });
         }
+
 
         async function saveTeacher() {
             const fullname = document.getElementById('input-teacher-name').value.trim();
