@@ -1997,18 +1997,26 @@
             evt.currentTarget.classList.add('bg-blue-600', 'text-white', 'shadow');
         }
 
-        // SUBSTITUA A FUNÇÃO ATUAL POR ESTA:
-function openNewStudentModal() {
-    document.getElementById('edit-student-id').value = "";
-    document.getElementById('modal-student-title').textContent = "Nova Matrícula";
-    document.getElementById('formFichaMatricula').reset();
-    
-    // Atualiza/limpa o campo de turmas ao resetar a ficha
-    filterTurmasByCourse(); 
-    
-    // Exibe a janela flutuante
-    document.getElementById('new-student-modal').style.display = 'flex';
-}
+       function openNewStudentModal() {
+            const editIdInput = document.getElementById('edit-student-id');
+            const titleModal = document.getElementById('modal-student-title');
+            const form = document.getElementById('formFichaMatricula');
+            const modal = document.getElementById('new-student-modal');
+
+            if (editIdInput) editIdInput.value = "";
+            if (titleModal) titleModal.textContent = "Nova Matrícula";
+            if (form) form.reset();
+
+            // Executa o filtro de turmas sem travar caso o select esteja nulo
+            if (typeof filterTurmasByCourse === 'function') {
+                filterTurmasByCourse();
+            }
+
+            // Exibe o modal
+            if (modal) {
+                modal.style.display = 'flex';
+            }
+        }
         function closeNewStudentModal() { document.getElementById('new-student-modal').style.display = 'none'; }
 
         let currentLogoDataUrl = "", courses = [], classes = [], students = [], teachers = [], financeLogs = [], academicCalendars = [];
@@ -2903,11 +2911,21 @@ function openNewStudentModal() {
         }
 
         function filterTurmasByCourse() {
-            const courseId = document.getElementById('input-student-course').value;
-            const select = document.getElementById('input-student-class');
-            if(!select) return;
-            select.innerHTML = '';
-            classes.filter(c => c.courseId == courseId).forEach(c => select.insertAdjacentHTML('beforeend', `<option value="${c.id}">${c.name}</option>`));
+            const courseSelect = document.getElementById('input-student-course');
+            const classSelect = document.getElementById('input-student-class');
+            
+            if (!courseSelect || !classSelect) return;
+            
+            const courseId = courseSelect.value;
+            classSelect.innerHTML = '<option value="">Selecione a turma...</option>';
+
+            if (Array.isArray(classes)) {
+                classes
+                    .filter(c => !courseId || c.courseId == courseId)
+                    .forEach(c => {
+                        classSelect.insertAdjacentHTML('beforeend', `<option value="${c.id}">${c.name}</option>`);
+                    });
+            }
         }
 
         function filterTurmasByAttendanceCourse() {
