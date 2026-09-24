@@ -3796,42 +3796,51 @@
     });
 }
 
-async function alternarApostilaIndividualAluno(alunoId, statusAtivo) {
-    const aluno = students.find(s => s.id === alunoId);
-    if (!aluno) return;
-    
-    if (!aluno.controleEJA) aluno.controleEJA = { apostilaAtiva: true, provaAtiva: false };
-    aluno.controleEJA.apostilaAtiva = statusAtivo;
-
+async function alternarApostilaIndividualAluno(studentId, novoStatus) {
     try {
-        await db.collection("students").doc(alunoId).update({ controleEJA: aluno.controleEJA });
-        registrarLogAuditoria(`Alterou a disponibilidade da Apostila para o aluno ${aluno.fullname}: ${statusAtivo ? 'Ativada' : 'Desativada'}`, "Gestão EJA");
-    } catch (error) {
-        alert("Erro ao atualizar na nuvem: " + error.message);
+        await db.collection("students").doc(studentId).set({
+            controleEJA: {
+                apostilaAtiva: novoStatus
+            }
+        }, { merge: true });
+        console.log(`Apostila ${novoStatus ? 'liberada' : 'bloqueada'} para o aluno ${studentId}`);
+    } catch (e) {
+        alert("Erro ao atualizar permissão da apostila: " + e.message);
     }
 }
 
-async function alternarProvaIndividualAluno(alunoId, statusAtivo) {
-    const aluno = students.find(s => s.id === alunoId);
-    if (!aluno) return;
-    
-    if (!aluno.controleEJA) aluno.controleEJA = { apostilaAtiva: true, provaAtiva: false };
-    aluno.controleEJA.provaAtiva = statusAtivo;
-
+async function alternarProvaIndividualAluno(studentId, novoStatus) {
     try {
-        await db.collection("students").doc(alunoId).update({ controleEJA: aluno.controleEJA });
-        registrarLogAuditoria(`Alterou a disponibilidade da Prova Online para o aluno ${aluno.fullname}: ${statusAtivo ? 'Ativada' : 'Desativada'}`, "Gestão EJA");
-    } catch (error) {
-        alert("Erro ao atualizar na nuvem: " + error.message);
+        await db.collection("students").doc(studentId).set({
+            controleEJA: {
+                provaAtiva: novoStatus
+            }
+        }, { merge: true });
+        console.log(`Prova ${novoStatus ? 'liberada' : 'bloqueada'} para o aluno ${studentId}`);
+    } catch (e) {
+        alert("Erro ao atualizar permissão da prova: " + e.message);
     }
 }
 
         async function salvarApostilaEJAAdmin() {
-            const url = document.getElementById('input-eja-apostila-url').value.trim();
-            if (!url) return alert("Informe o link da apostila.");
-            await db.collection("config").doc("ejaSettings").set({ apostilaUrl: url }, { merge: true });
-            alert("Apostila atualizada com sucesso!");
-        }
+    const inputUrl = document.getElementById('input-eja-apostila-url');
+    if (!inputUrl || !inputUrl.value.trim()) {
+        return alert("Por favor, cole o link da apostila no campo indicado.");
+    }
+
+    const url = inputUrl.value.trim();
+
+    try {
+        await db.collection("config").doc("ejaSettings").set({
+            apostilaUrl: url,
+            updatedAt: new Date().toISOString()
+        }, { merge: true });
+
+        alert("Link da Apostila EJA atualizado e disponibilizado com sucesso!");
+    } catch (e) {
+        alert("Erro ao salvar link da apostila: " + e.message);
+    }
+}
 
         async function alternarAtivacaoProvaEJA(checkbox) {
             const ativo = checkbox.checked;
@@ -3901,35 +3910,49 @@ async function alternarProvaIndividualAluno(alunoId, statusAtivo) {
         }
 
         async function salvarConfiguracaoProvaEJA() {
-            const instrucoes = document.getElementById('input-eja-instrucoes').value.trim();
-            const cards = document.querySelectorAll('.questao-card');
-            let questoes = [];
+    const instrucoes = document.getElementById('input-eja-instrucoes') ? document.getElementById('input-eja-instrucoes').value.trim() : '';
+    const provaAtiva = document.getElementById('switch-ativar-prova-eja') ? document.getElementById('switch-ativar-prova-eja').checked : true;
+    
+    // Coleta todas as questões cadastradas na interface
+    const blocosQuestoes = document.querySelectorAll('.questao-card');
+    const questoes = [];
 
-            cards.forEach(card => {
-                const enunciado = card.querySelector('.q-enunciado').value.trim();
-                const opt0 = card.querySelector('.q-opt-0').value.trim();
-                const opt1 = card.querySelector('.q-opt-1').value.trim();
-                const opt2 = card.querySelector('.q-opt-2').value.trim();
-                const opt3 = card.querySelector('.q-opt-3').value.trim();
-                const opt4 = card.querySelector('.q-opt-4').value.trim();
-                const correta = parseInt(card.querySelector('.q-correta').value);
+    blocosQuestoes.forEach((bloco) => {
+        const enunciadoInput = bloco.querySelector('.q-enunciado');
+        const corretaSelect = bloco.querySelector('.q-correta');
 
-                if (enunciado) {
-                    questoes.push({
-                        enunciado,
-                        opcoes: [opt0, opt1, opt2, opt3, opt4],
-                        correta
-                    });
+        if (enunciadoInput && enunciadoInput.value.trim() !== '') {
+            const opcoes = [];
+            for (let i = 0; i < 5; i++) {
+                const optInput = bloco.querySelector(`.q-opt-${i}`);
+                if (optInput && optInput.value.trim() !== '') {
+                    opcoes.push(optInput.value.trim());
                 }
+            }
+
+            const corretaIndex = corretaSelect ? parseInt(corretaSelect.value) : 0;
+
+            questoes.push({
+                enunciado: enunciadoInput.value.trim(),
+                opcoes: opcoes,
+                correta: corretaIndex
             });
-
-            await db.collection("config").doc("ejaSettings").set({
-                instrucoesProva: instrucoes,
-                questoes: questoes
-            }, { merge: true });
-
-            alert("Configurações e questões da prova salvas com sucesso!");
         }
+    });
+
+    try {
+        await db.collection("config").doc("ejaSettings").set({
+            provaAtiva: provaAtiva,
+            instrucoesProva: instrucoes,
+            questoes: questoes,
+            updatedAt: new Date().toISOString()
+        }, { merge: true });
+
+        alert("Configurações da Prova Online EJA salvas com sucesso no banco de dados!");
+    } catch (e) {
+        alert("Erro ao salvar prova EJA: " + e.message);
+    }
+}
 
         // ==========================================
         // FUNÇÕES DE VALIDAÇÃO DE DOCUMENTOS - EJA
@@ -4043,6 +4066,20 @@ async function alternarProvaIndividualAluno(alunoId, statusAtivo) {
             alert("Documento reprovado registrado com sucesso!");
             renderizarDocumentosEJagestao(alunoId);
         }
+
+	// Função para salvar/atualizar a URL do Google Apps Script no banco
+	async function salvarUrlGoogleDriveEJA(urlAppsScript) {
+    	if (!urlAppsScript) return;
+    	try {
+        await db.collection("config").doc("institution").set({
+            gdriveUrl: urlAppsScript.trim(),
+            updatedAt: new Date().toISOString()
+        }, { merge: true });
+        console.log("URL do Google Drive sincronizada com sucesso!");
+    } catch (e) {
+        console.error("Erro ao sincronizar URL do Google Drive:", e);
+    }
+}
     </script>
 </body>
 </html>
