@@ -697,12 +697,14 @@
                     code: novaMatriculaCodigo,
                     fullname: nome,
                     birthDate: nascimento,
+                    dob: nascimento,
                     gender: sexo,
                     cpf: cpfRaw,
                     rg: rg,
                     whatsapp: whatsapp,
                     email: email,
                     address: enderecoCompleto,
+                    endereco: enderecoCompleto,
                     cep: cep,
                     street: rua,
                     number: numero,
@@ -713,7 +715,6 @@
                     classId: "",
                     senhaAluno: senha,
                     documentos: {},
-                    controleEJA: { apostilaAtiva: true, provaAtiva: false },
                     createdAt: new Date().toISOString()
                 };
 
@@ -947,14 +948,37 @@
 
         async function carregarDadosPainel() {
             if(!alunoLogado) return;
-            document.getElementById('header-aluno-nome').textContent = alunoLogado.fullname;
+            document.getElementById('header-aluno-nome').textContent = alunoLogado.fullname || '---';
             document.getElementById('info-mat').textContent = alunoLogado.code || '---';
             document.getElementById('info-cpf').textContent = alunoLogado.cpf || '---';
             document.getElementById('info-rg').textContent = alunoLogado.rg || '---';
-            document.getElementById('info-nasc').textContent = alunoLogado.birthDate ? alunoLogado.birthDate.split('-').reverse().join('/') : '---';
+
+            // Tratamento flexível da Data de Nascimento
+            const rawNasc = alunoLogado.birthDate || alunoLogado.dob || '';
+            let nascFormatado = '---';
+            if (rawNasc) {
+                if (rawNasc.includes('-')) {
+                    nascFormatado = rawNasc.split('-').reverse().join('/');
+                } else {
+                    nascFormatado = rawNasc;
+                }
+            }
+            document.getElementById('info-nasc').textContent = nascFormatado;
+
             document.getElementById('info-email').textContent = alunoLogado.email || '---';
             document.getElementById('info-tel').textContent = alunoLogado.whatsapp || '---';
-            document.getElementById('info-endereco').textContent = alunoLogado.address || '---';
+
+            // Tratamento flexível do Endereço Completo
+            let enderecoFinal = alunoLogado.address || alunoLogado.endereco || '';
+            if (!enderecoFinal && (alunoLogado.rua || alunoLogado.street)) {
+                const rua = alunoLogado.rua || alunoLogado.street || '';
+                const num = alunoLogado.numero || alunoLogado.number || 'S/N';
+                const bairro = alunoLogado.bairro || alunoLogado.neighborhood || '';
+                const cid = alunoLogado.cidade || alunoLogado.city || '';
+                const uf = alunoLogado.estado || alunoLogado.state || '';
+                enderecoFinal = `${rua}, nº ${num} - ${bairro}, ${cid}/${uf}`;
+            }
+            document.getElementById('info-endereco').textContent = enderecoFinal || '---';
 
             if(alunoLogado.fotoAluno) {
                 document.getElementById('header-avatar-box').innerHTML = `<img src="${alunoLogado.fotoAluno}" class="w-full h-full object-cover">`;
@@ -1025,9 +1049,11 @@
                 cpf: "000.000.000-00",
                 rg: "1234567",
                 birthDate: "1995-01-01",
+                dob: "1995-01-01",
                 email: "teste.eja@sistema.com",
                 whatsapp: "(91) 98888-8888",
                 address: "Tv. Teste, nº 100 - Belém/PA",
+                endereco: "Tv. Teste, nº 100 - Belém/PA",
                 courseId: "curso_supletivo_ficticio",
                 documentos: {},
                 controleEJA: { apostilaAtiva: true, provaAtiva: true }
@@ -1049,14 +1075,13 @@
             };
 
             adaptarPainelPorModalidadeCurso(cursoSimuladoEJA);
-            renderizarDocumentosObrigatorios();
+            carregarDadosPainel();
         }
 
         function adaptarPainelPorModalidadeCurso(cursoObj) {
             const isEJA = cursoObj && (cursoObj.nivel === 'Supletivo' || cursoObj.sigla === 'EJA' || (cursoObj.name && cursoObj.name.toUpperCase().includes('EJA')));
 
             if (isEJA) {
-                // VERIFICA O CONTROLE INDIVIDUAL DO ALUNO SALVO NO FIREBASE
                 const controle = alunoLogado.controleEJA || { apostilaAtiva: true, provaAtiva: true };
 
                 const bannerPadrao = document.getElementById('banner-padrao-home');
@@ -1212,7 +1237,6 @@
             window.onpopstate = null;
         }
 
-        // --- PROVA ONLINE EJA DINÂMICA ---
         async function abrirTelaProvaOnlineEJA() {
             try {
                 const docSnap = await db.collection("config").doc("ejaSettings").get();
