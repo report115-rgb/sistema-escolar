@@ -516,7 +516,8 @@
             const savedTheme = localStorage.getItem('se7_aluno_theme') || 'light';
             if(savedTheme === 'dark') {
                 document.documentElement.classList.add('dark');
-                document.getElementById('theme-icon').className = "fa-solid fa-sun";
+                const tIcon = document.getElementById('theme-icon');
+                if (tIcon) tIcon.className = "fa-solid fa-sun text-amber-500";
             }
 
             await carregarConfiguracaoInstituicao();
@@ -551,11 +552,11 @@
             if(htmlEl.classList.contains('dark')) {
                 htmlEl.classList.remove('dark');
                 localStorage.setItem('se7_aluno_theme', 'light');
-                if (iconEl) iconEl.className = "fa-solid fa-moon";
+                if (iconEl) iconEl.className = "fa-solid fa-moon text-blue-500";
             } else {
                 htmlEl.classList.add('dark');
                 localStorage.setItem('se7_aluno_theme', 'dark');
-                if (iconEl) iconEl.className = "fa-solid fa-sun";
+                if (iconEl) iconEl.className = "fa-solid fa-sun text-amber-500";
             }
         }
 
@@ -1076,7 +1077,7 @@
                 endereco: "Tv. Teste, nº 100 - Belém/PA",
                 courseId: "curso_supletivo_ficticio",
                 documentos: {},
-                controleEJA: { apostilaAtiva: true, provaAtiva: true }
+                controleEJA: { apostilaAtiva: false, provaAtiva: false }
             };
 
             document.getElementById('welcome-screen').style.display = 'none';
@@ -1143,7 +1144,7 @@
                                 ` : `
                                     <div class="py-2.5 px-3 bg-white/20 text-white/70 font-bold rounded-xl text-xs flex items-center justify-center space-x-1.5 cursor-not-allowed" title="Disponibilidade desativada pela secretaria">
                                         <i class="fa-solid fa-lock"></i>
-                                        <span>Apostila Indisponível</span>
+                                        <span>Apostila Bloqueada</span>
                                     </div>
                                 `}
 
