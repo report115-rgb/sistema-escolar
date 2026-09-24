@@ -3755,6 +3755,22 @@
         function renderizarAlunosEJAAdmin() {
     const tbody = document.getElementById('tabela-alunos-eja');
     if (!tbody) return;
+
+    // Atualiza o cabeçalho da tabela se ele existir no DOM
+    const thead = tbody.closest('table') ? tbody.closest('table').querySelector('thead') : null;
+    if (thead) {
+        thead.innerHTML = `
+            <tr class="border-b border-gray-200 dark:border-slate-700 text-gray-500">
+                <th class="p-3">Matrícula</th>
+                <th class="p-3">Nome Completo</th>
+                <th class="p-3">CPF</th>
+                <th class="p-3">WhatsApp</th>
+                <th class="p-3 text-center">Apostila PDF</th>
+                <th class="p-3 text-center">Prova Online</th>
+            </tr>
+        `;
+    }
+
     tbody.innerHTML = '';
     
     const alunosEJA = students.filter(s => {
@@ -3768,28 +3784,44 @@
     }
 
     alunosEJA.forEach(s => {
-        // Garante que o objeto de controle individual exista para o aluno
         if (!s.controleEJA) {
             s.controleEJA = { apostilaAtiva: true, provaAtiva: false };
         }
 
+        const apostilaLiberada = s.controleEJA.apostilaAtiva;
+        const provaLiberada = s.controleEJA.provaAtiva;
+
         tbody.innerHTML += `
-            <tr class="border-b border-gray-100 dark:border-slate-700">
-                <td class="p-3 font-bold text-emerald-600">${s.code || '---'}</td>
-                <td class="p-3 font-semibold">${s.fullname}</td>
+            <tr class="border-b border-gray-100 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-900/40 transition">
+                <td class="p-3 font-bold text-emerald-600 dark:text-emerald-400">${s.code || '---'}</td>
+                <td class="p-3 font-semibold text-gray-900 dark:text-white">${s.fullname}</td>
                 <td class="p-3">${s.cpf || '---'}</td>
                 <td class="p-3">${s.whatsapp || '---'}</td>
+                
+                <!-- Coluna Apostila com Chave + Rótulo -->
                 <td class="p-3 text-center">
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" ${s.controleEJA.apostilaAtiva ? 'checked' : ''} onchange="alternarApostilaIndividualAluno('${s.id}', this.checked)" class="sr-only peer">
-                        <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
-                    </label>
+                    <div class="inline-flex items-center gap-2 bg-gray-100 dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-gray-200 dark:border-slate-700">
+                        <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                            <input type="checkbox" ${apostilaLiberada ? 'checked' : ''} onchange="alternarApostilaIndividualAluno('${s.id}', this.checked)" class="sr-only peer">
+                            <div class="w-9 h-5 bg-gray-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-emerald-600"></div>
+                        </label>
+                        <span class="text-[11px] font-bold ${apostilaLiberada ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-400'}">
+                            ${apostilaLiberada ? 'Liberada' : 'Bloqueada'}
+                        </span>
+                    </div>
                 </td>
+
+                <!-- Coluna Prova com Chave + Rótulo -->
                 <td class="p-3 text-center">
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" ${s.controleEJA.provaAtiva ? 'checked' : ''} onchange="alternarProvaIndividualAluno('${s.id}', this.checked)" class="sr-only peer">
-                        <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
+                    <div class="inline-flex items-center gap-2 bg-gray-100 dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-gray-200 dark:border-slate-700">
+                        <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                            <input type="checkbox" ${provaLiberada ? 'checked' : ''} onchange="alternarProvaIndividualAluno('${s.id}', this.checked)" class="sr-only peer">
+                            <div class="w-9 h-5 bg-gray-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                        </label>
+                        <span class="text-[11px] font-bold ${provaLiberada ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400'}">
+                            ${provaLiberada ? 'Liberada' : 'Bloqueada'}
+                        </span>
+                    </div>
                 </td>
             </tr>
         `;
