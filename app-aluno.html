@@ -713,6 +713,7 @@
                     classId: "",
                     senhaAluno: senha,
                     documentos: {},
+                    controleEJA: { apostilaAtiva: true, provaAtiva: false },
                     createdAt: new Date().toISOString()
                 };
 
@@ -959,7 +960,6 @@
                 document.getElementById('header-avatar-box').innerHTML = `<img src="${alunoLogado.fotoAluno}" class="w-full h-full object-cover">`;
             }
 
-            // GARANTE QUE OS DOCUMENTOS APARECEM EM QUALQUER MODALIDADE (TÉCNICO OU EJA)
             renderizarDocumentosObrigatorios();
             verificarPendenciaDocumentos();
 
@@ -1145,7 +1145,6 @@
                     let urlOriginal = docSnap.data().apostilaUrl.trim();
                     let urlApostila = urlOriginal;
 
-                    // Ajusta o link do Google Drive para visualização embutida (iframe)
                     if (urlApostila.includes('drive.google.com') && !urlApostila.includes('preview')) {
                         if (urlApostila.includes('/view')) {
                             urlApostila = urlApostila.replace(/\/view.*$/, '/preview');
@@ -1154,7 +1153,6 @@
                         }
                     }
 
-                    // Garante que o link de download abra de forma limpa no navegador externo do celular
                     let urlDownload = urlOriginal;
                     if (urlDownload.includes('drive.google.com') && !urlDownload.includes('usp=sharing')) {
                         if (!urlDownload.includes('usp=')) {
@@ -1193,7 +1191,6 @@
                     `;
                     modalApostila.style.display = 'flex';
 
-                    // Intercepta o botão voltar do histórico/navegador para fechar o modal
                     window.history.pushState({ modalApostilaAberto: true }, "");
                     window.onpopstate = function (event) {
                         fecharVisualizadorApostila();
@@ -1215,7 +1212,7 @@
             window.onpopstate = null;
         }
 
-        // --- PROVA ONLINE EJA DINÂMICA (INTEGRADA COM O PAINEL ADMINISTRATIVO) ---
+        // --- PROVA ONLINE EJA DINÂMICA ---
         async function abrirTelaProvaOnlineEJA() {
             try {
                 const docSnap = await db.collection("config").doc("ejaSettings").get();
