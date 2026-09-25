@@ -4103,7 +4103,7 @@ async function gerarCobrancaAsaas(financeLogId) {
     try {
         // Se o seu frontend está rodando no mesmo domínio da Vercel, use '/api/asaas/create-payment' 
         // ou coloque a URL completa do seu projeto na Vercel (ex: 'https://seu-projeto.vercel.app/api/asaas/create-payment')
-        const endpointVercel = '/api/asaas/create-payment'; 
+        const endpointVercel = 'https://modulo-asaas.vercel.app/api'; 
 
         const response = await fetch(endpointVercel, {
             method: 'POST',
