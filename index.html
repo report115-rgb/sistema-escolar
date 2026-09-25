@@ -3294,26 +3294,72 @@
 
             container.innerHTML = `<div class="font-bold text-xs text-blue-600 dark:text-blue-400 mb-2">Exibindo ${cobrancasAluno.length} cobranças / mensalidades para ${aluno ? aluno.fullname : ''}:</div>`;
 
-            cobrancasAluno.forEach((f, idx) => {
-                const textoBotao = f.invoiceUrl ? "Abrir Fatura Asaas" : "Gerar Fatura no Asaas";
+            cobrancasAluno.forEach((f) => {
+                const jaPago = f.status && f.status.toUpperCase().includes('PAGO');
+                
+                // Estilo e texto condicional dependendo se já foi dado baixa ou não
+                const corBadge = jaPago ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300';
+                const textoStatus = f.status || 'PENDENTE';
 
                 container.innerHTML += `
                     <div class="bg-gray-50 dark:bg-slate-900 p-3.5 rounded-xl border border-gray-200 dark:border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs">
                         <div>
                             <strong class="text-gray-900 dark:text-white text-sm">${f.description}</strong><br>
-                            <span class="text-gray-500">Vencimento: <strong>${f.date}</strong> &bull; Valor Normal: R$ ${f.amount} ${f.discountAmount ? `&bull; Com Desc. Pontualidade: <strong class="text-emerald-600">R$ ${f.discountAmount}</strong>` : ''}</span>
+                            <span class="text-gray-500">Vencimento: <strong>${f.date}</strong> &bull; Valor: R$ ${f.amount} ${f.discountAmount ? `&bull; Com Desc.: <strong class="text-emerald-600">R$ ${f.discountAmount}</strong>` : ''}</span>
                         </div>
                         <div class="flex flex-col items-end gap-1.5 w-full sm:w-auto">
-                            <span class="px-2 py-0.5 bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 rounded text-[10px] font-bold">${f.status}</span>
+                            <span class="px-2 py-0.5 ${corBadge} rounded text-[10px] font-bold">${textoStatus}</span>
                             <div class="flex flex-wrap gap-1.5 justify-end">
-                                <button onclick="gerarCobrancaAsaas('${f.id}')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded font-semibold text-[11px] flex items-center gap-1.5 shadow">
-                                    <i class="fa-solid fa-file-invoice-dollar"></i> ${textoBotao}
-                                </button>
+                                ${!jaPago ? `
+                                    <button onclick="darBaixaManualFinanceiro('${f.id}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-semibold text-[11px] flex items-center gap-1.5 shadow">
+                                        <i class="fa-solid fa-check-circle"></i> Dar Baixa Manual
+                                    </button>
+                                ` : `
+                                    <button onclick="estornarBaixaManualFinanceiro('${f.id}')" class="px-3 py-1.5 bg-gray-500 hover:bg-gray-600 text-white rounded font-semibold text-[11px] flex items-center gap-1.5 shadow">
+                                        <i class="fa-solid fa-undo"></i> Estornar Baixa
+                                    </button>
+                                `}
                             </div>
                         </div>
                     </div>
                 `;
             });
+        }
+
+        // --- FUNÇÃO TEMPORÁRIA PARA DAR BAIXA MANUAL ---
+        async function darBaixaManualFinanceiro(financeLogId) {
+            if (!confirm("Deseja confirmar o recebimento e dar baixa manual nesta mensalidade?")) return;
+
+            try {
+                await db.collection("financeLogs").doc(financeLogId).update({
+                    status: "PAGO (Baixa Manual)",
+                    dataPagamento: new Date().toLocaleDateString('pt-BR')
+                });
+
+                registrarLogAuditoria(`Deu baixa manual no registro financeiro ID ${financeLogId}`, "Financeiro");
+                alert("Baixa realizada com sucesso! O status foi atualizado para o aluno.");
+            } catch (error) {
+                console.error("Erro ao dar baixa manual:", error);
+                alert("Erro ao atualizar na nuvem: " + error.message);
+            }
+        }
+
+        // --- FUNÇÃO PARA ESTORNAR A BAIXA CASO NECESSÁRIO ---
+        async function estornarBaixaManualFinanceiro(financeLogId) {
+            if (!confirm("Deseja estornar a baixa desta mensalidade e retorná-la para pendente?")) return;
+
+            try {
+                await db.collection("financeLogs").doc(financeLogId).update({
+                    status: "PENDENTE (Desc. Pontualidade disponível até o vencimento)",
+                    dataPagamento: null
+                });
+
+                registrarLogAuditoria(`Estornou a baixa do registro financeiro ID ${financeLogId}`, "Financeiro");
+                alert("Baixa estornada com sucesso!");
+            } catch (error) {
+                console.error("Erro ao estornar baixa:", error);
+                alert("Erro ao atualizar na nuvem: " + error.message);
+            }
         }
 
         function popularSelectAlunosPortalMaster() {
