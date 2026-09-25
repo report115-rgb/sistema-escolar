@@ -4085,7 +4085,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setTimeout(carregarConfiguracaoAsaasAdmin, 500);
 });
     
-// --- FUNÇÃO PARA GERAR COBRANÇA APONTANDO PARA O PROJETO MODULO-ASAAS NA VERCEL ---
+// --- FUNÇÃO CORRETA PARA GERAR COBRANÇA VIA MÓDULO ASAAS NA VERCEL ---
 async function gerarCobrancaAsaas(financeLogId) {
     const log = financeLogs.find(f => f.id === financeLogId);
     if (!log) return alert("Registro financeiro não encontrado.");
@@ -4098,52 +4098,69 @@ async function gerarCobrancaAsaas(financeLogId) {
     const aluno = students.find(s => s.id === log.studentId);
     if (!aluno) return alert("Dados do aluno não encontrados para esta cobrança.");
 
-    alert("Solicitando geração de fatura ao módulo Asaas... Aguarde.");
+    alert("Conectando com o módulo Asaas na Vercel... Aguarde um instante.");
 
     try {
-        // Substitua pelo domínio exato do projeto modulo-asaas que aparece no seu painel da Vercel
-        const endpointVercel = 'https://modulo-asaas.vercel.app/api'; 
+        const dominioAsaasVercel = 'https://modulo-asaas.vercel.app';
 
-        const payloadData = {
-            studentId: aluno.id,
+        // Passo 1: Criar ou buscar o cliente no Asaas
+        const clientePayload = {
             name: aluno.fullname,
-            email: aluno.email || 'aluno@escola.com',
             cpfCnpj: aluno.cpf ? aluno.cpf.replace(/[^\d]/g, '') : '',
-            mobilePhone: aluno.whatsapp ? aluno.whatsapp.replace(/[^\d]/g, '') : '91999999999',
-            value: log.amount,
-            dueDate: log.date,
-            description: log.description,
-            financeLogId: financeLogId
+            email: aluno.email || 'aluno@escola.com',
+            phone: aluno.whatsapp ? aluno.whatsapp.replace(/[^\d]/g, '') : '91999999999'
         };
 
-        const response = await fetch(endpointVercel, {
+        const resCliente = await fetch(`${dominioAsaasVercel}/api/asaas/cliente`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(payloadData)
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(clientePayload)
         });
 
-        const data = await response.json();
-        if (!response.ok || data.error) {
-            return alert("Erro no módulo Asaas: " + (data.error || data.message || 'Erro desconhecido'));
+        const dadosCliente = await resCliente.json();
+        if (!dadosCliente.success || !dadosCliente.customerId) {
+            return alert("Erro ao cadastrar cliente no Asaas: " + JSON.stringify(dadosCliente.error || 'Erro desconhecido'));
         }
 
-        const linkFatura = data.invoiceUrl;
+        const customerId = dadosCliente.customerId;
 
-        await db.collection("financeLogs").doc(financeLogId).update({
-            invoiceUrl: linkFatura,
-            asaasPaymentId: data.paymentId
+        // Passo 2: Gerar a cobrança (Boleto/Pix) vinculada ao cliente
+        const cobrancaPayload = {
+            customerId: customerId,
+            billingType: 'UNDEFINED',
+            value: log.discountAmount && log.discountAmount > 0 ? log.discountAmount : log.amount,
+            dueDate: log.date,
+            description: log.description,
+            studentId: aluno.id
+        };
+
+        const resCobranca = await fetch(`${dominioAsaasVercel}/api/asaas/cobranca`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(cobrancaPayload)
         });
 
-        alert("Fatura gerada com sucesso!");
+        const dadosCobranca = await resCobranca.json();
+        if (!dadosCobranca.success || !dadosCobranca.invoiceUrl) {
+            return alert("Erro ao gerar cobrança no Asaas: " + JSON.stringify(dadosCobranca.error || 'Erro desconhecido'));
+        }
+
+        const linkFatura = dadosCobranca.invoiceUrl;
+
+        // Atualiza o registro financeiro no Firestore
+        await db.collection("financeLogs").doc(financeLogId).update({
+            invoiceUrl: linkFatura,
+            asaasPaymentId: dadosCobranca.paymentId
+        });
+
+        alert("Cobrança gerada com sucesso pelo módulo!");
         window.open(linkFatura, '_blank');
 
     } catch (e) {
-        console.error("Erro ao chamar módulo Asaas:", e);
+        console.error("Erro na comunicação com o módulo Asaas:", e);
         alert("Erro de comunicação com a API: " + e.message);
     }
-}	
+}
 	</script>
 </body>
 </html>
