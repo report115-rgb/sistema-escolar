@@ -4085,7 +4085,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setTimeout(carregarConfiguracaoAsaasAdmin, 500);
 });
     
-// --- FUNÇÃO PARA GERAR COBRANÇA VIA MÓDULO ASAAS NA VERCEL ---
+// --- FUNÇÃO PARA GERAR COBRANÇA APONTANDO PARA O PROJETO MODULO-ASAAS NA VERCEL ---
 async function gerarCobrancaAsaas(financeLogId) {
     const log = financeLogs.find(f => f.id === financeLogId);
     if (!log) return alert("Registro financeiro não encontrado.");
@@ -4098,29 +4098,30 @@ async function gerarCobrancaAsaas(financeLogId) {
     const aluno = students.find(s => s.id === log.studentId);
     if (!aluno) return alert("Dados do aluno não encontrados para esta cobrança.");
 
-    alert("Solicitando geração de fatura ao módulo Asaas na Vercel... Aguarde.");
+    alert("Solicitando geração de fatura ao módulo Asaas... Aguarde.");
 
     try {
-        // Se o seu frontend está rodando no mesmo domínio da Vercel, use '/api/asaas/create-payment' 
-        // ou coloque a URL completa do seu projeto na Vercel (ex: 'https://seu-projeto.vercel.app/api/asaas/create-payment')
+        // Substitua pelo domínio exato do projeto modulo-asaas que aparece no seu painel da Vercel
         const endpointVercel = 'https://modulo-asaas.vercel.app/api'; 
+
+        const payloadData = {
+            studentId: aluno.id,
+            name: aluno.fullname,
+            email: aluno.email || 'aluno@escola.com',
+            cpfCnpj: aluno.cpf ? aluno.cpf.replace(/[^\d]/g, '') : '',
+            mobilePhone: aluno.whatsapp ? aluno.whatsapp.replace(/[^\d]/g, '') : '91999999999',
+            value: log.amount,
+            dueDate: log.date,
+            description: log.description,
+            financeLogId: financeLogId
+        };
 
         const response = await fetch(endpointVercel, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                studentId: aluno.id,
-                name: aluno.fullname,
-                email: aluno.email || 'aluno@escola.com',
-                cpfCnpj: aluno.cpf ? aluno.cpf.replace(/[^\d]/g, '') : '',
-                mobilePhone: aluno.whatsapp ? aluno.whatsapp.replace(/[^\d]/g, '') : '91999999999',
-                value: log.amount,
-                dueDate: log.date,
-                description: log.description,
-                financeLogId: financeLogId
-            })
+            body: JSON.stringify(payloadData)
         });
 
         const data = await response.json();
@@ -4130,18 +4131,17 @@ async function gerarCobrancaAsaas(financeLogId) {
 
         const linkFatura = data.invoiceUrl;
 
-        // Atualiza no Firestore
         await db.collection("financeLogs").doc(financeLogId).update({
             invoiceUrl: linkFatura,
             asaasPaymentId: data.paymentId
         });
 
-        alert("Fatura gerada com sucesso pelo módulo!");
+        alert("Fatura gerada com sucesso!");
         window.open(linkFatura, '_blank');
 
     } catch (e) {
         console.error("Erro ao chamar módulo Asaas:", e);
-        alert("Erro de comunicação com a API da Vercel: " + e.message);
+        alert("Erro de comunicação com a API: " + e.message);
     }
 }	
 	</script>
