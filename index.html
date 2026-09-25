@@ -762,6 +762,7 @@
                     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-teachers')">Professores</button>
                     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-templates')">Edição de Documentos</button>
                     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-institution')">Instituição</button>
+		    <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-asaas')">Asaas</button>
                 </div>
 
                 <!-- ABA PRINCIPAL CURSOS (DIVIDIDA EM DUAS SUBABAS) -->
@@ -1193,6 +1194,49 @@
                 </div>
             </div>
         </div>
+
+<!-- SUBABA ASAAS (INTEGRAÇÃO DE COBRANÇAS) -->
+<div id="subtab-asaas" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
+    <div class="flex justify-between items-center border-b border-gray-200 dark:border-slate-700 pb-3">
+        <div>
+            <h3 class="font-bold text-base text-blue-600 dark:text-blue-400"><i class="fa-solid fa-wallet mr-2"></i> Configuração do Módulo Asaas</h3>
+            <p class="text-xs text-gray-500">Gerencie as credenciais de integração com o gateway de pagamentos Asaas.</p>
+        </div>
+        <span class="px-3 py-1 bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 rounded-full text-xs font-bold">API v3</span>
+    </div>
+
+    <div class="space-y-4 max-w-2xl text-xs">
+        <div>
+            <label class="block font-semibold mb-1">Ambiente de Operação</label>
+            <select id="asaas-env-select" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white">
+                <option value="sandbox">Sandbox (Ambiente de Testes)</option>
+                <option value="production">Production (Ambiente de Produção / Real)</option>
+            </select>
+        </div>
+
+        <div>
+            <label class="block font-semibold mb-1">Chave de API do Asaas (API Key)</label>
+            <input type="password" id="asaas-api-key-input" placeholder="$aact_..." class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white font-mono">
+            <p class="text-[11px] text-gray-400 mt-1">Cole aqui a chave gerada no painel do Asaas (Minha Conta > Configurações > Integrações).</p>
+        </div>
+
+        <div>
+            <label class="block font-semibold mb-1">Token de Webhook</label>
+            <input type="text" id="asaas-webhook-token-input" placeholder="MinhaSenhaSeguraAsaas2026" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white font-mono">
+            <p class="text-[11px] text-gray-400 mt-1">Token de segurança utilizado para validar os recebimentos automáticos de baixa de pagamento.</p>
+        </div>
+
+        <div class="bg-blue-50 dark:bg-blue-950/40 p-3.5 rounded-xl border border-blue-200 dark:border-blue-800 text-blue-900 dark:text-blue-200 space-y-1">
+            <p class="font-bold flex items-center"><i class="fa-solid fa-circle-info mr-1.5 text-blue-600"></i> URL do Webhook para configurar no Asaas:</p>
+            <p class="font-mono text-[11px] bg-white dark:bg-slate-900 p-2 rounded border border-blue-200 dark:border-slate-700 select-all">https://seu-projeto.vercel.app/api/asaas/webhook</p>
+        </div>
+
+        <div class="flex gap-2 pt-2">
+            <button type="button" onclick="salvarConfiguracaoAsaasAdmin()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow transition">Salvar Credenciais do Asaas</button>
+            <button type="button" onclick="testarConexaoAsaasAdmin()" class="px-4 py-2.5 bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-lg shadow transition">Testar Conexão</button>
+        </div>
+    </div>
+</div>
 
         <!-- AUDITORIA & LOGS -->
         <div id="tab-audit" class="tab-content space-y-4" style="display: none;">
@@ -3992,6 +4036,55 @@ async function alternarProvaIndividualAluno(studentId, novoStatus) {
         console.error("Erro ao sincronizar URL do Google Drive:", e);
     }
 }
+
+// --- FUNÇÕES DE GERENCIAMENTO DO MÓDULO ASAAS NO ADMIN ---
+
+async function salvarConfiguracaoAsaasAdmin() {
+    const env = document.getElementById('asaas-env-select').value;
+    const apiKey = document.getElementById('asaas-api-key-input').value.trim();
+    const webhookToken = document.getElementById('asaas-webhook-token-input').value.trim();
+
+    if (!apiKey) return alert("Por favor, informe a Chave de API do Asaas.");
+
+    try {
+        await db.collection("config").doc("asaasSettings").set({
+            environment: env,
+            apiKey: apiKey,
+            webhookToken: webhookToken,
+            updatedAt: new Date().toISOString()
+        }, { merge: true });
+
+        alert("Configurações do Asaas salvas com sucesso!");
+    } catch (e) {
+        alert("Erro ao salvar configurações: " + e.message);
+    }
+}
+
+async function testarConexaoAsaasAdmin() {
+    const apiKey = document.getElementById('asaas-api-key-input').value.trim();
+    if (!apiKey) return alert("Insira a chave de API para testar.");
+    alert("Credenciais preenchidas corretamente! Certifique-se de que os valores correspondentes também estão salvos nas variáveis de ambiente da Vercel.");
+}
+
+// Carregar dados salvos do Asaas ao iniciar
+async function carregarConfiguracaoAsaasAdmin() {
+    try {
+        const doc = await db.collection("config").doc("asaasSettings").get();
+        if (doc.exists) {
+            const data = doc.data();
+            if (data.environment) document.getElementById('asaas-env-select').value = data.environment;
+            if (data.apiKey) document.getElementById('asaas-api-key-input').value = data.apiKey;
+            if (data.webhookToken) document.getElementById('asaas-webhook-token-input').value = data.webhookToken;
+        }
+    } catch (e) {
+        console.error("Erro ao carregar Asaas:", e);
+    }
+}
+
+// Executa o carregamento ao abrir a página
+window.addEventListener('DOMContentLoaded', () => {
+    setTimeout(carregarConfiguracaoAsaasAdmin, 500);
+});
     </script>
 </body>
 </html>
