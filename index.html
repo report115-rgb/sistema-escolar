@@ -761,7 +761,6 @@
                     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-calendar')">Calendário Semestral</button>
                     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-teachers')">Professores</button>
                     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-templates')">Edição de Documentos</button>
-                    <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-fin-config')">Asaas</button>
                     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-institution')">Instituição</button>
                 </div>
 
@@ -1143,24 +1142,6 @@
                     <button onclick="saveCourseTemplates()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow">Salvar Modelos e Edição de Documentos</button>
                 </div>
 
-                <!-- SUBABA ASAAS -->
-                <div id="subtab-fin-config" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-semibold mb-1">Chave de API do Asaas</label>
-                            <input type="password" id="asaas-api-key" placeholder="$aact_..." class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold mb-1">Ambiente</label>
-                            <select id="asaas-env" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                                <option value="sandbox">Sandbox (Testes)</option>
-                                <option value="production">Produção</option>
-                            </select>
-                        </div>
-                    </div>
-                    <button onclick="saveAsaasConfig()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow">Salvar Credenciais Asaas</button>
-                </div>
-
                 <!-- SUBABA INSTITUIÇÃO -->
                 <div id="subtab-institution" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1453,94 +1434,6 @@
         });
         // ==========================================
 
-        class AsaasIntegrationService {
-            constructor() {
-                const config = JSON.parse(localStorage.getItem('app_asaas_config')) || { apiKey: '', env: 'production' };
-                this.apiKey = config.apiKey ? config.apiKey.trim() : '';
-                // Força 'production' caso esteja vazio ou divergente
-                this.environment = (config.env === 'production' || config.env === 'Produção') ? 'production' : 'sandbox';
-            }
-
-            async fazerRequisicaoAsaas(endpoint, method = 'GET', payload = null) {
-                const gdriveUrl = document.getElementById('input-gdrive-url').value.trim();
-                if (!gdriveUrl) throw new Error("URL do Web App do Google Apps Script não configurada em Sistema > Instituição.");
-
-                const response = await fetch(gdriveUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({
-                        action: "asaas",
-                        apiKey: this.apiKey,
-                        env: this.environment,
-                        endpoint: endpoint,
-                        method: method,
-                        payload: payload
-                    })
-                });
-
-                const text = await response.text();
-                let data;
-                try {
-                    data = JSON.parse(text);
-                } catch (err) {
-                    throw new Error("Falha ao comunicar com o servidor de integração: " + text.substring(0, 100));
-                }
-
-                if (data.errors) {
-                    const msg = data.errors.map(e => e.description).join(', ');
-                    throw new Error("Asaas recusou: " + msg);
-                }
-                return data;
-            }
-
-            async criarOuObterCliente(aluno) {
-                if (!this.apiKey) throw new Error("Chave de API do Asaas não configurada.");
-                const cpfCnpjLimpo = aluno.cpf ? aluno.cpf.replace(/\D/g, '') : '';
-                
-                try {
-                    const searchData = await this.fazerRequisicaoAsaas(`/customers?cpfCnpj=${cpfCnpjLimpo}`, 'GET');
-                    if (searchData.data && searchData.data.length > 0) {
-                        return searchData.data[0].id;
-                    }
-
-                    const createData = await this.fazerRequisicaoAsaas('/customers', 'POST', {
-                        name: aluno.fullname,
-                        email: aluno.email || "aluno@se7educacional.com",
-                        cpfCnpj: cpfCnpjLimpo,
-                        phone: aluno.whatsapp ? aluno.whatsapp.replace(/\D/g, '') : '91999999999'
-                    });
-                    return createData.id;
-                } catch (err) {
-                    console.error("Erro na integração com Asaas (Cliente):", err);
-                    throw err;
-                }
-            }
-
-            async criarCobrancaBoleto(customerId, dadosCobranca) {
-                const payload = {
-                    customer: customerId,
-                    billingType: 'UNDEFINED',
-                    value: parseFloat(dadosCobranca.valor),
-                    dueDate: dadosCobranca.vencimento,
-                    description: dadosCobranca.descricao || 'Taxa Educacional SE7',
-                    externalReference: dadosCobranca.referencia || `SE7_${Date.now()}`
-                };
-
-                const data = await this.fazerRequisicaoAsaas('/payments', 'POST', payload);
-
-                // Garante que o domínio seja estritamente de Produção se o ambiente for production
-                const dominioAsaas = this.environment === 'production' ? 'www.asaas.com' : 'sandbox.asaas.com';
-                const linkFatura = data.invoiceUrl || data.bankSlipUrl || (data.id ? `https://${dominioAsaas}/i/${data.id}` : '');
-
-                return {
-                    paymentId: data.id || '',
-                    invoiceUrl: linkFatura,
-                    bankSlipUrl: linkFatura,
-                    identificationField: data.identificationField || ''
-                };
-            }
-        }
-
         function iniciarRelogioAoVivo() {
             const relogioEl = document.getElementById('header-live-clock');
             if (!relogioEl) return;
@@ -1830,7 +1723,6 @@
             }
             renderizarLogsAuditoria();
             renderizarSolicitacoesPendentes();
-            carregarConfiguracaoAsaasNaTela();
             renderizarCamposDatasCalendario();
             calcularTotalCurso();
         });
@@ -2908,20 +2800,6 @@
                     }
                 }
 
-                try {
-                    const asaasService = new AsaasIntegrationService();
-                    if (asaasService.apiKey && cursoObj && cursoObj.valorParcela) {
-                        const customerId = await asaasService.criarOuObterCliente(studentData);
-                        const dataVenc = new Date(); dataVenc.setDate(dataVenc.getDate() + 10);
-                        const cobranca = await asaasService.criarCobrancaBoleto(customerId, { valor: cursoObj.valorParcela, vencimento: dataVenc.toISOString().slice(0, 10), descricao: `Mensalidade 1/${cursoObj.qtdParcelas || 1}: ${fullname}` });
-                        await db.collection("financeLogs").add({ studentId: novoAlunoId, studentName: fullname, studentCode: code, description: "COBRANÇA ASAAS - Parcela 1", amount: cursoObj.valorParcela, discountAmount: cursoObj.valorDesconto || cursoObj.valorParcela, date: new Date().toISOString().slice(0, 10), status: "PENDENTE", invoiceUrl: cobranca.invoiceUrl });
-                    }
-                } catch (e) { console.error(e); }
-
-                alert(`Matrícula efetuada com sucesso! Código: ${code}. Parcelas geradas e integradas automaticamente ao financeiro e portal do aluno.`);
-            }
-        }
-
         function editarAluno(id) {
             const aluno = students.find(s => s.id === id);
             if (!aluno) return;
@@ -3315,14 +3193,11 @@
                 return;
             }
 
-            // Descobre o ambiente atual salvo no localStorage
-            const configAsaas = JSON.parse(localStorage.getItem('app_asaas_config')) || { env: 'production' };
-            const dominioAsaas = (configAsaas.env === 'production' || configAsaas.env === 'Produção') ? 'www.asaas.com' : 'sandbox.asaas.com';
-
             container.innerHTML = `<div class="font-bold text-xs text-blue-600 dark:text-blue-400 mb-2">Exibindo ${cobrancasAluno.length} cobranças / mensalidades para ${aluno ? aluno.fullname : ''}:</div>`;
-            
-            cobrancasAluno.forEach((f, idx) => {
-                const linkPagamento = f.invoiceUrl || `https://${dominioAsaas}`;
+
+cobrancasAluno.forEach((f, idx) => {
+    const linkPagamento = f.invoiceUrl || '#';
+    const acaoLink = f.invoiceUrl ? `href="${f.invoiceUrl}" target="_blank"` : `onclick="alert('Link de pagamento não disponível ou gerenciado pelo módulo financeiro externo.')"`;
 
                 container.innerHTML += `
                     <div class="bg-gray-50 dark:bg-slate-900 p-3.5 rounded-xl border border-gray-200 dark:border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs">
@@ -3341,45 +3216,6 @@
                     </div>
                 `;
             });
-        }
-
-        async function gerarOpcoesPagamentoCobranca(logId) {
-            const cob = financeLogs.find(f => f.id === logId);
-            if(!cob) return;
-            const aluno = students.find(s => s.id === cob.studentId);
-            if(!aluno) return;
-
-            try {
-                const asaas = new AsaasIntegrationService();
-                if(!asaas.apiKey) return alert("Configure a Chave de API do Asaas na aba Sistema > Asaas.");
-                
-                const cid = await asaas.criarOuObterCliente(aluno);
-                const cobAsaas = await asaas.criarCobrancaBoleto(cid, { 
-                    valor: cob.discountAmount || cob.amount, 
-                    vencimento: cob.date, 
-                    descricao: cob.description 
-                });
-                
-                let linkFinal = cobAsaas.invoiceUrl;
-                if (!linkFinal && cobAsaas.paymentId) {
-                    const dominioAsaas = asaas.environment === 'production' ? 'www.asaas.com' : 'sandbox.asaas.com';
-                    linkFinal = `https://${dominioAsaas}/i/${cobAsaas.paymentId}`;
-                }
-
-                if (!linkFinal) {
-                    throw new Error("O Asaas não retornou a URL da fatura.");
-                }
-
-                await db.collection("financeLogs").doc(logId).update({ invoiceUrl: linkFinal });
-                
-                alert("Fatura gerada com sucesso!");
-                renderizarCobrancasAlunoSelecionadoFinanceiro(aluno.id);
-
-                window.open(linkFinal, '_blank');
-            } catch(e) {
-                // EXIBE O ERRO EXATO QUE IMPEDIU A GERAÇÃO NO ASAAS
-                alert("Erro detalhado do Asaas/Apps Script: " + e.message);
-            }
         }
 
         function popularSelectAlunosPortalMaster() {
@@ -3654,19 +3490,6 @@
 
             doc.save(`${tipoDoc}_${aluno.code}.pdf`);
             alert("Documento gerado e baixado em PDF com sucesso!");
-        }
-
-        function saveAsaasConfig() {
-            localStorage.setItem('app_asaas_config', JSON.stringify({ apiKey: document.getElementById('asaas-api-key').value, env: document.getElementById('asaas-env').value }));
-            alert("Configurações do Asaas salvas!");
-        }
-
-        function carregarConfiguracaoAsaasNaTela() {
-            const cfg = JSON.parse(localStorage.getItem('app_asaas_config'));
-            if(cfg) {
-                document.getElementById('asaas-api-key').value = cfg.apiKey || '';
-                document.getElementById('asaas-env').value = cfg.env || 'sandbox';
-            }
         }
 
         function renderDropdowns() {
