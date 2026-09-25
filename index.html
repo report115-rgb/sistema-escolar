@@ -3295,28 +3295,25 @@
             container.innerHTML = `<div class="font-bold text-xs text-blue-600 dark:text-blue-400 mb-2">Exibindo ${cobrancasAluno.length} cobranças / mensalidades para ${aluno ? aluno.fullname : ''}:</div>`;
 
 cobrancasAluno.forEach((f, idx) => {
-    const linkPagamento = f.invoiceUrl || '#';
-    const acaoLink = f.invoiceUrl ? `href="${f.invoiceUrl}" target="_blank"` : `onclick="alert('Link de pagamento não disponível ou gerenciado pelo módulo financeiro externo.')"`;
+    const textoBotao = f.invoiceUrl ? "Abrir Fatura Asaas" : "Gerar Fatura no Asaas";
 
-                container.innerHTML += `
-                    <div class="bg-gray-50 dark:bg-slate-900 p-3.5 rounded-xl border border-gray-200 dark:border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs">
-                        <div>
-                            <strong class="text-gray-900 dark:text-white text-sm">${f.description}</strong><br>
-                            <span class="text-gray-500">Vencimento: <strong>${f.date}</strong> &bull; Valor Normal: R$ ${f.amount} ${f.discountAmount ? `&bull; Com Desc. Pontualidade: <strong class="text-emerald-600">R$ ${f.discountAmount}</strong>` : ''}</span>
-                        </div>
-                        <div class="flex flex-col items-end gap-1.5 w-full sm:w-auto">
-                            <span class="px-2 py-0.5 bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 rounded text-[10px] font-bold">${f.status}</span>
-                            <div class="flex flex-wrap gap-1.5 justify-end">
-                                <a href="${linkPagamento}" target="_blank" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-semibold text-[11px] flex items-center gap-1 shadow"><i class="fa-solid fa-qrcode"></i> PIX / QR Code</a>
-                                <a href="${linkPagamento}" target="_blank" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded font-semibold text-[11px] flex items-center gap-1 shadow"><i class="fa-solid fa-barcode"></i> Boleto</a>
-                                <a href="${linkPagamento}" target="_blank" class="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded font-semibold text-[11px] flex items-center gap-1 shadow"><i class="fa-solid fa-credit-card"></i> Cartão</a>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-        }
-
+    container.innerHTML += `
+        <div class="bg-gray-50 dark:bg-slate-900 p-3.5 rounded-xl border border-gray-200 dark:border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs">
+            <div>
+                <strong class="text-gray-900 dark:text-white text-sm">${f.description}</strong><br>
+                <span class="text-gray-500">Vencimento: <strong>${f.date}</strong> &bull; Valor Normal: R$ ${f.amount} ${f.discountAmount ? `&bull; Com Desc. Pontualidade: <strong class="text-emerald-600">R$ ${f.discountAmount}</strong>` : ''}</span>
+            </div>
+            <div class="flex flex-col items-end gap-1.5 w-full sm:w-auto">
+                <span class="px-2 py-0.5 bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 rounded text-[10px] font-bold">${f.status}</span>
+                <div class="flex flex-wrap gap-1.5 justify-end">
+                    <button onclick="gerarCobrancaAsaas('${f.id}')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded font-semibold text-[11px] flex items-center gap-1.5 shadow">
+                        <i class="fa-solid fa-file-invoice-dollar"></i> ${textoBotao}
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+});
         function popularSelectAlunosPortalMaster() {
             const select = document.getElementById('admin-select-aluno-portal');
             if(!select) return;
@@ -4085,6 +4082,91 @@ async function carregarConfiguracaoAsaasAdmin() {
 window.addEventListener('DOMContentLoaded', () => {
     setTimeout(carregarConfiguracaoAsaasAdmin, 500);
 });
-    </script>
+    
+// --- FUNÇÃO PARA GERAR COBRANÇA REAL NO ASAAS AO CLICAR NO BOTÃO ---
+async function gerarCobrancaAsaas(financeLogId) {
+    const log = financeLogs.find(f => f.id === financeLogId);
+    if (!log) return alert("Registro financeiro não encontrado.");
+
+    if (log.invoiceUrl && log.invoiceUrl !== '#') {
+        window.open(log.invoiceUrl, '_blank');
+        return;
+    }
+
+    const aluno = students.find(s => s.id === log.studentId);
+    if (!aluno) return alert("Dados do aluno não encontrados para esta cobrança.");
+
+    alert("Conectando com o Asaas para gerar a cobrança... Aguarde um instante.");
+
+    try {
+        const configDoc = await db.collection("config").doc("asaasSettings").get();
+        if (!configDoc.exists || !configDoc.data().apiKey) {
+            return alert("As credenciais do Asaas não foram encontradas no painel administrativo (Sistema > Asaas).");
+        }
+
+        const asaasConfig = configDoc.data();
+        const baseUrl = asaasConfig.environment === 'production' 
+            ? 'https://www.asaas.com/api/v3' 
+            : 'https://sandbox.asaas.com/api/v3';
+
+        let customerId = aluno.asaasCustomerId;
+        if (!customerId) {
+            const customerResponse = await fetch(`${baseUrl}/customers`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'access_token': asaasConfig.apiKey
+                },
+                body: JSON.stringify({
+                    name: aluno.fullname,
+                    email: aluno.email || 'aluno@escola.com',
+                    cpfCnpj: aluno.cpf ? aluno.cpf.replace(/[^\d]/g, '') : '',
+                    mobilePhone: aluno.whatsapp ? aluno.whatsapp.replace(/[^\d]/g, '') : '91999999999'
+                })
+            });
+            const customerData = await customerResponse.json();
+            if (customerData.errors) {
+                return alert("Erro ao criar cliente no Asaas: " + customerData.errors[0].description);
+            }
+            customerId = customerData.id;
+            await db.collection("students").doc(aluno.id).update({ asaasCustomerId: customerId });
+        }
+
+        const paymentResponse = await fetch(`${baseUrl}/payments`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'access_token': asaasConfig.apiKey
+            },
+            body: JSON.stringify({
+                customer: customerId,
+                billingType: 'UNDEFINED',
+                value: log.amount,
+                dueDate: log.date,
+                description: log.description
+            })
+        });
+
+        const paymentData = await paymentResponse.json();
+        if (paymentData.errors) {
+            return alert("Erro ao gerar cobrança no Asaas: " + paymentData.errors[0].description);
+        }
+
+        const linkFatura = paymentData.invoiceUrl;
+
+        await db.collection("financeLogs").doc(financeLogId).update({
+            invoiceUrl: linkFatura,
+            asaasPaymentId: paymentData.id
+        });
+
+        alert("Cobrança gerada com sucesso!");
+        window.open(linkFatura, '_blank');
+
+    } catch (e) {
+        console.error("Erro na integração com Asaas:", e);
+        alert("Erro de comunicação com o Asaas: " + e.message);
+    }
+}
+	</script>
 </body>
 </html>
