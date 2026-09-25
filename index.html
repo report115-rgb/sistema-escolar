@@ -1987,48 +1987,101 @@
         }
 
         async function saveCourse() {
-    const editId = document.getElementById('edit-course-id').value;
-    const name = document.getElementById('input-course-name').value.trim();
-    const sigla = document.getElementById('input-course-sigla').value.trim().toUpperCase();
-    const nivel = document.getElementById('input-course-nivel').value;
-    
-    if (!name || !sigla || !nivel) return alert("Preencha o nome, a sigla e selecione o nível do curso!");
-    
-    const semestre = document.getElementById('input-course-semestre').value;
-    const qtdParcelas = parseInt(document.getElementById('input-course-parcelas').value) || 1;
-    const valorParcela = parseFloat(document.getElementById('input-course-valor-parcela').value) || 0;
-    const valorDesconto = parseFloat(document.getElementById('input-course-valor-desconto').value) || 0;
-    const vencimento = parseInt(document.getElementById('input-course-vencimento').value) || 10;
-    const valorTotal = qtdParcelas * valorParcela;
+            const editId = document.getElementById('edit-course-id').value;
+            const name = document.getElementById('input-course-name').value.trim();
+            const sigla = document.getElementById('input-course-sigla').value.trim().toUpperCase();
+            const nivel = document.getElementById('input-course-nivel').value;
+            
+            if (!name || !sigla || !nivel) return alert("Preencha o nome, a sigla e selecione o nível do curso!");
+            
+            const semestre = document.getElementById('input-course-semestre').value;
+            const qtdParcelas = parseInt(document.getElementById('input-course-parcelas').value) || 1;
+            const valorParcela = parseFloat(document.getElementById('input-course-valor-parcela').value) || 0;
+            const valorDesconto = parseFloat(document.getElementById('input-course-valor-desconto').value) || 0;
+            const vencimento = parseInt(document.getElementById('input-course-vencimento').value) || 10;
+            const valorTotal = qtdParcelas * valorParcela;
 
-    const courseData = {
-        name, 
-        sigla, 
-        nivel, 
-        semestre,
-        eixo: document.getElementById('input-course-eixo').value.trim(),
-        hours: document.getElementById('input-course-hours').value.trim(),
-        conselho: document.getElementById('input-course-conselho').value.trim(),
-        qtdParcelas, valorParcela, valorDesconto, vencimento, valorTotal
-    };
+            const courseData = {
+                name, 
+                sigla, 
+                nivel, 
+                semestre,
+                eixo: document.getElementById('input-course-eixo').value.trim(),
+                hours: document.getElementById('input-course-hours').value.trim(),
+                conselho: document.getElementById('input-course-conselho').value.trim(),
+                qtdParcelas, valorParcela, valorDesconto, vencimento, valorTotal
+            };
 
-    if (editId) {
-        await db.collection("courses").doc(editId).update(courseData);
-        cancelarEdicaoCurso();
-        alert("Curso atualizado com sucesso!");
-    } else {
-        courseData.subjects = [];
-        courseData.contractTemplate = "";
-        courseData.declTemplate = "";
-        courseData.historyTemplate = "";
-        courseData.historyPdfUrl = "";
-        await db.collection("courses").add(courseData);
-        document.getElementById('input-course-name').value = '';
-        document.getElementById('input-course-sigla').value = '';
-        document.getElementById('input-course-nivel').value = '';
-        alert("Curso salvo com sucesso!");
-    }
-}
+            if (editId) {
+                // 1. Atualiza os dados principais do curso
+                await db.collection("courses").doc(editId).update(courseData);
+
+                // 2. Propaga e recalcula no financeiro de TODOS os alunos matriculados neste curso
+                const alunosVinculados = students.filter(s => s.courseId === editId);
+                let logsAtualizados = 0;
+
+                for (const aluno of alunosVinculados) {
+                    // Busca todas as parcelas pendentes do aluno
+                    const parcelasAluno = financeLogs.filter(f => f.studentId === aluno.id && f.status && f.status.includes("PENDENTE"));
+                    
+                    // A) Atualiza as parcelas PENDENTES já existentes
+                    for (let i = 0; i < parcelasAluno.length; i++) {
+                        const log = parcelasAluno[i];
+                        const numParcela = i + 1;
+                        if (numParcela <= qtdParcelas) {
+                            await db.collection("financeLogs").doc(log.id).update({
+                                description: `Mensalidade ${numParcela}/${qtdParcelas} - ${name}`,
+                                amount: valorParcela,
+                                discountAmount: valorDesconto
+                            });
+                            logsAtualizados++;
+                        } else {
+                            // Se a nova quantidade de parcelas for menor, remove as excedentes pendentes
+                            await db.collection("financeLogs").doc(log.id).delete();
+                        }
+                    }
+
+                    // B) Se a nova quantidade de parcelas for maior que as que o aluno tinha
+                    if (parcelasAluno.length < qtdParcelas) {
+                        const qtdCriar = qtdParcelas - parcelasAluno.length;
+                        const inicioNum = parcelasAluno.length + 1;
+                        for (let i = 0; i < qtdCriar; i++) {
+                            const numP = inicioNum + i;
+                            const dataV = new Date();
+                            dataV.setMonth(dataV.getMonth() + i);
+                            dataV.setDate(vencimento);
+                            const dataStr = dataV.toISOString().slice(0, 10);
+
+                            await db.collection("financeLogs").add({
+                                studentId: aluno.id,
+                                studentName: aluno.fullname,
+                                studentCode: aluno.code,
+                                description: `Mensalidade ${numP}/${qtdParcelas} - ${name}`,
+                                amount: valorParcela,
+                                discountAmount: valorDesconto,
+                                date: dataStr,
+                                status: "PENDENTE (Desc. Pontualidade disponível até o vencimento)"
+                            });
+                        }
+                    }
+                }
+
+                registrarLogAuditoria(`Atualizou o curso "${name}" e sincronizou o financeiro de ${alunosVinculados.length} aluno(s)`, "Configurações / Curso");
+                cancelarEdicaoCurso();
+                alert(`Curso atualizado! O financeiro de ${alunosVinculados.length} aluno(s) vinculados foi recalculado e sincronizado no sistema e no Portal do Aluno.`);
+            } else {
+                courseData.subjects = [];
+                courseData.contractTemplate = "";
+                courseData.declTemplate = "";
+                courseData.historyTemplate = "";
+                courseData.historyPdfUrl = "";
+                await db.collection("courses").add(courseData);
+                document.getElementById('input-course-name').value = '';
+                document.getElementById('input-course-sigla').value = '';
+                document.getElementById('input-course-nivel').value = '';
+                alert("Curso salvo com sucesso!");
+            }
+        }
 
         function renderCourses() {
             const list = document.getElementById('courses-list');
@@ -3476,13 +3529,15 @@ cobrancasAluno.forEach((f, idx) => {
 
             let textoCorpo = "";
             const hojeStr = new Date().toLocaleDateString('pt-BR');
+            const nomeCursoAtualizado = curso ? curso.name : '---';
+            const cargaHorariaAtualizada = curso ? (curso.hours || '---') : '---';
 
             if(tipoDoc === 'declaracao') {
-                textoCorpo = (curso && curso.declTemplate) ? curso.declTemplate.replace(/\{\{nome\}\}/g, aluno.fullname).replace(/\{\{cpf\}\}/g, aluno.cpf).replace(/\{\{curso\}\}/g, curso.name).replace(/\{\{endereco_completo\}\}/g, enderecoCompleto) : `Declaramos para os devidos fins que o(a) aluno(a) ${aluno.fullname}, CPF ${aluno.cpf}, residente em ${enderecoCompleto}, encontra-se regularmente matriculado(a) no curso ${curso ? curso.name : 'Técnico'}.`;
+                textoCorpo = (curso && curso.declTemplate) ? curso.declTemplate.replace(/\{\{nome\}\}/g, aluno.fullname).replace(/\{\{cpf\}\}/g, aluno.cpf).replace(/\{\{curso\}\}/g, nomeCursoAtualizado).replace(/\{\{carga_horaria\}\}/g, cargaHorariaAtualizada).replace(/\{\{endereco_completo\}\}/g, enderecoCompleto) : `Declaramos para os devidos fins que o(a) aluno(a) ${aluno.fullname}, CPF ${aluno.cpf}, residente em ${enderecoCompleto}, encontra-se regularmente matriculado(a) no curso ${nomeCursoAtualizado}.`;
             } else if(tipoDoc === 'contrato') {
-                textoCorpo = (curso && curso.contractTemplate) ? curso.contractTemplate.replace(/\{\{nome\}\}/g, aluno.fullname).replace(/\{\{cpf\}\}/g, aluno.cpf).replace(/\{\{curso\}\}/g, curso.name).replace(/\{\{endereco_completo\}\}/g, enderecoCompleto) : `Contrato padrão firmado com ${aluno.fullname}, CPF ${aluno.cpf}, residente na ${enderecoCompleto}, curso ${curso ? curso.name : '---'}.`;
+                textoCorpo = (curso && curso.contractTemplate) ? curso.contractTemplate.replace(/\{\{nome\}\}/g, aluno.fullname).replace(/\{\{cpf\}\}/g, aluno.cpf).replace(/\{\{curso\}\}/g, nomeCursoAtualizado).replace(/\{\{carga_horaria\}\}/g, cargaHorariaAtualizada).replace(/\{\{endereco_completo\}\}/g, enderecoCompleto) : `Contrato padrão firmado com ${aluno.fullname}, CPF ${aluno.cpf}, residente na ${enderecoCompleto}, curso ${nomeCursoAtualizado}.`;
             } else {
-                textoCorpo = (curso && curso.historyTemplate) ? curso.historyTemplate.replace(/\{\{nome\}\}/g, aluno.fullname).replace(/\{\{cpf\}\}/g, aluno.cpf).replace(/\{\{curso\}\}/g, curso.name).replace(/\{\{endereco_completo\}\}/g, enderecoCompleto) : `Histórico Escolar do(a) aluno(a) ${aluno.fullname}, CPF ${aluno.cpf}, residente em ${enderecoCompleto}, vinculado(a) ao curso ${curso ? curso.name : '---'} e turma ${turma ? turma.name : '---'}. Situação: Concluído / Regular.`;
+                textoCorpo = (curso && curso.historyTemplate) ? curso.historyTemplate.replace(/\{\{nome\}\}/g, aluno.fullname).replace(/\{\{cpf\}\}/g, aluno.cpf).replace(/\{\{curso\}\}/g, nomeCursoAtualizado).replace(/\{\{carga_horaria\}\}/g, cargaHorariaAtualizada).replace(/\{\{endereco_completo\}\}/g, enderecoCompleto) : `Histórico Escolar do(a) aluno(a) ${aluno.fullname}, CPF ${aluno.cpf}, residente em ${enderecoCompleto}, vinculado(a) ao curso ${nomeCursoAtualizado} (Carga Horária: ${cargaHorariaAtualizada}) e turma ${turma ? turma.name : '---'}. Situação: Concluído / Regular.`;
             }
 
             doc.text(textoCorpo, 20, 60, { maxWidth: 170 });
