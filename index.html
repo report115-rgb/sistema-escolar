@@ -8,8 +8,12 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- COLE EXATAMENTE AQUI EMBAIXO: -->
+    <link rel="icon" type="image/png" id="app-favicon" href="">
+
     <!-- Bibliotecas Externas para Geração de PDF, QR Code, Firebase e FullCalendar -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <!-- FullCalendar CSS & JS CDN -->
     <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css' rel='stylesheet' />
@@ -3698,20 +3702,28 @@
 
         function removeLogo() { currentLogoDataUrl = ""; updateLogoPreview(""); }
 
-        function updateLogoPreview(src) {
-            const box = document.getElementById('logo-preview');
-            const header = document.getElementById('header-logo-img');
-            const fallback = document.getElementById('header-logo-fallback');
-            const loginLogoImg = document.getElementById('login-logo-img');
+    function updateLogoPreview(src) {
+    const box = document.getElementById('logo-preview');
+    const header = document.getElementById('header-logo-img');
+    const fallback = document.getElementById('header-logo-fallback');
+    const loginLogoImg = document.getElementById('login-logo-img');
+    
+    // ADICIONE ESTA LINHA ABAIXO PARA ATUALIZAR O ÍCONE DA ABA DO NAVEGADOR
+    const faviconEl = document.getElementById('app-favicon');
 
-            if(box) box.innerHTML = src ? `<img src="${src}" class="h-full object-contain">` : 'Sem logo';
-            if(header) { header.src = src; header.style.display = src ? 'block' : 'none'; }
-            if(fallback) fallback.style.display = src ? 'none' : 'flex';
-            if(loginLogoImg) {
-                if(src) { loginLogoImg.src = src; loginLogoImg.style.display = 'block'; }
-                else { loginLogoImg.style.display = 'none'; }
-            }
-        }
+    if(box) box.innerHTML = src ? `<img src="${src}" class="h-full object-contain">` : 'Sem logo';
+    if(header) { header.src = src; header.style.display = src ? 'block' : 'none'; }
+    if(fallback) fallback.style.display = src ? 'none' : 'flex';
+    if(loginLogoImg) {
+        if(src) { loginLogoImg.src = src; loginLogoImg.style.display = 'block'; }
+        else { loginLogoImg.style.display = 'none'; }
+    }
+    
+    // ADICIONE ESTE BLOCO ABAIXO PARA TROCAR O GLOBO PELA SUA LOGO
+    if(faviconEl && src) {
+        faviconEl.href = src;
+    }
+}
 
         async function salvarBrandingNaNuvem() {
             await db.collection("config").doc("institution").set({
