@@ -13,7 +13,7 @@
     <link rel="icon" type="image/png" id="app-favicon" href="">
 
     <!-- Bibliotecas Externas para Geração de PDF, QR Code, Firebase e FullCalendar -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <!-- FullCalendar CSS & JS CDN -->
     <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css' rel='stylesheet' />
@@ -2909,6 +2909,51 @@
                 const novoAlunoId = docRef.id;
                 closeNewStudentModal();
 
+// --- INSERÇÃO AUTOMÁTICA NO FINANCEIRO PARA GARANTIR QUE O ALUNO APAREÇA ---
+                try {
+                    const cobrancasExistentes = financeLogs.filter(f => f.studentId === novoAlunoId);
+                    if (cobrancasExistentes.length === 0) {
+                        if (cursoObj && cursoObj.valorParcela && cursoObj.qtdParcelas) {
+                            const qtdP = cursoObj.qtdParcelas;
+                            const valP = cursoObj.valorParcela;
+                            const valDesc = cursoObj.valorDesconto || valP;
+                            const diaVenc = cursoObj.vencimento || 10;
+                            
+                            for (let i = 1; i <= qtdP; i++) {
+                                const dataV = new Date();
+                                dataV.setMonth(dataV.getMonth() + (i - 1));
+                                dataV.setDate(diaVenc);
+                                const dataStr = dataV.toISOString().slice(0, 10);
+
+                                await db.collection("financeLogs").add({
+                                    studentId: novoAlunoId,
+                                    studentName: fullname,
+                                    studentCode: code,
+                                    description: `Mensalidade ${i}/${qtdP} - ${cursoObj.name}`,
+                                    amount: parseFloat(valP),
+                                    discountAmount: parseFloat(valDesc),
+                                    date: dataStr,
+                                    status: "PENDENTE (Desc. Pontualidade disponível até o vencimento)"
+                                });
+                            }
+                        } else {
+                            // Caso o curso não tenha parcelas configuradas, cria um registro padrão para o nome aparecer no financeiro
+                            await db.collection("financeLogs").add({
+                                studentId: novoAlunoId,
+                                studentName: fullname,
+                                studentCode: code,
+                                description: `Matrícula / Taxa Geral - ${cursoObj ? cursoObj.name : 'Curso Geral'}`,
+                                amount: 0.00,
+                                discountAmount: 0.00,
+                                date: new Date().toISOString().slice(0, 10),
+                                status: "PENDENTE"
+                            });
+                        }
+                    }
+                } catch (erroFin) {
+                    console.error("Erro ao gerar financeiro automático:", erroFin);
+                }
+
                 if (cursoObj && cursoObj.valorParcela && cursoObj.qtdParcelas) {
                 notificarCentralWhatsAppMatriz(studentData, cursoObj ? cursoObj.name : "Curso Geral");
                     const qtdP = cursoObj.qtdParcelas;
@@ -4258,7 +4303,7 @@ async function gerarCobrancaAsaas(financeLogId) {
         if (!dadosCobranca.success || !dadosCobranca.invoiceUrl) {
             return alert("Erro ao gerar cobrança no Asaas: " + JSON.stringify(dadosCobranca.error || 'Erro desconhecido'));
         }
-a
+
         const linkFatura = dadosCobranca.invoiceUrl;
 
         // Atualiza o registro financeiro no Firestore
