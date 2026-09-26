@@ -68,12 +68,6 @@
                 <i class="fa-solid fa-user-plus"></i>
                 <span>Quero me matricular</span>
             </button>
-
-            <!-- BOTÃO DE TESTE RÁPIDO DO PAINEL EJA -->
-            <button onclick="testarPainelEJAAmostra()" class="w-full py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-2xl shadow-lg transition flex items-center justify-center space-x-2 text-xs">
-                <i class="fa-solid fa-flask"></i>
-                <span>[TESTE] Visualizar Painel EJA Direto</span>
-            </button>
         </div>
 
         <div class="text-center text-[10px] text-blue-300 pb-2 space-y-0.5">
@@ -602,7 +596,6 @@
             }
         }
 
-        // --- FUNÇÃO DE RECARREGAR / ATUALIZAR DADOS EM TEMPO REAL ---
         async function recarregarDadosAppAluno() {
             if (!alunoLogado || !alunoLogado.id) return;
 
@@ -808,7 +801,6 @@
             await carregarDadosPainel();
         }
 
-        // --- VERIFICAÇÃO DE PENDÊNCIAS COM REGRA DIFERENCIADA PARA EJA ---
         async function verificarTodasPendencias() {
             if(!alunoLogado) return;
             
@@ -1117,43 +1109,6 @@
             });
 
             await verificarTodasPendencias();
-        }
-
-        function testarPainelEJAAmostra() {
-            alunoLogado = {
-                id: "teste_eja_123",
-                code: "MAT-EJA-TESTE",
-                fullname: "Sâmea Caroline (Aluno Teste EJA)",
-                cpf: "000.000.000-00",
-                rg: "1234567",
-                birthDate: "1995-01-01",
-                dob: "1995-01-01",
-                email: "teste.eja@sistema.com",
-                whatsapp: "(91) 98888-8888",
-                address: "Tv. Teste, nº 100 - Belém/PA",
-                endereco: "Tv. Teste, nº 100 - Belém/PA",
-                courseId: "curso_supletivo_ficticio",
-                documentos: {},
-                controleEJA: { apostilaAtiva: false, provaAtiva: false }
-            };
-
-            document.getElementById('welcome-screen').style.display = 'none';
-            document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('matricula-screen').style.display = 'none';
-            document.getElementById('main-app').style.display = 'flex';
-
-            document.getElementById('header-aluno-nome').textContent = alunoLogado.fullname;
-            document.getElementById('header-aluno-curso').textContent = "Ensino Médio - Supletivo (EJA)";
-            document.getElementById('info-curso-completo').textContent = "Ensino Médio - Supletivo (EJA)";
-
-            const cursoSimuladoEJA = {
-                name: "Ensino Médio - Supletivo (EJA)",
-                nivel: "Supletivo",
-                sigla: "EJA"
-            };
-
-            adaptarPainelPorModalidadeCurso(cursoSimuladoEJA);
-            carregarDadosPainel();
         }
 
         function adaptarPainelPorModalidadeCurso(cursoObj) {
