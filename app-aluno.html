@@ -319,29 +319,52 @@
         </div>
     </div>
 
-    <!-- MODAL DA CARTEIRINHA ID -->
+    <!-- MODAL DA CARTEIRINHA ID ESTILIZADA -->
     <div id="modal-carteirinha" class="fixed inset-0 z-[70] bg-black/70 flex items-center justify-center p-4" style="display: none;">
         <div class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center space-y-4 relative">
             <button onclick="fecharModalCarteirinha()" class="absolute top-4 right-4 text-slate-400 hover:text-red-500 text-xl font-bold">&times;</button>
-            <div class="bg-gradient-to-br from-blue-900 to-indigo-900 text-white p-5 rounded-2xl shadow-md space-y-3 relative overflow-hidden">
-                <div class="flex items-center space-x-2 text-left">
-                    <div class="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center text-sm font-bold">
-                        <i class="fa-solid fa-graduation-cap"></i>
+            
+            <!-- CARTÃO ESTUDANTIL ID -->
+            <div class="bg-gradient-to-br from-blue-900 via-indigo-900 to-slate-900 text-white p-5 rounded-2xl shadow-xl space-y-3 relative overflow-hidden border border-white/10 text-left">
+                <div class="flex items-center justify-between border-b border-white/20 pb-2">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-8 h-8 bg-white/25 rounded-lg flex items-center justify-center text-sm font-bold shadow">
+                            <i class="fa-solid fa-graduation-cap"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-xs uppercase tracking-wider">Carteirinha Estudantil</h4>
+                            <p class="text-[9px] text-blue-200">SE7 &bull; Identidade Acadêmica</p>
+                        </div>
                     </div>
+                    <span class="text-[9px] bg-emerald-500 text-white px-2 py-0.5 rounded-full font-bold">Oficial</span>
+                </div>
+
+                <div class="flex items-center gap-3 pt-1">
+                    <div class="w-16 h-20 bg-white/10 rounded-xl overflow-hidden border border-white/20 shrink-0 flex items-center justify-center relative cursor-pointer" onclick="dispararTrocaFoto()" title="Alterar foto na carteirinha">
+                        <div id="card-avatar-box" class="w-full h-full flex items-center justify-center">
+                            <i class="fa-solid fa-user text-blue-200 text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="space-y-1 truncate flex-1">
+                        <h3 class="font-bold text-xs truncate" id="card-nome-txt">---</h3>
+                        <p class="text-[10px] text-blue-200 truncate" id="card-curso-txt">---</p>
+                        <p class="text-[10px] text-blue-300 truncate"><strong class="text-white">Turma:</strong> <span id="card-turma-txt">---</span></p>
+                        <p class="text-[10px] text-blue-300 font-mono" id="card-matricula-txt">MAT: ---</p>
+                    </div>
+                </div>
+
+                <div class="pt-2 border-t border-white/20 flex items-center justify-between">
                     <div>
-                        <h4 class="font-bold text-xs uppercase tracking-wider">Carteirinha Estudantil</h4>
-                        <p class="text-[9px] text-blue-200">SE7 Gestão Educacional</p>
+                        <p class="text-[9px] text-blue-200 uppercase tracking-wider">Validade</p>
+                        <p class="text-[11px] font-bold font-mono">Dez / 2026</p>
+                        <p class="text-[8px] text-amber-300 italic mt-0.5">Documento intransferível</p>
                     </div>
-                </div>
-                <div class="py-2 flex flex-col items-center">
-                    <div id="qrcode-container" class="bg-white p-2.5 rounded-xl shadow-inner inline-block"></div>
-                    <p class="text-[10px] text-blue-200 mt-2 font-mono" id="card-matricula-txt">MAT: ---</p>
-                </div>
-                <div class="text-left bg-black/20 p-2.5 rounded-xl text-[11px] space-y-0.5">
-                    <p class="font-bold truncate" id="card-nome-txt">---</p>
-                    <p class="text-[10px] text-blue-200 truncate" id="card-curso-txt">---</p>
+                    <div class="bg-white p-1.5 rounded-xl shadow-inner shrink-0">
+                        <div id="qrcode-container" class="w-16 h-16 flex items-center justify-center"></div>
+                    </div>
                 </div>
             </div>
+
             <button onclick="fecharModalCarteirinha()" class="w-full py-2.5 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold rounded-xl text-xs transition">
                 Fechar Carteirinha
             </button>
@@ -394,7 +417,7 @@
                             </div>
                             <div class="text-left">
                                 <h4 class="font-bold text-sm">Carteirinha ID</h4>
-                                <p class="text-[10px] text-slate-500 dark:text-slate-400">Exibir QR Code</p>
+                                <p class="text-[10px] text-slate-500 dark:text-slate-400">Exibir QR Code e Credencial</p>
                             </div>
                         </div>
                         <i class="fa-solid fa-chevron-right text-xs text-slate-400 mr-1"></i>
@@ -466,7 +489,7 @@
             <div id="tab-frequencia" class="space-y-3 tab-pane" style="display: none;">
                 <h3 class="font-bold text-sm text-slate-700 dark:text-slate-200 mb-2">Controle de Frequência</h3>
                 <div id="frequency-list" class="space-y-2">
-                    <div class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm text-xs text-slate-600 dark:text-slate-300">
+                    <div class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm text-xs text-slate-600 dark:text-slate-300">
                         <p class="font-bold">Frequência Registrada</p>
                         <p class="text-[11px] text-slate-500 mt-0.5">Nenhum registro de falta lançado para o seu perfil no momento.</p>
                     </div>
@@ -480,6 +503,15 @@
                         <p class="font-bold mb-1"><i class="fa-solid fa-circle-info mr-1"></i> Instruções para Postagem:</p>
                         <p>Envie cada documento obrigatório rigorosamente em formato <strong>PDF</strong>. O arquivo será salvo diretamente na sua pasta oficial no Google Drive.</p>
                     </div>
+                </div>
+
+                <!-- MENSAGEM DE PARABÉNS QUANDO TUDO ESTIVER ENVIADO -->
+                <div id="docs-concluidos-banner" style="display: none;" class="bg-gradient-to-r from-emerald-600 to-teal-600 text-white p-4 rounded-2xl shadow-lg mb-3 space-y-1 text-center">
+                    <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mx-auto text-xl mb-1">
+                        <i class="fa-solid fa-check"></i>
+                    </div>
+                    <h3 class="font-bold text-sm">Parabéns! Todos os documentos foram enviados com sucesso!</h3>
+                    <p class="text-[11px] text-emerald-100">Sua documentação está completa e em análise pela secretaria acadêmica.</p>
                 </div>
 
                 <h3 class="font-bold text-sm text-slate-700 dark:text-slate-200 mb-2">Meus Documentos Obrigatórios</h3>
@@ -992,14 +1024,24 @@
             if(!alunoLogado) return;
             document.getElementById('card-nome-txt').textContent = alunoLogado.fullname || '---';
             document.getElementById('card-matricula-txt').textContent = `MAT: ${alunoLogado.code || '---'}`;
-            document.getElementById('card-curso-txt').textContent = document.getElementById('header-aluno-curso').textContent || 'Curso Regular';
+            document.getElementById('card-curso-txt').textContent = document.getElementById('header-aluno-curso').textContent || 'Curso Técnico';
             
+            const turmaNomeTxt = document.getElementById('info-turma').textContent || 'A definir';
+            document.getElementById('card-turma-txt').textContent = turmaNomeTxt;
+
+            const cardAvatarBox = document.getElementById('card-avatar-box');
+            if (alunoLogado.fotoAluno) {
+                cardAvatarBox.innerHTML = `<img src="${alunoLogado.fotoAluno}" class="w-full h-full object-cover">`;
+            } else {
+                cardAvatarBox.innerHTML = `<i class="fa-solid fa-user text-blue-200 text-xl"></i>`;
+            }
+
             const qrBox = document.getElementById('qrcode-container');
             qrBox.innerHTML = '';
             new QRCode(qrBox, {
                 text: `SE7-ALUNO-${alunoLogado.code}-${alunoLogado.cpf}`,
-                width: 120,
-                height: 120,
+                width: 64,
+                height: 64,
                 colorDark: "#000000",
                 colorLight: "#ffffff",
                 correctLevel: QRCode.CorrectLevel.H
@@ -1041,7 +1083,12 @@
                 alunoLogado.fotoAluno = base64Image;
                 sessionStorage.setItem('aluno_app_logado', JSON.stringify(alunoLogado));
                 document.getElementById('header-avatar-box').innerHTML = `<img src="${base64Image}" class="w-full h-full object-cover">`;
-                alert("Foto atualizada!");
+                
+                const cardAvatarBox = document.getElementById('card-avatar-box');
+                if(cardAvatarBox) {
+                    cardAvatarBox.innerHTML = `<img src="${base64Image}" class="w-full h-full object-cover">`;
+                }
+                alert("Foto atualizada com sucesso!");
             };
             reader.readAsDataURL(file);
         }
@@ -1071,14 +1118,47 @@
 
                     await db.collection("students").doc(alunoLogado.id).update({ documentos: alunoLogado.documentos });
                     sessionStorage.setItem('aluno_app_logado', JSON.stringify(alunoLogado));
+                    
                     renderizarDocumentosObrigatorios();
                     await verificarTodasPendencias();
+                    verificarSeTodosDocumentosEnviados();
+
                     alert("Documento enviado com sucesso!");
                 } catch(err) {
+                    if(!alunoLogado.documentos) alunoLogado.documentos = {};
+                    alunoLogado.documentos[tipoId] = { status: "Pendente", fileName: file.name, driveUrl: "" };
+                    await db.collection("students").doc(alunoLogado.id).update({ documentos: alunoLogado.documentos });
+                    sessionStorage.setItem('aluno_app_logado', JSON.stringify(alunoLogado));
+
+                    renderizarDocumentosObrigatorios();
+                    await verificarTodasPendencias();
+                    verificarSeTodosDocumentosEnviados();
+
                     alert("Documento enviado com sucesso!");
                 }
             };
             reader.readAsDataURL(file);
+        }
+
+        function verificarSeTodosDocumentosEnviados() {
+            const docs = alunoLogado.documentos || {};
+            let todosEnviados = true;
+
+            tiposDocumentosObrigatorios.forEach(tipo => {
+                if (!docs[tipo.id]) todosEnviados = false;
+            });
+
+            const bannerConcluidos = document.getElementById('docs-concluidos-banner');
+            if (bannerConcluidos) {
+                if (todosEnviados) {
+                    bannerConcluidos.style.display = 'block';
+                    if (typeof confetti === 'function') {
+                        confetti({ particleCount: 120, spread: 80, origin: { y: 0.5 } });
+                    }
+                } else {
+                    bannerConcluidos.style.display = 'none';
+                }
+            }
         }
 
         function renderizarDocumentosObrigatorios() {
@@ -1095,6 +1175,7 @@
 
                 let statusBadge = `<span class="px-2 py-0.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded text-[10px] font-bold">Pendente</span>`;
                 if(status === 'Aprovado') statusBadge = `<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded text-[10px] font-bold">Aprovado</span>`;
+                else if(status === 'Pendente') statusBadge = `<span class="px-2 py-0.5 bg-blue-100 text-blue-800 rounded text-[10px] font-bold">Enviado</span>`;
 
                 docList.innerHTML += `
                     <div class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-2 text-xs">
@@ -1110,6 +1191,8 @@
                     </div>
                 `;
             });
+
+            verificarSeTodosDocumentosEnviados();
         }
 
         async function carregarDadosPainel() {
