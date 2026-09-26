@@ -21,7 +21,7 @@
     <!-- Canvas Confetti -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
-        body { -webkit-tap-highlight-color: transparent; }
+        body { -webkit-tap-highlight-color: transparent; overscroll-behavior-y: none; }
         ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
 
@@ -52,7 +52,7 @@
         .animacao-piscar-alerta { animation: piscarAlerta 1.2s infinite ease-in-out; }
     </style>
 </head>
-<body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-200">
+<body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans antialiased h-screen overflow-hidden flex flex-col transition-colors duration-200">
 
     <!-- AVISO DE CONEXÃO OFFLINE -->
     <div id="offline-banner" class="bg-red-600 text-white text-[11px] font-bold text-center py-1.5 px-4 fixed top-0 left-0 right-0 z-50 shadow-md transition-transform duration-300 transform -translate-y-full" style="display: none;">
@@ -60,7 +60,7 @@
     </div>
 
     <!-- TELA INICIAL DE ESCOLHA (BOAS-VINDAS) -->
-    <div id="welcome-screen" class="app-screen fixed inset-0 z-50 bg-gradient-to-br from-blue-900 via-indigo-900 to-slate-900 flex flex-col justify-between p-6 text-white screen-transition">
+    <div id="welcome-screen" class="app-screen fixed inset-0 z-50 bg-gradient-to-br from-blue-900 via-indigo-900 to-slate-900 flex flex-col justify-between p-6 text-white screen-transition overflow-y-auto">
         <div class="mt-12 text-center flex flex-col items-center">
             <div id="welcome-icon-box" class="inline-flex items-center justify-center w-20 h-20 bg-blue-600 text-white rounded-3xl text-4xl font-bold mb-4 shadow-xl shadow-blue-500/30" style="display: none;">
                 <i class="fa-solid fa-graduation-cap"></i>
@@ -68,7 +68,7 @@
             <img id="welcome-logo-img" class="max-h-20 max-w-[220px] object-contain mb-2" alt="Logo da Instituição" src="" style="display: none;">
         </div>
 
-        <div class="bg-white/15 backdrop-blur-md border border-white/20 text-white p-6 rounded-3xl shadow-2xl space-y-4">
+        <div class="bg-white/15 backdrop-blur-md border border-white/20 text-white p-6 rounded-3xl shadow-2xl space-y-4 my-auto">
             <div class="text-center mb-2">
                 <h3 class="font-bold text-base">Seja bem-vindo(a)!</h3>
                 <p class="text-xs text-blue-200">Escolha uma das opções abaixo para continuar:</p>
@@ -90,7 +90,7 @@
     </div>
 
     <!-- TELA DE LOGIN DO ALUNO -->
-    <div id="login-screen" class="app-screen fixed inset-0 z-50 bg-gradient-to-br from-blue-900 via-indigo-900 to-slate-900 flex flex-col justify-between p-6 text-white" style="display: none;">
+    <div id="login-screen" class="app-screen fixed inset-0 z-50 bg-gradient-to-br from-blue-900 via-indigo-900 to-slate-900 flex flex-col justify-between p-6 text-white overflow-y-auto" style="display: none;">
         <div class="mt-8 flex items-center justify-between">
             <button onclick="mudarTelaComTransicao('login-screen', 'welcome-screen')" class="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center text-sm transition text-white active:scale-95">
                 <i class="fa-solid fa-arrow-left"></i>
@@ -99,25 +99,25 @@
             <div class="w-10"></div>
         </div>
 
-        <div class="text-center flex flex-col items-center">
+        <div class="text-center flex flex-col items-center my-auto">
             <h1 class="text-2xl font-bold">Entrar na Conta</h1>
-            <p class="text-xs text-blue-200 mt-1">Informe seus dados para acessar o painel</p>
-        </div>
+            <p class="text-xs text-blue-200 mt-1 mb-4">Informe seus dados para acessar o painel</p>
 
-        <div class="bg-white text-slate-800 p-6 rounded-3xl shadow-2xl space-y-4">
-            <div>
-                <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">CPF do Aluno</label>
-                <input type="text" id="login-cpf" placeholder="000.000.000-00" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-600 focus:outline-none">
-            </div>
-            <div>
-                <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Matrícula ou Senha</label>
-                <input type="password" id="login-pass" placeholder="MAT-2026-XXXXX" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-600 focus:outline-none">
-            </div>
-            <button onclick="fazerLoginAluno()" class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 transition active:scale-95">
-                Entrar no Aplicativo
-            </button>
-            <div class="text-center pt-1">
-                <button onclick="abrirModalEsqueciSenha()" class="text-xs text-blue-600 hover:underline font-semibold">Esqueci minha senha</button>
+            <div class="bg-white text-slate-800 p-6 rounded-3xl shadow-2xl space-y-4 w-full max-w-sm text-left">
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">CPF do Aluno</label>
+                    <input type="text" id="login-cpf" placeholder="000.000.000-00" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-600 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Matrícula ou Senha</label>
+                    <input type="password" id="login-pass" placeholder="MAT-2026-XXXXX" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-600 focus:outline-none">
+                </div>
+                <button onclick="fazerLoginAluno()" class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 transition active:scale-95">
+                    Entrar no Aplicativo
+                </button>
+                <div class="text-center pt-1">
+                    <button onclick="abrirModalEsqueciSenha()" class="text-xs text-blue-600 hover:underline font-semibold">Esqueci minha senha</button>
+                </div>
             </div>
         </div>
 
@@ -319,10 +319,10 @@
         </div>
     </div>
 
-    <!-- APLICATIVO PRINCIPAL (DASHBOARD) -->
-    <div id="main-app" class="app-screen flex-1 flex flex-col pb-24" style="display: none;">
-        <!-- Cabeçalho Mais Limpo -->
-        <header class="bg-blue-900 text-white p-4 flex justify-between items-center shadow-md sticky top-0 z-40">
+    <!-- APLICATIVO PRINCIPAL (DASHBOARD) COM LAYOUT FIXO E SCROLL INTERNO -->
+    <div id="main-app" class="app-screen fixed inset-0 z-40 flex flex-col bg-slate-100 dark:bg-slate-950" style="display: none;">
+        <!-- Cabeçalho Fixo -->
+        <header class="bg-blue-900 text-white p-4 flex justify-between items-center shadow-md shrink-0 z-20">
             <div class="flex items-center space-x-3">
                 <div class="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center font-bold text-sm overflow-hidden border border-white/20 relative cursor-pointer group" onclick="dispararTrocaFoto()" title="Alterar foto">
                     <div id="header-avatar-box" class="w-full h-full flex items-center justify-center">
@@ -341,8 +341,8 @@
 
         <input type="file" id="input-foto-perfil" accept="image/*" style="display: none;" onchange="processarAlteracaoFoto(event)">
 
-        <!-- Conteúdo das Abas -->
-        <div class="flex-1 p-4 overflow-y-auto space-y-4">
+        <!-- Conteúdo das Abas (Área que rola no meio) -->
+        <div class="flex-1 overflow-y-auto p-4 space-y-4 pb-24">
             
             <!-- ABA 1: INÍCIO -->
             <div id="tab-home" class="space-y-4 tab-pane">
@@ -473,8 +473,8 @@
 
         </div>
 
-        <!-- Menu Inferior Fixo -->
-        <nav id="main-nav-bar" class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-2 py-2 flex justify-around items-center fixed bottom-0 left-0 right-0 shadow-lg z-40 transition-colors duration-200">
+        <!-- Menu Inferior Estritamente Fixo na Base -->
+        <nav id="main-nav-bar" class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-2 py-2 flex justify-around items-center absolute bottom-0 left-0 right-0 shadow-lg z-30 transition-colors duration-200">
             <button onclick="mudarAba('home')" id="nav-home" class="flex flex-col items-center text-blue-600 dark:text-blue-400 text-[10px] font-bold transition">
                 <i class="fa-solid fa-id-card text-base mb-0.5"></i> Início
             </button>
@@ -557,12 +557,12 @@
                 document.getElementById('welcome-screen').style.display = 'none';
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('matricula-screen').style.display = 'none';
-                document.getElementById('main-app').style.display = 'flex';
+                const mainApp = document.getElementById('main-app');
+                mainApp.style.display = 'flex';
                 await carregarDadosPainel();
             }
         });
 
-        /* --- FUNÇÃO DE TRANSIÇÃO SUAVE DE TELA --- */
         function mudarTelaComTransicao(idTelaOrigem, idTelaDestino) {
             const origem = document.getElementById(idTelaOrigem);
             const destino = document.getElementById(idTelaDestino);
@@ -578,7 +578,6 @@
                 destino.style.display = 'flex';
                 destino.classList.add('screen-transition');
 
-                // Ações específicas ao abrir telas
                 if (idTelaDestino === 'matricula-screen') {
                     popularSelectsDataNascimento();
                     carregarCursosNoSelect();
