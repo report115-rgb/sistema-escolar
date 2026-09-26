@@ -568,9 +568,18 @@
         <!-- FINANCEIRO -->
         <div id="tab-student-finance" class="tab-content space-y-4" style="display: none;">
             <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-md p-6 border border-gray-200 dark:border-slate-700 space-y-4">
-                <div class="border-b border-gray-100 dark:border-slate-700 pb-2">
-                    <h2 class="text-xl font-bold text-gray-900 dark:text-white">Financeiro</h2>
-                    <p class="text-xs text-gray-500">Selecione o aluno abaixo para visualizar todas as cobranças geradas automaticamente no momento da matrícula e gerar boletos ou QR codes.</p>
+                <div class="border-b border-gray-100 dark:border-slate-700 pb-2 flex justify-between items-center flex-wrap gap-2">
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-900 dark:text-white">Financeiro</h2>
+                        <p class="text-xs text-gray-500">Selecione o aluno abaixo para visualizar todas as cobranças ou gerar faturas.</p>
+                    </div>
+                    
+                    <!-- COLE ESTE BOTÃO BEM AQUI -->
+                    <button type="button" onclick="abrirModalGerarFinanceiroManual()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-file-invoice-dollar"></i> Gerar Faturas Manuais para Aluno
+                    </button>
+                    <!-- FIM DO BOTÃO -->
+
                 </div>
                 
                 <div class="max-w-md">
@@ -4283,6 +4292,61 @@ async function gerarCobrancaAsaas(financeLogId) {
         alert("Erro de comunicação com a API: " + e.message);
     }
 }
+
+// ==========================================
+    // FUNÇÃO PARA GERAR FINANCEIRO MANUAL PARA ALUNOS DO APP
+    // ==========================================
+    async function abrirModalGerarFinanceiroManual() {
+        const alunoId = document.getElementById('fin-student-select').value;
+        if (!alunoId) {
+            return alert("Por favor, selecione um aluno primeiro no menu suspenso acima!");
+        }
+
+        const aluno = students.find(s => s.id === alunoId);
+        if (!aluno) return alert("Aluno não encontrado.");
+
+        const curso = courses.find(c => c.id === aluno.courseId);
+        if (!curso) {
+            return alert("Este aluno não possui um curso válido vinculado. Edite o cadastro do aluno e selecione o curso correto primeiro.");
+        }
+
+        const qtdParcelas = parseInt(prompt(`Gerar mensalidades para ${aluno.fullname}\nCurso: ${curso.name}\n\nInforme a quantidade de parcelas desejada:`, curso.qtdParcelas || 6)) || 0;
+        if (qtdParcelas <= 0) return;
+
+        const valorParcela = parseFloat(prompt("Informe o valor normal da parcela (R$):", curso.valorParcela || 300.00)) || 0;
+        const valorDesconto = parseFloat(prompt("Informe o valor com desconto de pontualidade (R$):", curso.valorDesconto || valorParcela)) || valorParcela;
+        const diaVencimento = parseInt(prompt("Informe o dia de vencimento das parcelas:", curso.vencimento || 10)) || 10;
+
+        if (confirm(`Deseja gerar ${qtdParcelas} parcela(s) no valor de R$ ${valorParcela} para ${aluno.fullname}?`)) {
+            try {
+                for (let i = 1; i <= qtdParcelas; i++) {
+                    const dataV = new Date();
+                    dataV.setMonth(dataV.getMonth() + (i - 1));
+                    dataV.setDate(diaVencimento);
+                    const dataStr = dataV.toISOString().slice(0, 10);
+
+                    await db.collection("financeLogs").add({
+                        studentId: aluno.id,
+                        studentName: aluno.fullname,
+                        studentCode: aluno.code || "MAT-ALUNO",
+                        description: `Mensalidade ${i}/${qtdParcelas} - ${curso.name}`,
+                        amount: valorParcela,
+                        discountAmount: valorDesconto,
+                        date: dataStr,
+                        status: "PENDENTE (Desc. Pontualidade disponível até o vencimento)"
+                    });
+                }
+
+                registrarLogAuditoria(`Gerou manualmente ${qtdParcelas} parcelas financeiras para o aluno ${aluno.fullname}`, "Financeiro");
+                alert("Parcelas geradas com sucesso! O financeiro do aluno foi atualizado na nuvem e já aparecerá para ele no Portal do Aluno.");
+                
+                // Atualiza a tela de financeiro do aluno instantaneamente
+                renderizarCobrancasAlunoSelecionadoFinanceiro(aluno.id);
+            } catch (e) {
+                alert("Erro ao gerar parcelas: " + e.message);
+            }
+        }
+    }
 	</script>
 </body>
 </html>
