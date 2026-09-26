@@ -1249,29 +1249,25 @@
 </div>
 
         <!-- AUDITORIA & LOGS -->
-        <div id="tab-audit" class="tab-content space-y-4" style="display: none;">
-            <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-md p-6 border border-gray-200 dark:border-slate-700">
-                <div class="flex justify-between items-center mb-4 pb-2 border-b border-gray-100 dark:border-slate-700">
-                    <h2 class="text-xl font-bold text-gray-900 dark:text-white">Auditoria e Rastreabilidade</h2>
-                    <button type="button" onclick="limparLogsAuditoria()" class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg shadow">Limpar Logs</button>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-xs">
-                        <thead>
-                            <tr class="border-b border-gray-200 dark:border-slate-700 text-gray-500">
-                                <th class="p-3">Data / Hora</th>
-                                <th class="p-3">Usuário</th>
-                                <th class="p-3">Módulo</th>
-                                <th class="p-3">Ação</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tabela-logs-auditoria" class="divide-y divide-gray-200 dark:divide-slate-700"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
+        <div id="subtab-audit" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
+    <div class="flex justify-between items-center mb-4 pb-2 border-b border-gray-100 dark:border-slate-700">
+        <h3 class="font-bold text-base text-blue-600 dark:text-blue-400"><i class="fa-solid fa-clock-rotate-left mr-2"></i> Auditoria e Rastreabilidade</h3>
+        <button type="button" onclick="limparLogsAuditoria()" class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg shadow">Limpar Logs</button>
     </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+            <thead>
+                <tr class="border-b border-gray-200 dark:border-slate-700 text-gray-500">
+                    <th class="p-3">Data / Hora</th>
+                    <th class="p-3">Usuário</th>
+                    <th class="p-3">Módulo</th>
+                    <th class="p-3">Ação</th>
+                </tr>
+            </thead>
+            <tbody id="tabela-logs-auditoria" class="divide-y divide-gray-200 dark:divide-slate-700"></tbody>
+        </table>
+    </div>
+</div>
 
     <!-- RODAPÉ -->
     <footer class="bg-white dark:bg-slate-800 border-t border-gray-200 dark:border-slate-700 py-4 px-6 text-center text-xs text-gray-500 dark:text-gray-400 flex flex-col sm:flex-row justify-between items-center gap-2">
@@ -1732,34 +1728,32 @@
         }
 
         function aplicarPermissoesPorPerfil(perfil) {
-            const btnAccessControl = document.getElementById('btn-access-control');
-            const btnSwitchUser = document.getElementById('btn-switch-user');
-            const navBtnSettings = document.getElementById('nav-btn-settings');
-            const navBtnAudit = document.getElementById('nav-btn-audit');
-            const navBtnPortalAluno = document.getElementById('nav-btn-portal-aluno');
-            const adminSelectorPortalBox = document.getElementById('admin-selector-portal-box');
+    const btnAccessControl = document.getElementById('btn-access-control');
+    const btnSwitchUser = document.getElementById('btn-switch-user');
+    const navBtnSettings = document.getElementById('nav-btn-settings');
+    const navBtnPortalAluno = document.getElementById('nav-btn-portal-aluno');
+    const adminSelectorPortalBox = document.getElementById('admin-selector-portal-box');
 
-            if (btnAccessControl) btnAccessControl.style.display = (perfil === 'master') ? 'inline-flex' : 'none';
-            if (btnSwitchUser) btnSwitchUser.style.display = (perfil === 'master') ? 'inline-flex' : 'none';
-            if (navBtnSettings) navBtnSettings.style.display = (perfil === 'master') ? 'inline-block' : 'none';
-            if (navBtnAudit) navBtnAudit.style.display = (perfil === 'master') ? 'inline-block' : 'none';
+    if (btnAccessControl) btnAccessControl.style.display = (perfil === 'master') ? 'inline-flex' : 'none';
+    if (btnSwitchUser) btnSwitchUser.style.display = (perfil === 'master') ? 'inline-flex' : 'none';
+    if (navBtnSettings) navBtnSettings.style.display = (perfil === 'master') ? 'inline-block' : 'none';
 
-            if (perfil === 'aluno') {
-                document.getElementById('main-tabs-nav').style.display = 'none';
-                if (navBtnPortalAluno) navBtnPortalAluno.style.display = 'inline-block';
-                if (adminSelectorPortalBox) adminSelectorPortalBox.style.display = 'none';
-                const sessao = JSON.parse(sessionStorage.getItem('usuario_logado'));
-                if (sessao && sessao.alunoId) {
-                    const alunoObj = students.find(s => s.id === sessao.alunoId);
-                    if (alunoObj) carregarDadosPortalAluno(alunoObj);
-                }
-            } else {
-                if (adminSelectorPortalBox) adminSelectorPortalBox.style.display = 'block';
-                popularSelectAlunosPortalMaster();
-                popularSelectAlunosValidacaoGestao();
-                renderizarSolicitacoesPendentes();
-            }
+    if (perfil === 'aluno') {
+        document.getElementById('main-tabs-nav').style.display = 'none';
+        if (navBtnPortalAluno) navBtnPortalAluno.style.display = 'inline-block';
+        if (adminSelectorPortalBox) adminSelectorPortalBox.style.display = 'none';
+        const sessao = JSON.parse(sessionStorage.getItem('usuario_logado'));
+        if (sessao && sessao.alunoId) {
+            const alunoObj = students.find(s => s.id === sessao.alunoId);
+            if (alunoObj) carregarDadosPortalAluno(alunoObj);
         }
+    } else {
+        if (adminSelectorPortalBox) adminSelectorPortalBox.style.display = 'block';
+        popularSelectAlunosPortalMaster();
+        popularSelectAlunosValidacaoGestao();
+        renderizarSolicitacoesPendentes();
+    }
+}
 
         window.addEventListener('DOMContentLoaded', () => {
             iniciarRelogioAoVivo();
@@ -4222,7 +4216,7 @@ async function gerarCobrancaAsaas(financeLogId) {
         if (!dadosCobranca.success || !dadosCobranca.invoiceUrl) {
             return alert("Erro ao gerar cobrança no Asaas: " + JSON.stringify(dadosCobranca.error || 'Erro desconhecido'));
         }
-
+a
         const linkFatura = dadosCobranca.invoiceUrl;
 
         // Atualiza o registro financeiro no Firestore
