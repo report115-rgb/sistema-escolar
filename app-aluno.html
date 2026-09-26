@@ -227,13 +227,13 @@
                         </div>
                         <div>
                             <label class="block text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Cidade</label>
-                            <input type="text" id="mat-cidade" placeholder="Cidade" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm bg-slate-50 dark:bg-slate-900" readonly>
+                            <input type="text" id="mat-cidade" placeholder="Cidade" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm focus:ring-2 focus:ring-emerald-600 focus:outline-none">
                         </div>
                     </div>
                     <div class="grid grid-cols-3 gap-3">
                         <div class="col-span-2">
                             <label class="block text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Rua / Logradouro</label>
-                            <input type="text" id="mat-rua" placeholder="Nome da rua" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm bg-slate-50 dark:bg-slate-900" readonly>
+                            <input type="text" id="mat-rua" placeholder="Nome da rua" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm focus:ring-2 focus:ring-emerald-600 focus:outline-none">
                         </div>
                         <div>
                             <label class="block text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Número</label>
@@ -243,11 +243,11 @@
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label class="block text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Bairro</label>
-                            <input type="text" id="mat-bairro" placeholder="Bairro" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm bg-slate-50 dark:bg-slate-900" readonly>
+                            <input type="text" id="mat-bairro" placeholder="Bairro" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm focus:ring-2 focus:ring-emerald-600 focus:outline-none">
                         </div>
                         <div>
                             <label class="block text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Estado (UF)</label>
-                            <input type="text" id="mat-estado" placeholder="UF" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm bg-slate-50 dark:bg-slate-900" readonly>
+                            <input type="text" id="mat-estado" placeholder="UF" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm focus:ring-2 focus:ring-emerald-600 focus:outline-none">
                         </div>
                     </div>
                 </div>
@@ -723,13 +723,20 @@
             try {
                 const res = await fetch(`https://viacep.com.br/ws/${cepInput}/json/`);
                 const data = await res.json();
-                if(!data.erro) {
-                    document.getElementById('mat-rua').value = data.logradouro || '';
-                    document.getElementById('mat-bairro').value = data.bairro || '';
-                    document.getElementById('mat-cidade').value = data.localidade || '';
-                    document.getElementById('mat-estado').value = data.uf || '';
-                    document.getElementById('mat-numero').focus();
+                
+                // Preenche automaticamente caso o ViaCEP retorne dados, mas sem bloquear a edição
+                document.getElementById('mat-rua').value = data.logradouro || '';
+                document.getElementById('mat-bairro').value = data.bairro || '';
+                document.getElementById('mat-cidade').value = data.localidade || '';
+                document.getElementById('mat-estado').value = data.uf || '';
+
+                if (!data.logradouro) {
+                    document.getElementById('mat-rua').focus();
                 } else {
+                    document.getElementById('mat-numero').focus();
+                }
+
+                if(data.erro) {
                     alert("CEP não encontrado.");
                 }
             } catch(e) {
