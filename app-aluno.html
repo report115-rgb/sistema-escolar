@@ -363,7 +363,7 @@
             <div id="tab-financeiro" class="space-y-3 tab-pane" style="display: none;">
                 <div class="bg-blue-50 dark:bg-blue-950/40 p-3.5 rounded-2xl border border-blue-200 dark:border-blue-800 text-xs text-blue-900 dark:text-blue-200 space-y-1 shadow-sm">
                     <p class="font-bold flex items-center"><i class="fa-solid fa-circle-info mr-1.5 text-blue-600 dark:text-blue-400"></i> Informação Importante:</p>
-                    <p class="text-[11px] leading-relaxed">As suas mensalidades pagas no boleto enviado pelo financeiro serão registradas aqui.</p>
+                    <p class="text-[11px] leading-relaxed">As suas mensalidades pagas ou liberadas pela secretaria serão registradas aqui.</p>
                 </div>
 
                 <div class="text-center pt-1 pb-1">
@@ -809,7 +809,8 @@
 
                 snap.forEach(doc => {
                     const f = doc.data();
-                    if (f.status && !f.status.toUpperCase().includes("PAGO") && f.date) {
+                    const statusUpper = (f.status || '').toUpperCase();
+                    if (!statusUpper.includes('PAGO') && f.date) {
                         let dataVencStr = f.date;
                         if(dataVencStr.includes('/')) {
                             const partes = dataVencStr.split('/');
@@ -1049,58 +1050,24 @@
                 });
             }
 
-            // --- CARREGAMENTO FINANCEIRO COMPATÍVEL COM ASAAS E RECALCULO DE CURSOS ---
             db.collection("financeLogs").where("studentId", "==", alunoLogado.id).get().then(snap => {
                 const finList = document.getElementById('finance-list');
                 finList.innerHTML = '';
                 if(snap.empty) {
-                    finList.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">Nenhuma fatura ou mensalidade encontrada.</p>`;
+                    finList.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">Nenhuma fatura encontrada.</p>`;
                     return;
                 }
-
-                // Ordena faturas por data de vencimento
-                const faturas = [];
-                snap.forEach(doc => faturas.push({ id: doc.id, ...doc.data() }));
-                faturas.sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0));
-
-                faturas.forEach(f => {
-                    const isPago = f.status && (f.status.toUpperCase().includes("PAGO") || f.status.toUpperCase().includes("RECEIVED") || f.status.toUpperCase().includes("CONFIRMED"));
-                    const valorComDesconto = (f.discountAmount && parseFloat(f.discountAmount) > 0) ? (parseFloat(f.amount) - parseFloat(f.discountAmount)).toFixed(2) : null;
-                    
-                    // Suporte aos campos do Asaas e Boleto/Pix do Sistema
-                    const linkPagamento = f.invoiceUrl || f.bankSlipUrl || f.pixUrl || f.paymentUrl || (f.asaasData ? f.asaasData.bankSlipUrl : '');
-                    const pixCopiaCola = f.pixCopiaECola || (f.asaasData ? f.asaasData.pixCopiaECola : '');
-
-                    let badgeStatusClass = "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300";
-                    if (isPago) badgeStatusClass = "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300";
-
-                    let botoesAcao = '';
-                    if (!isPago) {
-                        if (linkPagamento) {
-                            botoesAcao += `<a href="${linkPagamento}" target="_blank" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-[10px] inline-flex items-center space-x-1 shadow-sm"><i class="fa-solid fa-barcode"></i> <span>Boleto / Pagar</span></a>`;
-                        }
-                        if (pixCopiaCola) {
-                            botoesAcao += `<button onclick="navigator.clipboard.writeText('${pixCopiaCola}'); alert('Código Pix Copia e Cola copiado para a área de transferência!');" class="px-2.5 py-1 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-bold text-[10px] inline-flex items-center space-x-1 shadow-sm ml-1"><i class="fa-solid fa-pix"></i> <span>Copiar Pix</span></button>`;
-                        }
-                    }
+                snap.forEach(doc => {
+                    const f = doc.data();
+                    const statusUpper = (f.status || '').toUpperCase();
+                    const jaPago = statusUpper.includes('PAGO');
 
                     finList.innerHTML += `
-                        <div class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex justify-between items-center text-xs">
-                            <div class="space-y-0.5">
-                                <strong class="text-slate-800 dark:text-slate-100 font-bold block">${f.description}</strong>
-                                <p class="text-[10px] text-slate-500 dark:text-slate-400">
-                                    Vencimento: <span class="font-semibold text-slate-700 dark:text-slate-300">${f.date}</span> &bull; 
-                                    Valor: <span class="font-semibold text-slate-700 dark:text-slate-300">R$ ${parseFloat(f.amount || 0).toFixed(2)}</span>
-                                    ${valorComDesconto ? `<span class="text-emerald-600 font-bold block text-[10px]">Com desc. pontualidade: R$ ${valorComDesconto}</span>` : ''}
-                                </p>
-                            </div>
-                            <div class="text-right shrink-0 ml-2">
-                                <span class="text-[9px] px-2 py-0.5 rounded-full font-bold inline-block mb-1.5 ${badgeStatusClass}">
-                                    ${isPago ? 'PAGO' : (f.status || 'PENDENTE')}
-                                </span>
-                                <div class="flex items-center justify-end">
-                                    ${botoesAcao}
-                                </div>
+                        <div class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex justify-between items-center text-xs">
+                            <div><strong>${f.description}</strong><p class="text-[10px] text-slate-500">Vencimento: ${f.date} &bull; R$ ${f.amount}</p></div>
+                            <div class="text-right">
+                                <span class="text-[9px] px-2 py-0.5 rounded-full font-bold block mb-1 ${jaPago ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'}">${f.status || 'PENDENTE'}</span>
+                                ${!jaPago && f.invoiceUrl && f.invoiceUrl !== '#' ? `<a href="${f.invoiceUrl}" target="_blank" class="px-2 py-1 bg-blue-600 text-white rounded-lg font-bold text-[10px]">Boleto</a>` : ''}
                             </div>
                         </div>
                     `;
