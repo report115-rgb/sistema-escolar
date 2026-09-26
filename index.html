@@ -2911,13 +2911,13 @@
 
                 // --- GATILHO AUTOMÁTICO DE GERAÇÃO FINANCEIRA ---
                 try {
-                
-                if (cursoObj && cursoObj.valorParcela && cursoObj.qtdParcelas) {
                 notificarCentralWhatsAppMatriz(studentData, cursoObj ? cursoObj.name : "Curso Geral");
-                    const qtdP = cursoObj.qtdParcelas;
-                    const valP = cursoObj.valorParcela;
-                    const valDesc = cursoObj.valorDesconto || valP;
-                    const diaVenc = cursoObj.vencimento || 10;
+                
+		if (cursoObj && cursoObj.valorParcela && cursoObj.qtdParcelas) {
+                const qtdP = cursoObj.qtdParcelas;
+                const valP = cursoObj.valorParcela;
+                const valDesc = cursoObj.valorDesconto || valP;
+                const diaVenc = cursoObj.vencimento || 10;
                     
                     for (let i = 1; i <= qtdP; i++) {
                         const dataV = new Date();
