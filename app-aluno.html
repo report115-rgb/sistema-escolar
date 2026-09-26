@@ -498,6 +498,7 @@
 
             <!-- ABA 5: DOCUMENTOS OBRIGATÓRIOS -->
             <div id="tab-documentos" class="space-y-3 tab-pane" style="display: none;">
+                <!-- INSTRUÇÕES PARA POSTAGEM (SOMENTE ENQUANTO TIVER PENDÊNCIA) -->
                 <div id="docs-banner-msg">
                     <div class="bg-blue-50 dark:bg-blue-950/40 p-3 rounded-2xl border border-blue-200 dark:border-blue-800 text-xs text-blue-900 dark:text-blue-200 mb-3">
                         <p class="font-bold mb-1"><i class="fa-solid fa-circle-info mr-1"></i> Instruções para Postagem:</p>
@@ -505,13 +506,13 @@
                     </div>
                 </div>
 
-                <!-- MENSAGEM DE PARABÉNS QUANDO TUDO ESTIVER ENVIADO -->
+                <!-- MENSAGEM DE PARABÉNS QUANDO TODOS FOREM APROVADOS -->
                 <div id="docs-concluidos-banner" style="display: none;" class="bg-gradient-to-r from-emerald-600 to-teal-600 text-white p-4 rounded-2xl shadow-lg mb-3 space-y-1 text-center">
                     <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mx-auto text-xl mb-1">
                         <i class="fa-solid fa-check"></i>
                     </div>
-                    <h3 class="font-bold text-sm">Parabéns! Todos os documentos foram enviados com sucesso!</h3>
-                    <p class="text-[11px] text-emerald-100">Sua documentação está completa e em análise pela secretaria acadêmica.</p>
+                    <h3 class="font-bold text-sm">Parabéns! Todos os documentos foram enviados e aprovados com sucesso!</h3>
+                    <p class="text-[11px] text-emerald-100">Sua documentação está completa e validada pela secretaria acadêmica.</p>
                 </div>
 
                 <h3 class="font-bold text-sm text-slate-700 dark:text-slate-200 mb-2">Meus Documentos Obrigatórios</h3>
@@ -708,32 +709,6 @@
                 htmlEl.classList.add('dark');
                 localStorage.setItem('se7_aluno_theme', 'dark');
                 if (iconEl) iconEl.className = "fa-solid fa-sun text-amber-500";
-            }
-        }
-
-        async function recarregarDadosAppAluno() {
-            if (!alunoLogado || !alunoLogado.id) return;
-
-            const iconEl = document.getElementById('refresh-icon');
-            if (iconEl) iconEl.classList.add('fa-spin');
-
-            try {
-                const docSnap = await db.collection("students").doc(alunoLogado.id).get();
-                if (docSnap.exists) {
-                    alunoLogado = { id: docSnap.id, ...docSnap.data() };
-                    sessionStorage.setItem('aluno_app_logado', JSON.stringify(alunoLogado));
-                }
-
-                await carregarDadosPainel();
-
-                setTimeout(() => {
-                    if (iconEl) iconEl.classList.remove('fa-spin');
-                    alert("Dados atualizados com sucesso!");
-                }, 400);
-
-            } catch (e) {
-                if (iconEl) iconEl.classList.remove('fa-spin');
-                alert("Erro ao atualizar dados: " + e.message);
             }
         }
 
@@ -1121,7 +1096,6 @@
                     
                     renderizarDocumentosObrigatorios();
                     await verificarTodasPendencias();
-                    verificarSeTodosDocumentosEnviados();
 
                     alert("Documento enviado com sucesso!");
                 } catch(err) {
@@ -1132,7 +1106,6 @@
 
                     renderizarDocumentosObrigatorios();
                     await verificarTodasPendencias();
-                    verificarSeTodosDocumentosEnviados();
 
                     alert("Documento enviado com sucesso!");
                 }
@@ -1140,32 +1113,38 @@
             reader.readAsDataURL(file);
         }
 
-        function verificarSeTodosDocumentosEnviados() {
+        function verificarStatusCompletoDocumentos() {
             const docs = alunoLogado.documentos || {};
-            let todosEnviados = true;
+            let todosAprovados = true;
 
             tiposDocumentosObrigatorios.forEach(tipo => {
-                if (!docs[tipo.id]) todosEnviados = false;
+                const info = docs[tipo.id];
+                if (!info || info.status !== 'Aprovado') {
+                    todosAprovados = false;
+                }
             });
 
-            const bannerConcluidos = document.getElementById('docs-concluidos-banner');
-            if (bannerConcluidos) {
-                if (todosEnviados) {
-                    bannerConcluidos.style.display = 'block';
-                    if (typeof confetti === 'function') {
-                        confetti({ particleCount: 120, spread: 80, origin: { y: 0.5 } });
-                    }
-                } else {
-                    bannerConcluidos.style.display = 'none';
-                }
-            }
+            return todosAprovados;
         }
 
         function renderizarDocumentosObrigatorios() {
             const docList = document.getElementById('documents-list');
+            const bannerInstrucoes = document.getElementById('docs-banner-msg');
+            const bannerConcluidos = document.getElementById('docs-concluidos-banner');
+
             if(!docList) return;
             docList.innerHTML = '';
             const docs = alunoLogado.documentos || {};
+
+            const tudoAprovado = verificarStatusCompletoDocumentos();
+
+            if (tudoAprovado) {
+                if (bannerInstrucoes) bannerInstrucoes.style.display = 'none';
+                if (bannerConcluidos) bannerConcluidos.style.display = 'block';
+            } else {
+                if (bannerInstrucoes) bannerInstrucoes.style.display = 'block';
+                if (bannerConcluidos) bannerConcluidos.style.display = 'none';
+            }
 
             tiposDocumentosObrigatorios.forEach(tipo => {
                 const docInfo = docs[tipo.id];
@@ -1191,8 +1170,43 @@
                     </div>
                 `;
             });
+        }
 
-            verificarSeTodosDocumentosEnviados();
+        async function mudarAba(aba) {
+            const targetTab = document.getElementById(`tab-${aba}`);
+            if (!targetTab) return;
+
+            ['home', 'financeiro', 'notas', 'frequencia', 'documentos', 'calendario'].forEach(a => {
+                const elTab = document.getElementById(`tab-${a}`);
+                const elNav = document.getElementById(`nav-${a}`);
+                if (elTab) elTab.style.display = (a === aba) ? 'block' : 'none';
+                if (elNav) {
+                    elNav.className = (a === aba) 
+                        ? 'flex flex-col items-center text-blue-600 dark:text-blue-400 text-[10px] font-bold transition' 
+                        : 'flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition';
+                }
+            });
+
+            // DISPARA OS FOGOS SOMENTE QUANDO CLICAR NA ABA DE DOCUMENTOS E TIVER TUDO APROVADO
+            if (aba === 'documentos' && alunoLogado) {
+                renderizarDocumentosObrigatorios();
+                if (verificarStatusCompletoDocumentos()) {
+                    if (typeof confetti === 'function') {
+                        confetti({ particleCount: 130, spread: 90, origin: { y: 0.5 } });
+                    }
+                }
+            }
+
+            if (aba === 'notas' && alunoLogado) {
+                sessionStorage.setItem(`visto_notas_${alunoLogado.id}`, 'true');
+                const badgeNotas = document.getElementById('badge-alerta-notas');
+                if (badgeNotas) badgeNotas.style.display = 'none';
+            }
+            if (aba === 'financeiro' && alunoLogado) {
+                sessionStorage.setItem(`visto_financeiro_${alunoLogado.id}`, 'true');
+                const badgeFin = document.getElementById('badge-alerta-financeiro');
+                if (badgeFin) badgeFin.style.display = 'none';
+            }
         }
 
         async function carregarDadosPainel() {
@@ -1573,33 +1587,6 @@
             }
 
             fecharProvaOnlineEJA();
-        }
-
-        async function mudarAba(aba) {
-            const targetTab = document.getElementById(`tab-${aba}`);
-            if (!targetTab) return;
-
-            ['home', 'financeiro', 'notas', 'frequencia', 'documentos', 'calendario'].forEach(a => {
-                const elTab = document.getElementById(`tab-${a}`);
-                const elNav = document.getElementById(`nav-${a}`);
-                if (elTab) elTab.style.display = (a === aba) ? 'block' : 'none';
-                if (elNav) {
-                    elNav.className = (a === aba) 
-                        ? 'flex flex-col items-center text-blue-600 dark:text-blue-400 text-[10px] font-bold transition' 
-                        : 'flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition';
-                }
-            });
-
-            if (aba === 'notas' && alunoLogado) {
-                sessionStorage.setItem(`visto_notas_${alunoLogado.id}`, 'true');
-                const badgeNotas = document.getElementById('badge-alerta-notas');
-                if (badgeNotas) badgeNotas.style.display = 'none';
-            }
-            if (aba === 'financeiro' && alunoLogado) {
-                sessionStorage.setItem(`visto_financeiro_${alunoLogado.id}`, 'true');
-                const badgeFin = document.getElementById('badge-alerta-financeiro');
-                if (badgeFin) badgeFin.style.display = 'none';
-            }
         }
 
         function fazerLogout() {
