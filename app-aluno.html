@@ -319,6 +319,35 @@
         </div>
     </div>
 
+    <!-- MODAL DA CARTEIRINHA ID -->
+    <div id="modal-carteirinha" class="fixed inset-0 z-[70] bg-black/70 flex items-center justify-center p-4" style="display: none;">
+        <div class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center space-y-4 relative">
+            <button onclick="fecharModalCarteirinha()" class="absolute top-4 right-4 text-slate-400 hover:text-red-500 text-xl font-bold">&times;</button>
+            <div class="bg-gradient-to-br from-blue-900 to-indigo-900 text-white p-5 rounded-2xl shadow-md space-y-3 relative overflow-hidden">
+                <div class="flex items-center space-x-2 text-left">
+                    <div class="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center text-sm font-bold">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-xs uppercase tracking-wider">Carteirinha Estudantil</h4>
+                        <p class="text-[9px] text-blue-200">SE7 Gestão Educacional</p>
+                    </div>
+                </div>
+                <div class="py-2 flex flex-col items-center">
+                    <div id="qrcode-container" class="bg-white p-2.5 rounded-xl shadow-inner inline-block"></div>
+                    <p class="text-[10px] text-blue-200 mt-2 font-mono" id="card-matricula-txt">MAT: ---</p>
+                </div>
+                <div class="text-left bg-black/20 p-2.5 rounded-xl text-[11px] space-y-0.5">
+                    <p class="font-bold truncate" id="card-nome-txt">---</p>
+                    <p class="text-[10px] text-blue-200 truncate" id="card-curso-txt">---</p>
+                </div>
+            </div>
+            <button onclick="fecharModalCarteirinha()" class="w-full py-2.5 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold rounded-xl text-xs transition">
+                Fechar Carteirinha
+            </button>
+        </div>
+    </div>
+
     <!-- APLICATIVO PRINCIPAL (DASHBOARD) COM LAYOUT FIXO E SCROLL INTERNO -->
     <div id="main-app" class="app-screen fixed inset-0 z-40 flex flex-col bg-slate-100 dark:bg-slate-950" style="display: none;">
         <!-- Cabeçalho Fixo -->
@@ -437,8 +466,9 @@
             <div id="tab-frequencia" class="space-y-3 tab-pane" style="display: none;">
                 <h3 class="font-bold text-sm text-slate-700 dark:text-slate-200 mb-2">Controle de Frequência</h3>
                 <div id="frequency-list" class="space-y-2">
-                    <div class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 animate-pulse space-y-2">
-                        <div class="h-3 bg-slate-200 dark:bg-slate-800 rounded w-2/3"></div>
+                    <div class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm text-xs text-slate-600 dark:text-slate-300">
+                        <p class="font-bold">Frequência Registrada</p>
+                        <p class="text-[11px] text-slate-500 mt-0.5">Nenhum registro de falta lançado para o seu perfil no momento.</p>
                     </div>
                 </div>
             </div>
@@ -465,8 +495,10 @@
             <div id="tab-calendario" class="space-y-3 tab-pane" style="display: none;">
                 <h3 class="font-bold text-sm text-slate-700 dark:text-slate-200 mb-2">Calendário de Aulas</h3>
                 <div id="calendar-list" class="space-y-2">
-                    <div class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 animate-pulse space-y-2">
-                        <div class="h-3 bg-slate-200 dark:bg-slate-800 rounded w-3/4"></div>
+                    <div class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm text-xs text-slate-600 dark:text-slate-300 text-center py-6">
+                        <i class="fa-solid fa-calendar-days text-2xl text-slate-400 mb-2 block"></i>
+                        <p class="font-bold">Calendário Acadêmico</p>
+                        <p class="text-[11px] text-slate-500 mt-1">Assim que seu calendário for postado pela secretária, ele aparecerá aqui.</p>
                     </div>
                 </div>
             </div>
@@ -759,7 +791,6 @@
             const courseId = document.getElementById('mat-curso-select').value;
             const senha = document.getElementById('mat-senha').value.trim();
 
-            // VALIDAÇÃO RÍGIDA DE CAMPOS OBRIGATÓRIOS
             if (!nome) return alert("Por favor, preencha o seu Nome Completo.");
             if (!diaNasc || !mesNasc || !anoNasc) return alert("Por favor, selecione a Data de Nascimento completa (Dia, Mês e Ano).");
             if (!sexo) return alert("Por favor, selecione o seu Sexo.");
@@ -956,7 +987,26 @@
 
         function abrirModalEsqueciSenha() { document.getElementById('modal-esqueci-senha').style.display = 'flex'; }
         function fecharModalEsqueciSenha() { document.getElementById('modal-esqueci-senha').style.display = 'none'; }
-        function abrirModalCarteirinha() { document.getElementById('modal-carteirinha').style.display = 'flex'; }
+        
+        function abrirModalCarteirinha() {
+            if(!alunoLogado) return;
+            document.getElementById('card-nome-txt').textContent = alunoLogado.fullname || '---';
+            document.getElementById('card-matricula-txt').textContent = `MAT: ${alunoLogado.code || '---'}`;
+            document.getElementById('card-curso-txt').textContent = document.getElementById('header-aluno-curso').textContent || 'Curso Regular';
+            
+            const qrBox = document.getElementById('qrcode-container');
+            qrBox.innerHTML = '';
+            new QRCode(qrBox, {
+                text: `SE7-ALUNO-${alunoLogado.code}-${alunoLogado.cpf}`,
+                width: 120,
+                height: 120,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+            document.getElementById('modal-carteirinha').style.display = 'flex';
+        }
+
         function fecharModalCarteirinha() { document.getElementById('modal-carteirinha').style.display = 'none'; }
 
         async function executarRedefinicaoSenha() {
