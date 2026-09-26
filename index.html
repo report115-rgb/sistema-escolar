@@ -2841,7 +2841,36 @@
             renderGradeList();
         }
 
-        async function addOrUpdateStudent() {
+        async function notificarCentralWhatsAppMatriz(novoAluno, nomeCurso) {
+    try {
+        const urlApiWhatsApp = document.getElementById('input-gdrive-url').value.trim() || globalInstitutionData.gdriveUrl; 
+        if (!urlApiWhatsApp) return;
+
+        const mensagem = `🎓 *NOVA MATRÍCULA (SISTEMA MATRIZ)*\n\n` +
+                         `👤 *Nome:* ${novoAluno.fullname}\n` +
+                         `🆔 *Matrícula:* ${novoAluno.code}\n` +
+                         `📄 *CPF:* ${novoAluno.cpf}\n` +
+                         `📱 *WhatsApp:* ${novoAluno.whatsapp}\n` +
+                         `📚 *Curso:* ${nomeCurso}\n` +
+                         `📍 *Cidade/UF:* ${novoAluno.city || 'Belém'}/${novoAluno.state || 'PA'}\n\n` +
+                         `Matrícula cadastrada via painel administrativo.`;
+
+        await fetch(urlApiWhatsApp, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({
+                tipoAviso: "nova_matricula",
+                telefoneCentral: "5591984969127", // <--- COLOQUE O NÚMERO DA SUA CENTRAL AQUI (55 + DDD + Número)
+                message: mensagem,
+                aluno: novoAluno
+            })
+        });
+    } catch (erro) {
+        console.error("Erro ao enviar notificação WhatsApp na matriz:", erro);
+    }
+}
+
+	async function addOrUpdateStudent() {
             const editId = document.getElementById('edit-student-id').value;
             const fullname = document.getElementById('nomeAluno').value.trim();
             const email = document.getElementById('emailAluno').value.trim();
@@ -2881,6 +2910,7 @@
                 closeNewStudentModal();
 
                 if (cursoObj && cursoObj.valorParcela && cursoObj.qtdParcelas) {
+                notificarCentralWhatsAppMatriz(studentData, cursoObj ? cursoObj.name : "Curso Geral");
                     const qtdP = cursoObj.qtdParcelas;
                     const valP = cursoObj.valorParcela;
                     const valDesc = cursoObj.valorDesconto || valP;
