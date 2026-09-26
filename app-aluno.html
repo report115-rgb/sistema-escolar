@@ -148,7 +148,29 @@
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label class="block text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Data de Nascimento</label>
-                            <input type="date" id="mat-nascimento" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm focus:ring-2 focus:ring-emerald-600 focus:outline-none">
+                            <div class="grid grid-cols-3 gap-1">
+                                <select id="mat-nasc-dia" class="px-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-xs focus:ring-2 focus:ring-emerald-600 focus:outline-none">
+                                    <option value="">Dia</option>
+                                </select>
+                                <select id="mat-nasc-mes" class="px-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-xs focus:ring-2 focus:ring-emerald-600 focus:outline-none">
+                                    <option value="">Mês</option>
+                                    <option value="01">Jan</option>
+                                    <option value="02">Fev</option>
+                                    <option value="03">Mar</option>
+                                    <option value="04">Abr</option>
+                                    <option value="05">Mai</option>
+                                    <option value="06">Jun</option>
+                                    <option value="07">Jul</option>
+                                    <option value="08">Ago</option>
+                                    <option value="09">Set</option>
+                                    <option value="10">Out</option>
+                                    <option value="11">Nov</option>
+                                    <option value="12">Dez</option>
+                                </select>
+                                <select id="mat-nasc-ano" class="px-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-xs focus:ring-2 focus:ring-emerald-600 focus:outline-none">
+                                    <option value="">Ano</option>
+                                </select>
+                            </div>
                         </div>
                         <div>
                             <label class="block text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Sexo</label>
@@ -522,6 +544,7 @@
             }
 
             await carregarConfiguracaoInstituicao();
+            popularSelectsDataNascimento();
 
             const sessao = sessionStorage.getItem('aluno_app_logado');
             if(sessao) {
@@ -533,6 +556,25 @@
                 await carregarDadosPainel();
             }
         });
+
+        function popularSelectsDataNascimento() {
+            const selectDia = document.getElementById('mat-nasc-dia');
+            const selectAno = document.getElementById('mat-nasc-ano');
+            
+            if (selectDia && selectDia.options.length <= 1) {
+                for (let d = 1; d <= 31; d++) {
+                    const diaStr = d < 10 ? '0' + d : '' + d;
+                    selectDia.innerHTML += `<option value="${diaStr}">${diaStr}</option>`;
+                }
+            }
+
+            if (selectAno && selectAno.options.length <= 1) {
+                const anoAtual = new Date().getFullYear();
+                for (let a = anoAtual - 10; a >= 1940; a--) {
+                    selectAno.innerHTML += `<option value="${a}">${a}</option>`;
+                }
+            }
+        }
 
         function atualizarStatusConexao() {
             const banner = document.getElementById('offline-banner');
@@ -623,6 +665,7 @@
         async function irParaTelaMatricula() {
             document.getElementById('welcome-screen').style.display = 'none';
             document.getElementById('matricula-screen').style.display = 'flex';
+            popularSelectsDataNascimento();
             await carregarCursosNoSelect();
         }
 
@@ -670,7 +713,9 @@
 
         async function efetivarMatriculaOnline() {
             const nome = document.getElementById('mat-nome').value.trim();
-            const nascimento = document.getElementById('mat-nascimento').value.trim();
+            const diaNasc = document.getElementById('mat-nasc-dia').value;
+            const mesNasc = document.getElementById('mat-nasc-mes').value;
+            const anoNasc = document.getElementById('mat-nasc-ano').value;
             const sexo = document.getElementById('mat-sexo').value;
             const cpfRaw = document.getElementById('mat-cpf').value.trim();
             const cpf = cpfRaw.replace(/[^\d]/g, '');
@@ -688,13 +733,15 @@
             const courseId = document.getElementById('mat-curso-select').value;
             const senha = document.getElementById('mat-senha').value.trim();
 
-            if(!nome || !nascimento || !sexo || !cpf || !rg || !whatsapp || !email || !cep || !rua || !numero || !bairro || !cidade || !courseId || !senha) {
-                return alert("Por favor, preencha todos os campos da ficha de matrícula para continuar.");
+            if(!nome || !diaNasc || !mesNasc || !anoNasc || !sexo || !cpf || !rg || !whatsapp || !email || !cep || !rua || !numero || !bairro || !cidade || !courseId || !senha) {
+                return alert("Por favor, preencha todos os campos da ficha de matrícula, incluindo a data de nascimento completa.");
             }
 
             if(cpf.length !== 11) {
                 return alert("CPF inválido. Certifique-se de preencher os 11 dígitos.");
             }
+
+            const nascimento = `${anoNasc}-${mesNasc}-${diaNasc}`;
 
             try {
                 const existingSnap = await db.collection("students").get();
@@ -765,17 +812,14 @@
         async function verificarTodasPendencias() {
             if(!alunoLogado) return;
             
-            // Checa pendências de documentos obrigatoriamente para todos os alunos
             verificarPendenciaDocumentos();
 
-            // Para alunos da EJA, o alerta FICA EXCLUSIVAMENTE em Docs
             if (isAlunoEJA) {
                 const bFin = document.getElementById('badge-alerta-financeiro');
                 const bNotas = document.getElementById('badge-alerta-notas');
                 if(bFin) bFin.style.display = 'none';
                 if(bNotas) bNotas.style.display = 'none';
             } else {
-                // Alunos de Cursos Técnicos (Enfermagem, etc.) e Regulares verificam também Financeiro e Notas
                 await verificarPendenciaFinanceiro();
                 await verificarPendenciaNotas();
             }
@@ -985,7 +1029,6 @@
             document.getElementById('info-cpf').textContent = alunoLogado.cpf || '---';
             document.getElementById('info-rg').textContent = alunoLogado.rg || '---';
 
-            // Tratamento flexível da Data de Nascimento
             const rawNasc = alunoLogado.birthDate || alunoLogado.dob || '';
             let nascFormatado = '---';
             if (rawNasc) {
@@ -1000,7 +1043,6 @@
             document.getElementById('info-email').textContent = alunoLogado.email || '---';
             document.getElementById('info-tel').textContent = alunoLogado.whatsapp || '---';
 
-            // Tratamento flexível do Endereço Completo
             let enderecoFinal = alunoLogado.address || alunoLogado.endereco || '';
             if (!enderecoFinal && (alunoLogado.rua || alunoLogado.street)) {
                 const rua = alunoLogado.rua || alunoLogado.street || '';
@@ -1074,11 +1116,9 @@
                 });
             });
 
-            // Dispara a verificação final das pendências após ler a modalidade
             await verificarTodasPendencias();
         }
 
-        // --- SIMULAÇÃO RÁPIDA PARA TESTAR A EJA ---
         function testarPainelEJAAmostra() {
             alunoLogado = {
                 id: "teste_eja_123",
@@ -1125,7 +1165,6 @@
                 const bannerPadrao = document.getElementById('banner-padrao-home');
                 if (bannerPadrao) {
                     bannerPadrao.outerHTML = `
-                        <!-- BOTÕES DE AÇÕES RÁPIDAS CENTRALIZADOS EM CIMA DO CARD EJA -->
                         <div class="flex items-center justify-center space-x-3 mb-3 pt-1">
                             <button onclick="recarregarDadosAppAluno()" id="btn-refresh-app" class="px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-emerald-500 rounded-2xl shadow-sm text-slate-700 dark:text-slate-200 text-xs font-bold transition flex items-center space-x-2">
                                 <i id="refresh-icon" class="fa-solid fa-rotate text-emerald-600"></i>
@@ -1141,7 +1180,6 @@
                             </button>
                         </div>
 
-                        <!-- CARD EJA COM APOSTILA E PROVA -->
                         <div id="bloco-acoes-eja" class="bg-gradient-to-br from-emerald-600 to-teal-700 text-white p-4 rounded-2xl shadow-lg space-y-3">
                             <div class="flex items-center justify-between">
                                 <div class="space-y-0.5">
@@ -1159,7 +1197,7 @@
                                         <span>Baixar Apostila</span>
                                     </button>
                                 ` : `
-                                    <div class="py-2.5 px-3 bg-white/20 text-white/70 font-bold rounded-xl text-xs flex items-center justify-center space-x-1.5 cursor-not-allowed" title="Disponibilidade desativada pela secretaria">
+                                    <div class="py-2.5 px-3 bg-white/20 text-white/70 font-bold rounded-xl text-xs flex items-center justify-center space-x-1.5 cursor-not-allowed">
                                         <i class="fa-solid fa-lock"></i>
                                         <span>Apostila Bloqueada</span>
                                     </div>
@@ -1171,7 +1209,7 @@
                                         <span>Fazer Prova Online</span>
                                     </button>
                                 ` : `
-                                    <div class="py-2.5 px-3 bg-emerald-900/50 text-white/60 font-bold rounded-xl text-xs flex items-center justify-center space-x-1.5 cursor-not-allowed" title="Aguardando liberação da prova pela secretaria">
+                                    <div class="py-2.5 px-3 bg-emerald-900/50 text-white/60 font-bold rounded-xl text-xs flex items-center justify-center space-x-1.5 cursor-not-allowed">
                                         <i class="fa-solid fa-lock"></i>
                                         <span>Prova Bloqueada</span>
                                     </div>
