@@ -294,11 +294,21 @@
                 </div>
 
                 <div id="subtab-alunos-lista" class="subtab-content active space-y-4">
-                    <div class="flex justify-between items-center mb-4 pb-2 border-b border-gray-100 dark:border-slate-700">
-                        <h2 class="text-xl font-bold text-gray-900 dark:text-white">Alunos Matriculados</h2>
-                        <span class="text-xs text-gray-500 font-semibold" id="total-alunos-count">Total: 0 alunos</span>
-                    </div>
-                    <div class="overflow-x-auto">
+    <div class="flex justify-between items-center mb-4 pb-2 border-b border-gray-100 dark:border-slate-700 flex-wrap gap-2">
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white">Alunos Matriculados</h2>
+        
+        <!-- COLE ESTE BLOCO DA LUPA EXATAMENTE AQUI -->
+        <div class="relative w-full md:w-72">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </span>
+            <input type="text" id="input-busca-aluno-gestao" oninput="renderGestionStudentsTable()" placeholder="Pesquisar por nome ou CPF..." class="w-full pl-9 pr-4 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-xs dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-blue-600 focus:outline-none">
+        </div>
+        <!-- FIM DO BLOCO DA LUPA -->
+
+        <span class="text-xs text-gray-500 font-semibold" id="total-alunos-count">Total: 0 alunos</span>
+    </div>
+    <div class="overflow-x-auto">
                         <table class="w-full text-left text-xs">
                             <thead>
                                 <tr class="border-b border-gray-200 dark:border-slate-700 text-gray-500">
@@ -2969,37 +2979,59 @@
         }
 
         function renderGestionStudentsTable() {
-            const tbody = document.getElementById('tabela-gestao-alunos');
-            const counter = document.getElementById('total-alunos-count');
-            if(!tbody) return;
-            tbody.innerHTML = '';
-            const ativos = students.filter(s => s.status !== "Cancelado");
-            if(counter) counter.textContent = `Total: ${ativos.length} aluno(s)`;
-            
-            if(ativos.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-gray-400">Nenhum aluno cadastrado no momento.</td></tr>`;
-                return;
-            }
+    const tbody = document.getElementById('tabela-gestao-alunos');
+    const counter = document.getElementById('total-alunos-count');
+    const inputBusca = document.getElementById('input-busca-aluno-gestao');
+    if(!tbody) return;
 
-            ativos.forEach(s => {
-                const curso = courses.find(c => c.id == s.courseId);
-                const turma = classes.find(c => c.id == s.classId);
-                tbody.innerHTML += `
-                    <tr class="border-b border-gray-100 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-900/40">
-                        <td class="p-3 font-bold text-blue-600 dark:text-blue-400">${s.code || '---'}</td>
-                        <td class="p-3 font-semibold">${s.fullname}</td>
-                        <td class="p-3">${s.cpf || '---'}</td>
-                        <td class="p-3">${s.whatsapp || ''} <br><span class="text-[10px] text-gray-400">${s.email || ''}</span></td>
-                        <td class="p-3">${curso ? curso.name : '---'} <br><span class="text-[10px] text-gray-400">Turma: ${turma ? turma.name : '---'}</span></td>
-                        <td class="p-3"><span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 rounded text-[10px] font-bold">${s.status || 'Ativo'}</span></td>
-                        <td class="p-3 text-right space-x-1">
-                            <button onclick="editarAluno('${s.id}')" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs shadow"><i class="fa-solid fa-pen-to-square mr-1"></i> Editar</button>
-                            <button onclick="deletarInformacoesTotaisAluno('${s.id}')" class="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs shadow" title="Deletar permanentemente todas as informações"><i class="fa-solid fa-trash-can mr-1"></i> Deletar Total</button>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
+    tbody.innerHTML = '';
+    const ativos = students.filter(s => s.status !== "Cancelado");
+
+    // LÓGICA DE FILTRAGEM PELA LUPA (NOME, CPF OU MATRÍCULA)
+    let alunosFiltrados = ativos;
+    if (inputBusca && inputBusca.value.trim() !== "") {
+        const termo = inputBusca.value.toLowerCase().trim();
+        const termoLimpo = termo.replace(/[^\d]/g, '');
+
+        alunosFiltrados = ativos.filter(s => {
+            const nomeAluno = s.fullname ? s.fullname.toLowerCase() : "";
+            const cpfAluno = s.cpf ? s.cpf.toLowerCase() : "";
+            const cpfLimpoAluno = s.cpf ? s.cpf.replace(/[^\d]/g, '') : "";
+            const matriculaAluno = s.code ? s.code.toLowerCase() : "";
+
+            return nomeAluno.includes(termo) || 
+                   cpfAluno.includes(termo) || 
+                   (termoLimpo !== "" && cpfLimpoAluno.includes(termoLimpo)) ||
+                   matriculaAluno.includes(termo);
+        });
+    }
+
+    if(counter) counter.textContent = `Total: ${alunosFiltrados.length} aluno(s) (Filtrados de ${ativos.length})`;
+    
+    if(alunosFiltrados.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-gray-400">Nenhum aluno encontrado com este termo.</td></tr>`;
+        return;
+    }
+
+    alunosFiltrados.forEach(s => {
+        const curso = courses.find(c => c.id == s.courseId);
+        const turma = classes.find(c => c.id == s.classId);
+        tbody.innerHTML += `
+            <tr class="border-b border-gray-100 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-900/40">
+                <td class="p-3 font-bold text-blue-600 dark:text-blue-400">${s.code || '---'}</td>
+                <td class="p-3 font-semibold">${s.fullname}</td>
+                <td class="p-3">${s.cpf || '---'}</td>
+                <td class="p-3">${s.whatsapp || ''} <br><span class="text-[10px] text-gray-400">${s.email || ''}</span></td>
+                <td class="p-3">${curso ? curso.name : '---'} <br><span class="text-[10px] text-gray-400">Turma: ${turma ? turma.name : '---'}</span></td>
+                <td class="p-3"><span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 rounded text-[10px] font-bold">${s.status || 'Ativo'}</span></td>
+                <td class="p-3 text-right space-x-1">
+                    <button onclick="editarAluno('${s.id}')" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs shadow"><i class="fa-solid fa-pen-to-square mr-1"></i> Editar</button>
+                    <button onclick="deletarInformacoesTotaisAluno('${s.id}')" class="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs shadow" title="Deletar permanentemente todas as informações"><i class="fa-solid fa-trash-can mr-1"></i> Deletar Total</button>
+                </td>
+            </tr>
+        `;
+    });
+}
 
         function popularSelectAlunosValidacaoGestao() {
             const sel = document.getElementById('select-aluno-validacao');
