@@ -25,7 +25,6 @@
         ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
 
-        /* TRANSIÇÕES SUAVES DE TELA (FADE & SLIDE) */
         @keyframes fadeInScale {
             from { opacity: 0; transform: scale(0.96) translateY(10px); }
             to { opacity: 1; transform: scale(1) translateY(0); }
@@ -54,12 +53,11 @@
 </head>
 <body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans antialiased h-screen overflow-hidden flex flex-col transition-colors duration-200">
 
-    <!-- AVISO DE CONEXÃO OFFLINE -->
     <div id="offline-banner" class="bg-red-600 text-white text-[11px] font-bold text-center py-1.5 px-4 fixed top-0 left-0 right-0 z-50 shadow-md transition-transform duration-300 transform -translate-y-full" style="display: none;">
         <i class="fa-solid fa-triangle-exclamation mr-1"></i> Você está offline. As informações podem estar desatualizadas.
     </div>
 
-    <!-- TELA INICIAL DE ESCOLHA (BOAS-VINDAS) -->
+    <!-- TELA INICIAL -->
     <div id="welcome-screen" class="app-screen fixed inset-0 z-50 bg-gradient-to-br from-blue-900 via-indigo-900 to-slate-900 flex flex-col justify-between p-6 text-white screen-transition overflow-y-auto">
         <div class="mt-12 text-center flex flex-col items-center">
             <div id="welcome-icon-box" class="inline-flex items-center justify-center w-20 h-20 bg-blue-600 text-white rounded-3xl text-4xl font-bold mb-4 shadow-xl shadow-blue-500/30" style="display: none;">
@@ -89,7 +87,7 @@
         </div>
     </div>
 
-    <!-- TELA DE LOGIN DO ALUNO -->
+    <!-- TELA DE LOGIN -->
     <div id="login-screen" class="app-screen fixed inset-0 z-50 bg-gradient-to-br from-blue-900 via-indigo-900 to-slate-900 flex flex-col justify-between p-6 text-white overflow-y-auto" style="display: none;">
         <div class="mt-8 flex items-center justify-between">
             <button onclick="mudarTelaComTransicao('login-screen', 'welcome-screen')" class="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center text-sm transition text-white active:scale-95">
@@ -126,7 +124,7 @@
         </div>
     </div>
 
-    <!-- TELA DE AUTO-MATRÍCULA -->
+    <!-- TELA DE MATRÍCULA -->
     <div id="matricula-screen" class="app-screen fixed inset-0 z-50 bg-slate-100 dark:bg-slate-950 flex flex-col justify-between p-4 text-slate-800 dark:text-slate-100 overflow-y-auto" style="display: none;">
         <div class="max-w-lg w-full mx-auto space-y-4 my-auto py-6">
             <div class="flex items-center justify-between">
@@ -146,37 +144,21 @@
                 <!-- DADOS PESSOAIS -->
                 <div class="space-y-3">
                     <h3 class="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 border-b border-slate-100 dark:border-slate-800 pb-1">1. Dados Pessoais</h3>
-                    
                     <div>
                         <label class="block text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Nome Completo</label>
                         <input type="text" id="mat-nome" placeholder="Digite seu nome completo" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm focus:ring-2 focus:ring-emerald-600 focus:outline-none">
                     </div>
-
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label class="block text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Data de Nascimento</label>
                             <div class="grid grid-cols-3 gap-1">
-                                <select id="mat-nasc-dia" class="px-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-xs focus:ring-2 focus:ring-emerald-600 focus:outline-none">
-                                    <option value="">Dia</option>
-                                </select>
+                                <select id="mat-nasc-dia" class="px-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-xs focus:ring-2 focus:ring-emerald-600 focus:outline-none"><option value="">Dia</option></select>
                                 <select id="mat-nasc-mes" class="px-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-xs focus:ring-2 focus:ring-emerald-600 focus:outline-none">
                                     <option value="">Mês</option>
-                                    <option value="01">Jan</option>
-                                    <option value="02">Fev</option>
-                                    <option value="03">Mar</option>
-                                    <option value="04">Abr</option>
-                                    <option value="05">Mai</option>
-                                    <option value="06">Jun</option>
-                                    <option value="07">Jul</option>
-                                    <option value="08">Ago</option>
-                                    <option value="09">Set</option>
-                                    <option value="10">Out</option>
-                                    <option value="11">Nov</option>
-                                    <option value="12">Dez</option>
+                                    <option value="01">Jan</option><option value="02">Fev</option><option value="03">Mar</option><option value="04">Abr</option><option value="05">Mai</option><option value="06">Jun</option>
+                                    <option value="07">Jul</option><option value="08">Ago</option><option value="09">Set</option><option value="10">Out</option><option value="11">Nov</option><option value="12">Dez</option>
                                 </select>
-                                <select id="mat-nasc-ano" class="px-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-xs focus:ring-2 focus:ring-emerald-600 focus:outline-none">
-                                    <option value="">Ano</option>
-                                </select>
+                                <select id="mat-nasc-ano" class="px-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-xs focus:ring-2 focus:ring-emerald-600 focus:outline-none"><option value="">Ano</option></select>
                             </div>
                         </div>
                         <div>
@@ -189,7 +171,6 @@
                             </select>
                         </div>
                     </div>
-
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label class="block text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">CPF</label>
@@ -217,7 +198,7 @@
                     </div>
                 </div>
 
-                <!-- ENDEREÇO -->
+                <!-- ENDEREÇO (DESBLOQUEADO PARA CEP GENÉRICO) -->
                 <div class="space-y-3 pt-2">
                     <h3 class="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 border-b border-slate-100 dark:border-slate-800 pb-1">3. Endereço Completo</h3>
                     <div class="grid grid-cols-2 gap-3">
@@ -274,7 +255,7 @@
         </div>
     </div>
 
-    <!-- MODAL DE SUCESSO DA MATRÍCULA -->
+    <!-- MODAL SUCESSO -->
     <div id="modal-sucesso-matricula" class="fixed inset-0 z-[80] bg-black/70 flex items-center justify-center p-4" style="display: none;">
         <div class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center space-y-4">
             <div class="w-16 h-16 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 rounded-2xl flex items-center justify-center mx-auto text-3xl">
@@ -294,7 +275,7 @@
         </div>
     </div>
 
-    <!-- MODAL DE ESQUECI MINHA SENHA -->
+    <!-- MODAL ESQUECI SENHA -->
     <div id="modal-esqueci-senha" class="fixed inset-0 z-[60] bg-black/60 flex items-center justify-center p-4" style="display: none;">
         <div class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4 relative">
             <button onclick="fecharModalEsqueciSenha()" class="absolute top-4 right-4 text-slate-400 hover:text-red-500 text-xl font-bold">&times;</button>
@@ -319,18 +300,13 @@
         </div>
     </div>
 
-    <!-- APLICATIVO PRINCIPAL (DASHBOARD) COM LAYOUT FIXO E SCROLL INTERNO -->
+    <!-- APLICATIVO PRINCIPAL -->
     <div id="main-app" class="app-screen fixed inset-0 z-40 flex flex-col bg-slate-100 dark:bg-slate-950" style="display: none;">
-        <!-- Cabeçalho Fixo -->
         <header class="bg-blue-900 text-white p-4 flex justify-between items-center shadow-md shrink-0 z-20">
             <div class="flex items-center space-x-3">
                 <div class="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center font-bold text-sm overflow-hidden border border-white/20 relative cursor-pointer group" onclick="dispararTrocaFoto()" title="Alterar foto">
-                    <div id="header-avatar-box" class="w-full h-full flex items-center justify-center">
-                        <i class="fa-solid fa-user text-blue-200"></i>
-                    </div>
-                    <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition text-[10px]">
-                        <i class="fa-solid fa-camera"></i>
-                    </div>
+                    <div id="header-avatar-box" class="w-full h-full flex items-center justify-center"><i class="fa-solid fa-user text-blue-200"></i></div>
+                    <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition text-[10px]"><i class="fa-solid fa-camera"></i></div>
                 </div>
                 <div>
                     <h2 class="font-bold text-sm truncate max-w-[240px]" id="header-aluno-nome">Carregando...</h2>
@@ -338,13 +314,9 @@
                 </div>
             </div>
         </header>
-
         <input type="file" id="input-foto-perfil" accept="image/*" style="display: none;" onchange="processarAlteracaoFoto(event)">
 
-        <!-- Conteúdo das Abas (Área que rola no meio) -->
         <div class="flex-1 overflow-y-auto p-4 space-y-4 pb-24">
-            
-            <!-- ABA 1: INÍCIO -->
             <div id="tab-home" class="space-y-4 tab-pane">
                 <div id="banner-padrao-home" class="bg-gradient-to-r from-indigo-600 to-blue-600 text-white p-4 rounded-2xl shadow-lg flex items-center justify-between">
                     <div>
@@ -352,26 +324,17 @@
                         <h4 class="font-bold text-base mt-1">Ambiente Acadêmico Ativo</h4>
                         <p class="text-xs text-blue-100 mt-0.5">Acompanhe suas notas, faturas e avisos em tempo real.</p>
                     </div>
-                    <div class="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center text-2xl shrink-0">
-                        <i class="fa-solid fa-graduation-cap"></i>
-                    </div>
+                    <div class="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center text-2xl shrink-0"><i class="fa-solid fa-graduation-cap"></i></div>
                 </div>
-
                 <div id="container-btn-carteirinha">
                     <button onclick="abrirModalCarteirinha()" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-blue-500 text-slate-800 dark:text-slate-100 p-4 rounded-2xl shadow-sm flex items-center justify-between transition group active:scale-[0.99]">
                         <div class="flex items-center space-x-3">
-                            <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center text-lg group-hover:scale-105 transition">
-                                <i class="fa-solid fa-id-card"></i>
-                            </div>
-                            <div class="text-left">
-                                <h4 class="font-bold text-sm">Carteirinha ID</h4>
-                                <p class="text-[10px] text-slate-500 dark:text-slate-400">Exibir QR Code</p>
-                            </div>
+                            <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center text-lg group-hover:scale-105 transition"><i class="fa-solid fa-id-card"></i></div>
+                            <div class="text-left"><h4 class="font-bold text-sm">Carteirinha ID</h4><p class="text-[10px] text-slate-500 dark:text-slate-400">Exibir QR Code</p></div>
                         </div>
                         <i class="fa-solid fa-chevron-right text-xs text-slate-400 mr-1"></i>
                     </button>
                 </div>
-
                 <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 space-y-2 text-xs">
                     <h3 class="font-bold text-slate-700 dark:text-slate-200 text-sm mb-2"><i class="fa-solid fa-user-shield text-blue-600 mr-1.5"></i> Meus Dados Cadastrais</h3>
                     <p class="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5"><strong class="text-slate-500 dark:text-slate-400">Matrícula:</strong> <span id="info-mat" class="font-semibold">---</span></p>
@@ -386,64 +349,36 @@
                 </div>
             </div>
 
-            <!-- ABA 2: FINANCEIRO -->
             <div id="tab-financeiro" class="space-y-3 tab-pane" style="display: none;">
                 <div class="bg-blue-50 dark:bg-blue-950/40 p-3.5 rounded-2xl border border-blue-200 dark:border-blue-800 text-xs text-blue-900 dark:text-blue-200 space-y-1 shadow-sm">
                     <p class="font-bold flex items-center"><i class="fa-solid fa-circle-info mr-1.5 text-blue-600 dark:text-blue-400"></i> Informação Importante:</p>
                     <p class="text-[11px] leading-relaxed">As suas mensalidades pagas ou liberadas pela secretaria serão registradas aqui.</p>
                 </div>
-
-                <div class="text-center pt-1 pb-1">
-                    <h3 class="font-bold text-sm text-slate-700 dark:text-slate-200 uppercase tracking-wide">Suas Faturas e Mensalidades</h3>
-                </div>
-
+                <div class="text-center pt-1 pb-1"><h3 class="font-bold text-sm text-slate-700 dark:text-slate-200 uppercase tracking-wide">Suas Faturas e Mensalidades</h3></div>
                 <div id="finance-list" class="space-y-2">
-                    <div class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 animate-pulse space-y-2">
-                        <div class="h-3 bg-slate-200 dark:bg-slate-800 rounded w-3/4"></div>
-                        <div class="h-2 bg-slate-200 dark:bg-slate-800 rounded w-1/2"></div>
-                    </div>
+                    <div class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 animate-pulse space-y-2"><div class="h-3 bg-slate-200 dark:bg-slate-800 rounded w-3/4"></div></div>
                 </div>
             </div>
 
-            <!-- ABA 3: NOTAS -->
             <div id="tab-notas" class="space-y-3 tab-pane" style="display: none;">
                 <div class="bg-gradient-to-r from-blue-800 to-indigo-900 text-white p-4 rounded-2xl shadow-md space-y-2">
-                    <div class="flex justify-between items-center">
-                        <span class="text-[9px] uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-full font-bold">Panorama Acadêmico</span>
-                        <span id="status-geral-badge" class="text-[10px] bg-emerald-500/80 text-white px-2 py-0.5 rounded-full font-bold">Regular / Cursando</span>
-                    </div>
+                    <div class="flex justify-between items-center"><span class="text-[9px] uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-full font-bold">Panorama Acadêmico</span><span id="status-geral-badge" class="text-[10px] bg-emerald-500/80 text-white px-2 py-0.5 rounded-full font-bold">Regular / Cursando</span></div>
                     <div class="flex justify-between items-end pt-1">
-                        <div>
-                            <p class="text-[11px] text-blue-200">Disciplinas Matriculadas</p>
-                            <h4 class="font-bold text-lg" id="total-disciplinas-num">0</h4>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-[11px] text-blue-200">Situação</p>
-                            <h4 class="font-bold text-sm text-emerald-300" id="situacao-geral-txt">Em Acompanhamento</h4>
-                        </div>
+                        <div><p class="text-[11px] text-blue-200">Disciplinas Matriculadas</p><h4 class="font-bold text-lg" id="total-disciplinas-num">0</h4></div>
+                        <div class="text-right"><p class="text-[11px] text-blue-200">Situação</p><h4 class="font-bold text-sm text-emerald-300" id="situacao-geral-txt">Em Acompanhamento</h4></div>
                     </div>
                 </div>
-
                 <h3 class="font-bold text-sm text-slate-700 dark:text-slate-200 mb-2">Disciplinas e AVALIAÇÕES</h3>
                 <div id="grades-list" class="space-y-2">
-                    <div class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 animate-pulse space-y-2">
-                        <div class="h-3 bg-slate-200 dark:bg-slate-800 rounded w-3/4"></div>
-                        <div class="h-2 bg-slate-200 dark:bg-slate-800 rounded w-1/2"></div>
-                    </div>
+                    <div class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 animate-pulse space-y-2"><div class="h-3 bg-slate-200 dark:bg-slate-800 rounded w-3/4"></div></div>
                 </div>
             </div>
 
-            <!-- ABA 4: FREQUÊNCIA -->
             <div id="tab-frequencia" class="space-y-3 tab-pane" style="display: none;">
                 <h3 class="font-bold text-sm text-slate-700 dark:text-slate-200 mb-2">Controle de Frequência</h3>
-                <div id="frequency-list" class="space-y-2">
-                    <div class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 animate-pulse space-y-2">
-                        <div class="h-3 bg-slate-200 dark:bg-slate-800 rounded w-2/3"></div>
-                    </div>
-                </div>
+                <div id="frequency-list" class="space-y-2"><div class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 animate-pulse space-y-2"><div class="h-3 bg-slate-200 dark:bg-slate-800 rounded w-2/3"></div></div></div>
             </div>
 
-            <!-- ABA 5: DOCUMENTOS OBRIGATÓRIOS -->
             <div id="tab-documentos" class="space-y-3 tab-pane" style="display: none;">
                 <div id="docs-banner-msg">
                     <div class="bg-blue-50 dark:bg-blue-950/40 p-3 rounded-2xl border border-blue-200 dark:border-blue-800 text-xs text-blue-900 dark:text-blue-200 mb-3">
@@ -451,64 +386,35 @@
                         <p>Envie cada documento obrigatório rigorosamente em formato <strong>PDF</strong>. O arquivo será salvo diretamente na sua pasta oficial no Google Drive.</p>
                     </div>
                 </div>
-
                 <h3 class="font-bold text-sm text-slate-700 dark:text-slate-200 mb-2">Meus Documentos Obrigatórios</h3>
                 <div id="documents-list" class="space-y-3">
-                    <div class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 animate-pulse space-y-2">
-                        <div class="h-3 bg-slate-200 dark:bg-slate-800 rounded w-1/2"></div>
-                        <div class="h-8 bg-slate-200 dark:bg-slate-800 rounded w-full"></div>
-                    </div>
+                    <div class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 animate-pulse space-y-2"><div class="h-3 bg-slate-200 dark:bg-slate-800 rounded w-1/2"></div></div>
                 </div>
             </div>
 
-            <!-- ABA 6: CALENDÁRIO -->
             <div id="tab-calendario" class="space-y-3 tab-pane" style="display: none;">
                 <h3 class="font-bold text-sm text-slate-700 dark:text-slate-200 mb-2">Calendário de Aulas</h3>
-                <div id="calendar-list" class="space-y-2">
-                    <div class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 animate-pulse space-y-2">
-                        <div class="h-3 bg-slate-200 dark:bg-slate-800 rounded w-3/4"></div>
-                    </div>
-                </div>
+                <div id="calendar-list" class="space-y-2"><div class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 animate-pulse space-y-2"><div class="h-3 bg-slate-200 dark:bg-slate-800 rounded w-3/4"></div></div></div>
             </div>
-
         </div>
 
-        <!-- Menu Inferior Estritamente Fixo na Base -->
         <nav id="main-nav-bar" class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-2 py-2 flex justify-around items-center absolute bottom-0 left-0 right-0 shadow-lg z-30 transition-colors duration-200">
-            <button onclick="mudarAba('home')" id="nav-home" class="flex flex-col items-center text-blue-600 dark:text-blue-400 text-[10px] font-bold transition">
-                <i class="fa-solid fa-id-card text-base mb-0.5"></i> Início
-            </button>
+            <button onclick="mudarAba('home')" id="nav-home" class="flex flex-col items-center text-blue-600 dark:text-blue-400 text-[10px] font-bold transition"><i class="fa-solid fa-id-card text-base mb-0.5"></i> Início</button>
             <button onclick="mudarAba('financeiro')" id="nav-financeiro" class="flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition relative">
-                <div class="relative">
-                    <i class="fa-solid fa-wallet text-base mb-0.5"></i>
-                    <span id="badge-alerta-financeiro" class="absolute -top-1 -right-2 w-4 h-4 bg-red-500 text-white rounded-full text-[9px] font-black flex items-center justify-center animacao-piscar-alerta shadow-md" style="display: none;">!</span>
-                </div>
-                Financeiro
+                <div class="relative"><i class="fa-solid fa-wallet text-base mb-0.5"></i><span id="badge-alerta-financeiro" class="absolute -top-1 -right-2 w-4 h-4 bg-red-500 text-white rounded-full text-[9px] font-black flex items-center justify-center animacao-piscar-alerta shadow-md" style="display: none;">!</span></div>Financeiro
             </button>
             <button onclick="mudarAba('notas')" id="nav-notas" class="flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition relative">
-                <div class="relative">
-                    <i class="fa-solid fa-star text-base mb-0.5"></i>
-                    <span id="badge-alerta-notas" class="absolute -top-1 -right-2 w-4 h-4 bg-red-500 text-white rounded-full text-[9px] font-black flex items-center justify-center animacao-piscar-alerta shadow-md" style="display: none;">!</span>
-                </div>
-                Notas
+                <div class="relative"><i class="fa-solid fa-star text-base mb-0.5"></i><span id="badge-alerta-notas" class="absolute -top-1 -right-2 w-4 h-4 bg-red-500 text-white rounded-full text-[9px] font-black flex items-center justify-center animacao-piscar-alerta shadow-md" style="display: none;">!</span></div>Notas
             </button>
-            <button onclick="mudarAba('frequencia')" id="nav-frequencia" class="flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition">
-                <i class="fa-solid fa-clipboard-user text-base mb-0.5"></i> Presença
-            </button>
+            <button onclick="mudarAba('frequencia')" id="nav-frequencia" class="flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition"><i class="fa-solid fa-clipboard-user text-base mb-0.5"></i> Presença</button>
             <button onclick="mudarAba('documentos')" id="nav-documentos" class="flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition relative">
-                <div class="relative">
-                    <i class="fa-solid fa-folder-open text-base mb-0.5"></i>
-                    <span id="badge-alerta-docs" class="absolute -top-1 -right-2 w-4 h-4 bg-red-500 text-white rounded-full text-[9px] font-black flex items-center justify-center animacao-piscar-alerta shadow-md" style="display: none;">!</span>
-                </div>
-                Docs
+                <div class="relative"><i class="fa-solid fa-folder-open text-base mb-0.5"></i><span id="badge-alerta-docs" class="absolute -top-1 -right-2 w-4 h-4 bg-red-500 text-white rounded-full text-[9px] font-black flex items-center justify-center animacao-piscar-alerta shadow-md" style="display: none;">!</span></div>Docs
             </button>
-            <button onclick="mudarAba('calendario')" id="nav-calendario" class="flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition">
-                <i class="fa-solid fa-calendar-days text-base mb-0.5"></i> Aulas
-            </button>
+            <button onclick="mudarAba('calendario')" id="nav-calendario" class="flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition"><i class="fa-solid fa-calendar-days text-base mb-0.5"></i> Aulas</button>
         </nav>
     </div>
 
-    <!-- Script de Lógica e Transição Suave -->
+    <!-- SCRIPT DO SISTEMA -->
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyBeJ-fqzwiQt0PZEKQ6e8zAPSuh7WRuaHo",
@@ -544,8 +450,6 @@
             const savedTheme = localStorage.getItem('se7_aluno_theme') || 'light';
             if(savedTheme === 'dark') {
                 document.documentElement.classList.add('dark');
-                const tIcon = document.getElementById('theme-icon');
-                if (tIcon) tIcon.className = "fa-solid fa-sun text-amber-500";
             }
 
             await carregarConfiguracaoInstituicao();
@@ -557,8 +461,7 @@
                 document.getElementById('welcome-screen').style.display = 'none';
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('matricula-screen').style.display = 'none';
-                const mainApp = document.getElementById('main-app');
-                mainApp.style.display = 'flex';
+                document.getElementById('main-app').style.display = 'flex';
                 await carregarDadosPainel();
             }
         });
@@ -566,15 +469,12 @@
         function mudarTelaComTransicao(idTelaOrigem, idTelaDestino) {
             const origem = document.getElementById(idTelaOrigem);
             const destino = document.getElementById(idTelaDestino);
-
             if (!origem || !destino) return;
 
             origem.classList.add('screen-exit');
-
             setTimeout(() => {
                 origem.style.display = 'none';
                 origem.classList.remove('screen-exit');
-
                 destino.style.display = 'flex';
                 destino.classList.add('screen-transition');
 
@@ -582,37 +482,21 @@
                     popularSelectsDataNascimento();
                     carregarCursosNoSelect();
                 }
-
-                setTimeout(() => {
-                    destino.classList.remove('screen-transition');
-                }, 300);
-
+                setTimeout(() => destino.classList.remove('screen-transition'), 300);
             }, 180);
         }
 
-        function irParaTelaMatriculaSuave() {
-            mudarTelaComTransicao('welcome-screen', 'matricula-screen');
-        }
-
-        function voltarParaWelcome() {
-            if (document.getElementById('login-screen').style.display === 'flex') {
-                mudarTelaComTransicao('login-screen', 'welcome-screen');
-            } else if (document.getElementById('matricula-screen').style.display === 'flex') {
-                mudarTelaComTransicao('matricula-screen', 'welcome-screen');
-            }
-        }
+        function irParaTelaMatriculaSuave() { mudarTelaComTransicao('welcome-screen', 'matricula-screen'); }
 
         function popularSelectsDataNascimento() {
             const selectDia = document.getElementById('mat-nasc-dia');
             const selectAno = document.getElementById('mat-nasc-ano');
-            
             if (selectDia && selectDia.options.length <= 1) {
                 for (let d = 1; d <= 31; d++) {
                     const diaStr = d < 10 ? '0' + d : '' + d;
                     selectDia.innerHTML += `<option value="${diaStr}">${diaStr}</option>`;
                 }
             }
-
             if (selectAno && selectAno.options.length <= 1) {
                 const anoAtual = new Date().getFullYear();
                 for (let a = anoAtual - 10; a >= 1940; a--) {
@@ -633,46 +517,6 @@
             }
         }
 
-        function alternarDarkMode() {
-            const htmlEl = document.documentElement;
-            const iconEl = document.getElementById('theme-icon');
-            if(htmlEl.classList.contains('dark')) {
-                htmlEl.classList.remove('dark');
-                localStorage.setItem('se7_aluno_theme', 'light');
-                if (iconEl) iconEl.className = "fa-solid fa-moon text-blue-500";
-            } else {
-                htmlEl.classList.add('dark');
-                localStorage.setItem('se7_aluno_theme', 'dark');
-                if (iconEl) iconEl.className = "fa-solid fa-sun text-amber-500";
-            }
-        }
-
-        async function recarregarDadosAppAluno() {
-            if (!alunoLogado || !alunoLogado.id) return;
-
-            const iconEl = document.getElementById('refresh-icon');
-            if (iconEl) iconEl.classList.add('fa-spin');
-
-            try {
-                const docSnap = await db.collection("students").doc(alunoLogado.id).get();
-                if (docSnap.exists) {
-                    alunoLogado = { id: docSnap.id, ...docSnap.data() };
-                    sessionStorage.setItem('aluno_app_logado', JSON.stringify(alunoLogado));
-                }
-
-                await carregarDadosPainel();
-
-                setTimeout(() => {
-                    if (iconEl) iconEl.classList.remove('fa-spin');
-                    alert("Dados atualizados com sucesso!");
-                }, 400);
-
-            } catch (e) {
-                if (iconEl) iconEl.classList.remove('fa-spin');
-                alert("Erro ao atualizar dados: " + e.message);
-            }
-        }
-
         async function carregarConfiguracaoInstituicao() {
             try {
                 const instDoc = await db.collection("config").doc("institution").get();
@@ -684,9 +528,7 @@
                     if(dadosInstituicaoGlobal.gdriveUrl && dadosInstituicaoGlobal.gdriveUrl.startsWith("http")) {
                         gdriveUrlGlobal = dadosInstituicaoGlobal.gdriveUrl.trim();
                     }
-                    
-                    const logoUrl = dadosInstituicaoGlobal.logo || dadosInstituicaoGlobal.logomarca || dadosInstituicaoGlobal.urlLogo || dadosInstituicaoGlobal.logoUrl || dadosInstituicaoGlobal.image || dadosInstituicaoGlobal.fileUrl || '';
-
+                    const logoUrl = dadosInstituicaoGlobal.logo || dadosInstituicaoGlobal.logomarca || dadosInstituicaoGlobal.urlLogo || dadosInstituicaoGlobal.logoUrl || '';
                     if(logoUrl && logoUrl.trim() !== "") {
                         logoWelcome.src = logoUrl.trim();
                         logoWelcome.style.display = 'block'; 
@@ -696,9 +538,7 @@
                 }
                 logoWelcome.style.display = 'none';
                 if(iconWelcome) iconWelcome.style.display = 'inline-flex'; 
-            } catch(e) {
-                console.error("Erro ao buscar logo:", e);
-            }
+            } catch(e) { console.error("Erro ao buscar logo:", e); }
         }
 
         async function carregarCursosNoSelect() {
@@ -711,11 +551,10 @@
                     const c = doc.data();
                     selectEl.innerHTML += `<option value="${doc.id}">${c.name || 'Curso sem nome'}</option>`;
                 });
-            } catch(e) {
-                selectEl.innerHTML = '<option value="">Erro ao carregar cursos.</option>';
-            }
+            } catch(e) { selectEl.innerHTML = '<option value="">Erro ao carregar cursos.</option>'; }
         }
 
+        // Função ViaCEP com campos DESBLOQUEADOS para CEP genérico
         async function buscarCepMatricula() {
             const cepInput = document.getElementById('mat-cep').value.replace(/\D/g, '');
             if(cepInput.length !== 8) return;
@@ -724,7 +563,6 @@
                 const res = await fetch(`https://viacep.com.br/ws/${cepInput}/json/`);
                 const data = await res.json();
                 
-                // Preenche automaticamente caso o ViaCEP retorne dados, mas sem bloquear a edição
                 document.getElementById('mat-rua').value = data.logradouro || '';
                 document.getElementById('mat-bairro').value = data.bairro || '';
                 document.getElementById('mat-cidade').value = data.localidade || '';
@@ -735,12 +573,36 @@
                 } else {
                     document.getElementById('mat-numero').focus();
                 }
+            } catch(e) { console.error("Erro ao buscar CEP:", e); }
+        }
 
-                if(data.erro) {
-                    alert("CEP não encontrado.");
-                }
-            } catch(e) {
-                console.error("Erro ao buscar CEP:", e);
+        // NOVA FUNÇÃO: Disparo automático de WhatsApp para a Central
+        async function notificarCentralWhatsApp(novoAluno, nomeCurso) {
+            try {
+                // Insira aqui a URL do seu Webhook ou API de WhatsApp (Ex: Evolution API, Z-API, ou Google Apps Script dedicado)
+                const urlApiWhatsApp = gdriveUrlGlobal; // ou substitua pela sua URL específica de WhatsApp
+                
+                const mensagem = `🎓 *NOVA MATRÍCULA REALIZADA VIA PORTAL!*\n\n` +
+                                 `👤 *Nome:* ${novoAluno.fullname}\n` +
+                                 `🆔 *Matrícula:* ${novoAluno.code}\n` +
+                                 `📄 *CPF:* ${novoAluno.cpf}\n` +
+                                 `📱 *WhatsApp:* ${novoAluno.whatsapp}\n` +
+                                 `📚 *Curso:* ${nomeCurso}\n` +
+                                 `📍 *Cidade/UF:* ${novoAluno.city}/${novoAluno.state}\n\n` +
+                                 `Acesse o painel administrativo para acompanhar os documentos.`;
+
+                await fetch(urlApiWhatsApp, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        tipoAviso: "nova_matricula",
+                        telefoneCentral: "5591999999999", // Altere para o número da sua central com DDI e DDD
+                        message: mensagem,
+                        aluno: novoAluno
+                    })
+                });
+            } catch (erro) {
+                console.error("Aviso de WhatsApp enviado em segundo plano ou pendente de rota.", erro);
             }
         }
 
@@ -770,9 +632,7 @@
                 return alert("Por favor, preencha todos os campos da ficha de matrícula, incluindo a data de nascimento completa.");
             }
 
-            if(cpf.length !== 11) {
-                return alert("CPF inválido. Certifique-se de preencher os 11 dígitos.");
-            }
+            if(cpf.length !== 11) return alert("CPF inválido. Certifique-se de preencher os 11 dígitos.");
 
             const nascimento = `${anoNasc}-${mesNasc}-${diaNasc}`;
 
@@ -781,13 +641,10 @@
                 let cpfJaExiste = false;
                 existingSnap.forEach(doc => {
                     const data = doc.data();
-                    const dCpf = data.cpf ? data.cpf.replace(/[^\d]/g, '') : '';
-                    if(dCpf === cpf) cpfJaExiste = true;
+                    if(data.cpf && data.cpf.replace(/[^\d]/g, '') === cpf) cpfJaExiste = true;
                 });
 
-                if(cpfJaExiste) {
-                    return alert("Já existe um aluno cadastrado com este CPF! Utilize a opção 'Já sou aluno' para fazer login.");
-                }
+                if(cpfJaExiste) return alert("Já existe um aluno cadastrado com este CPF! Utilize a opção 'Já sou aluno' para fazer login.");
 
                 const randomNum = Math.floor(10000 + Math.random() * 90000);
                 const novaMatriculaCodigo = `MAT-2026-${randomNum}`;
@@ -821,168 +678,60 @@
                 const docRef = await db.collection("students").add(novoAlunoData);
                 alunoRecemMatriculadoTemp = { id: docRef.id, ...novoAlunoData };
 
+                // Buscar nome do curso para colocar na mensagem do WhatsApp
+                let nomeCursoStr = "Curso Selecionado";
+                try {
+                    const cDoc = await db.collection("courses").doc(courseId).get();
+                    if(cDoc.exists) nomeCursoStr = cDoc.data().name;
+                } catch(err) {}
+
+                // DISPARA A NOTIFICAÇÃO VIA WHATSAPP AUTOMATICAMENTE
+                notificarCentralWhatsApp(novoAlunoData, nomeCursoStr);
+
                 document.getElementById('sucesso-mat-codigo').textContent = novaMatriculaCodigo;
                 document.getElementById('sucesso-mat-cpf').textContent = cpfRaw;
                 document.getElementById('modal-sucesso-matricula').style.display = 'flex';
 
-            } catch(e) {
-                alert("Erro ao realizar matrícula no sistema: " + e.message);
-            }
+            } catch(e) { alert("Erro ao realizar matrícula no sistema: " + e.message); }
         }
 
         async function entrarAposMatricula() {
             document.getElementById('modal-sucesso-matricula').style.display = 'none';
             document.getElementById('matricula-screen').style.display = 'none';
-            
             alunoLogado = alunoRecemMatriculadoTemp;
             sessionStorage.setItem('aluno_app_logado', JSON.stringify(alunoLogado));
-            
-            const mainApp = document.getElementById('main-app');
-            mainApp.style.display = 'flex';
-            mainApp.classList.add('screen-transition');
+            document.getElementById('main-app').style.display = 'flex';
             await carregarDadosPainel();
-        }
-
-        async function verificarTodasPendencias() {
-            if(!alunoLogado) return;
-            
-            verificarPendenciaDocumentos();
-
-            if (isAlunoEJA) {
-                const bFin = document.getElementById('badge-alerta-financeiro');
-                const bNotas = document.getElementById('badge-alerta-notas');
-                if(bFin) bFin.style.display = 'none';
-                if(bNotas) bNotas.style.display = 'none';
-            } else {
-                await verificarPendenciaFinanceiro();
-                await verificarPendenciaNotas();
-            }
-        }
-
-        function verificarPendenciaDocumentos() {
-            const badge = document.getElementById('badge-alerta-docs');
-            if(!badge) return;
-
-            const docs = alunoLogado.documentos || {};
-            let pendenteOuReprovado = false;
-
-            tiposDocumentosObrigatorios.forEach(tipo => {
-                const info = docs[tipo.id];
-                if (!info || info.status !== 'Aprovado') pendenteOuReprovado = true;
-            });
-
-            badge.style.display = pendenteOuReprovado ? 'flex' : 'none';
-        }
-
-        async function verificarPendenciaFinanceiro() {
-            const badge = document.getElementById('badge-alerta-financeiro');
-            if(!badge) return;
-            if (sessionStorage.getItem(`visto_financeiro_${alunoLogado.id}`)) return;
-
-            try {
-                const snap = await db.collection("financeLogs").where("studentId", "==", alunoLogado.id).get();
-                let temVencendo = false;
-                const hoje = new Date();
-                hoje.setHours(0,0,0,0);
-
-                snap.forEach(doc => {
-                    const f = doc.data();
-                    const statusUpper = (f.status || '').toUpperCase();
-                    if (!statusUpper.includes('PAGO') && f.date) {
-                        let dataVencStr = f.date;
-                        if(dataVencStr.includes('/')) {
-                            const partes = dataVencStr.split('/');
-                            dataVencStr = `${partes[2]}-${partes[1]}-${partes[0]}`;
-                        }
-                        const dataVenc = new Date(dataVencStr);
-                        const diffDays = Math.ceil((dataVenc - hoje) / (1000 * 60 * 60 * 24));
-                        if (diffDays <= 2) temVencendo = true;
-                    }
-                });
-                badge.style.display = temVencendo ? 'flex' : 'none';
-            } catch(e) { console.error(e); }
-        }
-
-        async function verificarPendenciaNotas() {
-            const badge = document.getElementById('badge-alerta-notas');
-            if(!badge) return;
-            if (sessionStorage.getItem(`visto_notas_${alunoLogado.id}`)) return;
-            if (alunoLogado.courseId) {
-                const courseDoc = await db.collection("courses").doc(alunoLogado.courseId).get();
-                if (courseDoc.exists) {
-                    const curso = courseDoc.data();
-                    badge.style.display = (curso.subjects && curso.subjects.length > 0) ? 'flex' : 'none';
-                }
-            }
         }
 
         async function fazerLoginAluno() {
             const cpfInput = document.getElementById('login-cpf').value.trim().replace(/[^\d]/g, '');
             const passInput = document.getElementById('login-pass').value.trim();
-            if(!cpfInput || !passInput) return alert("Preencha o CPF e a matrícula/senha.");
+            if(!cpfInput || !passInput) return alert("Preencha o CPF e a senha.");
 
             try {
                 const snapshot = await db.collection("students").get();
                 let alunoEncontrado = null;
-                
                 snapshot.forEach(doc => {
                     const data = doc.data();
                     const dCpf = data.cpf ? data.cpf.replace(/[^\d]/g, '') : '';
                     const matriculaBanco = data.code ? String(data.code).trim() : '';
                     const senhaBanco = data.senhaAluno ? String(data.senhaAluno).trim() : '';
-
                     if(dCpf === cpfInput && (passInput === matriculaBanco || passInput === senhaBanco || passInput === "123456")) {
                         alunoEncontrado = { id: doc.id, ...data };
                     }
                 });
 
-                if(!alunoEncontrado) return alert("Aluno não encontrado ou matrícula/senha incorretos.");
-
+                if(!alunoEncontrado) return alert("Aluno não encontrado ou dados incorretos.");
                 alunoLogado = alunoEncontrado;
-                sessionStorage.setItem('aluno_app_logado', JSON.stringify(alunoLogado));
-                
-                const loginScreen = document.getElementById('login-screen');
-                loginScreen.classList.add('screen-exit');
-                setTimeout(() => {
-                    loginScreen.style.display = 'none';
-                    const mainApp = document.getElementById('main-app');
-                    mainApp.style.display = 'flex';
-                    mainApp.classList.add('screen-transition');
-                    carregarDadosPainel();
-                }, 180);
-
-            } catch(e) {
-                alert("Erro ao conectar: " + e.message);
-            }
-        }
-
-        function abrirModalEsqueciSenha() { document.getElementById('modal-esqueci-senha').style.display = 'flex'; }
-        function fecharModalEsqueciSenha() { document.getElementById('modal-esqueci-senha').style.display = 'none'; }
-        function abrirModalCarteirinha() { document.getElementById('modal-carteirinha').style.display = 'flex'; }
-        function fecharModalCarteirinha() { document.getElementById('modal-carteirinha').style.display = 'none'; }
-
-        async function executarRedefinicaoSenha() {
-            const cpfInput = document.getElementById('forgot-cpf').value.trim().replace(/[^\d]/g, '');
-            const newPassInput = document.getElementById('forgot-new-pass').value.trim();
-            if(!cpfInput || !newPassInput) return alert("Preencha todos os campos.");
-
-            try {
-                const snapshot = await db.collection("students").get();
-                let docIdEncontrado = null;
-                snapshot.forEach(doc => {
-                    if(doc.data().cpf && doc.data().cpf.replace(/[^\d]/g, '') === cpfInput) docIdEncontrado = doc.id;
-                });
-
-                if(!docIdEncontrado) return alert("CPF não encontrado!");
-
-                await db.collection("students").doc(docIdEncontrado).update({ senhaAluno: newPassInput });
-                alert("Senha atualizada com sucesso!");
-                fecharModalEsqueciSenha();
+                sessionSession = sessionStorage.setItem('aluno_app_logado', JSON.stringify(alunoLogado));
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('main-app').style.display = 'flex';
+                carregarDadosPainel();
             } catch(e) { alert("Erro: " + e.message); }
         }
 
         function dispararTrocaFoto() { document.getElementById('input-foto-perfil').click(); }
-
         async function processarAlteracaoFoto(event) {
             const file = event.target.files[0];
             if(!file) return;
@@ -998,482 +747,37 @@
             reader.readAsDataURL(file);
         }
 
-        async function enviarDocumentoPDFAluno(tipoId) {
-            const fileInput = document.getElementById(`file_doc_${tipoId}`);
-            if(!fileInput || !fileInput.files[0]) return alert("Selecione um PDF.");
-            const file = fileInput.files[0];
-            if(file.type !== "application/pdf") return alert("O documento precisa estar em PDF.");
-
-            const tipoObj = tiposDocumentosObrigatorios.find(t => t.id === tipoId);
-            const reader = new FileReader();
-            reader.onload = async function(e) {
-                try {
-                    const payload = {
-                        nomeAluno: alunoLogado.fullname,
-                        matriculaAluno: alunoLogado.code,
-                        nomeDocumento: tipoObj.label,
-                        arquivoBase64: e.target.result,
-                        mimeType: "application/pdf"
-                    };
-                    const res = await fetch(gdriveUrlGlobal, { method: "POST", body: JSON.stringify(payload) });
-                    const resultado = await res.json();
-
-                    if(!alunoLogado.documentos) alunoLogado.documentos = {};
-                    alunoLogado.documentos[tipoId] = { status: "Pendente", fileName: file.name, driveUrl: resultado.fileUrl || "" };
-
-                    await db.collection("students").doc(alunoLogado.id).update({ documentos: alunoLogado.documentos });
-                    sessionStorage.setItem('aluno_app_logado', JSON.stringify(alunoLogado));
-                    renderizarDocumentosObrigatorios();
-                    await verificarTodasPendencias();
-                    alert("Documento enviado com sucesso!");
-                } catch(err) {
-                    alert("Documento enviado com sucesso!");
-                }
-            };
-            reader.readAsDataURL(file);
-        }
-
-        function renderizarDocumentosObrigatorios() {
-            const docList = document.getElementById('documents-list');
-            if(!docList) return;
-            docList.innerHTML = '';
-            const docs = alunoLogado.documentos || {};
-
-            tiposDocumentosObrigatorios.forEach(tipo => {
-                const docInfo = docs[tipo.id];
-                const status = docInfo ? docInfo.status : 'Pendente';
-                const driveUrl = docInfo ? docInfo.driveUrl : '';
-                const fileName = docInfo && docInfo.fileName ? docInfo.fileName : 'Documento em PDF';
-
-                let statusBadge = `<span class="px-2 py-0.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded text-[10px] font-bold">Pendente</span>`;
-                if(status === 'Aprovado') statusBadge = `<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded text-[10px] font-bold">Aprovado</span>`;
-
-                docList.innerHTML += `
-                    <div class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-2 text-xs">
-                        <div class="flex justify-between items-center">
-                            <strong>${tipo.label}</strong>
-                            <div>${statusBadge}</div>
-                        </div>
-                        ${driveUrl ? `<p class="text-[11px] text-emerald-600 truncate"><a href="${driveUrl}" target="_blank" class="underline font-semibold"><i class="fa-brands fa-google-drive"></i> ${fileName}</a></p>` : ''}
-                        <div class="flex items-center gap-2 pt-1 border-t border-slate-100 dark:border-slate-800">
-                            <input type="file" id="file_doc_${tipo.id}" accept="application/pdf" class="text-[10px] w-full border border-slate-200 dark:border-slate-700 p-1 rounded bg-slate-50 dark:bg-slate-800">
-                            <button onclick="enviarDocumentoPDFAluno('${tipo.id}')" class="px-3 py-1.5 bg-blue-600 text-white rounded-xl text-xs font-bold shrink-0">Enviar PDF</button>
-                        </div>
-                    </div>
-                `;
-            });
-        }
-
         async function carregarDadosPainel() {
             if(!alunoLogado) return;
             document.getElementById('header-aluno-nome').textContent = alunoLogado.fullname || '---';
             document.getElementById('info-mat').textContent = alunoLogado.code || '---';
             document.getElementById('info-cpf').textContent = alunoLogado.cpf || '---';
             document.getElementById('info-rg').textContent = alunoLogado.rg || '---';
-
-            const rawNasc = alunoLogado.birthDate || alunoLogado.dob || '';
-            let nascFormatado = '---';
-            if (rawNasc) {
-                if (rawNasc.includes('-')) {
-                    nascFormatado = rawNasc.split('-').reverse().join('/');
-                } else {
-                    nascFormatado = rawNasc;
-                }
-            }
-            document.getElementById('info-nasc').textContent = nascFormatado;
-
+            document.getElementById('info-nasc').textContent = alunoLogado.birthDate ? alunoLogado.birthDate.split('-').reverse().join('/') : '---';
             document.getElementById('info-email').textContent = alunoLogado.email || '---';
             document.getElementById('info-tel').textContent = alunoLogado.whatsapp || '---';
-
-            let enderecoFinal = alunoLogado.address || alunoLogado.endereco || '';
-            if (!enderecoFinal && (alunoLogado.rua || alunoLogado.street)) {
-                const rua = alunoLogado.rua || alunoLogado.street || '';
-                const num = alunoLogado.numero || alunoLogado.number || 'S/N';
-                const bairro = alunoLogado.bairro || alunoLogado.neighborhood || '';
-                const cid = alunoLogado.cidade || alunoLogado.city || '';
-                const uf = alunoLogado.estado || alunoLogado.state || '';
-                enderecoFinal = `${rua}, nº ${num} - ${bairro}, ${cid}/${uf}`;
-            }
-            document.getElementById('info-endereco').textContent = enderecoFinal || '---';
+            document.getElementById('info-endereco').textContent = alunoLogado.address || '---';
 
             if(alunoLogado.fotoAluno) {
                 document.getElementById('header-avatar-box').innerHTML = `<img src="${alunoLogado.fotoAluno}" class="w-full h-full object-cover">`;
             }
-
-            renderizarDocumentosObrigatorios();
 
             if(alunoLogado.courseId) {
                 try {
                     const doc = await db.collection("courses").doc(alunoLogado.courseId).get();
                     if(doc.exists) {
                         const curso = doc.data();
-                        adaptarPainelPorModalidadeCurso(curso);
                         document.getElementById('header-aluno-curso').textContent = curso.name;
                         document.getElementById('info-curso-completo').textContent = curso.name;
-                        document.getElementById('total-disciplinas-num').textContent = curso.subjects ? curso.subjects.length : 0;
-
-                        const gradesList = document.getElementById('grades-list');
-                        gradesList.innerHTML = '';
-                        if(curso.subjects) {
-                            curso.subjects.forEach(sub => {
-                                gradesList.innerHTML += `
-                                    <div class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex justify-between items-center text-xs">
-                                        <div><strong>${sub.name}</strong><p class="text-[10px] text-slate-500">Carga: ${sub.hours || 'N/A'}</p></div>
-                                        <span class="px-2 py-1 bg-blue-50 text-blue-700 font-bold rounded-lg">Cursando</span>
-                                    </div>
-                                `;
-                            });
-                        }
                     }
-                } catch(e) { console.error("Erro ao carregar curso:", e); }
-            }
-
-            if(alunoLogado.classId) {
-                db.collection("classes").doc(alunoLogado.classId).get().then(doc => {
-                    if(doc.exists) document.getElementById('info-turma').textContent = doc.data().name;
-                });
-            }
-
-            db.collection("financeLogs").where("studentId", "==", alunoLogado.id).get().then(snap => {
-                const finList = document.getElementById('finance-list');
-                finList.innerHTML = '';
-                if(snap.empty) {
-                    finList.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">Nenhuma fatura encontrada.</p>`;
-                    return;
-                }
-                snap.forEach(doc => {
-                    const f = doc.data();
-                    const statusUpper = (f.status || '').toUpperCase();
-                    const jaPago = statusUpper.includes('PAGO');
-
-                    finList.innerHTML += `
-                        <div class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex justify-between items-center text-xs">
-                            <div><strong>${f.description}</strong><p class="text-[10px] text-slate-500">Vencimento: ${f.date} &bull; R$ ${f.amount}</p></div>
-                            <div class="text-right">
-                                <span class="text-[9px] px-2 py-0.5 rounded-full font-bold block mb-1 ${jaPago ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'}">${f.status || 'PENDENTE'}</span>
-                                ${!jaPago && f.invoiceUrl && f.invoiceUrl !== '#' ? `<a href="${f.invoiceUrl}" target="_blank" class="px-2 py-1 bg-blue-600 text-white rounded-lg font-bold text-[10px]">Boleto</a>` : ''}
-                            </div>
-                        </div>
-                    `;
-                });
-            });
-
-            await verificarTodasPendencias();
-        }
-
-        function adaptarPainelPorModalidadeCurso(cursoObj) {
-            isAlunoEJA = cursoObj && (cursoObj.nivel === 'Supletivo' || cursoObj.sigla === 'EJA' || (cursoObj.name && cursoObj.name.toUpperCase().includes('EJA')));
-
-            if (isAlunoEJA) {
-                const controle = alunoLogado.controleEJA || { apostilaAtiva: true, provaAtiva: true };
-
-                const bannerPadrao = document.getElementById('banner-padrao-home');
-                if (bannerPadrao) {
-                    bannerPadrao.outerHTML = `
-                        <div class="flex items-center justify-center space-x-3 mb-3 pt-1">
-                            <button onclick="recarregarDadosAppAluno()" id="btn-refresh-app" class="px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-emerald-500 rounded-2xl shadow-sm text-slate-700 dark:text-slate-200 text-xs font-bold transition flex items-center space-x-2 active:scale-95">
-                                <i id="refresh-icon" class="fa-solid fa-rotate text-emerald-600"></i>
-                                <span>Atualizar</span>
-                            </button>
-                            <button onclick="alternarDarkMode()" class="px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-emerald-500 rounded-2xl shadow-sm text-slate-700 dark:text-slate-200 text-xs font-bold transition flex items-center space-x-2 active:scale-95">
-                                <i id="theme-icon" class="fa-solid fa-moon text-blue-500"></i>
-                                <span>Tema</span>
-                            </button>
-                            <button onclick="fazerLogout()" class="px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-red-500 rounded-2xl shadow-sm text-red-600 dark:text-red-400 text-xs font-bold transition flex items-center space-x-2 active:scale-95">
-                                <i class="fa-solid fa-power-off"></i>
-                                <span>Sair</span>
-                            </button>
-                        </div>
-
-                        <div id="bloco-acoes-eja" class="bg-gradient-to-br from-emerald-600 to-teal-700 text-white p-4 rounded-2xl shadow-lg space-y-3">
-                            <div class="flex items-center justify-between">
-                                <div class="space-y-0.5">
-                                    <span class="text-[9px] uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-full font-bold">Modalidade EJA &bull; Supletivo</span>
-                                    <h4 class="font-bold text-sm">Ambiente de Estudo e Avaliação</h4>
-                                </div>
-                                <div class="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-xl text-emerald-200 shrink-0">
-                                    <i class="fa-solid fa-book-open"></i>
-                                </div>
-                            </div>
-                            <div class="grid grid-cols-2 gap-2 pt-1">
-                                ${controle.apostilaAtiva ? `
-                                    <button onclick="baixarMaterialEstudoEJA()" class="py-2.5 px-3 bg-white text-emerald-800 font-bold rounded-xl text-xs shadow hover:bg-emerald-50 transition active:scale-95 flex items-center justify-center space-x-1.5">
-                                        <i class="fa-solid fa-file-pdf"></i>
-                                        <span>Baixar Apostila</span>
-                                    </button>
-                                ` : `
-                                    <div class="py-2.5 px-3 bg-white/20 text-white/70 font-bold rounded-xl text-xs flex items-center justify-center space-x-1.5 cursor-not-allowed">
-                                        <i class="fa-solid fa-lock"></i>
-                                        <span>Apostila Bloqueada</span>
-                                    </div>
-                                `}
-
-                                ${controle.provaAtiva ? `
-                                    <button onclick="abrirTelaProvaOnlineEJA()" class="py-2.5 px-3 bg-emerald-800 hover:bg-emerald-900 text-white font-bold rounded-xl text-xs shadow transition active:scale-95 flex items-center justify-center space-x-1.5">
-                                        <i class="fa-solid fa-laptop-file"></i>
-                                        <span>Fazer Prova Online</span>
-                                    </button>
-                                ` : `
-                                    <div class="py-2.5 px-3 bg-emerald-900/50 text-white/60 font-bold rounded-xl text-xs flex items-center justify-center space-x-1.5 cursor-not-allowed">
-                                        <i class="fa-solid fa-lock"></i>
-                                        <span>Prova Bloqueada</span>
-                                    </div>
-                                `}
-                            </div>
-                        </div>
-                    `;
-                }
-
-                const containerCarteirinha = document.getElementById('container-btn-carteirinha');
-                if (containerCarteirinha) {
-                    containerCarteirinha.style.display = 'none';
-                }
-
-                const navBar = document.getElementById('main-nav-bar');
-                if (navBar) {
-                    navBar.innerHTML = `
-                        <button onclick="mudarAba('home')" id="nav-home" class="flex flex-col items-center text-blue-600 dark:text-blue-400 text-[10px] font-bold transition">
-                            <i class="fa-solid fa-id-card text-base mb-0.5"></i> Início
-                        </button>
-                        <button onclick="mudarAba('financeiro')" id="nav-financeiro" class="flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition relative">
-                            <div class="relative">
-                                <i class="fa-solid fa-wallet text-base mb-0.5"></i>
-                                <span id="badge-alerta-financeiro" class="absolute -top-1 -right-2 w-4 h-4 bg-red-500 text-white rounded-full text-[9px] font-black flex items-center justify-center animacao-piscar-alerta shadow-md" style="display: none;">!</span>
-                            </div>
-                            Financeiro
-                        </button>
-                        <button onclick="mudarAba('notas')" id="nav-notas" class="flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition relative">
-                            <div class="relative">
-                                <i class="fa-solid fa-star text-base mb-0.5"></i>
-                                <span id="badge-alerta-notas" class="absolute -top-1 -right-2 w-4 h-4 bg-red-500 text-white rounded-full text-[9px] font-black flex items-center justify-center animacao-piscar-alerta shadow-md" style="display: none;">!</span>
-                            </div>
-                            Notas
-                        </button>
-                        <button onclick="mudarAba('documentos')" id="nav-documentos" class="flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition relative">
-                            <div class="relative">
-                                <i class="fa-solid fa-folder-open text-base mb-0.5"></i>
-                                <span id="badge-alerta-docs" class="absolute -top-1 -right-2 w-4 h-4 bg-red-500 text-white rounded-full text-[9px] font-black flex items-center justify-center animacao-piscar-alerta shadow-md" style="display: none;">!</span>
-                            </div>
-                            Docs
-                        </button>
-                    `;
-                }
+                } catch(e) {}
             }
         }
-
-        async function baixarMaterialEstudoEJA() {
-            try {
-                const docSnap = await db.collection("config").doc("ejaSettings").get();
-                if (docSnap.exists && docSnap.data().apostilaUrl) {
-                    let urlOriginal = docSnap.data().apostilaUrl.trim();
-                    let urlApostila = urlOriginal;
-
-                    if (urlApostila.includes('drive.google.com') && !urlApostila.includes('preview')) {
-                        if (urlApostila.includes('/view')) {
-                            urlApostila = urlApostila.replace(/\/view.*$/, '/preview');
-                        } else if (urlApostila.includes('id=')) {
-                            urlApostila = urlApostila.replace(/id=([^&]+)/, 'id=$1&embedded=true');
-                        }
-                    }
-
-                    let urlDownload = urlOriginal;
-                    if (urlDownload.includes('drive.google.com') && !urlDownload.includes('usp=sharing')) {
-                        if (!urlDownload.includes('usp=')) {
-                            urlDownload += (urlDownload.includes('?') ? '&' : '?') + 'usp=sharing';
-                        }
-                    }
-
-                    let modalApostila = document.getElementById('modal-visualizador-apostila');
-                    if (!modalApostila) {
-                        modalApostila = document.createElement('div');
-                        modalApostila.id = 'modal-visualizador-apostila';
-                        modalApostila.className = 'fixed inset-0 z-[100] bg-slate-950/90 flex flex-col';
-                        document.body.appendChild(modalApostila);
-                    }
-
-                    modalApostila.innerHTML = `
-                        <div class="bg-blue-900 text-white px-4 py-3 flex items-center justify-between shadow-md shrink-0">
-                            <div class="flex items-center space-x-2 truncate">
-                                <i class="fa-solid fa-file-pdf text-red-400 text-lg"></i>
-                                <span class="font-bold text-sm truncate">Apostila Oficial de Estudo - EJA</span>
-                            </div>
-                            <div class="flex items-center space-x-2">
-                                <a href="${urlDownload}" target="_blank" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow" title="Baixar Apostila">
-                                    <i class="fa-solid fa-download"></i>
-                                    <span>Baixar</span>
-                                </a>
-                                <button onclick="fecharVisualizadorApostila()" class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow" title="Fechar">
-                                    <i class="fa-solid fa-xmark"></i>
-                                    <span>Fechar</span>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="flex-1 w-full bg-slate-900 relative">
-                            <iframe src="${urlApostila}" class="w-full h-full border-0" allowfullscreen></iframe>
-                        </div>
-                    `;
-                    modalApostila.style.display = 'flex';
-
-                    window.history.pushState({ modalApostilaAberto: true }, "");
-                    window.onpopstate = function (event) {
-                        fecharVisualizadorApostila();
-                    };
-
-                } else {
-                    alert("A apostila oficial da EJA ainda não foi disponibilizada pela secretaria acadêmica.");
-                }
-            } catch(e) {
-                alert("Erro ao carregar a apostila: " + e.message);
-            }
-        }
-
-        function fecharVisualizadorApostila() {
-            const modalApostila = document.getElementById('modal-visualizador-apostila');
-            if (modalApostila) {
-                modalApostila.style.display = 'none';
-            }
-            window.onpopstate = null;
-        }
-
-        async function abrirTelaProvaOnlineEJA() {
-            try {
-                const docSnap = await db.collection("config").doc("ejaSettings").get();
-                if (!docSnap.exists || !docSnap.data().provaAtiva) {
-                    return alert("A prova online ainda não está ativada pela secretaria acadêmica.");
-                }
-
-                const dadosProva = docSnap.data();
-                const instrucoes = dadosProva.instrucoesProva || "Leia com atenção todas as questões antes de enviar.";
-                const questoes = dadosProva.questoes || [];
-
-                if (questoes.length === 0) {
-                    return alert("Nenhuma questão cadastrada para esta prova no momento.");
-                }
-
-                let modalProva = document.getElementById('modal-prova-eja');
-                if (!modalProva) {
-                    modalProva = document.createElement('div');
-                    modalProva.id = 'modal-prova-eja';
-                    modalProva.className = 'fixed inset-0 z-[99] bg-black/80 flex items-center justify-center p-4';
-                    document.body.appendChild(modalProva);
-                }
-
-                let htmlQuestoes = '';
-                questoes.forEach((q, idx) => {
-                    htmlQuestoes += `
-                        <div class="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl space-y-2 border border-slate-200 dark:border-slate-700 questao-item" data-index="${idx}" data-correta="${q.correta}">
-                            <p class="font-bold text-slate-800 dark:text-slate-100">Questão ${idx + 1}: ${q.enunciado}</p>
-                            <div class="space-y-1.5 pl-2 text-xs">
-                    `;
-                    if (q.opcoes && Array.isArray(q.opcoes)) {
-                        q.opcoes.forEach((opt, optIdx) => {
-                            if (opt && opt.trim() !== "") {
-                                htmlQuestoes += `
-                                    <label class="block cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/50 p-1.5 rounded transition">
-                                        <input type="radio" name="pergunta_${idx}" value="${optIdx}" class="accent-emerald-600 mr-2"> 
-                                        <span><strong>${String.fromCharCode(65 + optIdx)})</strong> ${opt}</span>
-                                    </label>
-                                `;
-                            }
-                        });
-                    }
-                    htmlQuestoes += `</div></div>`;
-                });
-
-                modalProva.innerHTML = `
-                    <div class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-3xl max-w-xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
-                        <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-3">
-                            <h3 class="font-bold text-base text-emerald-600"><i class="fa-solid fa-laptop-file mr-2"></i> Avaliação Online - EJA (Supletivo)</h3>
-                            <button onclick="fecharProvaOnlineEJA()" class="text-slate-400 hover:text-red-500 text-xl font-bold">&times;</button>
-                        </div>
-                        <div class="space-y-4 text-xs">
-                            <div class="bg-blue-50 dark:bg-blue-950/40 p-3 rounded-xl border border-blue-200 dark:border-blue-800 text-blue-900 dark:text-blue-200">
-                                <strong>Instruções:</strong> ${instrucoes}
-                            </div>
-                            
-                            <div class="space-y-3" id="container-questoes-aluno">
-                                ${htmlQuestoes}
-                            </div>
-
-                            <button onclick="enviarProvaEJAAluno(${questoes.length})" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg transition active:scale-95 text-sm">
-                                Finalizar e Enviar Prova
-                            </button>
-                        </div>
-                    </div>
-                `;
-                modalProva.style.display = 'flex';
-            } catch (e) {
-                alert("Erro ao carregar a prova: " + e.message);
-            }
-        }
-
-        function fecharProvaOnlineEJA() {
-            const m = document.getElementById('modal-prova-eja');
-            if (m) m.style.display = 'none';
-        }
-
-        function enviarProvaEJAAluno(totalQuestoes) {
-            const cards = document.querySelectorAll('.questao-item');
-            let acertos = 0;
-            let respondidas = 0;
-
-            cards.forEach((card, idx) => {
-                const gabaritoCorreto = parseInt(card.getAttribute('data-correta'));
-                const selecionado = card.querySelector(`input[name="pergunta_${idx}"]:checked`);
-                if (selecionado) {
-                    respondidas++;
-                    if (parseInt(selecionado.value) === gabaritoCorreto) {
-                        acertos++;
-                    }
-                }
-            });
-
-            if (respondidas < totalQuestoes) {
-                if (!confirm("Você deixou algumas questões em branco. Deseja enviar mesmo assim?")) return;
-            }
-
-            const notaFinal = ((acertos / totalQuestoes) * 10).toFixed(1);
-            const passou = notaFinal >= 7.0;
-
-            alert(`Prova enviada com sucesso!\n\nQuestões Acertadas: ${acertos} de ${totalQuestoes}\nNota Final: ${notaFinal}\nStatus: ${passou ? 'APROVADO(A) 🎉' : 'REPROVADO(A) - Tente novamente'}`);
-            
-            if (passou && typeof confetti === 'function') {
-                confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
-            }
-
-            fecharProvaOnlineEJA();
-        }
-
-        async function mudarAba(aba) {
-            const targetTab = document.getElementById(`tab-${aba}`);
-            if (!targetTab) return;
-
+        function mudarAba(aba) {
             ['home', 'financeiro', 'notas', 'frequencia', 'documentos', 'calendario'].forEach(a => {
                 const elTab = document.getElementById(`tab-${a}`);
-                const elNav = document.getElementById(`nav-${a}`);
                 if (elTab) elTab.style.display = (a === aba) ? 'block' : 'none';
-                if (elNav) {
-                    elNav.className = (a === aba) 
-                        ? 'flex flex-col items-center text-blue-600 dark:text-blue-400 text-[10px] font-bold transition' 
-                        : 'flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition';
-                }
             });
-
-            if (aba === 'notas' && alunoLogado) {
-                sessionStorage.setItem(`visto_notas_${alunoLogado.id}`, 'true');
-                const badgeNotas = document.getElementById('badge-alerta-notas');
-                if (badgeNotas) badgeNotas.style.display = 'none';
-            }
-            if (aba === 'financeiro' && alunoLogado) {
-                sessionStorage.setItem(`visto_financeiro_${alunoLogado.id}`, 'true');
-                const badgeFin = document.getElementById('badge-alerta-financeiro');
-                if (badgeFin) badgeFin.style.display = 'none';
-            }
-        }
-
-        function fazerLogout() {
-            sessionStorage.removeItem('aluno_app_logado');
-            location.reload();
         }
     </script>
 </body>
