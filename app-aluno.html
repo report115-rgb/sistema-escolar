@@ -811,8 +811,45 @@
                     createdAt: new Date().toISOString()
                 };
 
+                // 1. Salva o aluno na coleção students
                 const docRef = await db.collection("students").add(novoAlunoData);
-                alunoRecemMatriculadoTemp = { id: docRef.id, ...novoAlunoData };
+                const novoAlunoId = docRef.id;
+                alunoRecemMatriculadoTemp = { id: novoAlunoId, ...novoAlunoData };
+
+                // 2. Busca os dados do curso escolhido para gerar o financeiro automaticamente
+                let cursoObj = null;
+                try {
+                    const cDoc = await db.collection("courses").doc(courseId).get();
+                    if(cDoc.exists) cursoObj = cDoc.data();
+                } catch(err) {
+                    console.error("Erro ao buscar curso para financeiro:", err);
+                }
+
+                // 3. GERAÇÃO AUTOMÁTICA DAS PARCELAS NO FINANCEIRO (Compatível com EJA e Técnicos)
+                if (cursoObj && cursoObj.valorParcela && cursoObj.qtdParcelas) {
+                    const qtdP = cursoObj.qtdParcelas;
+                    const valP = cursoObj.valorParcela;
+                    const valDesc = cursoObj.valorDesconto || valP;
+                    const diaVenc = cursoObj.vencimento || 10;
+                    
+                    for (let i = 1; i <= qtdP; i++) {
+                        const dataV = new Date();
+                        dataV.setMonth(dataV.getMonth() + (i - 1));
+                        dataV.setDate(diaVenc);
+                        const dataStr = dataV.toISOString().slice(0, 10);
+
+                        await db.collection("financeLogs").add({
+                            studentId: novoAlunoId,
+                            studentName: nome,
+                            studentCode: novaMatriculaCodigo,
+                            description: `Mensalidade ${i}/${qtdP} - ${cursoObj.name}`,
+                            amount: parseFloat(valP),
+                            discountAmount: parseFloat(valDesc),
+                            date: dataStr,
+                            status: "PENDENTE (Desc. Pontualidade disponível até o vencimento)"
+                        });
+                    }
+                }
 
                 document.getElementById('sucesso-mat-codigo').textContent = novaMatriculaCodigo;
                 document.getElementById('sucesso-mat-cpf').textContent = cpfRaw;
@@ -840,16 +877,8 @@
             if(!alunoLogado) return;
             
             verificarPendenciaDocumentos();
-
-            if (isAlunoEJA) {
-                const bFin = document.getElementById('badge-alerta-financeiro');
-                const bNotas = document.getElementById('badge-alerta-notas');
-                if(bFin) bFin.style.display = 'none';
-                if(bNotas) bNotas.style.display = 'none';
-            } else {
-                await verificarPendenciaFinanceiro();
-                await verificarPendenciaNotas();
-            }
+            await verificarPendenciaFinanceiro();
+            await verificarPendenciaNotas();
         }
 
         function verificarPendenciaDocumentos() {
