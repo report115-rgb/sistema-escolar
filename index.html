@@ -525,10 +525,26 @@
                 <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4 pb-2 border-b border-gray-100 dark:border-slate-700">Lançamento de Frequência</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div>
-                        <label class="block text-xs font-semibold mb-1">Data da Aula</label>
-                        <input type="date" id="attendance-date" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+                        <label class="block text-xs font-semibold mb-1">Curso</label>
+                        <select id="attendance-course-select" onchange="filterTurmasByAttendanceCourse()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></select>
                     </div>
                     <div>
+                        <label class="block text-xs font-semibold mb-1">Turma</label>
+                        <select id="class-select" onchange="carregarDatasCalendarioParaFrequencia()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-xs font-semibold mb-1">Data / Aula Programada (Calendário Semestral)</label>
+                        <select id="attendance-calendar-date-select" onchange="renderAttendanceList()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+                            <option value="">Selecione a turma primeiro...</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold mb-1">Professor Responsável</label>
+                        <select id="attendance-teacher-select" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></select>
+                    </div>
+                </div>
                         <label class="block text-xs font-semibold mb-1">Curso</label>
                         <select id="attendance-course-select" onchange="filterTurmasByAttendanceCourse()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></select>
                     </div>
@@ -1476,7 +1492,6 @@
 
         (function(){ emailjs.init("SUA_PUBLIC_KEY"); })();
 
-        document.getElementById('attendance-date').valueAsDate = new Date();
         document.getElementById('cancel-date').valueAsDate = new Date();
 
         const usuariosPadrao = [
@@ -2848,8 +2863,47 @@
             const courseId = document.getElementById('attendance-course-select').value;
             const select = document.getElementById('class-select');
             if(!select) return;
-            select.innerHTML = '';
+            select.innerHTML = '<option value="">Selecione a turma...</option>';
             classes.filter(c => c.courseId == courseId).forEach(c => select.insertAdjacentHTML('beforeend', `<option value="${c.id}">${c.name}</option>`));
+            
+            // Aciona o carregamento das datas do calendário correspondentes à turma selecionada
+            carregarDatasCalendarioParaFrequencia();
+        }
+
+function carregarDatasCalendarioParaFrequencia() {
+            const classId = document.getElementById('class-select').value;
+            const selectData = document.getElementById('attendance-calendar-date-select');
+            
+            if (!selectData) return;
+            selectData.innerHTML = '<option value="">Selecione a data da aula...</option>';
+
+            if (!classId) return;
+
+            // Filtra os eventos de calendário cadastrados para esta turma específica
+            const eventosTurma = academicCalendars.filter(cal => cal.classId === classId);
+
+            if (eventosTurma.length === 0) {
+                selectData.innerHTML = '<option value="">Nenhuma data cadastrada no Calendário Semestral para esta turma</option>';
+                renderAttendanceList();
+                return;
+            }
+
+            // Varre os eventos e extrai cada data configurada
+            eventosTurma.forEach(evento => {
+                if (evento.dates && Array.isArray(evento.dates)) {
+                    evento.dates.forEach(dataIso => {
+                        const dataFormatada = dataIso.split('-').reverse().join('/');
+                        const labelOpcao = `${dataFormatada} - ${evento.subject} (${evento.description || 'Aula'})`;
+                        
+                        selectData.insertAdjacentHTML('beforeend', `
+                            <option value="${dataIso}" data-subject="${evento.subject}">
+                                ${labelOpcao}
+                            </option>
+                        `);
+                    });
+                }
+            });
+
             renderAttendanceList();
         }
 
@@ -3321,11 +3375,11 @@
         }
 
         async function saveAttendance() {
-            const classId = document.getElementById('class-select').value;
-            const dataAula = document.getElementById('attendance-date').value;
-            const professorId = document.getElementById('attendance-teacher-select').value;
+    const classId = document.getElementById('class-select').value;
+    const dataAula = document.getElementById('attendance-calendar-date-select').value;
+    const professorId = document.getElementById('attendance-teacher-select').value;
 
-            if (!classId || !dataAula) return alert("Selecione a turma e a data da aula!");
+    if (!dataAula) return alert("Selecione a data da aula programada no calendário!");
 
             const alunosTurma = students.filter(s => s.classId == classId && s.status === "Ativo");
             if (alunosTurma.length === 0) return alert("Nenhum aluno ativo nesta turma.");
