@@ -3387,35 +3387,52 @@
             container.innerHTML = `<div class="font-bold text-xs text-blue-600 dark:text-blue-400 mb-2">Exibindo ${cobrancasAluno.length} cobranças / mensalidades para ${aluno ? aluno.fullname : ''}:</div>`;
 
             cobrancasAluno.forEach((f) => {
-                const jaPago = f.status && f.status.toUpperCase().includes('PAGO');
-                
-                // Estilo e texto condicional dependendo se já foi dado baixa ou não
-                const corBadge = jaPago ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300';
-                const textoStatus = f.status || 'PENDENTE';
+      const jaPago = f.status && f.status.toUpperCase().includes('PAGO');
+      
+      const corBadge = jaPago ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300';
+      const textoStatus = f.status || 'PENDENTE';
 
-                container.innerHTML += `
-                    <div class="bg-gray-50 dark:bg-slate-900 p-3.5 rounded-xl border border-gray-200 dark:border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs">
-                        <div>
-                            <strong class="text-gray-900 dark:text-white text-sm">${f.description}</strong><br>
-                            <span class="text-gray-500">Vencimento: <strong>${f.date}</strong> &bull; Valor: R$ ${f.amount} ${f.discountAmount ? `&bull; Com Desc.: <strong class="text-emerald-600">R$ ${f.discountAmount}</strong>` : ''}</span>
-                        </div>
-                        <div class="flex flex-col items-end gap-1.5 w-full sm:w-auto">
-                            <span class="px-2 py-0.5 ${corBadge} rounded text-[10px] font-bold">${textoStatus}</span>
-                            <div class="flex flex-wrap gap-1.5 justify-end">
-                                ${!jaPago ? `
-                                    <button onclick="darBaixaManualFinanceiro('${f.id}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-semibold text-[11px] flex items-center gap-1.5 shadow">
-                                        <i class="fa-solid fa-check-circle"></i> Dar Baixa Manual
-                                    </button>
-                                ` : `
-                                    <button onclick="estornarBaixaManualFinanceiro('${f.id}')" class="px-3 py-1.5 bg-gray-500 hover:bg-gray-600 text-white rounded font-semibold text-[11px] flex items-center gap-1.5 shadow">
-                                        <i class="fa-solid fa-undo"></i> Estornar Baixa
-                                    </button>
-                                `}
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
+      container.innerHTML += `
+          <div class="bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700 flex flex-col gap-3 text-xs">
+              <div class="flex justify-between items-start sm:items-center">
+                  <div>
+                      <strong class="text-gray-900 dark:text-white text-sm">${f.description}</strong><br>
+                      <span class="text-gray-500">Vencimento: <strong>${f.date}</strong> &bull; Valor: R$ ${f.amount}</span>
+                  </div>
+                  <span class="px-2 py-0.5 ${corBadge} rounded text-[10px] font-bold">${textoStatus}</span>
+              </div>
+
+              ${!jaPago ? `
+                  <div class="bg-white dark:bg-slate-800 p-3 rounded-lg border border-gray-200 dark:border-slate-700 grid grid-cols-1 sm:grid-cols-3 gap-2 items-end">
+                      <div>
+                          <label class="block text-[10px] font-semibold mb-1">Data do Pagamento</label>
+                          <input type="date" id="data-pagamento-${f.id}" value="${new Date().toISOString().slice(0, 10)}" oninput="validarLiberacaoBaixa('${f.id}')" class="w-full px-2.5 py-1.5 rounded border text-xs dark:bg-slate-900 dark:text-white">
+                      </div>
+                      <div>
+                          <label class="block text-[10px] font-semibold mb-1">Forma de Pagamento</label>
+                          <select id="forma-pagamento-${f.id}" onchange="validarLiberacaoBaixa('${f.id}')" class="w-full px-2.5 py-1.5 rounded border text-xs dark:bg-slate-900 dark:text-white">
+                              <option value="">Selecione...</option>
+                              <option value="Pix">Pix</option>
+                              <option value="Cartão">Cartão</option>
+                              <option value="Boleto">Boleto</option>
+                              <option value="Dinheiro">Dinheiro</option>
+                          </select>
+                      </div>
+                      <div>
+                          <button type="button" id="btn-baixa-${f.id}" disabled onclick="executarBaixaManualComDetalhes('${f.id}')" class="w-full px-3 py-1.5 bg-gray-400 text-white rounded font-semibold text-[11px] flex items-center justify-center gap-1.5 shadow cursor-not-allowed transition">
+                              <i class="fa-solid fa-lock"></i> Dar Baixa
+                          </button>
+                      </div>
+                  </div>
+              ` : `
+                  <div class="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center justify-between">
+                      <span><i class="fa-solid fa-circle-check"></i> Pago via <strong>${f.formaPagamento \vert{}\vert{} 'Manual'}</strong> em${f.dataPagamento || '---'}</span>
+                      <button onclick="estornarBaixaManualFinanceiro('${f.id}')" class="px-2.5 py-1 bg-gray-500 hover:bg-gray-600 text-white rounded text-[10px]">Estornar Baixa</button>
+                  </div>
+              `}
+          </div>
+      `;
+  });
         }
 
         // --- FUNÇÃO TEMPORÁRIA PARA DAR BAIXA MANUAL ---
@@ -4453,6 +4470,62 @@ async function gerarCobrancaAsaas(financeLogId) {
     window.addEventListener('DOMContentLoaded', () => {
         carregarAlunosSemTurma();
     });
+
+// Função 1: Valida se a data e a forma de pagamento foram preenchidas para acender o botão
+function validarLiberacaoBaixa(financeLogId) {
+    const dataInput = document.getElementById(`data-pagamento-${financeLogId}`).value;
+    const formaSelect = document.getElementById(`forma-pagamento-${financeLogId}`).value;
+    const btnBaixa = document.getElementById(`btn-baixa-${financeLogId}`);
+
+    if (!btnBaixa) return;
+
+    if (dataInput && formaSelect !== "") {
+        // Destrava o botão e deixa verde
+        btnBaixa.disabled = false;
+        btnBaixa.classList.remove('bg-gray-400', 'cursor-not-allowed');
+        btnBaixa.classList.add('bg-emerald-600', 'hover:bg-emerald-700', 'cursor-pointer');
+        btnBaixa.innerHTML = `<i class="fa-solid fa-check-circle"></i> Confirmar Baixa`;
+    } else {
+        // Trava o botão e deixa cinza
+        btnBaixa.disabled = true;
+        btnBaixa.classList.add('bg-gray-400', 'cursor-not-allowed');
+        btnBaixa.classList.remove('bg-emerald-600', 'hover:bg-emerald-700', 'cursor-pointer');
+        btnBaixa.innerHTML = `<i class="fa-solid fa-lock"></i> Dar Baixa`;
+    }
+}
+
+// Função 2: Salva os dados no banco e atualiza instantaneamente para o Aluno
+async function executarBaixaManualComDetalhes(financeLogId) {
+    const dataPagamento = document.getElementById(`data-pagamento-${financeLogId}`).value;
+    const formaPagamento = document.getElementById(`forma-pagamento-${financeLogId}`).value;
+
+    if (!dataPagamento || !formaPagamento) {
+        return alert("Preencha a data e selecione a forma de pagamento.");
+    }
+
+    // Transforma a data do formato de banco (AAAA-MM-DD) para o formato brasileiro (DD/MM/AAAA)
+    const dataFormatada = dataPagamento.split('-').reverse().join('/');
+
+    try {
+        await db.collection("financeLogs").doc(financeLogId).update({
+            status: `PAGO (${formaPagamento})`,
+            dataPagamento: dataFormatada,
+            formaPagamento: formaPagamento
+        });
+
+        registrarLogAuditoria(`Deu baixa manual com ${formaPagamento} em ${dataFormatada} no registro ID ${financeLogId}`, "Financeiro");
+        alert("Baixa realizada com sucesso! O status foi atualizado e já está visível no Portal do Aluno.");
+        
+        // Atualiza a tela de financeiro instantaneamente
+        const selFin = document.getElementById('fin-student-select');
+        if (selFin && selFin.value) {
+            renderizarCobrancasAlunoSelecionadoFinanceiro(selFin.value);
+        }
+    } catch (error) {
+        console.error("Erro ao dar baixa manual:", error);
+        alert("Erro ao atualizar na nuvem: " + error.message);
+    }
+}
 	</script>
 </body>
 </html>
