@@ -497,11 +497,20 @@
 
             <!-- ABA 4: FREQUÊNCIA -->
             <div id="tab-frequencia" class="space-y-3 tab-pane" style="display: none;">
-                <h3 class="font-bold text-sm text-slate-700 dark:text-slate-200 mb-2">Controle de Frequência</h3>
-                <div id="frequency-list" class="space-y-2">
-                    <div class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm text-xs text-slate-600 dark:text-slate-300">
-                        <p class="font-bold">Histórico de Presença</p>
-                        <p class="text-[11px] text-slate-500 mt-0.5">Nenhum registro de frequência lançado para o seu perfil no momento.</p>
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="font-bold text-sm text-slate-700 dark:text-slate-200">Controle de Frequência</h3>
+                    <div class="flex items-center space-x-2">
+                        <label for="select-filtro-semestre-freq" class="text-[11px] text-slate-500 font-semibold">Semestre:</label>
+                        <select id="select-filtro-semestre-freq" onchange="renderizarFrequenciaAluno()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs px-2.5 py-1.5 rounded-xl font-bold text-blue-600 dark:text-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-600">
+                            <option value="">Todos</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="frequency-list" class="space-y-3">
+                    <div class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm text-xs text-slate-600 dark:text-slate-300 text-center py-6">
+                        <i class="fa-solid fa-clipboard-user text-2xl text-slate-400 mb-2 block"></i>
+                        <p class="font-bold">Controle de Frequência</p>
+                        <p class="text-[11px] text-slate-500 mt-1">Carregando histórico de frequência do semestre...</p>
                     </div>
                 </div>
             </div>
@@ -1342,9 +1351,14 @@
                             const valorAtualSelect = selectSemestre.value;
                             selectSemestre.innerHTML = `<option value="">Todos os Semestres</option>`;
                             
+                            const selectSemestreFreq = document.getElementById('select-filtro-semestre-freq');
+                            const valorAtualSelectFreq = selectSemestreFreq.value;
+                            selectSemestreFreq.innerHTML = `<option value="">Todos os Semestres</option>`;
+
                             const semestresOrdenados = Array.from(semestresDisponiveis).sort().reverse();
                             semestresOrdenados.forEach(sem => {
                                 selectSemestre.innerHTML += `<option value="${sem}">${sem}</option>`;
+                                selectSemestreFreq.innerHTML += `<option value="${sem}">${sem}</option>`;
                             });
 
                             if (semestresOrdenados.includes(valorAtualSelect)) {
@@ -1353,7 +1367,14 @@
                                 selectSemestre.value = semestresOrdenados[0];
                             }
 
+                            if (semestresOrdenados.includes(valorAtualSelectFreq)) {
+                                selectSemestreFreq.value = valorAtualSelectFreq;
+                            } else if (semestresOrdenados.length > 0) {
+                                selectSemestreFreq.value = semestresOrdenados[0];
+                            }
+
                             renderizarCalendarioAluno();
+                            renderizarFrequenciaAluno();
                         });
                     }
                 });
@@ -1401,50 +1422,121 @@
             await verificarTodasPendencias();
         }
 
-        // --- FUNÇÃO DE RENDERIZAÇÃO DA FREQUÊNCIA DO ALUNO ---
+        // --- FUNÇÃO DE RENDERIZAÇÃO DA FREQUÊNCIA DO ALUNO (ESTILO CALENDÁRIO POR MÊS) ---
         function renderizarFrequenciaAluno() {
             const freqList = document.getElementById('frequency-list');
+            const filtroSemestre = document.getElementById('select-filtro-semestre-freq').value;
             if (!freqList) return;
 
             freqList.innerHTML = '';
 
-            // O objeto attendance armazena as presenças no formato: aluno.attendance[dataIso] = { status: 'Presente'/'Ausente', subject: 'Nome da Matéria' }
             const attendanceMap = alunoLogado.attendance || {};
-            const datasRegistradas = Object.keys(attendanceMap).sort().reverse(); // Mais recentes primeiro
 
-            if (datasRegistradas.length === 0) {
+            if (!eventosCalendarioCache || eventosCalendarioCache.length === 0) {
                 freqList.innerHTML = `
                     <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm text-xs text-slate-600 dark:text-slate-300 text-center py-6">
                         <i class="fa-solid fa-clipboard-user text-2xl text-slate-400 mb-2 block"></i>
                         <p class="font-bold">Controle de Frequência</p>
-                        <p class="text-[11px] text-slate-500 mt-1">Nenhum registro de presença ou falta lançado para o seu perfil no momento.</p>
+                        <p class="text-[11px] text-slate-500 mt-1">Nenhum calendário de aulas encontrado para este período.</p>
                     </div>
                 `;
                 return;
             }
 
-            datasRegistradas.forEach(dataIso => {
-                const reg = attendanceMap[dataIso];
-                const status = reg.status || 'Presente';
-                const subject = reg.subject || 'Aula Regular';
-                const dataFormatada = dataIso.split('-').reverse().join('/');
+            let eventosFiltrados = eventosCalendarioCache;
+            if (filtroSemestre) {
+                eventosFiltrados = eventosCalendarioCache.filter(ev => ev.semestre === filtroSemestre);
+            }
 
-                const isPresente = status.toLowerCase() === 'presente';
-                const badgeClass = isPresente 
-                    ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800' 
-                    : 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300 border border-red-200 dark:border-red-800';
-                
-                const iconeStatus = isPresente ? '<i class="fa-solid fa-circle-check mr-1"></i>' : '<i class="fa-solid fa-circle-xmark mr-1"></i>';
+            const mesesNomes = {
+                "01": "Janeiro", "02": "Fevereiro", "03": "Março", "04": "Abril",
+                "05": "Maio", "06": "Junho", "07": "Julho", "08": "Agosto",
+                "09": "Setembro", "10": "Outubro", "11": "Novembro", "12": "Dezembro"
+            };
+
+            const datasPorMes = {};
+
+            eventosFiltrados.forEach(ev => {
+                const materia = ev.subject || 'Disciplina';
+                (ev.dates || []).forEach(dataIso => {
+                    const partes = dataIso.split('-');
+                    if (partes.length === 3) {
+                        const [ano, mes, dia] = partes;
+                        if (!datasPorMes[mes]) datasPorMes[mes] = [];
+
+                        // Verifica o status de presença salvo no perfil do aluno para essa data específica
+                        const registroAluno = attendanceMap[dataIso];
+                        let status = 'Pendente';
+                        if (registroAluno) {
+                            status = registroAluno.status || 'Presente';
+                        }
+
+                        datasPorMes[mes].push({
+                            dataIso: dataIso,
+                            dataFormatada: `${dia}/${mes}/${ano}`,
+                            materia: materia,
+                            status: status
+                        });
+                    }
+                });
+            });
+
+            const mesesOrdenados = Object.keys(datasPorMes).sort();
+
+            if (mesesOrdenados.length === 0) {
+                freqList.innerHTML = `
+                    <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm text-xs text-slate-600 dark:text-slate-300 text-center py-6">
+                        <i class="fa-solid fa-clipboard-user text-2xl text-slate-400 mb-2 block"></i>
+                        <p class="font-bold">Controle de Frequência</p>
+                        <p class="text-[11px] text-slate-500 mt-1">Nenhuma aula programada para este semestre.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            mesesOrdenados.forEach(mesKey => {
+                const nomeMes = mesesNomes[mesKey] || `Mês ${mesKey}`;
+                const listaDatas = datasPorMes[mesKey].sort((a, b) => a.dataIso.localeCompare(b.dataIso));
+
+                let htmlItensDatas = '';
+                listaDatas.forEach(item => {
+                    let badgeClass = 'bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-400';
+                    let iconeStatus = '<i class="fa-solid fa-clock mr-1"></i>';
+                    let textoStatus = 'Aguardando';
+
+                    const stLower = item.status.toLowerCase();
+                    if (stLower === 'presente') {
+                        badgeClass = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800';
+                        iconeStatus = '<i class="fa-solid fa-circle-check mr-1"></i>';
+                        textoStatus = 'Presente';
+                    } else if (stLower === 'falta' || stLower === 'ausente') {
+                        badgeClass = 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300 border border-red-200 dark:border-red-800';
+                        iconeStatus = '<i class="fa-solid fa-circle-xmark mr-1"></i>';
+                        textoStatus = 'Falta';
+                    }
+
+                    htmlItensDatas += `
+                        <div class="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-100 dark:border-slate-800 flex justify-between items-center text-xs">
+                            <div class="space-y-0.5">
+                                <span class="font-bold text-blue-600 dark:text-blue-400 mr-2"><i class="fa-regular fa-calendar-check mr-1"></i> ${item.dataFormatada}</span>
+                                <span class="text-slate-700 dark:text-slate-200 font-semibold block">${item.materia}</span>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-full font-bold text-[10px] ${badgeClass} shrink-0">
+                                ${iconeStatus} ${textoStatus}
+                            </span>
+                        </div>
+                    `;
+                });
 
                 freqList.innerHTML += `
-                    <div class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between text-xs">
-                        <div class="space-y-0.5">
-                            <span class="font-bold text-blue-600 dark:text-blue-400 block"><i class="fa-regular fa-calendar mr-1"></i> ${dataFormatada}</span>
-                            <span class="text-slate-700 dark:text-slate-200 font-semibold block">${subject}</span>
+                    <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+                        <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-2">
+                            <h4 class="font-bold text-sm text-slate-800 dark:text-slate-100 uppercase tracking-wide"><i class="fa-solid fa-calendar-day mr-1.5 text-blue-600"></i> ${nomeMes}</h4>
+                            <span class="text-[10px] bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 px-2 py-0.5 rounded-full font-bold">${filtroSemestre || 'Geral'}</span>
                         </div>
-                        <span class="px-2.5 py-1 rounded-full font-bold text-[10px] ${badgeClass} shrink-0">
-                            ${iconeStatus} ${status}
-                        </span>
+                        <div class="space-y-2">
+                            ${htmlItensDatas}
+                        </div>
                     </div>
                 `;
             });
