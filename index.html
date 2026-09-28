@@ -574,8 +574,15 @@
                     </div>
                 </div>
                 <h3 id="grade-section-title" class="font-bold text-sm text-gray-700 dark:text-gray-300 mb-2">Notas e Avaliações por Aluno</h3>
-                <ul class="attendance-list divide-y divide-gray-200 dark:divide-slate-700 mb-4" id="student-grade-list"></ul>
-                <button onclick="saveGrades()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-sm shadow">Salvar Notas da Disciplina</button>
+<!-- Cabeçalho descritivo das caixinhas -->
+<div class="grid grid-cols-12 gap-2 px-3 py-2 bg-gray-50 dark:bg-slate-900 rounded-lg text-xs font-bold text-gray-600 dark:text-gray-300 mb-2">
+    <div class="col-span-4">Aluno</div>
+    <div class="col-span-2 text-center">Atividade Pedagógica</div>
+    <div class="col-span-2 text-center">Avaliação</div>
+    <div class="col-span-2 text-center">Nota Final</div>
+    <div class="col-span-2 text-right">Ações</div>
+</div>
+<ul class="attendance-list divide-y divide-gray-200 dark:divide-slate-700 mb-4 space-y-2" id="student-grade-list"></ul>
             </div>
         </div>
 
@@ -3345,28 +3352,102 @@
 
         function renderGradeList() {
             const classId = document.getElementById('grade-class-select').value;
+            const subjectSelect = document.getElementById('grade-subject-select').value;
             const list = document.getElementById('student-grade-list');
             if(!list) return;
             list.innerHTML = '';
+            
             students.filter(s => s.classId == classId && s.status === "Ativo").forEach(s => {
-                list.innerHTML += `<li class="py-2 text-xs flex justify-between items-center"><span>${s.fullname} (${s.code})</span><div class="flex gap-2"><input type="number" placeholder="Nota 1" class="w-20 px-2 py-1 rounded border text-xs dark:bg-slate-900" id="grade1_${s.id}" min="0" max="10" step="0.1"><input type="number" placeholder="Nota 2" class="w-20 px-2 py-1 rounded border text-xs dark:bg-slate-900" id="grade2_${s.id}" min="0" max="10" step="0.1"></div></li>`;
+                // Recupera notas salvas anteriormente se houver no objeto do aluno ou define vazio
+                const notasAluno = (s.grades && s.grades[subjectSelect]) ? s.grades[subjectSelect] : { atividade: '', avaliacao: '', final: '', salvo: false };
+                const readonlyAttr = notasAluno.salvo ? 'readonly disabled' : '';
+                const bgClass = notasAluno.salvo ? 'bg-gray-100 dark:bg-slate-900 text-gray-500' : 'bg-white dark:bg-slate-900';
+
+                list.innerHTML += `
+                    <li class="py-2.5 text-xs grid grid-cols-12 gap-2 items-center border-b border-gray-100 dark:border-slate-700" id="row_grade_${s.id}">
+                        <div class="col-span-4 font-semibold truncate">
+                            ${s.fullname} <br><span class="text-[10px] text-gray-400">(${s.code})</span>
+                        </div>
+                        <div class="col-span-2 text-center">
+                            <input type="number" placeholder="0-10" min="0" max="10" step="0.1" value="${notasAluno.atividade}" ${readonlyAttr} oninput="calcularNotaFinalAluno('${s.id}')" id="grade_ativ_${s.id}" class="w-full px-2 py-1.5 text-center rounded border text-xs ${bgClass} dark:border-slate-700">
+                        </div>
+                        <div class="col-span-2 text-center">
+                            <input type="number" placeholder="0-10" min="0" max="10" step="0.1" value="${notasAluno.avaliacao}" ${readonlyAttr} oninput="calcularNotaFinalAluno('${s.id}')" id="grade_aval_${s.id}" class="w-full px-2 py-1.5 text-center rounded border text-xs ${bgClass} dark:border-slate-700">
+                        </div>
+                        <div class="col-span-2 text-center">
+                            <input type="text" readonly placeholder="Final" value="${notasAluno.final}" id="grade_final_${s.id}" class="w-full px-2 py-1.5 text-center rounded border text-xs font-bold bg-gray-100 dark:bg-slate-900 text-blue-600 dark:text-blue-400 dark:border-slate-700">
+                        </div>
+                        <div class="col-span-2 text-right space-x-1">
+                            ${notasAluno.salvo ? `
+                                <button type="button" onclick="habilitarEdicaoNota('${s.id}')" class="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded font-semibold shadow text-[10px]">Editar Nota</button>
+                            ` : `
+                                <span class="text-[10px] text-gray-400 italic">Preencha e salve</span>
+                            `}
+                        </div>
+                    </li>`;
             });
         }
-        function saveGrades() { alert("Notas salvas com sucesso!"); }
 
-        function renderFinanceStudentSelect() {
-            const select = document.getElementById('fin-student-select');
-            if(select) {
-                const currentVal = select.value;
-                select.innerHTML = '<option value="">Selecione o aluno...</option>';
-                students.filter(s => s.status === "Ativo").forEach(s => {
-                    select.insertAdjacentHTML('beforeend', `<option value="${s.id}">${s.fullname} (${s.code})</option>`);
-                });
-                if(currentVal) {
-                    select.value = currentVal;
-                    renderizarCobrancasAlunoSelecionadoFinanceiro(currentVal);
+        // Função para calcular a soma ou média das duas caixinhas em tempo real
+        function calcularNotaFinalAluno(studentId) {
+            const ativ = parseFloat(document.getElementById(`grade_ativ_${studentId}`).value) || 0;
+            const aval = parseFloat(document.getElementById(`grade_aval_${studentId}`).value) || 0;
+            // Se preferir média, altere para (ativ + aval) / 2. Aqui está soma simples limitada a 10 ou média aritmética:
+            const final = ((ativ + aval) / 2).toFixed(1); 
+            document.getElementById(`grade_final_${studentId}`).value = final;
+        }
+
+        // Função para destravar a edição caso o usuário clique em "Editar Nota"
+        function habilitarEdicaoNota(studentId) {
+            document.getElementById(`grade_ativ_${studentId}`).removeAttribute('readonly');
+            document.getElementById(`grade_ativ_${studentId}`).removeAttribute('disabled');
+            document.getElementById(`grade_ativ_${studentId}`).classList.remove('bg-gray-100', 'text-gray-500');
+            
+            document.getElementById(`grade_aval_${studentId}`).removeAttribute('readonly');
+            document.getElementById(`grade_aval_${studentId}`).removeAttribute('disabled');
+            document.getElementById(`grade_aval_${studentId}`).classList.remove('bg-gray-100', 'text-gray-500');
+
+            // Troca o botão temporariamente para indicar que está em edição
+            const row = document.getElementById(`row_grade_${studentId}`);
+            const btnContainer = row.querySelector('.col-span-2.text-right');
+            btnContainer.innerHTML = `<span class="text-[10px] text-amber-600 font-bold">Editando... Clique em Salvar</span>`;
+        }
+
+        async function saveGrades() {
+            const classId = document.getElementById('grade-class-select').value;
+            const subjectId = document.getElementById('grade-subject-select').value;
+            if (!classId || !subjectId) return alert("Selecione a turma e a disciplina!");
+
+            const alunosTurma = students.filter(s => s.classId == classId && s.status === "Ativo");
+            let salvosCount = 0;
+
+            for (const s of alunosTurma) {
+                const ativInput = document.getElementById(`grade_ativ_${s.id}`);
+                // Se o input estiver travado/salvo e não foi clicado em editar, pula
+                if (ativInput.hasAttribute('readonly') && !ativInput.classList.contains('bg-white')) continue;
+
+                const ativ = ativInput.value;
+                const aval = document.getElementById(`grade_aval_${s.id}`).value;
+                const final = document.getElementById(`grade_final_${s.id}`).value;
+
+                if (ativ !== '' || aval !== '') {
+                    if (!s.grades) s.grades = {};
+                    s.grades[subjectId] = {
+                        atividade: ativ,
+                        avaliacao: aval,
+                        final: final,
+                        salvo: true
+                    };
+
+                    // Atualiza no Firebase para persistir na nuvem
+                    await db.collection("students").doc(s.id).update({ grades: s.grades });
+                    salvosCount++;
                 }
             }
+
+            registrarLogAuditoria(`Salvou notas da disciplina ID ${subjectId} para a turma ${classId}`, "Notas");
+            alert(`Notas salvas com sucesso para ${salvosCount} aluno(s)! A nota final foi fixada e o botão de edição foi liberado.`);
+            renderGradeList();
         }
 
         function renderizarCobrancasAlunoSelecionadoFinanceiro(studentId) {
