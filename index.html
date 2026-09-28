@@ -3100,14 +3100,33 @@
 }
 
         function popularSelectAlunosValidacaoGestao() {
-            const sel = document.getElementById('select-aluno-validacao');
-            if(!sel) return;
-            sel.innerHTML = '<option value="">Selecione o aluno...</option>';
-            students.forEach(s => {
-    // Exibe todos os alunos no seletor financeiro para facilitar a geração manual
-    select.insertAdjacentHTML('beforeend', `<option value="${s.id}">${s.fullname} (${s.code || 'Sem Matrícula'})</option>`);
-	});
-        }
+    // 1. Popular seletor de validação de documentos da gestão
+    const selValidacao = document.getElementById('select-aluno-validacao');
+    if(selValidacao) {
+        selValidacao.innerHTML = '<option value="">Selecione o aluno...</option>';
+        students.forEach(s => {
+            selValidacao.insertAdjacentHTML('beforeend', `<option value="${s.id}">${s.fullname} (${s.code || 'Sem Matrícula'})</option>`);
+        });
+    }
+
+    // 2. Popular seletor da aba Financeiro
+    const selFinanceiro = document.getElementById('fin-student-select');
+    if(selFinanceiro) {
+        selFinanceiro.innerHTML = '<option value="">Selecione o aluno...</option>';
+        students.forEach(s => {
+            selFinanceiro.insertAdjacentHTML('beforeend', `<option value="${s.id}">${s.fullname} (${s.code || 'Sem Matrícula'})</option>`);
+        });
+    }
+
+    // 3. Popular seletor do Portal do Aluno (Modo Master / Gestão)
+    const selPortalMaster = document.getElementById('admin-select-aluno-portal');
+    if(selPortalMaster) {
+        selPortalMaster.innerHTML = '<option value="">Selecione um aluno...</option>';
+        students.forEach(s => {
+            selPortalMaster.insertAdjacentHTML('beforeend', `<option value="${s.id}">${s.fullname} (${s.code || 'Sem Matrícula'})</option>`);
+        });
+    }
+}
 
         function renderizarDocumentosAlunoGestao(alunoId) {
             const container = document.getElementById('container-validacao-docs');
