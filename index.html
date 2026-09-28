@@ -3655,15 +3655,38 @@ function renderFinanceStudentSelect() {
             }
 
             const notaList = document.getElementById('portal-aluno-notas-list');
-            if(notaList && curso && curso.subjects) {
+            if (notaList && curso && curso.subjects) {
                 notaList.innerHTML = '';
                 curso.subjects.forEach(sub => {
-                    notaList.innerHTML += `<li class="py-2 text-xs flex justify-between items-center"><span><strong>${sub.name}</strong> (${sub.hours || 'N/A'})</span> <span class="font-semibold text-blue-600">Cursando / Em avaliação</span></li>`;
+                    // Busca a nota lançada para esta disciplina específica (usando o ID da disciplina)
+                    const registroNota = (aluno.grades && aluno.grades[sub.id]) ? aluno.grades[sub.id] : null;
+                    
+                    let statusNotaHtml = `<span class="px-2 py-0.5 bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 rounded text-[10px] font-bold">Cursando / Em avaliação</span>`;
+                    
+                    if (registroNota && registroNota.salvo) {
+                        statusNotaHtml = `
+                            <div class="text-right">
+                                <span class="text-gray-500 text-[11px]">Ativ: <strong>${registroNota.atividade || 0}</strong> | Aval: <strong>${registroNota.avaliacao || 0}</strong></span><br>
+                                <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 rounded text-[10px] font-bold">Nota Final: ${registroNota.final || 0}</span>
+                            </div>
+                        `;
+                    }
+
+                    notaList.innerHTML += `
+                        <li class="py-3 text-xs flex justify-between items-center border-b border-gray-100 dark:border-slate-700">
+                            <div>
+                                <strong class="text-sm text-gray-900 dark:text-white">${sub.name}</strong> 
+                                <span class="text-gray-400 font-semibold">[${sub.hours || 'N/A'}]</span>
+                            </div>
+                            <div>
+                                ${statusNotaHtml}
+                            </div>
+                        </li>
+                    `;
                 });
-            } else if(notaList) {
+            } else if (notaList) {
                 notaList.innerHTML = `<li class="py-3 text-sm text-gray-500">Nenhuma disciplina cadastrada para o curso.</li>`;
             }
-        }
 
         async function handleAlunoFotoUpload(e) {
             const file = e.target.files[0];
