@@ -1252,35 +1252,76 @@
 
             renderizarDocumentosObrigatorios();
 
+            // --- SINCRONIZAÇÃO AUTOMÁTICA EM TEMPO REAL DE CURSOS E NOTAS (MATRIZ) ---
             if(alunoLogado.courseId) {
                 try {
-                    const doc = await db.collection("courses").doc(alunoLogado.courseId).get();
-                    if(doc.exists) {
-                        const curso = doc.data();
-                        adaptarPainelPorModalidadeCurso(curso);
-                        document.getElementById('header-aluno-curso').textContent = curso.name;
-                        document.getElementById('info-curso-completo').textContent = curso.name;
-                        document.getElementById('total-disciplinas-num').textContent = curso.subjects ? curso.subjects.length : 0;
+                    db.collection("courses").doc(alunoLogado.courseId).onSnapshot((doc) => {
+                        if(doc.exists) {
+                            const curso = doc.data();
+                            adaptarPainelPorModalidadeCurso(curso);
+                            document.getElementById('header-aluno-curso').textContent = curso.name;
+                            document.getElementById('info-curso-completo').textContent = curso.name;
+                            document.getElementById('total-disciplinas-num').textContent = curso.subjects ? curso.subjects.length : 0;
 
-                        const gradesList = document.getElementById('grades-list');
-                        gradesList.innerHTML = '';
-                        if(curso.subjects) {
-                            curso.subjects.forEach(sub => {
-                                gradesList.innerHTML += `
-                                    <div class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex justify-between items-center text-xs">
-                                        <div><strong>${sub.name}</strong><p class="text-[10px] text-slate-500">Carga: ${sub.hours || 'N/A'}</p></div>
-                                        <span class="px-2 py-1 bg-blue-50 text-blue-700 font-bold rounded-lg">Cursando</span>
-                                    </div>
-                                `;
-                            });
+                            const gradesList = document.getElementById('grades-list');
+                            gradesList.innerHTML = '';
+                            if(curso.subjects && curso.subjects.length > 0) {
+                                curso.subjects.forEach(sub => {
+                                    gradesList.innerHTML += `
+                                        <div class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex justify-between items-center text-xs">
+                                            <div><strong>${sub.name}</strong><p class="text-[10px] text-slate-500">Carga: ${sub.hours || 'N/A'} &bull; Ementa: ${sub.ementa || '---'}</p></div>
+                                            <span class="px-2 py-1 bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 font-bold rounded-lg">Cursando</span>
+                                        </div>
+                                    `;
+                                });
+                            } else {
+                                gradesList.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">Nenhuma disciplina cadastrada na matriz para este curso.</p>`;
+                            }
                         }
-                    }
-                } catch(e) { console.error("Erro ao carregar curso:", e); }
+                    });
+                } catch(e) { console.error("Erro ao carregar curso em tempo real:", e); }
             }
 
             if(alunoLogado.classId) {
                 db.collection("classes").doc(alunoLogado.classId).get().then(doc => {
-                    if(doc.exists) document.getElementById('info-turma').textContent = doc.data().name;
+                    if(doc.exists) {
+                        const turmaData = doc.data();
+                        document.getElementById('info-turma').textContent = turmaData.name;
+
+                        // --- SINCRONIZAÇÃO AUTOMÁTICA EM TEMPO REAL DO CALENDÁRIO SEMESTRAL (MATRIZ) ---
+                        db.collection("academicCalendars").where("classId", "==", alunoLogado.classId).onSnapshot((calSnap) => {
+                            const calendarList = document.getElementById('calendar-list');
+                            if (!calendarList) return;
+                            calendarList.innerHTML = '';
+
+                            if (calSnap.empty) {
+                                calendarList.innerHTML = `
+                                    <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm text-xs text-slate-600 dark:text-slate-300 text-center py-6">
+                                        <i class="fa-solid fa-calendar-days text-2xl text-slate-400 mb-2 block"></i>
+                                        <p class="font-bold">Calendário Acadêmico</p>
+                                        <p class="text-[11px] text-slate-500 mt-1">Nenhum evento postado para esta turma no semestre atual.</p>
+                                    </div>
+                                `;
+                                return;
+                            }
+
+                            calSnap.forEach(calDoc => {
+                                const ev = calDoc.data();
+                                const datasFormatadas = (ev.dates || []).map(d => d.split('-').reverse().join('/')).join(', ');
+                                
+                                calendarList.innerHTML += `
+                                    <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-1.5 text-xs">
+                                        <div class="flex justify-between items-center font-bold text-blue-600 dark:text-blue-400">
+                                            <span><i class="fa-solid fa-book-open mr-1"></i> ${ev.subject}</span>
+                                            <span class="text-[10px] bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 px-2 py-0.5 rounded-full font-bold">${ev.semestre || '2026/2'}</span>
+                                        </div>
+                                        <p class="font-semibold text-slate-800 dark:text-slate-100">${ev.description || 'Aulas programadas'}</p>
+                                        <p class="text-[11px] text-slate-500 dark:text-slate-400"><i class="fa-regular fa-calendar mr-1"></i> <strong>Datas:</strong> ${datasFormatadas}</p>
+                                    </div>
+                                `;
+                            });
+                        });
+                    }
                 });
             }
 
@@ -1309,7 +1350,7 @@
                             </div>
                             ${jaPago ? `
                                 <div class="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1.5 pt-1 border-t border-slate-100 dark:border-slate-800">
-                                    <i class="fa-solid fa-circle-check"></i> Pago via <strong>${formaPg}</strong>${dataPg ? `em ${dataPg}` : ''}
+                                    <i class="fa-solid fa-circle-check"></i> Pago via <strong>${formaPg}</strong>${dataPg ? ` em ${dataPg}` : ''}
                                 </div>
                             ` : `
                                 ${f.invoiceUrl && f.invoiceUrl !== '#' ? `
@@ -1332,7 +1373,6 @@
             if (isAlunoEJA) {
                 const controle = alunoLogado.controleEJA || { apostilaAtiva: true, provaAtiva: false, dataInicio: '', dataFim: '' };
 
-                // Formatação bonita para exibição no card do aluno
                 const formatarDataBr = (dataIso) => {
                     if (!dataIso) return 'A definir';
                     const [data, hora] = dataIso.split('T');
@@ -1357,7 +1397,6 @@
                                 </div>
                             </div>
                             
-                            <!-- BLOCO DE INFORMAÇÕES DE AGENDAMENTO DA PROVA -->
                             <div class="bg-white/10 backdrop-blur-sm p-3 rounded-xl border border-white/20 text-xs space-y-1">
                                 <p class="font-bold text-emerald-200 flex items-center"><i class="fa-solid fa-calendar-days mr-1.5"></i> Agendamento da Prova Online:</p>
                                 <p>📅 <strong>Início:</strong> ${inicioStr}</p>
