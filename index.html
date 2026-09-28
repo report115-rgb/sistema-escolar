@@ -521,33 +521,49 @@
 
         <!-- FREQUÊNCIA -->
         <div id="tab-attendance" class="tab-content space-y-4" style="display: none;">
-            <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-md p-6 border border-gray-200 dark:border-slate-700">
-                <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4 pb-2 border-b border-gray-100 dark:border-slate-700">Lançamento de Frequência</h2>
+    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-md p-6 border border-gray-200 dark:border-slate-700">
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4 pb-2 border-b border-gray-100 dark:border-slate-700"><i class="fa-solid fa-calendar-check text-blue-600 mr-2"></i> Lançamento de Frequência via Calendário</h2>
+        
+        <!-- NOVO BLOCO: SELEÇÃO DA DATA DE AULA VINCULADA AO CALENDÁRIO -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div>
-                        <label class="block text-xs font-semibold mb-1">Data da Aula</label>
-                        <input type="date" id="attendance-date" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold mb-1">Curso</label>
-                        <select id="attendance-course-select" onchange="filterTurmasByAttendanceCourse()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></select>
-                    </div>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label class="block text-xs font-semibold mb-1">Turma</label>
-                        <select id="class-select" onchange="renderAttendanceList()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></select>
+                        <label class="block text-xs font-semibold mb-1 text-blue-600 dark:text-blue-400 font-bold">Data de Aula Cadastrada (Calendário Acadêmico)</label>
+                        <select id="attendance-calendar-date-select" onchange="renderAttendanceList()" class="w-full px-3 py-2 rounded-lg border border-blue-300 dark:border-slate-600 text-sm dark:bg-slate-900 dark:text-white font-semibold">
+                            <option value="">Selecione a turma primeiro...</option>
+                        </select>
                     </div>
                     <div>
                         <label class="block text-xs font-semibold mb-1">Professor Responsável</label>
                         <select id="attendance-teacher-select" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></select>
                     </div>
                 </div>
-                <h3 id="attendance-section-title" class="font-bold text-sm text-gray-700 dark:text-gray-300 mb-2">Lista de Alunos da Turma</h3>
-                <ul class="attendance-list divide-y divide-gray-200 dark:divide-slate-700 mb-4" id="student-attendance-list"></ul>
-                <button onclick="saveAttendance()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-sm shadow">Finalizar e Salvar Chamada</button>
+                <!-- OPCIONAL: Exibir o tópico/disciplina da data selecionada -->
+                <div id="attendance-info-disciplina" class="bg-blue-50 dark:bg-slate-900 p-3 rounded-xl border border-blue-200 dark:border-slate-700 text-xs mb-4 text-blue-800 dark:text-blue-300 font-semibold" style="display:none;"></div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+                <label class="block text-xs font-semibold mb-1 text-blue-600 dark:text-blue-400 font-bold">Data de Aula Cadastrada (Calendário Acadêmico)</label>
+                <select id="attendance-calendar-date-select" onchange="renderAttendanceList()" class="w-full px-3 py-2 rounded-lg border border-blue-300 dark:border-slate-600 text-sm dark:bg-slate-900 dark:text-white font-semibold">
+                    <option value="">Selecione a turma primeiro...</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold mb-1">Professor Responsável</label>
+                <select id="attendance-teacher-select" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 dark:text-white"></select>
             </div>
         </div>
+
+        <div id="attendance-info-disciplina" class="bg-blue-50 dark:bg-slate-900 p-3 rounded-xl border border-blue-200 dark:border-slate-700 text-xs mb-4 text-blue-800 dark:text-blue-300 font-semibold" style="display:none;">
+            <!-- Exibe o tópico/disciplina da data selecionada -->
+        </div>
+
+        <h3 id="attendance-section-title" class="font-bold text-sm text-gray-700 dark:text-gray-300 mb-2">Lista de Alunos da Turma</h3>
+        <ul class="attendance-list divide-y divide-gray-200 dark:divide-slate-700 mb-4" id="student-attendance-list">
+            <li class="py-3 text-sm text-gray-400 text-center">Selecione o curso, a turma e a data agendada no calendário acima.</li>
+        </ul>
+        <button onclick="saveAttendance()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-sm shadow transition">Finalizar e Salvar Chamada</button>
+    </div>
+</div>
 
         <!-- NOTAS -->
         <div id="tab-grades" class="tab-content space-y-4" style="display: none;">
@@ -2853,6 +2869,44 @@
             renderAttendanceList();
         }
 
+// --- COLE AQUI A NOVA FUNÇÃO DE CARREGAR DATAS DO CALENDÁRIO ---
+        function carregarDatasCalendarioParaChamada() {
+            const classId = document.getElementById('class-select').value;
+            const selectData = document.getElementById('attendance-calendar-date-select');
+            const infoBox = document.getElementById('attendance-info-disciplina');
+            
+            if (!selectData) return;
+            selectData.innerHTML = '<option value="">Selecione a data agendada...</option>';
+            if (infoBox) infoBox.style.display = 'none';
+
+            if (!classId) return;
+
+            // Filtra os eventos do calendário acadêmico vinculados a esta turma
+            const eventosTurma = academicCalendars.filter(cal => cal.classId === classId);
+
+            if (eventosTurma.length === 0) {
+                selectData.innerHTML = '<option value="">Nenhum calendário cadastrado para esta turma</option>';
+                return;
+            }
+
+            // Varre os eventos e extrai todas as datas cadastradas
+            eventosTurma.forEach(ev => {
+                if (ev.dates && Array.isArray(ev.dates)) {
+                    ev.dates.forEach(dataIso => {
+                        // Formata de AAAA-MM-DD para DD/MM/AAAA para exibição amigável
+                        const dataFormatada = dataIso.split('-').reverse().join('/');
+                        const optionText = `${dataFormatada} - Disciplina: ${ev.subject} (${ev.description || 'Aula'})`;
+                        
+                        selectData.insertAdjacentHTML('beforeend', `
+                            <option value="${dataIso}" data-subject="${ev.subject}" data-desc="${ev.description || ''}">
+                                ${optionText}
+                            </option>
+                        `);
+                    });
+                }
+            });
+        }
+
         function filterTurmasByGradeCourse() {
             const courseId = document.getElementById('grade-course-select').value;
             const select = document.getElementById('grade-class-select');
@@ -3322,10 +3376,11 @@
 
         async function saveAttendance() {
             const classId = document.getElementById('class-select').value;
-            const dataAula = document.getElementById('attendance-date').value;
+            const selectData = document.getElementById('attendance-calendar-date-select');
+            const dataAula = selectData ? selectData.value : '';
             const professorId = document.getElementById('attendance-teacher-select').value;
 
-            if (!classId || !dataAula) return alert("Selecione a turma e a data da aula!");
+            if (!classId || !dataAula) return alert("Selecione a turma e a data agendada no calendário para realizar a chamada!");
 
             const alunosTurma = students.filter(s => s.classId == classId && s.status === "Ativo");
             if (alunosTurma.length === 0) return alert("Nenhum aluno ativo nesta turma.");
@@ -3352,9 +3407,14 @@
                 });
             });
 
+            // Recupera o nome da disciplina selecionada no select de data
+            const selectedOption = selectData.options[selectData.selectedIndex];
+            const disciplinaAula = selectedOption ? selectedOption.getAttribute('data-subject') : 'Geral';
+
             const dadosChamada = {
                 classId,
                 date: dataAula,
+                subject: disciplinaAula,
                 teacherId: professorId || null,
                 frequencias: registrosFrequencia,
                 timestamp: new Date().toISOString()
@@ -3362,8 +3422,9 @@
 
             try {
                 await db.collection("attendanceRecords").add(dadosChamada);
-                registrarLogAuditoria(`Chamada realizada para a turma ${classId} em ${dataAula} (${totalFaltas} falta(s) registrada(s))`, "Frequência");
-                alert(`Chamada salva com sucesso! Foram computadas ${totalFaltas} falta(s).`);
+                registrarLogAuditoria(`Chamada realizada para a turma ${classId} em ${dataAula} (${totalFaltas} falta(s))`, "Frequência");
+                alert(`Chamada salva com sucesso! Foram computadas ${totalFaltas} falta(s) para a data ${dataAula.split('-').reverse().join('/')}.`);
+                renderAttendanceList();
             } catch (error) {
                 console.error("Erro ao salvar frequência:", error);
                 alert("Erro ao salvar chamada na nuvem: " + error.message);
@@ -3639,6 +3700,7 @@ function renderFinanceStudentSelect() {
 
             renderizarUploadDocumentosAluno(aluno);
             setTimeout(renderizarCalendarioSemestralPortalAluno, 150);
+	    renderizarFrequenciaPortalAluno(aluno);
 
             const finList = document.getElementById('portal-aluno-financeiro-list');
             if(finList) {
@@ -3797,6 +3859,7 @@ function renderFinanceStudentSelect() {
 
                     alert("Documento enviado com sucesso para a pasta do aluno no Google Drive!");
                     renderizarUploadDocumentosAluno(aluno);
+
                     popularSelectAlunosValidacaoGestao();
                 } catch (error) {
                     console.error("Erro ao enviar para o Drive:", error);
@@ -4758,6 +4821,54 @@ async function executarBaixaManualComDetalhes(financeLogId) {
         alert("Erro ao atualizar na nuvem: " + error.message);
     }
 }
+
+// Função para carregar e exibir o histórico de frequência no Portal do Aluno
+        async function renderizarFrequenciaPortalAluno(aluno) {
+            const container = document.getElementById('portal-aluno-frequencia-list');
+            if (!container || !aluno) return;
+
+            container.innerHTML = `<li class="py-3 text-sm text-gray-500">Carregando registros de frequência...</li>`;
+
+            try {
+                // Busca todos os registros de chamada da turma do aluno
+                const snapshot = await db.collection("attendanceRecords").where("classId", "==", aluno.classId).get();
+                let chamadasTurma = [];
+                snapshot.forEach(doc => chamadasTurma.push(doc.data()));
+
+                if (chamadasTurma.length === 0) {
+                    container.innerHTML = `<li class="py-3 text-sm text-gray-500">Nenhum registro de frequência lançado até o momento.</li>`;
+                    return;
+                }
+
+                container.innerHTML = `<div class="font-bold text-xs text-blue-600 dark:text-blue-400 mb-2">Histórico de Presenças e Faltas por Aula:</div>`;
+
+                chamadasTurma.forEach(chamada => {
+                    // Procura o status do aluno específico dentro da chamada daquela data
+                    const registroAluno = (chamada.frequencias || []).find(f => f.studentId === aluno.id);
+                    const statusPresenca = registroAluno ? registroAluno.status : 'Não lançado';
+                    
+                    const dataFormatada = chamada.date ? chamada.date.split('-').reverse().join('/') : '---';
+                    const corBadge = statusPresenca === 'presente' 
+                        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300' 
+                        : 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300';
+
+                    container.innerHTML += `
+                        <li class="py-3 text-xs flex justify-between items-center border-b border-gray-100 dark:border-slate-700">
+                            <div>
+                                <strong>Data: ${dataFormatada}</strong><br>
+                                <span class="text-gray-500">Disciplina / Tópico: ${chamada.subject || 'Aula Regular'}</span>
+                            </div>
+                            <div>
+                                <span class="px-2.5 py-1 ${corBadge} rounded font-bold uppercase text-[10px]">${statusPresenca}</span>
+                            </div>
+                        </li>
+                    `;
+                });
+            } catch (e) {
+                console.error("Erro ao carregar frequência do aluno:", e);
+                container.innerHTML = `<li class="py-3 text-sm text-red-500">Erro ao carregar registros.</li>`;
+            }
+        }
 	</script>
 </body>
 </html>
