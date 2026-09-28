@@ -486,7 +486,7 @@
                     </div>
                 </div>
 
-                <h3 class="font-bold text-sm text-slate-700 dark:text-slate-200 mb-2">Disciplinas e AVALIAÇÕES</h3>
+                <h3 class="font-bold text-sm text-slate-700 dark:text-slate-200 mb-2">Disciplinas Matriculadas</h3>
                 <div id="grades-list" class="space-y-2">
                     <div class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 animate-pulse space-y-2">
                         <div class="h-3 bg-slate-200 dark:bg-slate-800 rounded w-3/4"></div>
@@ -534,10 +534,18 @@
                 </div>
             </div>
 
-            <!-- ABA 6: CALENDÁRIO -->
+            <!-- ABA 6: CALENDÁRIO / AULAS -->
             <div id="tab-calendario" class="space-y-3 tab-pane" style="display: none;">
-                <h3 class="font-bold text-sm text-slate-700 dark:text-slate-200 mb-2">Calendário de Aulas</h3>
-                <div id="calendar-list" class="space-y-2">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="font-bold text-sm text-slate-700 dark:text-slate-200">Calendário de Aulas</h3>
+                    <div class="flex items-center space-x-2">
+                        <label for="select-filtro-semestre" class="text-[11px] text-slate-500 font-semibold">Semestre:</label>
+                        <select id="select-filtro-semestre" onchange="renderizarCalendarioAluno()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs px-2.5 py-1.5 rounded-xl font-bold text-blue-600 dark:text-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-600">
+                            <option value="">Todos</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="calendar-list" class="space-y-3">
                     <div class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm text-xs text-slate-600 dark:text-slate-300 text-center py-6">
                         <i class="fa-solid fa-calendar-days text-2xl text-slate-400 mb-2 block"></i>
                         <p class="font-bold">Calendário Acadêmico</p>
@@ -610,6 +618,7 @@
         let gdriveUrlGlobal = "https://script.google.com/macros/s/AKfycbwPL9G9q--46vYhuyCfqSwZ9IKm2tEvlfvlH18TvD0FJXqYrDnyLOyKqtp6mT7LdH5XOA/exec"; 
         let alunoRecemMatriculadoTemp = null;
         let isAlunoEJA = false;
+        let eventosCalendarioCache = [];
 
         window.addEventListener('DOMContentLoaded', async () => {
             window.addEventListener('online', atualizarStatusConexao);
@@ -1192,7 +1201,6 @@
                 }
             });
 
-            // DISPARA OS FOGOS SOMENTE QUANDO CLICAR NA ABA DE DOCUMENTOS E TIVER TUDO APROVADO
             if (aba === 'documentos' && alunoLogado) {
                 renderizarDocumentosObrigatorios();
                 if (verificarStatusCompletoDocumentos()) {
@@ -1252,7 +1260,7 @@
 
             renderizarDocumentosObrigatorios();
 
-            // --- SINCRONIZAÇÃO AUTOMÁTICA EM TEMPO REAL DE CURSOS E NOTAS (MATRIZ) ---
+            // --- NOTAS SIMPLIFICADAS (APENAS NOME DA DISCIPLINA E NOTA) ---
             if(alunoLogado.courseId) {
                 try {
                     db.collection("courses").doc(alunoLogado.courseId).onSnapshot((doc) => {
@@ -1268,9 +1276,9 @@
                             if(curso.subjects && curso.subjects.length > 0) {
                                 curso.subjects.forEach(sub => {
                                     gradesList.innerHTML += `
-                                        <div class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex justify-between items-center text-xs">
-                                            <div><strong>${sub.name}</strong><p class="text-[10px] text-slate-500">Carga: ${sub.hours || 'N/A'} &bull; Ementa: ${sub.ementa || '---'}</p></div>
-                                            <span class="px-2 py-1 bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 font-bold rounded-lg">Cursando</span>
+                                        <div class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex justify-between items-center text-xs">
+                                            <strong class="text-slate-800 dark:text-slate-100">${sub.name}</strong>
+                                            <span class="px-2.5 py-1 bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 font-bold rounded-lg">Cursando</span>
                                         </div>
                                     `;
                                 });
@@ -1282,44 +1290,39 @@
                 } catch(e) { console.error("Erro ao carregar curso em tempo real:", e); }
             }
 
+            // --- CALENDÁRIO COM SELETOR DE SEMESTRE E AGRUPAMENTO MENSAL (ESTILO MATRIZ) ---
             if(alunoLogado.classId) {
                 db.collection("classes").doc(alunoLogado.classId).get().then(doc => {
                     if(doc.exists) {
                         const turmaData = doc.data();
                         document.getElementById('info-turma').textContent = turmaData.name;
 
-                        // --- SINCRONIZAÇÃO AUTOMÁTICA EM TEMPO REAL DO CALENDÁRIO SEMESTRAL (MATRIZ) ---
                         db.collection("academicCalendars").where("classId", "==", alunoLogado.classId).onSnapshot((calSnap) => {
-                            const calendarList = document.getElementById('calendar-list');
-                            if (!calendarList) return;
-                            calendarList.innerHTML = '';
-
-                            if (calSnap.empty) {
-                                calendarList.innerHTML = `
-                                    <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm text-xs text-slate-600 dark:text-slate-300 text-center py-6">
-                                        <i class="fa-solid fa-calendar-days text-2xl text-slate-400 mb-2 block"></i>
-                                        <p class="font-bold">Calendário Acadêmico</p>
-                                        <p class="text-[11px] text-slate-500 mt-1">Nenhum evento postado para esta turma no semestre atual.</p>
-                                    </div>
-                                `;
-                                return;
-                            }
+                            eventosCalendarioCache = [];
+                            const semestresDisponiveis = new Set();
 
                             calSnap.forEach(calDoc => {
                                 const ev = calDoc.data();
-                                const datasFormatadas = (ev.dates || []).map(d => d.split('-').reverse().join('/')).join(', ');
-                                
-                                calendarList.innerHTML += `
-                                    <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-1.5 text-xs">
-                                        <div class="flex justify-between items-center font-bold text-blue-600 dark:text-blue-400">
-                                            <span><i class="fa-solid fa-book-open mr-1"></i> ${ev.subject}</span>
-                                            <span class="text-[10px] bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 px-2 py-0.5 rounded-full font-bold">${ev.semestre || '2026/2'}</span>
-                                        </div>
-                                        <p class="font-semibold text-slate-800 dark:text-slate-100">${ev.description || 'Aulas programadas'}</p>
-                                        <p class="text-[11px] text-slate-500 dark:text-slate-400"><i class="fa-regular fa-calendar mr-1"></i> <strong>Datas:</strong> ${datasFormatadas}</p>
-                                    </div>
-                                `;
+                                eventosCalendarioCache.push(ev);
+                                if (ev.semestre) semestresDisponiveis.add(ev.semestre);
                             });
+
+                            const selectSemestre = document.getElementById('select-filtro-semestre');
+                            const valorAtualSelect = selectSemestre.value;
+                            selectSemestre.innerHTML = `<option value="">Todos os Semestres</option>`;
+                            
+                            const semestresOrdenados = Array.from(semestresDisponiveis).sort().reverse();
+                            semestresOrdenados.forEach(sem => {
+                                selectSemestre.innerHTML += `<option value="${sem}">${sem}</option>`;
+                            });
+
+                            if (semestresOrdenados.includes(valorAtualSelect)) {
+                                selectSemestre.value = valorAtualSelect;
+                            } else if (semestresOrdenados.length > 0) {
+                                selectSemestre.value = semestresOrdenados[0]; // Seleciona o semestre mais recente por padrão
+                            }
+
+                            renderizarCalendarioAluno();
                         });
                     }
                 });
@@ -1365,6 +1368,92 @@
             });
 
             await verificarTodasPendencias();
+        }
+
+        function renderizarCalendarioAluno() {
+            const calendarList = document.getElementById('calendar-list');
+            const filtroSemestre = document.getElementById('select-filtro-semestre').value;
+            if (!calendarList) return;
+
+            calendarList.innerHTML = '';
+
+            let eventosFiltrados = eventosCalendarioCache;
+            if (filtroSemestre) {
+                eventosFiltrados = eventosCalendarioCache.filter(ev => ev.semestre === filtroSemestre);
+            }
+
+            if (eventosFiltrados.length === 0) {
+                calendarList.innerHTML = `
+                    <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm text-xs text-slate-600 dark:text-slate-300 text-center py-6">
+                        <i class="fa-solid fa-calendar-days text-2xl text-slate-400 mb-2 block"></i>
+                        <p class="font-bold">Calendário Acadêmico</p>
+                        <p class="text-[11px] text-slate-500 mt-1">Nenhum evento postado para este período.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Agrupa e ordena as datas cronologicamente por mês (estilo matriz)
+            const mesesNomes = {
+                "01": "Janeiro", "02": "Fevereiro", "03": "Março", "04": "Abril",
+                "05": "Maio", "06": "Junho", "07": "Julho", "08": "Agosto",
+                "09": "Setembro", "10": "Outubro", "11": "Novembro", "12": "Dezembro"
+            };
+
+            const datasPorMes = {};
+
+            eventosFiltrados.forEach(ev => {
+                const materia = ev.subject || 'Disciplina';
+                (ev.dates || []).forEach(dataIso => {
+                    // Esperado formato YYYY-MM-DD
+                    const partes = dataIso.split('-');
+                    if (partes.length === 3) {
+                        const [ano, mes, dia] = partes;
+                        if (!datasPorMes[mes]) datasPorMes[mes] = [];
+                        datasPorMes[mes].push({
+                            dataIso: dataIso,
+                            dataFormatada: `${dia}/${mes}/${ano}`,
+                            materia: materia,
+                            descricao: ev.description || 'Aula programada',
+                            semestre: ev.semestre
+                        });
+                    }
+                });
+            });
+
+            // Ordena os meses cronologicamente
+            const mesesOrdenados = Object.keys(datasPorMes).sort();
+
+            mesesOrdenados.forEach(mesKey => {
+                const nomeMes = mesesNomes[mesKey] || `Mês ${mesKey}`;
+                // Ordena as datas em ordem cronológica dentro de cada mês
+                const listaDatas = datasPorMes[mesKey].sort((a, b) => a.dataIso.localeCompare(b.dataIso));
+
+                let htmlItensDatas = '';
+                listaDatas.forEach(item => {
+                    htmlItensDatas += `
+                        <div class="bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 flex justify-between items-center text-xs">
+                            <div>
+                                <span class="font-bold text-blue-600 dark:text-blue-400 mr-2"><i class="fa-regular fa-calendar-check mr-1"></i> ${item.dataFormatada}</span>
+                                <span class="text-slate-700 dark:text-slate-200 font-semibold">${item.materia}</span>
+                            </div>
+                            <span class="text-[10px] text-slate-500 italic">${item.descricao}</span>
+                        </div>
+                    `;
+                });
+
+                calendarList.innerHTML += `
+                    <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+                        <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-2">
+                            <h4 class="font-bold text-sm text-slate-800 dark:text-slate-100 uppercase tracking-wide"><i class="fa-solid fa-calendar-day mr-1.5 text-blue-600"></i> ${nomeMes}</h4>
+                            <span class="text-[10px] bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 px-2 py-0.5 rounded-full font-bold">${filtroSemestre || 'Geral'}</span>
+                        </div>
+                        <div class="space-y-2">
+                            ${htmlItensDatas}
+                        </div>
+                    </div>
+                `;
+            });
         }
 
         function adaptarPainelPorModalidadeCurso(cursoObj) {
