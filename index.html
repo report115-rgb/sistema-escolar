@@ -3426,14 +3426,14 @@
                             </div>
                         ` : `
                             <div class="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center justify-between">
-                                <span><i class="fa-solid fa-circle-check"></i> Pago via <strong>${f.formaPagamento \vert{}\vert{} 'Manual'}</strong> em${f.dataPagamento || '---'}</span>
+                                <span><i class="fa-solid fa-circle-check"></i> Pago via <strong>${f.formaPagamento || 'Manual'}</strong> em ${f.dataPagamento || '---'}</span>
                                 <button onclick="estornarBaixaManualFinanceiro('${f.id}')" class="px-2.5 py-1 bg-gray-500 hover:bg-gray-600 text-white rounded text-[10px]">Estornar Baixa</button>
                             </div>
-                        `}
-                    </div>
-                `;
-            });
-        }
+                    `}
+                </div>
+            `;
+        });
+    }
 
         // --- FUNÇÃO TEMPORÁRIA PARA DAR BAIXA MANUAL ---
         async function darBaixaManualFinanceiro(financeLogId) {
