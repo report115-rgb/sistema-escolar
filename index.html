@@ -1486,14 +1486,34 @@
             { email: "professor@admin.com", pass: "123456", perfil: "professor", nome: "Professor Exemplo" }
         ];
 
-        const tiposDocumentosObrigatorios = [
-            { id: "rg_cnh", label: "RG ou CNH" },
-            { id: "cpf", label: "CPF" },
-            { id: "comprovante_residencia", label: "Comprovante de Residência" },
-            { id: "certidao_nasc_cas", label: "Certidão de Nascimento ou Casamento" },
+        // Função que decide quais documentos exigir com base no curso do aluno (EJA x Técnico)
+function obterDocumentosObrigatoriosPorAluno(aluno) {
+    // Descobre se o curso do aluno é EJA/Supletivo
+    const curso = courses.find(c => c.id === aluno.courseId);
+    const isEJA = curso && (
+        curso.nivel === 'Supletivo' || 
+        curso.sigla === 'EJA' || 
+        (curso.name && curso.name.toUpperCase().includes('EJA'))
+    );
+
+    // Documentos básicos exigidos para TODOS os cursos
+    const documentosBase = [
+        { id: "rg_cnh", label: "RG ou CNH" },
+        { id: "cpf", label: "CPF" },
+        { id: "comprovante_residencia", label: "Comprovante de Residência" },
+        { id: "certidao_nasc_cas", label: "Certidão de Nascimento ou Casamento" }
+    ];
+
+    // Se NÃO for EJA (ex: Técnico), adiciona o Diploma e o Histórico do Ensino Médio
+    if (!isEJA) {
+        documentosBase.push(
             { id: "diploma_medio", label: "Diploma do Ensino Médio" },
             { id: "historico_medio", label: "Histórico do Ensino Médio" }
-        ];
+        );
+    }
+
+    return documentosBase;
+}
 
         // ==========================================
         // SISTEMA DE INATIVIDADE ATIVO (10 MINUTOS)
@@ -3221,80 +3241,76 @@ function carregarDatasCalendarioParaFrequencia() {
 }
 
         function renderizarDocumentosAlunoGestao(alunoId) {
-            const container = document.getElementById('container-validacao-docs');
-            if(!container) return;
-            if(!alunoId) {
-                container.innerHTML = `<p class="text-xs text-gray-500">Selecione um aluno acima para visualizar, aprovar ou reprovar os documentos postados.</p>`;
-                return;
-            }
-            const aluno = students.find(s => s.id === alunoId);
-            if(!aluno) return;
+    const container = document.getElementById('container-validacao-docs');
+    if(!container) return;
+    if(!alunoId) {
+        container.innerHTML = `<p class="text-xs text-gray-500">Selecione um aluno acima para visualizar, aprovar ou reprovar os documentos postados.</p>`;
+        return;
+    }
+    const aluno = students.find(s => s.id === alunoId);
+    if(!aluno) return;
 
-            const docs = aluno.documentos || {};
-            container.innerHTML = `<h3 class="font-bold text-sm text-gray-800 dark:text-white mb-2">Documentação de ${aluno.fullname}</h3>`;
+    const docs = aluno.documentos || {};
+    container.innerHTML = `<h3 class="font-bold text-sm text-gray-800 dark:text-white mb-2">Documentação de ${aluno.fullname}</h3>`;
 
-            tiposDocumentosObrigatorios.forEach(tipo => {
-                const docInfo = docs[tipo.id];
-                const status = docInfo ? docInfo.status : 'Pendente';
-                const motivo = docInfo ? docInfo.motivoReprovacao : '';
-                const fileUrl = docInfo ? docInfo.fileUrl : '';
-                const driveUrl = docInfo ? docInfo.driveUrl : '';
-                const fileName = docInfo && docInfo.fileName ? docInfo.fileName : 'Documento em PDF';
+    // >>> AQUI USAMOS A NOVA LISTA DINÂMICA (Exclui o ensino médio se for EJA) <<<
+    const documentosPermitidos = obterDocumentosObrigatoriosPorAluno(aluno);
 
-                let statusBadge = `<span class="px-2 py-0.5 bg-gray-200 text-gray-800 rounded text-[10px] font-bold">Pendente</span>`;
-                if(status === 'Aprovado') statusBadge = `<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded text-[10px] font-bold">Aprovado</span>`;
-                if(status === 'Reprovado') statusBadge = `<span class="px-2 py-0.5 bg-red-100 text-red-800 rounded text-[10px] font-bold">Reprovado</span>`;
+    documentosPermitidos.forEach(tipo => {
+        const docInfo = docs[tipo.id];
+        const status = docInfo ? docInfo.status : 'Pendente';
+        const motivo = docInfo ? docInfo.motivoReprovacao : '';
+        const fileUrl = docInfo ? docInfo.fileUrl : '';
+        const driveUrl = docInfo ? docInfo.driveUrl : '';
+        const fileName = docInfo && docInfo.fileName ? docInfo.fileName : 'Documento em PDF';
 
-                let linkArquivoHtml = '<span class="text-gray-400">Não enviado pelo aluno</span>';
-                if (driveUrl) {
-                    linkArquivoHtml = `<a href="${driveUrl}" target="_blank" class="text-blue-600 dark:text-blue-400 underline font-semibold flex items-center gap-1"><i class="fa-brands fa-google-drive"></i> Arquivo Enviado: ${fileName} (Abrir no Drive)</a>`;
-                } else if (fileUrl) {
-                    linkArquivoHtml = `<a href="${fileUrl}" target="_blank" class="text-blue-600 dark:text-blue-400 underline font-semibold">Visualizar PDF (${fileName})</a>`;
-                }
+        let statusBadge = `<span class="px-2 py-0.5 bg-gray-200 text-gray-800 rounded text-[10px] font-bold">Pendente</span>`;
+        if(status === 'Aprovado') statusBadge = `<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded text-[10px] font-bold">Aprovado</span>`;
+        if(status === 'Reprovado') statusBadge = `<span class="px-2 py-0.5 bg-red-100 text-red-800 rounded text-[10px] font-bold">Reprovado</span>`;
 
-                // CONTROLE DOS BOTÕES CONFORME O STATUS
-                let botoesAcaoHtml = '';
-                
-                if (status === 'Aprovado') {
-                    // Se já foi aprovado, bloqueia as ações permanentemente
-                    botoesAcaoHtml = `
-                        <div class="text-xs text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
-                            <i class="fa-solid fa-circle-check"></i> Documento validado e aprovado com sucesso.
-                        </div>
-                    `;
-                } else if (!driveUrl && !fileUrl) {
-                    // Se o aluno ainda não enviou nada
-                    botoesAcaoHtml = `
-                        <span class="text-xs text-gray-400 italic">Aguardando o envio do documento pelo aluno.</span>
-                    `;
-                } else {
-                    // Se foi enviado (Pendente) ou Reprovado (permite reavaliar após nova ação)
-                    botoesAcaoHtml = `
-                        <div class="flex flex-wrap gap-2 pt-2 items-center">
-                            <button onclick="aprovarEEnviarParaGoogleDrive('${aluno.id}', '${tipo.id}')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-semibold"><i class="fa-solid fa-check mr-1"></i> Aprovar Documento</button>
-                            <button onclick="toggleBoxReprovacao('${tipo.id}')" class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-semibold"><i class="fa-solid fa-xmark mr-1"></i> Reprovar</button>
-                        </div>
-                        <div id="box_reprov_${tipo.id}" class="space-y-1 pt-2" style="display: ${status === 'Reprovado' ? 'block' : 'none'};">
-                            <input type="text" id="motivo_${tipo.id}" value="${motivo}" placeholder="Informe o motivo da reprovação..." class="w-full px-3 py-1.5 rounded border text-xs dark:bg-slate-800 dark:text-white">
-                            <button onclick="salvarReprovacaoDocumento('${aluno.id}', '${tipo.id}')" class="px-3 py-1 bg-gray-700 hover:bg-gray-800 text-white rounded text-[10px] font-semibold">Salvar Reprovação e Motivo</button>
-                        </div>
-                    `;
-                }
-
-                container.innerHTML += `
-                    <div class="bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700 space-y-2">
-                        <div class="flex justify-between items-center">
-                            <span class="font-bold text-xs text-blue-600 dark:text-blue-400">${tipo.label}</span>
-                            <div>${statusBadge}</div>
-                        </div>
-                        <div class="text-xs py-1">
-                            ${linkArquivoHtml}
-                        </div>
-                        ${botoesAcaoHtml}
-                    </div>
-                `;
-            });
+        let linkArquivoHtml = '<span class="text-gray-400">Não enviado pelo aluno</span>';
+        if (driveUrl) {
+            linkArquivoHtml = `<a href="${driveUrl}" target="_blank" class="text-blue-600 dark:text-blue-400 underline font-semibold flex items-center gap-1"><i class="fa-brands fa-google-drive"></i> Arquivo Enviado: ${fileName} (Abrir no Drive)</a>`;
+        } else if (fileUrl) {
+            linkArquivoHtml = `<a href="${fileUrl}" target="_blank" class="text-blue-600 dark:text-blue-400 underline font-semibold">Visualizar PDF (${fileName})</a>`;
         }
+
+        let botoesAcaoHtml = '';
+        if (status === 'Aprovado') {
+            botoesAcaoHtml = `
+                <div class="text-xs text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
+                    <i class="fa-solid fa-circle-check"></i> Documento validado e aprovado com sucesso.
+                </div>
+            `;
+        } else if (!driveUrl && !fileUrl) {
+            botoesAcaoHtml = `
+                <span class="text-xs text-gray-400 italic">Aguardando o envio do documento pelo aluno.</span>
+            `;
+        } else {
+            botoesAcaoHtml = `
+                <div class="flex flex-wrap gap-2 pt-2 items-center">
+                    <button onclick="aprovarEEnviarParaGoogleDrive('${aluno.id}', '${tipo.id}')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-semibold"><i class="fa-solid fa-check mr-1"></i> Aprovar Documento</button>
+                    <button onclick="toggleBoxReprovacao('${tipo.id}')" class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-semibold"><i class="fa-solid fa-xmark mr-1"></i> Reprovar</button>
+                </div>
+                <div id="box_reprov_${tipo.id}" class="space-y-1 pt-2" style="display: ${status === 'Reprovado' ? 'block' : 'none'};">
+                    <input type="text" id="motivo_${tipo.id}" value="${motivo}" placeholder="Informe o motivo da reprovação..." class="w-full px-3 py-1.5 rounded border text-xs dark:bg-slate-800 dark:text-white">
+                    <button onclick="salvarReprovacaoDocumento('${aluno.id}', '${tipo.id}')" class="px-3 py-1 bg-gray-700 hover:bg-gray-800 text-white rounded text-[10px] font-semibold">Salvar Reprovação e Motivo</button>
+                </div>
+            `;
+        }
+
+        container.innerHTML += `
+            <div class="bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700 space-y-2">
+                <div class="flex justify-between items-center">
+                    <span class="font-bold text-xs text-blue-600 dark:text-blue-400">${tipo.label}</span>
+                    <div>${statusBadge}</div>
+                </div>
+                <div class="text-xs py-1">${linkArquivoHtml}</div>
+                ${botoesAcaoHtml}
+            </div>
+        `;
+    });
+}
 
         async function aprovarEEnviarParaGoogleDrive(alunoId, tipoId) {
             const aluno = students.find(s => s.id === alunoId);
@@ -3859,38 +3875,41 @@ function renderFinanceStudentSelect() {
         }
 
         function renderizarUploadDocumentosAluno(aluno) {
-            const container = document.getElementById('container-upload-documentos-aluno');
-            if(!container) return;
-            container.innerHTML = '';
-            const docs = aluno.documentos || {};
+    const container = document.getElementById('container-upload-documentos-aluno');
+    if(!container) return;
+    container.innerHTML = '';
+    const docs = aluno.documentos || {};
 
-            tiposDocumentosObrigatorios.forEach(tipo => {
-                const docInfo = docs[tipo.id];
-                const status = docInfo ? docInfo.status : 'Pendente';
-                const motivo = docInfo ? docInfo.motivoReprovacao : '';
-                const fileUrl = docInfo ? docInfo.fileUrl : '';
-                const driveUrl = docInfo ? docInfo.driveUrl : '';
+    // >>> AQUI TAMBÉM USAMOS A NOVA LISTA DINÂMICA PARA O ALUNOS VÊ APENAS O QUE PRECISA NO PORTAL <<<
+    const documentosPermitidos = obterDocumentosObrigatoriosPorAluno(aluno);
 
-                let statusBadge = `<span class="px-2 py-0.5 bg-gray-200 text-gray-800 rounded text-[10px] font-bold">Pendente</span>`;
-                if(status === 'Aprovado') statusBadge = `<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded text-[10px] font-bold">Aprovado</span>`;
-                if(status === 'Reprovado') statusBadge = `<span class="px-2 py-0.5 bg-red-100 text-red-800 rounded text-[10px] font-bold" title="${motivo}">Reprovado</span>`;
+    documentosPermitidos.forEach(tipo => {
+        const docInfo = docs[tipo.id];
+        const status = docInfo ? docInfo.status : 'Pendente';
+        const motivo = docInfo ? docInfo.motivoReprovacao : '';
+        const fileUrl = docInfo ? docInfo.fileUrl : '';
+        const driveUrl = docInfo ? docInfo.driveUrl : '';
 
-                container.innerHTML += `
-                    <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-gray-200 dark:border-slate-700 space-y-2 shadow-sm">
-                        <div class="flex justify-between items-center">
-                            <strong class="text-xs">${tipo.label}</strong>
-                            <div>${statusBadge}</div>
-                        </div>
-                        ${fileUrl ? `<p class="text-[11px] text-blue-600 truncate"><a href="${fileUrl}" target="_blank" class="underline">Ver PDF enviado</a></p>` : '<p class="text-[11px] text-gray-400">Nenhum arquivo enviado</p>'}
-                        ${driveUrl ? `<p class="text-[11px] text-emerald-600 truncate"><i class="fa-brands fa-google-drive mr-1"></i> <a href="${driveUrl}" target="_blank" class="underline">Salvo no Google Drive</a></p>` : ''}
-                        <div class="flex items-center gap-2 pt-2">
-                            <input type="file" id="file_doc_${aluno.id}_${tipo.id}" accept="application/pdf" class="text-[10px] w-full border border-gray-300 dark:border-slate-600 p-1 rounded">
-                            <button onclick="enviarDocumentoPDFAluno('${aluno.id}', '${tipo.id}')" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-semibold shrink-0">Enviar PDF</button>
-                        </div>
-                    </div>
-                `;
-            });
-        }
+        let statusBadge = `<span class="px-2 py-0.5 bg-gray-200 text-gray-800 rounded text-[10px] font-bold">Pendente</span>`;
+        if(status === 'Aprovado') statusBadge = `<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded text-[10px] font-bold">Aprovado</span>`;
+        if(status === 'Reprovado') statusBadge = `<span class="px-2 py-0.5 bg-red-100 text-red-800 rounded text-[10px] font-bold" title="${motivo}">Reprovado</span>`;
+
+        container.innerHTML += `
+            <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-gray-200 dark:border-slate-700 space-y-2 shadow-sm">
+                <div class="flex justify-between items-center">
+                    <strong class="text-xs">${tipo.label}</strong>
+                    <div>${statusBadge}</div>
+                </div>
+                ${fileUrl ? `<p class="text-[11px] text-blue-600 truncate"><a href="${fileUrl}" target="_blank" class="underline">Ver PDF enviado</a></p>` : '<p class="text-[11px] text-gray-400">Nenhum arquivo enviado</p>'}
+                ${driveUrl ? `<p class="text-[11px] text-emerald-600 truncate"><i class="fa-brands fa-google-drive mr-1"></i> <a href="${driveUrl}" target="_blank" class="underline">Salvo no Google Drive</a></p>` : ''}
+                <div class="flex items-center gap-2 pt-2">
+                    <input type="file" id="file_doc_${aluno.id}_${tipo.id}" accept="application/pdf" class="text-[10px] w-full border border-gray-300 dark:border-slate-600 p-1 rounded">
+                    <button onclick="enviarDocumentoPDFAluno('${aluno.id}', '${tipo.id}')" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-semibold shrink-0">Enviar PDF</button>
+                </div>
+            </div>
+        `;
+    });
+}
 
         async function enviarDocumentoPDFAluno(alunoId, tipoId) {
             const fileInput = document.getElementById(`file_doc_${alunoId}_${tipoId}`);
@@ -4477,64 +4496,67 @@ async function alternarProvaIndividualAluno(studentId, novoStatus) {
         }
 
         function renderizarDocumentosEJagestao(alunoId) {
-            const container = document.getElementById('container-validacao-docs-eja');
-            if(!container) return;
-            if(!alunoId) {
-                container.innerHTML = `<p class="text-xs text-gray-500">Selecione um aluno da EJA acima para visualizar, aprovar ou reprovar os documentos postados.</p>`;
-                return;
-            }
-            const aluno = students.find(s => s.id === alunoId);
-            if(!aluno) return;
+    const container = document.getElementById('container-validacao-docs-eja');
+    if(!container) return;
+    if(!alunoId) {
+        container.innerHTML = `<p class="text-xs text-gray-500">Selecione um aluno da EJA acima para visualizar, aprovar ou reprovar os documentos postados.</p>`;
+        return;
+    }
+    const aluno = students.find(s => s.id === alunoId);
+    if(!aluno) return;
 
-            const docs = aluno.documentos || {};
-            container.innerHTML = `<h3 class="font-bold text-sm text-gray-800 dark:text-white mb-2">Documentação EJA de ${aluno.fullname}</h3>`;
+    const docs = aluno.documentos || {};
+    container.innerHTML = `<h3 class="font-bold text-sm text-gray-800 dark:text-white mb-2">Documentação EJA de ${aluno.fullname}</h3>`;
 
-            tiposDocumentosObrigatorios.forEach(tipo => {
-                const docInfo = docs[tipo.id];
-                const status = docInfo ? docInfo.status : 'Pendente';
-                const motivo = docInfo ? docInfo.motivoReprovacao : '';
-                const driveUrl = docInfo ? docInfo.driveUrl : '';
-                const fileName = docInfo && docInfo.fileName ? docInfo.fileName : 'Documento em PDF';
+    // >>> AQUI TAMBÉM USAMOS A NOVA LISTA DINÂMICA (Exclui o ensino médio) <<<
+    const documentosPermitidos = obterDocumentosObrigatoriosPorAluno(aluno);
 
-                let statusBadge = `<span class="px-2 py-0.5 bg-gray-200 text-gray-800 rounded text-[10px] font-bold">Pendente</span>`;
-                if(status === 'Aprovado') statusBadge = `<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded text-[10px] font-bold">Aprovado</span>`;
-                if(status === 'Reprovado') statusBadge = `<span class="px-2 py-0.5 bg-red-100 text-red-800 rounded text-[10px] font-bold">Reprovado</span>`;
+    documentosPermitidos.forEach(tipo => {
+        const docInfo = docs[tipo.id];
+        const status = docInfo ? docInfo.status : 'Pendente';
+        const motivo = docInfo ? docInfo.motivoReprovacao : '';
+        const driveUrl = docInfo ? docInfo.driveUrl : '';
+        const fileName = docInfo && docInfo.fileName ? docInfo.fileName : 'Documento em PDF';
 
-                let linkArquivoHtml = '<span class="text-gray-400">Não enviado pelo aluno</span>';
-                if (driveUrl) {
-                    linkArquivoHtml = `<a href="${driveUrl}" target="_blank" class="text-blue-600 dark:text-blue-400 underline font-semibold flex items-center gap-1"><i class="fa-brands fa-google-drive"></i> Arquivo no Drive: ${fileName} (Abrir)</a>`;
-                }
+        let statusBadge = `<span class="px-2 py-0.5 bg-gray-200 text-gray-800 rounded text-[10px] font-bold">Pendente</span>`;
+        if(status === 'Aprovado') statusBadge = `<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded text-[10px] font-bold">Aprovado</span>`;
+        if(status === 'Reprovado') statusBadge = `<span class="px-2 py-0.5 bg-red-100 text-red-800 rounded text-[10px] font-bold">Reprovado</span>`;
 
-                let botoesAcaoHtml = '';
-                if (status === 'Aprovado') {
-                    botoesAcaoHtml = `<div class="text-xs text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1"><i class="fa-solid fa-circle-check"></i> Documento EJA validado e aprovado.</div>`;
-                } else if (!driveUrl) {
-                    botoesAcaoHtml = `<span class="text-xs text-gray-400 italic">Aguardando o envio do documento pelo aluno da EJA.</span>`;
-                } else {
-                    botoesAcaoHtml = `
-                        <div class="flex flex-wrap gap-2 pt-2 items-center">
-                            <button onclick="aprovarDocumentoEJA('${aluno.id}', '${tipo.id}')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-semibold"><i class="fa-solid fa-check mr-1"></i> Aprovar Documento</button>
-                            <button onclick="toggleBoxReprovacaoEJA('${tipo.id}')" class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-semibold"><i class="fa-solid fa-xmark mr-1"></i> Reprovar</button>
-                        </div>
-                        <div id="box_reprov_eja_${tipo.id}" class="space-y-1 pt-2" style="display: none;">
-                            <input type="text" id="motivo_eja_${tipo.id}" value="${motivo}" placeholder="Informe o motivo da reprovação..." class="w-full px-3 py-1.5 rounded border text-xs dark:bg-slate-800 dark:text-white">
-                            <button onclick="salvarReprovacaoDocumentoEJA('${aluno.id}', '${tipo.id}')" class="px-3 py-1 bg-gray-700 hover:bg-gray-800 text-white rounded text-[10px] font-semibold">Salvar Reprovação</button>
-                        </div>
-                    `;
-                }
-
-                container.innerHTML += `
-                    <div class="bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700 space-y-2">
-                        <div class="flex justify-between items-center">
-                            <span class="font-bold text-xs text-emerald-600 dark:text-emerald-400">${tipo.label}</span>
-                            <div>${statusBadge}</div>
-                        </div>
-                        <div class="text-xs py-1">${linkArquivoHtml}</div>
-                        ${botoesAcaoHtml}
-                    </div>
-                `;
-            });
+        let linkArquivoHtml = '<span class="text-gray-400">Não enviado pelo aluno</span>';
+        if (driveUrl) {
+            linkArquivoHtml = `<a href="${driveUrl}" target="_blank" class="text-blue-600 dark:text-blue-400 underline font-semibold flex items-center gap-1"><i class="fa-brands fa-google-drive"></i> Arquivo no Drive: ${fileName} (Abrir)</a>`;
         }
+
+        let botoesAcaoHtml = '';
+        if (status === 'Aprovado') {
+            botoesAcaoHtml = `<div class="text-xs text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1"><i class="fa-solid fa-circle-check"></i> Documento EJA validado e aprovado.</div>`;
+        } else if (!driveUrl) {
+            botoesAcaoHtml = `<span class="text-xs text-gray-400 italic">Aguardando o envio do documento pelo aluno da EJA.</span>`;
+        } else {
+            botoesAcaoHtml = `
+                <div class="flex flex-wrap gap-2 pt-2 items-center">
+                    <button onclick="aprovarDocumentoEJA('${aluno.id}', '${tipo.id}')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-semibold"><i class="fa-solid fa-check mr-1"></i> Aprovar Documento</button>
+                    <button onclick="toggleBoxReprovacaoEJA('${tipo.id}')" class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-semibold"><i class="fa-solid fa-xmark mr-1"></i> Reprovar</button>
+                </div>
+                <div id="box_reprov_eja_${tipo.id}" class="space-y-1 pt-2" style="display: none;">
+                    <input type="text" id="motivo_eja_${tipo.id}" value="${motivo}" placeholder="Informe o motivo da reprovação..." class="w-full px-3 py-1.5 rounded border text-xs dark:bg-slate-800 dark:text-white">
+                    <button onclick="salvarReprovacaoDocumentoEJA('${aluno.id}', '${tipo.id}')" class="px-3 py-1 bg-gray-700 hover:bg-gray-800 text-white rounded text-[10px] font-semibold">Salvar Reprovação</button>
+                </div>
+            `;
+        }
+
+        container.innerHTML += `
+            <div class="bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700 space-y-2">
+                <div class="flex justify-between items-center">
+                    <span class="font-bold text-xs text-emerald-600 dark:text-emerald-400">${tipo.label}</span>
+                    <div>${statusBadge}</div>
+                </div>
+                <div class="text-xs py-1">${linkArquivoHtml}</div>
+                ${botoesAcaoHtml}
+            </div>
+        `;
+    });
+}
 
         function toggleBoxReprovacaoEJA(tipoId) {
             const box = document.getElementById(`box_reprov_eja_${tipoId}`);
