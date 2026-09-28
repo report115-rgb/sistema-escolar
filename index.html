@@ -3357,42 +3357,44 @@ function renderAttendanceList() {
     const turmaId = document.getElementById('class-select').value;
     const dataAula = document.getElementById('attendance-calendar-date-select').value;
     const container = document.getElementById('student-attendance-list');
+    if (!container) return;
+    
     container.innerHTML = '';
 
     if (!turmaId || !dataAula) {
-        container.innerHTML = '<li class="py-3 text-sm text-gray-500">Selecione a turma e a data da aula.</li>';
+        container.innerHTML = '<li class="py-3 text-sm text-gray-500">Selecione a turma e a data da aula programada.</li>';
         return;
     }
 
-    // Recupera a frequência já salva no localStorage ou Firebase para esta turma e data
-    let frequenciasSalvas = JSON.parse(localStorage.getItem('se7_frequencias') || '{}');
-    let chaveFrequencia = `${turmaId}_${dataAula}`;
-    let registroAula = frequenciasSalvas[chaveFrequencia] || {}; // { idAluno: 'P' ou 'F' }
-
-    // Filtra os alunos da turma selecionada
-    let alunosTurma = alunos.filter(a => a.turmaId === turmaId);
+    // Filtra os alunos ativos da turma utilizando a variável correta "students" e a propriedade "classId"
+    let alunosTurma = students.filter(s => s.classId === turmaId && s.status === "Ativo");
 
     if (alunosTurma.length === 0) {
-        container.innerHTML = '<li class="py-3 text-sm text-gray-500">Nenhum aluno encontrado nesta turma.</li>';
+        container.innerHTML = '<li class="py-3 text-sm text-gray-500">Nenhum aluno ativo encontrado nesta turma.</li>';
         return;
     }
 
+    // Recupera frequências salvas no localStorage para esta turma e data
+    let frequenciasSalvas = JSON.parse(localStorage.getItem('se7_frequencias_salvas') || '{}');
+    let chaveFrequencia = `${turmaId}_${dataAula}`;
+    let registroAula = frequenciasSalvas[chaveFrequencia] || { finalizada: false, registros: {} };
+
     alunosTurma.forEach(aluno => {
-        let statusSalvo = registroAula[aluno.id]; // 'P', 'F' ou undefined
-        let jaLancado = statusSalvo !== undefined;
+        let statusSalvo = registroAula.registros ? registroAula.registros[aluno.id] : undefined;
+        let jaLancado = registroAula.finalizada || statusSalvo !== undefined;
 
         let li = document.createElement('li');
-        li.className = "py-3 flex items-center justify-between";
+        li.className = "py-3 flex items-center justify-between border-b border-gray-100 dark:border-slate-700";
         li.innerHTML = `
-            <span class="text-sm font-medium text-gray-800 dark:text-gray-200">${aluno.nome}</span>
+            <span class="text-sm font-medium text-gray-800 dark:text-gray-200">${aluno.fullname} <span class="text-[10px] text-gray-400">(${aluno.code || 'S/N'})</span></span>
             <div class="flex items-center space-x-3">
                 <label class="inline-flex items-center space-x-1 cursor-pointer">
-                    <input type="radio" name="att_${aluno.id}" value="P" ${statusSalvo === 'P' ? 'checked' : ''} ${jaLancado ? 'disabled' : ''} class="text-emerald-600 focus:ring-emerald-500">
-                    <span class="text-xs ${jaLancado && statusSalvo !== 'P' ? 'opacity-50' : ''}">Presente</span>
+                    <input type="radio" name="att_${aluno.id}" value="Presente" ${statusSalvo === 'Presente' || !statusSalvo ? 'checked' : ''} ${jaLancado ? 'disabled' : ''} class="text-emerald-600 focus:ring-emerald-500">
+                    <span class="text-xs ${jaLancado && statusSalvo !== 'Presente' ? 'opacity-50' : ''}">Presente</span>
                 </label>
                 <label class="inline-flex items-center space-x-1 cursor-pointer">
-                    <input type="radio" name="att_${aluno.id}" value="F" ${statusSalvo === 'F' ? 'checked' : ''} ${jaLancado ? 'disabled' : ''} class="text-red-600 focus:ring-red-500">
-                    <span class="text-xs ${jaLancado && statusSalvo !== 'F' ? 'opacity-50' : ''}">Falta</span>
+                    <input type="radio" name="att_${aluno.id}" value="Falta" ${statusSalvo === 'Falta' ? 'checked' : ''} ${jaLancado ? 'disabled' : ''} class="text-red-600 focus:ring-red-500">
+                    <span class="text-xs ${jaLancado && statusSalvo !== 'Falta' ? 'opacity-50' : ''}">Falta</span>
                 </label>
                 ${jaLancado ? `<button type="button" onclick="habilitarEdicaoAlunoFrequencia(this, '${aluno.id}')" class="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-semibold rounded shadow transition"><i class="fa-solid fa-pen-to-square mr-1"></i> Editar</button>` : ''}
             </div>
