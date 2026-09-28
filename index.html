@@ -1639,15 +1639,53 @@
                 return alert("Este e-mail já está cadastrado no sistema.");
             }
 
-            solicitacoes.push({ id: Date.now().toString(), nome, email, pass, perfil, data: new Date().toLocaleString('pt-BR') });
-            localStorage.setItem('app_users_pending', JSON.stringify(solicitacoes));
+            // Cria o objeto do novo colaborador
+    const novoColaborador = { 
+        id: Date.now().toString(), 
+        nome, 
+        email, 
+        pass, 
+        perfil, 
+        data: new Date().toLocaleString('pt-BR') 
+    };
 
-            alert("Solicitação enviada com sucesso! Aguarde a liberação do Master ou da direção para acessar o sistema.");
-            fecharModalPrimeiroAcesso();
-            document.getElementById('pa-nome').value = '';
-            document.getElementById('pa-email').value = '';
-            document.getElementById('pa-pass').value = '';
+    solicitacoes.push(novoColaborador);
+    localStorage.setItem('app_users_pending', JSON.stringify(solicitacoes));
+
+    // >>> DISPARA O WHATSAPP AUTOMATICAMENTE PARA A CENTRAL <<<
+    notificarWhatsAppPrimeiroAcesso(novoColaborador);
+
+    alert("Solicitação enviada com sucesso! Aguarde a liberação do Master ou da direção para acessar o sistema.");
+    fecharModalPrimeiroAcesso();
         }
+
+// --- FUNÇÃO DE WHATSAPP PARA O PRIMEIRO ACESSO ---
+async function notificarWhatsAppPrimeiroAcesso(novoColaborador) {
+    try {
+        const urlApiWhatsApp = document.getElementById('input-gdrive-url').value.trim() || globalInstitutionData.gdriveUrl; 
+        if (!urlApiWhatsApp) return;
+
+        const mensagem = `🔑 *SOLICITAÇÃO DE PRIMEIRO ACESSO*\n\n` +
+                         `👤 *Nome:* ${novoColaborador.nome}\n` +
+                         `📧 *E-mail:* ${novoColaborador.email}\n` +
+                         `🛡️ *Perfil Desejado:* ${novoColaborador.perfil.toUpperCase()}\n` +
+                         `📅 *Data:* ${novoColaborador.data}\n\n` +
+                         `Uma nova solicitação aguarda aprovação no painel de Controle de Acesso do sistema SE7.`;
+
+        await fetch(urlApiWhatsApp, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({
+                tipoAviso: "primeiro_acesso",
+                telefoneCentral: "5591984969127", // Número da central que já está configurado no sistema
+                message: mensagem,
+                colaborador: novoColaborador
+            })
+        });
+    } catch (erro) {
+        console.error("Erro ao enviar notificação WhatsApp de primeiro acesso:", erro);
+    }
+}
 
         function renderizarSolicitacoesPendentes() {
             const container = document.getElementById('lista-solicitacoes-pendentes');
