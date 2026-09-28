@@ -2874,20 +2874,33 @@ function carregarDatasCalendarioParaFrequencia() {
                 return;
             }
 
-            // Varre os eventos e extrai cada data configurada
+            // Coleta todas as datas individuais de todos os eventos da turma
+            let todasAsDatas = [];
             eventosTurma.forEach(evento => {
                 if (evento.dates && Array.isArray(evento.dates)) {
                     evento.dates.forEach(dataIso => {
-                        const dataFormatada = dataIso.split('-').reverse().join('/');
-                        const labelOpcao = `${dataFormatada} - ${evento.subject} (${evento.description || 'Aula'})`;
-                        
-                        selectData.insertAdjacentHTML('beforeend', `
-                            <option value="${dataIso}" data-subject="${evento.subject}">
-                                ${labelOpcao}
-                            </option>
-                        `);
+                        todasAsDatas.push({
+                            dataIso: dataIso, // Padrão "AAAA-MM-DD"
+                            subject: evento.subject,
+                            description: evento.description || 'Aula'
+                        });
                     });
                 }
+            });
+
+            // ORDENAÇÃO CRONOLÓGICA PERFEITA (Do dia mais antigo para o mais recente)
+            todasAsDatas.sort((a, b) => a.dataIso.localeCompare(b.dataIso));
+
+            // Preenche o select de forma organizada e cronológica
+            todasAsDatas.forEach(item => {
+                const dataFormatada = item.dataIso.split('-').reverse().join('/');
+                const labelOpcao = `${dataFormatada} - ${item.subject} (${item.description})`;
+                
+                selectData.insertAdjacentHTML('beforeend', `
+                    <option value="${item.dataIso}" data-subject="${item.subject}">
+                        ${labelOpcao}
+                    </option>
+                `);
             });
 
             renderAttendanceList();
