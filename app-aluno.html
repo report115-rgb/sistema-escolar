@@ -1170,13 +1170,21 @@
 
             tiposDocumentosObrigatorios.forEach(tipo => {
                 const docInfo = docs[tipo.id];
-                const status = docInfo ? docInfo.status : 'Pendente';
+                
+                // Correção aplicada: Verifica se realmente existe um arquivo enviado (com URL ou nome de arquivo válido)
+                const temArquivoEnviado = docInfo && (docInfo.driveUrl || (docInfo.fileName && docInfo.fileName !== 'Documento em PDF'));
+                const status = temArquivoEnviado ? (docInfo.status || 'Pendente') : 'Pendente';
+                
                 const driveUrl = docInfo ? docInfo.driveUrl : '';
                 const fileName = docInfo && docInfo.fileName ? docInfo.fileName : 'Documento em PDF';
 
                 let statusBadge = `<span class="px-2 py-0.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded text-[10px] font-bold">Pendente</span>`;
-                if(status === 'Aprovado') statusBadge = `<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded text-[10px] font-bold">Aprovado</span>`;
-                else if(status === 'Pendente') statusBadge = `<span class="px-2 py-0.5 bg-blue-100 text-blue-800 rounded text-[10px] font-bold">Enviado</span>`;
+                
+                if (status === 'Aprovado') {
+                    statusBadge = `<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded text-[10px] font-bold">Aprovado</span>`;
+                } else if (temArquivoEnviado) {
+                    statusBadge = `<span class="px-2 py-0.5 bg-blue-100 text-blue-800 rounded text-[10px] font-bold">Enviado</span>`;
+                }
 
                 docList.innerHTML += `
                     <div class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-2 text-xs">
@@ -1916,3 +1924,4 @@
     </script>
 </body>
 </html>
+```[cite: 4]
