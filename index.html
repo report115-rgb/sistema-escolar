@@ -3931,27 +3931,65 @@ function renderizarAlunosEJAAdmin() {
     });
 }
 
-// 2. Salva o agendamento individual do aluno no Firebase
+// 2. Salva o agendamento individual do aluno no Firebase e dispara a notificação no WhatsApp
 async function salvarAgendamentoProvaAluno(studentId) {
-    const dtInicio = document.getElementById(`dt_inicio_${studentId}`).value;
-    const dtFim = document.getElementById(`dt_fim_${studentId}`).value;
+    const dtInicioInput = document.getElementById(`dt_inicio_${studentId}`).value;
+    const dtFimInput = document.getElementById(`dt_fim_${studentId}`).value;
 
-    if (!dtInicio || !dtFim) {
+    if (!dtInicioInput || !dtFimInput) {
         return alert("Preencha a data e hora de início e término.");
     }
 
     try {
         const aluno = students.find(s => s.id === studentId);
+        if (!aluno) return alert("Aluno não encontrado.");
+
         if (!aluno.controleEJA) aluno.controleEJA = {};
 
-        aluno.controleEJA.dataInicio = dtInicio;
-        aluno.controleEJA.dataFim = dtFim;
+        aluno.controleEJA.dataInicio = dtInicioInput;
+        aluno.controleEJA.dataFim = dtFimInput;
 
+        // Salva na nuvem (Firebase)
         await db.collection("students").doc(studentId).set({
             controleEJA: aluno.controleEJA
         }, { merge: true });
 
-        alert("Agendamento da prova salvo com sucesso! A liberação e o bloqueio ocorrerão automaticamente nos horários definidos.");
+        // Formata as datas para o padrão brasileiro (DD/MM/AAAA às HH:MM) para a mensagem ficar bonita
+        const formatarDataBr = (dataIso) => {
+            if (!dataIso) return '';
+            const [data, hora] = dataIso.split('T');
+            const [ano, mes, dia] = data.split('-');
+            return `${dia}/${mes}/${ano} às ${hora}`;
+        };
+
+        const inicioFormatado = formatarDataBr(dtInicioInput);
+        const fimFormatado = formatarDataBr(dtFimInput);
+
+        // Dispara o WhatsApp automático se o aluno tiver número cadastrado
+        const urlApiWhatsApp = document.getElementById('input-gdrive-url').value.trim() || (globalInstitutionData ? globalInstitutionData.gdriveUrl : '');
+        
+        if (urlApiWhatsApp && aluno.whatsapp) {
+            const mensagem = `🎓 *AGENDAMENTO DE PROVA ONLINE - EJA*\n\n` +
+                             `Olá, *${aluno.fullname}*!\n\n` +
+                             `Sua prova online foi agendada com sucesso.\n\n` +
+                             `📅 *Início:* ${inicioFormatado}\n` +
+                             `⏰ *Término:* ${fimFormatado}\n\n` +
+                             `Fique atento(a) aos horários e acesse o Portal do Aluno para realizá-la. Boa prova!`;
+
+            // Envia para o Web App do WhatsApp em segundo plano
+            fetch(urlApiWhatsApp, {
+                method: "POST",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify({
+                    tipoAviso: "agendamento_prova_eja",
+                    telefoneAluno: aluno.whatsapp.replace(/[^\d]/g, ''),
+                    message: mensagem,
+                    alunoId: aluno.id
+                })
+            }).catch(err => console.error("Erro ao disparar WhatsApp de agendamento:", err));
+        }
+
+        alert("Agendamento salvo com sucesso e notificação enviada via WhatsApp para a aluna!");
     } catch (e) {
         alert("Erro ao salvar agendamento: " + e.message);
     }
