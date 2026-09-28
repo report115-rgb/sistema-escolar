@@ -3390,8 +3390,7 @@ function carregarDatasCalendarioParaFrequencia() {
             alert("Matrícula reativada com sucesso!");
         }
 
-       // Exemplo de adaptação para a função renderAttendanceList e o salvamento/edição
-function renderAttendanceList() {
+	function renderAttendanceList() {
     const turmaId = document.getElementById('class-select').value;
     const dataAula = document.getElementById('attendance-calendar-date-select').value;
     const container = document.getElementById('student-attendance-list');
@@ -3404,7 +3403,6 @@ function renderAttendanceList() {
         return;
     }
 
-    // Filtra os alunos ativos da turma utilizando a variável correta "students" e a propriedade "classId"
     let alunosTurma = students.filter(s => s.classId === turmaId && s.status === "Ativo");
 
     if (alunosTurma.length === 0) {
@@ -3412,14 +3410,11 @@ function renderAttendanceList() {
         return;
     }
 
-    // Recupera frequências salvas no localStorage para esta turma e data
-    let frequenciasSalvas = JSON.parse(localStorage.getItem('se7_frequencias_salvas') || '{}');
-    let chaveFrequencia = `${turmaId}_${dataAula}`;
-    let registroAula = frequenciasSalvas[chaveFrequencia] || { finalizada: false, registros: {} };
-
     alunosTurma.forEach(aluno => {
-        let statusSalvo = registroAula.registros ? registroAula.registros[aluno.id] : undefined;
-        let jaLancado = registroAula.finalizada || statusSalvo !== undefined;
+        // Verifica se já existe registro de presença salvo no objeto do aluno sincronizado do Firebase
+        const historicoPresenca = aluno.attendance && aluno.attendance[dataAula] ? aluno.attendance[dataAula].status : undefined;
+        let jaLancado = historicoPresenca !== undefined;
+        let statusSalvo = historicoPresenca || 'Presente';
 
         let li = document.createElement('li');
         li.className = "py-3 flex items-center justify-between border-b border-gray-100 dark:border-slate-700";
@@ -3427,7 +3422,7 @@ function renderAttendanceList() {
             <span class="text-sm font-medium text-gray-800 dark:text-gray-200">${aluno.fullname} <span class="text-[10px] text-gray-400">(${aluno.code || 'S/N'})</span></span>
             <div class="flex items-center space-x-3">
                 <label class="inline-flex items-center space-x-1 cursor-pointer">
-                    <input type="radio" name="att_${aluno.id}" value="Presente" ${statusSalvo === 'Presente' || !statusSalvo ? 'checked' : ''} ${jaLancado ? 'disabled' : ''} class="text-emerald-600 focus:ring-emerald-500">
+                    <input type="radio" name="att_${aluno.id}" value="Presente" ${statusSalvo === 'Presente' ? 'checked' : ''} ${jaLancado ? 'disabled' : ''} class="text-emerald-600 focus:ring-emerald-500">
                     <span class="text-xs ${jaLancado && statusSalvo !== 'Presente' ? 'opacity-50' : ''}">Presente</span>
                 </label>
                 <label class="inline-flex items-center space-x-1 cursor-pointer">
@@ -3454,82 +3449,79 @@ function habilitarEdicaoAlunoFrequencia(botao, alunoId) {
 }
 
       async function saveAttendance() {
-            const classId = document.getElementById('class-select').value;
-            const dataAula = document.getElementById('attendance-calendar-date-select').value;
-            const professorId = document.getElementById('attendance-teacher-select').value;
+    const classId = document.getElementById('class-select').value;
+    const dataAula = document.getElementById('attendance-calendar-date-select').value;
+    const professorId = document.getElementById('attendance-teacher-select').value;
 
-            if (!classId || !dataAula) return alert("Selecione a turma e a data da aula programada no calendário!");
+    if (!classId || !dataAula) return alert("Selecione a turma e a data da aula programada no calendário!");
 
-            const alunosTurma = students.filter(s => s.classId == classId && s.status === "Ativo");
-            if (alunosTurma.length === 0) return alert("Nenhum aluno ativo nesta turma.");
+    const alunosTurma = students.filter(s => s.classId == classId && s.status === "Ativo");
+    if (alunosTurma.length === 0) return alert("Nenhum aluno ativo nesta turma.");
 
-            const registrosFrequencia = [];
-            const mapaAlunosRegistros = {};
-            let totalFaltas = 0;
-            const batch = db.batch(); 
+    const registrosFrequencia = [];
+    const mapaAlunosRegistros = {};
+    let totalFaltas = 0;
+    const batch = db.batch(); 
 
-            alunosTurma.forEach(s => {
-                const radios = document.getElementsByName(`att_${s.id}`);
-                let statusPresenca = "Presente"; 
-                for (const r of radios) {
-                    if (r.checked) {
-                        statusPresenca = r.value;
-                        break;
-                    }
-                }
-
-                if (statusPresenca === 'Falta') totalFaltas++;
-
-                mapaAlunosRegistros[s.id] = statusPresenca;
-
-                registrosFrequencia.push({
-                    studentId: s.id,
-                    studentName: s.fullname,
-                    status: statusPresenca
-                });
-
-                const alunoRef = db.collection("students").doc(s.id);
-                const attendanceMap = s.attendance || {};
-                attendanceMap[dataAula] = { status: statusPresenca, updatedAt: new Date().toISOString() };
-                
-                batch.update(alunoRef, { attendance: attendanceMap });
-            });
-
-            // NOVO: Salva o estado de finalizado no navegador para bloquear os campos na próxima visualização
-            let frequenciasSalvas = JSON.parse(localStorage.getItem('se7_frequencias_salvas') || '{}');
-            frequenciasSalvas[`${classId}_${dataAula}`] = {
-                finalizada: true,
-                registros: mapaAlunosRegistros,
-                updatedAt: new Date().toISOString()
-            };
-            localStorage.setItem('se7_frequencias_salvas', JSON.stringify(frequenciasSalvas));
-
-            const dadosChamada = {
-                classId,
-                date: dataAula,
-                teacherId: professorId || null,
-                frequencias: registrosFrequencia,
-                timestamp: new Date().toISOString()
-            };
-
-            try {
-                const callRef = db.collection("attendanceRecords").doc();
-                batch.set(callRef, dadosChamada);
-
-                await batch.commit();
-
-                registrarLogAuditoria(`Chamada realizada para a turma ${classId} em ${dataAula} (${totalFaltas} falta(s) registrada(s))`, "Frequência");
-                alert(`Chamada salva com sucesso! Os campos foram bloqueados.`);
-                
-                // Atualiza a tela instantaneamente para refletir o bloqueio e o botão de edição
-                if (typeof renderAttendanceList === 'function') {
-                    renderAttendanceList();
-                }
-            } catch (error) {
-                console.error("Erro ao salvar frequência:", error);
-                alert("Erro ao salvar chamada na nuvem: " + error.message);
+    alunosTurma.forEach(s => {
+        const radios = document.getElementsByName(`att_${s.id}`);
+        let statusPresenca = "Presente"; 
+        for (const r of radios) {
+            if (r.checked) {
+                statusPresenca = r.value;
+                break;
             }
         }
+
+        if (statusPresenca === 'Falta') totalFaltas++;
+
+        mapaAlunosRegistros[s.id] = statusPresenca;
+
+        registrosFrequencia.push({
+            studentId: s.id,
+            studentName: s.fullname,
+            status: statusPresenca
+        });
+
+        // Grava a frequência diretamente no documento do aluno na nuvem (Firestore)
+        const alunoRef = db.collection("students").doc(s.id);
+        const alunoObj = students.find(item => item.id === s.id);
+        const attendanceMap = (alunoObj && alunoObj.attendance) ? alunoObj.attendance : {};
+        
+        attendanceMap[dataAula] = { 
+            status: statusPresenca, 
+            updatedAt: new Date().toISOString() 
+        };
+        
+        batch.update(alunoRef, { attendance: attendanceMap });
+    });
+
+    const dadosChamada = {
+        classId,
+        date: dataAula,
+        teacherId: professorId || null,
+        frequencias: registrosFrequencia,
+        timestamp: new Date().toISOString()
+    };
+
+    try {
+        const callRef = db.collection("attendanceRecords").doc();
+        batch.set(callRef, dadosChamada);
+
+        // Executa todas as atualizações na nuvem de uma só vez para Master e Secretárias
+        await batch.commit();
+
+        registrarLogAuditoria(`Chamada realizada para a turma ${classId} em ${dataAula} (${totalFaltas} falta(s) registrada(s))`, "Frequência");
+        alert(`Chamada salva com sucesso na nuvem! Sincronizada para todas as secretárias.`);
+        
+        if (typeof renderAttendanceList === 'function') {
+            renderAttendanceList();
+        }
+    } catch (error) {
+        console.error("Erro ao salvar frequência na nuvem:", error);
+        alert("Erro ao salvar chamada: " + error.message);
+    }
+}
 
         function renderGradeList() {
             const classId = document.getElementById('grade-class-select').value;
