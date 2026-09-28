@@ -3373,55 +3373,69 @@ function carregarDatasCalendarioParaFrequencia() {
             });
         }
 
-        async function saveAttendance() {
+       async function saveAttendance() {
     const classId = document.getElementById('class-select').value;
     const dataAula = document.getElementById('attendance-calendar-date-select').value;
     const professorId = document.getElementById('attendance-teacher-select').value;
 
     if (!dataAula) return alert("Selecione a data da aula programada no calendário!");
 
-            const alunosTurma = students.filter(s => s.classId == classId && s.status === "Ativo");
-            if (alunosTurma.length === 0) return alert("Nenhum aluno ativo nesta turma.");
+    const alunosTurma = students.filter(s => s.classId == classId && s.status === "Ativo");
+    if (alunosTurma.length === 0) return alert("Nenhum aluno ativo nesta turma.");
 
-            const registrosFrequencia = [];
-            let totalFaltas = 0;
+    const registrosFrequencia = [];
+    let totalFaltas = 0;
+    const batch = db.batch(); // Utilizando Batch do Firestore para atualizar matriz e alunos de forma atômica
 
-            alunosTurma.forEach(s => {
-                const radios = document.getElementsByName(`att_${s.id}`);
-                let statusPresenca = "presente";
-                for (const r of radios) {
-                    if (r.checked) {
-                        statusPresenca = r.value;
-                        break;
-                    }
-                }
-
-                if (statusPresenca === 'falta') totalFaltas++;
-
-                registrosFrequencia.push({
-                    studentId: s.id,
-                    studentName: s.fullname,
-                    status: statusPresenca
-                });
-            });
-
-            const dadosChamada = {
-                classId,
-                date: dataAula,
-                teacherId: professorId || null,
-                frequencias: registrosFrequencia,
-                timestamp: new Date().toISOString()
-            };
-
-            try {
-                await db.collection("attendanceRecords").add(dadosChamada);
-                registrarLogAuditoria(`Chamada realizada para a turma ${classId} em ${dataAula} (${totalFaltas} falta(s) registrada(s))`, "Frequência");
-                alert(`Chamada salva com sucesso! Foram computadas ${totalFaltas} falta(s).`);
-            } catch (error) {
-                console.error("Erro ao salvar frequência:", error);
-                alert("Erro ao salvar chamada na nuvem: " + error.message);
+    alunosTurma.forEach(s => {
+        const radios = document.getElementsByName(`att_${s.id}`);
+        let statusPresenca = "Presente"; // Padrão inicial capitalizado
+        for (const r of radios) {
+            if (r.checked) {
+                // Normaliza para o padrão esperado pelo app do aluno ("Presente" ou "Falta")
+                statusPresenca = r.value === 'presente' ? 'Presente' : 'Falta';
+                break;
             }
         }
+
+        if (statusPresenca === 'Falta') totalFaltas++;
+
+        registrosFrequencia.push({
+            studentId: s.id,
+            studentName: s.fullname,
+            status: statusPresenca
+        });
+
+        // INTEGRANDO COM O ALUNO: Atualiza o map de frequência diretamente no documento do aluno em 'students'
+        const alunoRef = db.collection("students").doc(s.id);
+        const attendanceMap = s.attendance || {};
+        attendanceMap[dataAula] = { status: statusPresenca, updatedAt: new Date().toISOString() };
+        
+        batch.update(alunoRef, { attendance: attendanceMap });
+    });
+
+    const dadosChamada = {
+        classId,
+        date: dataAula,
+        teacherId: professorId || null,
+        frequencias: registrosFrequencia,
+        timestamp: new Date().toISOString()
+    };
+
+    try {
+        // Salva o registro geral da chamada e executa as atualizações nos alunos em lote
+        const callRef = db.collection("attendanceRecords").doc();
+        batch.set(callRef, dadosChamada);
+
+        await batch.commit();
+
+        registrarLogAuditoria(`Chamada realizada para a turma ${classId} em ${dataAula} (${totalFaltas} falta(s) registrada(s))`, "Frequência");
+        alert(`Chamada salva e sincronizada com sucesso para o Portal do Aluno! Foram computadas ${totalFaltas} falta(s).`);
+    } catch (error) {
+        console.error("Erro ao salvar frequência:", error);
+        alert("Erro ao salvar chamada na nuvem: " + error.message);
+    }
+}
 
         function renderGradeList() {
             const classId = document.getElementById('grade-class-select').value;
