@@ -3358,7 +3358,6 @@
             list.innerHTML = '';
             
             students.filter(s => s.classId == classId && s.status === "Ativo").forEach(s => {
-                // Recupera notas salvas anteriormente se houver no objeto do aluno ou define vazio
                 const notasAluno = (s.grades && s.grades[subjectSelect]) ? s.grades[subjectSelect] : { atividade: '', avaliacao: '', final: '', salvo: false };
                 const readonlyAttr = notasAluno.salvo ? 'readonly disabled' : '';
                 const bgClass = notasAluno.salvo ? 'bg-gray-100 dark:bg-slate-900 text-gray-500' : 'bg-white dark:bg-slate-900';
@@ -3369,35 +3368,34 @@
                             ${s.fullname} <br><span class="text-[10px] text-gray-400">(${s.code})</span>
                         </div>
                         <div class="col-span-2 text-center">
-                            <input type="number" placeholder="0-10" min="0" max="10" step="0.1" value="${notasAluno.atividade}" ${readonlyAttr} oninput="calcularNotaFinalAluno('${s.id}')" id="grade_ativ_${s.id}" class="w-full px-2 py-1.5 text-center rounded border text-xs ${bgClass} dark:border-slate-700">
+                            <input type="number" placeholder="0 a 5" min="0" max="5" step="0.5" value="${notasAluno.atividade}" ${readonlyAttr} oninput="calcularNotaFinalAluno('${s.id}')" id="grade_ativ_${s.id}" class="w-full px-2 py-1.5 text-center rounded border text-xs ${bgClass} dark:border-slate-700">
                         </div>
                         <div class="col-span-2 text-center">
-                            <input type="number" placeholder="0-10" min="0" max="10" step="0.1" value="${notasAluno.avaliacao}" ${readonlyAttr} oninput="calcularNotaFinalAluno('${s.id}')" id="grade_aval_${s.id}" class="w-full px-2 py-1.5 text-center rounded border text-xs ${bgClass} dark:border-slate-700">
+                            <input type="number" placeholder="0 a 5" min="0" max="5" step="0.5" value="${notasAluno.avaliacao}" ${readonlyAttr} oninput="calcularNotaFinalAluno('${s.id}')" id="grade_aval_${s.id}" class="w-full px-2 py-1.5 text-center rounded border text-xs ${bgClass} dark:border-slate-700">
                         </div>
                         <div class="col-span-2 text-center">
-                            <input type="text" readonly placeholder="Final" value="${notasAluno.final}" id="grade_final_${s.id}" class="w-full px-2 py-1.5 text-center rounded border text-xs font-bold bg-gray-100 dark:bg-slate-900 text-blue-600 dark:text-blue-400 dark:border-slate-700">
+                            <input type="text" readonly placeholder="0 a 10" value="${notasAluno.final}" id="grade_final_${s.id}" class="w-full px-2 py-1.5 text-center rounded border text-xs font-bold bg-gray-100 dark:bg-slate-900 text-blue-600 dark:text-blue-400 dark:border-slate-700">
                         </div>
-                        <div class="col-span-2 text-right space-x-1">
+                        <div class="col-span-2 text-right space-x-1" id="action_btn_container_${s.id}">
                             ${notasAluno.salvo ? `
-                                <button type="button" onclick="habilitarEdicaoNota('${s.id}')" class="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded font-semibold shadow text-[10px]">Editar Nota</button>
+                                <button type="button" onclick="habilitarEdicaoNota('${s.id}')" class="px-2 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded font-semibold shadow text-[10px]">Editar Nota</button>
                             ` : `
-                                <span class="text-[10px] text-gray-400 italic">Preencha e salve</span>
+                                <button type="button" onclick="salvarNotaIndividualAluno('${s.id}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-semibold shadow text-[10px]">Salvar</button>
                             `}
                         </div>
                     </li>`;
             });
         }
 
-        // Função para calcular a soma ou média das duas caixinhas em tempo real
+        // Soma direta: Atividade (0 a 5) + Avaliação (0 a 5) = Nota Final (0 a 10)
         function calcularNotaFinalAluno(studentId) {
             const ativ = parseFloat(document.getElementById(`grade_ativ_${studentId}`).value) || 0;
             const aval = parseFloat(document.getElementById(`grade_aval_${studentId}`).value) || 0;
-            // Se preferir média, altere para (ativ + aval) / 2. Aqui está soma simples limitada a 10 ou média aritmética:
-            const final = ((ativ + aval) / 2).toFixed(1); 
+            const final = (ativ + aval).toFixed(1);
             document.getElementById(`grade_final_${studentId}`).value = final;
         }
 
-        // Função para destravar a edição caso o usuário clique em "Editar Nota"
+        // Habilita os campos para edição
         function habilitarEdicaoNota(studentId) {
             document.getElementById(`grade_ativ_${studentId}`).removeAttribute('readonly');
             document.getElementById(`grade_ativ_${studentId}`).removeAttribute('disabled');
@@ -3407,47 +3405,40 @@
             document.getElementById(`grade_aval_${studentId}`).removeAttribute('disabled');
             document.getElementById(`grade_aval_${studentId}`).classList.remove('bg-gray-100', 'text-gray-500');
 
-            // Troca o botão temporariamente para indicar que está em edição
-            const row = document.getElementById(`row_grade_${studentId}`);
-            const btnContainer = row.querySelector('.col-span-2.text-right');
-            btnContainer.innerHTML = `<span class="text-[10px] text-amber-600 font-bold">Editando... Clique em Salvar</span>`;
+            // Troca o botão da linha para o botão de "Salvar" atualizado
+            const btnContainer = document.getElementById(`action_btn_container_${studentId}`);
+            btnContainer.innerHTML = `<button type="button" onclick="salvarNotaIndividualAluno('${studentId}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-semibold shadow text-[10px]">Salvar</button>`;
         }
 
-        async function saveGrades() {
+        // Salva a nota individual de um aluno específico ao clicar no botão "Salvar" da linha
+        async function salvarNotaIndividualAluno(studentId) {
             const classId = document.getElementById('grade-class-select').value;
             const subjectId = document.getElementById('grade-subject-select').value;
-            if (!classId || !subjectId) return alert("Selecione a turma e a disciplina!");
+            if (!subjectId) return alert("Selecione a disciplina!");
 
-            const alunosTurma = students.filter(s => s.classId == classId && s.status === "Ativo");
-            let salvosCount = 0;
+            const ativ = document.getElementById(`grade_ativ_${studentId}`).value;
+            const aval = document.getElementById(`grade_aval_${studentId}`).value;
+            const final = document.getElementById(`grade_final_${studentId}`).value;
 
-            for (const s of alunosTurma) {
-                const ativInput = document.getElementById(`grade_ativ_${s.id}`);
-                // Se o input estiver travado/salvo e não foi clicado em editar, pula
-                if (ativInput.hasAttribute('readonly') && !ativInput.classList.contains('bg-white')) continue;
+            const aluno = students.find(s => s.id === studentId);
+            if (!aluno) return;
 
-                const ativ = ativInput.value;
-                const aval = document.getElementById(`grade_aval_${s.id}`).value;
-                const final = document.getElementById(`grade_final_${s.id}`).value;
+            if (!aluno.grades) aluno.grades = {};
+            aluno.grades[subjectId] = {
+                atividade: ativ,
+                avaliacao: aval,
+                final: final,
+                salvo: true
+            };
 
-                if (ativ !== '' || aval !== '') {
-                    if (!s.grades) s.grades = {};
-                    s.grades[subjectId] = {
-                        atividade: ativ,
-                        avaliacao: aval,
-                        final: final,
-                        salvo: true
-                    };
-
-                    // Atualiza no Firebase para persistir na nuvem
-                    await db.collection("students").doc(s.id).update({ grades: s.grades });
-                    salvosCount++;
-                }
+            try {
+                await db.collection("students").doc(studentId).update({ grades: aluno.grades });
+                registrarLogAuditoria(`Salvou a nota do aluno ${aluno.fullname} na disciplina ID ${subjectId}`, "Notas");
+                alert(`Nota salva com sucesso para ${aluno.fullname}!`);
+                renderGradeList(); // Atualiza a linha com o botão "Editar Nota"
+            } catch (error) {
+                alert("Erro ao salvar nota na nuvem: " + error.message);
             }
-
-            registrarLogAuditoria(`Salvou notas da disciplina ID ${subjectId} para a turma ${classId}`, "Notas");
-            alert(`Notas salvas com sucesso para ${salvosCount} aluno(s)! A nota final foi fixada e o botão de edição foi liberado.`);
-            renderGradeList();
         }
 
         function renderizarCobrancasAlunoSelecionadoFinanceiro(studentId) {
