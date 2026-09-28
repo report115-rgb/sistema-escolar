@@ -486,7 +486,7 @@
                     </div>
                 </div>
 
-                <h3 class="font-bold text-sm text-slate-700 dark:text-slate-200 mb-2">Disciplinas Matriculadas</h3>
+                <h3 class="font-bold text-sm text-slate-700 dark:text-slate-200 mb-2">Disciplinas e Notas</h3>
                 <div id="grades-list" class="space-y-2">
                     <div class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 animate-pulse space-y-2">
                         <div class="h-3 bg-slate-200 dark:bg-slate-800 rounded w-3/4"></div>
@@ -1260,9 +1260,17 @@
 
             renderizarDocumentosObrigatorios();
 
-            // --- NOTAS SIMPLIFICADAS (APENAS NOME DA DISCIPLINA E NOTA) ---
+            // --- CARREGAMENTO DO CURSO E NOTAS SINCRONIZADAS COM O SISTEMA MATRIZ ---
             if(alunoLogado.courseId) {
                 try {
+                    // Atualiza também os dados do aluno em tempo real para refletir notas editadas na matriz
+                    db.collection("students").doc(alunoLogado.id).onSnapshot((studentDoc) => {
+                        if (studentDoc.exists) {
+                            alunoLogado = { id: studentDoc.id, ...studentDoc.data() };
+                            sessionStorage.setItem('aluno_app_logado', JSON.stringify(alunoLogado));
+                        }
+                    });
+
                     db.collection("courses").doc(alunoLogado.courseId).onSnapshot((doc) => {
                         if(doc.exists) {
                             const curso = doc.data();
@@ -1275,10 +1283,32 @@
                             gradesList.innerHTML = '';
                             if(curso.subjects && curso.subjects.length > 0) {
                                 curso.subjects.forEach(sub => {
+                                    // Recupera as notas lançadas no cadastro do aluno (por ID da disciplina ou por nome)
+                                    const notasDoAluno = (alunoLogado.grades && (alunoLogado.grades[sub.id] || alunoLogado.grades[sub.name])) 
+                                        ? (alunoLogado.grades[sub.id] || alunoLogado.grades[sub.name]) 
+                                        : null;
+
+                                    const ativ = notasDoAluno && notasDoAluno.atividade !== '' ? notasDoAluno.atividade : '-';
+                                    const aval = notasDoAluno && notasDoAluno.avaliacao !== '' ? notasDoAluno.avaliacao : '-';
+                                    const notaFinal = notasDoAluno && notasDoAluno.final !== '' ? notasDoAluno.final : null;
+
+                                    let badgeStatus = `<span class="px-2 py-0.5 bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 font-bold rounded text-[10px]">Cursando</span>`;
+                                    if (notaFinal !== null) {
+                                        const numFinal = parseFloat(notaFinal);
+                                        const corNota = numFinal >= 6.0 ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300';
+                                        badgeStatus = `<span class="px-2.5 py-1 ${corNota} font-bold rounded-lg text-xs">Final: ${notaFinal}</span>`;
+                                    }
+
                                     gradesList.innerHTML += `
-                                        <div class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex justify-between items-center text-xs">
-                                            <strong class="text-slate-800 dark:text-slate-100">${sub.name}</strong>
-                                            <span class="px-2.5 py-1 bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 font-bold rounded-lg">Cursando</span>
+                                        <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-2 text-xs">
+                                            <div class="flex justify-between items-center">
+                                                <strong class="text-slate-800 dark:text-slate-100 text-sm">${sub.name}</strong>
+                                                <div>${badgeStatus}</div>
+                                            </div>
+                                            <div class="grid grid-cols-2 gap-2 pt-1 border-t border-slate-100 dark:border-slate-800 text-[11px] text-slate-500 dark:text-slate-400">
+                                                <div>Atividade Pedagógica (0-5): <strong class="text-slate-800 dark:text-slate-200">${ativ}</strong></div>
+                                                <div class="text-right">Avaliação (0-5): <strong class="text-slate-800 dark:text-slate-200">${aval}</strong></div>
+                                            </div>
                                         </div>
                                     `;
                                 });
@@ -1393,7 +1423,6 @@
                 return;
             }
 
-            // Agrupa e ordena as datas cronologicamente por mês (estilo matriz)
             const mesesNomes = {
                 "01": "Janeiro", "02": "Fevereiro", "03": "Março", "04": "Abril",
                 "05": "Maio", "06": "Junho", "07": "Julho", "08": "Agosto",
@@ -1405,7 +1434,6 @@
             eventosFiltrados.forEach(ev => {
                 const materia = ev.subject || 'Disciplina';
                 (ev.dates || []).forEach(dataIso => {
-                    // Esperado formato YYYY-MM-DD
                     const partes = dataIso.split('-');
                     if (partes.length === 3) {
                         const [ano, mes, dia] = partes;
@@ -1421,12 +1449,10 @@
                 });
             });
 
-            // Ordena os meses cronologicamente
             const mesesOrdenados = Object.keys(datasPorMes).sort();
 
             mesesOrdenados.forEach(mesKey => {
                 const nomeMes = mesesNomes[mesKey] || `Mês ${mesKey}`;
-                // Ordena as datas em ordem cronológica dentro de cada mês
                 const listaDatas = datasPorMes[mesKey].sort((a, b) => a.dataIso.localeCompare(b.dataIso));
 
                 let htmlItensDatas = '';
