@@ -500,15 +500,14 @@
                 <h3 class="font-bold text-sm text-slate-700 dark:text-slate-200 mb-2">Controle de Frequência</h3>
                 <div id="frequency-list" class="space-y-2">
                     <div class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm text-xs text-slate-600 dark:text-slate-300">
-                        <p class="font-bold">Frequência Registrada</p>
-                        <p class="text-[11px] text-slate-500 mt-0.5">Nenhum registro de falta lançado para o seu perfil no momento.</p>
+                        <p class="font-bold">Histórico de Presença</p>
+                        <p class="text-[11px] text-slate-500 mt-0.5">Nenhum registro de frequência lançado para o seu perfil no momento.</p>
                     </div>
                 </div>
             </div>
 
             <!-- ABA 5: DOCUMENTOS OBRIGATÓRIOS -->
             <div id="tab-documentos" class="space-y-3 tab-pane" style="display: none;">
-                <!-- INSTRUÇÕES PARA POSTAGEM (SOMENTE ENQUANTO TIVER PENDÊNCIA) -->
                 <div id="docs-banner-msg">
                     <div class="bg-blue-50 dark:bg-blue-950/40 p-3 rounded-2xl border border-blue-200 dark:border-blue-800 text-xs text-blue-900 dark:text-blue-200 mb-3">
                         <p class="font-bold mb-1"><i class="fa-solid fa-circle-info mr-1"></i> Instruções para Postagem:</p>
@@ -516,7 +515,6 @@
                     </div>
                 </div>
 
-                <!-- MENSAGEM DE PARABÉNS QUANDO TODOS FOREM APROVADOS -->
                 <div id="docs-concluidos-banner" style="display: none;" class="bg-gradient-to-r from-emerald-600 to-teal-600 text-white p-4 rounded-2xl shadow-lg mb-3 space-y-1 text-center">
                     <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mx-auto text-xl mb-1">
                         <i class="fa-solid fa-check"></i>
@@ -865,6 +863,7 @@
                     status: "Ativo",
                     senhaAluno: senha,
                     documentos: {},
+                    attendance: {}, // Histórico de frequência sincronizado
                     createdAt: new Date().toISOString()
                 };
 
@@ -1260,17 +1259,20 @@
 
             renderizarDocumentosObrigatorios();
 
-            // --- CARREGAMENTO DO CURSO E NOTAS SINCRONIZADAS COM O SISTEMA MATRIZ ---
+            // --- ESCUTADOR EM TEMPO REAL PARA DADOS DO ALUNO (NOTAS E FREQUÊNCIA) ---
+            db.collection("students").doc(alunoLogado.id).onSnapshot((studentDoc) => {
+                if (studentDoc.exists) {
+                    alunoLogado = { id: studentDoc.id, ...studentDoc.data() };
+                    sessionStorage.setItem('aluno_app_logado', JSON.stringify(alunoLogado));
+
+                    // Atualiza a aba de Frequência dinamicamente
+                    renderizarFrequenciaAluno();
+                }
+            });
+
+            // --- CARREGAMENTO DO CURSO E NOTAS ---
             if(alunoLogado.courseId) {
                 try {
-                    // Atualiza também os dados do aluno em tempo real para refletir notas editadas na matriz
-                    db.collection("students").doc(alunoLogado.id).onSnapshot((studentDoc) => {
-                        if (studentDoc.exists) {
-                            alunoLogado = { id: studentDoc.id, ...studentDoc.data() };
-                            sessionStorage.setItem('aluno_app_logado', JSON.stringify(alunoLogado));
-                        }
-                    });
-
                     db.collection("courses").doc(alunoLogado.courseId).onSnapshot((doc) => {
                         if(doc.exists) {
                             const curso = doc.data();
@@ -1283,7 +1285,6 @@
                             gradesList.innerHTML = '';
                             if(curso.subjects && curso.subjects.length > 0) {
                                 curso.subjects.forEach(sub => {
-                                    // Recupera as notas lançadas no cadastro do aluno (por ID da disciplina ou por nome)
                                     const notasDoAluno = (alunoLogado.grades && (alunoLogado.grades[sub.id] || alunoLogado.grades[sub.name])) 
                                         ? (alunoLogado.grades[sub.id] || alunoLogado.grades[sub.name]) 
                                         : null;
@@ -1320,7 +1321,7 @@
                 } catch(e) { console.error("Erro ao carregar curso em tempo real:", e); }
             }
 
-            // --- CALENDÁRIO COM SELETOR DE SEMESTRE E AGRUPAMENTO MENSAL (ESTILO MATRIZ) ---
+            // --- CALENDÁRIO COM SELETOR DE SEMESTRE E AGRUPAMENTO MENSAL ---
             if(alunoLogado.classId) {
                 db.collection("classes").doc(alunoLogado.classId).get().then(doc => {
                     if(doc.exists) {
@@ -1349,7 +1350,7 @@
                             if (semestresOrdenados.includes(valorAtualSelect)) {
                                 selectSemestre.value = valorAtualSelect;
                             } else if (semestresOrdenados.length > 0) {
-                                selectSemestre.value = semestresOrdenados[0]; // Seleciona o semestre mais recente por padrão
+                                selectSemestre.value = semestresOrdenados[0];
                             }
 
                             renderizarCalendarioAluno();
@@ -1398,6 +1399,55 @@
             });
 
             await verificarTodasPendencias();
+        }
+
+        // --- FUNÇÃO DE RENDERIZAÇÃO DA FREQUÊNCIA DO ALUNO ---
+        function renderizarFrequenciaAluno() {
+            const freqList = document.getElementById('frequency-list');
+            if (!freqList) return;
+
+            freqList.innerHTML = '';
+
+            // O objeto attendance armazena as presenças no formato: aluno.attendance[dataIso] = { status: 'Presente'/'Ausente', subject: 'Nome da Matéria' }
+            const attendanceMap = alunoLogado.attendance || {};
+            const datasRegistradas = Object.keys(attendanceMap).sort().reverse(); // Mais recentes primeiro
+
+            if (datasRegistradas.length === 0) {
+                freqList.innerHTML = `
+                    <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm text-xs text-slate-600 dark:text-slate-300 text-center py-6">
+                        <i class="fa-solid fa-clipboard-user text-2xl text-slate-400 mb-2 block"></i>
+                        <p class="font-bold">Controle de Frequência</p>
+                        <p class="text-[11px] text-slate-500 mt-1">Nenhum registro de presença ou falta lançado para o seu perfil no momento.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            datasRegistradas.forEach(dataIso => {
+                const reg = attendanceMap[dataIso];
+                const status = reg.status || 'Presente';
+                const subject = reg.subject || 'Aula Regular';
+                const dataFormatada = dataIso.split('-').reverse().join('/');
+
+                const isPresente = status.toLowerCase() === 'presente';
+                const badgeClass = isPresente 
+                    ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800' 
+                    : 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300 border border-red-200 dark:border-red-800';
+                
+                const iconeStatus = isPresente ? '<i class="fa-solid fa-circle-check mr-1"></i>' : '<i class="fa-solid fa-circle-xmark mr-1"></i>';
+
+                freqList.innerHTML += `
+                    <div class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between text-xs">
+                        <div class="space-y-0.5">
+                            <span class="font-bold text-blue-600 dark:text-blue-400 block"><i class="fa-regular fa-calendar mr-1"></i> ${dataFormatada}</span>
+                            <span class="text-slate-700 dark:text-slate-200 font-semibold block">${subject}</span>
+                        </div>
+                        <span class="px-2.5 py-1 rounded-full font-bold text-[10px] ${badgeClass} shrink-0">
+                            ${iconeStatus} ${status}
+                        </span>
+                    </div>
+                `;
+            });
         }
 
         function renderizarCalendarioAluno() {
