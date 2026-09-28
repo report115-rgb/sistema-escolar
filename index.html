@@ -3838,21 +3838,19 @@
             if(subId === 'subeja-validar-docs') popularSelectAlunosEJAValidacao();
         }
 
-        function renderizarAlunosEJAAdmin() {
+        // 1. Renderização atualizada da tabela de Alunos EJA com os inputs de Data e Hora da Prova
+function renderizarAlunosEJAAdmin() {
     const tbody = document.getElementById('tabela-alunos-eja');
     if (!tbody) return;
 
-    // Atualiza o cabeçalho da tabela se ele existir no DOM
     const thead = tbody.closest('table') ? tbody.closest('table').querySelector('thead') : null;
     if (thead) {
         thead.innerHTML = `
             <tr class="border-b border-gray-200 dark:border-slate-700 text-gray-500">
                 <th class="p-3">Matrícula</th>
-                <th class="p-3">Nome Completo</th>
-                <th class="p-3">CPF</th>
-                <th class="p-3">WhatsApp</th>
+                <th class="p-3">Nome / CPF</th>
                 <th class="p-3 text-center">Apostila PDF</th>
-                <th class="p-3 text-center">Prova Online</th>
+                <th class="p-3 text-center">Agendamento & Prova Online (Individual)</th>
             </tr>
         `;
     }
@@ -3865,54 +3863,121 @@
     });
 
     if (alunosEJA.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-400">Nenhum aluno EJA matriculado.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-400">Nenhum aluno EJA matriculado.</td></tr>`;
         return;
     }
 
     alunosEJA.forEach(s => {
         if (!s.controleEJA) {
-            s.controleEJA = { apostilaAtiva: true, provaAtiva: false };
+            s.controleEJA = { apostilaAtiva: true, provaAtiva: false, dataInicio: '', dataFim: '' };
         }
 
         const apostilaLiberada = s.controleEJA.apostilaAtiva;
         const provaLiberada = s.controleEJA.provaAtiva;
+        const dataInicio = s.controleEJA.dataInicio || '';
+        const dataFim = s.controleEJA.dataFim || '';
 
         tbody.innerHTML += `
             <tr class="border-b border-gray-100 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-900/40 transition">
                 <td class="p-3 font-bold text-emerald-600 dark:text-emerald-400">${s.code || '---'}</td>
-                <td class="p-3 font-semibold text-gray-900 dark:text-white">${s.fullname}</td>
-                <td class="p-3">${s.cpf || '---'}</td>
-                <td class="p-3">${s.whatsapp || '---'}</td>
+                <td class="p-3">
+                    <strong class="text-gray-900 dark:text-white">${s.fullname}</strong><br>
+                    <span class="text-[11px] text-gray-400">CPF: ${s.cpf || '---'} &bull; Tel: ${s.whatsapp || '---'}</span>
+                </td>
                 
-                <!-- Coluna Apostila com Chave + Rótulo -->
+                <!-- Coluna Apostila -->
                 <td class="p-3 text-center">
                     <div class="inline-flex items-center gap-2 bg-gray-100 dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-gray-200 dark:border-slate-700">
                         <label class="relative inline-flex items-center cursor-pointer shrink-0">
                             <input type="checkbox" ${apostilaLiberada ? 'checked' : ''} onchange="alternarApostilaIndividualAluno('${s.id}', this.checked)" class="sr-only peer">
-                            <div class="w-9 h-5 bg-gray-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-emerald-600"></div>
+                            <div class="w-9 h-5 bg-gray-300 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
                         </label>
-                        <span class="text-[11px] font-bold ${apostilaLiberada ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-400'}">
-                            ${apostilaLiberada ? 'Liberada' : 'Bloqueada'}
-                        </span>
+                        <span class="text-[11px] font-bold ${apostilaLiberada ? 'text-emerald-600' : 'text-gray-400'}">${apostilaLiberada ? 'Liberada' : 'Bloqueada'}</span>
                     </div>
                 </td>
 
-                <!-- Coluna Prova com Chave + Rótulo -->
-                <td class="p-3 text-center">
-                    <div class="inline-flex items-center gap-2 bg-gray-100 dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-gray-200 dark:border-slate-700">
-                        <label class="relative inline-flex items-center cursor-pointer shrink-0">
-                            <input type="checkbox" ${provaLiberada ? 'checked' : ''} onchange="alternarProvaIndividualAluno('${s.id}', this.checked)" class="sr-only peer">
-                            <div class="w-9 h-5 bg-gray-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-                        </label>
-                        <span class="text-[11px] font-bold ${provaLiberada ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400'}">
-                            ${provaLiberada ? 'Liberada' : 'Bloqueada'}
-                        </span>
+                <!-- Coluna Prova Online com Agendamento de Data/Hora -->
+                <td class="p-3">
+                    <div class="bg-gray-50 dark:bg-slate-900 p-3 rounded-xl border border-gray-200 dark:border-slate-700 space-y-2 max-w-md">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-blue-600 dark:text-blue-400">Status Geral:</span>
+                            <div class="inline-flex items-center gap-2">
+                                <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                                    <input type="checkbox" id="check_prova_${s.id}" ${provaLiberada ? 'checked' : ''} onchange="alternarProvaIndividualAluno('${s.id}', this.checked)" class="sr-only peer">
+                                    <div class="w-9 h-5 bg-gray-300 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                                </label>
+                                <span id="label_status_prova_${s.id}" class="text-[11px] font-bold ${provaLiberada ? 'text-blue-600' : 'text-gray-400'}">${provaLiberada ? 'Liberada Manual' : 'Bloqueada'}</span>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2 text-[11px]">
+                            <div>
+                                <label class="block font-semibold mb-0.5">Início da Prova</label>
+                                <input type="datetime-local" id="dt_inicio_${s.id}" value="${dataInicio}" class="w-full px-2 py-1 rounded border dark:bg-slate-800 dark:text-white text-xs">
+                            </div>
+                            <div>
+                                <label class="block font-semibold mb-0.5">Término da Prova</label>
+                                <input type="datetime-local" id="dt_fim_${s.id}" value="${dataFim}" class="w-full px-2 py-1 rounded border dark:bg-slate-800 dark:text-white text-xs">
+                            </div>
+                        </div>
+
+                        <button type="button" onclick="salvarAgendamentoProvaAluno('${s.id}')" class="w-full py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow transition">
+                            <i class="fa-solid fa-clock mr-1"></i> Salvar Agendamento Automático
+                        </button>
                     </div>
                 </td>
             </tr>
         `;
     });
 }
+
+// 2. Salva o agendamento individual do aluno no Firebase
+async function salvarAgendamentoProvaAluno(studentId) {
+    const dtInicio = document.getElementById(`dt_inicio_${studentId}`).value;
+    const dtFim = document.getElementById(`dt_fim_${studentId}`).value;
+
+    if (!dtInicio || !dtFim) {
+        return alert("Preencha a data e hora de início e término.");
+    }
+
+    try {
+        const aluno = students.find(s => s.id === studentId);
+        if (!aluno.controleEJA) aluno.controleEJA = {};
+
+        aluno.controleEJA.dataInicio = dtInicio;
+        aluno.controleEJA.dataFim = dtFim;
+
+        await db.collection("students").doc(studentId).set({
+            controleEJA: aluno.controleEJA
+        }, { merge: true });
+
+        alert("Agendamento da prova salvo com sucesso! A liberação e o bloqueio ocorrerão automaticamente nos horários definidos.");
+    } catch (e) {
+        alert("Erro ao salvar agendamento: " + e.message);
+    }
+}
+
+// 3. Verificador automático executado a cada minuto para travar/destravar conforme o agendamento
+setInterval(() => {
+    const agora = new Date();
+
+    students.forEach(s => {
+        if (s.controleEJA && s.controleEJA.dataInicio && s.controleEJA.dataFim) {
+            const inicio = new Date(s.controleEJA.dataInicio);
+            const fim = new Date(s.controleEJA.dataFim);
+
+            let deveEstarLiberada = agora >= inicio && agora <= fim;
+
+            if (s.controleEJA.provaAtiva !== deveEstarLiberada) {
+                s.controleEJA.provaAtiva = deveEstarLiberada;
+                // Atualiza em background no banco de dados
+                db.collection("students").doc(s.id).set({
+                    controleEJA: s.controleEJA
+                }, { merge: true }).catch(err => console.error(err));
+            }
+        }
+    });
+}, 60000);
 
 async function alternarApostilaIndividualAluno(studentId, novoStatus) {
     try {
