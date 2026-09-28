@@ -1330,7 +1330,18 @@
             isAlunoEJA = cursoObj && (cursoObj.nivel === 'Supletivo' || cursoObj.sigla === 'EJA' || (cursoObj.name && cursoObj.name.toUpperCase().includes('EJA')));
 
             if (isAlunoEJA) {
-                const controle = alunoLogado.controleEJA || { apostilaAtiva: true, provaAtiva: true };
+                const controle = alunoLogado.controleEJA || { apostilaAtiva: true, provaAtiva: false, dataInicio: '', dataFim: '' };
+
+                // Formatação bonita para exibição no card do aluno
+                const formatarDataBr = (dataIso) => {
+                    if (!dataIso) return 'A definir';
+                    const [data, hora] = dataIso.split('T');
+                    const [ano, mes, dia] = data.split('-');
+                    return `${dia}/${mes}/${ano} às ${hora}`;
+                };
+
+                const inicioStr = formatarDataBr(controle.dataInicio);
+                const fimStr = formatarDataBr(controle.dataFim);
 
                 const bannerPadrao = document.getElementById('banner-padrao-home');
                 if (bannerPadrao) {
@@ -1345,6 +1356,14 @@
                                     <i class="fa-solid fa-book-open"></i>
                                 </div>
                             </div>
+                            
+                            <!-- BLOCO DE INFORMAÇÕES DE AGENDAMENTO DA PROVA -->
+                            <div class="bg-white/10 backdrop-blur-sm p-3 rounded-xl border border-white/20 text-xs space-y-1">
+                                <p class="font-bold text-emerald-200 flex items-center"><i class="fa-solid fa-calendar-days mr-1.5"></i> Agendamento da Prova Online:</p>
+                                <p>📅 <strong>Início:</strong> ${inicioStr}</p>
+                                <p>⏰ <strong>Término:</strong> ${fimStr}</p>
+                            </div>
+
                             <div class="grid grid-cols-2 gap-2 pt-1">
                                 ${controle.apostilaAtiva ? `
                                     <button onclick="baixarMaterialEstudoEJA()" class="py-2.5 px-3 bg-white text-emerald-800 font-bold rounded-xl text-xs shadow hover:bg-emerald-50 transition active:scale-95 flex items-center justify-center space-x-1.5">
