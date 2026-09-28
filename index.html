@@ -525,6 +525,26 @@
         <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4 pb-2 border-b border-gray-100 dark:border-slate-700"><i class="fa-solid fa-calendar-check text-blue-600 mr-2"></i> Lançamento de Frequência via Calendário</h2>
         
         <!-- NOVO BLOCO: SELEÇÃO DA DATA DE AULA VINCULADA AO CALENDÁRIO -->
+                <!-- FREQUÊNCIA -->
+        <div id="tab-attendance" class="tab-content space-y-4" style="display: none;">
+            <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-md p-6 border border-gray-200 dark:border-slate-700">
+                <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4 pb-2 border-b border-gray-100 dark:border-slate-700">
+                    <i class="fa-solid fa-calendar-check text-blue-600 mr-2"></i> Lançamento de Frequência via Calendário
+                </h2>
+                
+                <!-- SELEÇÃO DE CURSO E TURMA -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-xs font-semibold mb-1">Curso</label>
+                        <select id="attendance-course-select" onchange="filterTurmasByAttendanceCourse()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold mb-1">Turma Vinculada</label>
+                        <select id="class-select" onchange="carregarDatasCalendarioParaChamada()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></select>
+                    </div>
+                </div>
+
+                <!-- SELEÇÃO DA DATA DE AULA VINCULADA AO CALENDÁRIO & PROFESSOR -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div>
                         <label class="block text-xs font-semibold mb-1 text-blue-600 dark:text-blue-400 font-bold">Data de Aula Cadastrada (Calendário Acadêmico)</label>
@@ -534,36 +554,20 @@
                     </div>
                     <div>
                         <label class="block text-xs font-semibold mb-1">Professor Responsável</label>
-                        <select id="attendance-teacher-select" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></select>
+                        <select id="attendance-teacher-select" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 dark:text-white"></select>
                     </div>
                 </div>
+
                 <!-- OPCIONAL: Exibir o tópico/disciplina da data selecionada -->
                 <div id="attendance-info-disciplina" class="bg-blue-50 dark:bg-slate-900 p-3 rounded-xl border border-blue-200 dark:border-slate-700 text-xs mb-4 text-blue-800 dark:text-blue-300 font-semibold" style="display:none;"></div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div>
-                <label class="block text-xs font-semibold mb-1 text-blue-600 dark:text-blue-400 font-bold">Data de Aula Cadastrada (Calendário Acadêmico)</label>
-                <select id="attendance-calendar-date-select" onchange="renderAttendanceList()" class="w-full px-3 py-2 rounded-lg border border-blue-300 dark:border-slate-600 text-sm dark:bg-slate-900 dark:text-white font-semibold">
-                    <option value="">Selecione a turma primeiro...</option>
-                </select>
-            </div>
-            <div>
-                <label class="block text-xs font-semibold mb-1">Professor Responsável</label>
-                <select id="attendance-teacher-select" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 dark:text-white"></select>
+                <h3 id="attendance-section-title" class="font-bold text-sm text-gray-700 dark:text-gray-300 mb-2">Lista de Alunos da Turma</h3>
+                <ul class="attendance-list divide-y divide-gray-200 dark:divide-slate-700 mb-4" id="student-attendance-list">
+                    <li class="py-3 text-sm text-gray-400 text-center">Selecione o curso, a turma e a data agendada no calendário acima.</li>
+                </ul>
+                <button onclick="saveAttendance()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-sm shadow transition">Finalizar e Salvar Chamada</button>
             </div>
         </div>
-
-        <div id="attendance-info-disciplina" class="bg-blue-50 dark:bg-slate-900 p-3 rounded-xl border border-blue-200 dark:border-slate-700 text-xs mb-4 text-blue-800 dark:text-blue-300 font-semibold" style="display:none;">
-            <!-- Exibe o tópico/disciplina da data selecionada -->
-        </div>
-
-        <h3 id="attendance-section-title" class="font-bold text-sm text-gray-700 dark:text-gray-300 mb-2">Lista de Alunos da Turma</h3>
-        <ul class="attendance-list divide-y divide-gray-200 dark:divide-slate-700 mb-4" id="student-attendance-list">
-            <li class="py-3 text-sm text-gray-400 text-center">Selecione o curso, a turma e a data agendada no calendário acima.</li>
-        </ul>
-        <button onclick="saveAttendance()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-sm shadow transition">Finalizar e Salvar Chamada</button>
-    </div>
-</div>
 
         <!-- NOTAS -->
         <div id="tab-grades" class="tab-content space-y-4" style="display: none;">
