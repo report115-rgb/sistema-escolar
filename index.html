@@ -3809,6 +3809,8 @@ function renderFinanceStudentSelect() {
 
             const notaList = document.getElementById('portal-aluno-notas-list');
             if (notaList && curso && curso.subjects) {
+	    const eventosTurmaFreq = academicCalendars.filter(ev => ev.classId === aluno.classId);
+            renderizarFrequenciaPainelAluno(aluno, eventosTurmaFreq);
                 notaList.innerHTML = '';
                 curso.subjects.forEach(sub => {
                     const registroNota = (aluno.grades && aluno.grades[sub.id]) ? aluno.grades[sub.id] : null;
@@ -4910,6 +4912,115 @@ async function executarBaixaManualComDetalhes(financeLogId) {
         console.error("Erro ao dar baixa manual:", error);
         alert("Erro ao atualizar na nuvem: " + error.message);
     }
+}
+
+// --- FUNÇÃO DE RENDERIZAÇÃO DA FREQUÊNCIA NO MONITORAMENTO DA SECRETARIA / MASTER ---
+function renderizarFrequenciaPainelAluno(alunoSelecionado, eventosCalendarioTurma) {
+    const containerFreq = document.getElementById('subtab-portal-frequencia');
+    if (!containerFreq) return;
+
+    // Mantém o título e limpa apenas a lista antiga
+    containerFreq.innerHTML = `
+        <div class="bg-blue-50 dark:bg-slate-900 p-4 rounded-xl border border-blue-200 dark:border-slate-700 text-xs mb-4">
+            <p class="font-bold text-blue-800 dark:text-blue-300 mb-1"><i class="fa-solid fa-clipboard-user mr-1"></i> Controle de Frequência do Aluno</p>
+            <p>Histórico completo de presença e faltas cruzado com o calendário acadêmico da turma.</p>
+        </div>
+        <div id="painel-aluno-frequencia-container" class="space-y-4"></div>
+    `;
+
+    const containerMeses = document.getElementById('painel-aluno-frequencia-container');
+    const attendanceMap = alunoSelecionado.attendance || {};
+
+    if (!eventosCalendarioTurma || eventosCalendarioTurma.length === 0) {
+        containerMeses.innerHTML = `
+            <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm text-xs text-slate-600 dark:text-slate-300 text-center py-6">
+                <i class="fa-solid fa-clipboard-user text-2xl text-slate-400 mb-2 block"></i>
+                <p class="font-bold">Controle de Frequência</p>
+                <p class="text-[11px] text-slate-500 mt-1">Nenhum calendário de aulas vinculado à turma deste aluno.</p>
+            </div>
+        `;
+        return;
+    }
+
+    const mesesNomes = {
+        "01": "Janeiro", "02": "Fevereiro", "03": "Março", "04": "Abril",
+        "05": "Maio", "06": "Junho", "07": "Julho", "08": "Agosto",
+        "09": "Setembro", "10": "Outubro", "11": "Novembro", "12": "Dezembro"
+    };
+
+    const datasPorMes = {};
+
+    eventosCalendarioTurma.forEach(ev => {
+        const materia = ev.subject || 'Disciplina';
+        (ev.dates || []).forEach(dataIso => {
+            const partes = dataIso.split('-');
+            if (partes.length === 3) {
+                const [ano, mes, dia] = partes;
+                if (!datasPorMes[mes]) datasPorMes[mes] = [];
+
+                const registroAluno = attendanceMap[dataIso];
+                let status = 'Pendente';
+                if (registroAluno) {
+                    status = registroAluno.status || 'Presente';
+                }
+
+                datasPorMes[mes].push({
+                    dataIso: dataIso,
+                    dataFormatada: `${dia}/${mes}/${ano}`,
+                    materia: materia,
+                    status: status
+                });
+            }
+        });
+    });
+
+    const mesesOrdenados = Object.keys(datasPorMes).sort();
+
+    mesesOrdenados.forEach(mesKey => {
+        const nomeMes = mesesNomes[mesKey] || `Mês ${mesKey}`;
+        const listaDatas = datasPorMes[mesKey].sort((a, b) => a.dataIso.localeCompare(b.dataIso));
+
+        let htmlItensDatas = '';
+        listaDatas.forEach(item => {
+            let badgeClass = 'bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-400';
+            let iconeStatus = '<i class="fa-solid fa-clock mr-1"></i>';
+            let textoStatus = 'Aguardando';
+
+            const stLower = item.status.toLowerCase();
+            if (stLower === 'presente') {
+                badgeClass = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800';
+                iconeStatus = '<i class="fa-solid fa-circle-check mr-1"></i>';
+                textoStatus = 'Presente';
+            } else if (stLower === 'falta' || stLower === 'ausente') {
+                badgeClass = 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300 border border-red-200 dark:border-red-800';
+                iconeStatus = '<i class="fa-solid fa-circle-xmark mr-1"></i>';
+                textoStatus = 'Falta';
+            }
+
+            htmlItensDatas += `
+                <div class="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-100 dark:border-slate-800 flex justify-between items-center text-xs">
+                    <div class="space-y-0.5">
+                        <span class="font-bold text-blue-600 dark:text-blue-400 mr-2"><i class="fa-regular fa-calendar-check mr-1"></i> ${item.dataFormatada}</span>
+                        <span class="text-slate-700 dark:text-slate-200 font-semibold block">${item.materia}</span>
+                    </div>
+                    <span class="px-2.5 py-1 rounded-full font-bold text-[10px] ${badgeClass} shrink-0">
+                        ${iconeStatus} ${textoStatus}
+                    </span>
+                </div>
+            `;
+        });
+
+        containerMeses.innerHTML += `
+            <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3 mb-3">
+                <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-2">
+                    <h4 class="font-bold text-sm text-slate-800 dark:text-slate-100 uppercase tracking-wide"><i class="fa-solid fa-calendar-day mr-1.5 text-blue-600"></i> ${nomeMes}</h4>
+                </div>
+                <div class="space-y-2">
+                    ${htmlItensDatas}
+                </div>
+            </div>
+        `;
+    });
 }
 	</script>
 </body>
