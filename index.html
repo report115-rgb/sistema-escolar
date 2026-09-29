@@ -1642,42 +1642,41 @@ function obterDocumentosObrigatoriosPorAluno(aluno) {
         function fecharModalEsqueciSenhaAluno() { document.getElementById('modal-esqueci-senha-aluno').style.display = 'none'; }
 
         async function enviarSolicitudePrimeiroAcesso() {
-            const nome = document.getElementById('pa-nome').value.trim();
-            const email = document.getElementById('pa-email').value.trim();
-            const pass = document.getElementById('pa-pass').value.trim();
-            const perfil = document.getElementById('pa-perfil').value;
+    const nome = document.getElementById('pa-nome').value.trim();
+    const email = document.getElementById('pa-email').value.trim();
+    const pass = document.getElementById('pa-pass').value.trim();
+    const perfil = document.getElementById('pa-perfil').value;
 
-            if (!nome || !email || !pass) return alert("Preencha todos os campos da solicitação.");
-            
-            let solicitacoes = JSON.parse(localStorage.getItem('app_users_pending')) || [];
-            if (solicitacoes.some(s => s.email === email)) {
-                return alert("Já existe uma solicitação de primeiro acesso pendente para este e-mail.");
-            }
-
-            let dbUsers = JSON.parse(localStorage.getItem('app_users_system')) || usuariosPadrao;
-            if (dbUsers.some(u => u.email === email)) {
-                return alert("Este e-mail já está cadastrado no sistema.");
-            }
-
-            // Cria o objeto do novo colaborador
-    const novoColaborador = { 
-        id: Date.now().toString(), 
-        nome, 
-        email, 
-        pass, 
-        perfil, 
-        data: new Date().toLocaleString('pt-BR') 
-    };
-
-    solicitacoes.push(novoColaborador);
-    localStorage.setItem('app_users_pending', JSON.stringify(solicitacoes));
-
-    // >>> DISPARA O WHATSAPP AUTOMATICAMENTE PARA A CENTRAL <<<
-    notificarWhatsAppPrimeiroAcesso(novoColaborador);
-
-    alert("Solicitação enviada com sucesso! Aguarde a liberação do Master ou da direção para acessar o sistema.");
-    fecharModalPrimeiroAcesso();
+    if (!nome || !email || !pass) return alert("Preencha todos os campos da solicitação.");
+    
+    try {
+        // Verifica no Firebase se já existe solicitação para este e-mail
+        const querySnapshot = await db.collection("pendingUsers").where("email", "==", email).get();
+        if (!querySnapshot.empty) {
+            return alert("Já existe uma solicitação de primeiro acesso pendente para este e-mail.");
         }
+
+        // Cria o registro diretamente no Firestore
+        const novoColaborador = { 
+            nome, 
+            email, 
+            pass, 
+            perfil, 
+            data: new Date().toLocaleString('pt-BR'),
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        await db.collection("pendingUsers").add(novoColaborador);
+
+        // Dispara o WhatsApp automático para a central
+        notificarWhatsAppPrimeiroAcesso(novoColaborador);
+
+        alert("Solicitação enviada com sucesso! Aguarde a liberação do Master ou da direção para acessar o sistema.");
+        fecharModalPrimeiroAcesso();
+    } catch (e) {
+        alert("Erro ao enviar solicitação: " + e.message);
+    }
+}
 
 // --- FUNÇÃO DE WHATSAPP PARA O PRIMEIRO ACESSO ---
 async function notificarWhatsAppPrimeiroAcesso(novoColaborador) {
@@ -1708,69 +1707,82 @@ async function notificarWhatsAppPrimeiroAcesso(novoColaborador) {
 }
 
         function renderizarSolicitacoesPendentes() {
-            const container = document.getElementById('lista-solicitacoes-pendentes');
-            const badge = document.getElementById('badge-pendentes-cont');
-            if (!container) return;
+    const container = document.getElementById('lista-solicitacoes-pendentes');
+    const badge = document.getElementById('badge-pendentes-cont');
+    if (!container) return;
 
-            let solicitacoes = JSON.parse(localStorage.getItem('app_users_pending')) || [];
-            if (badge) {
-                if (solicitacoes.length > 0) {
-                    badge.textContent = solicitacoes.length;
-                    badge.style.display = 'inline-block';
-                } else {
-                    badge.style.display = 'none';
-                }
+    // Escuta em tempo real a coleção no Firebase
+    db.collection("pendingUsers").orderBy("createdAt", "desc").onSnapshot((snapshot) => {
+        let solicitacoes = [];
+        snapshot.forEach(doc => {
+            solicitacoes.push({ id: doc.id, ...doc.data() });
+        });
+
+        if (badge) {
+            if (solicitacoes.length > 0) {
+                badge.textContent = solicitacoes.length;
+                badge.style.display = 'inline-block';
+            } else {
+                badge.style.display = 'none';
             }
+        }
 
-            if (solicitacoes.length === 0) {
-                container.innerHTML = `<p class="text-xs text-gray-400">Nenhuma solicitação pendente no momento.</p>`;
-                return;
-            }
+        if (solicitacoes.length === 0) {
+            container.innerHTML = `<p class="text-xs text-gray-400">Nenhuma solicitação pendente no momento.</p>`;
+            return;
+        }
 
-            container.innerHTML = '';
-            solicitacoes.forEach(s => {
-                container.innerHTML += `
-                    <div class="bg-white dark:bg-slate-800 p-3 rounded-lg border border-amber-200 dark:border-slate-700 flex justify-between items-center text-xs">
-                        <div>
-                            <strong>${s.nome}</strong> (${s.email})<br>
-                            <span class="text-[10px] text-gray-500">Perfil: ${s.perfil.toUpperCase()} &bull; ${s.data}</span>
-                        </div>
-                        <div class="flex gap-1.5">
-                            <button onclick="aprovarSolicitacao('${s.id}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-semibold">Aprovar</button>
-                            <button onclick="rejeitarSolicitacao('${s.id}')" class="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white rounded font-semibold">Rejeitar</button>
-                        </div>
+        container.innerHTML = '';
+        solicitacoes.forEach(s => {
+            container.innerHTML += `
+                <div class="bg-white dark:bg-slate-800 p-3 rounded-lg border border-amber-200 dark:border-slate-700 flex justify-between items-center text-xs">
+                    <div>
+                        <strong>${s.nome}</strong> (${s.email})<br>
+                        <span class="text-[10px] text-gray-500">Perfil: ${s.perfil.toUpperCase()} &bull; ${s.data || ''}</span>
                     </div>
-                `;
-            });
-        }
+                    <div class="flex gap-1.5">
+                        <button onclick="aprovarSolicitacao('${s.id}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-semibold">Aprovar</button>
+                        <button onclick="rejeitarSolicitacao('${s.id}')" class="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white rounded font-semibold">Rejeitar</button>
+                    </div>
+                </div>
+            `;
+        });
+    });
+}
 
-        function aprovarSolicitacao(id) {
-            let solicitacoes = JSON.parse(localStorage.getItem('app_users_pending')) || [];
-            const idx = solicitacoes.findIndex(s => s.id === id);
-            if (idx === -1) return;
-            const user = solicitacoes[idx];
+        async function aprovarSolicitacao(id) {
+    try {
+        const docRef = db.collection("pendingUsers").doc(id);
+        const docSnap = await docRef.get();
+        if (!docSnap.exists) return alert("Solicitação não encontrada.");
+        
+        const user = docSnap.data();
 
-            let dbUsers = JSON.parse(localStorage.getItem('app_users_system')) || usuariosPadrao;
-            dbUsers.push({ nome: user.nome, email: user.email, pass: user.pass, perfil: user.perfil });
-            localStorage.setItem('app_users_system', JSON.stringify(dbUsers));
+        // Adiciona na lista de usuários ativos do sistema (ou você pode migrar os usuários para uma coleção 'users' no Firebase também)
+        let dbUsers = JSON.parse(localStorage.getItem('app_users_system')) || usuariosPadrao;
+        dbUsers.push({ nome: user.nome, email: user.email, pass: user.pass, perfil: user.perfil });
+        localStorage.setItem('app_users_system', JSON.stringify(dbUsers));
 
-            solicitacoes.splice(idx, 1);
-            localStorage.setItem('app_users_pending', JSON.stringify(solicitacoes));
+        // Remove da tabela de pendentes no Firebase
+        await docRef.delete();
 
-            registrarLogAuditoria(`Aprovou o primeiro acesso do colaborador ${user.nome} (${user.email})`, "Autenticação");
-            alert(`Acesso aprovado para ${user.nome}! O colaborador já pode fazer login.`);
-            renderizarSolicitacoesPendentes();
-            renderizarUsuariosSistema();
-        }
+        registrarLogAuditoria(`Aprovou o primeiro acesso do colaborador ${user.nome} (${user.email})`, "Autenticação");
+        alert(`Acesso aprovado para ${user.nome}! O colaborador já pode fazer login.`);
+        renderizarUsuariosSistema();
+    } catch (e) {
+        alert("Erro ao aprovar solicitação: " + e.message);
+    }
+}
 
-        function rejeitarSolicitacao(id) {
-            if (!confirm("Deseja rejeitar esta solicitação de acesso?")) return;
-            let solicitacoes = JSON.parse(localStorage.getItem('app_users_pending')) || [];
-            solicitacoes = solicitacoes.filter(s => s.id !== id);
-            localStorage.setItem('app_users_pending', JSON.stringify(solicitacoes));
-            alert("Solicitação rejeitada.");
-            renderizarSolicitacoesPendentes();
-        }
+       async function rejeitarSolicitacao(id) {
+    if (!confirm("Deseja rejeitar esta solicitação de acesso?")) return;
+    try {
+        await db.collection("pendingUsers").doc(id).delete();
+        alert("Solicitação rejeitada e removida.");
+    } catch (e) {
+        alert("Erro ao rejeitar: " + e.message);
+    }
+}
 
         function executarRedefinicaoSenha() {
             const emailInput = document.getElementById('forgot-user-email').value.trim();
