@@ -3687,7 +3687,16 @@ function habilitarEdicaoAlunoFrequencia(botao, alunoId) {
                 return;
             }
 
-            container.innerHTML = `<div class="font-bold text-xs text-blue-600 dark:text-blue-400 mb-2">Exibindo ${cobrancasAluno.length} cobranças / mensalidades para ${aluno ? aluno.fullname : ''}:</div>`;
+           container.innerHTML = `
+            <div class="flex justify-between items-center mb-2 flex-wrap gap-2">
+                <div class="font-bold text-xs text-blue-600 dark:text-blue-400">
+                    Exibindo ${cobrancasAluno.length} cobranças / mensalidades para ${aluno ? aluno.fullname : ''}:
+                </div>
+                <button onclick="reorganizarMensalidadesAlunoSelecionado()" class="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded text-[11px] font-semibold shadow transition flex items-center gap-1">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Reorganizar e Renumerar Sequência
+                </button>
+            </div>
+        `;
 
             cobrancasAluno.forEach((f) => {
     const jaPago = f.status && f.status.toUpperCase().includes('PAGO');
@@ -3742,6 +3751,50 @@ function habilitarEdicaoAlunoFrequencia(botao, alunoId) {
             `;
         });
     }
+
+async function reorganizarMensalidadesAlunoSelecionado() {
+    const selFin = document.getElementById('fin-student-select');
+    if (!selFin || !selFin.value) return alert("Selecione um aluno na aba Financeiro primeiro.");
+    const alunoId = selFin.value;
+
+    // Pega todas as faturas do aluno e ordena cronologicamente pela data
+    let cobrancasAluno = financeLogs.filter(f => f.studentId === alunoId);
+    cobrancasAluno.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    if (cobrancasAluno.length === 0) return alert("Nenhuma fatura encontrada para este aluno.");
+
+    if (!confirm(`Deseja reorganizar e renumerar sequencialmente as ${cobrancasAluno.length} mensalidades deste aluno (1/${cobrancasAluno.length}, 2/${cobrancasAluno.length}...) mantendo a ordem correta das datas?`)) return;
+
+    try {
+        const totalParcelas = cobrancasAluno.length;
+
+        // Atualiza cada fatura no Firebase com a numeração correta baseada na posição cronológica
+        for (let i = 0; i < totalParcelas; i++) {
+            const fatura = cobrancasAluno[i];
+            const numParcela = i + 1;
+
+            // Extrai o nome do curso da descrição atual (ex: pega tudo após o hífen)
+            let nomeCurso = "Curso";
+            if (fatura.description && fatura.description.includes("-")) {
+                nomeCurso = fatura.description.split("-")[1].trim();
+            } else if (fatura.description) {
+                nomeCurso = fatura.description;
+            }
+
+            const novaDescricao = `Mensalidade ${numParcela}/${totalParcelas} - ${nomeCurso}`;
+
+            // Atualiza no banco de dados
+            await db.collection("financeLogs").doc(fatura.id).update({
+                description: novaDescricao
+            });
+        }
+
+        alert("Mensalidades reorganizadas e renumeradas com sucesso!");
+        renderizarCobrancasAlunoSelecionadoFinanceiro(alunoId);
+    } catch (error) {
+        alert("Erro ao reorganizar faturas: " + error.message);
+    }
+}
 
         // --- FUNÇÃO TEMPORÁRIA PARA DAR BAIXA MANUAL ---
         async function darBaixaManualFinanceiro(financeLogId) {
