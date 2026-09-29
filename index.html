@@ -11,7 +11,6 @@
     
     <!-- COLE EXATAMENTE AQUI EMBAIXO: -->
     <link rel="icon" type="image/png" id="app-favicon" href="">
-
     <!-- Bibliotecas Externas para Geração de PDF, QR Code, Firebase e FullCalendar -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -1461,6 +1460,36 @@
             <ul class="data-list divide-y divide-gray-200 dark:divide-slate-700 max-h-64 overflow-y-auto" id="switch-users-list"></ul>
         </div>
     </div>
+
+<!-- MODAL DE EDIÇÃO DE FATURA / VENCIMENTO -->
+<div id="modal-editar-fatura" class="fixed inset-0 z-[3500] flex items-center justify-center bg-black/50 p-4" style="display: none;">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full p-6 border border-gray-200 dark:border-slate-700 relative shadow-2xl space-y-4">
+        <button type="button" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 text-xl font-bold" onclick="fecharModalEditarFatura()">&times;</button>
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white"><i class="fa-solid fa-pen-to-square text-blue-600 mr-2"></i> Editar Vencimento / Cobrança</h3>
+
+        <input type="hidden" id="edit-fin-id" value="">
+
+        <div>
+            <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase mb-1">Descrição</label>
+            <input type="text" id="edit-fin-desc" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 dark:text-white">
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+            <div>
+                <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase mb-1">Data de Vencimento</label>
+                <input type="date" id="edit-fin-date" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 dark:text-white">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase mb-1">Valor (R$)</label>
+                <input type="number" step="0.01" id="edit-fin-amount" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 dark:text-white">
+            </div>
+        </div>
+
+        <button type="button" onclick="salvarEdicaoFaturaFinanceira()" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow transition text-sm">
+            Salvar Alterações da Fatura
+        </button>
+    </div>
+</div>
 
     <!-- SCRIPTS DA APLICAÇÃO -->
     <script>
@@ -3660,20 +3689,25 @@ function habilitarEdicaoAlunoFrequencia(botao, alunoId) {
             container.innerHTML = `<div class="font-bold text-xs text-blue-600 dark:text-blue-400 mb-2">Exibindo ${cobrancasAluno.length} cobranças / mensalidades para ${aluno ? aluno.fullname : ''}:</div>`;
 
             cobrancasAluno.forEach((f) => {
-                const jaPago = f.status && f.status.toUpperCase().includes('PAGO');
-                
-                const corBadge = jaPago ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300';
-                const textoStatus = f.status || 'PENDENTE';
+    const jaPago = f.status && f.status.toUpperCase().includes('PAGO');
+    const corBadge = jaPago ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300';
+    const textoStatus = f.status || 'PENDENTE';
 
-                container.innerHTML += `
-                    <div class="bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700 flex flex-col gap-3 text-xs">
-                        <div class="flex justify-between items-start sm:items-center">
-                            <div>
-                                <strong class="text-gray-900 dark:text-white text-sm">${f.description}</strong><br>
-                                <span class="text-gray-500">Vencimento: <strong>${f.date}</strong> &bull; Valor: R$ ${f.amount}</span>
-                            </div>
-                            <span class="px-2 py-0.5 ${corBadge} rounded text-[10px] font-bold">${textoStatus}</span>
-                        </div>
+    container.innerHTML += `
+        <div class="bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700 flex flex-col gap-3 text-xs">
+            <div class="flex justify-between items-start sm:items-center">
+                <div>
+                    <strong class="text-gray-900 dark:text-white text-sm">${f.description}</strong><br>
+                    <span class="text-gray-500">Vencimento: <strong>${f.date}</strong> &bull; Valor: R$ ${f.amount}</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <!-- BOTÃO DE EDIÇÃO ADICIONADO AQUI -->
+                    <button onclick="abrirModalEditarFatura('${f.id}')" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[10px] font-semibold flex items-center gap-1 shadow transition">
+                        <i class="fa-solid fa-pen"></i> Editar
+                    </button>
+                    <span class="px-2 py-0.5 ${corBadge} rounded text-[10px] font-bold">${textoStatus}</span>
+                </div>
+            </div>
 
                         ${!jaPago ? `
                             <div class="bg-white dark:bg-slate-800 p-3 rounded-lg border border-gray-200 dark:border-slate-700 grid grid-cols-1 sm:grid-cols-3 gap-2 items-end">
@@ -4945,6 +4979,50 @@ async function executarBaixaManualComDetalhes(financeLogId) {
     } catch (error) {
         console.error("Erro ao dar baixa manual:", error);
         alert("Erro ao atualizar na nuvem: " + error.message);
+    }
+}
+
+function abrirModalEditarFatura(faturaId) {
+    const log = financeLogs.find(f => f.id === faturaId);
+    if (!log) return alert("Fatura não encontrada.");
+
+    document.getElementById('edit-fin-id').value = log.id;
+    document.getElementById('edit-fin-desc').value = log.description || '';
+    document.getElementById('edit-fin-date').value = log.date || '';
+    document.getElementById('edit-fin-amount').value = log.amount || 0;
+
+    document.getElementById('modal-editar-fatura').style.display = 'flex';
+}
+
+function fecharModalEditarFatura() {
+    document.getElementById('modal-editar-fatura').style.display = 'none';
+}
+
+async function salvarEdicaoFaturaFinanceira() {
+    const id = document.getElementById('edit-fin-id').value;
+    const description = document.getElementById('edit-fin-desc').value.trim();
+    const date = document.getElementById('edit-fin-date').value;
+    const amount = parseFloat(document.getElementById('edit-fin-amount').value) || 0;
+
+    if (!id || !date) return alert("Preencha a data de vencimento.");
+
+    try {
+        await db.collection("financeLogs").doc(id).update({
+            description,
+            date,
+            amount
+        });
+
+        registrarLogAuditoria(`Editou a fatura financeira ID ${id} (Vencimento: ${date})`, "Financeiro");
+        alert("Fatura atualizada com sucesso!");
+        fecharModalEditarFatura();
+
+        const selFin = document.getElementById('fin-student-select');
+        if (selFin && selFin.value) {
+            renderizarCobrancasAlunoSelecionadoFinanceiro(selFin.value);
+        }
+    } catch (error) {
+        alert("Erro ao atualizar fatura na nuvem: " + error.message);
     }
 }
 
