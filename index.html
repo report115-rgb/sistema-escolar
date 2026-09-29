@@ -4098,7 +4098,7 @@ function renderFinanceStudentSelect() {
             students.filter(s => s.classId == classId && s.status === "Ativo").forEach(s => studentSelect.insertAdjacentHTML('beforeend', `<option value="${s.id}">${s.fullname} (${s.code})</option>`));
         }
 
-        async function emitirDocumentoSelecionado() {
+       async function emitirDocumentoSelecionado() {
             const studentId = document.getElementById('report-student-select').value;
             const tipoDoc = document.getElementById('report-type-select').value;
             const aluno = students.find(s => s.id === studentId);
@@ -4108,6 +4108,153 @@ function renderFinanceStudentSelect() {
             const turma = classes.find(c => c.id == aluno.classId);
             const enderecoCompleto = `${aluno.endereco || ''}, nº ${aluno.numero || ''} - ${aluno.bairro || ''}, ${aluno.cidade || ''}/${aluno.estado || ''} - CEP: ${aluno.cep || ''}`;
 
+            // Se o documento selecionado for o HISTÓRICO ESCOLAR, usamos o novo modelo perfeito:
+            if (tipoDoc === 'historico') {
+                const instNome = globalInstitutionData.name || "SE7 Gestão Educacional";
+                const instRazao = globalInstitutionData.razao || "JS & SS Serviços Educacionais e Cia Ltda";
+                const instEnd = globalInstitutionData.end || "Tv Magalhães Barata, 692, Centro - Vigia / PA";
+                const instCnpj = globalInstitutionData.cnpj || "31.535.516/0001-64";
+                const instLogo = globalInstitutionData.logo || "";
+
+                let htmlDisciplinas = '';
+                if (curso && curso.subjects && curso.subjects.length > 0) {
+                    curso.subjects.forEach(sub => {
+                        const notaObj = (aluno.grades && aluno.grades[sub.id]) ? aluno.grades[sub.id] : null;
+                        const notaFinal = notaObj && notaObj.salvo ? notaObj.final : '---';
+                        const situacaoSub = notaObj && notaObj.salvo ? (parseFloat(notaObj.final) >= 6 ? 'Aprovado' : 'Cursando') : 'Cursando';
+                        
+                        htmlDisciplinas += `
+                            <tr>
+                                <td>${sub.name}</td>
+                                <td style="text-align: center;">${sub.hours || '---'}</td>
+                                <td style="text-align: center;">100%</td>
+                                <td style="text-align: center;">${notaFinal}</td>
+                                <td style="text-align: center;">${situacaoSub}</td>
+                            </tr>
+                        `;
+                    });
+                } else {
+                    htmlDisciplinas = `<tr><td colspan="5" style="text-align: center; color: #666;">Nenhuma disciplina cadastrada para este curso.</td></tr>`;
+                }
+
+                const listaEstagios = [
+                    "Estágio em Saúde Coletiva",
+                    "Estágio em Clínica Médica",
+                    "Estágio em Clínica Cirúrgica e CME",
+                    "Estágio em Urgência e Emergência",
+                    "Estágio em Clínica Obstétrica e Pediátrica",
+                    "Estágio em UTI"
+                ];
+                
+                let htmlEstagios = '';
+                listaEstagios.forEach(est => {
+                    htmlEstagios += `
+                        <tr>
+                            <td>${est}</td>
+                            <td style="text-align: center;">100 h</td>
+                            <td style="text-align: center;">100%</td>
+                            <td style="text-align: center;">---</td>
+                            <td style="text-align: center;">Cursando</td>
+                        </tr>
+                    `;
+                });
+
+                const janelaImpressao = window.open('', '_blank');
+                janelaImpressao.document.write(`
+                    <!DOCTYPE html>
+                    <html lang="pt-BR">
+                    <head>
+                        <meta charset="UTF-8">
+                        <title>Histórico Escolar - ${aluno.fullname}</title>
+                        <style>
+                            body { font-family: Arial, sans-serif; font-size: 11px; color: #000; margin: 0; padding: 20px; background: #fff; }
+                            .header { display: flex; align-items: center; border-bottom: 2px solid #1e40af; padding-bottom: 10px; margin-bottom: 15px; }
+                            .header img { max-height: 55px; max-width: 130px; margin-right: 15px; object-fit: contain; }
+                            .header-text { flex: 1; text-align: center; }
+                            .header-text h2 { margin: 0; font-size: 13px; color: #1e40af; text-transform: uppercase; font-weight: bold; }
+                            .header-text h3 { margin: 3px 0; font-size: 11px; font-weight: bold; color: #333; }
+                            .header-text p { margin: 2px 0; font-size: 9.5px; color: #555; }
+                            
+                            .student-info { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 6px; margin-bottom: 15px; background: #f8fafc; padding: 10px; border: 1px solid #cbd5e1; border-radius: 4px; }
+                            .student-info div { font-size: 11px; }
+                            .student-info strong { color: #1e40af; }
+
+                            table { width: 100%; border-collapse: collapse; margin-bottom: 25px; font-size: 10.5px; }
+                            th, td { border: 1px solid #94a3b8; padding: 5px 7px; text-align: left; }
+                            th { background-color: #1e40af; color: #fff; text-transform: uppercase; font-size: 9.5px; }
+                            .section-title { background-color: #e2e8f0; font-weight: bold; text-align: center; color: #1e40af; font-size: 10px; }
+                            
+                            .footer-signatures { margin-top: 50px; text-align: center; }
+                            .signature-line { width: 45%; border-top: 1px solid #000; padding-top: 5px; margin: 0 auto; font-size: 11px; }
+                            .footer-note { text-align: center; font-size: 9px; color: #666; margin-top: 25px; }
+
+                            @media print {
+                                body { padding: 0; }
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="header">
+                            ${instLogo ? `<img src="${instLogo}" alt="Logo">` : ''}
+                            <div class="header-text">
+                                <h2>${instNome}</h2>
+                                <h3>${instRazao}</h3>
+                                <p>${instEnd} | CNPJ: ${instCnpj}</p>
+                            </div>
+                        </div>
+
+                        <div class="student-info">
+                            <div><strong>Aluno(a):</strong> ${aluno.fullname}</div>
+                            <div><strong>Matrícula:</strong> ${aluno.code || '---'}</div>
+                            <div><strong>Turma:</strong> ${turma ? turma.name : '---'}</div>
+                            <div><strong>Curso:</strong> ${curso ? curso.name : '---'}</div>
+                            <div><strong>CPF:</strong> ${aluno.cpf || '---'}</div>
+                            <div><strong>RG:</strong> ${aluno.rg || '---'}</div>
+                            <div><strong>Data de Nasc.:</strong> ${aluno.dob ? aluno.dob.split('-').reverse().join('/') : '---'}</div>
+                            <div><strong>Telefone:</strong> ${aluno.whatsapp || '---'}</div>
+                            <div><strong>Situação Atual:</strong> ${aluno.status || 'Ativo'}</div>
+                        </div>
+
+                        <table>
+                            <thead>
+                                encodeURIComponent
+                                <tr>
+                                    <th>Componente Curricular</th>
+                                    <th style="width: 65px; text-align: center;">Carga H.</th>
+                                    <th style="width: 65px; text-align: center;">Freq. (%)</th>
+                                    <th style="width: 65px; text-align: center;">Nota</th>
+                                    <th style="width: 95px; text-align: center;">Situação</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td colspan="5" class="section-title">MÓDULO DE TEORIA E PRÁTICA</td></tr>
+                                ${htmlDisciplinas}
+                                <tr><td colspan="5" class="section-title">MÓDULO DE ESTÁGIO</td></tr>
+                                ${htmlEstagios}
+                            </tbody>
+                        </table>
+
+                        <div class="footer-signatures">
+                            <div class="signature-line">Coordenação / Secretaria</div>
+                        </div>
+
+                        <div class="footer-note">
+                            Documento gerado em conformidade com o histórico acadêmico do curso técnico de enfermagem.
+                        </div>
+
+                        <script>
+                            window.onload = function() {
+                                window.print();
+                            };
+                        </script>
+                    </body>
+                    </html>
+                `);
+                janelaImpressao.document.close();
+                return;
+            }
+
+            // Fallback padrão para os outros documentos (Declaração e Contrato)
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
 
@@ -4122,7 +4269,7 @@ function renderFinanceStudentSelect() {
 
             doc.setFont("helvetica", "bold");
             doc.setFontSize(14);
-            let tituloDoc = tipoDoc === 'declaracao' ? "DECLARAÇÃO DE MATRÍCULA" : (tipoDoc === 'contrato' ? "CONTRATO DE PRESTAÇÃO DE SERVIÇOS" : "HISTÓRICO ESCOLAR");
+            let tituloDoc = tipoDoc === 'declaracao' ? "DECLARAÇÃO DE MATRÍCULA" : "CONTRATO DE PRESTAÇÃO DE SERVIÇOS";
             doc.text(tituloDoc, 105, 45, { align: "center" });
 
             doc.setFont("helvetica", "normal");
@@ -4131,14 +4278,11 @@ function renderFinanceStudentSelect() {
             let textoCorpo = "";
             const hojeStr = new Date().toLocaleDateString('pt-BR');
             const nomeCursoAtualizado = curso ? curso.name : '---';
-            const cargaHorariaAtualizada = curso ? (curso.hours || '---') : '---';
 
             if(tipoDoc === 'declaracao') {
-                textoCorpo = (curso && curso.declTemplate) ? curso.declTemplate.replace(/\{\{nome\}\}/g, aluno.fullname).replace(/\{\{cpf\}\}/g, aluno.cpf).replace(/\{\{curso\}\}/g, nomeCursoAtualizado).replace(/\{\{carga_horaria\}\}/g, cargaHorariaAtualizada).replace(/\{\{endereco_completo\}\}/g, enderecoCompleto) : `Declaramos para os devidos fins que o(a) aluno(a) ${aluno.fullname}, CPF ${aluno.cpf}, residente em ${enderecoCompleto}, encontra-se regularmente matriculado(a) no curso ${nomeCursoAtualizado}.`;
-            } else if(tipoDoc === 'contrato') {
-                textoCorpo = (curso && curso.contractTemplate) ? curso.contractTemplate.replace(/\{\{nome\}\}/g, aluno.fullname).replace(/\{\{cpf\}\}/g, aluno.cpf).replace(/\{\{curso\}\}/g, nomeCursoAtualizado).replace(/\{\{carga_horaria\}\}/g, cargaHorariaAtualizada).replace(/\{\{endereco_completo\}\}/g, enderecoCompleto) : `Contrato padrão firmado com ${aluno.fullname}, CPF ${aluno.cpf}, residente na ${enderecoCompleto}, curso ${nomeCursoAtualizado}.`;
+                textoCorpo = (curso && curso.declTemplate) ? curso.declTemplate.replace(/\{\{nome\}\}/g, aluno.fullname).replace(/\{\{cpf\}\}/g, aluno.cpf).replace(/\{\{curso\}\}/g, nomeCursoAtualizado).replace(/\{\{endereco_completo\}\}/g, enderecoCompleto) : `Declaramos para os devidos fins que o(a) aluno(a) ${aluno.fullname}, CPF ${aluno.cpf}, residente em ${enderecoCompleto}, encontra-se regularmente matriculado(a) no curso ${nomeCursoAtualizado}.`;
             } else {
-                textoCorpo = (curso && curso.historyTemplate) ? curso.historyTemplate.replace(/\{\{nome\}\}/g, aluno.fullname).replace(/\{\{cpf\}\}/g, aluno.cpf).replace(/\{\{curso\}\}/g, nomeCursoAtualizado).replace(/\{\{carga_horaria\}\}/g, cargaHorariaAtualizada).replace(/\{\{endereco_completo\}\}/g, enderecoCompleto) : `Histórico Escolar do(a) aluno(a) ${aluno.fullname}, CPF ${aluno.cpf}, residente em ${enderecoCompleto}, vinculado(a) ao curso ${nomeCursoAtualizado} (Carga Horária: ${cargaHorariaAtualizada}) e turma ${turma ? turma.name : '---'}. Situação: Concluído / Regular.`;
+                textoCorpo = (curso && curso.contractTemplate) ? curso.contractTemplate.replace(/\{\{nome\}\}/g, aluno.fullname).replace(/\{\{cpf\}\}/g, aluno.cpf).replace(/\{\{curso\}\}/g, nomeCursoAtualizado).replace(/\{\{endereco_completo\}\}/g, enderecoCompleto) : `Contrato padrão firmado com ${aluno.fullname}, CPF ${aluno.cpf}, residente na ${enderecoCompleto}, curso ${nomeCursoAtualizado}.`;
             }
 
             doc.text(textoCorpo, 20, 60, { maxWidth: 170 });
