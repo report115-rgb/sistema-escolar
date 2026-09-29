@@ -3680,6 +3680,7 @@ function habilitarEdicaoAlunoFrequencia(botao, alunoId) {
             }
             const aluno = students.find(s => s.id === studentId);
             const cobrancasAluno = financeLogs.filter(f => f.studentId === studentId);
+	    cobrancasAluno.sort((a, b) => new Date(a.date) - new Date(b.date));
 
             if(cobrancasAluno.length === 0) {
                 container.innerHTML = `<p class="text-xs text-gray-400">Nenhuma cobrança encontrada para ${aluno ? aluno.fullname : 'este aluno'}.</p>`;
