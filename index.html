@@ -4217,7 +4217,6 @@ function renderFinanceStudentSelect() {
 
                         <table>
                             <thead>
-                                encodeURIComponent
                                 <tr>
                                     <th>Componente Curricular</th>
                                     <th style="width: 65px; text-align: center;">Carga H.</th>
@@ -4253,6 +4252,46 @@ function renderFinanceStudentSelect() {
                 janelaImpressao.document.close();
                 return;
             }
+
+            // Fallback padrão para os outros documentos (Declaração e Contrato)
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(16);
+            doc.text("SE7 GESTÃO EDUCACIONAL", 105, 20, { align: "center" });
+
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(10);
+            doc.text("JS & SS Serviços Educacionais e Cia Ltda", 105, 26, { align: "center" });
+            doc.line(20, 32, 190, 32);
+
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(14);
+            let tituloDoc = tipoDoc === 'declaracao' ? "DECLARAÇÃO DE MATRÍCULA" : "CONTRATO DE PRESTAÇÃO DE SERVIÇOS";
+            doc.text(tituloDoc, 105, 45, { align: "center" });
+
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(11);
+
+            let textoCorpo = "";
+            const hojeStr = new Date().toLocaleDateString('pt-BR');
+            const nomeCursoAtualizado = curso ? curso.name : '---';
+
+            if(tipoDoc === 'declaracao') {
+                textoCorpo = (curso && curso.declTemplate) ? curso.declTemplate.replace(/\{\{nome\}\}/g, aluno.fullname).replace(/\{\{cpf\}\}/g, aluno.cpf).replace(/\{\{curso\}\}/g, nomeCursoAtualizado).replace(/\{\{endereco_completo\}\}/g, enderecoCompleto) : `Declaramos para os devidos fins que o(a) aluno(a) ${aluno.fullname}, CPF ${aluno.cpf}, residente em ${enderecoCompleto}, encontra-se regularmente matriculado(a) no curso ${nomeCursoAtualizado}.`;
+            } else {
+                textoCorpo = (curso && curso.contractTemplate) ? curso.contractTemplate.replace(/\{\{nome\}\}/g, aluno.fullname).replace(/\{\{cpf\}\}/g, aluno.cpf).replace(/\{\{curso\}\}/g, nomeCursoAtualizado).replace(/\{\{endereco_completo\}\}/g, enderecoCompleto) : `Contrato padrão firmado com ${aluno.fullname}, CPF ${aluno.cpf}, residente na ${enderecoCompleto}, curso ${nomeCursoAtualizado}.`;
+            }
+
+            doc.text(textoCorpo, 20, 60, { maxWidth: 170 });
+            doc.text(`Belém - PA, ${hojeStr}`, 105, 200, { align: "center" });
+            doc.line(60, 230, 150, 230);
+            doc.text("Secretaria Acadêmica - SE7", 105, 236, { align: "center" });
+
+            doc.save(`${tipoDoc}_${aluno.code}.pdf`);
+            alert("Documento gerado e baixado em PDF com sucesso!");
+        }
 
             // Fallback padrão para os outros documentos (Declaração e Contrato)
             const { jsPDF } = window.jspdf;
