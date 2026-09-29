@@ -122,7 +122,7 @@
         </div>
 
         <div class="text-center text-[10px] text-blue-300 pb-2">
-            <div>SE7 Gestão Educacional</div>
+            <div>Sistema SE7 Gestão Acadêmica</div>
         </div>
     </div>
 
@@ -611,14 +611,27 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        const tiposDocumentosObrigatorios = [
-            { id: "rg_cnh", label: "RG ou CNH" },
-            { id: "cpf", label: "CPF" },
-            { id: "comprovante_residencia", label: "Comprovante de Residência" },
-            { id: "certidao_nasc_cas", label: "Certidão de Nascimento ou Casamento" },
-            { id: "diploma_medio", label: "Diploma do Ensino Médio" },
-            { id: "historico_medio", label: "Histórico do Ensino Médio" }
-        ];
+        // Função dinâmica para definir os documentos obrigatórios (EJA x Técnico)
+        function obterDocumentosObrigatoriosAluno() {
+            let isEJA = window.cursoAtualEJA || false;
+
+            const documentosBase = [
+                { id: "rg_cnh", label: "RG ou CNH" },
+                { id: "cpf", label: "CPF" },
+                { id: "comprovante_residencia", label: "Comprovante de Residência" },
+                { id: "certidao_nasc_cas", label: "Certidão de Nascimento ou Casamento" }
+            ];
+
+            // Se NÃO for EJA (ex: curso Técnico), adiciona os documentos do Ensino Médio
+            if (!isEJA) {
+                documentosBase.push(
+                    { id: "diploma_medio", label: "Diploma do Ensino Médio" },
+                    { id: "historico_medio", label: "Histórico do Ensino Médio" }
+                );
+            }
+
+            return documentosBase;
+        }
 
         let alunoLogado = null;
         let dadosInstituicaoGlobal = {};
@@ -872,7 +885,7 @@
                     status: "Ativo",
                     senhaAluno: senha,
                     documentos: {},
-                    attendance: {}, // Histórico de frequência sincronizado
+                    attendance: {},
                     createdAt: new Date().toISOString()
                 };
 
@@ -923,8 +936,9 @@
 
             const docs = alunoLogado.documentos || {};
             let pendenteOuReprovado = false;
+            const documentosAtuais = obterDocumentosObrigatoriosAluno();
 
-            tiposDocumentosObrigatorios.forEach(tipo => {
+            documentosAtuais.forEach(tipo => {
                 const info = docs[tipo.id];
                 if (!info || info.status !== 'Aprovado') pendenteOuReprovado = true;
             });
@@ -1096,7 +1110,8 @@
             const file = fileInput.files[0];
             if(file.type !== "application/pdf") return alert("O documento precisa estar em PDF.");
 
-            const tipoObj = tiposDocumentosObrigatorios.find(t => t.id === tipoId);
+            const documentosAtuais = obterDocumentosObrigatoriosAluno();
+            const tipoObj = documentosAtuais.find(t => t.id === tipoId);
             const reader = new FileReader();
             reader.onload = async function(e) {
                 try {
@@ -1138,8 +1153,9 @@
         function verificarStatusCompletoDocumentos() {
             const docs = alunoLogado.documentos || {};
             let todosAprovados = true;
+            const documentosAtuais = obterDocumentosObrigatoriosAluno();
 
-            tiposDocumentosObrigatorios.forEach(tipo => {
+            documentosAtuais.forEach(tipo => {
                 const info = docs[tipo.id];
                 if (!info || info.status !== 'Aprovado') {
                     todosAprovados = false;
@@ -1168,10 +1184,10 @@
                 if (bannerConcluidos) bannerConcluidos.style.display = 'none';
             }
 
-            tiposDocumentosObrigatorios.forEach(tipo => {
+            const documentosAtuais = obterDocumentosObrigatoriosAluno();
+            documentosAtuais.forEach(tipo => {
                 const docInfo = docs[tipo.id];
                 
-                // Correção aplicada: Verifica se realmente existe um arquivo enviado (com URL ou nome de arquivo válido)
                 const temArquivoEnviado = docInfo && (docInfo.driveUrl || (docInfo.fileName && docInfo.fileName !== 'Documento em PDF'));
                 const status = temArquivoEnviado ? (docInfo.status || 'Pendente') : 'Pendente';
                 
@@ -1274,15 +1290,12 @@
                 document.getElementById('header-avatar-box').innerHTML = `<img src="${alunoLogado.fotoAluno}" class="w-full h-full object-cover">`;
             }
 
-            renderizarDocumentosObrigatorios();
-
             // --- ESCUTADOR EM TEMPO REAL PARA DADOS DO ALUNO (NOTAS E FREQUÊNCIA) ---
             db.collection("students").doc(alunoLogado.id).onSnapshot((studentDoc) => {
                 if (studentDoc.exists) {
                     alunoLogado = { id: studentDoc.id, ...studentDoc.data() };
                     sessionStorage.setItem('aluno_app_logado', JSON.stringify(alunoLogado));
 
-                    // Atualiza a aba de Frequência dinamicamente
                     renderizarFrequenciaAluno();
                 }
             });
@@ -1294,6 +1307,11 @@
                         if(doc.exists) {
                             const curso = doc.data();
                             adaptarPainelPorModalidadeCurso(curso);
+                            
+                            // Atualiza os documentos obrigatórios após identificar o curso
+                            renderizarDocumentosObrigatorios();
+                            verificarTodasPendencias();
+
                             document.getElementById('header-aluno-curso').textContent = curso.name;
                             document.getElementById('info-curso-completo').textContent = curso.name;
                             document.getElementById('total-disciplinas-num').textContent = curso.subjects ? curso.subjects.length : 0;
@@ -1430,7 +1448,7 @@
             await verificarTodasPendencias();
         }
 
-        // --- FUNÇÃO DE RENDERIZAÇÃO DA FREQUÊNCIA DO ALUNO (ESTILO CALENDÁRIO POR MÊS) ---
+        // --- RENDERIZAÇÃO DA FREQUÊNCIA DO ALUNO ---
         function renderizarFrequenciaAluno() {
             const freqList = document.getElementById('frequency-list');
             const filtroSemestre = document.getElementById('select-filtro-semestre-freq').value;
@@ -1472,7 +1490,6 @@
                         const [ano, mes, dia] = partes;
                         if (!datasPorMes[mes]) datasPorMes[mes] = [];
 
-                        // Verifica o status de presença salvo no perfil do aluno para essa data específica
                         const registroAluno = attendanceMap[dataIso];
                         let status = 'Pendente';
                         if (registroAluno) {
@@ -1634,6 +1651,9 @@
 
         function adaptarPainelPorModalidadeCurso(cursoObj) {
             isAlunoEJA = cursoObj && (cursoObj.nivel === 'Supletivo' || cursoObj.sigla === 'EJA' || (cursoObj.name && cursoObj.name.toUpperCase().includes('EJA')));
+            
+            // Marca a flag global para o filtro dinâmico de documentos
+            window.cursoAtualEJA = isAlunoEJA;
 
             if (isAlunoEJA) {
                 const controle = alunoLogado.controleEJA || { apostilaAtiva: true, provaAtiva: false, dataInicio: '', dataFim: '' };
@@ -1924,4 +1944,3 @@
     </script>
 </body>
 </html>
-```[cite: 4]
