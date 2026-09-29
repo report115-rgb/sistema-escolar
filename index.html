@@ -4098,7 +4098,7 @@ function renderFinanceStudentSelect() {
             students.filter(s => s.classId == classId && s.status === "Ativo").forEach(s => studentSelect.insertAdjacentHTML('beforeend', `<option value="${s.id}">${s.fullname} (${s.code})</option>`));
         }
 
-       async function emitirDocumentoSelecionado() {
+        async function emitirDocumentoSelecionado() {
             const studentId = document.getElementById('report-student-select').value;
             const tipoDoc = document.getElementById('report-type-select').value;
             const aluno = students.find(s => s.id === studentId);
@@ -4108,7 +4108,7 @@ function renderFinanceStudentSelect() {
             const turma = classes.find(c => c.id == aluno.classId);
             const enderecoCompleto = `${aluno.endereco || ''}, nº ${aluno.numero || ''} - ${aluno.bairro || ''}, ${aluno.cidade || ''}/${aluno.estado || ''} - CEP: ${aluno.cep || ''}`;
 
-            // Se o documento selecionado for o HISTÓRICO ESCOLAR, usamos o novo modelo perfeito:
+            // Se o documento selecionado for o HISTÓRICO ESCOLAR, usamos o novo modelo:
             if (tipoDoc === 'historico') {
                 const instNome = globalInstitutionData.name || "SE7 Gestão Educacional";
                 const instRazao = globalInstitutionData.razao || "JS & SS Serviços Educacionais e Cia Ltda";
@@ -4159,6 +4159,9 @@ function renderFinanceStudentSelect() {
                     `;
                 });
 
+                // CORREÇÃO APLICADA AQUI: Uso de aspas simples para evitar quebra de sintaxe
+                const tagLogoHtml = instLogo ? '<img src="' + instLogo + '" alt="Logo">' : '';
+
                 const janelaImpressao = window.open('', '_blank');
                 janelaImpressao.document.write(`
                     <!DOCTYPE html>
@@ -4195,7 +4198,7 @@ function renderFinanceStudentSelect() {
                     </head>
                     <body>
                         <div class="header">
-                            ${instLogo ? `<img src="${instLogo}" alt="Logo">` : ''}
+                            ${tagLogoHtml}
                             <div class="header-text">
                                 <h2>${instNome}</h2>
                                 <h3>${instRazao}</h3>
@@ -4279,47 +4282,7 @@ function renderFinanceStudentSelect() {
             const nomeCursoAtualizado = curso ? curso.name : '---';
 
             if(tipoDoc === 'declaracao') {
-                textoCorpo = (curso && curso.declTemplate) ? curso.declTemplate.replace(/\{\{nome\}\}/g, aluno.fullname).replace(/\{\{cpf\}\}/g, aluno.cpf).replace(/\{\{curso\}\}/g, nomeCursoAtualizado).replace(/\{\{endereco_completo\}\}/g, enderecoCompleto) : `Declaramos para os devidos fins que o(a) aluno(a) ${aluno.fullname}, CPF ${aluno.cpf}, residente em ${enderecoCompleto}, encontra-se regularmente matriculado(a) no curso ${nomeCursoAtualizado}.`;
-            } else {
-                textoCorpo = (curso && curso.contractTemplate) ? curso.contractTemplate.replace(/\{\{nome\}\}/g, aluno.fullname).replace(/\{\{cpf\}\}/g, aluno.cpf).replace(/\{\{curso\}\}/g, nomeCursoAtualizado).replace(/\{\{endereco_completo\}\}/g, enderecoCompleto) : `Contrato padrão firmado com ${aluno.fullname}, CPF ${aluno.cpf}, residente na ${enderecoCompleto}, curso ${nomeCursoAtualizado}.`;
-            }
-
-            doc.text(textoCorpo, 20, 60, { maxWidth: 170 });
-            doc.text(`Belém - PA, ${hojeStr}`, 105, 200, { align: "center" });
-            doc.line(60, 230, 150, 230);
-            doc.text("Secretaria Acadêmica - SE7", 105, 236, { align: "center" });
-
-            doc.save(`${tipoDoc}_${aluno.code}.pdf`);
-            alert("Documento gerado e baixado em PDF com sucesso!");
-        }
-
-            // Fallback padrão para os outros documentos (Declaração e Contrato)
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(16);
-            doc.text("SE7 GESTÃO EDUCACIONAL", 105, 20, { align: "center" });
-
-            doc.setFont("helvetica", "normal");
-            doc.setFontSize(10);
-            doc.text("JS & SS Serviços Educacionais e Cia Ltda", 105, 26, { align: "center" });
-            doc.line(20, 32, 190, 32);
-
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(14);
-            let tituloDoc = tipoDoc === 'declaracao' ? "DECLARAÇÃO DE MATRÍCULA" : "CONTRATO DE PRESTAÇÃO DE SERVIÇOS";
-            doc.text(tituloDoc, 105, 45, { align: "center" });
-
-            doc.setFont("helvetica", "normal");
-            doc.setFontSize(11);
-
-            let textoCorpo = "";
-            const hojeStr = new Date().toLocaleDateString('pt-BR');
-            const nomeCursoAtualizado = curso ? curso.name : '---';
-
-            if(tipoDoc === 'declaracao') {
-                textoCorpo = (curso && curso.declTemplate) ? curso.declTemplate.replace(/\{\{nome\}\}/g, aluno.fullname).replace(/\{\{cpf\}\}/g, aluno.cpf).replace(/\{\{curso\}\}/g, nomeCursoAtualizado).replace(/\{\{endereco_completo\}\}/g, enderecoCompleto) : `Declaramos para os devidos fins que o(a) aluno(a) ${aluno.fullname}, CPF ${aluno.cpf}, residente em ${enderecoCompleto}, encontra-se regularmente matriculado(a) no curso ${nomeCursoAtualizado}.`;
+                textoCorpo = (curso && curso.declTemplate) ? curso.declTemplate.replace(/\{\{nome\}\}/g, aluno.fullname).replace(/\{\{cpf\}\>/g, aluno.cpf).replace(/\{\{curso\}\}/g, nomeCursoAtualizado).replace(/\{\{endereco_completo\}\}/g, enderecoCompleto) : `Declaramos para os devidos fins que o(a) aluno(a) ${aluno.fullname}, CPF ${aluno.cpf}, residente em ${enderecoCompleto}, encontra-se regularmente matriculado(a) no curso ${nomeCursoAtualizado}.`;
             } else {
                 textoCorpo = (curso && curso.contractTemplate) ? curso.contractTemplate.replace(/\{\{nome\}\}/g, aluno.fullname).replace(/\{\{cpf\}\}/g, aluno.cpf).replace(/\{\{curso\}\}/g, nomeCursoAtualizado).replace(/\{\{endereco_completo\}\}/g, enderecoCompleto) : `Contrato padrão firmado com ${aluno.fullname}, CPF ${aluno.cpf}, residente na ${enderecoCompleto}, curso ${nomeCursoAtualizado}.`;
             }
