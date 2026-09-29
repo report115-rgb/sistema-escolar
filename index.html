@@ -4106,35 +4106,33 @@ function renderFinanceStudentSelect() {
             
             const curso = courses.find(c => c.id == aluno.courseId);
             const turma = classes.find(c => c.id == aluno.classId);
-            const enderecoCompleto = `${aluno.endereco || ''}, nº ${aluno.numero || ''} - ${aluno.bairro || ''}, ${aluno.cidade || ''}/${aluno.estado || ''} - CEP: ${aluno.cep || ''}`;
+            const enderecoCompleto = (aluno.endereco || '') + ", nº " + (aluno.numero || '') + " - " + (aluno.bairro || '') + ", " + (aluno.cidade || '') + "/" + (aluno.estado || '') + " - CEP: " + (aluno.cep || '');
 
-            // Se o documento selecionado for o HISTÓRICO ESCOLAR, usamos o novo modelo:
+            // Se for Histórico Escolar
             if (tipoDoc === 'historico') {
-                const instNome = globalInstitutionData.name || "SE7 Gestão Educacional";
-                const instRazao = globalInstitutionData.razao || "JS & SS Serviços Educacionais e Cia Ltda";
-                const instEnd = globalInstitutionData.end || "Tv Magalhães Barata, 692, Centro - Vigia / PA";
-                const instCnpj = globalInstitutionData.cnpj || "31.535.516/0001-64";
-                const instLogo = globalInstitutionData.logo || "";
+                const instNome = (globalInstitutionData && globalInstitutionData.name) ? globalInstitutionData.name : "SE7 Gestão Educacional";
+                const instRazao = (globalInstitutionData && globalInstitutionData.razao) ? globalInstitutionData.razao : "JS & SS Serviços Educacionais e Cia Ltda";
+                const instEnd = (globalInstitutionData && globalInstitutionData.end) ? globalInstitutionData.end : "Tv Magalhães Barata, 692, Centro - Vigia / PA";
+                const instCnpj = (globalInstitutionData && globalInstitutionData.cnpj) ? globalInstitutionData.cnpj : "31.535.516/0001-64";
+                const instLogo = (globalInstitutionData && globalInstitutionData.logo) ? globalInstitutionData.logo : "";
 
-                let htmlDisciplinas = '';
+                let linhasDisciplinas = "";
                 if (curso && curso.subjects && curso.subjects.length > 0) {
-                    curso.subjects.forEach(sub => {
+                    curso.subjects.forEach(function(sub) {
                         const notaObj = (aluno.grades && aluno.grades[sub.id]) ? aluno.grades[sub.id] : null;
-                        const notaFinal = notaObj && notaObj.salvo ? notaObj.final : '---';
-                        const situacaoSub = notaObj && notaObj.salvo ? (parseFloat(notaObj.final) >= 6 ? 'Aprovado' : 'Cursando') : 'Cursando';
+                        const notaFinal = (notaObj && notaObj.salvo) ? notaObj.final : '---';
+                        const situacaoSub = (notaObj && notaObj.salvo) ? (parseFloat(notaObj.final) >= 6 ? 'Aprovado' : 'Cursando') : 'Cursando';
                         
-                        htmlDisciplinas += `
-                            <tr>
-                                <td>${sub.name}</td>
-                                <td style="text-align: center;">${sub.hours || '---'}</td>
-                                <td style="text-align: center;">100%</td>
-                                <td style="text-align: center;">${notaFinal}</td>
-                                <td style="text-align: center;">${situacaoSub}</td>
-                            </tr>
-                        `;
+                        linhasDisciplinas += '<tr>' +
+                            '<td>' + sub.name + '</td>' +
+                            '<td style="text-align: center;">' + (sub.hours || '---') + '</td>' +
+                            '<td style="text-align: center;">100%</td>' +
+                            '<td style="text-align: center;">' + notaFinal + '</td>' +
+                            '<td style="text-align: center;">' + situacaoSub + '</td>' +
+                            '</tr>';
                     });
                 } else {
-                    htmlDisciplinas = `<tr><td colspan="5" style="text-align: center; color: #666;">Nenhuma disciplina cadastrada para este curso.</td></tr>`;
+                    linhasDisciplinas = '<tr><td colspan="5" style="text-align: center; color: #666;">Nenhuma disciplina cadastrada para este curso.</td></tr>';
                 }
 
                 const listaEstagios = [
@@ -4146,134 +4144,119 @@ function renderFinanceStudentSelect() {
                     "Estágio em UTI"
                 ];
                 
-                let htmlEstagios = '';
-                listaEstagios.forEach(est => {
-                    htmlEstagios += `
-                        <tr>
-                            <td>${est}</td>
-                            <td style="text-align: center;">100 h</td>
-                            <td style="text-align: center;">100%</td>
-                            <td style="text-align: center;">---</td>
-                            <td style="text-align: center;">Cursando</td>
-                        </tr>
-                    `;
+                let linhasEstagios = "";
+                listaEstagios.forEach(function(est) {
+                    linhasEstagios += '<tr>' +
+                        '<td>' + est + '</td>' +
+                        '<td style="text-align: center;">100 h</td>' +
+                        '<td style="text-align: center;">100%</td>' +
+                        '<td style="text-align: center;">---</td>' +
+                        '<td style="text-align: center;">Cursando</td>' +
+                        '</tr>';
                 });
 
-                // CORREÇÃO APLICADA AQUI: Uso de aspas simples para evitar quebra de sintaxe
-                const tagLogoHtml = instLogo ? '<img src="' + instLogo + '" alt="Logo">' : '';
+                const htmlLogo = instLogo ? '<img src="' + instLogo + '" alt="Logo" style="max-height: 55px; max-width: 130px; margin-right: 15px; object-fit: contain;">' : '';
+                const alunoDataNasc = aluno.dob ? aluno.dob.split('-').reverse().join('/') : '---';
+                const alunoMatricula = aluno.code || '---';
+                const alunoTurma = turma ? turma.name : '---';
+                const alunoCurso = curso ? curso.name : '---';
+                const alunoCpf = aluno.cpf || '---';
+                const alunoRg = aluno.rg || '---';
+                const alunoTelefone = aluno.whatsapp || '---';
+                const alunoStatus = aluno.status || 'Ativo';
 
                 const janelaImpressao = window.open('', '_blank');
-                janelaImpressao.document.write(`
-                    <!DOCTYPE html>
-                    <html lang="pt-BR">
-                    <head>
-                        <meta charset="UTF-8">
-                        <title>Histórico Escolar - ${aluno.fullname}</title>
-                        <style>
-                            body { font-family: Arial, sans-serif; font-size: 11px; color: #000; margin: 0; padding: 20px; background: #fff; }
-                            .header { display: flex; align-items: center; border-bottom: 2px solid #1e40af; padding-bottom: 10px; margin-bottom: 15px; }
-                            .header img { max-height: 55px; max-width: 130px; margin-right: 15px; object-fit: contain; }
-                            .header-text { flex: 1; text-align: center; }
-                            .header-text h2 { margin: 0; font-size: 13px; color: #1e40af; text-transform: uppercase; font-weight: bold; }
-                            .header-text h3 { margin: 3px 0; font-size: 11px; font-weight: bold; color: #333; }
-                            .header-text p { margin: 2px 0; font-size: 9.5px; color: #555; }
-                            
-                            .student-info { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 6px; margin-bottom: 15px; background: #f8fafc; padding: 10px; border: 1px solid #cbd5e1; border-radius: 4px; }
-                            .student-info div { font-size: 11px; }
-                            .student-info strong { color: #1e40af; }
-
-                            table { width: 100%; border-collapse: collapse; margin-bottom: 25px; font-size: 10.5px; }
-                            th, td { border: 1px solid #94a3b8; padding: 5px 7px; text-align: left; }
-                            th { background-color: #1e40af; color: #fff; text-transform: uppercase; font-size: 9.5px; }
-                            .section-title { background-color: #e2e8f0; font-weight: bold; text-align: center; color: #1e40af; font-size: 10px; }
-                            
-                            .footer-signatures { margin-top: 50px; text-align: center; }
-                            .signature-line { width: 45%; border-top: 1px solid #000; padding-top: 5px; margin: 0 auto; font-size: 11px; }
-                            .footer-note { text-align: center; font-size: 9px; color: #666; margin-top: 25px; }
-
-                            @media print {
-                                body { padding: 0; }
-                            }
-                        </style>
-                    </head>
-                    <body>
-                        <div class="header">
-                            ${tagLogoHtml}
-                            <div class="header-text">
-                                <h2>${instNome}</h2>
-                                <h3>${instRazao}</h3>
-                                <p>${instEnd} | CNPJ: ${instCnpj}</p>
-                            </div>
-                        </div>
-
-                        <div class="student-info">
-                            <div><strong>Aluno(a):</strong> ${aluno.fullname}</div>
-                            <div><strong>Matrícula:</strong> ${aluno.code || '---'}</div>
-                            <div><strong>Turma:</strong> ${turma ? turma.name : '---'}</div>
-                            <div><strong>Curso:</strong> ${curso ? curso.name : '---'}</div>
-                            <div><strong>CPF:</strong> ${aluno.cpf || '---'}</div>
-                            <div><strong>RG:</strong> ${aluno.rg || '---'}</div>
-                            <div><strong>Data de Nasc.:</strong> ${aluno.dob ? aluno.dob.split('-').reverse().join('/') : '---'}</div>
-                            <div><strong>Telefone:</strong> ${aluno.whatsapp || '---'}</div>
-                            <div><strong>Situação Atual:</strong> ${aluno.status || 'Ativo'}</div>
-                        </div>
-
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Componente Curricular</th>
-                                    <th style="width: 65px; text-align: center;">Carga H.</th>
-                                    <th style="width: 65px; text-align: center;">Freq. (%)</th>
-                                    <th style="width: 65px; text-align: center;">Nota</th>
-                                    <th style="width: 95px; text-align: center;">Situação</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr><td colspan="5" class="section-title">MÓDULO DE TEORIA E PRÁTICA</td></tr>
-                                ${htmlDisciplinas}
-                                <tr><td colspan="5" class="section-title">MÓDULO DE ESTÁGIO</td></tr>
-                                ${htmlEstagios}
-                            </tbody>
-                        </table>
-
-                        <div class="footer-signatures">
-                            <div class="signature-line">Coordenação / Secretaria</div>
-                        </div>
-
-                        <div class="footer-note">
-                            Documento gerado em conformidade com o histórico acadêmico do curso técnico de enfermagem.
-                        </div>
-
-                        <script>
-                            window.onload = function() {
-                                window.print();
-                            };
-                        </script>
-                    </body>
-                    </html>
-                `);
+                janelaImpressao.document.write(
+                    '<!DOCTYPE html>' +
+                    '<html lang="pt-BR">' +
+                    '<head>' +
+                    '<meta charset="UTF-8">' +
+                    '<title>Histórico Escolar - ' + aluno.fullname + '</title>' +
+                    '<style>' +
+                    'body { font-family: Arial, sans-serif; font-size: 11px; color: #000; margin: 0; padding: 20px; background: #fff; }' +
+                    '.header { display: flex; align-items: center; border-bottom: 2px solid #1e40af; padding-bottom: 10px; margin-bottom: 15px; }' +
+                    '.header-text { flex: 1; text-align: center; }' +
+                    '.header-text h2 { margin: 0; font-size: 13px; color: #1e40af; text-transform: uppercase; font-weight: bold; }' +
+                    '.header-text h3 { margin: 3px 0; font-size: 11px; font-weight: bold; color: #333; }' +
+                    '.header-text p { margin: 2px 0; font-size: 9.5px; color: #555; }' +
+                    '.student-info { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 6px; margin-bottom: 15px; background: #f8fafc; padding: 10px; border: 1px solid #cbd5e1; border-radius: 4px; }' +
+                    '.student-info div { font-size: 11px; }' +
+                    '.student-info strong { color: #1e40af; }' +
+                    'table { width: 100%; border-collapse: collapse; margin-bottom: 25px; font-size: 10.5px; }' +
+                    'th, td { border: 1px solid #94a3b8; padding: 5px 7px; text-align: left; }' +
+                    'th { background-color: #1e40af; color: #fff; text-transform: uppercase; font-size: 9.5px; }' +
+                    '.section-title { background-color: #e2e8f0; font-weight: bold; text-align: center; color: #1e40af; font-size: 10px; }' +
+                    '.footer-signatures { margin-top: 50px; text-align: center; }' +
+                    '.signature-line { width: 45%; border-top: 1px solid #000; padding-top: 5px; margin: 0 auto; font-size: 11px; }' +
+                    '.footer-note { text-align: center; font-size: 9px; color: #666; margin-top: 25px; }' +
+                    '@media print { body { padding: 0; } }' +
+                    '</style>' +
+                    '</head>' +
+                    '<body>' +
+                    '<div class="header">' +
+                    htmlLogo +
+                    '<div class="header-text">' +
+                    '<h2>' + instNome + '</h2>' +
+                    '<h3>' + instRazao + '</h3>' +
+                    '<p>' + instEnd + ' | CNPJ: ' + instCnpj + '</p>' +
+                    '</div>' +
+                    '</div>' +
+                    '<div class="student-info">' +
+                    '<div><strong>Aluno(a):</strong> ' + aluno.fullname + '</div>' +
+                    '<div><strong>Matrícula:</strong> ' + alunoMatricula + '</div>' +
+                    '<div><strong>Turma:</strong> ' + alunoTurma + '</div>' +
+                    '<div><strong>Curso:</strong> ' + alunoCurso + '</div>' +
+                    '<div><strong>CPF:</strong> ' + alunoCpf + '</div>' +
+                    '<div><strong>RG:</strong> ' + alunoRg + '</div>' +
+                    '<div><strong>Data de Nasc.:</strong> ' + alunoDataNasc + '</div>' +
+                    '<div><strong>Telefone:</strong> ' + alunoTelefone + '</div>' +
+                    '<div><strong>Situação Atual:</strong> ' + alunoStatus + '</div>' +
+                    '</div>' +
+                    '<table>' +
+                    '<thead>' +
+                    '<tr>' +
+                    '<th>Componente Curricular</th>' +
+                    '<th style="width: 65px; text-align: center;">Carga H.</th>' +
+                    '<th style="width: 65px; text-align: center;">Freq. (%)</th>' +
+                    '<th style="width: 65px; text-align: center;">Nota</th>' +
+                    '<th style="width: 95px; text-align: center;">Situação</th>' +
+                    '</tr>' +
+                    '</thead>' +
+                    '<tbody>' +
+                    '<tr><td colspan="5" class="section-title">MÓDULO DE TEORIA E PRÁTICA</td></tr>' +
+                    linhasDisciplinas +
+                    '<tr><td colspan="5" class="section-title">MÓDULO DE ESTÁGIO</td></tr>' +
+                    linhasEstagios +
+                    '</tbody>' +
+                    '</table>' +
+                    '<div class="footer-signatures">' +
+                    '<div class="signature-line">Coordenação / Secretaria</div>' +
+                    '</div>' +
+                    '<div class="footer-note">' +
+                    'Documento gerado em conformidade com o histórico acadêmico do curso técnico de enfermagem.' +
+                    '</div>' +
+                    '<script>window.onload = function() { window.print(); };<\/script>' +
+                    '</body>' +
+                    '</html>'
+                );
                 janelaImpressao.document.close();
                 return;
             }
 
-            // Fallback padrão para os outros documentos (Declaração e Contrato)
+            // Fallback para Declaração e Contrato originais do sistema
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
-
             doc.setFont("helvetica", "bold");
             doc.setFontSize(16);
             doc.text("SE7 GESTÃO EDUCACIONAL", 105, 20, { align: "center" });
-
             doc.setFont("helvetica", "normal");
             doc.setFontSize(10);
             doc.text("JS & SS Serviços Educacionais e Cia Ltda", 105, 26, { align: "center" });
             doc.line(20, 32, 190, 32);
-
             doc.setFont("helvetica", "bold");
             doc.setFontSize(14);
             let tituloDoc = tipoDoc === 'declaracao' ? "DECLARAÇÃO DE MATRÍCULA" : "CONTRATO DE PRESTAÇÃO DE SERVIÇOS";
             doc.text(tituloDoc, 105, 45, { align: "center" });
-
             doc.setFont("helvetica", "normal");
             doc.setFontSize(11);
 
@@ -4282,17 +4265,16 @@ function renderFinanceStudentSelect() {
             const nomeCursoAtualizado = curso ? curso.name : '---';
 
             if(tipoDoc === 'declaracao') {
-                textoCorpo = (curso && curso.declTemplate) ? curso.declTemplate.replace(/\{\{nome\}\}/g, aluno.fullname).replace(/\{\{cpf\}\>/g, aluno.cpf).replace(/\{\{curso\}\}/g, nomeCursoAtualizado).replace(/\{\{endereco_completo\}\}/g, enderecoCompleto) : `Declaramos para os devidos fins que o(a) aluno(a) ${aluno.fullname}, CPF ${aluno.cpf}, residente em ${enderecoCompleto}, encontra-se regularmente matriculado(a) no curso ${nomeCursoAtualizado}.`;
+                textoCorpo = (curso && curso.declTemplate) ? curso.declTemplate.replace(/\{\{nome\}\}/g, aluno.fullname).replace(/\{\{cpf\}\}/g, aluno.cpf).replace(/\{\{curso\}\}/g, nomeCursoAtualizado).replace(/\{\{endereco_completo\}\}/g, enderecoCompleto) : "Declaramos para os devidos fins que o(a) aluno(a) " + aluno.fullname + ", CPF " + aluno.cpf + ", residente em " + enderecoCompleto + ", encontra-se regularmente matriculado(a) no curso " + nomeCursoAtualizado + ".";
             } else {
-                textoCorpo = (curso && curso.contractTemplate) ? curso.contractTemplate.replace(/\{\{nome\}\}/g, aluno.fullname).replace(/\{\{cpf\}\}/g, aluno.cpf).replace(/\{\{curso\}\}/g, nomeCursoAtualizado).replace(/\{\{endereco_completo\}\}/g, enderecoCompleto) : `Contrato padrão firmado com ${aluno.fullname}, CPF ${aluno.cpf}, residente na ${enderecoCompleto}, curso ${nomeCursoAtualizado}.`;
+                textoCorpo = (curso && curso.contractTemplate) ? curso.contractTemplate.replace(/\{\{nome\}\}/g, aluno.fullname).replace(/\{\{cpf\}\}/g, aluno.cpf).replace(/\{\{curso\}\}/g, nomeCursoAtualizado).replace(/\{\{endereco_completo\}\}/g, enderecoCompleto) : "Contrato padrão firmado com " + aluno.fullname + ", CPF " + aluno.cpf + ", residente na " + enderecoCompleto + ", curso " + nomeCursoAtualizado + ".";
             }
 
             doc.text(textoCorpo, 20, 60, { maxWidth: 170 });
-            doc.text(`Belém - PA, ${hojeStr}`, 105, 200, { align: "center" });
+            doc.text("Belém - PA, " + hojeStr, 105, 200, { align: "center" });
             doc.line(60, 230, 150, 230);
             doc.text("Secretaria Acadêmica - SE7", 105, 236, { align: "center" });
-
-            doc.save(`${tipoDoc}_${aluno.code}.pdf`);
+            doc.save(tipoDoc + "_" + aluno.code + ".pdf");
             alert("Documento gerado e baixado em PDF com sucesso!");
         }
 
