@@ -1581,47 +1581,59 @@ function obterDocumentosObrigatoriosPorAluno(aluno) {
             setInterval(atualizarHora, 1000);
         }
 
-        function registrarLogAuditoria(acao, modulo) {
-            const usuarioSessao = JSON.parse(sessionStorage.getItem('usuario_logado')) || { nome: "Sistema" };
-            const logs = JSON.parse(localStorage.getItem('se7_sistema_logs')) || [];
-            logs.unshift({ dataHora: new Date().toLocaleString('pt-BR'), usuario: usuarioSessao.nome, perfil: usuarioSessao.perfil ? usuarioSessao.perfil.toUpperCase() : 'GERAL', modulo, acao });
-            localStorage.setItem('se7_sistema_logs', JSON.stringify(logs));
-            renderizarLogsAuditoria();
+        async function registrarLogAuditoria(acao, categoria = "Geral") {
+    try {
+        // Pega o usuário logado atualmente na sessão
+        let usuarioLogado = JSON.parse(sessionStorage.getItem('usuario_logado')) || { nome: "Desconhecido", perfil: "Desconhecido" };
+        
+        const logData = {
+            usuario: usuarioLogado.nome || "Usuário",
+            perfil: usuarioLogado.perfil || "Secretaria/Comum",
+            acao: acao,
+            categoria: categoria,
+            dataHora: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        // Salva o log diretamente no Firebase para centralizar no painel de auditoria
+        await db.collection("systemLogs").add(logData);
+        
+        // Opcional: mantém uma cópia local rápida se necessário, mas o foco é a nuvem
+    } catch (e) {
+        console.error("Erro ao registrar log de auditoria no Firebase:", e);
+    }
+}
+
+        function carregarLogsAuditoriaFirebase() {
+    const tabelaLogs = document.getElementById('tabela-logs-auditoria');
+    if (!tabelaLogs) return;
+    
+    tabelaLogs.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-gray-400">Carregando auditoria da nuvem...</td></tr>`;
+
+    db.collection("systemLogs").orderBy("dataHora", "desc").limit(100).onSnapshot((snapshot) => {
+        tabelaLogs.innerHTML = "";
+        if (snapshot.empty) {
+            tabelaLogs.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-gray-400">Nenhum registro de auditoria encontrado.</td></tr>`;
+            return;
         }
 
-        function renderizarLogsAuditoria() {
-            const tbody = document.getElementById('tabela-logs-auditoria');
-            if (!tbody) return;
-            const logs = JSON.parse(localStorage.getItem('se7_sistema_logs')) || [];
-            tbody.innerHTML = logs.length === 0 ? `<tr><td colspan="4" class="p-3 text-center text-gray-400">Nenhum log encontrado.</td></tr>` : '';
-            logs.forEach(l => {
-                tbody.innerHTML += `<tr class="border-b border-gray-100 dark:border-slate-700"><td class="p-3">${l.dataHora}</td><td class="p-3 font-semibold">${l.usuario} (${l.perfil})</td><td class="p-3"><span class="px-2 py-0.5 bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 rounded text-[10px] font-bold">${l.modulo}</span></td><td class="p-3">${l.acao}</td></tr>`;
-            });
-        }
-
-        function limparLogsAuditoria() {
-            if (confirm("Deseja limpar os logs?")) { localStorage.removeItem('se7_sistema_logs'); renderizarLogsAuditoria(); }
-        }
-
-        function mudarTipoLogin(tipo) {
-            const btnAdmin = document.getElementById('btn-tab-admin');
-            const btnAluno = document.getElementById('btn-tab-aluno');
-            const formAdmin = document.getElementById('form-login-admin');
-            const formAluno = document.getElementById('form-login-aluno');
-            const subTitle = document.getElementById('login-subtitle-text');
-
-            if (tipo === 'admin') {
-                btnAdmin.className = "flex-1 py-2 text-xs font-semibold rounded-md transition bg-blue-600 text-white shadow";
-                btnAluno.className = "flex-1 py-2 text-xs font-semibold rounded-md transition text-gray-600 dark:text-gray-300";
-                formAdmin.style.display = 'block'; formAluno.style.display = 'none';
-                subTitle.textContent = "Entre com suas credenciais para continuar";
-            } else {
-                btnAluno.className = "flex-1 py-2 text-xs font-semibold rounded-md transition bg-emerald-600 text-white shadow";
-                btnAdmin.className = "flex-1 py-2 text-xs font-semibold rounded-md transition text-gray-600 dark:text-gray-300";
-                formAluno.style.display = 'block'; formAdmin.style.display = 'none';
-                subTitle.textContent = "Acesse suas notas, presenças e faturas";
+        snapshot.forEach(doc => {
+            const log = doc.data();
+            let dataFormatada = "Data indisponível";
+            if (log.dataHora && log.dataHora.toDate) {
+                dataFormatada = log.dataHora.toDate().toLocaleString('pt-BR');
             }
-        }
+
+            tabelaLogs.innerHTML += `
+                <tr class="border-b border-gray-100 dark:border-slate-700">
+                    <td class="p-3">${dataFormatada}</td>
+                    <td class="p-3 font-semibold"><b>${log.usuario || 'Usuário'}</b> (${log.perfil || '---'})</td>
+                    <td class="p-3"><span class="px-2 py-0.5 bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 rounded text-[10px] font-bold">${log.categoria || 'Geral'}</span></td>
+                    <td class="p-3">${log.acao}</td>
+                </tr>
+            `;
+        });
+    });
+}
 
         async function fazerLogin() {
     const userInput = document.getElementById('login-user').value.trim();
@@ -1925,7 +1937,7 @@ async function notificarWhatsAppPrimeiroAcesso(novoColaborador) {
             } else if (loginModal) {
                 loginModal.style.display = 'flex';
             }
-            renderizarLogsAuditoria();
+            carregarLogsAuditoriaFirebase();
             renderizarSolicitacoesPendentes();
             renderizarCamposDatasCalendario();
             calcularTotalCurso();
