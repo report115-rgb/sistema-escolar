@@ -807,7 +807,7 @@
                     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-templates')">Edição de Documentos</button>
                     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-institution')">Instituição</button>
 		    <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-asaas')">Asaas</button>
-		    <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-audit')">Auditoria</button>
+		    <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-audit'); carregarLogsAuditoriaFirebase();">Auditoria</button>
 </div>
 
                 <!-- ABA PRINCIPAL CURSOS (DIVIDIDA EM DUAS SUBABAS) -->
@@ -1603,19 +1603,27 @@ function obterDocumentosObrigatoriosPorAluno(aluno) {
     }
 }
 
-        function carregarLogsAuditoriaFirebase() {
+        let unsubscribeLogs = null; // Variável global para controlar o listener e evitar vazamento de memória
+
+function carregarLogsAuditoriaFirebase() {
     const tabelaLogs = document.getElementById('tabela-logs-auditoria');
     if (!tabelaLogs) return;
     
     tabelaLogs.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-gray-400">Carregando auditoria da nuvem...</td></tr>`;
 
-    db.collection("systemLogs").orderBy("dataHora", "desc").limit(100).onSnapshot((snapshot) => {
+    // Se já houver um listener ativo, cancela ele antes de criar um novo para evitar congelamento
+    if (unsubscribeLogs) {
+        unsubscribeLogs();
+    }
+
+    unsubscribeLogs = db.collection("systemLogs").orderBy("dataHora", "desc").limit(50).onSnapshot((snapshot) => {
         tabelaLogs.innerHTML = "";
         if (snapshot.empty) {
             tabelaLogs.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-gray-400">Nenhum registro de auditoria encontrado.</td></tr>`;
             return;
         }
 
+        let htmlRows = "";
         snapshot.forEach(doc => {
             const log = doc.data();
             let dataFormatada = "Data indisponível";
@@ -1623,7 +1631,7 @@ function obterDocumentosObrigatoriosPorAluno(aluno) {
                 dataFormatada = log.dataHora.toDate().toLocaleString('pt-BR');
             }
 
-            tabelaLogs.innerHTML += `
+            htmlRows += `
                 <tr class="border-b border-gray-100 dark:border-slate-700">
                     <td class="p-3">${dataFormatada}</td>
                     <td class="p-3 font-semibold"><b>${log.usuario || 'Usuário'}</b> (${log.perfil || '---'})</td>
@@ -1632,6 +1640,10 @@ function obterDocumentosObrigatoriosPorAluno(aluno) {
                 </tr>
             `;
         });
+        tabelaLogs.innerHTML = htmlRows;
+    }, (error) => {
+        console.error("Erro ao escutar logs de auditoria:", error);
+        tabelaLogs.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-red-400">Erro ao carregar logs da nuvem.</td></tr>`;
     });
 }
 
