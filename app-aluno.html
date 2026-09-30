@@ -4257,6 +4257,7 @@ function renderizarCobrancasAlunoSelecionadoFinanceiro(studentId) {
     if (!confirm("ATENÇÃO: Deseja realmente estornar a baixa desta mensalidade e retorná-la para o status PENDENTE?")) return;
 
     try {
+        // 1. Atualiza no banco de dados (Firebase) limpando o pagamento e voltando para pendente
         await db.collection("financeLogs").doc(financeLogId).update({
             status: "PENDENTE (Desc. Pontualidade disponível até o vencimento)",
             dataPagamento: null,
@@ -4266,7 +4267,7 @@ function renderizarCobrancasAlunoSelecionadoFinanceiro(studentId) {
         registrarLogAuditoria(`Estornou a baixa do registro financeiro ID ${financeLogId}`, "Financeiro");
         alert("Baixa estornada com sucesso! A cobrança retornou para o status pendente.");
         
-        // Atualiza a tela de financeiro instantaneamente
+        // 2. Atualiza a tela de financeiro instantaneamente para sumir o botão de estorno e mostrar as opções de baixa
         const selFin = document.getElementById('fin-student-select');
         if (selFin && selFin.value) {
             renderizarCobrancasAlunoSelecionadoFinanceiro(selFin.value);
