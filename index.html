@@ -2171,13 +2171,15 @@ async function rejeitarSolicitacaoFirebase(id) {
         }
 
         function aplicarPermissoesPorPerfil(perfil) {
-    	const btnAccessControl = document.getElementById('btn-access-control');
-    	const btnSwitchUser = document.getElementById('btn-switch-user');
-    	const navBtnSettings = document.getElementById('nav-btn-settings');
-    	const navBtnPortalAluno = document.getElementById('nav-btn-portal-aluno');
-    	const adminSelectorPortalBox = document.getElementById('admin-selector-portal-box');
+    const btnAccessControl = document.getElementById('btn-access-control');
+    const btnSwitchUser = document.getElementById('btn-switch-user');
+    const navBtnSettings = document.getElementById('nav-btn-settings');
+    const navBtnPortalAluno = document.getElementById('nav-btn-portal-aluno');
+    const adminSelectorPortalBox = document.getElementById('admin-selector-portal-box');
+    const floatingTrigger = document.getElementById('floating-calendar-trigger');
 
-    	if (perfil === 'financeiro') {
+    // 1. Regras específicas para o perfil Financeiro
+    if (perfil === 'financeiro') {
         document.getElementById('main-tabs-nav').style.display = 'flex';
 
         const btnNotas = document.querySelector("button[onclick*='tab-grades']");
@@ -2205,22 +2207,23 @@ async function rejeitarSolicitacaoFirebase(id) {
 
         openTab({ currentTarget: document.querySelector("button[onclick*='tab-gestion-students']") }, 'tab-gestion-students');
     }
-    // 👇 ADICIONE ESTA LINHA ABAIXO PARA CONTROLAR O BOTÃO FLUTUANTE 👇
-    const floatingTrigger = document.getElementById('floating-calendar-trigger');
 
+    // 2. Controle dos botões de topo baseados no perfil Master
     if (btnAccessControl) btnAccessControl.style.display = (perfil === 'master') ? 'inline-flex' : 'none';
     if (btnSwitchUser) btnSwitchUser.style.display = (perfil === 'master') ? 'inline-flex' : 'none';
     if (navBtnSettings) navBtnSettings.style.display = (perfil === 'master') ? 'inline-block' : 'none';
 
-    // Se o perfil for master, o botão flutuante fica oculto (display: none). Caso contrário, aparece!
+    // 3. Controle do botão flutuante do calendário
     if (floatingTrigger) {
         floatingTrigger.style.display = (perfil === 'master') ? 'none' : 'block';
     }
 
+    // 4. Regras específicas para o perfil Aluno
     if (perfil === 'aluno') {
         document.getElementById('main-tabs-nav').style.display = 'none';
         if (navBtnPortalAluno) navBtnPortalAluno.style.display = 'inline-block';
         if (adminSelectorPortalBox) adminSelectorPortalBox.style.display = 'none';
+        
         const sessao = JSON.parse(sessionStorage.getItem('usuario_logado'));
         if (sessao && sessao.alunoId) {
             const alunoObj = students.find(s => s.id === sessao.alunoId);
@@ -2232,7 +2235,7 @@ async function rejeitarSolicitacaoFirebase(id) {
         popularSelectAlunosValidacaoGestao();
         renderizarSolicitacoesPendentes();
     }
-}
+} // <--- Única chave de fechamento da função no lugar correto
 
         window.addEventListener('DOMContentLoaded', () => {
             iniciarRelogioAoVivo();
