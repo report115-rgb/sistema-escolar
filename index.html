@@ -4207,9 +4207,19 @@ function renderFinanceStudentSelect() {
             const cargaHorariaAtualizada = curso ? (curso.hours || '---') : '---';
 
             if(tipoDoc === 'declaracao') {
-                // ... código da declaração ...
+                textoCorpo = (curso && curso.declTemplate) ? curso.declTemplate.replace(/\{\{nome\}\}/g, aluno.fullname).replace(/\{\{cpf\}\}/g, aluno.cpf).replace(/\{\{curso\}\}/g, nomeCursoAtualizado).replace(/\{\{carga_horaria\}\}/g, cargaHorariaAtualizada).replace(/\{\{endereco_completo\}\}/g, enderecoCompleto) : `Declaramos...`;
+                doc.text(textoCorpo, 20, 60, { maxWidth: 170 });
+                doc.text(`Belém - PA, ${hojeStr}`, 105, 200, { align: "center" });
+                doc.line(60, 230, 150, 230);
+                doc.text("Secretaria Acadêmica - SE7", 105, 236, { align: "center" });
+                doc.save(`${tipoDoc}_${aluno.code}.pdf`);
             } else if(tipoDoc === 'contrato') {
-                // ... código do contrato ...
+                textoCorpo = (curso && curso.contractTemplate) ? curso.contractTemplate.replace(/\{\{nome\}\}/g, aluno.fullname).replace(/\{\{cpf\}\}/g, aluno.cpf).replace(/\{\{curso\}\}/g, nomeCursoAtualizado).replace(/\{\{carga_horaria\}\}/g, cargaHorariaAtualizada).replace(/\{\{endereco_completo\}\}/g, enderecoCompleto) : `Contrato...`;
+                doc.text(textoCorpo, 20, 60, { maxWidth: 170 });
+                doc.text(`Belém - PA, ${hojeStr}`, 105, 200, { align: "center" });
+                doc.line(60, 230, 150, 230);
+                doc.text("Secretaria Acadêmica - SE7", 105, 236, { align: "center" });
+                doc.save(`${tipoDoc}_${aluno.code}.pdf`);
             } else {
                 // CHAMA O HISTÓRICO DINÂMICO EM HTML
                 gerarHistoricoEscolarDinamico(studentId);
