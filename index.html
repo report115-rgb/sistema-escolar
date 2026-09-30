@@ -3655,9 +3655,9 @@ function carregarDatasCalendarioParaFrequencia() {
     const inputBusca = document.getElementById('input-busca-aluno-gestao');
     if(!tbody) return;
 
-const sessaoAtual = JSON.parse(sessionStorage.getItem('usuario_logado')) || {};
+    const sessaoAtual = JSON.parse(sessionStorage.getItem('usuario_logado')) || {};
     const isFinanceiro = sessaoAtual.perfil === 'financeiro';
-    tbody.innerHTML = '';
+    
     const ativos = students
         .filter(s => s.status !== "Cancelado")
         .sort((a, b) => a.fullname.localeCompare(b.fullname));
@@ -3688,10 +3688,17 @@ const sessaoAtual = JSON.parse(sessionStorage.getItem('usuario_logado')) || {};
         return;
     }
 
+    // Acumula o HTML para atualizar o DOM de uma só vez (melhor performance)
+    let htmlLinhas = '';
+
     alunosFiltrados.forEach(s => {
         const curso = courses.find(c => c.id == s.courseId);
         const turma = classes.find(c => c.id == s.classId);
-        tbody.innerHTML += `
+        
+        // Correção: Uso de aspas simples por dentro ou concatenação limpa para evitar conflito de crases
+        const botaoDeletar = isFinanceiro ? '' : `<button onclick="deletarInformacoesTotaisAluno('${s.id}')" class="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs shadow" title="Deletar permanentemente todas as informações"><i class="fa-solid fa-trash-can mr-1"></i> Deletar Total</button>`;
+
+        htmlLinhas += `
             <tr class="border-b border-gray-100 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-900/40">
                 <td class="p-3 font-bold text-blue-600 dark:text-blue-400">${s.code || '---'}</td>
                 <td class="p-3 font-semibold">${s.fullname}</td>
@@ -3701,11 +3708,13 @@ const sessaoAtual = JSON.parse(sessionStorage.getItem('usuario_logado')) || {};
                 <td class="p-3"><span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 rounded text-[10px] font-bold">${s.status || 'Ativo'}</span></td>
                 <td class="p-3 text-right space-x-1">
                     <button onclick="editarAluno('${s.id}')" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs shadow"><i class="fa-solid fa-pen-to-square mr-1"></i> Editar</button>
-                    ${isFinanceiro ? '' : `<button onclick="deletarInformacoesTotaisAluno('${s.id}')" class="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs shadow" title="Deletar permanentemente todas as informações"><i class="fa-solid fa-trash-can mr-1"></i> Deletar Total</button>`}
+                    ${botaoDeletar}
                 </td>
             </tr>
         `;
     });
+
+    tbody.innerHTML = htmlLinhas;
 }
 
         function popularSelectAlunosValidacaoGestao() {
