@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SE7 Mobile - Setor Financeiro</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Firebase App (Compat) e Firestore -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: { primary: '#1e40af', secondary: '#3b82f6', accent: '#f59e0b' }
+                }
+            }
+        }
+    </script>
+    <style>
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
+    </style>
+</head>
+<body class="bg-slate-100 dark:bg-slate-900 text-gray-800 dark:text-gray-100 font-sans antialiased min-h-screen flex flex-col pb-20">
+
+    <!-- TELA DE LOGIN DO APP -->
+    <div id="login-modal" class="fixed inset-0 z-[3000] flex items-center justify-center bg-gradient-to-br from-blue-900 via-indigo-900 to-slate-900 p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl max-w-sm w-full p-6 border border-white/20">
+            <div class="text-center mb-6">
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-600 text-white rounded-2xl text-3xl font-bold mb-3 shadow-lg shadow-blue-500/30">
+                    <i class="fa-solid fa-wallet"></i>
+                </div>
+                <h2 class="text-xl font-bold text-gray-900 dark:text-white">SE7 Financeiro</h2>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Acesso exclusivo para colaboradores</p>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase mb-1">E-mail</label>
+                    <input type="text" id="login-user" value="financeiro@admin.com" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-blue-600 focus:outline-none text-sm dark:bg-slate-900 dark:text-white">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase mb-1">Senha</label>
+                    <input type="password" id="login-pass" value="123456" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-blue-600 focus:outline-none text-sm dark:bg-slate-900 dark:text-white">
+                </div>
+                <button type="button" onclick="fazerLogin()" class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-lg shadow-blue-600/30 transition duration-200 text-sm">
+                    Entrar no App
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CABEÇALHO MOBILE -->
+    <header class="bg-blue-900 dark:bg-slate-800 text-white px-4 py-3.5 flex justify-between items-center shadow-md sticky top-0 z-40">
+        <div class="flex items-center space-x-2.5">
+            <div class="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center font-bold text-base shadow">
+                <i class="fa-solid fa-wallet"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-sm leading-tight">SE7 Financeiro Mobile</h1>
+                <p class="text-[10px] text-blue-200" id="header-user-display">Conectado</p>
+            </div>
+        </div>
+        <button type="button" onclick="fazerLogout()" class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-xs font-semibold rounded-lg shadow">
+            <i class="fa-solid fa-power-off"></i>
+        </button>
+    </header>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main class="max-w-md w-full mx-auto p-4 flex-1 space-y-4">
+        
+        <!-- ABA 1: GESTÃO DE ALUNOS -->
+        <div id="tab-alunos" class="space-y-3">
+            <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 space-y-3">
+                <h2 class="font-bold text-sm text-gray-900 dark:text-white flex items-center gap-2">
+                    <i class="fa-solid fa-users text-blue-600"></i> Consulta de Alunos
+                </h2>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
+                        <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                    </span>
+                    <input type="text" id="input-busca-aluno" oninput="renderizarListaAlunos()" placeholder="Pesquisar por nome ou CPF..." class="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-300 dark:border-slate-600 text-xs dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-blue-600 focus:outline-none">
+                </div>
+            </div>
+
+            <div id="lista-alunos-container" class="space-y-2">
+                <!-- Os alunos serão carregados aqui dinamicamente -->
+            </div>
+        </div>
+
+        <!-- ABA 2: FINANCEIRO (OCULTA POR PADRÃO ATÉ SELECIONAR UM ALUNO) -->
+        <div id="tab-financeiro" class="space-y-3" style="display: none;">
+            <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 space-y-2">
+                <div class="flex justify-between items-center">
+                    <h2 class="font-bold text-sm text-blue-600 dark:text-blue-400" id="fin-aluno-nome">Nome do Aluno</h2>
+                    <button onclick="voltarParaListaAlunos()" class="px-2.5 py-1 bg-gray-200 dark:bg-slate-700 text-xs rounded-lg font-semibold">
+                        <i class="fa-solid fa-arrow-left mr-1"></i> Voltar
+                    </button>
+                </div>
+                <p class="text-[11px] text-gray-500" id="fin-aluno-detalhes">Matrícula: ---</p>
+            </div>
+
+            <div id="lista-cobrancas-container" class="space-y-2">
+                <!-- Cobranças do aluno selecionado -->
+            </div>
+        </div>
+
+    </main>
+
+    <!-- BARRA DE NAVEGAÇÃO INFERIOR MOBILE -->
+    <nav class="fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-slate-800 border-t border-gray-200 dark:border-slate-700 py-2 px-6 flex justify-around items-center shadow-lg">
+        <button onclick="mudarAbaApp('alunos')" id="nav-btn-alunos" class="flex flex-col items-center text-blue-600 dark:text-blue-400 text-xs font-bold gap-1">
+            <i class="fa-solid fa-users text-lg"></i>
+            <span>Alunos</span>
+        </button>
+        <button onclick="mudarAbaApp('financeiro')" id="nav-btn-fin" class="flex flex-col items-center text-gray-400 text-xs font-semibold gap-1">
+            <i class="fa-solid fa-wallet text-lg"></i>
+            <span>Faturas</span>
+        </button>
+    </nav>
+
+    <!-- SCRIPTS DE INTEGRAÇÃO COM FIREBASE -->
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBeJ-fqzwiQt0PZEKQ6e8zAPSuh7WRuaHo",
+            authDomain: "sistema-escolar-nuvem.firebaseapp.com",
+            projectId: "sistema-escolar-nuvem",
+            storageBucket: "sistema-escolar-nuvem.firebasestorage.app",
+            messagingSenderId: "343442411308",
+            appId: "1:343442411308:web:e4500b862fa29b6b326689"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        let students = [];
+        let financeLogs = [];
+        let alunoSelecionadoId = null;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const sessao = JSON.parse(sessionStorage.getItem('app_financeiro_user'));
+            if (sessao) {
+                document.getElementById('login-modal').style.display = 'none';
+                document.getElementById('header-user-display').textContent = sessao.nome;
+                carregarDadosNuvem();
+            }
+        });
+
+        function fazerLogin() {
+            const user = document.getElementById('login-user').value.trim().toLowerCase();
+            const pass = document.getElementById('login-pass').value.trim();
+
+            if (user === 'financeiro@admin.com' && pass === '123456') {
+                const userData = { nome: "Funcionário Financeiro", perfil: "financeiro" };
+                sessionStorage.setItem('app_financeiro_user', JSON.stringify(userData));
+                document.getElementById('login-modal').style.display = 'none';
+                document.getElementById('header-user-display').textContent = userData.nome;
+                carregarDadosNuvem();
+            } else {
+                alert("E-mail ou senha inválidos.");
+            }
+        }
+
+        function fazerLogout() {
+            sessionStorage.removeItem('app_financeiro_user');
+            location.reload();
+        }
+
+        function carregarDadosNuvem() {
+            db.collection("students").onSnapshot(snapshot => {
+                students = [];
+                snapshot.forEach(doc => students.push({ id: doc.id, ...doc.data() }));
+                students.sort((a, b) => a.fullname.localeCompare(b.fullname));
+                renderizarListaAlunos();
+            });
+
+            db.collection("financeLogs").onSnapshot(snapshot => {
+                financeLogs = [];
+                snapshot.forEach(doc => financeLogs.push({ id: doc.id, ...doc.data() }));
+                if (alunoSelecionadoId) selecionarAlunoFinanceiro(alunoSelecionadoId);
+            });
+        }
+
+        function renderizarListaAlunos() {
+            const container = document.getElementById('lista-alunos-container');
+            const termo = document.getElementById('input-busca-aluno').value.toLowerCase().trim();
+            if (!container) return;
+
+            const filtrados = students.filter(s => 
+                s.fullname.toLowerCase().includes(termo) || (s.cpf && s.cpf.includes(termo))
+            );
+
+            if (filtrados.length === 0) {
+                container.innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-2xl text-center text-xs text-gray-400">Nenhum aluno encontrado.</div>`;
+                return;
+            }
+
+            container.innerHTML = '';
+            filtrados.forEach(s => {
+                container.innerHTML += `
+                    <div onclick="selecionarAlunoFinanceiro('${s.id}')" class="bg-white dark:bg-slate-800 p-3.5 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 flex justify-between items-center active:scale-98 transition cursor-pointer">
+                        <div>
+                            <strong class="text-xs font-bold text-gray-900 dark:text-white">${s.fullname}</strong>
+                            <p class="text-[10px] text-gray-400">Matrícula: ${s.code || 'S/N'} &bull; CPF: ${s.cpf || '---'}</p>
+                        </div>
+                        <div class="w-8 h-8 bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center text-xs">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function selecionarAlunoFinanceiro(id) {
+            alunoSelecionadoId = id;
+            const aluno = students.find(s => s.id === id);
+            if (!aluno) return;
+
+            document.getElementById('fin-aluno-nome').textContent = aluno.fullname;
+            document.getElementById('fin-aluno-detalhes').textContent = `Matrícula: ${aluno.code || 'S/N'} | CPF: ${aluno.cpf || '---'}`;
+
+            const container = document.getElementById('lista-cobrancas-container');
+            const cobrancas = financeLogs.filter(f => f.studentId === id);
+
+            if (cobrancas.length === 0) {
+                container.innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-2xl text-center text-xs text-gray-400">Nenhuma fatura encontrada para este aluno.</div>`;
+            } else {
+                container.innerHTML = '';
+                cobrancas.forEach(f => {
+                    const jaPago = f.status && f.status.toUpperCase().includes('PAGO');
+                    const corBadge = jaPago ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300';
+                    
+                    container.innerHTML += `
+                        <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 space-y-2 text-xs">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <strong class="text-gray-900 dark:text-white text-xs">${f.description}</strong><br>
+                                    <span class="text-gray-400 text-[10px]">Vencimento: ${f.date} &bull; Valor: <strong>R$ ${f.amount}</strong></span>
+                                </div>
+                                <span class="px-2 py-0.5 ${corBadge} rounded-full text-[10px] font-bold">${f.status || 'PENDENTE'}</span>
+                            </div>
+                            ${!jaPago ? `
+                                <button onclick="darBaixaApp('${f.id}')" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold text-xs shadow transition">
+                                    <i class="fa-solid fa-check mr-1"></i> Dar Baixa (Pix / Dinheiro)
+                                </button>
+                            ` : `
+                                <div class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold pt-1">
+                                    <i class="fa-solid fa-circle-check mr-1"></i> Pago em ${f.dataPagamento \vert{}\vert{} '---'} (${f.formaPagamento || 'Manual'})
+                                </div>
+                            `}
+                        </div>
+                    `;
+                });
+            }
+
+            mudarAbaApp('financeiro');
+        }
+
+        async function darBaixaApp(financeLogId) {
+            if (!confirm("Confirmar o recebimento e dar baixa nesta mensalidade?")) return;
+            try {
+                await db.collection("financeLogs").doc(financeLogId).update({
+                    status: "PAGO (Baixa App Mobile)",
+                    dataPagamento: new Date().toLocaleDateString('pt-BR'),
+                    formaPagamento: "Pix/Dinheiro"
+                });
+                alert("Baixa realizada com sucesso!");
+            } catch (e) {
+                alert("Erro ao dar baixa: " + e.message);
+            }
+        }
+
+        function mudarAbaApp(aba) {
+            const tabAlunos = document.getElementById('tab-alunos');
+            const tabFin = document.getElementById('tab-financeiro');
+            const btnAlunos = document.getElementById('nav-btn-alunos');
+            const btnFin = document.getElementById('nav-btn-fin');
+
+            if (aba === 'alunos') {
+                tabAlunos.style.display = 'block';
+                tabFin.style.display = 'none';
+                btnAlunos.className = "flex flex-col items-center text-blue-600 dark:text-blue-400 text-xs font-bold gap-1";
+                btnFin.className = "flex flex-col items-center text-gray-400 text-xs font-semibold gap-1";
+            } else {
+                tabAlunos.style.display = 'none';
+                tabFin.style.display = 'block';
+                btnFin.className = "flex flex-col items-center text-blue-600 dark:text-blue-400 text-xs font-bold gap-1";
+                btnAlunos.className = "flex flex-col items-center text-gray-400 text-xs font-semibold gap-1";
+            }
+        }
+
+        function voltarParaListaAlunos() {
+            mudarAbaApp('alunos');
+        }
+    </script>
+</body>
+</html>
