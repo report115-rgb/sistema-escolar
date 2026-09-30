@@ -1140,6 +1140,10 @@
                         <label class="block text-xs font-semibold mb-1">Selecione o Curso</label>
                         <select id="template-course-select" onchange="loadCourseTemplate()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></select>
                     </div>
+<div class="mt-4">
+    <label class="block text-xs font-semibold mb-1 text-blue-600 dark:text-blue-400">Template HTML Completo do Histórico Escolar</label>
+    <textarea id="input-historico-html-template" rows="8" placeholder="Cole o código HTML do histórico aqui..." class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-xs font-mono dark:bg-slate-900 dark:text-white"></textarea>
+</div>
 
                     <div>
                         <div class="flex justify-between items-center mb-1">
@@ -3017,7 +3021,8 @@ async function removerUsuarioSistemaFirebase(id) {
         function loadCourseTemplate() {
             const course = courses.find(c => c.id == document.getElementById('template-course-select').value);
             if(course) {
-                document.getElementById('input-contract-text').value = course.contractTemplate || '';
+		document.getElementById('input-historico-html').value = course.historicoHtmlTemplate || '';                
+		document.getElementById('input-contract-text').value = course.contractTemplate || '';
                 document.getElementById('input-decl-text').value = course.declTemplate || '';
                 document.getElementById('input-history-text').value = course.historyTemplate || '';
                 tempUploadedHistoryPdf = course.historyPdfUrl || '';
@@ -3049,7 +3054,8 @@ async function removerUsuarioSistemaFirebase(id) {
             await db.collection("courses").doc(courseId).update({
                 contractTemplate: document.getElementById('input-contract-text').value,
                 declTemplate: document.getElementById('input-decl-text').value,
-                historyTemplate: document.getElementById('input-history-text').value,
+		historicoHtmlTemplate: document.getElementById('input-historico-html').value,                
+		historyTemplate: document.getElementById('input-history-text').value,
                 historyPdfUrl: tempUploadedHistoryPdf
             });
             alert("Modelos e Edição de Documentos salvos com sucesso!");
@@ -5098,6 +5104,69 @@ async function executarBaixaManualComDetalhes(financeLogId) {
         console.error("Erro ao dar baixa manual:", error);
         alert("Erro ao atualizar na nuvem: " + error.message);
     }
+}
+
+async function gerarHistoricoEscolarDinamico(alunoId) {
+    const aluno = students.find(s => s.id === alunoId);
+    if (!aluno) return alert("Aluno não encontrado!");
+
+    const curso = courses.find(c => c.id === aluno.courseId);
+    const turma = classes.find(c => c.id === aluno.classId);
+
+    // 1. Recupera o template HTML salvo na nuvem (ou usa o padrão)
+    let templateHtml = globalInstitutionData.historicoTemplateHtml || `
+        <!-- Cole aqui o seu HTML caso queira um padrão fixo, ou puxe do banco -->
+    `;
+
+    // Se você salvar o template no curso ou nas configurações, basta resgatar aqui.
+    // Vamos fazer a substituição das tags básicas do aluno e da instituição:
+    let htmlPreenchido = templateHtml
+        .replace(/\{\{instituicao_nome\}\}/g, globalInstitutionData.name || 'SE7 Gestão Educacional')
+        .replace(/\{\{instituicao_razao\}\}/g, globalInstitutionData.razao || '')
+        .replace(/\{\{instituicao_endereco\}\}/g, globalInstitutionData.end || '')
+        .replace(/\{\{instituicao_cnpj\}\}/g, globalInstitutionData.cnpj || '')
+        .replace(/\{\{instituicao_logo\}\}/g, globalInstitutionData.logo || '')
+        .replace(/\{\{aluno_nome\}\}/g, aluno.fullname || '')
+        .replace(/\{\{aluno_matricula\}\}/g, aluno.code || '')
+        .replace(/\{\{aluno_turma\}\}/g, turma ? turma.name : '---')
+        .replace(/\{\{aluno_curso\}\}/g, curso ? curso.name : '---')
+        .replace(/\{\{aluno_cpf\}\}/g, aluno.cpf || '')
+        .replace(/\{\{aluno_rg\}\}/g, aluno.rg || '')
+        .replace(/\{\{aluno_data_nascimento\}\}/g, aluno.dob ? aluno.dob.split('-').reverse().join('/') : '')
+        .replace(/\{\{aluno_telefone\}\}/g, aluno.whatsapp || '')
+        .replace(/\{\{aluno_situacao\}\}/g, aluno.status || 'Ativo');
+
+    // 2. Montagem dinâmica das disciplinas (Loop do Histórico)
+    let linhasDisciplinasHtml = '';
+    if (curso && curso.subjects) {
+        curso.subjects.forEach(sub => {
+            const registroNota = (aluno.grades && aluno.grades[sub.id]) ? aluno.grades[sub.id] : { final: '---' };
+            linhasDisciplinasHtml += `
+                <tr>
+                    <td>${sub.name}</td>
+                    <td style="text-align: center;">${sub.hours || '---'}</td>
+                    <td style="text-align: center;">100%</td>
+                    <td style="text-align: center;">${registroNota.final || '---'}</td>
+                    <td style="text-align: center;">${parseFloat(registroNota.final) >= 6 ? 'Aprovado' : 'Cursando'}</td>
+                </tr>
+            `;
+        });
+    } else {
+        linhasDisciplinasHtml = `<tr><td colspan="5" style="text-align: center;">Nenhuma disciplina cadastrada para este curso.</td></tr>`;
+    }
+
+    // Substitui o bloco de disciplinas no HTML
+    // (Podemos injetar o HTML gerado substituindo a seção do template)
+    
+    // 3. Abre uma nova janela invisível/temporária para impressão ou exportação em PDF limpa
+    const janelaImpressao = window.open('', '_blank', 'width=800,height=600');
+    janelaImpressao.document.write(htmlPreenchido);
+    janelaImpressao.document.close();
+    
+    // Aguarda carregar e dispara a janela de impressão do navegador (permitindo salvar em PDF com 1 clique)
+    setTimeout(() => {
+        janelaImpressao.print();
+    }, 500);
 }
 	</script>
 </body>
