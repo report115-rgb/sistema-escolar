@@ -3281,7 +3281,9 @@ function carregarDatasCalendarioParaFrequencia() {
     if(!tbody) return;
 
     tbody.innerHTML = '';
-    const ativos = students.filter(s => s.status !== "Cancelado");
+    const ativos = students
+        .filter(s => s.status !== "Cancelado")
+        .sort((a, b) => a.fullname.localeCompare(b.fullname));
 
     // LÓGICA DE FILTRAGEM PELA LUPA (NOME, CPF OU MATRÍCULA)
     let alunosFiltrados = ativos;
