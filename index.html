@@ -1574,19 +1574,49 @@
             }
         }
 
-        function fazerLogin() {
-            const userInput = document.getElementById('login-user').value.trim();
-            const passInput = document.getElementById('login-pass').value.trim();
-            let dbUsers = JSON.parse(localStorage.getItem('app_users_system')) || usuariosPadrao;
-            let userFound = dbUsers.find(u => u.email === userInput && u.pass === passInput);
-            if (!userFound) return alert("Usuário ou senha inválidos!");
-            sessionStorage.setItem('usuario_logado', JSON.stringify(userFound));
-            document.getElementById('login-modal').style.display = 'none';
-            aplicarPermissoesPorPerfil(userFound.perfil);
-            atualizarDisplayUsuarioLogado();
-            registrarLogAuditoria("Efetuou login no sistema", "Autenticação");
-            resetarTemporizadorInatividade();
+        async function fazerLogin() {
+    const userInput = document.getElementById('login-user').value.trim().toLowerCase();
+    const passInput = document.getElementById('login-pass').value.trim();
+
+    if (!userInput || !passInput) return alert("Preencha o e-mail e a senha.");
+
+    let userFound = null;
+
+    // 1. Verifica se é um dos usuários padrão do sistema
+    const usuarioPadraoEncontrado = usuariosPadrao.find(u => u.email.toLowerCase() === userInput && u.pass === passInput);
+    if (usuarioPadraoEncontrado) {
+        userFound = usuarioPadraoEncontrado;
+    } else {
+        // 2. Se não for padrão, busca na nuvem (Firestore na coleção "systemUsers")
+        try {
+            const snapshot = await db.collection("systemUsers").where("email", "==", userInput).get();
+            if (!snapshot.empty) {
+                const dadosNuves = snapshot.docs[0].data();
+                if (dadosNuves.pass === passInput) {
+                    userFound = {
+                        nome: dadosNuves.nome,
+                        email: dadosNuves.email,
+                        pass: dadosNuves.pass,
+                        perfil: dadosNuves.perfil
+                    };
+                }
+            }
+        } catch (e) {
+            console.error("Erro ao validar login no Firebase:", e);
         }
+    }
+
+    if (!userFound) {
+        return alert("E-mail ou senha inválidos! Verifique se seu acesso já foi aprovado pela direção.");
+    }
+
+    sessionStorage.setItem('usuario_logado', JSON.stringify(userFound));
+    document.getElementById('login-modal').style.display = 'none';
+    aplicarPermissoesPorPerfil(userFound.perfil);
+    atualizarDisplayUsuarioLogado();
+    registrarLogAuditoria("Efetuou login no sistema", "Autenticação");
+    resetarTemporizadorInatividade();
+}
 
         function fazerLoginAluno() {
             const cpfInput = document.getElementById('login-aluno-cpf').value.trim().replace(/[^\d]/g, '');
@@ -1622,42 +1652,47 @@
         function fecharModalEsqueciSenhaAluno() { document.getElementById('modal-esqueci-senha-aluno').style.display = 'none'; }
 
         async function enviarSolicitudePrimeiroAcesso() {
-            const nome = document.getElementById('pa-nome').value.trim();
-            const email = document.getElementById('pa-email').value.trim();
-            const pass = document.getElementById('pa-pass').value.trim();
-            const perfil = document.getElementById('pa-perfil').value;
+    const nome = document.getElementById('pa-nome').value.trim();
+    const email = document.getElementById('pa-email').value.trim().toLowerCase();
+    const pass = document.getElementById('pa-pass').value.trim();
+    const perfil = document.getElementById('pa-perfil').value;
 
-            if (!nome || !email || !pass) return alert("Preencha todos os campos da solicitação.");
-            
-            let solicitacoes = JSON.parse(localStorage.getItem('app_users_pending')) || [];
-            if (solicitacoes.some(s => s.email === email)) {
-                return alert("Já existe uma solicitação de primeiro acesso pendente para este e-mail.");
-            }
-
-            let dbUsers = JSON.parse(localStorage.getItem('app_users_system')) || usuariosPadrao;
-            if (dbUsers.some(u => u.email === email)) {
-                return alert("Este e-mail já está cadastrado no sistema.");
-            }
-
-            // Cria o objeto do novo colaborador
-    const novoColaborador = { 
-        id: Date.now().toString(), 
-        nome, 
-        email, 
-        pass, 
-        perfil, 
-        data: new Date().toLocaleString('pt-BR') 
-    };
-
-    solicitacoes.push(novoColaborador);
-    localStorage.setItem('app_users_pending', JSON.stringify(solicitacoes));
-
-    // >>> DISPARA O WHATSAPP AUTOMATICAMENTE PARA A CENTRAL <<<
-    notificarWhatsAppPrimeiroAcesso(novoColaborador);
-
-    alert("Solicitação enviada com sucesso! Aguarde a liberação do Master ou da direção para acessar o sistema.");
-    fecharModalPrimeiroAcesso();
+    if (!nome || !email || !pass) return alert("Preencha todos os campos da solicitação.");
+    
+    try {
+        // Verifica se já existe um usuário ou solicitação com esse e-mail no Firebase
+        const snapshotCheck = await db.collection("systemUsers").where("email", "==", email).get();
+        if (!snapshotCheck.empty) {
+            return alert("Este e-mail já está cadastrado ou aprovado no sistema.");
         }
+
+        const snapshotPending = await db.collection("pendingUsers").where("email", "==", email).get();
+        if (!snapshotPending.empty) {
+            return alert("Já existe uma solicitação pendente para este e-mail.");
+        }
+
+        // Salva a solicitação pendente no Firestore
+        const novoColaborador = { 
+            nome, 
+            email, 
+            pass, 
+            perfil, 
+            data: new Date().toLocaleString('pt-BR'),
+            createdAt: new Date().toISOString()
+        };
+
+        const docRef = await db.collection("pendingUsers").add(novoColaborador);
+        novoColaborador.id = docRef.id;
+
+        // Dispara o WhatsApp automático para a central
+        notificarWhatsAppPrimeiroAcesso(novoColaborador);
+
+        alert("Solicitação enviada com sucesso para a nuvem! Aguarde a liberação do Master.");
+        fecharModalPrimeiroAcesso();
+    } catch (e) {
+        alert("Erro ao enviar solicitação para o Firebase: " + e.message);
+    }
+}
 
 // --- FUNÇÃO DE WHATSAPP PARA O PRIMEIRO ACESSO ---
 async function notificarWhatsAppPrimeiroAcesso(novoColaborador) {
@@ -1687,80 +1722,89 @@ async function notificarWhatsAppPrimeiroAcesso(novoColaborador) {
     }
 }
 
-        function renderizarSolicitacoesPendentes() {
-            const container = document.getElementById('lista-solicitacoes-pendentes');
-            const badge = document.getElementById('badge-pendentes-cont');
-            if (!container) return;
-
-            let solicitacoes = JSON.parse(localStorage.getItem('app_users_pending')) || [];
-            if (badge) {
-                if (solicitacoes.length > 0) {
-                    badge.textContent = solicitacoes.length;
-                    badge.style.display = 'inline-block';
-                } else {
-                    badge.style.display = 'none';
-                }
-            }
-
-            if (solicitacoes.length === 0) {
-                container.innerHTML = `<p class="text-xs text-gray-400">Nenhuma solicitação pendente no momento.</p>`;
-                return;
-            }
-
-            container.innerHTML = '';
-            solicitacoes.forEach(s => {
-                container.innerHTML += `
-                    <div class="bg-white dark:bg-slate-800 p-3 rounded-lg border border-amber-200 dark:border-slate-700 flex justify-between items-center text-xs">
-                        <div>
-                            <strong>${s.nome}</strong> (${s.email})<br>
-                            <span class="text-[10px] text-gray-500">Perfil: ${s.perfil.toUpperCase()} &bull; ${s.data}</span>
-                        </div>
-                        <div class="flex gap-1.5">
-                            <button onclick="aprovarSolicitacao('${s.id}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-semibold">Aprovar</button>
-                            <button onclick="rejeitarSolicitacao('${s.id}')" class="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white rounded font-semibold">Rejeitar</button>
-                        </div>
-                    </div>
-                `;
-            });
-        }
-
-        async function aprovarSolicitacao(id) {
-    let solicitacoes = JSON.parse(localStorage.getItem('app_users_pending')) || [];
-    const idx = solicitacoes.findIndex(s => s.id === id);
-    if (idx === -1) return;
-    const user = solicitacoes[idx];
+        async function renderizarSolicitacoesPendentes() {
+    const container = document.getElementById('lista-solicitacoes-pendentes');
+    const badge = document.getElementById('badge-pendentes-cont');
+    if (!container) return;
 
     try {
-        // Salva o novo usuário diretamente no Firestore (coleção "systemUsers")
-        await db.collection("systemUsers").add({
-            nome: user.nome,
-            email: user.email.trim().toLowerCase(),
-            pass: user.pass,
-            perfil: user.perfil,
-            createdAt: new Date().toISOString()
+        const snapshot = await db.collection("pendingUsers").get();
+        let solicitacoes = [];
+        snapshot.forEach(doc => solicitacoes.push({ id: doc.id, ...doc.data() }));
+
+        if (badge) {
+            if (solicitacoes.length > 0) {
+                badge.textContent = solicitacoes.length;
+                badge.style.display = 'inline-block';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        if (solicitacoes.length === 0) {
+            container.innerHTML = `<p class="text-xs text-gray-400">Nenhuma solicitação pendente na nuvem.</p>`;
+            return;
+        }
+
+        container.innerHTML = '';
+        solicitacoes.forEach(s => {
+            container.innerHTML += `
+                <div class="bg-white dark:bg-slate-800 p-3 rounded-lg border border-amber-200 dark:border-slate-700 flex justify-between items-center text-xs">
+                    <div>
+                        <strong>${s.nome}</strong> (${s.email})<br>
+                        <span class="text-[10px] text-gray-500">Perfil: ${s.perfil.toUpperCase()} &bull; ${s.data}</span>
+                    </div>
+                    <div class="flex gap-1.5">
+                        <button onclick="aprovarSolicitacaoFirebase('${s.id}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-semibold">Aprovar</button>
+                        <button onclick="rejeitarSolicitacaoFirebase('${s.id}')" class="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white rounded font-semibold">Rejeitar</button>
+                    </div>
+                </div>
+            `;
         });
-
-        // Remove da lista de pendentes local
-        solicitacoes.splice(idx, 1);
-        localStorage.setItem('app_users_pending', JSON.stringify(solicitacoes));
-
-        registrarLogAuditoria(`Aprovou o primeiro acesso do colaborador ${user.nome} (${user.email})`, "Autenticação");
-        alert(`Acesso aprovado e salvo na nuvem para ${user.nome}! Ela já pode fazer login de qualquer lugar.`);
-        renderizarSolicitacoesPendentes();
-        renderizarUsuariosSistema();
     } catch (e) {
-        alert("Erro ao aprovar usuário na nuvem: " + e.message);
+        console.error("Erro ao carregar solicitações pendentes do Firebase:", e);
     }
 }
 
-        function rejeitarSolicitacao(id) {
-            if (!confirm("Deseja rejeitar esta solicitação de acesso?")) return;
-            let solicitacoes = JSON.parse(localStorage.getItem('app_users_pending')) || [];
-            solicitacoes = solicitacoes.filter(s => s.id !== id);
-            localStorage.setItem('app_users_pending', JSON.stringify(solicitacoes));
-            alert("Solicitação rejeitada.");
-            renderizarSolicitacoesPendentes();
-        }
+async function aprovarSolicitacaoFirebase(id) {
+    try {
+        const docRef = db.collection("pendingUsers").doc(id);
+        const doc = await docRef.get();
+        if (!doc.exists) return alert("Solicitação não encontrada.");
+
+        const user = doc.data();
+
+        // Salva na coleção definitiva de usuários ativos na nuvem
+        await db.collection("systemUsers").add({
+            nome: user.nome,
+            email: user.email,
+            pass: user.pass,
+            perfil: user.perfil,
+            approvedAt: new Date().toISOString()
+        });
+
+        // Remove da coleção de pendentes
+        await docRef.delete();
+
+        registrarLogAuditoria(`Aprovou o primeiro acesso do colaborador ${user.nome} (${user.email})`, "Autenticação");
+        alert(`Acesso aprovado para ${user.nome}! Ela já pode fazer login de qualquer computador.`);
+        renderizarSolicitacoesPendentes();
+        renderizarUsuariosSistemaFirebase();
+    } catch (e) {
+        alert("Erro ao aprovar solicitação: " + e.message);
+    }
+}
+
+async function rejeitarSolicitacaoFirebase(id) {
+    if (!confirm("Deseja rejeitar e excluir esta solicitação?")) return;
+    try {
+        await db.collection("pendingUsers").doc(id).delete();
+        alert("Solicitação rejeitada.");
+        renderizarSolicitacoesPendentes();
+    } catch (e) {
+        alert("Erro ao rejeitar: " + e.message);
+    }
+}
 
         function executarRedefinicaoSenha() {
             const emailInput = document.getElementById('forgot-user-email').value.trim();
@@ -1889,37 +1933,100 @@ async function notificarWhatsAppPrimeiroAcesso(novoColaborador) {
             } catch (e) { console.error(e); }
         }
 
-        function abrirModalControleAcesso() { document.getElementById('access-control-modal').style.display = 'flex'; renderizarUsuariosSistema(); renderizarSolicitacoesPendentes(); }
-        function fecharModalControleAcesso() { document.getElementById('access-control-modal').style.display = 'none'; }
+        function abrirModalControleAcesso() { 
+    document.getElementById('access-control-modal').style.display = 'flex'; 
+    renderizarUsuariosSistemaFirebase(); // <-- Agora chama a versão do Firebase
+    renderizarSolicitacoesPendentes(); 
+}
         
-        function cadastrarNovoUsuarioSistema() {
-            const nome = document.getElementById('new-user-name').value.trim();
-            const email = document.getElementById('new-user-email').value.trim();
-            const pass = document.getElementById('new-user-pass').value.trim();
-            const perfil = document.getElementById('new-user-perfil').value;
-            if (!nome || !email || !pass) return alert("Preencha todos os campos!");
-            let dbUsers = JSON.parse(localStorage.getItem('app_users_system')) || usuariosPadrao;
-            dbUsers.push({ nome, email, pass, perfil });
-            localStorage.setItem('app_users_system', JSON.stringify(dbUsers));
-            renderizarUsuariosSistema();
-            alert("Usuário cadastrado com sucesso!");
+        // 1. Cadastrar novo usuário manualmente direto na nuvem
+async function cadastrarNovoUsuarioSistema() {
+    const nome = document.getElementById('new-user-name').value.trim();
+    const email = document.getElementById('new-user-email').value.trim().toLowerCase();
+    const pass = document.getElementById('new-user-pass').value.trim();
+    const perfil = document.getElementById('new-user-perfil').value;
+
+    if (!nome || !email || !pass) return alert("Preencha todos os campos!");
+
+    try {
+        // Verifica se já existe na nuvem
+        const snapshot = await db.collection("systemUsers").where("email", "==", email).get();
+        if (!snapshot.empty) {
+            return alert("Já existe um usuário cadastrado com este e-mail na nuvem!");
         }
 
-        function renderizarUsuariosSistema() {
-            const list = document.getElementById('system-users-list');
-            if (!list) return;
-            list.innerHTML = '';
-            let dbUsers = JSON.parse(localStorage.getItem('app_users_system')) || usuariosPadrao;
-            dbUsers.forEach((u, i) => {
-                list.innerHTML += `<li class="py-2 flex justify-between items-center text-xs"><span><strong>${u.nome}</strong> (${u.email}) - ${u.perfil.toUpperCase()}</span>${i >= 3 ? `<button onclick="removerUsuarioSistema('${u.email}')" class="px-2 py-1 bg-red-600 text-white rounded">Remover</button>` : ''}</li>`;
-            });
+        // Salva no Firestore
+        await db.collection("systemUsers").add({
+            nome,
+            email,
+            pass,
+            perfil,
+            createdAt: new Date().toISOString()
+        });
+
+        document.getElementById('new-user-name').value = '';
+        document.getElementById('new-user-email').value = '';
+        document.getElementById('new-user-pass').value = '';
+
+        alert("Usuário cadastrado com sucesso na nuvem!");
+        renderizarUsuariosSistemaFirebase();
+    } catch (e) {
+        alert("Erro ao cadastrar usuário no Firebase: " + e.message);
+    }
+}
+
+// 2. Renderizar a lista de usuários ativos direto do Firebase (incluindo os usuários padrão)
+async function renderizarUsuariosSistemaFirebase() {
+    const list = document.getElementById('system-users-list');
+    if (!list) return;
+    list.innerHTML = '<li class="py-2 text-xs text-gray-400 text-center">Carregando usuários da nuvem...</li>';
+
+    try {
+        // Busca os usuários cadastrados na nuvem
+        const snapshot = await db.collection("systemUsers").get();
+        let usuariosNuves = [];
+        snapshot.forEach(doc => usuariosNuves.push({ id: doc.id, ...doc.data() }));
+
+        list.innerHTML = '';
+
+        // Exibe primeiro os usuários padrão do sistema (Master, Secretaria, Professor)
+        usuariosPadrao.forEach((u) => {
+            list.innerHTML += `
+                <li class="py-2 flex justify-between items-center text-xs border-b border-gray-100 dark:border-slate-700">
+                    <span><strong>${u.nome}</strong> (${u.email}) - <span class="text-blue-600 font-bold">${u.perfil.toUpperCase()}</span> <span class="text-[10px] text-gray-400">(Padrão)</span></span>
+                </li>`;
+        });
+
+        // Exibe os usuários cadastrados via nuvem/aprovação
+        if (usuariosNuves.length === 0 && usuariosPadrao.length === 0) {
+            list.innerHTML = `<li class="py-2 text-xs text-gray-400 text-center">Nenhum usuário cadastrado.</li>`;
+            return;
         }
-        function removerUsuarioSistema(email) {
-            let dbUsers = JSON.parse(localStorage.getItem('app_users_system')) || usuariosPadrao;
-            dbUsers = dbUsers.filter(u => u.email !== email);
-            localStorage.setItem('app_users_system', JSON.stringify(dbUsers));
-            renderizarUsuariosSistema();
-        }
+
+        usuariosNuves.forEach((u) => {
+            list.innerHTML += `
+                <li class="py-2 flex justify-between items-center text-xs border-b border-gray-100 dark:border-slate-700">
+                    <span><strong>${u.nome}</strong> (${u.email}) - <span class="text-emerald-600 font-bold">${u.perfil.toUpperCase()}</span></span>
+                    <button onclick="removerUsuarioSistemaFirebase('${u.id}')" class="px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded font-semibold text-[10px]">Remover</button>
+                </li>`;
+        });
+    } catch (e) {
+        console.error("Erro ao carregar usuários do Firebase:", e);
+        list.innerHTML = `<li class="py-2 text-xs text-red-500 text-center">Erro ao carregar usuários da nuvem.</li>`;
+    }
+}
+
+// 3. Remover usuário da nuvem
+async function removerUsuarioSistemaFirebase(id) {
+    if (!confirm("Deseja realmente remover o acesso deste usuário do sistema?")) return;
+    try {
+        await db.collection("systemUsers").doc(id).delete();
+        alert("Usuário removido com sucesso da nuvem!");
+        renderizarUsuariosSistemaFirebase();
+    } catch (e) {
+        alert("Erro ao remover usuário: " + e.message);
+    }
+}
 
         function openTab(evt, tabId) {
             Array.from(document.getElementsByClassName("tab-content")).forEach(el => el.style.display = "none");
