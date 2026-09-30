@@ -2197,6 +2197,9 @@ async function rejeitarSolicitacaoFirebase(id) {
         const btnMatricula = document.querySelector("button[onclick*='tab-students']");
         if (btnMatricula) btnMatricula.style.display = 'none';
 
+	const subTabValidacao = document.querySelector("button[onclick*='validar-documentacao']") || document.getElementById('btn-subtab-validar');
+        if (subTabValidacao) subTabValidacao.style.display = 'none';
+
         const botoesExcluir = document.querySelectorAll('.btn-excluir-aluno, .btn-deletar-total');
         botoesExcluir.forEach(btn => {
             btn.style.display = 'none';
