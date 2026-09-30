@@ -4253,11 +4253,10 @@ function renderizarCobrancasAlunoSelecionadoFinanceiro(studentId) {
         }
 
         // --- FUNÇÃO PARA ESTORNAR A BAIXA CASO NECESSÁRIO ---
-        async function estornarBaixaManualFinanceiro(financeLogId) {
+       async function estornarBaixaManualFinanceiro(financeLogId) {
     if (!confirm("ATENÇÃO: Deseja realmente estornar a baixa desta mensalidade e retorná-la para o status PENDENTE?")) return;
 
     try {
-        // 1. Atualiza no banco de dados (Firebase) limpando o pagamento e voltando para pendente
         await db.collection("financeLogs").doc(financeLogId).update({
             status: "PENDENTE (Desc. Pontualidade disponível até o vencimento)",
             dataPagamento: null,
@@ -4267,7 +4266,7 @@ function renderizarCobrancasAlunoSelecionadoFinanceiro(studentId) {
         registrarLogAuditoria(`Estornou a baixa do registro financeiro ID ${financeLogId}`, "Financeiro");
         alert("Baixa estornada com sucesso! A cobrança retornou para o status pendente.");
         
-        // 2. Atualiza a tela de financeiro instantaneamente para sumir o botão de estorno e mostrar as opções de baixa
+        // 👇 ESTA LINHA FORÇA A TELA A SE ATUALIZAR NA HORA (SEM PRECISAR DE F5)
         const selFin = document.getElementById('fin-student-select');
         if (selFin && selFin.value) {
             renderizarCobrancasAlunoSelecionadoFinanceiro(selFin.value);
@@ -5513,9 +5512,9 @@ async function executarBaixaManualComDetalhes(financeLogId) {
         });
 
         registrarLogAuditoria(`Deu baixa manual com ${formaPagamento} em ${dataFormatada} no registro ID ${financeLogId}`, "Financeiro");
-        alert("Baixa realizada com sucesso! O status foi atualizado e já está visível no Portal do Aluno.");
+        alert("Baixa realizada com sucesso! O status foi atualizado.");
         
-        // Atualiza a tela de financeiro instantaneamente
+        // 👇 ESTA LINHA FORÇA A TELA A SE ATUALIZAR NA HORA (SEM PRECISAR DE F5)
         const selFin = document.getElementById('fin-student-select');
         if (selFin && selFin.value) {
             renderizarCobrancasAlunoSelecionadoFinanceiro(selFin.value);
