@@ -4158,7 +4158,7 @@ function renderizarCobrancasAlunoSelecionadoFinanceiro(studentId) {
 
     container.innerHTML = `<div class="font-bold text-xs text-blue-600 dark:text-blue-400 mb-2">Exibindo ${cobrancasAluno.length} cobranças / mensalidades para ${aluno ? aluno.fullname : ''}:</div>`;
 
-    cobrancasAluno.codegen = cobrancasAluno.forEach((f) => {
+    cobrancasAluno.forEach((f) => {
         const jaPago = f.status && f.status.toUpperCase().includes('PAGO');
         const corBadge = jaPago ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300';
         const textoStatus = f.status || 'PENDENTE';
