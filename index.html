@@ -4655,6 +4655,66 @@ function renderFinanceStudentSelect() {
         return;
   	  }
 	}
+} else if(tipoDoc === 'historico') {
+        let templateHtmlHistorico = document.getElementById('input-historico-html-template').value || (curso ? curso.historicoHtmlTemplate : '');
+
+        if (!templateHtmlHistorico || templateHtmlHistorico.trim() === "") {
+            alert("Nenhum template HTML de histórico cadastrado para este curso. Vá em Sistema > Edição de Documentos e salve o modelo.");
+            return;
+        }
+
+        // Montagem dinâmica das linhas da tabela de disciplinas com notas e carga horária
+        let linhasDisciplinasHtml = '';
+        if (curso && curso.subjects && curso.subjects.length > 0) {
+            curso.subjects.forEach(sub => {
+                const registroNota = (aluno.grades && aluno.grades[sub.id]) ? aluno.grades[sub.id] : { final: '---' };
+                const notaFinalNum = parseFloat(registroNota.final);
+                const situacaoDisciplina = !isNaN(notaFinalNum) ? (notaFinalNum >= 6 ? 'Aprovado' : 'Reprovado') : 'Cursando';
+                
+                linhasDisciplinasHtml += `
+                    <tr>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${sub.name}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${sub.hours || '---'}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">100%</td>
+                        <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${registroNota.final !== undefined && registroNota.final !== '' ? registroNota.final : '---'}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd; text-align: center; font-weight: bold; color: ${situacaoDisciplina === 'Aprovado' ? 'green' : '#333'};">${situacaoDisciplina}</td>
+                    </tr>
+                `;
+            });
+        } else {
+            linhasDisciplinasHtml = `<tr><td colspan="5" style="text-align: center; padding: 12px;">Nenhuma disciplina cadastrada na grade curricular deste curso.</td></tr>`;
+        }
+
+        const hoje = new Date();
+        const dataPorExtenso = hoje.toLocaleDateString('pt-BR', { year: 'numeric', month: 'long', day: 'numeric' });
+
+        let htmlPreenchido = templateHtmlHistorico
+            .replace(/\{\{instituicao_nome\}\}/g, globalInstitutionData.name || 'SE7 Gestão Educacional')
+            .replace(/\{\{instituicao_razao\}\}/g, globalInstitutionData.razao || '')
+            .replace(/\{\{instituicao_endereco\}\}/g, globalInstitutionData.end || '')
+            .replace(/\{\{instituicao_cnpj\}\}/g, globalInstitutionData.cnpj || '')
+            .replace(/\{\{instituicao_logo\}\}/g, globalInstitutionData.logo || '')
+            .replace(/\{\{aluno_nome\}\}/g, aluno.fullname || '')
+            .replace(/\{\{aluno_matricula\}\}/g, aluno.code || '')
+            .replace(/\{\{aluno_turma\}\}/g, turma ? turma.name : '---')
+            .replace(/\{\{aluno_curso\}\}/g, curso ? curso.name : '---')
+            .replace(/\{\{carga_horaria_curso\}\}/g, curso ? (curso.hours || '3600h') : '3600h')
+            .replace(/\{\{aluno_cpf\}\}/g, aluno.cpf || '')
+            .replace(/\{\{aluno_rg\}\}/g, aluno.rg || '')
+            .replace(/\{\{aluno_data_nascimento\}\}/g, aluno.dob ? aluno.dob.split('-').reverse().join('/') : '')
+            .replace(/\{\{aluno_telefone\}\}/g, aluno.whatsapp || '')
+            .replace(/\{\{aluno_situacao\}\}/g, aluno.status || 'Ativo')
+            .replace(/\{\{tabela_disciplinas\}\}/g, linhasDisciplinasHtml)
+            .replace(/Vigia\/PA,.*<\/div>/g, `Vigia/PA, ${dataPorExtenso}</div>`);
+
+        const janelaImpressao = window.open('', '_blank', 'width=900,height=700');
+        janelaImpressao.document.write(htmlPreenchido);
+        janelaImpressao.document.close();
+        
+        setTimeout(() => {
+            janelaImpressao.print();
+        }, 600);
+        return;
 
         function renderDropdowns() {
             ['input-class-course', 'input-student-course', 'input-subject-course-select', 'attendance-course-select', 'grade-course-select', 'template-course-select', 'cal-course-select'].forEach(id => {
