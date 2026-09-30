@@ -3678,7 +3678,10 @@ function habilitarEdicaoAlunoFrequencia(botao, alunoId) {
             if(!list) return;
             list.innerHTML = '';
             
-            students.filter(s => s.classId == classId && s.status === "Ativo").forEach(s => {
+            students
+        .filter(s => s.classId == classId && s.status === "Ativo")
+        .sort((a, b) => a.fullname.localeCompare(b.fullname))
+        .forEach(s => {
                 const notasAluno = (s.grades && s.grades[subjectSelect]) ? s.grades[subjectSelect] : { atividade: '', avaliacao: '', final: '', salvo: false };
                 const readonlyAttr = notasAluno.salvo ? 'readonly disabled' : '';
                 const bgClass = notasAluno.salvo ? 'bg-gray-100 dark:bg-slate-900 text-gray-500' : 'bg-white dark:bg-slate-900';
