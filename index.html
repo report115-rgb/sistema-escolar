@@ -244,6 +244,7 @@
                     <select id="pa-perfil" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 dark:text-white">
                         <option value="secretaria">Secretaria</option>
                         <option value="professor">Professor</option>
+			<option value="financeiro">Financeiro</option>
                     </select>
                 </div>
             </div>
@@ -1484,6 +1485,7 @@
                             <option value="master">Master</option>
                             <option value="secretaria">Secretaria</option>
                             <option value="professor">Professor</option>
+			    <option value="financeiro">Financeiro</option>
                         </select>
                     </div>
                 </div>
@@ -1524,6 +1526,7 @@
             { email: "master@admin.com", pass: "123456", perfil: "master", nome: "Administrador Master" },
             { email: "secretaria@admin.com", pass: "123456", perfil: "secretaria", nome: "Funcionária Secretaria" },
             { email: "professor@admin.com", pass: "123456", perfil: "professor", nome: "Professor Exemplo" }
+	    { email: "financeiro@admin.com", pass: "123456", perfil: "financeiro", nome: "Funcionário Financeiro" },
         ];
 
         const tiposDocumentosObrigatorios = [
@@ -2173,6 +2176,28 @@ async function rejeitarSolicitacaoFirebase(id) {
     const navBtnSettings = document.getElementById('nav-btn-settings');
     const navBtnPortalAluno = document.getElementById('nav-btn-portal-aluno');
     const adminSelectorPortalBox = document.getElementById('admin-selector-portal-box');
+
+if (perfil === 'financeiro') {
+        document.getElementById('main-tabs-nav').style.display = 'flex';
+
+        // Oculta abas que o perfil financeiro não deve ver
+        const btnNotas = document.querySelector("button[onclick*='tab-grades']");
+        if (btnNotas) btnNotas.style.display = 'none';
+
+        const btnFrequencia = document.querySelector("button[onclick*='tab-attendance']");
+        if (btnFrequencia) btnFrequencia.style.display = 'none';
+
+        const btnEja = document.querySelector("button[onclick*='tab-gestao-eja']");
+        if (btnEja) btnEja.style.display = 'none';
+
+        const btnDocumentos = document.querySelector("button[onclick*='tab-history']");
+        if (btnDocumentos) btnDocumentos.style.display = 'none';
+
+        if (navBtnSettings) navBtnSettings.style.display = 'none';
+        if (navBtnPortalAluno) navBtnPortalAluno.style.display = 'none';
+
+        openTab({ currentTarget: document.querySelector("button[onclick*='tab-gestion-students']") }, 'tab-gestion-students');
+    }
     
     // 👇 ADICIONE ESTA LINHA ABAIXO PARA CONTROLAR O BOTÃO FLUTUANTE 👇
     const floatingTrigger = document.getElementById('floating-calendar-trigger');
@@ -3630,6 +3655,8 @@ function carregarDatasCalendarioParaFrequencia() {
     const inputBusca = document.getElementById('input-busca-aluno-gestao');
     if(!tbody) return;
 
+const sessaoAtual = JSON.parse(sessionStorage.getItem('usuario_logado')) || {};
+    const isFinanceiro = sessaoAtual.perfil === 'financeiro';
     tbody.innerHTML = '';
     const ativos = students
         .filter(s => s.status !== "Cancelado")
@@ -3674,7 +3701,7 @@ function carregarDatasCalendarioParaFrequencia() {
                 <td class="p-3"><span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 rounded text-[10px] font-bold">${s.status || 'Ativo'}</span></td>
                 <td class="p-3 text-right space-x-1">
                     <button onclick="editarAluno('${s.id}')" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs shadow"><i class="fa-solid fa-pen-to-square mr-1"></i> Editar</button>
-                    <button onclick="deletarInformacoesTotaisAluno('${s.id}')" class="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs shadow" title="Deletar permanentemente todas as informações"><i class="fa-solid fa-trash-can mr-1"></i> Deletar Total</button>
+                    ${isFinanceiro ? '' : `<button onclick="deletarInformacoesTotaisAluno('${s.id}')" class="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs shadow" title="Deletar permanentemente todas as informações"><i class="fa-solid fa-trash-can mr-1"></i> Deletar Total</button>`}
                 </td>
             </tr>
         `;
