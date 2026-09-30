@@ -1135,68 +1135,29 @@
                 </div>
 
                 <!-- SUBABA EDIÇÃO DE DOCUMENTOS -->
-                <div id="subtab-templates" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
-                    <div>
-                        <label class="block text-xs font-semibold mb-1">Selecione o Curso</label>
-                        <select id="template-course-select" onchange="loadCourseTemplate()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></select>
-                    </div>
-<!-- COLE ESTE BLOCO EXATAMENTE AQUI EM CIMA -->
-<div class="mt-4">
-    <label class="block text-xs font-semibold mb-1 text-emerald-600 dark:text-emerald-400">Template HTML Completo da Declaração de Matrícula</label>
-    <textarea id="input-declaracao-html-template" rows="8" placeholder="Cole o código HTML da declaração aqui..." class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-xs font-mono dark:bg-slate-900 dark:text-white"></textarea>
+<div id="subtab-templates" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
+    <div>
+        <label class="block text-xs font-semibold mb-1">Selecione o Curso</label>
+        <select id="template-course-select" onchange="loadCourseTemplate()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></select>
+    </div>
+
+    <!-- Template HTML da Declaração de Matrícula -->
+    <div class="mt-4">
+        <label class="block text-xs font-semibold mb-1 text-emerald-600 dark:text-emerald-400">Template HTML Completo da Declaração de Matrícula</label>
+        <textarea id="input-declaracao-html-template" rows="8" placeholder="Cole o código HTML da declaração aqui..." class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-xs font-mono dark:bg-slate-900 dark:text-white"></textarea>
+    </div>
+
+    <!-- Template HTML do Histórico Escolar -->
+    <div class="mt-4">
+        <label class="block text-xs font-semibold mb-1 text-blue-600 dark:text-blue-400">Template HTML Completo do Histórico Escolar</label>
+        <textarea id="input-historico-html-template" rows="8" placeholder="Cole o código HTML do histórico aqui..." class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-xs font-mono dark:bg-slate-900 dark:text-white"></textarea>
+    </div>
+
+    <!-- Botão de Salvar -->
+    <div class="pt-2">
+        <button onclick="saveCourseTemplates()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow">Salvar Modelos HTML</button>
+    </div>
 </div>
-<!-- Bloco que você já tinha do Histórico Escolar -->
-<div class="mt-4">
-    <label class="block text-xs font-semibold mb-1 text-blue-600 dark:text-blue-400">Template HTML Completo do Histórico Escolar</label>
-    <textarea id="input-historico-html-template" rows="8" placeholder="Cole o código HTML do histórico aqui..." class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-xs font-mono dark:bg-slate-900 dark:text-white"></textarea>
-</div>
-                    <div>
-                        <div class="flex justify-between items-center mb-1">
-                            <label class="text-xs font-semibold">Texto do Contrato</label>
-                            <div class="flex gap-1 flex-wrap">
-                                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-contract-text', '{{nome}}')">+ Nome</button>
-                                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-contract-text', '{{cpf}}')">+ CPF</button>
-                                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-contract-text', '{{curso}}')">+ Curso</button>
-                                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-contract-text', '{{endereco_completo}}')">+ Endereço Completo</button>
-                            </div>
-                        </div>
-                        <textarea id="input-contract-text" rows="5" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></textarea>
-                    </div>
-
-                    <div>
-                        <div class="flex justify-between items-center mb-1">
-                            <label class="text-xs font-semibold">Texto da Declaração</label>
-                            <div class="flex gap-1 flex-wrap">
-                                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-decl-text', '{{nome}}')">+ Nome</button>
-                                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-decl-text', '{{cpf}}')">+ CPF</button>
-                                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-decl-text', '{{curso}}')">+ Curso</button>
-                                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-decl-text', '{{endereco_completo}}')">+ Endereço Completo</button>
-                            </div>
-                        </div>
-                        <textarea id="input-decl-text" rows="4" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></textarea>
-                    </div>
-
-                    <div>
-                        <div class="flex justify-between items-center mb-1">
-                            <label class="text-xs font-semibold">Texto do Histórico Escolar</label>
-                            <div class="flex gap-1 flex-wrap">
-                                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-history-text', '{{nome}}')">+ Nome</button>
-                                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-history-text', '{{cpf}}')">+ CPF</button>
-                                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-history-text', '{{curso}}')">+ Curso</button>
-                                <button type="button" class="tag-insert-btn px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-[10px] rounded font-bold" onclick="inserirTagNoCampo('input-history-text', '{{endereco_completo}}')">+ Endereço Completo</button>
-                            </div>
-                        </div>
-                        <textarea id="input-history-text" rows="4" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900" placeholder="Estrutura e layout do histórico escolar..."></textarea>
-                    </div>
-
-                    <div class="bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700 space-y-2">
-                        <label class="block text-xs font-semibold mb-1">Enviar Histórico em Formato PDF (Modelo de Referência)</label>
-                        <input type="file" id="input-history-pdf-file" accept="application/pdf" onchange="handleHistoryPdfUpload(event)" class="text-xs">
-                        <p id="history-pdf-status" class="text-[11px] text-gray-400">Nenhum arquivo PDF de histórico enviado para este curso.</p>
-                    </div>
-
-                    <button onclick="saveCourseTemplates()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow">Salvar Modelos e Edição de Documentos</button>
-                </div>
 
                 <!-- SUBABA INSTITUIÇÃO -->
                 <div id="subtab-institution" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
@@ -3024,49 +2985,33 @@ async function removerUsuarioSistemaFirebase(id) {
 
         let tempUploadedHistoryPdf = "";
         function loadCourseTemplate() {
-            const course = courses.find(c => c.id == document.getElementById('template-course-select').value);
-            if(course) {
-                document.getElementById('input-declaracao-html-template').value = course.declaracaoHtmlTemplate || '';
-		document.getElementById('input-historico-html-template').value = course.historicoHtmlTemplate || '';
-                document.getElementById('input-contract-text').value = course.contractTemplate || '';
-                document.getElementById('input-decl-text').value = course.declTemplate || '';
-                document.getElementById('input-history-text').value = course.historyTemplate || '';
-                tempUploadedHistoryPdf = course.historyPdfUrl || '';
-                const pdfStatus = document.getElementById('history-pdf-status');
-                if(pdfStatus) pdfStatus.textContent = tempUploadedHistoryPdf ? "PDF de histórico modelo carregado e salvo." : "Nenhum arquivo PDF de histórico enviado para este curso.";
-            }
-        }
+    const course = courses.find(c => c.id == document.getElementById('template-course-select').value);
+    if(course) {
+        // Carrega apenas os templates HTML ativos
+        const inputDecl = document.getElementById('input-declaracao-html-template');
+        const inputHist = document.getElementById('input-historico-html-template');
+        
+        if(inputDecl) inputDecl.value = course.declaracaoHtmlTemplate || '';
+        if(inputHist) inputHist.value = course.historicoHtmlTemplate || '';
+    }
+}
 
-        function handleHistoryPdfUpload(e) {
-            const file = e.target.files[0];
-            if(!file) return;
-            if(file.type !== "application/pdf") return alert("O arquivo deve estar obrigatoriamente no formato PDF.");
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                tempUploadedHistoryPdf = evt.target.result;
-                document.getElementById('history-pdf-status').textContent = `PDF "${file.name}" pronto para salvar.`;
-            };
-            reader.readAsDataURL(file);
-        }
+async function saveCourseTemplates() {
+    const courseId = document.getElementById('template-course-select').value;
+    if(!courseId) return;
 
-        function inserirTagNoCampo(elementId, tag) {
-            const ta = document.getElementById(elementId);
-            ta.value += tag;
-        }
+    // Pega os valores dos campos HTML atuais
+    const declaracaoHtml = document.getElementById('input-declaracao-html-template').value;
+    const historicoHtml = document.getElementById('input-historico-html-template').value;
 
-        async function saveCourseTemplates() {
-            const courseId = document.getElementById('template-course-select').value;
-            if(!courseId) return;
-            await db.collection("courses").doc(courseId).update({
-		declaracaoHtmlTemplate: document.getElementById('input-declaracao-html-template').value,                
-		contractTemplate: document.getElementById('input-contract-text').value,
-                declTemplate: document.getElementById('input-decl-text').value,
-                historicoHtmlTemplate: document.getElementById('input-historico-html-template').value,
-                historyTemplate: document.getElementById('input-history-text').value,
-                historyPdfUrl: tempUploadedHistoryPdf
-            });
-            alert("Modelos e Edição de Documentos salvos com sucesso!");
-        }
+    // Salva na nuvem apenas o que está sendo utilizado
+    await db.collection("courses").doc(courseId).update({
+        declaracaoHtmlTemplate: declaracaoHtml,
+        historicoHtmlTemplate: historicoHtml
+    });
+    
+    alert("Modelos HTML salvos com sucesso!");
+}
 
         function filterTurmasByCourse() {
             const courseId = document.getElementById('input-student-course').value;
