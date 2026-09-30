@@ -1938,6 +1938,10 @@ async function rejeitarSolicitacaoFirebase(id) {
     renderizarUsuariosSistemaFirebase(); // <-- Agora chama a versão do Firebase
     renderizarSolicitacoesPendentes(); 
 }
+
+function fecharModalControleAcesso() {
+    document.getElementById('access-control-modal').style.display = 'none';
+}
         
         // 1. Cadastrar novo usuário manualmente direto na nuvem
 async function cadastrarNovoUsuarioSistema() {
