@@ -122,8 +122,8 @@
         </div>
 
         <div class="text-center text-[10px] text-blue-300 pb-2">
-            <div>Sistema SE7 de Gestão Acadêmica</div>
-	<div>v1.2.4 &bull; Central de Atendimento ao Aluno</div>
+            <div>Sistema SE7 Gestão Acadêmica</div>
+            <div>v1.2.4 &bull; Central de Atendimento ao Aluno</div>
         </div>
     </div>
 
@@ -1414,8 +1414,29 @@
                     finList.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">Nenhuma fatura encontrada.</p>`;
                     return;
                 }
+
+                // Transforma em array para ordenação cronológica correta
+                let faturas = [];
                 snap.forEach(doc => {
-                    const f = doc.data();
+                    faturas.push({ id: doc.id, ...doc.data() });
+                });
+
+                // Ordena por data de vencimento (suporta YYYY-MM-DD ou DD/MM/YYYY)
+                faturas.sort((a, b) => {
+                    let dataA = a.date || '';
+                    let dataB = b.date || '';
+                    if (dataA.includes('/')) {
+                        const p = dataA.split('/');
+                        dataA = `${p[2]}-${p[1]}-${p[0]}`;
+                    }
+                    if (dataB.includes('/')) {
+                        const p = dataB.split('/');
+                        dataB = `${p[2]}-${p[1]}-${p[0]}`;
+                    }
+                    return dataA.localeCompare(dataB);
+                });
+
+                faturas.forEach(f => {
                     const statusUpper = (f.status || '').toUpperCase();
                     const jaPago = statusUpper.includes('PAGO');
                     const formaPg = f.formaPagamento || 'Manual';
