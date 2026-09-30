@@ -1818,17 +1818,33 @@ async function rejeitarSolicitacaoFirebase(id) {
     }
 }
 
-        function executarRedefinicaoSenha() {
-            const emailInput = document.getElementById('forgot-user-email').value.trim();
+        async function executarRedefinicaoSenha() {
+            const emailInput = document.getElementById('forgot-user-email').value.trim().toLowerCase();
             const newPassInput = document.getElementById('forgot-new-pass').value.trim();
             if (!emailInput || !newPassInput) return alert("Preencha todos os campos.");
-            let dbUsers = JSON.parse(localStorage.getItem('app_users_system')) || usuariosPadrao;
-            let idx = dbUsers.findIndex(u => u.email === emailInput);
-            if (idx === -1) return alert("E-mail não encontrado!");
-            dbUsers[idx].pass = newPassInput;
-            localStorage.setItem('app_users_system', JSON.stringify(dbUsers));
-            alert("Senha alterada com sucesso!");
-            fecharModalEsqueciSenhaAdmin();
+
+            // Verifica se tenta alterar um usuário padrão
+            const padrao = usuariosPadrao.find(u => u.email.toLowerCase() === emailInput);
+            if (padrao) {
+                return alert("Não é permitido redefinir a senha de contas padrão do sistema por aqui.");
+            }
+
+            try {
+                const snapshot = await db.collection("systemUsers").where("email", "==", emailInput).get();
+                if (snapshot.empty) {
+                    return alert("E-mail não encontrado na base de dados da nuvem!");
+                }
+
+                // Atualiza a senha no documento do Firestore
+                const docId = snapshot.docs[0].id;
+                await db.collection("systemUsers").doc(docId).update({ pass: newPassInput });
+
+                registrarLogAuditoria(`Redefiniu a senha do colaborador (${emailInput})`, "Autenticação");
+                alert("Senha alterada com sucesso na nuvem!");
+                fecharModalEsqueciSenhaAdmin();
+            } catch (e) {
+                alert("Erro ao redefinir senha no Firebase: " + e.message);
+            }
         }
 
         function executarRedefinicaoSenhaAluno() {
@@ -1848,22 +1864,52 @@ async function rejeitarSolicitacaoFirebase(id) {
 
         function fazerLogout() { sessionStorage.removeItem('usuario_logado'); location.reload(); }
 
-        function abrirModalAlternarUsuario() {
+       async function abrirModalAlternarUsuario() {
             const sessaoAtual = JSON.parse(sessionStorage.getItem('usuario_logado'));
             if (!sessaoAtual || sessaoAtual.perfil !== 'master') return alert("Acesso restrito a Master.");
+            
             const listEl = document.getElementById('switch-users-list');
-            listEl.innerHTML = '';
-            let dbUsers = JSON.parse(localStorage.getItem('app_users_system')) || usuariosPadrao;
-            dbUsers.forEach(u => {
-                listEl.innerHTML += `<li class="p-2 flex justify-between items-center text-xs"><span><strong>${u.nome}</strong> (${u.perfil})</span><button onclick="alternarParaUsuario('${u.email}')" class="px-2 py-1 bg-blue-600 text-white rounded">Alternar</button></li>`;
-            });
+            listEl.innerHTML = '<li class="p-2 text-xs text-center text-gray-400">Carregando usuários da nuvem...</li>';
             document.getElementById('switch-user-modal').style.display = 'flex';
+
+            try {
+                const snapshot = await db.collection("systemUsers").get();
+                let usuariosNuvem = [];
+                snapshot.forEach(doc => usuariosNuvem.push({ id: doc.id, ...doc.data() }));
+
+                listEl.innerHTML = '';
+
+                // Adiciona os usuários padrão primeiro
+                usuariosPadrao.forEach(u => {
+                    listEl.innerHTML += `
+                        <li class="p-2 flex justify-between items-center text-xs border-b border-gray-100 dark:border-slate-700">
+                            <span><strong>${u.nome}</strong> (${u.perfil}) <span class="text-[10px] text-gray-400">(Padrão)</span></span>
+                            <button onclick="alternarParaUsuarioDados('${u.email}', '${u.nome}', '${u.perfil}')" class="px-2 py-1 bg-blue-600 text-white rounded">Alternar</button>
+                        </li>`;
+                });
+
+                // Adiciona os usuários da nuvem
+                usuariosNuvem.forEach(u => {
+                    listEl.innerHTML += `
+                        <li class="p-2 flex justify-between items-center text-xs border-b border-gray-100 dark:border-slate-700">
+                            <span><strong>${u.nome}</strong> (${u.perfil})</span>
+                            <button onclick="alternarParaUsuarioDados('${u.email}', '${u.nome}', '${u.perfil}')" class="px-2 py-1 bg-blue-600 text-white rounded">Alternar</button>
+                        </li>`;
+                });
+            } catch (e) {
+                listEl.innerHTML = `<li class="p-2 text-xs text-center text-red-400">Erro ao carregar usuários.</li>`;
+            }
         }
-        function fecharModalAlternarUsuario() { document.getElementById('switch-user-modal').style.display = 'none'; }
-        function alternarParaUsuario(email) {
-            let dbUsers = JSON.parse(localStorage.getItem('app_users_system')) || usuariosPadrao;
-            let userFound = dbUsers.find(u => u.email === email);
-            if (userFound) { sessionStorage.setItem('usuario_logado', JSON.stringify(userFound)); location.reload(); }
+
+        function fecharModalAlternarUsuario() { 
+            document.getElementById('switch-user-modal').style.display = 'none'; 
+        }
+
+        function alternarParaUsuarioDados(email, nome, perfil) {
+            const userFound = { email, nome, perfil };
+            sessionStorage.setItem('usuario_logado', JSON.stringify(userFound));
+            registrarLogAuditoria(`Alternou para o usuário ${nome} (${perfil})`, "Autenticação");
+            location.reload();
         }
 
         function aplicarPermissoesPorPerfil(perfil) {
@@ -3572,20 +3618,21 @@ function carregarDatasCalendarioParaFrequencia() {
         }
 
        // Exemplo de adaptação para a função renderAttendanceList e o salvamento/edição
-function renderAttendanceList() {
+// ✅ FUNÇÃO CORRIGIDA E ATUALIZADA PARA LER O BLOQUEIO DA NUVEM (FIREBASE)
+async function renderAttendanceList() {
     const turmaId = document.getElementById('class-select').value;
     const dataAula = document.getElementById('attendance-calendar-date-select').value;
     const container = document.getElementById('student-attendance-list');
     if (!container) return;
     
-    container.innerHTML = '';
+    container.innerHTML = '<li class="py-3 text-sm text-gray-500 text-center">Carregando lista e status da nuvem...</li>';
 
     if (!turmaId || !dataAula) {
-        container.innerHTML = '<li class="py-3 text-sm text-gray-500">Selecione a turma e a data da aula programada.</li>';
+        container.innerHTML = '<li class="py-3 text-sm text-gray-500">Selecione a turma e a data da aula programada no calendário.</li>';
         return;
     }
 
-    // Filtra os alunos ativos da turma utilizando a variável correta "students" e a propriedade "classId"
+    // Filtra os alunos ativos da turma
     let alunosTurma = students
         .filter(s => s.classId === turmaId && s.status === "Ativo")
         .sort((a, b) => a.fullname.localeCompare(b.fullname));
@@ -3595,14 +3642,26 @@ function renderAttendanceList() {
         return;
     }
 
-    // Recupera frequências salvas no localStorage para esta turma e data
-    let frequenciasSalvas = JSON.parse(localStorage.getItem('se7_frequencias_salvas') || '{}');
-    let chaveFrequencia = `${turmaId}_${dataAula}`;
-    let registroAula = frequenciasSalvas[chaveFrequencia] || { finalizada: false, registros: {} };
+    let jaLancado = false;
+    let registrosAnteriores = {};
+
+    try {
+        // Consulta na nuvem (Firestore) se já existe chamada salva para esta turma e data
+        const docRef = await db.collection("attendanceLocks").doc(`${turmaId}_${dataAula}`).get();
+        if (docRef.exists) {
+            const dadosNuves = docRef.data();
+            jaLancado = dadosNuves.finalizada || false;
+            registrosAnteriores = dadosNuves.registros || {};
+        }
+    } catch (e) {
+        console.error("Erro ao verificar bloqueio na nuvem:", e);
+    }
+
+    container.innerHTML = '';
 
     alunosTurma.forEach(aluno => {
-        let statusSalvo = registroAula.registros ? registroAula.registros[aluno.id] : undefined;
-        let jaLancado = registroAula.finalizada || statusSalvo !== undefined;
+        let statusSalvo = registrosAnteriores[aluno.id];
+        let alunoBloqueado = jaLancado || statusSalvo !== undefined;
 
         let li = document.createElement('li');
         li.className = "py-3 flex items-center justify-between border-b border-gray-100 dark:border-slate-700";
@@ -3610,14 +3669,14 @@ function renderAttendanceList() {
             <span class="text-sm font-medium text-gray-800 dark:text-gray-200">${aluno.fullname} <span class="text-[10px] text-gray-400">(${aluno.code || 'S/N'})</span></span>
             <div class="flex items-center space-x-3">
                 <label class="inline-flex items-center space-x-1 cursor-pointer">
-                    <input type="radio" name="att_${aluno.id}" value="Presente" ${statusSalvo === 'Presente' || !statusSalvo ? 'checked' : ''} ${jaLancado ? 'disabled' : ''} class="text-emerald-600 focus:ring-emerald-500">
-                    <span class="text-xs ${jaLancado && statusSalvo !== 'Presente' ? 'opacity-50' : ''}">Presente</span>
+                    <input type="radio" name="att_${aluno.id}" value="Presente" ${statusSalvo === 'Presente' || !statusSalvo ? 'checked' : ''} ${alunoBloqueado ? 'disabled' : ''} class="text-emerald-600 focus:ring-emerald-500">
+                    <span class="text-xs ${alunoBloqueado && statusSalvo !== 'Presente' ? 'opacity-50' : ''}">Presente</span>
                 </label>
                 <label class="inline-flex items-center space-x-1 cursor-pointer">
-                    <input type="radio" name="att_${aluno.id}" value="Falta" ${statusSalvo === 'Falta' ? 'checked' : ''} ${jaLancado ? 'disabled' : ''} class="text-red-600 focus:ring-red-500">
-                    <span class="text-xs ${jaLancado && statusSalvo !== 'Falta' ? 'opacity-50' : ''}">Falta</span>
+                    <input type="radio" name="att_${aluno.id}" value="Falta" ${statusSalvo === 'Falta' ? 'checked' : ''} ${alunoBloqueado ? 'disabled' : ''} class="text-red-600 focus:ring-red-500">
+                    <span class="text-xs ${alunoBloqueado && statusSalvo !== 'Falta' ? 'opacity-50' : ''}">Falta</span>
                 </label>
-                ${jaLancado ? `<button type="button" onclick="habilitarEdicaoAlunoFrequencia(this, '${aluno.id}')" class="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-semibold rounded shadow transition"><i class="fa-solid fa-pen-to-square mr-1"></i> Editar</button>` : ''}
+                ${alunoBloqueado ? `<button type="button" onclick="habilitarEdicaoAlunoFrequencia(this, '${aluno.id}')" class="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-semibold rounded shadow transition"><i class="fa-solid fa-pen-to-square mr-1"></i> Editar</button>` : ''}
             </div>
         `;
         container.appendChild(li);
@@ -3636,83 +3695,87 @@ function habilitarEdicaoAlunoFrequencia(botao, alunoId) {
     botao.remove();
 }
 
-      async function saveAttendance() {
-            const classId = document.getElementById('class-select').value;
-            const dataAula = document.getElementById('attendance-calendar-date-select').value;
-            const professorId = document.getElementById('attendance-teacher-select').value;
+      // ✅ CÓDIGO NOVO (100% NUVEM / FIREBASE)
+async function saveAttendance() {
+    const classId = document.getElementById('class-select').value;
+    const dataAula = document.getElementById('attendance-calendar-date-select').value;
+    const professorId = document.getElementById('attendance-teacher-select').value;
 
-            if (!classId || !dataAula) return alert("Selecione a turma e a data da aula programada no calendário!");
+    if (!classId || !dataAula) return alert("Selecione a turma e a data da aula programada no calendário!");
 
-            const alunosTurma = students.filter(s => s.classId == classId && s.status === "Ativo");
-            if (alunosTurma.length === 0) return alert("Nenhum aluno ativo nesta turma.");
+    const alunosTurma = students.filter(s => s.classId == classId && s.status === "Ativo");
+    if (alunosTurma.length === 0) return alert("Nenhum aluno ativo nesta turma.");
 
-            const registrosFrequencia = [];
-            const mapaAlunosRegistros = {};
-            let totalFaltas = 0;
-            const batch = db.batch(); 
+    const registrosFrequencia = [];
+    const mapaAlunosRegistros = {};
+    let totalFaltas = 0;
+    const batch = db.batch(); 
 
-            alunosTurma.forEach(s => {
-                const radios = document.getElementsByName(`att_${s.id}`);
-                let statusPresenca = "Presente"; 
-                for (const r of radios) {
-                    if (r.checked) {
-                        statusPresenca = r.value;
-                        break;
-                    }
-                }
-
-                if (statusPresenca === 'Falta') totalFaltas++;
-
-                mapaAlunosRegistros[s.id] = statusPresenca;
-
-                registrosFrequencia.push({
-                    studentId: s.id,
-                    studentName: s.fullname,
-                    status: statusPresenca
-                });
-
-                const alunoRef = db.collection("students").doc(s.id);
-                const attendanceMap = s.attendance || {};
-                attendanceMap[dataAula] = { status: statusPresenca, updatedAt: new Date().toISOString() };
-                
-                batch.update(alunoRef, { attendance: attendanceMap });
-            });
-
-            // NOVO: Salva o estado de finalizado no navegador para bloquear os campos na próxima visualização
-            let frequenciasSalvas = JSON.parse(localStorage.getItem('se7_frequencias_salvas') || '{}');
-            frequenciasSalvas[`${classId}_${dataAula}`] = {
-                finalizada: true,
-                registros: mapaAlunosRegistros,
-                updatedAt: new Date().toISOString()
-            };
-            localStorage.setItem('se7_frequencias_salvas', JSON.stringify(frequenciasSalvas));
-
-            const dadosChamada = {
-                classId,
-                date: dataAula,
-                teacherId: professorId || null,
-                frequencias: registrosFrequencia,
-                timestamp: new Date().toISOString()
-            };
-
-            try {
-                const callRef = db.collection("attendanceRecords").doc();
-                batch.set(callRef, dadosChamada);
-
-                await batch.commit();
-
-                registrarLogAuditoria(`Chamada realizada para a turma ${classId} em ${dataAula} (${totalFaltas} falta(s) registrada(s))`, "Frequência");
-                alert(`Chamada salva com sucesso! Os campos foram bloqueados.`);
-                
-                // Atualiza a tela instantaneamente para refletir o bloqueio e o botão de edição
-                if (typeof renderAttendanceList === 'function') {
-                    renderAttendanceList();
-                }
-            } catch (error) {
-                console.error("Erro ao salvar frequência:", error);
-                alert("Erro ao salvar chamada na nuvem: " + error.message);
+    alunosTurma.forEach(s => {
+        const radios = document.getElementsByName(`att_${s.id}`);
+        let statusPresenca = "Presente"; 
+        for (const r of radios) {
+            if (r.checked) {
+                statusPresenca = r.value;
+                break;
             }
         }
+
+        if (statusPresenca === 'Falta') totalFaltas++;
+
+        mapaAlunosRegistros[s.id] = statusPresenca;
+
+        registrosFrequencia.push({
+            studentId: s.id,
+            studentName: s.fullname,
+            status: statusPresenca
+        });
+
+        const alunoRef = db.collection("students").doc(s.id);
+        const attendanceMap = s.attendance || {};
+        attendanceMap[dataAula] = { status: statusPresenca, updatedAt: new Date().toISOString() };
+        
+        batch.update(alunoRef, { attendance: attendanceMap });
+    });
+
+    // ==========================================
+    // SUBSTITUIÇÃO DO LOCALSTORAGE PARA O FIREBASE
+    // ==========================================
+    const lockRef = db.collection("attendanceLocks").doc(`${classId}_${dataAula}`);
+    batch.set(lockRef, {
+        classId: classId,
+        date: dataAula,
+        finalizada: true,
+        registros: mapaAlunosRegistros,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+
+    const dadosChamada = {
+        classId,
+        date: dataAula,
+        teacherId: professorId || null,
+        frequencias: registrosFrequencia,
+        timestamp: new Date().toISOString()
+    };
+
+    try {
+        const callRef = db.collection("attendanceRecords").doc();
+        batch.set(callRef, dadosChamada);
+
+        await batch.commit();
+
+        registrarLogAuditoria(`Chamada realizada para a turma ${classId} em ${dataAula} (${totalFaltas} falta(s) registrada(s))`, "Frequência");
+        alert(`Chamada salva e sincronizada na nuvem com sucesso!`);
+        
+        // Atualiza a tela instantaneamente para refletir o bloqueio
+        if (typeof renderAttendanceList === 'function') {
+            renderAttendanceList();
+        }
+    } catch (error) {
+        console.error("Erro ao salvar frequência:", error);
+        alert("Erro ao salvar chamada na nuvem: " + error.message);
+    }
+}
 
         function renderGradeList() {
             const classId = document.getElementById('grade-class-select').value;
