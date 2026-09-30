@@ -1240,24 +1240,26 @@
             </div>
         </div>
 
-<!-- SUBABA ASAAS (INTEGRAÇÃO DE COBRANÇAS) -->
+<!-- SUBABA ASAAS -->
 <div id="subtab-asaas" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
-    <div class="flex justify-between items-center border-b border-gray-200 dark:border-slate-700 pb-3">
+    <h3 class="font-bold text-sm text-gray-800 dark:text-white mb-2"><i class="fa-solid fa-credit-card mr-1"></i> Configurações de Integração Asaas</h3>
+    <p class="text-xs text-gray-500 mb-4">Gerencie as chaves de API e os parâmetros de cobrança integrada com o Asaas.</p>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-            <h3 class="font-bold text-base text-blue-600 dark:text-blue-400"><i class="fa-solid fa-wallet mr-2"></i> Configuração do Módulo Asaas</h3>
-            <p class="text-xs text-gray-500">Gerencie as credenciais de integração com o gateway de pagamentos Asaas.</p>
+            <label class="block text-xs font-semibold mb-1">Chave de API do Asaas</label>
+            <input type="password" id="input-asaas-api-key" placeholder="$aact_..." class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800">
         </div>
-        <span class="px-3 py-1 bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 rounded-full text-xs font-bold">API v3</span>
-    </div>
-
-    <div class="space-y-4 max-w-2xl text-xs">
         <div>
-            <label class="block font-semibold mb-1">Ambiente de Operação</label>
-            <select id="asaas-env-select" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white">
-                <option value="sandbox">Sandbox (Ambiente de Testes)</option>
-                <option value="production">Production (Ambiente de Produção / Real)</option>
+            <label class="block text-xs font-semibold mb-1">Ambiente</label>
+            <select id="input-asaas-ambiente" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800">
+                <option value="sandbox">Sandbox (Testes)</option>
+                <option value="producao">Produção (Oficial)</option>
             </select>
         </div>
+    </div>
+    <button type="button" onclick="salvarConfiguracaoAsaas()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow">Salvar Configurações do Asaas</button>
+</div>
 
         <div>
             <label class="block font-semibold mb-1">Chave de API do Asaas (API Key)</label>
@@ -2038,20 +2040,29 @@ async function notificarWhatsAppPrimeiroAcesso(novoColaborador) {
         }
 
         function openSubTab(evt, subtabId) {
-            const parent = evt.currentTarget.closest('.bg-white, .dark\\:bg-slate-800');
-            if (parent) {
-                parent.querySelectorAll('.subtab-content').forEach(el => el.style.display = 'none');
-                parent.querySelectorAll('.subtab-button').forEach(el => {
-                    el.classList.remove('bg-blue-600', 'text-white', 'shadow');
-                    el.classList.add('bg-gray-100', 'dark:bg-slate-700', 'text-gray-700', 'dark:text-gray-300');
-                });
-            }
-            document.getElementById(subtabId).style.display = 'block';
-            evt.currentTarget.classList.remove('bg-gray-100', 'dark:bg-slate-700', 'text-gray-700', 'dark:text-gray-300');
-            evt.currentTarget.classList.add('bg-blue-600', 'text-white', 'shadow');
-            if(subtabId === 'subtab-calendar') setTimeout(renderizarCalendarioSemestralAdmin, 200);
-            if(subtabId === 'subtab-portal-calendario') setTimeout(renderizarCalendarioSemestralPortalAluno, 200);
-        }
+    // Seleciona todas as sub-abas do container atual ou geral
+    const contents = document.querySelectorAll('.subtab-content');
+    contents.forEach(content => {
+        content.style.display = 'none';
+    });
+
+    const buttons = document.querySelectorAll('.subtab-button');
+    buttons.forEach(button => {
+        button.classList.remove('active', 'bg-blue-600', 'text-white', 'shadow');
+        button.classList.add('bg-gray-100', 'dark:bg-slate-700', 'text-gray-700', 'dark:text-gray-300');
+    });
+
+    // Mostra apenas a sub-aba clicada
+    const target = document.getElementById(subtabId);
+    if (target) {
+        target.style.display = 'block';
+    }
+
+    if (evt && evt.currentTarget) {
+        evt.currentTarget.classList.add('active', 'bg-blue-600', 'text-white', 'shadow');
+        evt.currentTarget.classList.remove('bg-gray-100', 'dark:bg-slate-700', 'text-gray-700', 'dark:text-gray-300');
+    }
+}
 
         // FUNÇÃO PARA GERENCIAR AS SUB-SUBABAS DE CURSOS
         function openSubSubTab(evt, subsubtabId) {
