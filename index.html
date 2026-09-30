@@ -1764,6 +1764,10 @@ function atualizarTurmasCalendarioFlutuante() {
     renderizarCalendarioFlutuanteResultado();
 }
 
+// ==========================================
+// CALENDÁRIO FLUTUANTE EM FORMATO DE MESES (CRONOLÓGICO)
+// ==========================================
+
 function renderizarCalendarioFlutuanteResultado() {
     const turmaId = document.getElementById('float-cal-class').value;
     const semestreSelecionado = document.getElementById('float-cal-semester').value;
@@ -1772,7 +1776,7 @@ function renderizarCalendarioFlutuanteResultado() {
     if (!container) return;
 
     if (!turmaId) {
-        container.innerHTML = `<p class="text-xs text-gray-400 text-center py-8">Selecione uma turma para carregar os eventos.</p>`;
+        container.innerHTML = `<p class="text-xs text-gray-400 text-center py-8">Selecione uma turma para carregar o calendário acadêmico.</p>`;
         return;
     }
 
@@ -1781,36 +1785,104 @@ function renderizarCalendarioFlutuanteResultado() {
         return;
     }
 
-    // Filtra os eventos da turma e do semestre escolhido
+    // 1. Define os meses correspondentes ao semestre selecionado (ex: 2º Semestre = Julho a Dezembro)
+    let mesesDoSemestre = [];
+    if (semestreSelecionado.endsWith('/2')) {
+        mesesDoSemestre = [
+            { num: 7, nome: "Julho" },
+            { num: 8, nome: "Agosto" },
+            { num: 9, nome: "Setembro" },
+            { num: 10, nome: "Outubro" },
+            { num: 11, nome: "Novembro" },
+            { num: 12, nome: "Dezembro" }
+        ];
+    } else {
+        mesesDoSemestre = [
+            { num: 1, nome: "Janeiro" },
+            { num: 2, nome: "Fevereiro" },
+            { num: 3, nome: "Março" },
+            { num: 4, nome: "Abril" },
+            { num: 5, nome: "Maio" },
+            { num: 6, nome: "Junho" }
+        ];
+    }
+
+    const anoStr = semestreSelecionado.split('/')[0];
+    
+    // Filtra os eventos da turma e semestre selecionados
     const eventosTurma = academicCalendars.filter(ev => 
         ev.classId === turmaId && (!ev.semestre || ev.semestre === semestreSelecionado)
     );
 
     if (eventosTurma.length === 0) {
-        container.innerHTML = `<p class="text-xs text-amber-600 dark:text-amber-400 text-center py-8 font-semibold">Nenhuma aula ou evento programado para esta turma no semestre ${semestreSelecionado}.</p>`;
+        container.innerHTML = `<p class="text-xs text-amber-600 dark:text-amber-400 text-center py-8 font-semibold">Nenhuma aula programada para esta turma no semestre ${semestreSelecionado}.</p>`;
         return;
     }
 
-    let htmlEventos = '';
-    
-    // Organiza e exibe os eventos de forma limpa
+    // 2. Extrai e aplaina todas as datas individuais de todos os eventos para uma única lista plana
+    let listaAulasPlana = [];
     eventosTurma.forEach(ev => {
-        const datasFormatadas = (ev.dates || []).map(d => d.split('-').reverse().join('/')).join(', ');
-        htmlEventos += `
-            <div class="bg-white dark:bg-slate-800 p-3 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm space-y-1">
-                <div class="flex justify-between items-center">
-                    <span class="font-bold text-xs text-blue-600 dark:text-blue-400">${ev.subject}</span>
-                    <span class="text-[10px] bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300 px-2 py-0.5 rounded font-bold">${ev.semestre || semestreSelecionado}</span>
+        if (ev.dates && Array.isArray(ev.dates)) {
+            ev.dates.forEach(dataIso => {
+                listaAulasPlana.push({
+                    dataIso: dataIso, // Formato "AAAA-MM-DD"
+                    subject: ev.subject,
+                    description: ev.description || 'Aula programada'
+                });
+            });
+        }
+    });
+
+    // 3. ORDENAÇÃO CRONOLÓGICA PERFEITA (Do dia mais antigo para o mais recente)
+    listaAulasPlana.sort((a, b) => a.dataIso.localeCompare(b.dataIso));
+
+    // 4. Monta a visualização dividida em blocos de meses (estilo grade elegante)
+    let htmlGrid = '<div class="grid grid-cols-1 md:grid-cols-2 gap-3">';
+    
+    let totalAulasEncontradas = 0;
+
+    mesesDoSemestre.forEach(m => {
+        let htmlAulasDoMes = '';
+
+        // Filtra as aulas que pertencem estritamente a este mês e ano
+        listaAulasPlana.forEach(aula => {
+            const [anoD, mesD, diaD] = aula.dataIso.split('-');
+            if (parseInt(mesD) === m.num && anoD === anoStr) {
+                totalAulasEncontradas++;
+                htmlAulasDoMes += `
+                    <div class="bg-blue-50 dark:bg-slate-900 border-l-4 border-blue-600 p-2.5 rounded-lg text-xs space-y-1 mb-2 shadow-xs">
+                        <div class="flex justify-between items-center font-bold text-blue-800 dark:text-blue-300">
+                            <span><i class="fa-solid fa-calendar-day mr-1"></i> ${diaD}/${mesD}/${anoD}</span>
+                            <span class="text-[10px] bg-blue-600 text-white px-1.5 py-0.2 rounded">Presencial</span>
+                        </div>
+                        <div class="font-semibold text-gray-900 dark:text-white">${aula.subject}</div>
+                        <div class="text-[11px] text-gray-500 dark:text-gray-400">${aula.description}</div>
+                    </div>
+                `;
+            }
+        });
+
+        // Renderiza o card do mês (mesmo que vazio para manter o layout limpo)
+        htmlGrid += `
+            <div class="bg-white dark:bg-slate-800 p-3.5 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 flex flex-col h-64 overflow-hidden">
+                <div class="font-bold text-xs text-gray-900 dark:text-white border-b border-gray-100 dark:border-slate-700 pb-2 mb-2 flex justify-between items-center">
+                    <span><i class="fa-solid fa-calendar text-blue-600 mr-1"></i> ${m.nome} / ${anoStr}</span>
+                    <span class="text-[10px] text-gray-400 font-semibold">Calendário Semestral</span>
                 </div>
-                <p class="text-xs text-gray-700 dark:text-gray-300 font-medium">${ev.description || 'Aula programada'}</p>
-                <div class="text-[11px] text-gray-500 dark:text-gray-400 flex items-center gap-1 pt-1">
-                    <i class="fa-solid fa-calendar-check text-emerald-600"></i> Datas de Aula: <strong>${datasFormatadas || 'N/I'}</strong>
+                <div class="overflow-y-auto flex-1 pr-1 space-y-1">
+                    ${htmlAulasDoMes || '<p class="text-[11px] text-gray-400 text-center py-12">Nenhuma aula agendada para este mês.</p>'}
                 </div>
             </div>
         `;
     });
 
-    container.innerHTML = htmlEventos;
+    htmlGrid += '</div>';
+
+    if (totalAulasEncontradas === 0) {
+        container.innerHTML = `<p class="text-xs text-amber-600 dark:text-amber-400 text-center py-8 font-semibold">Nenhuma data encontrada para o semestre ${semestreSelecionado}.</p>`;
+    } else {
+        container.innerHTML = htmlGrid;
+    }
 }
 
         function fazerLoginAluno() {
