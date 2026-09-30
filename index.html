@@ -3636,61 +3636,83 @@ function habilitarEdicaoAlunoFrequencia(botao, alunoId) {
     botao.remove();
 }
 
-      // ✅ CÓDIGO NOVO (100% FIREBASE / NUVEM)
-async function saveAttendance() {
-    try {
-        let classId = document.getElementById('selectTurma').value;
-        let dataAula = document.getElementById('inputData').value;
-        
-        if (!classId || !dataAula) {
-            alert('Selecione a turma e a data.');
-            return;
-        }
+      async function saveAttendance() {
+            const classId = document.getElementById('class-select').value;
+            const dataAula = document.getElementById('attendance-calendar-date-select').value;
+            const professorId = document.getElementById('attendance-teacher-select').value;
 
-        // Coleta os dados de presença dos alunos na tela
-        let registrosAlunos = {};
-        document.querySelectorAll('.attendance-row').forEach(row => {
-            let alunoId = row.getAttribute('data-alunoid');
-            let status = row.querySelector('input[type="radio"]:checked')?.value || 'P';
-            registrosAlunos[alunoId] = status;
-        });
+            if (!classId || !dataAula) return alert("Selecione a turma e a data da aula programada no calendário!");
 
-        // Salva na nuvem do Firebase para sincronizar entre todas as cidades
-        await db.collection("attendanceLocks").doc(`${classId}_${dataAula}`).set({
-            classId: classId,
-            date: dataAula,
-            finalizada: true,
-            registros: registrosAlunos,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
+            const alunosTurma = students.filter(s => s.classId == classId && s.status === "Ativo");
+            if (alunosTurma.length === 0) return alert("Nenhum aluno ativo nesta turma.");
 
-        alert('Chamada salva e sincronizada na nuvem com sucesso!');
-        // Recarrega a listagem para aplicar o bloqueio de edição
-       // ✅ CÓDIGO NOVO PARA VERIFICAR SE A CHAMADA JÁ FOI FEITA
-async function checkAttendanceLock(classId, dataAula) {
-    try {
-        // Consulta o documento correspondente no Firestore
-        let docRef = await db.collection("attendanceLocks").doc(`${classId}_${dataAula}`).get();
-        
-        if (docRef.exists) {
-            let dadosChamada = docRef.data();
-            
-            if (dadosChamada.finalizada) {
-                // Bloqueia os inputs de presença e exibe aviso de chamada finalizada
-                bloquearCamposFrequencia(true);
-                document.getElementById('btnSalvarChamada').style.display = 'none';
-                document.getElementById('btnEditarChamada').style.display = 'inline-block';
+            const registrosFrequencia = [];
+            const mapaAlunosRegistros = {};
+            let totalFaltas = 0;
+            const batch = db.batch(); 
+
+            alunosTurma.forEach(s => {
+                const radios = document.getElementsByName(`att_${s.id}`);
+                let statusPresenca = "Presente"; 
+                for (const r of radios) {
+                    if (r.checked) {
+                        statusPresenca = r.value;
+                        break;
+                    }
+                }
+
+                if (statusPresenca === 'Falta') totalFaltas++;
+
+                mapaAlunosRegistros[s.id] = statusPresenca;
+
+                registrosFrequencia.push({
+                    studentId: s.id,
+                    studentName: s.fullname,
+                    status: statusPresenca
+                });
+
+                const alunoRef = db.collection("students").doc(s.id);
+                const attendanceMap = s.attendance || {};
+                attendanceMap[dataAula] = { status: statusPresenca, updatedAt: new Date().toISOString() };
+                
+                batch.update(alunoRef, { attendance: attendanceMap });
+            });
+
+            // NOVO: Salva o estado de finalizado no navegador para bloquear os campos na próxima visualização
+            let frequenciasSalvas = JSON.parse(localStorage.getItem('se7_frequencias_salvas') || '{}');
+            frequenciasSalvas[`${classId}_${dataAula}`] = {
+                finalizada: true,
+                registros: mapaAlunosRegistros,
+                updatedAt: new Date().toISOString()
+            };
+            localStorage.setItem('se7_frequencias_salvas', JSON.stringify(frequenciasSalvas));
+
+            const dadosChamada = {
+                classId,
+                date: dataAula,
+                teacherId: professorId || null,
+                frequencias: registrosFrequencia,
+                timestamp: new Date().toISOString()
+            };
+
+            try {
+                const callRef = db.collection("attendanceRecords").doc();
+                batch.set(callRef, dadosChamada);
+
+                await batch.commit();
+
+                registrarLogAuditoria(`Chamada realizada para a turma ${classId} em ${dataAula} (${totalFaltas} falta(s) registrada(s))`, "Frequência");
+                alert(`Chamada salva com sucesso! Os campos foram bloqueados.`);
+                
+                // Atualiza a tela instantaneamente para refletir o bloqueio e o botão de edição
+                if (typeof renderAttendanceList === 'function') {
+                    renderAttendanceList();
+                }
+            } catch (error) {
+                console.error("Erro ao salvar frequência:", error);
+                alert("Erro ao salvar chamada na nuvem: " + error.message);
             }
-        } else {
-            // Chamada ainda não foi realizada/finalizada
-            bloquearCamposFrequencia(false);
-            document.getElementById('btnSalvarChamada').style.display = 'inline-block';
-            document.getElementById('btnEditarChamada').style.display = 'none';
         }
-    } catch (error) {
-        console.error("Erro ao verificar bloqueio de chamada:", error);
-    }
-}
 
         function renderGradeList() {
             const classId = document.getElementById('grade-class-select').value;
