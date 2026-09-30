@@ -1140,11 +1140,16 @@
                         <label class="block text-xs font-semibold mb-1">Selecione o Curso</label>
                         <select id="template-course-select" onchange="loadCourseTemplate()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></select>
                     </div>
+<!-- COLE ESTE BLOCO EXATAMENTE AQUI EM CIMA -->
+<div class="mt-4">
+    <label class="block text-xs font-semibold mb-1 text-emerald-600 dark:text-emerald-400">Template HTML Completo da Declaração de Matrícula</label>
+    <textarea id="input-declaracao-html-template" rows="8" placeholder="Cole o código HTML da declaração aqui..." class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-xs font-mono dark:bg-slate-900 dark:text-white"></textarea>
+</div>
+<!-- Bloco que você já tinha do Histórico Escolar -->
 <div class="mt-4">
     <label class="block text-xs font-semibold mb-1 text-blue-600 dark:text-blue-400">Template HTML Completo do Histórico Escolar</label>
     <textarea id="input-historico-html-template" rows="8" placeholder="Cole o código HTML do histórico aqui..." class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-xs font-mono dark:bg-slate-900 dark:text-white"></textarea>
 </div>
-
                     <div>
                         <div class="flex justify-between items-center mb-1">
                             <label class="text-xs font-semibold">Texto do Contrato</label>
@@ -3021,7 +3026,8 @@ async function removerUsuarioSistemaFirebase(id) {
         function loadCourseTemplate() {
             const course = courses.find(c => c.id == document.getElementById('template-course-select').value);
             if(course) {
-                document.getElementById('input-historico-html-template').value = course.historicoHtmlTemplate || '';
+                document.getElementById('input-declaracao-html-template').value = course.declaracaoHtmlTemplate || '';
+		document.getElementById('input-historico-html-template').value = course.historicoHtmlTemplate || '';
                 document.getElementById('input-contract-text').value = course.contractTemplate || '';
                 document.getElementById('input-decl-text').value = course.declTemplate || '';
                 document.getElementById('input-history-text').value = course.historyTemplate || '';
@@ -3052,7 +3058,8 @@ async function removerUsuarioSistemaFirebase(id) {
             const courseId = document.getElementById('template-course-select').value;
             if(!courseId) return;
             await db.collection("courses").doc(courseId).update({
-                contractTemplate: document.getElementById('input-contract-text').value,
+		declaracaoHtmlTemplate: document.getElementById('input-declaracao-html-template').value,                
+		contractTemplate: document.getElementById('input-contract-text').value,
                 declTemplate: document.getElementById('input-decl-text').value,
                 historicoHtmlTemplate: document.getElementById('input-historico-html-template').value,
                 historyTemplate: document.getElementById('input-history-text').value,
@@ -4207,24 +4214,42 @@ function renderFinanceStudentSelect() {
             const cargaHorariaAtualizada = curso ? (curso.hours || '---') : '---';
 
             if(tipoDoc === 'declaracao') {
-                textoCorpo = (curso && curso.declTemplate) ? curso.declTemplate.replace(/\{\{nome\}\}/g, aluno.fullname).replace(/\{\{cpf\}\}/g, aluno.cpf).replace(/\{\{curso\}\}/g, nomeCursoAtualizado).replace(/\{\{carga_horaria\}\}/g, cargaHorariaAtualizada).replace(/\{\{endereco_completo\}\}/g, enderecoCompleto) : `Declaramos...`;
-                doc.text(textoCorpo, 20, 60, { maxWidth: 170 });
-                doc.text(`Belém - PA, ${hojeStr}`, 105, 200, { align: "center" });
-                doc.line(60, 230, 150, 230);
-                doc.text("Secretaria Acadêmica - SE7", 105, 236, { align: "center" });
-                doc.save(`${tipoDoc}_${aluno.code}.pdf`);
-            } else if(tipoDoc === 'contrato') {
-                textoCorpo = (curso && curso.contractTemplate) ? curso.contractTemplate.replace(/\{\{nome\}\}/g, aluno.fullname).replace(/\{\{cpf\}\}/g, aluno.cpf).replace(/\{\{curso\}\}/g, nomeCursoAtualizado).replace(/\{\{carga_horaria\}\}/g, cargaHorariaAtualizada).replace(/\{\{endereco_completo\}\}/g, enderecoCompleto) : `Contrato...`;
-                doc.text(textoCorpo, 20, 60, { maxWidth: 170 });
-                doc.text(`Belém - PA, ${hojeStr}`, 105, 200, { align: "center" });
-                doc.line(60, 230, 150, 230);
-                doc.text("Secretaria Acadêmica - SE7", 105, 236, { align: "center" });
-                doc.save(`${tipoDoc}_${aluno.code}.pdf`);
-            } else {
-                // CHAMA O HISTÓRICO DINÂMICO EM HTML
-                gerarHistoricoEscolarDinamico(studentId);
-                return;
-            }
+        let templateHtmlDeclaracao = document.getElementById('input-declaracao-html-template').value || (curso ? curso.declaracaoHtmlTemplate : '');
+
+        if (!templateHtmlDeclaracao || templateHtmlDeclaracao.trim() === "") {
+            alert("Nenhum template HTML de declaração cadastrado para este curso. Vá em Sistema > Edição de Documentos e salve o modelo.");
+            return;
+        }
+
+        const hoje = new Date();
+        const dataPorExtenso = hoje.toLocaleDateString('pt-BR', { year: 'numeric', month: 'long', day: 'numeric' });
+
+        let htmlPreenchido = templateHtmlDeclaracao
+            .replace(/\{\{instituicao_nome\}\}/g, globalInstitutionData.name || 'SE7 Gestão Educacional')
+            .replace(/\{\{instituicao_razao\}\}/g, globalInstitutionData.razao || '')
+            .replace(/\{\{instituicao_endereco\}\}/g, globalInstitutionData.end || '')
+            .replace(/\{\{instituicao_cnpj\}\}/g, globalInstitutionData.cnpj || '')
+            .replace(/\{\{instituicao_logo\}\}/g, globalInstitutionData.logo || '')
+            .replace(/\{\{aluno_nome\}\}/g, aluno.fullname || '')
+            .replace(/\{\{aluno_matricula\}\}/g, aluno.code || '')
+            .replace(/\{\{aluno_turma\}\}/g, turma ? turma.name : '---')
+            .replace(/\{\{aluno_curso\}\}/g, curso ? curso.name : '---')
+            .replace(/\{\{aluno_cpf\}\}/g, aluno.cpf || '')
+            .replace(/\{\{aluno_rg\}\}/g, aluno.rg || '')
+            .replace(/\{\{aluno_data_nascimento\}\}/g, aluno.dob ? aluno.dob.split('-').reverse().join('/') : '')
+            .replace(/\{\{aluno_telefone\}\}/g, aluno.whatsapp || '')
+            .replace(/\{\{aluno_situacao\}\}/g, aluno.status || 'Ativo')
+            .replace(/Vigia\/PA,.*<\/div>/g, `Vigia/PA, ${dataPorExtenso}</div>`);
+
+        const janelaImpressao = window.open('', '_blank', 'width=900,height=700');
+        janelaImpressao.document.write(htmlPreenchido);
+        janelaImpressao.document.close();
+        
+        setTimeout(() => {
+            janelaImpressao.print();
+        }, 600);
+        return;
+  	  }
 	}
 
         function renderDropdowns() {
