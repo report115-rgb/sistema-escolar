@@ -1532,27 +1532,71 @@
             setInterval(atualizarHora, 1000);
         }
 
-        function registrarLogAuditoria(acao, modulo) {
-            const usuarioSessao = JSON.parse(sessionStorage.getItem('usuario_logado')) || { nome: "Sistema" };
-            const logs = JSON.parse(localStorage.getItem('se7_sistema_logs')) || [];
-            logs.unshift({ dataHora: new Date().toLocaleString('pt-BR'), usuario: usuarioSessao.nome, perfil: usuarioSessao.perfil ? usuarioSessao.perfil.toUpperCase() : 'GERAL', modulo, acao });
-            localStorage.setItem('se7_sistema_logs', JSON.stringify(logs));
-            renderizarLogsAuditoria();
+        async function registrarLogAuditoria(acao, modulo) {
+    const usuarioSessao = JSON.parse(sessionStorage.getItem('usuario_logado')) || { nome: "Sistema", perfil: "geral" };
+    
+    const novoLog = {
+        dataHora: new Date().toLocaleString('pt-BR'),
+        usuario: usuarioSessao.nome,
+        perfil: usuarioSessao.perfil ? usuarioSessao.perfil.toUpperCase() : 'GERAL',
+        modulo: modulo,
+        acao: acao,
+        createdAt: new Date().toISOString()
+    };
+
+    try {
+        // Salva diretamente na nuvem (Firestore) para que o Master veja de qualquer lugar
+        await db.collection("systemLogs").add(novoLog);
+    } catch (e) {
+        console.error("Erro ao registrar log na nuvem:", e);
+    }
+}
+
+async function renderizarLogsAuditoria() {
+    const tbody = document.getElementById('tabela-logs-auditoria');
+    if (!tbody) return;
+    
+    tbody.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-gray-400">Carregando logs da nuvem...</td></tr>`;
+
+    try {
+        // Busca os logs ordenados do mais recente para o mais antigo na nuvem
+        const snapshot = await db.collection("systemLogs").orderBy("createdAt", "desc").limit(100).get();
+        
+        if (snapshot.empty) {
+            tbody.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-gray-400">Nenhum log encontrado na nuvem.</td></tr>`;
+            return;
         }
 
-        function renderizarLogsAuditoria() {
-            const tbody = document.getElementById('tabela-logs-auditoria');
-            if (!tbody) return;
-            const logs = JSON.parse(localStorage.getItem('se7_sistema_logs')) || [];
-            tbody.innerHTML = logs.length === 0 ? `<tr><td colspan="4" class="p-3 text-center text-gray-400">Nenhum log encontrado.</td></tr>` : '';
-            logs.forEach(l => {
-                tbody.innerHTML += `<tr class="border-b border-gray-100 dark:border-slate-700"><td class="p-3">${l.dataHora}</td><td class="p-3 font-semibold">${l.usuario} (${l.perfil})</td><td class="p-3"><span class="px-2 py-0.5 bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 rounded text-[10px] font-bold">${l.modulo}</span></td><td class="p-3">${l.acao}</td></tr>`;
-            });
-        }
+        tbody.innerHTML = '';
+        snapshot.forEach(doc => {
+            const l = doc.data();
+            tbody.innerHTML += `
+                <tr class="border-b border-gray-100 dark:border-slate-700">
+                    <td class="p-3">${l.dataHora}</td>
+                    <td class="p-3 font-semibold">${l.usuario} (${l.perfil})</td>
+                    <td class="p-3"><span class="px-2 py-0.5 bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 rounded text-[10px] font-bold">${l.modulo}</span></td>
+                    <td class="p-3">${l.acao}</td>
+                </tr>`;
+        });
+    } catch (e) {
+        console.error("Erro ao carregar logs da nuvem:", e);
+        tbody.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-red-400">Erro ao carregar os logs.</td></tr>`;
+    }
+}
 
-        function limparLogsAuditoria() {
-            if (confirm("Deseja limpar os logs?")) { localStorage.removeItem('se7_sistema_logs'); renderizarLogsAuditoria(); }
-        }
+async function limparLogsAuditoria() {
+    if (!confirm("Deseja limpar todos os logs da nuvem?")) return;
+    try {
+        const snapshot = await db.collection("systemLogs").get();
+        const batch = db.batch();
+        snapshot.forEach(doc => batch.delete(doc.ref));
+        await batch.commit();
+        alert("Logs limpos com sucesso!");
+        renderizarLogsAuditoria();
+    } catch (e) {
+        alert("Erro ao limpar logs: " + e.message);
+    }
+}
 
         function mudarTipoLogin(tipo) {
             const btnAdmin = document.getElementById('btn-tab-admin');
