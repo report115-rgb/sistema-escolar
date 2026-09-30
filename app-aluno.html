@@ -1407,21 +1407,22 @@
                 });
             }
 
-            db.collection("financeLogs").where("studentId", "==", alunoLogado.id).get().then(snap => {
+            // --- ESCUTADOR EM TEMPO REAL PARA AS FATURAS / FINANCEIRO ---
+            db.collection("financeLogs").where("studentId", "==", alunoLogado.id).onSnapshot(snap => {
                 const finList = document.getElementById('finance-list');
+                if(!finList) return;
                 finList.innerHTML = '';
+                
                 if(snap.empty) {
                     finList.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">Nenhuma fatura encontrada.</p>`;
                     return;
                 }
 
-                // Transforma em array para ordenação cronológica correta
                 let faturas = [];
                 snap.forEach(doc => {
                     faturas.push({ id: doc.id, ...doc.data() });
                 });
 
-                // Ordena por data de vencimento (suporta YYYY-MM-DD ou DD/MM/YYYY)
                 faturas.sort((a, b) => {
                     let dataA = a.date || '';
                     let dataB = b.date || '';
@@ -1442,7 +1443,6 @@
                     const formaPg = f.formaPagamento || 'Manual';
                     const dataPg = f.dataPagamento ? f.dataPagamento.split('-').reverse().join('/') : '';
 
-                    // Formata a data de vencimento para DD/MM/YYYY para exibição correta
                     let dataVencExibicao = f.date || '';
                     if (dataVencExibicao.includes('-')) {
                         const partesData = dataVencExibicao.split('-');
