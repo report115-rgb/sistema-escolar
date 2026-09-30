@@ -2177,7 +2177,7 @@ async function rejeitarSolicitacaoFirebase(id) {
     const navBtnPortalAluno = document.getElementById('nav-btn-portal-aluno');
     const adminSelectorPortalBox = document.getElementById('admin-selector-portal-box');
 
-if (perfil === 'financeiro') {
+    if (perfil === 'financeiro') {
         document.getElementById('main-tabs-nav').style.display = 'flex';
 
         // Oculta abas que o perfil financeiro não deve ver
@@ -2192,17 +2192,23 @@ if (perfil === 'financeiro') {
 
         const btnDocumentos = document.querySelector("button[onclick*='tab-history']");
         if (btnDocumentos) btnDocumentos.style.display = 'none';
-	
-	const botoesExcluir = document.querySelectorAll('.btn-excluir-aluno, .btn-deletar-total');
-    botoesExcluir.forEach(btn => {
-        btn.style.display = 'none';
-    });
+
+        // 👉 LINHA NOVA ADICIONADA AQUI PARA SUMIR COM A MATRÍCULA:
+        // (Altere 'tab-matricula' se o nome no seu onclick for um pouco diferente, ex: 'tab-enrollment')
+        const btnMatricula = document.querySelector("button[onclick*='tab-matricula']");
+        if (btnMatricula) btnMatricula.style.display = 'none';
+
+        const botoesExcluir = document.querySelectorAll('.btn-excluir-aluno, .btn-deletar-total');
+        botoesExcluir.forEach(btn => {
+            btn.style.display = 'none';
+        });
 
         if (navBtnSettings) navBtnSettings.style.display = 'none';
         if (navBtnPortalAluno) navBtnPortalAluno.style.display = 'none';
 
         openTab({ currentTarget: document.querySelector("button[onclick*='tab-gestion-students']") }, 'tab-gestion-students');
     }
+}
     
     // 👇 ADICIONE ESTA LINHA ABAIXO PARA CONTROLAR O BOTÃO FLUTUANTE 👇
     const floatingTrigger = document.getElementById('floating-calendar-trigger');
