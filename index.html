@@ -4115,21 +4115,32 @@ function renderFinanceStudentSelect() {
         }
 
         function renderReportClasses() {
-            const select = document.getElementById('report-class-select');
-            if(!select) return;
-            select.innerHTML = '';
-            classes.forEach(c => select.insertAdjacentHTML('beforeend', `<option value="${c.id}">${c.name}</option>`));
-            onReportClassChange();
-        }
+    const select = document.getElementById('report-class-select');
+    if(!select) return;
+    select.innerHTML = '';
+    
+    // Ordena as turmas alfabeticamente pelo nome
+    const turmasOrdenadas = [...classes].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+    turmasOrdenadas.forEach(c => select.insertAdjacentHTML('beforeend', `<option value="${c.id}">${c.name}</option>`));
+    onReportClassChange();
+}
 
         function onReportClassChange() {
-            const classId = document.getElementById('report-class-select').value;
-            const studentSelect = document.getElementById('report-student-select');
-            if(!studentSelect) return;
-            studentSelect.innerHTML = '';
-            studentSelect.disabled = false;
-            students.filter(s => s.classId == classId && s.status === "Ativo").forEach(s => studentSelect.insertAdjacentHTML('beforeend', `<option value="${s.id}">${s.fullname} (${s.code})</option>`));
-        }
+    const classId = document.getElementById('report-class-select').value;
+    const studentSelect = document.getElementById('report-student-select');
+    if(!studentSelect) return;
+    
+    studentSelect.innerHTML = '';
+    studentSelect.disabled = false;
+
+    // Filtra e ordena os alunos ativos da turma alfabeticamente pelo nome completo
+    const alunosTurma = students
+        .filter(s => s.classId == classId && s.status === "Ativo")
+        .sort((a, b) => a.fullname.localeCompare(b.fullname));
+
+    alunosTurma.forEach(s => studentSelect.insertAdjacentHTML('beforeend', `<option value="${s.id}">${s.fullname} (${s.code})</option>`));
+}
 
         async function emitirDocumentoSelecionado() {
             const studentId = document.getElementById('report-student-select').value;
