@@ -5117,7 +5117,7 @@ async function gerarHistoricoEscolarDinamico(alunoId) {
     const curso = courses.find(c => c.id === aluno.courseId);
     const turma = classes.find(c => c.id === aluno.classId);
 
-    // Pega o HTML exato que você salvou na subaba de Edição de Documentos
+    // Pega o template HTML salvo na subaba de Edição de Documentos
     let templateHtml = document.getElementById('input-historico-html-template').value || (curso ? curso.historicoHtmlTemplate : '');
     
     if (!templateHtml || templateHtml.trim() === "") {
@@ -5125,7 +5125,31 @@ async function gerarHistoricoEscolarDinamico(alunoId) {
         return;
     }
 
-    // Substitui as tags básicas do aluno e da instituição
+    // 1. Montagem dinâmica das linhas da tabela de disciplinas com notas, carga horária e situação
+    let linhasDisciplinasHtml = '';
+    let cargaHorariaTotalCurso = curso && curso.hours ? curso.hours : '3600h';
+
+    if (curso && curso.subjects && curso.subjects.length > 0) {
+        curso.subjects.forEach(sub => {
+            const registroNota = (aluno.grades && aluno.grades[sub.id]) ? aluno.grades[sub.id] : { final: '---' };
+            const notaFinalNum = parseFloat(registroNota.final);
+            const situacaoDisciplina = !isNaN(notaFinalNum) ? (notaFinalNum >= 6 ? 'Aprovado' : 'Reprovado') : 'Cursando';
+            
+            linhasDisciplinasHtml += `
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;">${sub.name}</td>
+                    <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${sub.hours || '---'}</td>
+                    <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">100%</td>
+                    <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${registroNota.final !== undefined && registroNota.final !== '' ? registroNota.final : '---'}</td>
+                    <td style="padding: 8px; border: 1px solid #ddd; text-align: center; font-weight: bold; color: ${situacaoDisciplina === 'Aprovado' ? 'green' : '#333'};">${situacaoDisciplina}</td>
+                </tr>
+            `;
+        });
+    } else {
+        linhasDisciplinasHtml = `<tr><td colspan="5" style="text-align: center; padding: 12px;">Nenhuma disciplina cadastrada na grade curricular deste curso.</td></tr>`;
+    }
+
+    // 2. Substituição rigorosa das tags de dados e da tabela de disciplinas no HTML
     let htmlPreenchido = templateHtml
         .replace(/\{\{instituicao_nome\}\}/g, globalInstitutionData.name || 'SE7 Gestão Educacional')
         .replace(/\{\{instituicao_razao\}\}/g, globalInstitutionData.razao || '')
@@ -5136,34 +5160,15 @@ async function gerarHistoricoEscolarDinamico(alunoId) {
         .replace(/\{\{aluno_matricula\}\}/g, aluno.code || '')
         .replace(/\{\{aluno_turma\}\}/g, turma ? turma.name : '---')
         .replace(/\{\{aluno_curso\}\}/g, curso ? curso.name : '---')
+        .replace(/\{\{carga_horaria_curso\}\}/g, cargaHorariaTotalCurso)
         .replace(/\{\{aluno_cpf\}\}/g, aluno.cpf || '')
         .replace(/\{\{aluno_rg\}\}/g, aluno.rg || '')
         .replace(/\{\{aluno_data_nascimento\}\}/g, aluno.dob ? aluno.dob.split('-').reverse().join('/') : '')
         .replace(/\{\{aluno_telefone\}\}/g, aluno.whatsapp || '')
-        .replace(/\{\{aluno_situacao\}\}/g, aluno.status || 'Ativo');
+        .replace(/\{\{aluno_situacao\}\}/g, aluno.status || 'Ativo')
+        .replace(/\{\{tabela_disciplinas\}\}/g, linhasDisciplinasHtml);
 
-    // Monta as linhas das disciplinas dinamicamente com base nas notas cadastradas
-    let linhasDisciplinasHtml = '';
-    if (curso && curso.subjects) {
-        curso.subjects.forEach(sub => {
-            const registroNota = (aluno.grades && aluno.grades[sub.id]) ? aluno.grades[sub.id] : { final: '---' };
-            linhasDisciplinasHtml += `
-                <tr>
-                    <td>${sub.name}</td>
-                    <td style="text-align: center;">${sub.hours || '---'}</td>
-                    <td style="text-align: center;">100%</td>
-                    <td style="text-align: center;">${registroNota.final || '---'}</td>
-                    <td style="text-align: center;">${parseFloat(registroNota.final) >= 6 ? 'Aprovado' : 'Cursando'}</td>
-                </tr>
-            `;
-        });
-    } else {
-        linhasDisciplinasHtml = `<tr><td colspan="5" style="text-align: center;">Nenhuma disciplina cadastrada para este curso.</td></tr>`;
-    }
-
-    // Se o seu HTML possuir um identificador de tabela de disciplinas, injeta aqui
-    // (Caso contrário, o layout base é aberto diretamente preenchido)
-    
+    // 3. Abre a janela de impressão com o template devidamente preenchido
     const janelaImpressao = window.open('', '_blank', 'width=900,height=700');
     janelaImpressao.document.write(htmlPreenchido);
     janelaImpressao.document.close();
@@ -5171,8 +5176,7 @@ async function gerarHistoricoEscolarDinamico(alunoId) {
     setTimeout(() => {
         janelaImpressao.print();
     }, 600);
-}
-	
+}	
 	</script>
 </body>
 </html>
