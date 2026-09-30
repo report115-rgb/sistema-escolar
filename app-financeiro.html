@@ -134,7 +134,9 @@
             appId: "1:343442411308:web:e4500b862fa29b6b326689"
         };
 
-        firebase.initializeApp(firebaseConfig);
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
         const db = firebase.firestore();
 
         const usuariosPadrao = [
@@ -174,7 +176,7 @@
             if (padraoEncontrado) {
                 userFound = padraoEncontrado;
             } else {
-                // 2. Tenta buscar no Firebase Firestore de forma segura (tratando maiúsculas/minúsculas)
+                // 2. Tenta buscar no Firebase Firestore de forma segura
                 try {
                     const snapshot = await db.collection("systemUsers").get();
                     let usuarioEncontradoNuvem = null;
@@ -223,14 +225,18 @@
             db.collection("students").onSnapshot(snapshot => {
                 students = [];
                 snapshot.forEach(doc => students.push({ id: doc.id, ...doc.data() }));
-                students.sort((a, b) => a.fullname.localeCompare(b.fullname));
+                students.sort((a, b) => (a.fullname || '').localeCompare(b.fullname || ''));
                 renderizarListaAlunos();
+            }, error => {
+                console.error("Erro ao carregar alunos:", error);
             });
 
             db.collection("financeLogs").onSnapshot(snapshot => {
                 financeLogs = [];
                 snapshot.forEach(doc => financeLogs.push({ id: doc.id, ...doc.data() }));
                 if (alunoSelecionadoId) selecionarAlunoFinanceiro(alunoSelecionadoId);
+            }, error => {
+                console.error("Erro ao carregar faturas:", error);
             });
         }
 
@@ -240,7 +246,7 @@
             if (!container) return;
 
             const filtrados = students.filter(s => 
-                s.fullname.toLowerCase().includes(termo) || (s.cpf && s.cpf.includes(termo))
+                (s.fullname && s.fullname.toLowerCase().includes(termo)) || (s.cpf && s.cpf.includes(termo))
             );
 
             if (filtrados.length === 0) {
@@ -253,7 +259,7 @@
                 container.innerHTML += `
                     <div onclick="selecionarAlunoFinanceiro('${s.id}')" class="bg-white dark:bg-slate-800 p-3.5 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 flex justify-between items-center active:scale-98 transition cursor-pointer">
                         <div>
-                            <strong class="text-xs font-bold text-gray-900 dark:text-white">${s.fullname}</strong>
+                            <strong class="text-xs font-bold text-gray-900 dark:text-white">${s.fullname || 'Sem Nome'}</strong>
                             <p class="text-[10px] text-gray-400">Matrícula: ${s.code || 'S/N'} &bull; CPF: ${s.cpf || '---'}</p>
                         </div>
                         <div class="w-8 h-8 bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center text-xs">
@@ -269,7 +275,7 @@
             const aluno = students.find(s => s.id === id);
             if (!aluno) return;
 
-            document.getElementById('fin-aluno-nome').textContent = aluno.fullname;
+            document.getElementById('fin-aluno-nome').textContent = aluno.fullname || '---';
             document.getElementById('fin-aluno-detalhes').textContent = `Matrícula: ${aluno.code || 'S/N'} | CPF: ${aluno.cpf || '---'}`;
 
             const container = document.getElementById('lista-cobrancas-container');
@@ -282,13 +288,15 @@
                 cobrancas.forEach(f => {
                     const jaPago = f.status && f.status.toUpperCase().includes('PAGO');
                     const corBadge = jaPago ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300';
+                    const dataPag = f.dataPagamento || '---';
+                    const formaPag = f.formaPagamento || 'Manual';
                     
                     container.innerHTML += `
                         <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 space-y-2 text-xs">
                             <div class="flex justify-between items-start">
                                 <div>
-                                    <strong class="text-gray-900 dark:text-white text-xs">${f.description}</strong><br>
-                                    <span class="text-gray-400 text-[10px]">Vencimento: ${f.date} &bull; Valor: <strong>R$ ${f.amount}</strong></span>
+                                    <strong class="text-gray-900 dark:text-white text-xs">${f.description || 'Cobrança'}</strong><br>
+                                    <span class="text-gray-400 text-[10px]">Vencimento: ${f.date || '---'} &bull; Valor: <strong>R$ ${f.amount || '0,00'}</strong></span>
                                 </div>
                                 <span class="px-2 py-0.5 ${corBadge} rounded-full text-[10px] font-bold">${f.status || 'PENDENTE'}</span>
                             </div>
@@ -298,7 +306,7 @@
                                 </button>
                             ` : `
                                 <div class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold pt-1">
-                                    <i class="fa-solid fa-circle-check mr-1"></i> Pago em ${f.dataPagamento \vert{}\vert{} '---'} (${f.formaPagamento || 'Manual'})
+                                    <i class="fa-solid fa-circle-check mr-1"></i> Pago em ${dataPag} (${formaPag})
                                 </div>
                             `}
                         </div>
