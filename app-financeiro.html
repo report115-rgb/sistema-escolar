@@ -176,23 +176,25 @@
             if (padraoEncontrado) {
                 userFound = padraoEncontrado;
             } else {
-                // 2. Tenta buscar no Firebase Firestore de forma segura
+                // 2. Tenta buscar no Firebase Firestore de forma blindada (tratando espaços, maiúsculas e variações de senha)
                 try {
                     const snapshot = await db.collection("systemUsers").get();
                     let usuarioEncontradoNuvem = null;
 
                     snapshot.forEach(doc => {
                         const dados = doc.data();
-                        if (dados.email && dados.email.toLowerCase() === userInput) {
+                        const emailBanco = (dados.email || "").trim().toLowerCase();
+                        
+                        if (emailBanco === userInput) {
                             usuarioEncontradoNuvem = dados;
                         }
                     });
 
                     if (usuarioEncontradoNuvem) {
-                        const senhaCadastrada = usuarioEncontradoNuvem.pass || usuarioEncontradoNuvem.senha;
+                        const senhaCadastrada = String(usuarioEncontradoNuvem.pass || usuarioEncontradoNuvem.senha || usuarioEncontradoNuvem.password || "").trim();
                         if (senhaCadastrada === passInput) {
                             userFound = {
-                                nome: usuarioEncontradoNuvem.nome || "Usuário",
+                                nome: usuarioEncontradoNuvem.nome || usuarioEncontradoNuvem.name || "Funcionário",
                                 email: usuarioEncontradoNuvem.email,
                                 perfil: usuarioEncontradoNuvem.perfil || "financeiro"
                             };
@@ -207,7 +209,7 @@
             btnEntrar.disabled = false;
 
             if (!userFound) {
-                return alert("E-mail ou senha inválidos! Verifique suas credenciais.");
+                return alert("E-mail ou senha inválidos! Verifique suas credenciais no sistema matriz.");
             }
 
             sessionStorage.setItem('app_financeiro_user', JSON.stringify(userFound));
