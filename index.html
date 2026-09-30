@@ -2193,8 +2193,7 @@ async function rejeitarSolicitacaoFirebase(id) {
         const btnDocumentos = document.querySelector("button[onclick*='tab-history']");
         if (btnDocumentos) btnDocumentos.style.display = 'none';
 
-        // 👉 LINHA NOVA ADICIONADA AQUI PARA SUMIR COM A MATRÍCULA:
-        // (Altere 'tab-matricula' se o nome no seu onclick for um pouco diferente, ex: 'tab-enrollment')
+        // Oculta a aba de Matrícula para o perfil financeiro
         const btnMatricula = document.querySelector("button[onclick*='tab-matricula']");
         if (btnMatricula) btnMatricula.style.display = 'none';
 
