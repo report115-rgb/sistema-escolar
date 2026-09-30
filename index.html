@@ -4223,9 +4223,11 @@ function renderizarCobrancasAlunoSelecionadoFinanceiro(studentId) {
                         </div>
                     </div>
                 ` : `
-                    <div class="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center justify-between">
-                        <span><i class="fa-solid fa-circle-check"></i> Pago via <strong>${f.formaPagamento || 'Manual'}</strong> em ${f.dataPagamento || '---'}</span>
-                        <button onclick="estornarBaixaManualFinanceiro('${f.id}')" class="px-2.5 py-1 bg-gray-500 hover:bg-gray-600 text-white rounded text-[10px]">Estornar Baixa</button>
+                    <div class="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center justify-between bg-emerald-50 dark:bg-slate-900 p-2.5 rounded-lg border border-emerald-200 dark:border-slate-700">
+                        <span><i class="fa-solid fa-circle-check mr-1"></i> Pago via <strong>${f.formaPagamento || 'Manual'}</strong> em ${f.dataPagamento || '---'}</span>
+                        <button type="button" onclick="estornarBaixaManualFinanceiro('${f.id}')" class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold shadow transition flex items-center gap-1">
+                            <i class="fa-solid fa-rotate-left"></i> Estornar Baixa
+                        </button>
                     </div>
                 `}
             </div>
@@ -4252,21 +4254,29 @@ function renderizarCobrancasAlunoSelecionadoFinanceiro(studentId) {
 
         // --- FUNÇÃO PARA ESTORNAR A BAIXA CASO NECESSÁRIO ---
         async function estornarBaixaManualFinanceiro(financeLogId) {
-            if (!confirm("Deseja estornar a baixa desta mensalidade e retorná-la para pendente?")) return;
+    if (!confirm("ATENÇÃO: Deseja realmente estornar a baixa desta mensalidade e retorná-la para o status PENDENTE?")) return;
 
-            try {
-                await db.collection("financeLogs").doc(financeLogId).update({
-                    status: "PENDENTE (Desc. Pontualidade disponível até o vencimento)",
-                    dataPagamento: null
-                });
+    try {
+        // 1. Atualiza no banco de dados (Firebase) limpando o pagamento e voltando para pendente
+        await db.collection("financeLogs").doc(financeLogId).update({
+            status: "PENDENTE (Desc. Pontualidade disponível até o vencimento)",
+            dataPagamento: null,
+            formaPagamento: null
+        });
 
-                registrarLogAuditoria(`Estornou a baixa do registro financeiro ID ${financeLogId}`, "Financeiro");
-                alert("Baixa estornada com sucesso!");
-            } catch (error) {
-                console.error("Erro ao estornar baixa:", error);
-                alert("Erro ao atualizar na nuvem: " + error.message);
-            }
+        registrarLogAuditoria(`Estornou a baixa do registro financeiro ID ${financeLogId}`, "Financeiro");
+        alert("Baixa estornada com sucesso! A cobrança retornou para o status pendente.");
+        
+        // 2. Atualiza a tela de financeiro instantaneamente para sumir o botão de estorno e mostrar as opções de baixa
+        const selFin = document.getElementById('fin-student-select');
+        if (selFin && selFin.value) {
+            renderizarCobrancasAlunoSelecionadoFinanceiro(selFin.value);
         }
+    } catch (error) {
+        console.error("Erro ao estornar baixa:", error);
+        alert("Erro ao atualizar na nuvem: " + error.message);
+    }
+}
 
         function popularSelectAlunosPortalMaster() {
     const select = document.getElementById('admin-select-aluno-portal');
