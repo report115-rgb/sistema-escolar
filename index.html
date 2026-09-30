@@ -11,6 +11,7 @@
     
     <!-- COLE EXATAMENTE AQUI EMBAIXO: -->
     <link rel="icon" type="image/png" id="app-favicon" href="">
+
     <!-- Bibliotecas Externas para Geração de PDF, QR Code, Firebase e FullCalendar -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -807,7 +808,7 @@
                     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-templates')">Edição de Documentos</button>
                     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-institution')">Instituição</button>
 		    <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-asaas')">Asaas</button>
-		    <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-audit'); carregarLogsAuditoriaFirebase();">Auditoria</button>
+		    <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-audit')">Auditoria</button>
 </div>
 
                 <!-- ABA PRINCIPAL CURSOS (DIVIDIDA EM DUAS SUBABAS) -->
@@ -1240,26 +1241,24 @@
             </div>
         </div>
 
-<!-- SUBABA ASAAS -->
+<!-- SUBABA ASAAS (INTEGRAÇÃO DE COBRANÇAS) -->
 <div id="subtab-asaas" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
-    <h3 class="font-bold text-sm text-gray-800 dark:text-white mb-2"><i class="fa-solid fa-credit-card mr-1"></i> Configurações de Integração Asaas</h3>
-    <p class="text-xs text-gray-500 mb-4">Gerencie as chaves de API e os parâmetros de cobrança integrada com o Asaas.</p>
-    
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="flex justify-between items-center border-b border-gray-200 dark:border-slate-700 pb-3">
         <div>
-            <label class="block text-xs font-semibold mb-1">Chave de API do Asaas</label>
-            <input type="password" id="input-asaas-api-key" placeholder="$aact_..." class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800">
+            <h3 class="font-bold text-base text-blue-600 dark:text-blue-400"><i class="fa-solid fa-wallet mr-2"></i> Configuração do Módulo Asaas</h3>
+            <p class="text-xs text-gray-500">Gerencie as credenciais de integração com o gateway de pagamentos Asaas.</p>
         </div>
+        <span class="px-3 py-1 bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 rounded-full text-xs font-bold">API v3</span>
+    </div>
+
+    <div class="space-y-4 max-w-2xl text-xs">
         <div>
-            <label class="block text-xs font-semibold mb-1">Ambiente</label>
-            <select id="input-asaas-ambiente" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800">
-                <option value="sandbox">Sandbox (Testes)</option>
-                <option value="producao">Produção (Oficial)</option>
+            <label class="block font-semibold mb-1">Ambiente de Operação</label>
+            <select id="asaas-env-select" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white">
+                <option value="sandbox">Sandbox (Ambiente de Testes)</option>
+                <option value="production">Production (Ambiente de Produção / Real)</option>
             </select>
         </div>
-    </div>
-    <button type="button" onclick="salvarConfiguracaoAsaas()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow">Salvar Configurações do Asaas</button>
-</div>
 
         <div>
             <label class="block font-semibold mb-1">Chave de API do Asaas (API Key)</label>
@@ -1286,7 +1285,7 @@
 </div>
 
         <!-- AUDITORIA & LOGS -->
-        <div id="subtab-audit" class="tab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
+        <div id="subtab-audit" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
     <div class="flex justify-between items-center mb-4 pb-2 border-b border-gray-100 dark:border-slate-700">
         <h3 class="font-bold text-base text-blue-600 dark:text-blue-400"><i class="fa-solid fa-clock-rotate-left mr-2"></i> Auditoria e Rastreabilidade</h3>
         <button type="button" onclick="limparLogsAuditoria()" class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg shadow">Limpar Logs</button>
@@ -1463,36 +1462,6 @@
         </div>
     </div>
 
-<!-- MODAL DE EDIÇÃO DE FATURA / VENCIMENTO -->
-<div id="modal-editar-fatura" class="fixed inset-0 z-[3500] flex items-center justify-center bg-black/50 p-4" style="display: none;">
-    <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full p-6 border border-gray-200 dark:border-slate-700 relative shadow-2xl space-y-4">
-        <button type="button" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 text-xl font-bold" onclick="fecharModalEditarFatura()">&times;</button>
-        <h3 class="text-lg font-bold text-gray-900 dark:text-white"><i class="fa-solid fa-pen-to-square text-blue-600 mr-2"></i> Editar Vencimento / Cobrança</h3>
-
-        <input type="hidden" id="edit-fin-id" value="">
-
-        <div>
-            <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase mb-1">Descrição</label>
-            <input type="text" id="edit-fin-desc" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 dark:text-white">
-        </div>
-
-        <div class="grid grid-cols-2 gap-2">
-            <div>
-                <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase mb-1">Data de Vencimento</label>
-                <input type="date" id="edit-fin-date" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 dark:text-white">
-            </div>
-            <div>
-                <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase mb-1">Valor (R$)</label>
-                <input type="number" step="0.01" id="edit-fin-amount" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 dark:text-white">
-            </div>
-        </div>
-
-        <button type="button" onclick="salvarEdicaoFaturaFinanceira()" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow transition text-sm">
-            Salvar Alterações da Fatura
-        </button>
-    </div>
-</div>
-
     <!-- SCRIPTS DA APLICAÇÃO -->
     <script>
         const firebaseConfig = {
@@ -1517,34 +1486,14 @@
             { email: "professor@admin.com", pass: "123456", perfil: "professor", nome: "Professor Exemplo" }
         ];
 
-        // Função que decide quais documentos exigir com base no curso do aluno (EJA x Técnico)
-function obterDocumentosObrigatoriosPorAluno(aluno) {
-    // Descobre se o curso do aluno é EJA/Supletivo
-    const curso = courses.find(c => c.id === aluno.courseId);
-    const isEJA = curso && (
-        curso.nivel === 'Supletivo' || 
-        curso.sigla === 'EJA' || 
-        (curso.name && curso.name.toUpperCase().includes('EJA'))
-    );
-
-    // Documentos básicos exigidos para TODOS os cursos
-    const documentosBase = [
-        { id: "rg_cnh", label: "RG ou CNH" },
-        { id: "cpf", label: "CPF" },
-        { id: "comprovante_residencia", label: "Comprovante de Residência" },
-        { id: "certidao_nasc_cas", label: "Certidão de Nascimento ou Casamento" }
-    ];
-
-    // Se NÃO for EJA (ex: Técnico), adiciona o Diploma e o Histórico do Ensino Médio
-    if (!isEJA) {
-        documentosBase.push(
+        const tiposDocumentosObrigatorios = [
+            { id: "rg_cnh", label: "RG ou CNH" },
+            { id: "cpf", label: "CPF" },
+            { id: "comprovante_residencia", label: "Comprovante de Residência" },
+            { id: "certidao_nasc_cas", label: "Certidão de Nascimento ou Casamento" },
             { id: "diploma_medio", label: "Diploma do Ensino Médio" },
             { id: "historico_medio", label: "Histórico do Ensino Médio" }
-        );
-    }
-
-    return documentosBase;
-}
+        ];
 
         // ==========================================
         // SISTEMA DE INATIVIDADE ATIVO (10 MINUTOS)
@@ -1583,103 +1532,61 @@ function obterDocumentosObrigatoriosPorAluno(aluno) {
             setInterval(atualizarHora, 1000);
         }
 
-        async function registrarLogAuditoria(acao, categoria = "Geral") {
-    try {
-        // Pega o usuário logado atualmente na sessão
-        let usuarioLogado = JSON.parse(sessionStorage.getItem('usuario_logado')) || { nome: "Desconhecido", perfil: "Desconhecido" };
-        
-        const logData = {
-            usuario: usuarioLogado.nome || "Usuário",
-            perfil: usuarioLogado.perfil || "Secretaria/Comum",
-            acao: acao,
-            categoria: categoria,
-            dataHora: firebase.firestore.FieldValue.serverTimestamp()
-        };
-
-        // Salva o log diretamente no Firebase para centralizar no painel de auditoria
-        await db.collection("systemLogs").add(logData);
-        
-        // Opcional: mantém uma cópia local rápida se necessário, mas o foco é a nuvem
-    } catch (e) {
-        console.error("Erro ao registrar log de auditoria no Firebase:", e);
-    }
-}
-
-        let unsubscribeLogs = null; // Variável global para controlar o listener e evitar vazamento de memória
-
-function carregarLogsAuditoriaFirebase() {
-    const tabelaLogs = document.getElementById('tabela-logs-auditoria');
-    if (!tabelaLogs) return;
-    
-    tabelaLogs.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-gray-400">Carregando auditoria da nuvem...</td></tr>`;
-
-    // Se já houver um listener ativo, cancela ele antes de criar um novo para evitar congelamento
-    if (unsubscribeLogs) {
-        unsubscribeLogs();
-    }
-
-    unsubscribeLogs = db.collection("systemLogs").orderBy("dataHora", "desc").limit(50).onSnapshot((snapshot) => {
-        tabelaLogs.innerHTML = "";
-        if (snapshot.empty) {
-            tabelaLogs.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-gray-400">Nenhum registro de auditoria encontrado.</td></tr>`;
-            return;
+        function registrarLogAuditoria(acao, modulo) {
+            const usuarioSessao = JSON.parse(sessionStorage.getItem('usuario_logado')) || { nome: "Sistema" };
+            const logs = JSON.parse(localStorage.getItem('se7_sistema_logs')) || [];
+            logs.unshift({ dataHora: new Date().toLocaleString('pt-BR'), usuario: usuarioSessao.nome, perfil: usuarioSessao.perfil ? usuarioSessao.perfil.toUpperCase() : 'GERAL', modulo, acao });
+            localStorage.setItem('se7_sistema_logs', JSON.stringify(logs));
+            renderizarLogsAuditoria();
         }
 
-        let htmlRows = "";
-        snapshot.forEach(doc => {
-            const log = doc.data();
-            let dataFormatada = "Data indisponível";
-            if (log.dataHora && log.dataHora.toDate) {
-                dataFormatada = log.dataHora.toDate().toLocaleString('pt-BR');
+        function renderizarLogsAuditoria() {
+            const tbody = document.getElementById('tabela-logs-auditoria');
+            if (!tbody) return;
+            const logs = JSON.parse(localStorage.getItem('se7_sistema_logs')) || [];
+            tbody.innerHTML = logs.length === 0 ? `<tr><td colspan="4" class="p-3 text-center text-gray-400">Nenhum log encontrado.</td></tr>` : '';
+            logs.forEach(l => {
+                tbody.innerHTML += `<tr class="border-b border-gray-100 dark:border-slate-700"><td class="p-3">${l.dataHora}</td><td class="p-3 font-semibold">${l.usuario} (${l.perfil})</td><td class="p-3"><span class="px-2 py-0.5 bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 rounded text-[10px] font-bold">${l.modulo}</span></td><td class="p-3">${l.acao}</td></tr>`;
+            });
+        }
+
+        function limparLogsAuditoria() {
+            if (confirm("Deseja limpar os logs?")) { localStorage.removeItem('se7_sistema_logs'); renderizarLogsAuditoria(); }
+        }
+
+        function mudarTipoLogin(tipo) {
+            const btnAdmin = document.getElementById('btn-tab-admin');
+            const btnAluno = document.getElementById('btn-tab-aluno');
+            const formAdmin = document.getElementById('form-login-admin');
+            const formAluno = document.getElementById('form-login-aluno');
+            const subTitle = document.getElementById('login-subtitle-text');
+
+            if (tipo === 'admin') {
+                btnAdmin.className = "flex-1 py-2 text-xs font-semibold rounded-md transition bg-blue-600 text-white shadow";
+                btnAluno.className = "flex-1 py-2 text-xs font-semibold rounded-md transition text-gray-600 dark:text-gray-300";
+                formAdmin.style.display = 'block'; formAluno.style.display = 'none';
+                subTitle.textContent = "Entre com suas credenciais para continuar";
+            } else {
+                btnAluno.className = "flex-1 py-2 text-xs font-semibold rounded-md transition bg-emerald-600 text-white shadow";
+                btnAdmin.className = "flex-1 py-2 text-xs font-semibold rounded-md transition text-gray-600 dark:text-gray-300";
+                formAluno.style.display = 'block'; formAdmin.style.display = 'none';
+                subTitle.textContent = "Acesse suas notas, presenças e faturas";
             }
+        }
 
-            htmlRows += `
-                <tr class="border-b border-gray-100 dark:border-slate-700">
-                    <td class="p-3">${dataFormatada}</td>
-                    <td class="p-3 font-semibold"><b>${log.usuario || 'Usuário'}</b> (${log.perfil || '---'})</td>
-                    <td class="p-3"><span class="px-2 py-0.5 bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 rounded text-[10px] font-bold">${log.categoria || 'Geral'}</span></td>
-                    <td class="p-3">${log.acao}</td>
-                </tr>
-            `;
-        });
-        tabelaLogs.innerHTML = htmlRows;
-    }, (error) => {
-        console.error("Erro ao escutar logs de auditoria:", error);
-        tabelaLogs.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-red-400">Erro ao carregar logs da nuvem.</td></tr>`;
-    });
-}
-
-        async function fazerLogin() {
-    const userInput = document.getElementById('login-user').value.trim();
-    const passInput = document.getElementById('login-pass').value.trim();
-    
-    // Inicia com os usuários padrão do sistema
-    let dbUsers = [...usuariosPadrao];
-    
-    try {
-        // Busca os colaboradores aprovados/cadastrados na nuvem (Firebase)
-        const snapshot = await db.collection("systemUsers").get();
-        snapshot.forEach(doc => {
-            dbUsers.push(doc.data());
-        });
-    } catch (e) {
-        console.error("Erro ao buscar usuários do Firebase:", e);
-    }
-    
-    // Mantém compatibilidade com o localStorage caso haja algum usuário salvo localmente
-    let localUsers = JSON.parse(localStorage.getItem('app_users_system')) || [];
-    dbUsers = [...dbUsers, ...localUsers];
-
-    let userFound = dbUsers.find(u => u.email === userInput && u.pass === passInput);
-    if (!userFound) return alert("Usuário ou senha inválidos!");
-    
-    sessionStorage.setItem('usuario_logado', JSON.stringify(userFound));
-    document.getElementById('login-modal').style.display = 'none';
-    aplicarPermissoesPorPerfil(userFound.perfil);
-    atualizarDisplayUsuarioLogado();
-    registrarLogAuditoria("Efetuou login no sistema", "Autenticação");
-    resetarTemporizadorInatividade();
-}
+        function fazerLogin() {
+            const userInput = document.getElementById('login-user').value.trim();
+            const passInput = document.getElementById('login-pass').value.trim();
+            let dbUsers = JSON.parse(localStorage.getItem('app_users_system')) || usuariosPadrao;
+            let userFound = dbUsers.find(u => u.email === userInput && u.pass === passInput);
+            if (!userFound) return alert("Usuário ou senha inválidos!");
+            sessionStorage.setItem('usuario_logado', JSON.stringify(userFound));
+            document.getElementById('login-modal').style.display = 'none';
+            aplicarPermissoesPorPerfil(userFound.perfil);
+            atualizarDisplayUsuarioLogado();
+            registrarLogAuditoria("Efetuou login no sistema", "Autenticação");
+            resetarTemporizadorInatividade();
+        }
 
         function fazerLoginAluno() {
             const cpfInput = document.getElementById('login-aluno-cpf').value.trim().replace(/[^\d]/g, '');
@@ -1715,41 +1622,42 @@ function carregarLogsAuditoriaFirebase() {
         function fecharModalEsqueciSenhaAluno() { document.getElementById('modal-esqueci-senha-aluno').style.display = 'none'; }
 
         async function enviarSolicitudePrimeiroAcesso() {
-    const nome = document.getElementById('pa-nome').value.trim();
-    const email = document.getElementById('pa-email').value.trim();
-    const pass = document.getElementById('pa-pass').value.trim();
-    const perfil = document.getElementById('pa-perfil').value;
+            const nome = document.getElementById('pa-nome').value.trim();
+            const email = document.getElementById('pa-email').value.trim();
+            const pass = document.getElementById('pa-pass').value.trim();
+            const perfil = document.getElementById('pa-perfil').value;
 
-    if (!nome || !email || !pass) return alert("Preencha todos os campos da solicitação.");
-    
-    try {
-        // Verifica no Firebase se já existe solicitação para este e-mail
-        const querySnapshot = await db.collection("pendingUsers").where("email", "==", email).get();
-        if (!querySnapshot.empty) {
-            return alert("Já existe uma solicitação de primeiro acesso pendente para este e-mail.");
+            if (!nome || !email || !pass) return alert("Preencha todos os campos da solicitação.");
+            
+            let solicitacoes = JSON.parse(localStorage.getItem('app_users_pending')) || [];
+            if (solicitacoes.some(s => s.email === email)) {
+                return alert("Já existe uma solicitação de primeiro acesso pendente para este e-mail.");
+            }
+
+            let dbUsers = JSON.parse(localStorage.getItem('app_users_system')) || usuariosPadrao;
+            if (dbUsers.some(u => u.email === email)) {
+                return alert("Este e-mail já está cadastrado no sistema.");
+            }
+
+            // Cria o objeto do novo colaborador
+    const novoColaborador = { 
+        id: Date.now().toString(), 
+        nome, 
+        email, 
+        pass, 
+        perfil, 
+        data: new Date().toLocaleString('pt-BR') 
+    };
+
+    solicitacoes.push(novoColaborador);
+    localStorage.setItem('app_users_pending', JSON.stringify(solicitacoes));
+
+    // >>> DISPARA O WHATSAPP AUTOMATICAMENTE PARA A CENTRAL <<<
+    notificarWhatsAppPrimeiroAcesso(novoColaborador);
+
+    alert("Solicitação enviada com sucesso! Aguarde a liberação do Master ou da direção para acessar o sistema.");
+    fecharModalPrimeiroAcesso();
         }
-
-        // Cria o registro diretamente no Firestore
-        const novoColaborador = { 
-            nome, 
-            email, 
-            pass, 
-            perfil, 
-            data: new Date().toLocaleString('pt-BR'),
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        };
-
-        await db.collection("pendingUsers").add(novoColaborador);
-
-        // Dispara o WhatsApp automático para a central
-        notificarWhatsAppPrimeiroAcesso(novoColaborador);
-
-        alert("Solicitação enviada com sucesso! Aguarde a liberação do Master ou da direção para acessar o sistema.");
-        fecharModalPrimeiroAcesso();
-    } catch (e) {
-        alert("Erro ao enviar solicitação: " + e.message);
-    }
-}
 
 // --- FUNÇÃO DE WHATSAPP PARA O PRIMEIRO ACESSO ---
 async function notificarWhatsAppPrimeiroAcesso(novoColaborador) {
@@ -1780,86 +1688,69 @@ async function notificarWhatsAppPrimeiroAcesso(novoColaborador) {
 }
 
         function renderizarSolicitacoesPendentes() {
-    const container = document.getElementById('lista-solicitacoes-pendentes');
-    const badge = document.getElementById('badge-pendentes-cont');
-    if (!container) return;
+            const container = document.getElementById('lista-solicitacoes-pendentes');
+            const badge = document.getElementById('badge-pendentes-cont');
+            if (!container) return;
 
-    // Escuta em tempo real a coleção no Firebase
-    db.collection("pendingUsers").orderBy("createdAt", "desc").onSnapshot((snapshot) => {
-        let solicitacoes = [];
-        snapshot.forEach(doc => {
-            solicitacoes.push({ id: doc.id, ...doc.data() });
-        });
-
-        if (badge) {
-            if (solicitacoes.length > 0) {
-                badge.textContent = solicitacoes.length;
-                badge.style.display = 'inline-block';
-            } else {
-                badge.style.display = 'none';
+            let solicitacoes = JSON.parse(localStorage.getItem('app_users_pending')) || [];
+            if (badge) {
+                if (solicitacoes.length > 0) {
+                    badge.textContent = solicitacoes.length;
+                    badge.style.display = 'inline-block';
+                } else {
+                    badge.style.display = 'none';
+                }
             }
+
+            if (solicitacoes.length === 0) {
+                container.innerHTML = `<p class="text-xs text-gray-400">Nenhuma solicitação pendente no momento.</p>`;
+                return;
+            }
+
+            container.innerHTML = '';
+            solicitacoes.forEach(s => {
+                container.innerHTML += `
+                    <div class="bg-white dark:bg-slate-800 p-3 rounded-lg border border-amber-200 dark:border-slate-700 flex justify-between items-center text-xs">
+                        <div>
+                            <strong>${s.nome}</strong> (${s.email})<br>
+                            <span class="text-[10px] text-gray-500">Perfil: ${s.perfil.toUpperCase()} &bull; ${s.data}</span>
+                        </div>
+                        <div class="flex gap-1.5">
+                            <button onclick="aprovarSolicitacao('${s.id}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-semibold">Aprovar</button>
+                            <button onclick="rejeitarSolicitacao('${s.id}')" class="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white rounded font-semibold">Rejeitar</button>
+                        </div>
+                    </div>
+                `;
+            });
         }
 
-        if (solicitacoes.length === 0) {
-            container.innerHTML = `<p class="text-xs text-gray-400">Nenhuma solicitação pendente no momento.</p>`;
-            return;
+        function aprovarSolicitacao(id) {
+            let solicitacoes = JSON.parse(localStorage.getItem('app_users_pending')) || [];
+            const idx = solicitacoes.findIndex(s => s.id === id);
+            if (idx === -1) return;
+            const user = solicitacoes[idx];
+
+            let dbUsers = JSON.parse(localStorage.getItem('app_users_system')) || usuariosPadrao;
+            dbUsers.push({ nome: user.nome, email: user.email, pass: user.pass, perfil: user.perfil });
+            localStorage.setItem('app_users_system', JSON.stringify(dbUsers));
+
+            solicitacoes.splice(idx, 1);
+            localStorage.setItem('app_users_pending', JSON.stringify(solicitacoes));
+
+            registrarLogAuditoria(`Aprovou o primeiro acesso do colaborador ${user.nome} (${user.email})`, "Autenticação");
+            alert(`Acesso aprovado para ${user.nome}! O colaborador já pode fazer login.`);
+            renderizarSolicitacoesPendentes();
+            renderizarUsuariosSistema();
         }
 
-        container.innerHTML = '';
-        solicitacoes.forEach(s => {
-            container.innerHTML += `
-                <div class="bg-white dark:bg-slate-800 p-3 rounded-lg border border-amber-200 dark:border-slate-700 flex justify-between items-center text-xs">
-                    <div>
-                        <strong>${s.nome}</strong> (${s.email})<br>
-                        <span class="text-[10px] text-gray-500">Perfil: ${s.perfil.toUpperCase()} &bull; ${s.data || ''}</span>
-                    </div>
-                    <div class="flex gap-1.5">
-                        <button onclick="aprovarSolicitacao('${s.id}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-semibold">Aprovar</button>
-                        <button onclick="rejeitarSolicitacao('${s.id}')" class="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white rounded font-semibold">Rejeitar</button>
-                    </div>
-                </div>
-            `;
-        });
-    });
-}
-
-        async function aprovarSolicitacao(id) {
-    try {
-        const docRef = db.collection("pendingUsers").doc(id);
-        const docSnap = await docRef.get();
-        if (!docSnap.exists) return alert("Solicitação não encontrada.");
-        
-        const user = docSnap.data();
-
-        // Salva o usuário aprovado diretamente na nuvem (Firestore) para sincronizar com qualquer dispositivo
-        await db.collection("systemUsers").add({
-            nome: user.nome,
-            email: user.email,
-            pass: user.pass,
-            perfil: user.perfil,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-
-        // Remove da tabela de pendentes no Firebase
-        await docRef.delete();
-
-        registrarLogAuditoria(`Aprovou o primeiro acesso do colaborador ${user.nome} (${user.email})`, "Autenticação");
-        alert(`Acesso aprovado para ${user.nome}! O colaborador já pode fazer login.`);
-        renderizarUsuariosSistema();
-    } catch (e) {
-        alert("Erro ao aprovar solicitação: " + e.message);
-    }
-}
-
-       async function rejeitarSolicitacao(id) {
-    if (!confirm("Deseja rejeitar esta solicitação de acesso?")) return;
-    try {
-        await db.collection("pendingUsers").doc(id).delete();
-        alert("Solicitação rejeitada e removida.");
-    } catch (e) {
-        alert("Erro ao rejeitar: " + e.message);
-    }
-}
+        function rejeitarSolicitacao(id) {
+            if (!confirm("Deseja rejeitar esta solicitação de acesso?")) return;
+            let solicitacoes = JSON.parse(localStorage.getItem('app_users_pending')) || [];
+            solicitacoes = solicitacoes.filter(s => s.id !== id);
+            localStorage.setItem('app_users_pending', JSON.stringify(solicitacoes));
+            alert("Solicitação rejeitada.");
+            renderizarSolicitacoesPendentes();
+        }
 
         function executarRedefinicaoSenha() {
             const emailInput = document.getElementById('forgot-user-email').value.trim();
@@ -1951,7 +1842,7 @@ async function notificarWhatsAppPrimeiroAcesso(novoColaborador) {
             } else if (loginModal) {
                 loginModal.style.display = 'flex';
             }
-            carregarLogsAuditoriaFirebase();
+            renderizarLogsAuditoria();
             renderizarSolicitacoesPendentes();
             renderizarCamposDatasCalendario();
             calcularTotalCurso();
@@ -2040,29 +1931,20 @@ async function notificarWhatsAppPrimeiroAcesso(novoColaborador) {
         }
 
         function openSubTab(evt, subtabId) {
-    // Seleciona todas as sub-abas do container atual ou geral
-    const contents = document.querySelectorAll('.subtab-content');
-    contents.forEach(content => {
-        content.style.display = 'none';
-    });
-
-    const buttons = document.querySelectorAll('.subtab-button');
-    buttons.forEach(button => {
-        button.classList.remove('active', 'bg-blue-600', 'text-white', 'shadow');
-        button.classList.add('bg-gray-100', 'dark:bg-slate-700', 'text-gray-700', 'dark:text-gray-300');
-    });
-
-    // Mostra apenas a sub-aba clicada
-    const target = document.getElementById(subtabId);
-    if (target) {
-        target.style.display = 'block';
-    }
-
-    if (evt && evt.currentTarget) {
-        evt.currentTarget.classList.add('active', 'bg-blue-600', 'text-white', 'shadow');
-        evt.currentTarget.classList.remove('bg-gray-100', 'dark:bg-slate-700', 'text-gray-700', 'dark:text-gray-300');
-    }
-}
+            const parent = evt.currentTarget.closest('.bg-white, .dark\\:bg-slate-800');
+            if (parent) {
+                parent.querySelectorAll('.subtab-content').forEach(el => el.style.display = 'none');
+                parent.querySelectorAll('.subtab-button').forEach(el => {
+                    el.classList.remove('bg-blue-600', 'text-white', 'shadow');
+                    el.classList.add('bg-gray-100', 'dark:bg-slate-700', 'text-gray-700', 'dark:text-gray-300');
+                });
+            }
+            document.getElementById(subtabId).style.display = 'block';
+            evt.currentTarget.classList.remove('bg-gray-100', 'dark:bg-slate-700', 'text-gray-700', 'dark:text-gray-300');
+            evt.currentTarget.classList.add('bg-blue-600', 'text-white', 'shadow');
+            if(subtabId === 'subtab-calendar') setTimeout(renderizarCalendarioSemestralAdmin, 200);
+            if(subtabId === 'subtab-portal-calendario') setTimeout(renderizarCalendarioSemestralPortalAluno, 200);
+        }
 
         // FUNÇÃO PARA GERENCIAR AS SUB-SUBABAS DE CURSOS
         function openSubSubTab(evt, subsubtabId) {
@@ -3339,76 +3221,80 @@ function carregarDatasCalendarioParaFrequencia() {
 }
 
         function renderizarDocumentosAlunoGestao(alunoId) {
-    const container = document.getElementById('container-validacao-docs');
-    if(!container) return;
-    if(!alunoId) {
-        container.innerHTML = `<p class="text-xs text-gray-500">Selecione um aluno acima para visualizar, aprovar ou reprovar os documentos postados.</p>`;
-        return;
-    }
-    const aluno = students.find(s => s.id === alunoId);
-    if(!aluno) return;
+            const container = document.getElementById('container-validacao-docs');
+            if(!container) return;
+            if(!alunoId) {
+                container.innerHTML = `<p class="text-xs text-gray-500">Selecione um aluno acima para visualizar, aprovar ou reprovar os documentos postados.</p>`;
+                return;
+            }
+            const aluno = students.find(s => s.id === alunoId);
+            if(!aluno) return;
 
-    const docs = aluno.documentos || {};
-    container.innerHTML = `<h3 class="font-bold text-sm text-gray-800 dark:text-white mb-2">Documentação de ${aluno.fullname}</h3>`;
+            const docs = aluno.documentos || {};
+            container.innerHTML = `<h3 class="font-bold text-sm text-gray-800 dark:text-white mb-2">Documentação de ${aluno.fullname}</h3>`;
 
-    // >>> AQUI USAMOS A NOVA LISTA DINÂMICA (Exclui o ensino médio se for EJA) <<<
-    const documentosPermitidos = obterDocumentosObrigatoriosPorAluno(aluno);
+            tiposDocumentosObrigatorios.forEach(tipo => {
+                const docInfo = docs[tipo.id];
+                const status = docInfo ? docInfo.status : 'Pendente';
+                const motivo = docInfo ? docInfo.motivoReprovacao : '';
+                const fileUrl = docInfo ? docInfo.fileUrl : '';
+                const driveUrl = docInfo ? docInfo.driveUrl : '';
+                const fileName = docInfo && docInfo.fileName ? docInfo.fileName : 'Documento em PDF';
 
-    documentosPermitidos.forEach(tipo => {
-        const docInfo = docs[tipo.id];
-        const status = docInfo ? docInfo.status : 'Pendente';
-        const motivo = docInfo ? docInfo.motivoReprovacao : '';
-        const fileUrl = docInfo ? docInfo.fileUrl : '';
-        const driveUrl = docInfo ? docInfo.driveUrl : '';
-        const fileName = docInfo && docInfo.fileName ? docInfo.fileName : 'Documento em PDF';
+                let statusBadge = `<span class="px-2 py-0.5 bg-gray-200 text-gray-800 rounded text-[10px] font-bold">Pendente</span>`;
+                if(status === 'Aprovado') statusBadge = `<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded text-[10px] font-bold">Aprovado</span>`;
+                if(status === 'Reprovado') statusBadge = `<span class="px-2 py-0.5 bg-red-100 text-red-800 rounded text-[10px] font-bold">Reprovado</span>`;
 
-        let statusBadge = `<span class="px-2 py-0.5 bg-gray-200 text-gray-800 rounded text-[10px] font-bold">Pendente</span>`;
-        if(status === 'Aprovado') statusBadge = `<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded text-[10px] font-bold">Aprovado</span>`;
-        if(status === 'Reprovado') statusBadge = `<span class="px-2 py-0.5 bg-red-100 text-red-800 rounded text-[10px] font-bold">Reprovado</span>`;
+                let linkArquivoHtml = '<span class="text-gray-400">Não enviado pelo aluno</span>';
+                if (driveUrl) {
+                    linkArquivoHtml = `<a href="${driveUrl}" target="_blank" class="text-blue-600 dark:text-blue-400 underline font-semibold flex items-center gap-1"><i class="fa-brands fa-google-drive"></i> Arquivo Enviado: ${fileName} (Abrir no Drive)</a>`;
+                } else if (fileUrl) {
+                    linkArquivoHtml = `<a href="${fileUrl}" target="_blank" class="text-blue-600 dark:text-blue-400 underline font-semibold">Visualizar PDF (${fileName})</a>`;
+                }
 
-        let linkArquivoHtml = '<span class="text-gray-400">Não enviado pelo aluno</span>';
-        if (driveUrl) {
-            linkArquivoHtml = `<a href="${driveUrl}" target="_blank" class="text-blue-600 dark:text-blue-400 underline font-semibold flex items-center gap-1"><i class="fa-brands fa-google-drive"></i> Arquivo Enviado: ${fileName} (Abrir no Drive)</a>`;
-        } else if (fileUrl) {
-            linkArquivoHtml = `<a href="${fileUrl}" target="_blank" class="text-blue-600 dark:text-blue-400 underline font-semibold">Visualizar PDF (${fileName})</a>`;
+                // CONTROLE DOS BOTÕES CONFORME O STATUS
+                let botoesAcaoHtml = '';
+                
+                if (status === 'Aprovado') {
+                    // Se já foi aprovado, bloqueia as ações permanentemente
+                    botoesAcaoHtml = `
+                        <div class="text-xs text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
+                            <i class="fa-solid fa-circle-check"></i> Documento validado e aprovado com sucesso.
+                        </div>
+                    `;
+                } else if (!driveUrl && !fileUrl) {
+                    // Se o aluno ainda não enviou nada
+                    botoesAcaoHtml = `
+                        <span class="text-xs text-gray-400 italic">Aguardando o envio do documento pelo aluno.</span>
+                    `;
+                } else {
+                    // Se foi enviado (Pendente) ou Reprovado (permite reavaliar após nova ação)
+                    botoesAcaoHtml = `
+                        <div class="flex flex-wrap gap-2 pt-2 items-center">
+                            <button onclick="aprovarEEnviarParaGoogleDrive('${aluno.id}', '${tipo.id}')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-semibold"><i class="fa-solid fa-check mr-1"></i> Aprovar Documento</button>
+                            <button onclick="toggleBoxReprovacao('${tipo.id}')" class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-semibold"><i class="fa-solid fa-xmark mr-1"></i> Reprovar</button>
+                        </div>
+                        <div id="box_reprov_${tipo.id}" class="space-y-1 pt-2" style="display: ${status === 'Reprovado' ? 'block' : 'none'};">
+                            <input type="text" id="motivo_${tipo.id}" value="${motivo}" placeholder="Informe o motivo da reprovação..." class="w-full px-3 py-1.5 rounded border text-xs dark:bg-slate-800 dark:text-white">
+                            <button onclick="salvarReprovacaoDocumento('${aluno.id}', '${tipo.id}')" class="px-3 py-1 bg-gray-700 hover:bg-gray-800 text-white rounded text-[10px] font-semibold">Salvar Reprovação e Motivo</button>
+                        </div>
+                    `;
+                }
+
+                container.innerHTML += `
+                    <div class="bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700 space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold text-xs text-blue-600 dark:text-blue-400">${tipo.label}</span>
+                            <div>${statusBadge}</div>
+                        </div>
+                        <div class="text-xs py-1">
+                            ${linkArquivoHtml}
+                        </div>
+                        ${botoesAcaoHtml}
+                    </div>
+                `;
+            });
         }
-
-        let botoesAcaoHtml = '';
-        if (status === 'Aprovado') {
-            botoesAcaoHtml = `
-                <div class="text-xs text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
-                    <i class="fa-solid fa-circle-check"></i> Documento validado e aprovado com sucesso.
-                </div>
-            `;
-        } else if (!driveUrl && !fileUrl) {
-            botoesAcaoHtml = `
-                <span class="text-xs text-gray-400 italic">Aguardando o envio do documento pelo aluno.</span>
-            `;
-        } else {
-            botoesAcaoHtml = `
-                <div class="flex flex-wrap gap-2 pt-2 items-center">
-                    <button onclick="aprovarEEnviarParaGoogleDrive('${aluno.id}', '${tipo.id}')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-semibold"><i class="fa-solid fa-check mr-1"></i> Aprovar Documento</button>
-                    <button onclick="toggleBoxReprovacao('${tipo.id}')" class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-semibold"><i class="fa-solid fa-xmark mr-1"></i> Reprovar</button>
-                </div>
-                <div id="box_reprov_${tipo.id}" class="space-y-1 pt-2" style="display: ${status === 'Reprovado' ? 'block' : 'none'};">
-                    <input type="text" id="motivo_${tipo.id}" value="${motivo}" placeholder="Informe o motivo da reprovação..." class="w-full px-3 py-1.5 rounded border text-xs dark:bg-slate-800 dark:text-white">
-                    <button onclick="salvarReprovacaoDocumento('${aluno.id}', '${tipo.id}')" class="px-3 py-1 bg-gray-700 hover:bg-gray-800 text-white rounded text-[10px] font-semibold">Salvar Reprovação e Motivo</button>
-                </div>
-            `;
-        }
-
-        container.innerHTML += `
-            <div class="bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700 space-y-2">
-                <div class="flex justify-between items-center">
-                    <span class="font-bold text-xs text-blue-600 dark:text-blue-400">${tipo.label}</span>
-                    <div>${statusBadge}</div>
-                </div>
-                <div class="text-xs py-1">${linkArquivoHtml}</div>
-                ${botoesAcaoHtml}
-            </div>
-        `;
-    });
-}
 
         async function aprovarEEnviarParaGoogleDrive(alunoId, tipoId) {
             const aluno = students.find(s => s.id === alunoId);
@@ -3504,7 +3390,8 @@ function carregarDatasCalendarioParaFrequencia() {
             alert("Matrícula reativada com sucesso!");
         }
 
-	function renderAttendanceList() {
+       // Exemplo de adaptação para a função renderAttendanceList e o salvamento/edição
+function renderAttendanceList() {
     const turmaId = document.getElementById('class-select').value;
     const dataAula = document.getElementById('attendance-calendar-date-select').value;
     const container = document.getElementById('student-attendance-list');
@@ -3517,6 +3404,7 @@ function carregarDatasCalendarioParaFrequencia() {
         return;
     }
 
+    // Filtra os alunos ativos da turma utilizando a variável correta "students" e a propriedade "classId"
     let alunosTurma = students.filter(s => s.classId === turmaId && s.status === "Ativo");
 
     if (alunosTurma.length === 0) {
@@ -3524,11 +3412,14 @@ function carregarDatasCalendarioParaFrequencia() {
         return;
     }
 
+    // Recupera frequências salvas no localStorage para esta turma e data
+    let frequenciasSalvas = JSON.parse(localStorage.getItem('se7_frequencias_salvas') || '{}');
+    let chaveFrequencia = `${turmaId}_${dataAula}`;
+    let registroAula = frequenciasSalvas[chaveFrequencia] || { finalizada: false, registros: {} };
+
     alunosTurma.forEach(aluno => {
-        // Verifica se já existe registro de presença salvo no objeto do aluno sincronizado do Firebase
-        const historicoPresenca = aluno.attendance && aluno.attendance[dataAula] ? aluno.attendance[dataAula].status : undefined;
-        let jaLancado = historicoPresenca !== undefined;
-        let statusSalvo = historicoPresenca || 'Presente';
+        let statusSalvo = registroAula.registros ? registroAula.registros[aluno.id] : undefined;
+        let jaLancado = registroAula.finalizada || statusSalvo !== undefined;
 
         let li = document.createElement('li');
         li.className = "py-3 flex items-center justify-between border-b border-gray-100 dark:border-slate-700";
@@ -3536,7 +3427,7 @@ function carregarDatasCalendarioParaFrequencia() {
             <span class="text-sm font-medium text-gray-800 dark:text-gray-200">${aluno.fullname} <span class="text-[10px] text-gray-400">(${aluno.code || 'S/N'})</span></span>
             <div class="flex items-center space-x-3">
                 <label class="inline-flex items-center space-x-1 cursor-pointer">
-                    <input type="radio" name="att_${aluno.id}" value="Presente" ${statusSalvo === 'Presente' ? 'checked' : ''} ${jaLancado ? 'disabled' : ''} class="text-emerald-600 focus:ring-emerald-500">
+                    <input type="radio" name="att_${aluno.id}" value="Presente" ${statusSalvo === 'Presente' || !statusSalvo ? 'checked' : ''} ${jaLancado ? 'disabled' : ''} class="text-emerald-600 focus:ring-emerald-500">
                     <span class="text-xs ${jaLancado && statusSalvo !== 'Presente' ? 'opacity-50' : ''}">Presente</span>
                 </label>
                 <label class="inline-flex items-center space-x-1 cursor-pointer">
@@ -3563,79 +3454,82 @@ function habilitarEdicaoAlunoFrequencia(botao, alunoId) {
 }
 
       async function saveAttendance() {
-    const classId = document.getElementById('class-select').value;
-    const dataAula = document.getElementById('attendance-calendar-date-select').value;
-    const professorId = document.getElementById('attendance-teacher-select').value;
+            const classId = document.getElementById('class-select').value;
+            const dataAula = document.getElementById('attendance-calendar-date-select').value;
+            const professorId = document.getElementById('attendance-teacher-select').value;
 
-    if (!classId || !dataAula) return alert("Selecione a turma e a data da aula programada no calendário!");
+            if (!classId || !dataAula) return alert("Selecione a turma e a data da aula programada no calendário!");
 
-    const alunosTurma = students.filter(s => s.classId == classId && s.status === "Ativo");
-    if (alunosTurma.length === 0) return alert("Nenhum aluno ativo nesta turma.");
+            const alunosTurma = students.filter(s => s.classId == classId && s.status === "Ativo");
+            if (alunosTurma.length === 0) return alert("Nenhum aluno ativo nesta turma.");
 
-    const registrosFrequencia = [];
-    const mapaAlunosRegistros = {};
-    let totalFaltas = 0;
-    const batch = db.batch(); 
+            const registrosFrequencia = [];
+            const mapaAlunosRegistros = {};
+            let totalFaltas = 0;
+            const batch = db.batch(); 
 
-    alunosTurma.forEach(s => {
-        const radios = document.getElementsByName(`att_${s.id}`);
-        let statusPresenca = "Presente"; 
-        for (const r of radios) {
-            if (r.checked) {
-                statusPresenca = r.value;
-                break;
+            alunosTurma.forEach(s => {
+                const radios = document.getElementsByName(`att_${s.id}`);
+                let statusPresenca = "Presente"; 
+                for (const r of radios) {
+                    if (r.checked) {
+                        statusPresenca = r.value;
+                        break;
+                    }
+                }
+
+                if (statusPresenca === 'Falta') totalFaltas++;
+
+                mapaAlunosRegistros[s.id] = statusPresenca;
+
+                registrosFrequencia.push({
+                    studentId: s.id,
+                    studentName: s.fullname,
+                    status: statusPresenca
+                });
+
+                const alunoRef = db.collection("students").doc(s.id);
+                const attendanceMap = s.attendance || {};
+                attendanceMap[dataAula] = { status: statusPresenca, updatedAt: new Date().toISOString() };
+                
+                batch.update(alunoRef, { attendance: attendanceMap });
+            });
+
+            // NOVO: Salva o estado de finalizado no navegador para bloquear os campos na próxima visualização
+            let frequenciasSalvas = JSON.parse(localStorage.getItem('se7_frequencias_salvas') || '{}');
+            frequenciasSalvas[`${classId}_${dataAula}`] = {
+                finalizada: true,
+                registros: mapaAlunosRegistros,
+                updatedAt: new Date().toISOString()
+            };
+            localStorage.setItem('se7_frequencias_salvas', JSON.stringify(frequenciasSalvas));
+
+            const dadosChamada = {
+                classId,
+                date: dataAula,
+                teacherId: professorId || null,
+                frequencias: registrosFrequencia,
+                timestamp: new Date().toISOString()
+            };
+
+            try {
+                const callRef = db.collection("attendanceRecords").doc();
+                batch.set(callRef, dadosChamada);
+
+                await batch.commit();
+
+                registrarLogAuditoria(`Chamada realizada para a turma ${classId} em ${dataAula} (${totalFaltas} falta(s) registrada(s))`, "Frequência");
+                alert(`Chamada salva com sucesso! Os campos foram bloqueados.`);
+                
+                // Atualiza a tela instantaneamente para refletir o bloqueio e o botão de edição
+                if (typeof renderAttendanceList === 'function') {
+                    renderAttendanceList();
+                }
+            } catch (error) {
+                console.error("Erro ao salvar frequência:", error);
+                alert("Erro ao salvar chamada na nuvem: " + error.message);
             }
         }
-
-        if (statusPresenca === 'Falta') totalFaltas++;
-
-        mapaAlunosRegistros[s.id] = statusPresenca;
-
-        registrosFrequencia.push({
-            studentId: s.id,
-            studentName: s.fullname,
-            status: statusPresenca
-        });
-
-        // Grava a frequência diretamente no documento do aluno na nuvem (Firestore)
-        const alunoRef = db.collection("students").doc(s.id);
-        const alunoObj = students.find(item => item.id === s.id);
-        const attendanceMap = (alunoObj && alunoObj.attendance) ? alunoObj.attendance : {};
-        
-        attendanceMap[dataAula] = { 
-            status: statusPresenca, 
-            updatedAt: new Date().toISOString() 
-        };
-        
-        batch.update(alunoRef, { attendance: attendanceMap });
-    });
-
-    const dadosChamada = {
-        classId,
-        date: dataAula,
-        teacherId: professorId || null,
-        frequencias: registrosFrequencia,
-        timestamp: new Date().toISOString()
-    };
-
-    try {
-        const callRef = db.collection("attendanceRecords").doc();
-        batch.set(callRef, dadosChamada);
-
-        // Executa todas as atualizações na nuvem de uma só vez para Master e Secretárias
-        await batch.commit();
-
-        registrarLogAuditoria(`Chamada realizada para a turma ${classId} em ${dataAula} (${totalFaltas} falta(s) registrada(s))`, "Frequência");
-        alert(`Chamada salva com sucesso na nuvem! Sincronizada para todas as secretárias.`);
-        
-        if (typeof renderAttendanceList === 'function') {
-            renderAttendanceList();
-        }
-    } catch (error) {
-        console.error("Erro ao salvar frequência na nuvem:", error);
-        alert("Erro ao salvar chamada: " + error.message);
-    }
-}
 
         function renderGradeList() {
             const classId = document.getElementById('grade-class-select').value;
@@ -3737,44 +3631,29 @@ function habilitarEdicaoAlunoFrequencia(botao, alunoId) {
             }
             const aluno = students.find(s => s.id === studentId);
             const cobrancasAluno = financeLogs.filter(f => f.studentId === studentId);
-	    cobrancasAluno.sort((a, b) => new Date(a.date) - new Date(b.date));
 
             if(cobrancasAluno.length === 0) {
                 container.innerHTML = `<p class="text-xs text-gray-400">Nenhuma cobrança encontrada para ${aluno ? aluno.fullname : 'este aluno'}.</p>`;
                 return;
             }
 
-           container.innerHTML = `
-            <div class="flex justify-between items-center mb-2 flex-wrap gap-2">
-                <div class="font-bold text-xs text-blue-600 dark:text-blue-400">
-                    Exibindo ${cobrancasAluno.length} cobranças / mensalidades para ${aluno ? aluno.fullname : ''}:
-                </div>
-                <button onclick="reorganizarMensalidadesAlunoSelecionado()" class="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded text-[11px] font-semibold shadow transition flex items-center gap-1">
-                    <i class="fa-solid fa-wand-magic-sparkles"></i> Reorganizar e Renumerar Sequência
-                </button>
-            </div>
-        `;
+            container.innerHTML = `<div class="font-bold text-xs text-blue-600 dark:text-blue-400 mb-2">Exibindo ${cobrancasAluno.length} cobranças / mensalidades para ${aluno ? aluno.fullname : ''}:</div>`;
 
             cobrancasAluno.forEach((f) => {
-    const jaPago = f.status && f.status.toUpperCase().includes('PAGO');
-    const corBadge = jaPago ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300';
-    const textoStatus = f.status || 'PENDENTE';
+                const jaPago = f.status && f.status.toUpperCase().includes('PAGO');
+                
+                const corBadge = jaPago ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300';
+                const textoStatus = f.status || 'PENDENTE';
 
-    container.innerHTML += `
-        <div class="bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700 flex flex-col gap-3 text-xs">
-            <div class="flex justify-between items-start sm:items-center">
-                <div>
-                    <strong class="text-gray-900 dark:text-white text-sm">${f.description}</strong><br>
-                    <span class="text-gray-500">Vencimento: <strong>${f.date ? f.date.split('-').reverse().join('/') : '---'}</strong> &bull; Valor: R$ ${f.amount}</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <!-- BOTÃO DE EDIÇÃO ADICIONADO AQUI -->
-                    <button onclick="abrirModalEditarFatura('${f.id}')" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[10px] font-semibold flex items-center gap-1 shadow transition">
-                        <i class="fa-solid fa-pen"></i> Editar
-                    </button>
-                    <span class="px-2 py-0.5 ${corBadge} rounded text-[10px] font-bold">${textoStatus}</span>
-                </div>
-            </div>
+                container.innerHTML += `
+                    <div class="bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700 flex flex-col gap-3 text-xs">
+                        <div class="flex justify-between items-start sm:items-center">
+                            <div>
+                                <strong class="text-gray-900 dark:text-white text-sm">${f.description}</strong><br>
+                                <span class="text-gray-500">Vencimento: <strong>${f.date}</strong> &bull; Valor: R$ ${f.amount}</span>
+                            </div>
+                            <span class="px-2 py-0.5 ${corBadge} rounded text-[10px] font-bold">${textoStatus}</span>
+                        </div>
 
                         ${!jaPago ? `
                             <div class="bg-white dark:bg-slate-800 p-3 rounded-lg border border-gray-200 dark:border-slate-700 grid grid-cols-1 sm:grid-cols-3 gap-2 items-end">
@@ -3808,50 +3687,6 @@ function habilitarEdicaoAlunoFrequencia(botao, alunoId) {
             `;
         });
     }
-
-async function reorganizarMensalidadesAlunoSelecionado() {
-    const selFin = document.getElementById('fin-student-select');
-    if (!selFin || !selFin.value) return alert("Selecione um aluno na aba Financeiro primeiro.");
-    const alunoId = selFin.value;
-
-    // Pega todas as faturas do aluno e ordena cronologicamente pela data
-    let cobrancasAluno = financeLogs.filter(f => f.studentId === alunoId);
-    cobrancasAluno.sort((a, b) => new Date(a.date) - new Date(b.date));
-
-    if (cobrancasAluno.length === 0) return alert("Nenhuma fatura encontrada para este aluno.");
-
-    if (!confirm(`Deseja reorganizar e renumerar sequencialmente as ${cobrancasAluno.length} mensalidades deste aluno (1/${cobrancasAluno.length}, 2/${cobrancasAluno.length}...) mantendo a ordem correta das datas?`)) return;
-
-    try {
-        const totalParcelas = cobrancasAluno.length;
-
-        // Atualiza cada fatura no Firebase com a numeração correta baseada na posição cronológica
-        for (let i = 0; i < totalParcelas; i++) {
-            const fatura = cobrancasAluno[i];
-            const numParcela = i + 1;
-
-            // Extrai o nome do curso da descrição atual (ex: pega tudo após o hífen)
-            let nomeCurso = "Curso";
-            if (fatura.description && fatura.description.includes("-")) {
-                nomeCurso = fatura.description.split("-")[1].trim();
-            } else if (fatura.description) {
-                nomeCurso = fatura.description;
-            }
-
-            const novaDescricao = `Mensalidade ${numParcela}/${totalParcelas} - ${nomeCurso}`;
-
-            // Atualiza no banco de dados
-            await db.collection("financeLogs").doc(fatura.id).update({
-                description: novaDescricao
-            });
-        }
-
-        alert("Mensalidades reorganizadas e renumeradas com sucesso!");
-        renderizarCobrancasAlunoSelecionadoFinanceiro(alunoId);
-    } catch (error) {
-        alert("Erro ao reorganizar faturas: " + error.message);
-    }
-}
 
         // --- FUNÇÃO TEMPORÁRIA PARA DAR BAIXA MANUAL ---
         async function darBaixaManualFinanceiro(financeLogId) {
@@ -3982,8 +3817,6 @@ function renderFinanceStudentSelect() {
 
             const notaList = document.getElementById('portal-aluno-notas-list');
             if (notaList && curso && curso.subjects) {
-	    const eventosTurmaFreq = academicCalendars.filter(ev => ev.classId === aluno.classId);
-            renderizarFrequenciaPainelAluno(aluno, eventosTurmaFreq);
                 notaList.innerHTML = '';
                 curso.subjects.forEach(sub => {
                     const registroNota = (aluno.grades && aluno.grades[sub.id]) ? aluno.grades[sub.id] : null;
@@ -4032,41 +3865,38 @@ function renderFinanceStudentSelect() {
         }
 
         function renderizarUploadDocumentosAluno(aluno) {
-    const container = document.getElementById('container-upload-documentos-aluno');
-    if(!container) return;
-    container.innerHTML = '';
-    const docs = aluno.documentos || {};
+            const container = document.getElementById('container-upload-documentos-aluno');
+            if(!container) return;
+            container.innerHTML = '';
+            const docs = aluno.documentos || {};
 
-    // >>> AQUI TAMBÉM USAMOS A NOVA LISTA DINÂMICA PARA O ALUNOS VÊ APENAS O QUE PRECISA NO PORTAL <<<
-    const documentosPermitidos = obterDocumentosObrigatoriosPorAluno(aluno);
+            tiposDocumentosObrigatorios.forEach(tipo => {
+                const docInfo = docs[tipo.id];
+                const status = docInfo ? docInfo.status : 'Pendente';
+                const motivo = docInfo ? docInfo.motivoReprovacao : '';
+                const fileUrl = docInfo ? docInfo.fileUrl : '';
+                const driveUrl = docInfo ? docInfo.driveUrl : '';
 
-    documentosPermitidos.forEach(tipo => {
-        const docInfo = docs[tipo.id];
-        const status = docInfo ? docInfo.status : 'Pendente';
-        const motivo = docInfo ? docInfo.motivoReprovacao : '';
-        const fileUrl = docInfo ? docInfo.fileUrl : '';
-        const driveUrl = docInfo ? docInfo.driveUrl : '';
+                let statusBadge = `<span class="px-2 py-0.5 bg-gray-200 text-gray-800 rounded text-[10px] font-bold">Pendente</span>`;
+                if(status === 'Aprovado') statusBadge = `<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded text-[10px] font-bold">Aprovado</span>`;
+                if(status === 'Reprovado') statusBadge = `<span class="px-2 py-0.5 bg-red-100 text-red-800 rounded text-[10px] font-bold" title="${motivo}">Reprovado</span>`;
 
-        let statusBadge = `<span class="px-2 py-0.5 bg-gray-200 text-gray-800 rounded text-[10px] font-bold">Pendente</span>`;
-        if(status === 'Aprovado') statusBadge = `<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded text-[10px] font-bold">Aprovado</span>`;
-        if(status === 'Reprovado') statusBadge = `<span class="px-2 py-0.5 bg-red-100 text-red-800 rounded text-[10px] font-bold" title="${motivo}">Reprovado</span>`;
-
-        container.innerHTML += `
-            <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-gray-200 dark:border-slate-700 space-y-2 shadow-sm">
-                <div class="flex justify-between items-center">
-                    <strong class="text-xs">${tipo.label}</strong>
-                    <div>${statusBadge}</div>
-                </div>
-                ${fileUrl ? `<p class="text-[11px] text-blue-600 truncate"><a href="${fileUrl}" target="_blank" class="underline">Ver PDF enviado</a></p>` : '<p class="text-[11px] text-gray-400">Nenhum arquivo enviado</p>'}
-                ${driveUrl ? `<p class="text-[11px] text-emerald-600 truncate"><i class="fa-brands fa-google-drive mr-1"></i> <a href="${driveUrl}" target="_blank" class="underline">Salvo no Google Drive</a></p>` : ''}
-                <div class="flex items-center gap-2 pt-2">
-                    <input type="file" id="file_doc_${aluno.id}_${tipo.id}" accept="application/pdf" class="text-[10px] w-full border border-gray-300 dark:border-slate-600 p-1 rounded">
-                    <button onclick="enviarDocumentoPDFAluno('${aluno.id}', '${tipo.id}')" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-semibold shrink-0">Enviar PDF</button>
-                </div>
-            </div>
-        `;
-    });
-}
+                container.innerHTML += `
+                    <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-gray-200 dark:border-slate-700 space-y-2 shadow-sm">
+                        <div class="flex justify-between items-center">
+                            <strong class="text-xs">${tipo.label}</strong>
+                            <div>${statusBadge}</div>
+                        </div>
+                        ${fileUrl ? `<p class="text-[11px] text-blue-600 truncate"><a href="${fileUrl}" target="_blank" class="underline">Ver PDF enviado</a></p>` : '<p class="text-[11px] text-gray-400">Nenhum arquivo enviado</p>'}
+                        ${driveUrl ? `<p class="text-[11px] text-emerald-600 truncate"><i class="fa-brands fa-google-drive mr-1"></i> <a href="${driveUrl}" target="_blank" class="underline">Salvo no Google Drive</a></p>` : ''}
+                        <div class="flex items-center gap-2 pt-2">
+                            <input type="file" id="file_doc_${aluno.id}_${tipo.id}" accept="application/pdf" class="text-[10px] w-full border border-gray-300 dark:border-slate-600 p-1 rounded">
+                            <button onclick="enviarDocumentoPDFAluno('${aluno.id}', '${tipo.id}')" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-semibold shrink-0">Enviar PDF</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
 
         async function enviarDocumentoPDFAluno(alunoId, tipoId) {
             const fileInput = document.getElementById(`file_doc_${alunoId}_${tipoId}`);
@@ -4163,175 +3993,47 @@ function renderFinanceStudentSelect() {
             
             const curso = courses.find(c => c.id == aluno.courseId);
             const turma = classes.find(c => c.id == aluno.classId);
-            const enderecoCompleto = (aluno.endereco || '') + ", nº " + (aluno.numero || '') + " - " + (aluno.bairro || '') + ", " + (aluno.cidade || '') + "/" + (aluno.estado || '') + " - CEP: " + (aluno.cep || '');
+            const enderecoCompleto = `${aluno.endereco || ''}, nº ${aluno.numero || ''} - ${aluno.bairro || ''}, ${aluno.cidade || ''}/${aluno.estado || ''} - CEP: ${aluno.cep || ''}`;
 
-            // Se for Histórico Escolar
-            if (tipoDoc === 'historico') {
-                const instNome = (globalInstitutionData && globalInstitutionData.name) ? globalInstitutionData.name : "SE7 Gestão Educacional";
-                const instRazao = (globalInstitutionData && globalInstitutionData.razao) ? globalInstitutionData.razao : "JS & SS Serviços Educacionais e Cia Ltda";
-                const instEnd = (globalInstitutionData && globalInstitutionData.end) ? globalInstitutionData.end : "Tv Magalhães Barata, 692, Centro - Vigia / PA";
-                const instCnpj = (globalInstitutionData && globalInstitutionData.cnpj) ? globalInstitutionData.cnpj : "31.535.516/0001-64";
-                const instLogo = (globalInstitutionData && globalInstitutionData.logo) ? globalInstitutionData.logo : "";
-
-                let linhasDisciplinas = "";
-                if (curso && curso.subjects && curso.subjects.length > 0) {
-                    curso.subjects.forEach(function(sub) {
-                        const notaObj = (aluno.grades && aluno.grades[sub.id]) ? aluno.grades[sub.id] : null;
-                        const notaFinal = (notaObj && notaObj.salvo) ? notaObj.final : '---';
-                        const situacaoSub = (notaObj && notaObj.salvo) ? (parseFloat(notaObj.final) >= 6 ? 'Aprovado' : 'Cursando') : 'Cursando';
-                        
-                        linhasDisciplinas += '<tr>' +
-                            '<td>' + sub.name + '</td>' +
-                            '<td style="text-align: center;">' + (sub.hours || '---') + '</td>' +
-                            '<td style="text-align: center;">100%</td>' +
-                            '<td style="text-align: center;">' + notaFinal + '</td>' +
-                            '<td style="text-align: center;">' + situacaoSub + '</td>' +
-                            '</tr>';
-                    });
-                } else {
-                    linhasDisciplinas = '<tr><td colspan="5" style="text-align: center; color: #666;">Nenhuma disciplina cadastrada para este curso.</td></tr>';
-                }
-
-                const listaEstagios = [
-                    "Estágio em Saúde Coletiva",
-                    "Estágio em Clínica Médica",
-                    "Estágio em Clínica Cirúrgica e CME",
-                    "Estágio em Urgência e Emergência",
-                    "Estágio em Clínica Obstétrica e Pediátrica",
-                    "Estágio em UTI"
-                ];
-                
-                let linhasEstagios = "";
-                listaEstagios.forEach(function(est) {
-                    linhasEstagios += '<tr>' +
-                        '<td>' + est + '</td>' +
-                        '<td style="text-align: center;">100 h</td>' +
-                        '<td style="text-align: center;">100%</td>' +
-                        '<td style="text-align: center;">---</td>' +
-                        '<td style="text-align: center;">Cursando</td>' +
-                        '</tr>';
-                });
-
-                const htmlLogo = instLogo ? '<img src="' + instLogo + '" alt="Logo" style="max-height: 55px; max-width: 130px; margin-right: 15px; object-fit: contain;">' : '';
-                const alunoDataNasc = aluno.dob ? aluno.dob.split('-').reverse().join('/') : '---';
-                const alunoMatricula = aluno.code || '---';
-                const alunoTurma = turma ? turma.name : '---';
-                const alunoCurso = curso ? curso.name : '---';
-                const alunoCpf = aluno.cpf || '---';
-                const alunoRg = aluno.rg || '---';
-                const alunoTelefone = aluno.whatsapp || '---';
-                const alunoStatus = aluno.status || 'Ativo';
-
-                const janelaImpressao = window.open('', '_blank');
-                janelaImpressao.document.write(
-                    '<!DOCTYPE html>' +
-                    '<html lang="pt-BR">' +
-                    '<head>' +
-                    '<meta charset="UTF-8">' +
-                    '<title>Histórico Escolar - ' + aluno.fullname + '</title>' +
-                    '<style>' +
-                    'body { font-family: Arial, sans-serif; font-size: 11px; color: #000; margin: 0; padding: 20px; background: #fff; }' +
-                    '.header { display: flex; align-items: center; border-bottom: 2px solid #1e40af; padding-bottom: 10px; margin-bottom: 15px; }' +
-                    '.header-text { flex: 1; text-align: center; }' +
-                    '.header-text h2 { margin: 0; font-size: 13px; color: #1e40af; text-transform: uppercase; font-weight: bold; }' +
-                    '.header-text h3 { margin: 3px 0; font-size: 11px; font-weight: bold; color: #333; }' +
-                    '.header-text p { margin: 2px 0; font-size: 9.5px; color: #555; }' +
-                    '.student-info { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 6px; margin-bottom: 15px; background: #f8fafc; padding: 10px; border: 1px solid #cbd5e1; border-radius: 4px; }' +
-                    '.student-info div { font-size: 11px; }' +
-                    '.student-info strong { color: #1e40af; }' +
-                    'table { width: 100%; border-collapse: collapse; margin-bottom: 25px; font-size: 10.5px; }' +
-                    'th, td { border: 1px solid #94a3b8; padding: 5px 7px; text-align: left; }' +
-                    'th { background-color: #1e40af; color: #fff; text-transform: uppercase; font-size: 9.5px; }' +
-                    '.section-title { background-color: #e2e8f0; font-weight: bold; text-align: center; color: #1e40af; font-size: 10px; }' +
-                    '.footer-signatures { margin-top: 50px; text-align: center; }' +
-                    '.signature-line { width: 45%; border-top: 1px solid #000; padding-top: 5px; margin: 0 auto; font-size: 11px; }' +
-                    '.footer-note { text-align: center; font-size: 9px; color: #666; margin-top: 25px; }' +
-                    '@media print { body { padding: 0; } }' +
-                    '</style>' +
-                    '</head>' +
-                    '<body>' +
-                    '<div class="header">' +
-                    htmlLogo +
-                    '<div class="header-text">' +
-                    '<h2>' + instNome + '</h2>' +
-                    '<h3>' + instRazao + '</h3>' +
-                    '<p>' + instEnd + ' | CNPJ: ' + instCnpj + '</p>' +
-                    '</div>' +
-                    '</div>' +
-                    '<div class="student-info">' +
-                    '<div><strong>Aluno(a):</strong> ' + aluno.fullname + '</div>' +
-                    '<div><strong>Matrícula:</strong> ' + alunoMatricula + '</div>' +
-                    '<div><strong>Turma:</strong> ' + alunoTurma + '</div>' +
-                    '<div><strong>Curso:</strong> ' + alunoCurso + '</div>' +
-                    '<div><strong>CPF:</strong> ' + alunoCpf + '</div>' +
-                    '<div><strong>RG:</strong> ' + alunoRg + '</div>' +
-                    '<div><strong>Data de Nasc.:</strong> ' + alunoDataNasc + '</div>' +
-                    '<div><strong>Telefone:</strong> ' + alunoTelefone + '</div>' +
-                    '<div><strong>Situação Atual:</strong> ' + alunoStatus + '</div>' +
-                    '</div>' +
-                    '<table>' +
-                    '<thead>' +
-                    '<tr>' +
-                    '<th>Componente Curricular</th>' +
-                    '<th style="width: 65px; text-align: center;">Carga H.</th>' +
-                    '<th style="width: 65px; text-align: center;">Freq. (%)</th>' +
-                    '<th style="width: 65px; text-align: center;">Nota</th>' +
-                    '<th style="width: 95px; text-align: center;">Situação</th>' +
-                    '</tr>' +
-                    '</thead>' +
-                    '<tbody>' +
-                    '<tr><td colspan="5" class="section-title">MÓDULO DE TEORIA E PRÁTICA</td></tr>' +
-                    linhasDisciplinas +
-                    '<tr><td colspan="5" class="section-title">MÓDULO DE ESTÁGIO</td></tr>' +
-                    linhasEstagios +
-                    '</tbody>' +
-                    '</table>' +
-                    '<div class="footer-signatures">' +
-                    '<div class="signature-line">Coordenação / Secretaria</div>' +
-                    '</div>' +
-                    '<div class="footer-note">' +
-                    'Documento gerado em conformidade com o histórico acadêmico do curso técnico de enfermagem.' +
-                    '</div>' +
-                    '<script>window.onload = function() { window.print(); };<\/script>' +
-                    '</body>' +
-                    '</html>'
-                );
-                janelaImpressao.document.close();
-                return;
-            }
-
-            // Fallback para Declaração e Contrato originais do sistema
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
+
             doc.setFont("helvetica", "bold");
             doc.setFontSize(16);
             doc.text("SE7 GESTÃO EDUCACIONAL", 105, 20, { align: "center" });
+
             doc.setFont("helvetica", "normal");
             doc.setFontSize(10);
             doc.text("JS & SS Serviços Educacionais e Cia Ltda", 105, 26, { align: "center" });
             doc.line(20, 32, 190, 32);
+
             doc.setFont("helvetica", "bold");
             doc.setFontSize(14);
-            let tituloDoc = tipoDoc === 'declaracao' ? "DECLARAÇÃO DE MATRÍCULA" : "CONTRATO DE PRESTAÇÃO DE SERVIÇOS";
+            let tituloDoc = tipoDoc === 'declaracao' ? "DECLARAÇÃO DE MATRÍCULA" : (tipoDoc === 'contrato' ? "CONTRATO DE PRESTAÇÃO DE SERVIÇOS" : "HISTÓRICO ESCOLAR");
             doc.text(tituloDoc, 105, 45, { align: "center" });
+
             doc.setFont("helvetica", "normal");
             doc.setFontSize(11);
 
             let textoCorpo = "";
             const hojeStr = new Date().toLocaleDateString('pt-BR');
             const nomeCursoAtualizado = curso ? curso.name : '---';
+            const cargaHorariaAtualizada = curso ? (curso.hours || '---') : '---';
 
             if(tipoDoc === 'declaracao') {
-                textoCorpo = (curso && curso.declTemplate) ? curso.declTemplate.replace(/\{\{nome\}\}/g, aluno.fullname).replace(/\{\{cpf\}\}/g, aluno.cpf).replace(/\{\{curso\}\}/g, nomeCursoAtualizado).replace(/\{\{endereco_completo\}\}/g, enderecoCompleto) : "Declaramos para os devidos fins que o(a) aluno(a) " + aluno.fullname + ", CPF " + aluno.cpf + ", residente em " + enderecoCompleto + ", encontra-se regularmente matriculado(a) no curso " + nomeCursoAtualizado + ".";
+                textoCorpo = (curso && curso.declTemplate) ? curso.declTemplate.replace(/\{\{nome\}\}/g, aluno.fullname).replace(/\{\{cpf\}\}/g, aluno.cpf).replace(/\{\{curso\}\}/g, nomeCursoAtualizado).replace(/\{\{carga_horaria\}\}/g, cargaHorariaAtualizada).replace(/\{\{endereco_completo\}\}/g, enderecoCompleto) : `Declaramos para os devidos fins que o(a) aluno(a) ${aluno.fullname}, CPF ${aluno.cpf}, residente em ${enderecoCompleto}, encontra-se regularmente matriculado(a) no curso ${nomeCursoAtualizado}.`;
+            } else if(tipoDoc === 'contrato') {
+                textoCorpo = (curso && curso.contractTemplate) ? curso.contractTemplate.replace(/\{\{nome\}\}/g, aluno.fullname).replace(/\{\{cpf\}\}/g, aluno.cpf).replace(/\{\{curso\}\}/g, nomeCursoAtualizado).replace(/\{\{carga_horaria\}\}/g, cargaHorariaAtualizada).replace(/\{\{endereco_completo\}\}/g, enderecoCompleto) : `Contrato padrão firmado com ${aluno.fullname}, CPF ${aluno.cpf}, residente na ${enderecoCompleto}, curso ${nomeCursoAtualizado}.`;
             } else {
-                textoCorpo = (curso && curso.contractTemplate) ? curso.contractTemplate.replace(/\{\{nome\}\}/g, aluno.fullname).replace(/\{\{cpf\}\}/g, aluno.cpf).replace(/\{\{curso\}\}/g, nomeCursoAtualizado).replace(/\{\{endereco_completo\}\}/g, enderecoCompleto) : "Contrato padrão firmado com " + aluno.fullname + ", CPF " + aluno.cpf + ", residente na " + enderecoCompleto + ", curso " + nomeCursoAtualizado + ".";
+                textoCorpo = (curso && curso.historyTemplate) ? curso.historyTemplate.replace(/\{\{nome\}\}/g, aluno.fullname).replace(/\{\{cpf\}\}/g, aluno.cpf).replace(/\{\{curso\}\}/g, nomeCursoAtualizado).replace(/\{\{carga_horaria\}\}/g, cargaHorariaAtualizada).replace(/\{\{endereco_completo\}\}/g, enderecoCompleto) : `Histórico Escolar do(a) aluno(a) ${aluno.fullname}, CPF ${aluno.cpf}, residente em ${enderecoCompleto}, vinculado(a) ao curso ${nomeCursoAtualizado} (Carga Horária: ${cargaHorariaAtualizada}) e turma ${turma ? turma.name : '---'}. Situação: Concluído / Regular.`;
             }
 
             doc.text(textoCorpo, 20, 60, { maxWidth: 170 });
-            doc.text("Belém - PA, " + hojeStr, 105, 200, { align: "center" });
+            doc.text(`Belém - PA, ${hojeStr}`, 105, 200, { align: "center" });
             doc.line(60, 230, 150, 230);
             doc.text("Secretaria Acadêmica - SE7", 105, 236, { align: "center" });
-            doc.save(tipoDoc + "_" + aluno.code + ".pdf");
+
+            doc.save(`${tipoDoc}_${aluno.code}.pdf`);
             alert("Documento gerado e baixado em PDF com sucesso!");
         }
 
@@ -4781,67 +4483,64 @@ async function alternarProvaIndividualAluno(studentId, novoStatus) {
         }
 
         function renderizarDocumentosEJagestao(alunoId) {
-    const container = document.getElementById('container-validacao-docs-eja');
-    if(!container) return;
-    if(!alunoId) {
-        container.innerHTML = `<p class="text-xs text-gray-500">Selecione um aluno da EJA acima para visualizar, aprovar ou reprovar os documentos postados.</p>`;
-        return;
-    }
-    const aluno = students.find(s => s.id === alunoId);
-    if(!aluno) return;
+            const container = document.getElementById('container-validacao-docs-eja');
+            if(!container) return;
+            if(!alunoId) {
+                container.innerHTML = `<p class="text-xs text-gray-500">Selecione um aluno da EJA acima para visualizar, aprovar ou reprovar os documentos postados.</p>`;
+                return;
+            }
+            const aluno = students.find(s => s.id === alunoId);
+            if(!aluno) return;
 
-    const docs = aluno.documentos || {};
-    container.innerHTML = `<h3 class="font-bold text-sm text-gray-800 dark:text-white mb-2">Documentação EJA de ${aluno.fullname}</h3>`;
+            const docs = aluno.documentos || {};
+            container.innerHTML = `<h3 class="font-bold text-sm text-gray-800 dark:text-white mb-2">Documentação EJA de ${aluno.fullname}</h3>`;
 
-    // >>> AQUI TAMBÉM USAMOS A NOVA LISTA DINÂMICA (Exclui o ensino médio) <<<
-    const documentosPermitidos = obterDocumentosObrigatoriosPorAluno(aluno);
+            tiposDocumentosObrigatorios.forEach(tipo => {
+                const docInfo = docs[tipo.id];
+                const status = docInfo ? docInfo.status : 'Pendente';
+                const motivo = docInfo ? docInfo.motivoReprovacao : '';
+                const driveUrl = docInfo ? docInfo.driveUrl : '';
+                const fileName = docInfo && docInfo.fileName ? docInfo.fileName : 'Documento em PDF';
 
-    documentosPermitidos.forEach(tipo => {
-        const docInfo = docs[tipo.id];
-        const status = docInfo ? docInfo.status : 'Pendente';
-        const motivo = docInfo ? docInfo.motivoReprovacao : '';
-        const driveUrl = docInfo ? docInfo.driveUrl : '';
-        const fileName = docInfo && docInfo.fileName ? docInfo.fileName : 'Documento em PDF';
+                let statusBadge = `<span class="px-2 py-0.5 bg-gray-200 text-gray-800 rounded text-[10px] font-bold">Pendente</span>`;
+                if(status === 'Aprovado') statusBadge = `<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded text-[10px] font-bold">Aprovado</span>`;
+                if(status === 'Reprovado') statusBadge = `<span class="px-2 py-0.5 bg-red-100 text-red-800 rounded text-[10px] font-bold">Reprovado</span>`;
 
-        let statusBadge = `<span class="px-2 py-0.5 bg-gray-200 text-gray-800 rounded text-[10px] font-bold">Pendente</span>`;
-        if(status === 'Aprovado') statusBadge = `<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded text-[10px] font-bold">Aprovado</span>`;
-        if(status === 'Reprovado') statusBadge = `<span class="px-2 py-0.5 bg-red-100 text-red-800 rounded text-[10px] font-bold">Reprovado</span>`;
+                let linkArquivoHtml = '<span class="text-gray-400">Não enviado pelo aluno</span>';
+                if (driveUrl) {
+                    linkArquivoHtml = `<a href="${driveUrl}" target="_blank" class="text-blue-600 dark:text-blue-400 underline font-semibold flex items-center gap-1"><i class="fa-brands fa-google-drive"></i> Arquivo no Drive: ${fileName} (Abrir)</a>`;
+                }
 
-        let linkArquivoHtml = '<span class="text-gray-400">Não enviado pelo aluno</span>';
-        if (driveUrl) {
-            linkArquivoHtml = `<a href="${driveUrl}" target="_blank" class="text-blue-600 dark:text-blue-400 underline font-semibold flex items-center gap-1"><i class="fa-brands fa-google-drive"></i> Arquivo no Drive: ${fileName} (Abrir)</a>`;
+                let botoesAcaoHtml = '';
+                if (status === 'Aprovado') {
+                    botoesAcaoHtml = `<div class="text-xs text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1"><i class="fa-solid fa-circle-check"></i> Documento EJA validado e aprovado.</div>`;
+                } else if (!driveUrl) {
+                    botoesAcaoHtml = `<span class="text-xs text-gray-400 italic">Aguardando o envio do documento pelo aluno da EJA.</span>`;
+                } else {
+                    botoesAcaoHtml = `
+                        <div class="flex flex-wrap gap-2 pt-2 items-center">
+                            <button onclick="aprovarDocumentoEJA('${aluno.id}', '${tipo.id}')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-semibold"><i class="fa-solid fa-check mr-1"></i> Aprovar Documento</button>
+                            <button onclick="toggleBoxReprovacaoEJA('${tipo.id}')" class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-semibold"><i class="fa-solid fa-xmark mr-1"></i> Reprovar</button>
+                        </div>
+                        <div id="box_reprov_eja_${tipo.id}" class="space-y-1 pt-2" style="display: none;">
+                            <input type="text" id="motivo_eja_${tipo.id}" value="${motivo}" placeholder="Informe o motivo da reprovação..." class="w-full px-3 py-1.5 rounded border text-xs dark:bg-slate-800 dark:text-white">
+                            <button onclick="salvarReprovacaoDocumentoEJA('${aluno.id}', '${tipo.id}')" class="px-3 py-1 bg-gray-700 hover:bg-gray-800 text-white rounded text-[10px] font-semibold">Salvar Reprovação</button>
+                        </div>
+                    `;
+                }
+
+                container.innerHTML += `
+                    <div class="bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700 space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold text-xs text-emerald-600 dark:text-emerald-400">${tipo.label}</span>
+                            <div>${statusBadge}</div>
+                        </div>
+                        <div class="text-xs py-1">${linkArquivoHtml}</div>
+                        ${botoesAcaoHtml}
+                    </div>
+                `;
+            });
         }
-
-        let botoesAcaoHtml = '';
-        if (status === 'Aprovado') {
-            botoesAcaoHtml = `<div class="text-xs text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1"><i class="fa-solid fa-circle-check"></i> Documento EJA validado e aprovado.</div>`;
-        } else if (!driveUrl) {
-            botoesAcaoHtml = `<span class="text-xs text-gray-400 italic">Aguardando o envio do documento pelo aluno da EJA.</span>`;
-        } else {
-            botoesAcaoHtml = `
-                <div class="flex flex-wrap gap-2 pt-2 items-center">
-                    <button onclick="aprovarDocumentoEJA('${aluno.id}', '${tipo.id}')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-semibold"><i class="fa-solid fa-check mr-1"></i> Aprovar Documento</button>
-                    <button onclick="toggleBoxReprovacaoEJA('${tipo.id}')" class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-semibold"><i class="fa-solid fa-xmark mr-1"></i> Reprovar</button>
-                </div>
-                <div id="box_reprov_eja_${tipo.id}" class="space-y-1 pt-2" style="display: none;">
-                    <input type="text" id="motivo_eja_${tipo.id}" value="${motivo}" placeholder="Informe o motivo da reprovação..." class="w-full px-3 py-1.5 rounded border text-xs dark:bg-slate-800 dark:text-white">
-                    <button onclick="salvarReprovacaoDocumentoEJA('${aluno.id}', '${tipo.id}')" class="px-3 py-1 bg-gray-700 hover:bg-gray-800 text-white rounded text-[10px] font-semibold">Salvar Reprovação</button>
-                </div>
-            `;
-        }
-
-        container.innerHTML += `
-            <div class="bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700 space-y-2">
-                <div class="flex justify-between items-center">
-                    <span class="font-bold text-xs text-emerald-600 dark:text-emerald-400">${tipo.label}</span>
-                    <div>${statusBadge}</div>
-                </div>
-                <div class="text-xs py-1">${linkArquivoHtml}</div>
-                ${botoesAcaoHtml}
-            </div>
-        `;
-    });
-}
 
         function toggleBoxReprovacaoEJA(tipoId) {
             const box = document.getElementById(`box_reprov_eja_${tipoId}`);
@@ -5219,159 +4918,6 @@ async function executarBaixaManualComDetalhes(financeLogId) {
         console.error("Erro ao dar baixa manual:", error);
         alert("Erro ao atualizar na nuvem: " + error.message);
     }
-}
-
-function abrirModalEditarFatura(faturaId) {
-    const log = financeLogs.find(f => f.id === faturaId);
-    if (!log) return alert("Fatura não encontrada.");
-
-    document.getElementById('edit-fin-id').value = log.id;
-    document.getElementById('edit-fin-desc').value = log.description || '';
-    document.getElementById('edit-fin-date').value = log.date || '';
-    document.getElementById('edit-fin-amount').value = log.amount || 0;
-
-    document.getElementById('modal-editar-fatura').style.display = 'flex';
-}
-
-function fecharModalEditarFatura() {
-    document.getElementById('modal-editar-fatura').style.display = 'none';
-}
-
-async function salvarEdicaoFaturaFinanceira() {
-    const id = document.getElementById('edit-fin-id').value;
-    const description = document.getElementById('edit-fin-desc').value.trim();
-    const date = document.getElementById('edit-fin-date').value;
-    const amount = parseFloat(document.getElementById('edit-fin-amount').value) || 0;
-
-    if (!id || !date) return alert("Preencha a data de vencimento.");
-
-    try {
-        await db.collection("financeLogs").doc(id).update({
-            description,
-            date,
-            amount
-        });
-
-        registrarLogAuditoria(`Editou a fatura financeira ID ${id} (Vencimento: ${date})`, "Financeiro");
-        alert("Fatura atualizada com sucesso!");
-        fecharModalEditarFatura();
-
-        const selFin = document.getElementById('fin-student-select');
-        if (selFin && selFin.value) {
-            renderizarCobrancasAlunoSelecionadoFinanceiro(selFin.value);
-        }
-    } catch (error) {
-        alert("Erro ao atualizar fatura na nuvem: " + error.message);
-    }
-}
-
-// --- FUNÇÃO DE RENDERIZAÇÃO DA FREQUÊNCIA NO MONITORAMENTO DA SECRETARIA / MASTER ---
-function renderizarFrequenciaPainelAluno(alunoSelecionado, eventosCalendarioTurma) {
-    const containerFreq = document.getElementById('subtab-portal-frequencia');
-    if (!containerFreq) return;
-
-    // Mantém o título e limpa apenas a lista antiga
-    containerFreq.innerHTML = `
-        <div class="bg-blue-50 dark:bg-slate-900 p-4 rounded-xl border border-blue-200 dark:border-slate-700 text-xs mb-4">
-            <p class="font-bold text-blue-800 dark:text-blue-300 mb-1"><i class="fa-solid fa-clipboard-user mr-1"></i> Controle de Frequência do Aluno</p>
-            <p>Histórico completo de presença e faltas cruzado com o calendário acadêmico da turma.</p>
-        </div>
-        <div id="painel-aluno-frequencia-container" class="space-y-4"></div>
-    `;
-
-    const containerMeses = document.getElementById('painel-aluno-frequencia-container');
-    const attendanceMap = alunoSelecionado.attendance || {};
-
-    if (!eventosCalendarioTurma || eventosCalendarioTurma.length === 0) {
-        containerMeses.innerHTML = `
-            <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm text-xs text-slate-600 dark:text-slate-300 text-center py-6">
-                <i class="fa-solid fa-clipboard-user text-2xl text-slate-400 mb-2 block"></i>
-                <p class="font-bold">Controle de Frequência</p>
-                <p class="text-[11px] text-slate-500 mt-1">Nenhum calendário de aulas vinculado à turma deste aluno.</p>
-            </div>
-        `;
-        return;
-    }
-
-    const mesesNomes = {
-        "01": "Janeiro", "02": "Fevereiro", "03": "Março", "04": "Abril",
-        "05": "Maio", "06": "Junho", "07": "Julho", "08": "Agosto",
-        "09": "Setembro", "10": "Outubro", "11": "Novembro", "12": "Dezembro"
-    };
-
-    const datasPorMes = {};
-
-    eventosCalendarioTurma.forEach(ev => {
-        const materia = ev.subject || 'Disciplina';
-        (ev.dates || []).forEach(dataIso => {
-            const partes = dataIso.split('-');
-            if (partes.length === 3) {
-                const [ano, mes, dia] = partes;
-                if (!datasPorMes[mes]) datasPorMes[mes] = [];
-
-                const registroAluno = attendanceMap[dataIso];
-                let status = 'Pendente';
-                if (registroAluno) {
-                    status = registroAluno.status || 'Presente';
-                }
-
-                datasPorMes[mes].push({
-                    dataIso: dataIso,
-                    dataFormatada: `${dia}/${mes}/${ano}`,
-                    materia: materia,
-                    status: status
-                });
-            }
-        });
-    });
-
-    const mesesOrdenados = Object.keys(datasPorMes).sort();
-
-    mesesOrdenados.forEach(mesKey => {
-        const nomeMes = mesesNomes[mesKey] || `Mês ${mesKey}`;
-        const listaDatas = datasPorMes[mesKey].sort((a, b) => a.dataIso.localeCompare(b.dataIso));
-
-        let htmlItensDatas = '';
-        listaDatas.forEach(item => {
-            let badgeClass = 'bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-400';
-            let iconeStatus = '<i class="fa-solid fa-clock mr-1"></i>';
-            let textoStatus = 'Aguardando';
-
-            const stLower = item.status.toLowerCase();
-            if (stLower === 'presente') {
-                badgeClass = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800';
-                iconeStatus = '<i class="fa-solid fa-circle-check mr-1"></i>';
-                textoStatus = 'Presente';
-            } else if (stLower === 'falta' || stLower === 'ausente') {
-                badgeClass = 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300 border border-red-200 dark:border-red-800';
-                iconeStatus = '<i class="fa-solid fa-circle-xmark mr-1"></i>';
-                textoStatus = 'Falta';
-            }
-
-            htmlItensDatas += `
-                <div class="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-100 dark:border-slate-800 flex justify-between items-center text-xs">
-                    <div class="space-y-0.5">
-                        <span class="font-bold text-blue-600 dark:text-blue-400 mr-2"><i class="fa-regular fa-calendar-check mr-1"></i> ${item.dataFormatada}</span>
-                        <span class="text-slate-700 dark:text-slate-200 font-semibold block">${item.materia}</span>
-                    </div>
-                    <span class="px-2.5 py-1 rounded-full font-bold text-[10px] ${badgeClass} shrink-0">
-                        ${iconeStatus} ${textoStatus}
-                    </span>
-                </div>
-            `;
-        });
-
-        containerMeses.innerHTML += `
-            <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3 mb-3">
-                <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-2">
-                    <h4 class="font-bold text-sm text-slate-800 dark:text-slate-100 uppercase tracking-wide"><i class="fa-solid fa-calendar-day mr-1.5 text-blue-600"></i> ${nomeMes}</h4>
-                </div>
-                <div class="space-y-2">
-                    ${htmlItensDatas}
-                </div>
-            </div>
-        `;
-    });
 }
 	</script>
 </body>
