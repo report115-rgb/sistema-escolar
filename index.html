@@ -3543,7 +3543,9 @@ function renderAttendanceList() {
     }
 
     // Filtra os alunos ativos da turma utilizando a variável correta "students" e a propriedade "classId"
-    let alunosTurma = students.filter(s => s.classId === turmaId && s.status === "Ativo");
+    let alunosTurma = students
+        .filter(s => s.classId === turmaId && s.status === "Ativo")
+        .sort((a, b) => a.fullname.localeCompare(b.fullname));
 
     if (alunosTurma.length === 0) {
         container.innerHTML = '<li class="py-3 text-sm text-gray-500">Nenhum aluno ativo encontrado nesta turma.</li>';
