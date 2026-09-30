@@ -135,7 +135,7 @@
 <!-- ========================================== -->
 <!-- BALÃOZINHO / ÍCONE FLUTUANTE DE CALENDÁRIO -->
 <!-- ========================================== -->
-<div id="floating-calendar-trigger" class="fixed bottom-6 right-6 z-[2500]">
+<div id="floating-calendar-trigger" class="fixed bottom-6 right-6 z-[2500]" style="display: none;">
     <button type="button" onclick="abrirModalCalendarioFlutuante()" class="group flex items-center gap-2.5 bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-full shadow-2xl transition-all duration-300 hover:scale-105 border border-white/20">
         <i class="fa-solid fa-calendar-days text-lg"></i>
         <span class="text-xs font-semibold tracking-wide pr-1 max-w-0 overflow-hidden whitespace-nowrap group-hover:max-w-xs transition-all duration-300 ease-in-out">Calendário Acadêmico</span>
@@ -2173,10 +2173,18 @@ async function rejeitarSolicitacaoFirebase(id) {
     const navBtnSettings = document.getElementById('nav-btn-settings');
     const navBtnPortalAluno = document.getElementById('nav-btn-portal-aluno');
     const adminSelectorPortalBox = document.getElementById('admin-selector-portal-box');
+    
+    // 👇 ADICIONE ESTA LINHA ABAIXO PARA CONTROLAR O BOTÃO FLUTUANTE 👇
+    const floatingTrigger = document.getElementById('floating-calendar-trigger');
 
     if (btnAccessControl) btnAccessControl.style.display = (perfil === 'master') ? 'inline-flex' : 'none';
     if (btnSwitchUser) btnSwitchUser.style.display = (perfil === 'master') ? 'inline-flex' : 'none';
     if (navBtnSettings) navBtnSettings.style.display = (perfil === 'master') ? 'inline-block' : 'none';
+
+    // Se o perfil for master, o botão flutuante fica oculto (display: none). Caso contrário, aparece!
+    if (floatingTrigger) {
+        floatingTrigger.style.display = (perfil === 'master') ? 'none' : 'block';
+    }
 
     if (perfil === 'aluno') {
         document.getElementById('main-tabs-nav').style.display = 'none';
