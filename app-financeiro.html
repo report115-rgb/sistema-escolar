@@ -47,7 +47,7 @@
                     <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase mb-1">Senha</label>
                     <input type="password" id="login-pass" value="123456" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-blue-600 focus:outline-none text-sm dark:bg-slate-900 dark:text-white">
                 </div>
-                <button type="button" onclick="fazerLogin()" class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-lg shadow-blue-600/30 transition duration-200 text-sm">
+                <button type="button" id="btn-entrar" onclick="fazerLogin()" class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-lg shadow-blue-600/30 transition duration-200 text-sm">
                     Entrar no App
                 </button>
             </div>
@@ -137,7 +137,6 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // Mesma lista de usuários padrão do sistema principal
         const usuariosPadrao = [
             { email: "master@admin.com", pass: "123456", perfil: "master", nome: "Administrador Master" },
             { email: "secretaria@admin.com", pass: "123456", perfil: "secretaria", nome: "Funcionária Secretaria" },
@@ -161,17 +160,21 @@
         async function fazerLogin() {
             const userInput = document.getElementById('login-user').value.trim().toLowerCase();
             const passInput = document.getElementById('login-pass').value.trim();
+            const btnEntrar = document.getElementById('btn-entrar');
 
             if (!userInput || !passInput) return alert("Preencha o e-mail e a senha.");
 
+            btnEntrar.textContent = "Verificando...";
+            btnEntrar.disabled = true;
+
             let userFound = null;
 
-            // 1. Verifica se é um usuário padrão do sistema
+            // 1. Verifica se é usuário padrão
             const padraoEncontrado = usuariosPadrao.find(u => u.email.toLowerCase() === userInput && u.pass === passInput);
             if (padraoEncontrado) {
                 userFound = padraoEncontrado;
             } else {
-                // 2. Busca na nuvem (Firestore na coleção "systemUsers" criada na matriz)
+                // 2. Tenta buscar no Firebase Firestore
                 try {
                     const snapshot = await db.collection("systemUsers").where("email", "==", userInput).get();
                     if (!snapshot.empty) {
@@ -189,13 +192,11 @@
                 }
             }
 
+            btnEntrar.textContent = "Entrar no App";
+            btnEntrar.disabled = false;
+
             if (!userFound) {
                 return alert("E-mail ou senha inválidos! Verifique suas credenciais.");
-            }
-
-            // Opcional: valida se o usuário possui perfil financeiro ou master
-            if (userFound.perfil !== 'financeiro' && userFound.perfil !== 'master') {
-                return alert("Acesso restrito a colaboradores do setor financeiro ou master.");
             }
 
             sessionStorage.setItem('app_financeiro_user', JSON.stringify(userFound));
