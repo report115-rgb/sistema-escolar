@@ -1623,19 +1623,37 @@ function obterDocumentosObrigatoriosPorAluno(aluno) {
             }
         }
 
-        function fazerLogin() {
-            const userInput = document.getElementById('login-user').value.trim();
-            const passInput = document.getElementById('login-pass').value.trim();
-            let dbUsers = JSON.parse(localStorage.getItem('app_users_system')) || usuariosPadrao;
-            let userFound = dbUsers.find(u => u.email === userInput && u.pass === passInput);
-            if (!userFound) return alert("Usuário ou senha inválidos!");
-            sessionStorage.setItem('usuario_logado', JSON.stringify(userFound));
-            document.getElementById('login-modal').style.display = 'none';
-            aplicarPermissoesPorPerfil(userFound.perfil);
-            atualizarDisplayUsuarioLogado();
-            registrarLogAuditoria("Efetuou login no sistema", "Autenticação");
-            resetarTemporizadorInatividade();
-        }
+        async function fazerLogin() {
+    const userInput = document.getElementById('login-user').value.trim();
+    const passInput = document.getElementById('login-pass').value.trim();
+    
+    // Inicia com os usuários padrão do sistema
+    let dbUsers = [...usuariosPadrao];
+    
+    try {
+        // Busca os colaboradores aprovados/cadastrados na nuvem (Firebase)
+        const snapshot = await db.collection("systemUsers").get();
+        snapshot.forEach(doc => {
+            dbUsers.push(doc.data());
+        });
+    } catch (e) {
+        console.error("Erro ao buscar usuários do Firebase:", e);
+    }
+    
+    // Mantém compatibilidade com o localStorage caso haja algum usuário salvo localmente
+    let localUsers = JSON.parse(localStorage.getItem('app_users_system')) || [];
+    dbUsers = [...dbUsers, ...localUsers];
+
+    let userFound = dbUsers.find(u => u.email === userInput && u.pass === passInput);
+    if (!userFound) return alert("Usuário ou senha inválidos!");
+    
+    sessionStorage.setItem('usuario_logado', JSON.stringify(userFound));
+    document.getElementById('login-modal').style.display = 'none';
+    aplicarPermissoesPorPerfil(userFound.perfil);
+    atualizarDisplayUsuarioLogado();
+    registrarLogAuditoria("Efetuou login no sistema", "Autenticação");
+    resetarTemporizadorInatividade();
+}
 
         function fazerLoginAluno() {
             const cpfInput = document.getElementById('login-aluno-cpf').value.trim().replace(/[^\d]/g, '');
@@ -1787,10 +1805,14 @@ async function notificarWhatsAppPrimeiroAcesso(novoColaborador) {
         
         const user = docSnap.data();
 
-        // Adiciona na lista de usuários ativos do sistema (ou você pode migrar os usuários para uma coleção 'users' no Firebase também)
-        let dbUsers = JSON.parse(localStorage.getItem('app_users_system')) || usuariosPadrao;
-        dbUsers.push({ nome: user.nome, email: user.email, pass: user.pass, perfil: user.perfil });
-        localStorage.setItem('app_users_system', JSON.stringify(dbUsers));
+        // Salva o usuário aprovado diretamente na nuvem (Firestore) para sincronizar com qualquer dispositivo
+        await db.collection("systemUsers").add({
+            nome: user.nome,
+            email: user.email,
+            pass: user.pass,
+            perfil: user.perfil,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
 
         // Remove da tabela de pendentes no Firebase
         await docRef.delete();
