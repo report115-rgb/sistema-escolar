@@ -4146,26 +4146,36 @@ function renderizarCobrancasAlunoSelecionadoFinanceiro(studentId) {
         return;
     }
     const aluno = students.find(s => s.id === studentId);
-    const cobrancasAluno = financeLogs.filter(f => f.studentId === studentId);
+    let cobrancasAluno = financeLogs.filter(f => f.studentId === studentId);
 
     if(cobrancasAluno.length === 0) {
         container.innerHTML = `<p class="text-xs text-gray-400">Nenhuma cobrança encontrada para ${aluno ? aluno.fullname : 'este aluno'}.</p>`;
         return;
     }
 
+    // 1. ORDENAÇÃO CRONOLÓGICA (Da data mais antiga para a mais recente)
+    cobrancasAluno.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+
     container.innerHTML = `<div class="font-bold text-xs text-blue-600 dark:text-blue-400 mb-2">Exibindo ${cobrancasAluno.length} cobranças / mensalidades para ${aluno ? aluno.fullname : ''}:</div>`;
 
-    cobrancasAluno.forEach((f) => {
+    cobrancasAluno.codegen = cobrancasAluno.forEach((f) => {
         const jaPago = f.status && f.status.toUpperCase().includes('PAGO');
         const corBadge = jaPago ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300';
         const textoStatus = f.status || 'PENDENTE';
+
+        // 2. FORMATAÇÃO DA DATA DE AAAA-MM-DD PARA DD/MM/AAAA
+        let dataFormatada = f.date;
+        if (f.date && f.date.includes('-')) {
+            const [ano, mes, dia] = f.date.split('-');
+            dataFormatada = `${dia}/${mes}/${ano}`;
+        }
 
         container.innerHTML += `
             <div class="bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700 flex flex-col gap-3 text-xs" id="card-fin-${f.id}">
                 <div class="flex justify-between items-start sm:items-center">
                     <div>
                         <strong class="text-gray-900 dark:text-white text-sm">${f.description}</strong><br>
-                        <span class="text-gray-500">Vencimento: <strong id="venc-text-${f.id}">${f.date}</strong> &bull; Valor Normal: <strong id="val-text-${f.id}">R$ ${f.amount}</strong> ${f.discountAmount ? `(Pontualidade: R$ ${f.discountAmount})` : ''}</span>
+                        <span class="text-gray-500">Vencimento: <strong id="venc-text-${f.id}">${dataFormatada}</strong> &bull; Valor Normal: <strong id="val-text-${f.id}">R$ ${f.amount}</strong> ${f.discountAmount ? `(Pontualidade: R$ ${f.discountAmount})` : ''}</span>
                     </div>
                     <div class="flex items-center gap-2">
                         <button type="button" onclick="toggleModoEdicaoFinanceiro('${f.id}')" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[10px] font-semibold shadow" title="Editar Vencimento e Valor"><i class="fa-solid fa-pen-to-square"></i> Editar</button>
@@ -4197,7 +4207,7 @@ function renderizarCobrancasAlunoSelecionadoFinanceiro(studentId) {
                             <input type="date" id="data-pagamento-${f.id}" value="${new Date().toISOString().slice(0, 10)}" oninput="validarLiberacaoBaixa('${f.id}')" class="w-full px-2.5 py-1.5 rounded border text-xs dark:bg-slate-900 dark:text-white">
                         </div>
                         <div>
-                            <label class="block text-[10px] font-semibold mb-1">Forma de Pagamento</label>
+                            <label class="block text-xs font-semibold mb-1">Forma de Pagamento</label>
                             <select id="forma-pagamento-${f.id}" onchange="validarLiberacaoBaixa('${f.id}')" class="w-full px-2.5 py-1.5 rounded border text-xs dark:bg-slate-900 dark:text-white">
                                 <option value="">Selecione...</option>
                                 <option value="Pix">Pix</option>
@@ -4214,7 +4224,7 @@ function renderizarCobrancasAlunoSelecionadoFinanceiro(studentId) {
                     </div>
                 ` : `
                     <div class="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center justify-between">
-                       <span><i class="fa-solid fa-circle-check"></i> Pago via <strong>${f.formaPagamento || 'Manual'}</strong> em${f.dataPagamento || '---'}</span>
+                        <span><i class="fa-solid fa-circle-check"></i> Pago via <strong>${f.formaPagamento \vert{}\vert{} 'Manual'}</strong> em${f.dataPagamento || '---'}</span>
                         <button onclick="estornarBaixaManualFinanceiro('${f.id}')" class="px-2.5 py-1 bg-gray-500 hover:bg-gray-600 text-white rounded text-[10px]">Estornar Baixa</button>
                     </div>
                 `}
@@ -4222,7 +4232,6 @@ function renderizarCobrancasAlunoSelecionadoFinanceiro(studentId) {
         `;
     });
 }
-
         // --- FUNÇÃO TEMPORÁRIA PARA DAR BAIXA MANUAL ---
         async function darBaixaManualFinanceiro(financeLogId) {
             if (!confirm("Deseja confirmar o recebimento e dar baixa manual nesta mensalidade?")) return;
