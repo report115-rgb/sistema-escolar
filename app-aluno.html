@@ -122,7 +122,7 @@
         </div>
 
         <div class="text-center text-[10px] text-blue-300 pb-2">
-            <div>Sistema SE7 Gestão Acadêmica</div>
+            <div>Sistema SE7 de Gestão Acadêmica</div>
             <div>v1.2.4 &bull; Central de Atendimento ao Aluno</div>
         </div>
     </div>
@@ -1442,12 +1442,21 @@
                     const formaPg = f.formaPagamento || 'Manual';
                     const dataPg = f.dataPagamento ? f.dataPagamento.split('-').reverse().join('/') : '';
 
+                    // Formata a data de vencimento para DD/MM/YYYY para exibição correta
+                    let dataVencExibicao = f.date || '';
+                    if (dataVencExibicao.includes('-')) {
+                        const partesData = dataVencExibicao.split('-');
+                        if (partesData.length === 3) {
+                            dataVencExibicao = `${partesData[2]}/${partesData[1]}/${partesData[0]}`;
+                        }
+                    }
+
                     finList.innerHTML += `
                         <div class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-2 text-xs">
                             <div class="flex justify-between items-start sm:items-center">
                                 <div>
                                     <strong class="text-slate-900 dark:text-white">${f.description}</strong>
-                                    <p class="text-[10px] text-slate-500 mt-0.5">Vencimento: ${f.date} &bull; Valor: R$ ${f.amount}</p>
+                                    <p class="text-[10px] text-slate-500 mt-0.5">Vencimento: ${dataVencExibicao} &bull; Valor: R$ ${f.amount}</p>
                                 </div>
                                 <span class="text-[9px] px-2.5 py-1 rounded-full font-bold ${jaPago ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'}">${f.status || 'PENDENTE'}</span>
                             </div>
