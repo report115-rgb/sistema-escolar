@@ -4256,17 +4256,28 @@ function renderizarCobrancasAlunoSelecionadoFinanceiro(studentId) {
        async function estornarBaixaManualFinanceiro(financeLogId) {
     if (!confirm("ATENÇÃO: Deseja realmente estornar a baixa desta mensalidade e retorná-la para o status PENDENTE?")) return;
 
+    const statusPendente = "PENDENTE (Desc. Pontualidade disponível até o vencimento)";
+
     try {
+        // 1. Atualiza no banco de dados (Firebase)
         await db.collection("financeLogs").doc(financeLogId).update({
-            status: "PENDENTE (Desc. Pontualidade disponível até o vencimento)",
+            status: statusPendente,
             dataPagamento: null,
             formaPagamento: null
         });
 
+        // 2. ATUALIZAÇÃO LOCAL IMEDIATA (Faz a tela mudar na hora sem esperar o servidor)
+        const logLocal = financeLogs.find(f => f.id === financeLogId);
+        if (logLocal) {
+            logLocal.status = statusPendente;
+            logLocal.dataPagamento = null;
+            logLocal.formaPagamento = null;
+        }
+
         registrarLogAuditoria(`Estornou a baixa do registro financeiro ID ${financeLogId}`, "Financeiro");
         alert("Baixa estornada com sucesso! A cobrança retornou para o status pendente.");
         
-        // 👇 ESTA LINHA FORÇA A TELA A SE ATUALIZAR NA HORA (SEM PRECISAR DE F5)
+        // 3. Redesenha a tela instantaneamente
         const selFin = document.getElementById('fin-student-select');
         if (selFin && selFin.value) {
             renderizarCobrancasAlunoSelecionadoFinanceiro(selFin.value);
@@ -5501,20 +5512,29 @@ async function executarBaixaManualComDetalhes(financeLogId) {
         return alert("Preencha a data e selecione a forma de pagamento.");
     }
 
-    // Transforma a data do formato de banco (AAAA-MM-DD) para o formato brasileiro (DD/MM/AAAA)
     const dataFormatada = dataPagamento.split('-').reverse().join('/');
+    const novoStatus = `PAGO (${formaPagamento})`;
 
     try {
+        // 1. Atualiza no banco de dados (Firebase)
         await db.collection("financeLogs").doc(financeLogId).update({
-            status: `PAGO (${formaPagamento})`,
+            status: novoStatus,
             dataPagamento: dataFormatada,
             formaPagamento: formaPagamento
         });
 
+        // 2. ATUALIZAÇÃO LOCAL IMEDIATA (Faz a tela mudar na hora sem esperar o servidor)
+        const logLocal = financeLogs.find(f => f.id === financeLogId);
+        if (logLocal) {
+            logLocal.status = novoStatus;
+            logLocal.dataPagamento = dataFormatada;
+            logLocal.formaPagamento = formaPagamento;
+        }
+
         registrarLogAuditoria(`Deu baixa manual com ${formaPagamento} em ${dataFormatada} no registro ID ${financeLogId}`, "Financeiro");
-        alert("Baixa realizada com sucesso! O status foi atualizado.");
+        alert("Baixa realizada com sucesso!");
         
-        // 👇 ESTA LINHA FORÇA A TELA A SE ATUALIZAR NA HORA (SEM PRECISAR DE F5)
+        // 3. Redesenha a tela instantaneamente
         const selFin = document.getElementById('fin-student-select');
         if (selFin && selFin.value) {
             renderizarCobrancasAlunoSelecionadoFinanceiro(selFin.value);
