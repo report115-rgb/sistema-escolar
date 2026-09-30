@@ -4253,20 +4253,20 @@ function renderizarCobrancasAlunoSelecionadoFinanceiro(studentId) {
         }
 
         // --- FUNÇÃO PARA ESTORNAR A BAIXA CASO NECESSÁRIO ---
-       async function estornarBaixaManualFinanceiro(financeLogId) {
-    if (!confirm("ATENÇÃO: Deseja realmente estornar a baixa desta mensalidade e retorná-la para o status PENDENTE?")) return;
+      async function estornarBaixaManualFinanceiro(financeLogId) {
+    if (!confirm("Deseja realmente estornar a baixa desta mensalidade e retorná-la para o status PENDENTE?")) return;
 
     const statusPendente = "PENDENTE (Desc. Pontualidade disponível até o vencimento)";
 
     try {
-        // 1. Atualiza no banco de dados (Firebase)
+        // 1. Atualiza no Firebase
         await db.collection("financeLogs").doc(financeLogId).update({
             status: statusPendente,
             dataPagamento: null,
             formaPagamento: null
         });
 
-        // 2. ATUALIZAÇÃO LOCAL IMEDIATA (Faz a tela mudar na hora sem esperar o servidor)
+        // >>> MELHORIA: Atualiza o objeto no array local em memória <<<
         const logLocal = financeLogs.find(f => f.id === financeLogId);
         if (logLocal) {
             logLocal.status = statusPendente;
@@ -4274,17 +4274,16 @@ function renderizarCobrancasAlunoSelecionadoFinanceiro(studentId) {
             logLocal.formaPagamento = null;
         }
 
-        registrarLogAuditoria(`Estornou a baixa do registro financeiro ID ${financeLogId}`, "Financeiro");
-        alert("Baixa estornada com sucesso! A cobrança retornou para o status pendente.");
+        alert("Baixa estornada com sucesso!");
         
-        // 3. Redesenha a tela instantaneamente
+        // >>> MELHORIA: Redesenha a tabela instantaneamente na tela <<<
         const selFin = document.getElementById('fin-student-select');
         if (selFin && selFin.value) {
             renderizarCobrancasAlunoSelecionadoFinanceiro(selFin.value);
         }
     } catch (error) {
         console.error("Erro ao estornar baixa:", error);
-        alert("Erro ao atualizar na nuvem: " + error.message);
+        alert("Erro ao atualizar: " + error.message);
     }
 }
 
@@ -5516,14 +5515,14 @@ async function executarBaixaManualComDetalhes(financeLogId) {
     const novoStatus = `PAGO (${formaPagamento})`;
 
     try {
-        // 1. Atualiza no banco de dados (Firebase)
+        // 1. Atualiza no Firebase
         await db.collection("financeLogs").doc(financeLogId).update({
             status: novoStatus,
             dataPagamento: dataFormatada,
             formaPagamento: formaPagamento
         });
 
-        // 2. ATUALIZAÇÃO LOCAL IMEDIATA (Faz a tela mudar na hora sem esperar o servidor)
+        // >>> MELHORIA: Atualiza o objeto no array local em memória <<<
         const logLocal = financeLogs.find(f => f.id === financeLogId);
         if (logLocal) {
             logLocal.status = novoStatus;
@@ -5531,17 +5530,16 @@ async function executarBaixaManualComDetalhes(financeLogId) {
             logLocal.formaPagamento = formaPagamento;
         }
 
-        registrarLogAuditoria(`Deu baixa manual com ${formaPagamento} em ${dataFormatada} no registro ID ${financeLogId}`, "Financeiro");
         alert("Baixa realizada com sucesso!");
         
-        // 3. Redesenha a tela instantaneamente
+        // >>> MELHORIA: Redesenha a tabela instantaneamente na tela <<<
         const selFin = document.getElementById('fin-student-select');
         if (selFin && selFin.value) {
             renderizarCobrancasAlunoSelecionadoFinanceiro(selFin.value);
         }
     } catch (error) {
         console.error("Erro ao dar baixa manual:", error);
-        alert("Erro ao atualizar na nuvem: " + error.message);
+        alert("Erro ao atualizar: " + error.message);
     }
 }
 
