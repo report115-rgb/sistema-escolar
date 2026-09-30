@@ -4134,71 +4134,94 @@ async function saveAttendance() {
             }
         }
 
-        function renderizarCobrancasAlunoSelecionadoFinanceiro(studentId) {
-            const container = document.getElementById('container-cobrancas-aluno-financeiro');
-            if(!container) return;
-            if(!studentId) {
-                container.innerHTML = `<p class="text-xs text-gray-400">Selecione um aluno acima para visualizar as mensalidades e parcelas.</p>`;
-                return;
-            }
-            const aluno = students.find(s => s.id === studentId);
-            const cobrancasAluno = financeLogs.filter(f => f.studentId === studentId);
+// ==========================================
+// RENDERIZAÇÃO E EDIÇÃO DO FINANCEIRO DO ALUNO
+// ==========================================
 
-            if(cobrancasAluno.length === 0) {
-                container.innerHTML = `<p class="text-xs text-gray-400">Nenhuma cobrança encontrada para ${aluno ? aluno.fullname : 'este aluno'}.</p>`;
-                return;
-            }
-
-            container.innerHTML = `<div class="font-bold text-xs text-blue-600 dark:text-blue-400 mb-2">Exibindo ${cobrancasAluno.length} cobranças / mensalidades para ${aluno ? aluno.fullname : ''}:</div>`;
-
-            cobrancasAluno.forEach((f) => {
-                const jaPago = f.status && f.status.toUpperCase().includes('PAGO');
-                
-                const corBadge = jaPago ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300';
-                const textoStatus = f.status || 'PENDENTE';
-
-                container.innerHTML += `
-                    <div class="bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700 flex flex-col gap-3 text-xs">
-                        <div class="flex justify-between items-start sm:items-center">
-                            <div>
-                                <strong class="text-gray-900 dark:text-white text-sm">${f.description}</strong><br>
-                                <span class="text-gray-500">Vencimento: <strong>${f.date}</strong> &bull; Valor: R$ ${f.amount}</span>
-                            </div>
-                            <span class="px-2 py-0.5 ${corBadge} rounded text-[10px] font-bold">${textoStatus}</span>
-                        </div>
-
-                        ${!jaPago ? `
-                            <div class="bg-white dark:bg-slate-800 p-3 rounded-lg border border-gray-200 dark:border-slate-700 grid grid-cols-1 sm:grid-cols-3 gap-2 items-end">
-                                <div>
-                                    <label class="block text-[10px] font-semibold mb-1">Data do Pagamento</label>
-                                    <input type="date" id="data-pagamento-${f.id}" value="${new Date().toISOString().slice(0, 10)}" oninput="validarLiberacaoBaixa('${f.id}')" class="w-full px-2.5 py-1.5 rounded border text-xs dark:bg-slate-900 dark:text-white">
-                                </div>
-                                <div>
-                                    <label class="block text-[10px] font-semibold mb-1">Forma de Pagamento</label>
-                                    <select id="forma-pagamento-${f.id}" onchange="validarLiberacaoBaixa('${f.id}')" class="w-full px-2.5 py-1.5 rounded border text-xs dark:bg-slate-900 dark:text-white">
-                                        <option value="">Selecione...</option>
-                                        <option value="Pix">Pix</option>
-                                        <option value="Cartão">Cartão</option>
-                                        <option value="Boleto">Boleto</option>
-                                        <option value="Dinheiro">Dinheiro</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <button type="button" id="btn-baixa-${f.id}" disabled onclick="executarBaixaManualComDetalhes('${f.id}')" class="w-full px-3 py-1.5 bg-gray-400 text-white rounded font-semibold text-[11px] flex items-center justify-center gap-1.5 shadow cursor-not-allowed transition">
-                                        <i class="fa-solid fa-lock"></i> Dar Baixa
-                                    </button>
-                                </div>
-                            </div>
-                        ` : `
-                            <div class="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center justify-between">
-                                <span><i class="fa-solid fa-circle-check"></i> Pago via <strong>${f.formaPagamento || 'Manual'}</strong> em ${f.dataPagamento || '---'}</span>
-                                <button onclick="estornarBaixaManualFinanceiro('${f.id}')" class="px-2.5 py-1 bg-gray-500 hover:bg-gray-600 text-white rounded text-[10px]">Estornar Baixa</button>
-                            </div>
-                    `}
-                </div>
-            `;
-        });
+function renderizarCobrancasAlunoSelecionadoFinanceiro(studentId) {
+    const container = document.getElementById('container-cobrancas-aluno-financeiro');
+    if(!container) return;
+    if(!studentId) {
+        container.innerHTML = `<p class="text-xs text-gray-400">Selecione um aluno acima para visualizar as mensalidades e parcelas.</p>`;
+        return;
     }
+    const aluno = students.find(s => s.id === studentId);
+    const cobrancasAluno = financeLogs.filter(f => f.studentId === studentId);
+
+    if(cobrancasAluno.length === 0) {
+        container.innerHTML = `<p class="text-xs text-gray-400">Nenhuma cobrança encontrada para ${aluno ? aluno.fullname : 'este aluno'}.</p>`;
+        return;
+    }
+
+    container.innerHTML = `<div class="font-bold text-xs text-blue-600 dark:text-blue-400 mb-2">Exibindo ${cobrancasAluno.length} cobranças / mensalidades para ${aluno ? aluno.fullname : ''}:</div>`;
+
+    cobrancasAluno.forEach((f) => {
+        const jaPago = f.status && f.status.toUpperCase().includes('PAGO');
+        const corBadge = jaPago ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300';
+        const textoStatus = f.status || 'PENDENTE';
+
+        container.innerHTML += `
+            <div class="bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700 flex flex-col gap-3 text-xs" id="card-fin-${f.id}">
+                <div class="flex justify-between items-start sm:items-center">
+                    <div>
+                        <strong class="text-gray-900 dark:text-white text-sm">${f.description}</strong><br>
+                        <span class="text-gray-500">Vencimento: <strong id="venc-text-${f.id}">${f.date}</strong> &bull; Valor Normal: <strong id="val-text-${f.id}">R$ ${f.amount}</strong> ${f.discountAmount ? `(Pontualidade: R$ ${f.discountAmount})` : ''}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="toggleModoEdicaoFinanceiro('${f.id}')" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[10px] font-semibold shadow" title="Editar Vencimento e Valor"><i class="fa-solid fa-pen-to-square"></i> Editar</button>
+                        <span class="px-2 py-0.5 ${corBadge} rounded text-[10px] font-bold">${textoStatus}</span>
+                    </div>
+                </div>
+
+                <!-- FORMULÁRIO OCULTO DE EDIÇÃO DE VENCIMENTO E VALOR -->
+                <div id="edit-box-fin-${f.id}" class="bg-blue-50 dark:bg-slate-800 p-3 rounded-lg border border-blue-200 dark:border-slate-700 grid grid-cols-1 sm:grid-cols-3 gap-2 items-end" style="display: none;">
+                    <div>
+                        <label class="block text-[10px] font-semibold mb-1 text-blue-800 dark:text-blue-300">Nova Data de Vencimento</label>
+                        <input type="date" id="edit-venc-${f.id}" value="${f.date}" class="w-full px-2.5 py-1.5 rounded border text-xs dark:bg-slate-900 dark:text-white">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-semibold mb-1 text-blue-800 dark:text-blue-300">Novo Valor (R$)</label>
+                        <input type="number" step="0.01" id="edit-val-${f.id}" value="${f.amount}" class="w-full px-2.5 py-1.5 rounded border text-xs dark:bg-slate-900 dark:text-white">
+                    </div>
+                    <div class="flex gap-1">
+                        <button type="button" onclick="salvarEdicaoVencimentoValor('${f.id}')" class="flex-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-semibold text-[11px] shadow">Salvar</button>
+                        <button type="button" onclick="toggleModoEdicaoFinanceiro('${f.id}')" class="px-2.5 py-1.5 bg-gray-500 text-white rounded font-semibold text-[11px]">Cancelar</button>
+                    </div>
+                </div>
+
+                <!-- SEÇÃO DE BAIXA (PAGAMENTO) -->
+                ${!jaPago ? `
+                    <div class="bg-white dark:bg-slate-800 p-3 rounded-lg border border-gray-200 dark:border-slate-700 grid grid-cols-1 sm:grid-cols-3 gap-2 items-end">
+                        <div>
+                            <label class="block text-[10px] font-semibold mb-1">Data do Pagamento</label>
+                            <input type="date" id="data-pagamento-${f.id}" value="${new Date().toISOString().slice(0, 10)}" oninput="validarLiberacaoBaixa('${f.id}')" class="w-full px-2.5 py-1.5 rounded border text-xs dark:bg-slate-900 dark:text-white">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-semibold mb-1">Forma de Pagamento</label>
+                            <select id="forma-pagamento-${f.id}" onchange="validarLiberacaoBaixa('${f.id}')" class="w-full px-2.5 py-1.5 rounded border text-xs dark:bg-slate-900 dark:text-white">
+                                <option value="">Selecione...</option>
+                                <option value="Pix">Pix</option>
+                                <option value="Cartão">Cartão</option>
+                                <option value="Boleto">Boleto</option>
+                                <option value="Dinheiro">Dinheiro</option>
+                            </select>
+                        </div>
+                        <div>
+                            <button type="button" id="btn-baixa-${f.id}" disabled onclick="executarBaixaManualComDetalhes('${f.id}')" class="w-full px-3 py-1.5 bg-gray-400 text-white rounded font-semibold text-[11px] flex items-center justify-center gap-1.5 shadow cursor-not-allowed transition">
+                                <i class="fa-solid fa-lock"></i> Dar Baixa
+                            </button>
+                        </div>
+                    </div>
+                ` : `
+                    <div class="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center justify-between">
+                        <span><i class="fa-solid fa-circle-check"></i> Pago via <strong>${f.formaPagamento \vert{}\vert{} 'Manual'}</strong> em${f.dataPagamento || '---'}</span>
+                        <button onclick="estornarBaixaManualFinanceiro('${f.id}')" class="px-2.5 py-1 bg-gray-500 hover:bg-gray-600 text-white rounded text-[10px]">Estornar Baixa</button>
+                    </div>
+                `}
+            </div>
+        `;
+    });
+}
 
         // --- FUNÇÃO TEMPORÁRIA PARA DAR BAIXA MANUAL ---
         async function darBaixaManualFinanceiro(financeLogId) {
@@ -5551,6 +5574,43 @@ async function gerarHistoricoEscolarDinamico(alunoId) {
         janelaImpressao.print();
     }, 600);
 }	
+
+// Abre ou fecha o bloco de edição de vencimento e valor da fatura
+function toggleModoEdicaoFinanceiro(financeLogId) {
+    const box = document.getElementById(`edit-box-fin-${financeLogId}`);
+    if (box) {
+        box.style.display = box.style.display === 'none' ? 'grid' : 'none';
+    }
+}
+
+// Salva a nova data de vencimento e o novo valor diretamente na nuvem
+async function salvarEdicaoVencimentoValor(financeLogId) {
+    const novoVencimento = document.getElementById(`edit-venc-${financeLogId}`).value;
+    const novoValor = parseFloat(document.getElementById(`edit-val-${financeLogId}`).value) || 0;
+
+    if (!novoVencimento) {
+        return alert("Informe uma data de vencimento válida.");
+    }
+
+    try {
+        await db.collection("financeLogs").doc(financeLogId).update({
+            date: novoVencimento,
+            amount: novoValor
+        });
+
+        registrarLogAuditoria(`Atualizou o vencimento para ${novoVencimento} e valor para R$ ${novoValor} no registro financeiro ID ${financeLogId}`, "Financeiro");
+        alert("Vencimento e valor atualizados com sucesso!");
+
+        // Atualiza a listagem do aluno instantaneamente na tela
+        const selFin = document.getElementById('fin-student-select');
+        if (selFin && selFin.value) {
+            renderizarCobrancasAlunoSelecionadoFinanceiro(selFin.value);
+        }
+    } catch (error) {
+        console.error("Erro ao atualizar fatura:", error);
+        alert("Erro ao atualizar na nuvem: " + error.message);
+    }
+}
 	</script>
 </body>
 </html>
