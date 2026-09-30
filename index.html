@@ -2171,16 +2171,15 @@ async function rejeitarSolicitacaoFirebase(id) {
         }
 
         function aplicarPermissoesPorPerfil(perfil) {
-    const btnAccessControl = document.getElementById('btn-access-control');
-    const btnSwitchUser = document.getElementById('btn-switch-user');
-    const navBtnSettings = document.getElementById('nav-btn-settings');
-    const navBtnPortalAluno = document.getElementById('nav-btn-portal-aluno');
-    const adminSelectorPortalBox = document.getElementById('admin-selector-portal-box');
+    	const btnAccessControl = document.getElementById('btn-access-control');
+    	const btnSwitchUser = document.getElementById('btn-switch-user');
+    	const navBtnSettings = document.getElementById('nav-btn-settings');
+    	const navBtnPortalAluno = document.getElementById('nav-btn-portal-aluno');
+    	const adminSelectorPortalBox = document.getElementById('admin-selector-portal-box');
 
-    if (perfil === 'financeiro') {
+    	if (perfil === 'financeiro') {
         document.getElementById('main-tabs-nav').style.display = 'flex';
 
-        // Oculta abas que o perfil financeiro não deve ver
         const btnNotas = document.querySelector("button[onclick*='tab-grades']");
         if (btnNotas) btnNotas.style.display = 'none';
 
@@ -2193,7 +2192,6 @@ async function rejeitarSolicitacaoFirebase(id) {
         const btnDocumentos = document.querySelector("button[onclick*='tab-history']");
         if (btnDocumentos) btnDocumentos.style.display = 'none';
 
-        // Oculta a aba de Matrícula para o perfil financeiro
         const btnMatricula = document.querySelector("button[onclick*='tab-matricula']");
         if (btnMatricula) btnMatricula.style.display = 'none';
 
@@ -2207,8 +2205,7 @@ async function rejeitarSolicitacaoFirebase(id) {
 
         openTab({ currentTarget: document.querySelector("button[onclick*='tab-gestion-students']") }, 'tab-gestion-students');
     }
-}
-    
+}  
     // 👇 ADICIONE ESTA LINHA ABAIXO PARA CONTROLAR O BOTÃO FLUTUANTE 👇
     const floatingTrigger = document.getElementById('floating-calendar-trigger');
 
