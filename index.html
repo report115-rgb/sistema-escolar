@@ -1724,24 +1724,34 @@ async function notificarWhatsAppPrimeiroAcesso(novoColaborador) {
             });
         }
 
-        function aprovarSolicitacao(id) {
-            let solicitacoes = JSON.parse(localStorage.getItem('app_users_pending')) || [];
-            const idx = solicitacoes.findIndex(s => s.id === id);
-            if (idx === -1) return;
-            const user = solicitacoes[idx];
+        async function aprovarSolicitacao(id) {
+    let solicitacoes = JSON.parse(localStorage.getItem('app_users_pending')) || [];
+    const idx = solicitacoes.findIndex(s => s.id === id);
+    if (idx === -1) return;
+    const user = solicitacoes[idx];
 
-            let dbUsers = JSON.parse(localStorage.getItem('app_users_system')) || usuariosPadrao;
-            dbUsers.push({ nome: user.nome, email: user.email, pass: user.pass, perfil: user.perfil });
-            localStorage.setItem('app_users_system', JSON.stringify(dbUsers));
+    try {
+        // Salva o novo usuário diretamente no Firestore (coleção "systemUsers")
+        await db.collection("systemUsers").add({
+            nome: user.nome,
+            email: user.email.trim().toLowerCase(),
+            pass: user.pass,
+            perfil: user.perfil,
+            createdAt: new Date().toISOString()
+        });
 
-            solicitacoes.splice(idx, 1);
-            localStorage.setItem('app_users_pending', JSON.stringify(solicitacoes));
+        // Remove da lista de pendentes local
+        solicitacoes.splice(idx, 1);
+        localStorage.setItem('app_users_pending', JSON.stringify(solicitacoes));
 
-            registrarLogAuditoria(`Aprovou o primeiro acesso do colaborador ${user.nome} (${user.email})`, "Autenticação");
-            alert(`Acesso aprovado para ${user.nome}! O colaborador já pode fazer login.`);
-            renderizarSolicitacoesPendentes();
-            renderizarUsuariosSistema();
-        }
+        registrarLogAuditoria(`Aprovou o primeiro acesso do colaborador ${user.nome} (${user.email})`, "Autenticação");
+        alert(`Acesso aprovado e salvo na nuvem para ${user.nome}! Ela já pode fazer login de qualquer lugar.`);
+        renderizarSolicitacoesPendentes();
+        renderizarUsuariosSistema();
+    } catch (e) {
+        alert("Erro ao aprovar usuário na nuvem: " + e.message);
+    }
+}
 
         function rejeitarSolicitacao(id) {
             if (!confirm("Deseja rejeitar esta solicitação de acesso?")) return;
