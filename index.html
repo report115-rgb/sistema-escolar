@@ -3905,19 +3905,28 @@ function habilitarEdicaoAlunoFrequencia(botao, alunoId) {
         function popularSelectAlunosPortalMaster() {
     const select = document.getElementById('admin-select-aluno-portal');
     if (!select) return;
+    
+    // Guarda o valor selecionado atualmente para não perdê-lo caso já esteja visualizando um aluno
+    const valorAtual = select.value;
+    
     select.innerHTML = '<option value="">Selecione um aluno...</option>';
     
     if (students && students.length > 0) {
-        // Cria uma cópia da lista ordenada alfabeticamente pelo nome completo
+        // Ordena explicitamente por ordem alfabética (case-insensitive e considerando acentos)
         const alunosOrdenados = [...students].sort((a, b) => {
-            const nomeA = a.fullname ? a.fullname.toUpperCase() : '';
-            const nomeB = b.fullname ? b.fullname.toUpperCase() : '';
-            return nomeA.localeCompare(nomeB);
+            const nomeA = (a.fullname || '').trim().toLowerCase();
+            const nomeB = (b.fullname || '').trim().toLowerCase();
+            return nomeA.localeCompare(nomeB, 'pt-BR');
         });
 
         alunosOrdenados.forEach(s => {
             select.insertAdjacentHTML('beforeend', `<option value="${s.id}">${s.fullname} (${s.code || 'S/N'})</option>`);
         });
+
+        // Restaura o valor selecionado se ele ainda existir na lista
+        if (valorAtual) {
+            select.value = valorAtual;
+        }
     }
 }
 
