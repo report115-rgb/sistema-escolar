@@ -81,7 +81,7 @@
 
         <div class="text-center text-[10px] text-blue-300 pb-2">
             <div>Sistema SE7 de Gestão Acadêmica</div>
-            <div>v1.4.6 &bull; Setor Financeiro</div>
+            <div>v1.4.9 &bull; Setor Financeiro</div>
         </div>
     </div>
 
@@ -161,15 +161,16 @@
                     </button>
                 </div>
 
-                <!-- PAINEL PARCELADO -->
+                <!-- PAINEL PARCELADO (ATÉ 5X) -->
                 <div id="painel-acordo-parcelado" class="space-y-3 p-3.5 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700" style="display: none;">
-                    <h4 class="font-bold text-slate-900 dark:text-white">Opção 2: Parcelado (Até 4x)</h4>
+                    <h4 class="font-bold text-slate-900 dark:text-white">Opção 2: Parcelado (Até 5x)</h4>
                     <div>
                         <label class="block font-semibold uppercase text-slate-500 mb-1">Número de Parcelas</label>
                         <select id="qtd-parcelas-acordo-modal" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white">
                             <option value="2">2x</option>
                             <option value="3">3x</option>
-                            <option value="4" selected>4x</option>
+                            <option value="4">4x</option>
+                            <option value="5" selected>5x</option>
                         </select>
                     </div>
                     <div>
@@ -353,22 +354,23 @@
                     <h2 class="font-bold text-sm text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
                         <i class="fa-solid fa-handshake-angle"></i> Aba de Negociações
                     </h2>
-                    <p class="text-[11px] text-slate-500">Busque o aluno por nome ou CPF para visualizar e negociar apenas as mensalidades em atraso.</p>
+                    <p class="text-[11px] text-slate-500">Alunos com negociações em andamento ou aprovadas aparecem listados abaixo automaticamente. Você também pode buscar por nome ou CPF para iniciar um novo acordo.</p>
                     
                     <div class="relative">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
                             <i class="fa-solid fa-magnifying-glass text-xs"></i>
                         </span>
-                        <input type="text" id="input-busca-negociacao" oninput="pesquisarAlunoNegociacao()" placeholder="Digite o nome ou CPF do aluno..." class="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-emerald-600 focus:outline-none">
+                        <input type="text" id="input-busca-negociacao" oninput="pesquisarAlunoNegociacao()" placeholder="Pesquisar novo aluno por nome ou CPF..." class="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-emerald-600 focus:outline-none">
                     </div>
                 </div>
 
-                <!-- Resultados da busca para negociação -->
-                <div id="lista-busca-negociacao-container" class="space-y-2">
-                    <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">
-                        Digite acima o nome ou CPF para localizar o aluno.
-                    </div>
+                <!-- LISTA AUTOMÁTICA DE NEGOCIAÇÕES EM ANDAMENTO / APROVADAS -->
+                <div id="lista-negociacoes-ativas-container" class="space-y-2">
+                    <!-- Preenchido via script ao abrir a aba -->
                 </div>
+
+                <!-- Resultados da busca para negociação (quando pesquisar) -->
+                <div id="lista-busca-negociacao-container" class="space-y-2"></div>
 
                 <!-- Painel de Cálculo e Faturas Atrasadas do Aluno Selecionado para Acordo -->
                 <div id="painel-negociacao-aluno" class="space-y-3" style="display: none;">
@@ -398,7 +400,7 @@
 
         <!-- Menu Inferior Fixo Estilo Aluno -->
         <nav class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-2 py-2 flex justify-around items-center absolute bottom-0 left-0 right-0 shadow-lg z-30">
-            <button onclick="mudarAbaApp('alunos')" id="nav-btn-alunos" class="flex flex-col items-center text-blue-600 dark:text-blue-400 text-[10px] font-bold transition">
+            <button onclick="mudarAbaApp('alunos')" id="nav-btn-alunos" class="flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition">
                 <i class="fa-solid fa-users text-base mb-0.5"></i> Alunos
             </button>
             <button onclick="mudarAbaApp('novos')" id="nav-btn-novos" class="flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition relative">
@@ -412,7 +414,7 @@
                 <i class="fa-solid fa-wallet text-base mb-0.5"></i>
                 <span>Faturas</span>
             </button>
-            <button onclick="mudarAbaApp('negociacoes')" id="nav-btn-neg" class="flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition">
+            <button onclick="mudarAbaApp('negociacoes')" id="nav-btn-neg" class="flex flex-col items-center text-emerald-600 dark:text-emerald-400 text-[10px] font-bold transition">
                 <i class="fa-solid fa-handshake-angle text-base mb-0.5"></i>
                 <span>Negociações</span>
             </button>
@@ -568,6 +570,7 @@
                 renderizarListaAlunos();
                 renderizarNovosAlunos();
                 atualizarSeletorCursosUI();
+                renderizarNegociacoesAtivasGeral();
                 if (alunoNegociacaoId) selecionarAlunoNegociacao(alunoNegociacaoId);
             }, error => {
                 console.error("Erro ao carregar alunos:", error);
@@ -577,6 +580,7 @@
                 financeLogs = [];
                 snapshot.forEach(doc => financeLogs.push({ id: doc.id, ...doc.data() }));
                 renderizarFaturasDoAlunoSelecionado();
+                renderizarNegociacoesAtivasGeral();
                 if (alunoNegociacaoId) selecionarAlunoNegociacao(alunoNegociacaoId);
                 if (alunoSelecionadoId && document.getElementById('tab-detalhes-aluno').style.display === 'block') {
                     abrirDetalhesAluno(alunoSelecionadoId, abaOrigemRetorno);
@@ -898,6 +902,70 @@
         }
 
         // --- FUNÇÕES DA ABA DE NEGOCIAÇÕES ---
+        function renderizarNegociacoesAtivasGeral() {
+            const container = document.getElementById('lista-negociacoes-ativas-container');
+            if (!container) return;
+
+            // Filtra faturas/registros que representam propostas em andamento ou acordos aceitos
+            const propostasOuAcordos = financeLogs.filter(f => {
+                const status = (f.status || '').toUpperCase();
+                return status.includes("AGUARDANDO APROVAÇÃO") || status.includes("ACORDO ACEITO") || status.includes("ACORDO EFETIVADO");
+            });
+
+            if (propostasOuAcordos.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-white dark:bg-slate-900 p-5 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800 space-y-1">
+                        <i class="fa-solid fa-folder-open text-slate-300 text-xl mb-1"></i>
+                        <p class="font-semibold text-slate-700 dark:text-slate-300">Nenhuma negociação em andamento ou aprovada no momento.</p>
+                        <p class="text-[10px]">Utilize a busca abaixo caso queira iniciar uma negociação para um novo aluno.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = `
+                <div class="space-y-2">
+                    <span class="font-bold text-xs uppercase text-slate-500 tracking-wider block px-1">Alunos com Negociações em Andamento ou Aprovadas:</span>
+            `;
+
+            propostasOuAcordos.forEach(p => {
+                const alunoId = p.studentId || p.alunoId;
+                const aluno = studentsMap[alunoId] || { fullname: p.nomeAluno || 'Aluno Cadastrado', cpf: '---' };
+                const nomeAluno = aluno.fullname || aluno.name || 'Aluno';
+                const cpfAluno = aluno.cpf || '---';
+
+                const rawCurso = aluno.course || aluno.curso || aluno.turma || aluno.nomeCurso || aluno.courseName || aluno.courseId || '---';
+                const cursoExibir = coursesMap[rawCurso] || coursesMap[normalizarTexto(rawCurso)] || String(rawCurso);
+
+                const statusStr = (p.status || '').toUpperCase();
+                const eAguardando = statusStr.includes("AGUARDANDO");
+                const corBadge = eAguardando ? "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300" : "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300";
+                const textoStatus = eAguardando ? "Aguardando Aprovação" : "Acordo Aceito / Aprovado";
+                const valorExibir = p.amount || p.valor || '0.00';
+
+                html += `
+                    <div class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 space-y-2 transition">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <strong class="text-xs font-bold text-slate-900 dark:text-white">${nomeAluno}</strong>
+                                <p class="text-[10px] text-slate-400">CPF: ${cpfAluno} &bull; Curso: ${cursoExibir}</p>
+                            </div>
+                            <span class="px-2 py-0.5 ${corBadge} rounded-full text-[10px] font-bold">${textoStatus}</span>
+                        </div>
+                        <div class="flex justify-between items-center text-[10px] text-slate-500 border-t border-slate-100 dark:border-slate-800 pt-2">
+                            <span>Valor do Acordo: <strong>R$ ${valorExibir}</strong></span>
+                            <button type="button" onclick="selecionarAlunoNegociacao('${alunoId}')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[10px] shadow transition">
+                                <i class="fa-solid fa-folder-open mr-1"></i> Ver Situação / Detalhes
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `</div>`;
+            container.innerHTML = html;
+        }
+
         function pesquisarAlunoNegociacao() {
             const termo = normalizarTexto(document.getElementById('input-busca-negociacao').value);
             const container = document.getElementById('lista-busca-negociacao-container');
@@ -906,9 +974,8 @@
             if (!container) return;
 
             if (termo.length < 2) {
-                container.innerHTML = `<div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">Digite ao menos 2 caracteres para buscar o aluno.</div>`;
+                container.innerHTML = ``;
                 if (painel) painel.style.display = 'none';
-                alunoNegociacaoId = null;
                 return;
             }
 
@@ -919,19 +986,18 @@
             });
 
             if (encontrados.length === 0) {
-                container.innerHTML = `<div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">Nenhum aluno encontrado com este nome ou CPF.</div>`;
+                container.innerHTML = `<div class="bg-white dark:bg-slate-900 p-4 rounded-2xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">Nenhum aluno encontrado com este nome ou CPF.</div>`;
                 if (painel) painel.style.display = 'none';
-                alunoNegociacaoId = null;
                 return;
             }
 
-            let html = '';
+            let html = `<div class="space-y-1"><span class="font-bold text-[10px] uppercase text-slate-400 px-1">Resultados da Busca:</span>`;
             encontrados.forEach(s => {
                 const rawCurso = s.course || s.curso || s.turma || s.nomeCurso || s.courseName || s.courseId || 'Não informado';
                 const cursoExibir = coursesMap[rawCurso] || coursesMap[normalizarTexto(rawCurso)] || String(rawCurso);
                 
                 html += `
-                    <div onclick="selecionarAlunoNegociacao('${s.id}')" class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 flex justify-between items-center active:scale-98 transition cursor-pointer">
+                    <div onclick="selecionarAlunoNegociacao('${s.id}')" class="bg-white dark:bg-slate-900 p-3 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 flex justify-between items-center active:scale-98 transition cursor-pointer">
                         <div>
                             <strong class="text-xs font-bold text-slate-900 dark:text-white">${s.fullname || s.name || 'Sem Nome'}</strong>
                             <p class="text-[10px] text-slate-400">CPF: ${s.cpf || '---'} &bull; Curso: ${cursoExibir}</p>
@@ -940,6 +1006,7 @@
                     </div>
                 `;
             });
+            html += `</div>`;
             container.innerHTML = html;
         }
 
@@ -947,26 +1014,25 @@
             alunoNegociacaoId = alunoId;
             const aluno = studentsMap[alunoId];
             const containerBusca = document.getElementById('lista-busca-negociacao-container');
+            const containerAtivas = document.getElementById('lista-negociacoes-ativas-container');
             const painel = document.getElementById('painel-negociacao-aluno');
             
             if (!aluno || !painel) return;
 
-            containerBusca.innerHTML = `
-                <div class="bg-emerald-50 dark:bg-emerald-950/40 p-3 rounded-2xl border border-emerald-200 dark:border-emerald-900 flex justify-between items-center text-xs">
-                    <div>
-                        <span class="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400">Aluno Selecionado:</span>
-                        <strong class="block text-slate-900 dark:text-white">${aluno.fullname || aluno.name}</strong>
-                    </div>
-                    <button onclick="limparSelecaoNegociacao()" class="px-2 py-1 bg-slate-200 dark:bg-slate-800 text-[10px] font-semibold rounded-lg">Trocar Aluno</button>
-                </div>
-            `;
+            containerBusca.innerHTML = '';
+            if (containerAtivas) containerAtivas.innerHTML = '';
+
+            const rawCursoAluno = aluno.course || aluno.curso || aluno.turma || aluno.nomeCurso || aluno.courseName || aluno.courseId || '---';
+            const cursoAlunoExibir = coursesMap[rawCursoAluno] || coursesMap[normalizarTexto(rawCursoAluno)] || String(rawCursoAluno);
+
+            document.getElementById('input-busca-negociacao').value = '';
 
             painel.style.display = 'block';
 
             const hoje = new Date();
             hoje.setHours(0, 0, 0, 0);
 
-            // PRÉ-CÁLCULO RIGOROSO DOS DÉBITOS EM ATRASO (ORIGINAL + MULTA + JUROS)
+            // PRÉ-CÁLCULO RIGOROSO DOS DÉBITOS EM ATRASO
             faturasAtrasadasGlobal = financeLogs.filter(f => {
                 const pertenceAluno = (f.studentId === alunoId || f.alunoId === alunoId);
                 const jaPago = f.status && (f.status.toUpperCase().includes('PAGO') || f.status.includes('NEGOCIADO'));
@@ -1004,13 +1070,18 @@
             const propostasAluno = financeLogs.filter(f => (f.studentId === alunoId || f.alunoId === alunoId) && (f.status && (f.status.includes("AGUARDANDO APROVAÇÃO") || f.status.includes("ACORDO ACEITO") || f.status.includes("ACORDO EFETIVADO"))));
 
             let htmlPropostasRealizadas = '';
+            let temPropostaAtiva = false;
+
             if (propostasAluno.length > 0) {
                 propostasAluno.forEach(p => {
                     let corStatus = p.status.includes("AGUARDANDO") ? "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300" : "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300";
                     let textoStatusExibir = p.status.includes("AGUARDANDO") ? "Aguardando aprovação do aluno" : "Acordo aceito";
                     let eAguardando = p.status.includes("AGUARDANDO");
 
-                    // Sincroniza as opções salvas no banco para a memória se existirem
+                    if (eAguardando) {
+                        temPropostaAtiva = true;
+                    }
+
                     if (eAguardando && p.opcoesSalvas) {
                         opcoesGeradas = p.opcoesSalvas;
                     }
@@ -1042,8 +1113,20 @@
                 });
             }
 
+            let cabecalhoAlunoHtml = `
+                <div class="bg-emerald-50 dark:bg-emerald-950/40 p-3.5 rounded-2xl border border-emerald-200 dark:border-emerald-900 flex justify-between items-center text-xs mb-2">
+                    <div>
+                        <span class="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400">Aluno Selecionado:</span>
+                        <strong class="block text-slate-900 dark:text-white text-sm">${aluno.fullname || aluno.name}</strong>
+                        <span class="text-[10px] text-slate-500">Curso: ${cursoAlunoExibir} &bull; CPF: ${aluno.cpf || '---'}</span>
+                    </div>
+                    <button onclick="voltarListaNegociacoesGeral()" class="px-2.5 py-1.5 bg-slate-200 dark:bg-slate-800 text-[10px] font-semibold rounded-lg shadow">Voltar à Lista</button>
+                </div>
+            `;
+
             if (faturasAtrasadasGlobal.length === 0 && propostasAluno.length === 0) {
                 painel.innerHTML = `
+                    ${cabecalhoAlunoHtml}
                     <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800 space-y-2">
                         <div class="w-10 h-10 bg-emerald-100 dark:bg-emerald-950 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-base">
                             <i class="fa-solid fa-check"></i>
@@ -1055,6 +1138,19 @@
                 return;
             }
 
+            // SE HOUVER UMA PROPOSTA ATIVA, OCULTA O RESUMO DE DÉBITOS E AS FATURAS VENCIDAS DA TELA
+            if (temPropostaAtiva) {
+                painel.innerHTML = `
+                    ${cabecalhoAlunoHtml}
+                    <div class="space-y-2 pt-1">
+                        <h4 class="font-bold text-xs uppercase text-emerald-600 tracking-wider">Propostas Realizadas / Registros:</h4>
+                        ${htmlPropostasRealizadas}
+                    </div>
+                `;
+                return;
+            }
+
+            // CASO CONTRÁRIO (SEM PROPOSTA ATIVA), EXIBE O FLUXO NORMAL DE CÁLCULO
             let htmlFaturasCalc = '';
             faturasAtrasadasGlobal.forEach(f => {
                 const valorOriginal = parseFloat(String(f.amount || f.valor || '0').replace(',', '.')) || 0;
@@ -1085,6 +1181,7 @@
             });
 
             painel.innerHTML = `
+                ${cabecalhoAlunoHtml}
                 ${htmlPropostasRealizadas ? `
                     <div class="space-y-2 pt-1">
                         <h4 class="font-bold text-xs uppercase text-emerald-600 tracking-wider">Propostas Realizadas / Registros:</h4>
@@ -1116,6 +1213,12 @@
             `;
         }
 
+        function voltarListaNegociacoesGeral() {
+            alunoNegociacaoId = null;
+            document.getElementById('painel-negociacao-aluno').style.display = 'none';
+            renderizarNegociacoesAtivasGeral();
+        }
+
         function abrirModalRealizarAcordo() {
             document.getElementById('edit-proposta-id-ativo').value = "";
             document.getElementById('titulo-modal-acordo-texto').textContent = "Gerar Proposta de Acordo";
@@ -1143,6 +1246,7 @@
                 await db.collection("financeLogs").doc(propostaId).delete();
                 alert("Proposta excluída com sucesso!");
                 if (alunoNegociacaoId) selecionarAlunoNegociacao(alunoNegociacaoId);
+                renderizarNegociacoesAtivasGeral();
             } catch (e) {
                 alert("Erro ao excluir proposta: " + e.message);
             }
@@ -1243,15 +1347,6 @@
             atualizarListaOpcoesGeradasModal();
         }
 
-        function limparSelecaoNegociacao() {
-            alunoNegociacaoId = null;
-            opcoesGeradas = { avista: null, parcelado: null, cartao: null };
-            document.getElementById('input-busca-negociacao').value = '';
-            document.getElementById('lista-busca-negociacao-container').innerHTML = `<div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">Digite acima o nome ou CPF para localizar o aluno.</div>`;
-            document.getElementById('painel-negociacao-aluno').style.display = 'none';
-        }
-
-        // GERA OU ATUALIZA PROPOSTA E SALVA AS OPÇÕES NO FIREBASE
         async function gerarPropostaPDF() {
             if (!alunoNegociacaoId) return;
             const aluno = studentsMap[alunoNegociacaoId];
@@ -1265,15 +1360,17 @@
 
             const propostaIdExistente = document.getElementById('edit-proposta-id-ativo').value;
             const valorTotalNegociadoParaRegistro = valorAtualNegociacaoGlobal.toFixed(2);
+            const nomeAlunoSalvar = aluno.fullname || aluno.name || 'Aluno';
 
             try {
                 if (propostaIdExistente) {
                     await db.collection("financeLogs").doc(propostaIdExistente).update({
                         amount: valorTotalNegociadoParaRegistro,
                         valor: valorTotalNegociadoParaRegistro,
+                        nomeAluno: nomeAlunoSalvar,
                         date: new Date().toLocaleDateString('pt-BR'),
                         status: "AGUARDANDO APROVAÇÃO DO ALUNO",
-                        opcoesSalvas: opcoesGeradas, // GRAVA AS OPÇÕES NO BANCO
+                        opcoesSalvas: opcoesGeradas,
                         atualizadoEm: new Date().toISOString()
                     });
                 } else {
@@ -1281,13 +1378,14 @@
                     await db.collection("financeLogs").doc(propostaId).set({
                         studentId: alunoNegociacaoId,
                         alunoId: alunoNegociacaoId,
+                        nomeAluno: nomeAlunoSalvar,
                         description: `Proposta de Acordo Gerada`,
                         amount: valorTotalNegociadoParaRegistro,
                         valor: valorTotalNegociadoParaRegistro,
                         date: new Date().toLocaleDateString('pt-BR'),
                         vencimento: new Date().toISOString().split('T')[0],
                         status: "AGUARDANDO APROVAÇÃO DO ALUNO",
-                        opcoesSalvas: opcoesGeradas, // GRAVA AS OPÇÕES NO BANCO
+                        opcoesSalvas: opcoesGeradas,
                         criadoEm: new Date().toISOString()
                     });
                 }
@@ -1516,6 +1614,7 @@
             janelaPDF.document.write(htmlConteudoPDF);
             janelaPDF.document.close();
             selecionarAlunoNegociacao(alunoNegociacaoId);
+            renderizarNegociacoesAtivasGeral();
         }
 
         function abrirModalFecharAcordoParaProposta(propostaId) {
@@ -1595,6 +1694,7 @@
                     await db.collection("financeLogs").doc(novoAcordoId).set({
                         studentId: alunoNegociacaoId,
                         alunoId: alunoNegociacaoId,
+                        nomeAluno: nome,
                         description: `Acordo Aceito - ${escolhaKey.toUpperCase()}`,
                         amount: opEscolhida.valorFinal.toFixed(2),
                         valor: opEscolhida.valorFinal.toFixed(2),
@@ -1609,6 +1709,7 @@
                 alert(`🎉 Acordo aceito com sucesso para ${nome}!\n\n• O registro foi atualizado para 'Acordo aceito'.\n• As faturas atrasadas foram baixadas.`);
                 
                 selecionarAlunoNegociacao(alunoNegociacaoId);
+                renderizarNegociacoesAtivasGeral();
 
             } catch (e) {
                 alert("Erro ao fechar acordo: " + e.message);
@@ -1903,6 +2004,7 @@
             } else if (aba === 'negociacoes') {
                 tabNeg.style.display = 'block';
                 btnNeg.className = "flex flex-col items-center text-emerald-600 dark:text-emerald-400 text-[10px] font-bold transition";
+                renderizarNegociacoesAtivasGeral();
             } else if (aba === 'detalhes') {
                 tabDetalhes.style.display = 'block';
             }
