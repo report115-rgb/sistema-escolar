@@ -81,7 +81,7 @@
 
         <div class="text-center text-[10px] text-blue-300 pb-2">
             <div>Sistema SE7 de Gestão Acadêmica</div>
-            <div>v1.3.9 &bull; Setor Financeiro</div>
+            <div>v1.4.0 &bull; Setor Financeiro</div>
         </div>
     </div>
 
@@ -445,7 +445,13 @@
         let coursesMap = {};
         let classesMap = {};
         let financeLogs = [];
-        let institutionData = null;
+        let institutionData = {
+            name: "SE7 - Sistema de Ensino Técnico e de Transporte",
+            razaoSocial: "SE7 - Sistema de Ensino Técnico e de Transporte",
+            cnpj: "00.000.000/0001-00",
+            address: "Matriz Principal - Pará, Brasil",
+            logo: ""
+        };
         let alunoSelecionadoId = null;
         let alunoNegociacaoId = null;
         let valorTotalOriginalGlobal = 0;
@@ -552,7 +558,7 @@
                 students = [];
                 studentsMap = {};
                 snapshot.forEach(doc => {
-                    const data = { id: doc.id, ...doc.data() };
+                    const data = { id: doc.id, collections: 'students', ...doc.data() };
                     students.push(data);
                     studentsMap[doc.id] = data;
                 });
@@ -578,20 +584,28 @@
             });
         }
 
+        // BUSCA ROBUSTA DOS DADOS DA INSTITUIÇÃO EM VÁRIAS COLEÇÕES POSSÍVEIS DO FIREBASE
         async function carregarDadosInstituicao() {
-            try {
-                // Tenta carregar da coleção institution ou settings padrão
-                const snap = await db.collection("institution").get();
-                if (!snap.empty) {
-                    institutionData = snap.docs[0].data();
-                } else {
-                    const snapAlt = await db.collection("settings").get();
-                    if (!snapAlt.empty) {
-                        institutionData = snapAlt.docs[0].data();
+            const colecoesPossiveis = ["institution", "settings", "empresa", "config", "escola", "dadosInstituicao"];
+            
+            for (let col of colecoesPossiveis) {
+                try {
+                    const snap = await db.collection(col).get();
+                    if (!snap.empty) {
+                        const dadosDoc = snap.docs[0].data();
+                        institutionData = {
+                            name: dadosDoc.name || dadosDoc.razaoSocial || dadosDoc.nomeInstituicao || dadosDoc.nome || institutionData.name,
+                            razaoSocial: dadosDoc.razaoSocial || dadosDoc.name || dadosDoc.nomeInstituicao || institutionData.razaoSocial,
+                            cnpj: dadosDoc.cnpj || dadosDoc.documento || institutionData.cnpj,
+                            address: dadosDoc.address || dadosDoc.endereco || dadosDoc.logradouro || institutionData.address,
+                            logo: dadosDoc.logo || dadosDoc.logoUrl || dadosDoc.logomarca || institutionData.logo
+                        };
+                        console.log(`Dados da instituição encontrados na coleção: ${col}`, institutionData);
+                        break;
                     }
+                } catch (e) {
+                    console.warn(`Tentativa falhou na coleção ${col}:`, e);
                 }
-            } catch (e) {
-                console.warn("Erro ao buscar dados da instituição:", e);
             }
         }
 
@@ -1159,7 +1173,7 @@
             document.getElementById('painel-negociacao-aluno').style.display = 'none';
         }
 
-        // FUNÇÃO ATUALIZADA: GERA PDF COM CABEÇALHO INSTITUCIONAL (LOGOMARCA, RAZÃO SOCIAL, CNPJ E ENDEREÇO) E COR AZUL DO APP
+        // GERA PDF COM DADOS DA INSTITUIÇÃO GARANTIDOS (LOGOMARCA, RAZÃO SOCIAL, CNPJ E ENDEREÇO)
         function gerarPropostaPDF() {
             if (!alunoNegociacaoId) return;
             const aluno = studentsMap[alunoNegociacaoId];
@@ -1171,12 +1185,10 @@
 
             fecharModalRealizarAcordo();
 
-            // Dados da Instituição obtidos do Firebase ou valores padrão institucionais
-            const inst = institutionData || {};
-            const razaoSocial = inst.name || inst.razaoSocial || inst.nomeInstituicao || "SE7 Sistema Educacional de Ensino e Transporte";
-            const cnpjInst = inst.cnpj || "00.000.000/0001-00";
-            const logoUrl = inst.logo || inst.logoUrl || "";
-            const enderecoInst = inst.address || inst.endereco || "Matriz Principal";
+            const razaoSocial = institutionData.razaoSocial || institutionData.name || "SE7 Sistema Educacional";
+            const cnpjInst = institutionData.cnpj || "00.000.000/0001-00";
+            const logoUrl = institutionData.logo || "";
+            const enderecoInst = institutionData.address || "Matriz Principal";
 
             const nomeCompleto = aluno.fullname || aluno.name || '---';
             const codigoMatricula = aluno.code || aluno.matricula || 'S/N';
@@ -1213,7 +1225,6 @@
             const rawCurso = aluno.course || aluno.curso || aluno.turma || aluno.nomeCurso || aluno.courseName || aluno.courseId || '';
             const cursoExibir = coursesMap[rawCurso] || coursesMap[normalizarTexto(rawCurso)] || String(rawCurso || 'Não vinculado');
 
-            // MONTA O EXTRATO DETALHADO DAS FATURAS EM ATRASO E OS TOTAIS GERAIS
             const hoje = new Date();
             hoje.setHours(0, 0, 0, 0);
 
@@ -1283,7 +1294,7 @@
                         /* Cabeçalho Institucional com a cor azul do app */
                         .header { background: #1e3a8a; color: white; padding: 25px; border-radius: 10px; display: flex; align-items: center; gap: 20px; margin-bottom: 25px; }
                         .header img { width: 65px; height: 65px; object-fit: contain; background: white; border-radius: 8px; padding: 4px; }
-                        .header-text h1 { font-size: 18px; margin: 0 0 4px 0; font-weight: bold; }
+                        .header-text h1 { font-size: 17px; margin: 0 0 4px 0; font-weight: bold; }
                         .header-text p { font-size: 11px; margin: 2px 0; opacity: 0.9; }
                         
                         .section-title { font-size: 13px; font-weight: bold; color: #1e3a8a; text-transform: uppercase; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; margin-bottom: 10px; margin-top: 20px; }
@@ -1320,7 +1331,7 @@
 
                     <div class="sheet">
                         <div class="header">
-                            ${logoUrl ? `<img src="${logoUrl}" alt="Logomarca">` : `<div style="width:65px; height:65px; background:white; color:#1e3a8a; border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:20px;">SE7</div>`}
+                            ${logoUrl ? `<img src="${logoUrl}" alt="Logomarca">` : `<div style="width:65px; height:65px; background:white; color:#1e3a8a; border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:20px; shrink:0;">SE7</div>`}
                             <div class="header-text">
                                 <h1>${razaoSocial}</h1>
                                 <p><strong>CNPJ:</strong> ${cnpjInst} &bull; <strong>Endereço:</strong> ${enderecoInst}</p>
