@@ -81,7 +81,7 @@
 
         <div class="text-center text-[10px] text-blue-300 pb-2">
             <div>Sistema SE7 de Gestão Acadêmica</div>
-            <div>v1.4.2 &bull; Setor Financeiro</div>
+            <div>v1.4.3 &bull; Setor Financeiro</div>
         </div>
     </div>
 
@@ -127,12 +127,14 @@
         <div class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-3xl shadow-2xl max-w-lg w-full p-6 space-y-4 border border-slate-200 dark:border-slate-800 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b pb-3 border-slate-200 dark:border-slate-800">
                 <h3 class="font-bold text-sm text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
-                    <i class="fa-solid fa-file-contract"></i> Gerar Proposta de Acordo
+                    <i class="fa-solid fa-file-contract"></i> <span id="titulo-modal-acordo-texto">Gerar Proposta de Acordo</span>
                 </h3>
                 <button onclick="fecharModalRealizarAcordo()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
+
+            <input type="hidden" id="edit-proposta-id-ativo" value="">
 
             <div class="space-y-4 text-xs">
                 <p class="text-slate-500">Configure os descontos para cada modalidade abaixo. As 3 opções são necessárias para gerar a proposta em PDF para o aluno.</p>
@@ -584,7 +586,6 @@
             });
         }
 
-        // BUSCA DIRETA E EXATA NO FIREBASE: colecao "config", documento "institution"
         async function carregarDadosInstituicao() {
             try {
                 const docRef = db.collection("config").doc("institution");
@@ -599,9 +600,7 @@
                         address: dados.endereço || dados.address || institutionData.address,
                         logo: dados.logo || dados.logoUrl || dados.logomarca || institutionData.logo
                     };
-                    console.log("Dados institucionais carregados com sucesso de config/institution:", institutionData);
                 } else {
-                    // Fallback para outras coleções caso config/institution não exista
                     const colecoesPossiveis = ["institution", "settings", "empresa", "escola", "dadosInstituicao"];
                     for (let col of colecoesPossiveis) {
                         const snap = await db.collection(col).get();
@@ -967,28 +966,7 @@
             const hoje = new Date();
             hoje.setHours(0, 0, 0, 0);
 
-            const propostasAluno = financeLogs.filter(f => (f.studentId === alunoId || f.alunoId === alunoId) && (f.status && (f.status.includes("AGUARDANDO APROVAÇÃO") || f.status.includes("ACORDO ACEITO") || f.status.includes("ACORDO EFETIVADO"))));
-
-            let htmlPropostasRealizadas = '';
-            if (propostasAluno.length > 0) {
-                propostasAluno.forEach(p => {
-                    let corStatus = p.status.includes("AGUARDANDO") ? "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300" : "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300";
-                    let textoStatusExibir = p.status.includes("AGUARDANDO") ? "Aguardando aprovação do aluno" : "Acordo aceito";
-
-                    htmlPropostasRealizadas += `
-                        <div class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl shadow-sm border border-emerald-500/50 space-y-2 text-xs mb-2">
-                            <div class="flex justify-between items-center">
-                                <span class="font-bold text-slate-900 dark:text-white">${p.description || 'Proposta de Acordo'}</span>
-                                <span class="px-2 py-0.5 ${corStatus} rounded-full text-[10px] font-bold">${textoStatusExibir}</span>
-                            </div>
-                            <div class="text-[10px] text-slate-400">
-                                Valor Negociado: <strong>R$ ${p.amount || p.valor || '0.00'}</strong> &bull; Data: ${p.date || '---'}
-                            </div>
-                        </div>
-                    `;
-                });
-            }
-
+            // PRÉ-CÁLCULO DOS DÉBITOS EM ATRASO PARA GARANTIR VALORES CORRETOS
             faturasAtrasadasGlobal = financeLogs.filter(f => {
                 const pertenceAluno = (f.studentId === alunoId || f.alunoId === alunoId);
                 const jaPago = f.status && (f.status.toUpperCase().includes('PAGO') || f.status.includes('NEGOCIADO'));
@@ -1004,6 +982,58 @@
                 return dataVenc < hoje;
             });
 
+            valorTotalOriginalGlobal = 0;
+            multaTotalGlobal = 0;
+            jurosTotalGlobal = 0;
+
+            faturasAtrasadasGlobal.forEach(f => {
+                const valorOriginal = parseFloat(String(f.amount || f.valor || '0').replace(',', '.')) || 0;
+                valorTotalOriginalGlobal += valorOriginal;
+
+                const vencimentoStr = f.date || f.vencimento || '';
+                let dataVenc = parseDataParaOrdem(vencimentoStr);
+                dataVenc.setHours(0, 0, 0, 0);
+                
+                let diasAtraso = Math.ceil(Math.abs(hoje - dataVenc) / (1000 * 60 * 60 * 24));
+                multaTotalGlobal += 10.00;
+                jurosTotalGlobal += (valorOriginal * 0.005 * diasAtraso);
+            });
+
+            valorAtualNegociacaoGlobal = valorTotalOriginalGlobal + multaTotalGlobal + jurosTotalGlobal;
+
+            const propostasAluno = financeLogs.filter(f => (f.studentId === alunoId || f.alunoId === alunoId) && (f.status && (f.status.includes("AGUARDANDO APROVAÇÃO") || f.status.includes("ACORDO ACEITO") || f.status.includes("ACORDO EFETIVADO"))));
+
+            let htmlPropostasRealizadas = '';
+            if (propostasAluno.length > 0) {
+                propostasAluno.forEach(p => {
+                    let corStatus = p.status.includes("AGUARDANDO") ? "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300" : "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300";
+                    let textoStatusExibir = p.status.includes("AGUARDANDO") ? "Aguardando aprovação do aluno" : "Acordo aceito";
+                    let eAguardando = p.status.includes("AGUARDANDO");
+
+                    htmlPropostasRealizadas += `
+                        <div class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl shadow-sm border border-emerald-500/50 space-y-2 text-xs mb-2">
+                            <div class="flex justify-between items-center">
+                                <span class="font-bold text-slate-900 dark:text-white">${p.description || 'Proposta de Acordo'}</span>
+                                <span class="px-2 py-0.5 ${corStatus} rounded-full text-[10px] font-bold">${textoStatusExibir}</span>
+                            </div>
+                            <div class="text-[10px] text-slate-400">
+                                Valor Negociado Total (Com Juros e Multas): <strong>R$ ${p.amount || p.valor || '0.00'}</strong> &bull; Data: ${p.date || '---'}
+                            </div>
+                            ${eAguardando ? `
+                                <div class="flex gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                                    <button type="button" onclick="abrirModalEditarProposta('${p.id}')" class="flex-1 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold text-[10px] shadow">
+                                        <i class="fa-solid fa-pen-to-square mr-1"></i> Editar Proposta
+                                    </button>
+                                    <button type="button" onclick="excluirPropostaRegistro('${p.id}')" class="flex-1 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold text-[10px] shadow">
+                                        <i class="fa-solid fa-trash mr-1"></i> Excluir Proposta
+                                    </button>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                });
+            }
+
             if (faturasAtrasadasGlobal.length === 0 && propostasAluno.length === 0) {
                 painel.innerHTML = `
                     <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800 space-y-2">
@@ -1017,28 +1047,14 @@
                 return;
             }
 
-            valorTotalOriginalGlobal = 0;
-            multaTotalGlobal = 0;
-            jurosTotalGlobal = 0;
             let htmlFaturasCalc = '';
-
             faturasAtrasadasGlobal.forEach(f => {
                 const valorOriginal = parseFloat(String(f.amount || f.valor || '0').replace(',', '.')) || 0;
-                valorTotalOriginalGlobal += valorOriginal;
-
-                const vencimentoStr = f.date || f.vencimento || '';
-                let dataVenc = parseDataParaOrdem(vencimentoStr);
+                let dataVenc = parseDataParaOrdem(f.date || f.vencimento);
                 dataVenc.setHours(0, 0, 0, 0);
-                
                 let diasAtraso = Math.ceil(Math.abs(hoje - dataVenc) / (1000 * 60 * 60 * 24));
-
                 let multaParcela = 10.00;
-                multaTotalGlobal += multaParcela;
-
-                let taxaJurosDia = 0.005;
-                let jurosParcela = valorOriginal * taxaJurosDia * diasAtraso;
-                jurosTotalGlobal += jurosParcela;
-
+                let jurosParcela = valorOriginal * 0.005 * diasAtraso;
                 let totalParcelaAtualizada = valorOriginal + multaParcela + jurosParcela;
 
                 htmlFaturasCalc += `
@@ -1048,7 +1064,7 @@
                             <span class="px-2 py-0.5 bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300 rounded-full text-[10px] font-bold">Atrasado (${diasAtraso} dias)</span>
                         </div>
                         <div class="text-[10px] text-slate-400">
-                            Vencimento original: <strong>${formatarDataParaExibicao(vencimentoStr)}</strong>
+                            Vencimento original: <strong>${formatarDataParaExibicao(f.date || f.vencimento)}</strong>
                         </div>
                         <div class="grid grid-cols-2 gap-1 bg-slate-50 dark:bg-slate-800/50 p-2 rounded-xl text-[10px]">
                             <div>Valor Original: <strong>R$ ${valorOriginal.toFixed(2)}</strong></div>
@@ -1059,8 +1075,6 @@
                     </div>
                 `;
             });
-
-            valorAtualNegociacaoGlobal = valorTotalOriginalGlobal + multaTotalGlobal + jurosTotalGlobal;
 
             painel.innerHTML = `
                 ${htmlPropostasRealizadas ? `
@@ -1098,8 +1112,31 @@
         }
 
         function abrirModalRealizarAcordo() {
+            document.getElementById('edit-proposta-id-ativo').value = "";
+            document.getElementById('titulo-modal-acordo-texto').textContent = "Gerar Proposta de Acordo";
             document.getElementById('modal-realizar-acordo').style.display = 'flex';
             atualizarListaOpcoesGeradasModal();
+        }
+
+        function abrirModalEditarProposta(propostaId) {
+            const prop = financeLogs.find(f => f.id === propostaId);
+            if (!prop) return;
+
+            document.getElementById('edit-proposta-id-ativo').value = propostaId;
+            document.getElementById('titulo-modal-acordo-texto').textContent = "Editar Proposta de Acordo";
+            document.getElementById('modal-realizar-acordo').style.display = 'flex';
+            atualizarListaOpcoesGeradasModal();
+        }
+
+        async function excluirPropostaRegistro(propostaId) {
+            if (!confirm("Deseja realmente excluir esta proposta de acordo?")) return;
+            try {
+                await db.collection("financeLogs").doc(propostaId).delete();
+                alert("Proposta excluída com sucesso!");
+                if (alunoNegociacaoId) selecionarAlunoNegociacao(alunoNegociacaoId);
+            } catch (e) {
+                alert("Erro ao excluir proposta: " + e.message);
+            }
         }
 
         function fecharModalRealizarAcordo() {
@@ -1205,7 +1242,7 @@
             document.getElementById('painel-negociacao-aluno').style.display = 'none';
         }
 
-        // GERA PROPOSTA, PUXA A LOGOMARCA DE config/institution E ABRE PDF
+        // GERA OU ATUALIZA PROPOSTA USANDO O VALOR TOTAL COM JUROS/MULTA E ABRE PDF
         async function gerarPropostaPDF() {
             if (!alunoNegociacaoId) return;
             const aluno = studentsMap[alunoNegociacaoId];
@@ -1217,21 +1254,37 @@
 
             fecharModalRealizarAcordo();
 
+            const propostaIdExistente = document.getElementById('edit-proposta-id-ativo').value;
+            // O valor gravado é o total atualizado da dívida com juros/multas da opção à vista ou o montante base
+            const valorTotalNegociadoParaRegistro = opcoesGeradas.avista.valorFinal.toFixed(2);
+
             try {
-                const propostaId = "proposta_" + alunoNegociacaoId + "_" + Date.now();
-                await db.collection("financeLogs").doc(propostaId).set({
-                    studentId: alunoNegociacaoId,
-                    alunoId: alunoNegociacaoId,
-                    description: `Proposta de Acordo Gerada`,
-                    amount: opcoesGeradas.avista.valorFinal.toFixed(2),
-                    valor: opcoesGeradas.avista.valorFinal.toFixed(2),
-                    date: new Date().toLocaleDateString('pt-BR'),
-                    vencimento: new Date().toISOString().split('T')[0],
-                    status: "AGUARDANDO APROVAÇÃO DO ALUNO",
-                    criadoEm: new Date().toISOString()
-                });
+                if (propostaIdExistente) {
+                    // Atualiza o registro existente sem duplicar
+                    await db.collection("financeLogs").doc(propostaIdExistente).update({
+                        amount: valorTotalNegociadoParaRegistro,
+                        valor: valorTotalNegociadoParaRegistro,
+                        date: new Date().toLocaleDateString('pt-BR'),
+                        status: "AGUARDANDO APROVAÇÃO DO ALUNO",
+                        atualizadoEm: new Date().toISOString()
+                    });
+                } else {
+                    // Cria novo registro
+                    const propostaId = "proposta_" + alunoNegociacaoId + "_" + Date.now();
+                    await db.collection("financeLogs").doc(propostaId).set({
+                        studentId: alunoNegociacaoId,
+                        alunoId: alunoNegociacaoId,
+                        description: `Proposta de Acordo Gerada`,
+                        amount: valorTotalNegociadoParaRegistro,
+                        valor: valorTotalNegociadoParaRegistro,
+                        date: new Date().toLocaleDateString('pt-BR'),
+                        vencimento: new Date().toISOString().split('T')[0],
+                        status: "AGUARDANDO APROVAÇÃO DO ALUNO",
+                        criadoEm: new Date().toISOString()
+                    });
+                }
             } catch (e) {
-                console.warn("Erro ao registrar proposta no Firebase:", e);
+                console.warn("Erro ao salvar proposta no Firebase:", e);
             }
 
             const razaoSocial = institutionData.razaoSocial || "JS & SS SERVIÇOS EDUCACIONAIS E CIA LTDA";
@@ -1295,8 +1348,7 @@
                 let multaParcela = 10.00;
                 somaMultaGeral += multaParcela;
 
-                let taxaJurosDia = 0.005;
-                let jurosParcela = valorOriginal * taxaJurosDia * diasAtraso;
+                let jurosParcela = valorOriginal * 0.005 * diasAtraso;
                 somaJurosGeral += jurosParcela;
 
                 let totalParcelaAtualizada = valorOriginal + multaParcela + jurosParcela;
