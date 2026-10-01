@@ -832,13 +832,24 @@
             const whatsapp = aluno.whatsapp || aluno.phone || aluno.telefone || '---';
             const email = aluno.email || '---';
 
-            // Endereço completo estruturado
+            // Tratamento robusto para extrair o endereço completo incluindo o logradouro (nome da rua)
             const cep = aluno.cep || '---';
-            const logradouro = aluno.street || aluno.rua || '---';
+            const logradouro = aluno.street || aluno.rua || aluno.logradouro || '';
             const numero = aluno.number || aluno.numero || 'S/N';
             const bairro = aluno.neighborhood || aluno.bairro || '---';
             const cidade = aluno.city || aluno.cidade || '---';
             const estado = aluno.state || aluno.estado || '---';
+
+            let enderecoCompletoFormatado = '';
+            if (logradouro) {
+                enderecoCompletoFormatado = `${logradouro}, nº ${numero} - ${bairro}, ${cidade}/${estado} (CEP: ${cep})`;
+            } else if (aluno.address) {
+                enderecoCompletoFormatado = aluno.address;
+            } else if (aluno.endereco) {
+                enderecoCompletoFormatado = aluno.endereco;
+            } else {
+                enderecoCompletoFormatado = `Rua não informada, nº ${numero} - ${bairro}, ${cidade}/${estado} (CEP: ${cep})`;
+            }
 
             // Vínculo acadêmico (Curso e Turma)
             const rawCurso = aluno.course || aluno.curso || aluno.turma || aluno.nomeCurso || aluno.courseName || aluno.courseId || '';
@@ -882,8 +893,15 @@
                                 <div><span class="text-slate-400 uppercase text-[10px]">CEP:</span><br><span class="font-semibold">${cep}</span></div>
                                 <div><span class="text-slate-400 uppercase text-[10px]">Cidade / Estado:</span><br><span class="font-semibold">${cidade}/${estado}</span></div>
                             </div>
-                            <div><span class="text-slate-400 uppercase text-[10px]">Logradouro (Rua):</span><br><span class="font-semibold">${logradouro}, nº ${numero}</span></div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div><span class="text-slate-400 uppercase text-[10px]">Logradouro (Rua):</span><br><span class="font-semibold">${logradouro || 'Não informado'}</span></div>
+                                <div><span class="text-slate-400 uppercase text-[10px]">Número:</span><br><span class="font-semibold">${numero}</span></div>
+                            </div>
                             <div><span class="text-slate-400 uppercase text-[10px]">Bairro:</span><br><span class="font-semibold">${bairro}</span></div>
+                            <div class="bg-slate-50 dark:bg-slate-800/50 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 mt-1">
+                                <span class="text-slate-400 uppercase text-[9px] block mb-0.5">Endereço Completo (Pronto para Boletos):</span>
+                                <span class="font-bold text-slate-900 dark:text-white">${enderecoCompletoFormatado}</span>
+                            </div>
                         </div>
                     </div>
 
