@@ -81,7 +81,7 @@
 
         <div class="text-center text-[10px] text-blue-300 pb-2">
             <div>Sistema SE7 de Gestão Acadêmica</div>
-            <div>v1.3.2 &bull; Setor Financeiro</div>
+            <div>v1.3.3 &bull; Setor Financeiro</div>
         </div>
     </div>
 
@@ -454,7 +454,6 @@
         let faturasAtrasadasGlobal = [];
         let abaOrigemRetorno = 'alunos';
 
-        // Armazena as opções temporárias de acordo para gerar a proposta
         let opcoesGeradas = {
             avista: null,
             parcelado: null,
@@ -792,8 +791,11 @@
                             </div>
                             <div class="flex items-center gap-1.5">
                                 <span class="px-2 py-0.5 ${corBadge} rounded-full text-[10px] font-bold">${f.status || 'PENDENTE'}</span>
-                                <button type="button" onclick="abrirModalEditarMensalidadeFinanceiro('${f.id}')" class="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[10px] font-semibold shadow transition">
-                                    <i class="fa-solid fa-pen-to-square"></i> Editar
+                                <button type="button" onclick="abrirModalEditarMensalidadeFinanceiro('${f.id}')" class="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[10px] font-semibold shadow transition" title="Editar">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </button>
+                                <button type="button" onclick="excluirFaturaRegistro('${f.id}')" class="px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg text-[10px] font-semibold shadow transition" title="Excluir Fatura/Acordo">
+                                    <i class="fa-solid fa-trash"></i>
                                 </button>
                             </div>
                         </div>
@@ -836,6 +838,18 @@
             });
 
             container.innerHTML = htmlAcumulado;
+        }
+
+        // FUNÇÃO PARA EXCLUIR FATURA OU REGISTRO INDEVIDO DO FIREBASE
+        async function excluirFaturaRegistro(faturaId) {
+            if (!confirm("Deseja realmente excluir permanentemente esta fatura ou registro do sistema?")) return;
+
+            try {
+                await db.collection("financeLogs").doc(faturaId).delete();
+                alert("Registro excluído com sucesso!");
+            } catch (e) {
+                alert("Erro ao excluir registro: " + e.message);
+            }
         }
 
         // --- FUNÇÕES DA ABA DE NEGOCIAÇÕES ---
@@ -907,7 +921,6 @@
             const hoje = new Date();
             hoje.setHours(0, 0, 0, 0);
 
-            // Verifica se já existe um acordo efetivado para este aluno
             const acordoEfetivado = financeLogs.find(f => (f.studentId === alunoId || f.alunoId === alunoId) && f.status && f.status.includes("ACORDO EFETIVADO"));
 
             if (acordoEfetivado) {
@@ -921,11 +934,14 @@
                 return;
             }
 
+            // FILTRA APENAS FATURAS REAIS VENCIDAS (IGNORANDO TERMOS E PROPOSTAS RESIDUAIS)
             faturasAtrasadasGlobal = financeLogs.filter(f => {
                 const pertenceAluno = (f.studentId === alunoId || f.alunoId === alunoId);
                 const jaPago = f.status && (f.status.toUpperCase().includes('PAGO') || f.status.includes('NEGOCIADO'));
+                const descLower = (f.description || f.descricao || '').toLowerCase();
+                const eTermoOuProposta = descLower.includes('termo') || descLower.includes('proposta') || descLower.includes('acordo consolidado');
                 
-                if (!pertenceAluno || jaPago) return false;
+                if (!pertenceAluno || jaPago || eTermoOuProposta) return false;
 
                 const vencimentoStr = f.date || f.vencimento || '';
                 let dataVenc = parseDataParaOrdem(vencimentoStr);
@@ -1126,7 +1142,6 @@
             document.getElementById('painel-negociacao-aluno').style.display = 'none';
         }
 
-        // ETAPA 1: APENAS GERAR A PROPOSTA EM PDF (SEM MEXER EM FATURAS E SEM POLUIR O SISTEMA)
         function gerarPropostaPDF() {
             if (!alunoNegociacaoId) return;
             const aluno = studentsMap[alunoNegociacaoId];
@@ -1147,7 +1162,6 @@
             }
         }
 
-        // ETAPA 2: ABRIR MODAL DE FECHAR ACORDO
         function abrirModalFecharAcordo() {
             if (!opcoesGeradas.avista || !opcoesGeradas.parcelado || !opcoesGeradas.cartao) {
                 return alert("Você precisa primeiro gerar a proposta configurando as 3 opções no botão 'Realizar Acordo' antes de fechar o acordo.");
@@ -1182,7 +1196,6 @@
             document.getElementById('modal-fechar-acordo').style.display = 'none';
         }
 
-        // ETAPA 3: EFETIVAR O FECHAMENTO DO ACORDO DEFINITIVAMENTE (BAIXA AS ATRASADAS E CRIA A NOVA PARCELA)
         async function executarFechamentoAcordoDefinitivo() {
             const radioSelecionado = document.querySelector('input[name="opcao-escolhida-fechamento"]:checked');
             if (!radioSelecionado) {
@@ -1199,7 +1212,6 @@
             }
 
             try {
-                // 1. Dar baixa nas faturas atrasadas anteriores
                 for (let fatura of faturasAtrasadasGlobal) {
                     await db.collection("financeLogs").doc(fatura.id).update({
                         status: "NEGOCIADO (ACORDO)",
@@ -1208,7 +1220,6 @@
                     });
                 }
 
-                // 2. Criar a nova fatura/termo de acordo definitivo na aba faturas do aluno
                 const novoAcordoId = "acordo_efetivado_" + Date.now();
                 let nomeModalidade = escolhaKey === 'avista' ? 'À Vista' : (escolhaKey === 'parcelado' ? `Parcelado (${opEscolhida.infoExtra})` : 'Cartão de Crédito');
 
