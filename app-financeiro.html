@@ -81,7 +81,7 @@
 
         <div class="text-center text-[10px] text-blue-300 pb-2">
             <div>Sistema SE7 de Gestão Acadêmica</div>
-            <div>v1.3.3 &bull; Setor Financeiro</div>
+            <div>v1.3.4 &bull; Setor Financeiro</div>
         </div>
     </div>
 
@@ -840,7 +840,6 @@
             container.innerHTML = htmlAcumulado;
         }
 
-        // FUNÇÃO PARA EXCLUIR FATURA OU REGISTRO INDEVIDO DO FIREBASE
         async function excluirFaturaRegistro(faturaId) {
             if (!confirm("Deseja realmente excluir permanentemente esta fatura ou registro do sistema?")) return;
 
@@ -934,7 +933,6 @@
                 return;
             }
 
-            // FILTRA APENAS FATURAS REAIS VENCIDAS (IGNORANDO TERMOS E PROPOSTAS RESIDUAIS)
             faturasAtrasadasGlobal = financeLogs.filter(f => {
                 const pertenceAluno = (f.studentId === alunoId || f.alunoId === alunoId);
                 const jaPago = f.status && (f.status.toUpperCase().includes('PAGO') || f.status.includes('NEGOCIADO'));
@@ -1008,13 +1006,14 @@
 
             valorAtualNegociacaoGlobal = valorTotalOriginalGlobal + multaTotalGlobal + jurosTotalGlobal;
 
+            // PAINEL DE RESUMO ATUALIZADO COM O VALOR GRANDE NO LUGAR DE "GERENCIAR OPÇÕES"
             painel.innerHTML = `
                 <div class="bg-gradient-to-br from-emerald-600 to-teal-800 text-white p-4 rounded-3xl shadow-lg space-y-3">
                     <div class="text-[10px] uppercase font-semibold tracking-wider text-emerald-200">Resumo da Negociação (Débitos em Atraso)</div>
                     <div class="flex justify-between items-end">
                         <div>
-                            <span class="text-xs opacity-80">Total Vencidas: ${faturasAtrasadasGlobal.length} | Sem Desconto: R$ ${valorAtualNegociacaoGlobal.toFixed(2)}</span>
-                            <h3 class="text-xl font-bold">Gerencie as Opções</h3>
+                            <span class="text-xs opacity-90 font-medium">Total Vencidas: ${faturasAtrasadasGlobal.length}</span>
+                            <h3 class="text-2xl font-bold tracking-tight mt-0.5">R$ ${valorAtualNegociacaoGlobal.toFixed(2)}</h3>
                         </div>
                         <div class="flex gap-2">
                             <button type="button" onclick="abrirModalRealizarAcordo()" class="px-3 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-xl text-xs shadow transition">
