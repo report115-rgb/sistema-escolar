@@ -81,7 +81,7 @@
 
         <div class="text-center text-[10px] text-blue-300 pb-2">
             <div>Sistema SE7 de Gestão Acadêmica</div>
-            <div>v1.2.4 &bull; Setor Financeiro</div>
+            <div>v1.2.5 &bull; Setor Financeiro (Otimizado)</div>
         </div>
     </div>
 
@@ -124,7 +124,7 @@
 
     <!-- APLICATIVO PRINCIPAL (PAINEL FINANCEIRO) -->
     <div id="main-app" class="app-screen fixed inset-0 z-40 flex flex-col bg-slate-100 dark:bg-slate-950" style="display: none;">
-        <!-- Cabeçalho Fixo -->
+        <!-- Cabeçalho Fixo com Botão de Atualizar -->
         <header class="bg-blue-900 text-white p-4 flex justify-between items-center shadow-md shrink-0 z-20">
             <div class="flex items-center space-x-3">
                 <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center font-bold text-base shadow">
@@ -135,9 +135,14 @@
                     <p class="text-[10px] text-blue-200" id="header-user-display">Conectado</p>
                 </div>
             </div>
-            <button type="button" onclick="fazerLogout()" class="w-9 h-9 bg-red-600 hover:bg-red-700 text-xs font-semibold rounded-xl shadow flex items-center justify-center" title="Sair">
-                <i class="fa-solid fa-power-off"></i>
-            </button>
+            <div class="flex items-center space-x-2">
+                <button type="button" onclick="carregarDadosNuvem()" class="w-9 h-9 bg-blue-700 hover:bg-blue-600 text-xs font-semibold rounded-xl shadow flex items-center justify-center transition" title="Atualizar Dados">
+                    <i class="fa-solid fa-rotate"></i>
+                </button>
+                <button type="button" onclick="fazerLogout()" class="w-9 h-9 bg-red-600 hover:bg-red-700 text-xs font-semibold rounded-xl shadow flex items-center justify-center" title="Sair">
+                    <i class="fa-solid fa-power-off"></i>
+                </button>
+            </div>
         </header>
 
         <!-- Conteúdo Principal com Rolagem -->
@@ -254,7 +259,7 @@
         </nav>
     </div>
 
-    <!-- SCRIPTS DE INTEGRAÇÃO COM FIREBASE -->
+    <!-- SCRIPTS DE INTEGRAÇÃO COM FIREBASE OTIMIZADOS (.get EM VEZ DE onSnapshot) -->
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyBeJ-fqzwiQt0PZEKQ6e8zAPSuh7WRuaHo",
@@ -368,13 +373,16 @@
             location.reload();
         }
 
+        // --- BUSCAS PONTUAIS OTIMIZADAS COM .get() EM VEZ DE onSnapshot ---
         async function carregarDadosNuvem() {
             await carregarCursosTurmasMatriz();
 
-            db.collection("students").onSnapshot(snapshot => {
+            try {
+                // Busca pontual de alunos
+                const studentSnap = await db.collection("students").get();
                 students = [];
                 studentsMap = {};
-                snapshot.forEach(doc => {
+                studentSnap.forEach(doc => {
                     const data = { id: doc.id, ...doc.data() };
                     students.push(data);
                     studentsMap[doc.id] = data;
@@ -383,20 +391,20 @@
                 renderizarListaAlunos();
                 renderizarNovosAlunos();
                 atualizarSeletorCursosUI();
-            }, error => {
-                console.error("Erro ao carregar alunos:", error);
-            });
 
-            db.collection("financeLogs").onSnapshot(snapshot => {
+                // Busca pontual de faturas
+                const financeSnap = await db.collection("financeLogs").get();
                 financeLogs = [];
-                snapshot.forEach(doc => financeLogs.push({ id: doc.id, ...doc.data() }));
+                financeSnap.forEach(doc => financeLogs.push({ id: doc.id, ...doc.data() }));
                 renderizarFaturasDoAlunoSelecionado();
+                
                 if (alunoSelecionadoId && document.getElementById('tab-detalhes-aluno').style.display === 'block') {
                     abrirDetalhesAluno(alunoSelecionadoId, abaOrigemRetorno);
                 }
-            }, error => {
-                console.error("Erro ao carregar faturas:", error);
-            });
+            } catch (error) {
+                console.error("Erro ao carregar dados do Firestore:", error);
+                alert("Erro ao conectar com a nuvem. Verifique sua conexão.");
+            }
         }
 
         async function carregarCursosTurmasMatriz() {
@@ -707,8 +715,9 @@
                     valor: novoValor
                 });
 
-                alert("Mensalidade atualizada com sucesso! Sincronizado com a matriz.");
+                alert("Mensalidade atualizada com sucesso!");
                 fecharModalEdicao();
+                await carregarDadosNuvem();
             } catch (e) {
                 alert("Erro ao atualizar mensalidade: " + e.message);
             }
@@ -738,6 +747,7 @@
                     formaPagamento: formaPagamento
                 });
                 alert("Baixa realizada com sucesso!");
+                await carregarDadosNuvem();
             } catch (e) {
                 alert("Erro ao dar baixa: " + e.message);
             }
@@ -752,7 +762,8 @@
                     dataPagamento: firebase.firestore.FieldValue.delete(),
                     formaPagamento: firebase.firestore.FieldValue.delete()
                 });
-                alert("Pagamento estornado com sucesso! A fatura está pendente novamente.");
+                alert("Pagamento estornado com sucesso!");
+                await carregarDadosNuvem();
             } catch (e) {
                 alert("Erro ao estornar pagamento: " + e.message);
             }
@@ -817,7 +828,6 @@
 
             const cardDados = document.getElementById('card-dados-aluno');
             
-            // Tratamento e formatação de dados cadastrais completos da matriz
             const nomeCompleto = aluno.fullname || aluno.name || '---';
             const codigoMatricula = aluno.code || aluno.matricula || 'S/N';
             const cpf = aluno.cpf || '---';
@@ -832,7 +842,6 @@
             const whatsapp = aluno.whatsapp || aluno.phone || aluno.telefone || '---';
             const email = aluno.email || '---';
 
-            // Tratamento robusto para extrair o endereço completo incluindo o logradouro (nome da rua)
             const cep = aluno.cep || '---';
             const logradouro = aluno.street || aluno.rua || aluno.logradouro || '';
             const numero = aluno.number || aluno.numero || 'S/N';
@@ -851,7 +860,6 @@
                 enderecoCompletoFormatado = `Rua não informada, nº ${numero} - ${bairro}, ${cidade}/${estado} (CEP: ${cep})`;
             }
 
-            // Vínculo acadêmico (Curso e Turma)
             const rawCurso = aluno.course || aluno.curso || aluno.turma || aluno.nomeCurso || aluno.courseName || aluno.courseId || '';
             const cursoExibir = coursesMap[rawCurso] || coursesMap[normalizarTexto(rawCurso)] || String(rawCurso || 'Não vinculado');
             
@@ -860,7 +868,6 @@
 
             cardDados.innerHTML = `
                 <div class="space-y-4">
-                    <!-- 1. Dados Pessoais -->
                     <div>
                         <h3 class="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 border-b border-slate-100 dark:border-slate-800 pb-1 mb-2">1. Dados Pessoais</h3>
                         <div class="space-y-2">
@@ -876,7 +883,6 @@
                         </div>
                     </div>
 
-                    <!-- 2. Contato -->
                     <div>
                         <h3 class="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 border-b border-slate-100 dark:border-slate-800 pb-1 mb-2">2. Contato</h3>
                         <div class="grid grid-cols-2 gap-2">
@@ -885,7 +891,6 @@
                         </div>
                     </div>
 
-                    <!-- 3. Endereço Completo -->
                     <div>
                         <h3 class="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 border-b border-slate-100 dark:border-slate-800 pb-1 mb-2">3. Endereço Completo</h3>
                         <div class="space-y-2">
@@ -905,7 +910,6 @@
                         </div>
                     </div>
 
-                    <!-- 4. Vínculo Acadêmico -->
                     <div>
                         <h3 class="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 border-b border-slate-100 dark:border-slate-800 pb-1 mb-2">4. Vínculo Acadêmico</h3>
                         <div class="space-y-2">
