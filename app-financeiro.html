@@ -80,7 +80,7 @@
                     <i class="fa-solid fa-users text-blue-600"></i> Consulta de Alunos
                 </h2>
                 
-                <!-- NOVO SELETOR DE CURSOS -->
+                <!-- SELETOR DE CURSOS -->
                 <div>
                     <label class="block text-[11px] font-semibold text-gray-600 dark:text-gray-400 uppercase mb-1">Filtrar por Curso / Turma</label>
                     <select id="select-filtro-curso" onchange="renderizarListaAlunos()" class="w-full px-3 py-2.5 rounded-xl border border-gray-300 dark:border-slate-600 text-xs dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-blue-600 focus:outline-none">
@@ -156,6 +156,7 @@
         ];
 
         let students = [];
+        let coursesList = [];
         let financeLogs = [];
         let alunoSelecionadoId = null;
 
@@ -231,16 +232,20 @@
         }
 
         function carregarDadosNuvem() {
+            // Carrega os Cursos da Matriz (buscando nas coleções 'courses', 'cursos' ou 'turmas')
+            carregarCursosMatriz();
+
+            // Carrega os Alunos
             db.collection("students").onSnapshot(snapshot => {
                 students = [];
                 snapshot.forEach(doc => students.push({ id: doc.id, ...doc.data() }));
                 students.sort((a, b) => (a.fullname || '').localeCompare(b.fullname || ''));
-                atualizarSeletorCursos();
                 renderizarListaAlunos();
             }, error => {
                 console.error("Erro ao carregar alunos:", error);
             });
 
+            // Carrega os Registros Financeiros
             db.collection("financeLogs").onSnapshot(snapshot => {
                 financeLogs = [];
                 snapshot.forEach(doc => financeLogs.push({ id: doc.id, ...doc.data() }));
@@ -250,25 +255,50 @@
             });
         }
 
-        function atualizarSeletorCursos() {
+        async function carregarCursosMatriz() {
+            const nomesColecoes = ["courses", "cursos", "turmas"];
+            let cursosEncontrados = new Set();
+
+            for (let col of nomesColecoes) {
+                try {
+                    const snap = await db.collection(col).get();
+                    if (!snap.empty) {
+                        snap.forEach(doc => {
+                            const d = doc.data();
+                            // Tenta pegar o nome do curso de várias propriedades possíveis
+                            const nomeCurso = d.name || d.nome || d.curso || d.title || d.descricao;
+                            if (nomeCurso && typeof nomeCurso === 'string') {
+                                cursosEncontrados.add(nomeCurso.trim());
+                            }
+                        });
+                    }
+                } catch (e) {
+                    console.warn(`Coleção ${col} não encontrada ou sem permissão.`);
+                }
+            }
+
+            // Se não encontrar nada nas coleções dedicadas de cursos, varre os alunos como alternativa de segurança
+            if (cursosEncontrados.size === 0) {
+                students.forEach(s => {
+                    const c = s.course || s.curso || s.turma || s.nomeCurso;
+                    if (c && typeof c === 'string' && c.trim() !== '') {
+                        cursosEncontrados.add(c.trim());
+                    }
+                });
+            }
+
+            coursesList = Array.from(cursosEncontrados).sort();
+            atualizarSeletorCursosUI();
+        }
+
+        function atualizarSeletorCursosUI() {
             const selectCurso = document.getElementById('select-filtro-curso');
             if (!selectCurso) return;
 
             const cursoSelecionadoAtual = selectCurso.value;
-            
-            // Extrai todos os cursos únicos dos alunos cadastrados (suporta campos course, curso ou turma)
-            const cursosSet = new Set();
-            students.forEach(s => {
-                const c = s.course || s.curso || s.turma;
-                if (c && typeof c === 'string' && c.trim() !== '') {
-                    cursosSet.add(c.trim());
-                }
-            });
-
-            const cursosOrdenados = Array.from(cursosSet).sort();
-
             selectCurso.innerHTML = `<option value="">Todos os Cursos</option>`;
-            cursosOrdenados.forEach(curso => {
+            
+            coursesList.forEach(curso => {
                 const selectedAttr = (curso === cursoSelecionadoAtual) ? 'selected' : '';
                 selectCurso.innerHTML += `<option value="${curso}" ${selectedAttr}>${curso}</option>`;
             });
@@ -280,10 +310,21 @@
             const cursoSelecionado = document.getElementById('select-filtro-curso').value;
             if (!container) return;
 
+            // Se a lista de cursos estiver vazia, tenta atualizar com base nos alunos já carregados
+            if (coursesList.length === 0 && students.length > 0) {
+                let tempCursos = new Set();
+                students.forEach(s => {
+                    const c = s.course || s.curso || s.turma || s.nomeCurso;
+                    if (c) tempCursos.add(c.trim());
+                });
+                coursesList = Array.from(tempCursos).sort();
+                atualizarSeletorCursosUI();
+            }
+
             const filtrados = students.filter(s => {
-                const nomeAluno = s.fullname || '';
+                const nomeAluno = s.fullname || s.name || '';
                 const cpfAluno = s.cpf || '';
-                const cursoAluno = s.course || s.curso || s.turma || '';
+                const cursoAluno = s.course || s.curso || s.turma || s.nomeCurso || '';
 
                 const bateTexto = nomeAluno.toLowerCase().includes(termo) || cpfAluno.includes(termo);
                 const bateCurso = (cursoSelecionado === "") || (cursoAluno.trim() === cursoSelecionado);
@@ -298,12 +339,12 @@
 
             container.innerHTML = '';
             filtrados.forEach(s => {
-                const cursoExibir = s.course || s.curso || s.turma || 'Curso não informado';
+                const cursoExibir = s.course || s.curso || s.turma || s.nomeCurso || 'Curso não informado';
                 container.innerHTML += `
                     <div onclick="selecionarAlunoFinanceiro('${s.id}')" class="bg-white dark:bg-slate-800 p-3.5 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 flex justify-between items-center active:scale-98 transition cursor-pointer">
                         <div>
-                            <strong class="text-xs font-bold text-gray-900 dark:text-white">${s.fullname || 'Sem Nome'}</strong>
-                            <p class="text-[10px] text-gray-400">Curso: ${cursoExibir} &bull; Matrícula: ${s.code || 'S/N'}</p>
+                            <strong class="text-xs font-bold text-gray-900 dark:text-white">${s.fullname || s.name || 'Sem Nome'}</strong>
+                            <p class="text-[10px] text-gray-400">Curso: ${cursoExibir} &bull; Matrícula: ${s.code || s.matricula || 'S/N'}</p>
                         </div>
                         <div class="w-8 h-8 bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center text-xs">
                             <i class="fa-solid fa-chevron-right"></i>
@@ -318,11 +359,11 @@
             const aluno = students.find(s => s.id === id);
             if (!aluno) return;
 
-            document.getElementById('fin-aluno-nome').textContent = aluno.fullname || '---';
-            document.getElementById('fin-aluno-detalhes').textContent = `Matrícula: ${aluno.code || 'S/N'} | CPF: ${aluno.cpf || '---'}`;
+            document.getElementById('fin-aluno-nome').textContent = aluno.fullname || aluno.name || '---';
+            document.getElementById('fin-aluno-detalhes').textContent = `Matrícula: ${aluno.code || aluno.matricula || 'S/N'} | CPF: ${aluno.cpf || '---'}`;
 
             const container = document.getElementById('lista-cobrancas-container');
-            const cobrancas = financeLogs.filter(f => f.studentId === id);
+            const cobrancas = financeLogs.filter(f => f.studentId === id || f.alunoId === id);
 
             if (cobrancas.length === 0) {
                 container.innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-2xl text-center text-xs text-gray-400">Nenhuma fatura encontrada para este aluno.</div>`;
@@ -338,8 +379,8 @@
                         <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 space-y-2 text-xs">
                             <div class="flex justify-between items-start">
                                 <div>
-                                    <strong class="text-gray-900 dark:text-white text-xs">${f.description || 'Cobrança'}</strong><br>
-                                    <span class="text-gray-400 text-[10px]">Vencimento: ${f.date || '---'} &bull; Valor: <strong>R$ ${f.amount || '0,00'}</strong></span>
+                                    <strong class="text-gray-900 dark:text-white text-xs">${f.description || f.descricao || 'Cobrança'}</strong><br>
+                                    <span class="text-gray-400 text-[10px]">Vencimento: ${f.date || f.vencimento || '---'} &bull; Valor: <strong>R$ ${f.amount || f.valor || '0,00'}</strong></span>
                                 </div>
                                 <span class="px-2 py-0.5 ${corBadge} rounded-full text-[10px] font-bold">${f.status || 'PENDENTE'}</span>
                             </div>
