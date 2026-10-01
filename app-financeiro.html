@@ -63,6 +63,43 @@
         </div>
     </div>
 
+    <!-- MODAL DE EDIÇÃO COM CALENDÁRIO -->
+    <div id="modal-editar-cobranca" class="fixed inset-0 z-[4000] flex items-center justify-center bg-black/60 p-4" style="display: none;">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-sm w-full p-5 space-y-4 border border-slate-200 dark:border-slate-700">
+            <div class="flex justify-between items-center border-b pb-3 border-slate-200 dark:border-slate-700">
+                <h3 class="font-bold text-sm text-gray-900 dark:text-white flex items-center gap-2">
+                    <i class="fa-solid fa-pen-to-square text-blue-600"></i> Editar Mensalidade
+                </h3>
+                <button onclick="fecharModalEdicao()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-sm">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <input type="hidden" id="edit-cobranca-id">
+
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold text-gray-600 dark:text-gray-400 uppercase mb-1">Nova Data de Vencimento (Calendário)</label>
+                    <input type="date" id="edit-cobranca-data" min="2024-01-01" max="2035-12-31" class="w-full px-3 py-2 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-600">
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-gray-600 dark:text-gray-400 uppercase mb-1">Novo Valor (R$)</label>
+                    <input type="text" id="edit-cobranca-valor" placeholder="0,00" class="w-full px-3 py-2 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-600">
+                </div>
+            </div>
+
+            <div class="flex gap-2 pt-2">
+                <button type="button" onclick="fecharModalEdicao()" class="flex-1 py-2.5 bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-200 font-semibold rounded-xl text-xs">
+                    Cancelar
+                </button>
+                <button type="button" onclick="salvarEdicaoMensalidade()" class="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-xs shadow">
+                    Salvar Alterações
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- CABEÇALHO MOBILE -->
     <header class="bg-blue-900 dark:bg-slate-800 text-white px-4 py-3.5 flex justify-between items-center shadow-md sticky top-0 z-40">
         <div class="flex items-center space-x-2.5">
@@ -502,14 +539,14 @@
                             </div>
                             <div class="flex items-center gap-1.5">
                                 <span class="px-2 py-0.5 ${corBadge} rounded-full text-[10px] font-bold">${f.status || 'PENDENTE'}</span>
-                                <!-- Botão Editar Mensalidade (Data e Valor)[cite: 1] -->
+                                <!-- Botão Editar Mensalidade (Calendário e Valor) -->
                                 <button type="button" onclick="abrirModalEditarMensalidadeFinanceiro('${f.id}')" class="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[10px] font-semibold shadow transition">
                                     <i class="fa-solid fa-pen-to-square"></i> Editar
                                 </button>
                             </div>
                         </div>
 
-                        <!-- Seção de Baixa com Forma de Pagamento e Data Personalizada[cite: 1] -->
+                        <!-- Seção de Baixa com Forma de Pagamento e Data Personalizada -->
                         ${!jaPago ? `
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-2 pt-2 border-t border-gray-200 dark:border-slate-700 items-center">
                                 <div>
@@ -545,30 +582,59 @@
             container.innerHTML = htmlAcumulado;
         }
 
-        // --- FUNÇÕES DE EDIÇÃO E BAIXA AVANÇADA ---
+        // --- FUNÇÕES DE EDIÇÃO COM CALENDÁRIO VISUAL E SALVAMENTO NO FIRESTORE ---
         function abrirModalEditarMensalidadeFinanceiro(financeLogId) {
             const fatura = financeLogs.find(f => f.id === financeLogId);
             if (!fatura) return;
 
-            let vencimentoAtual = fatura.date || fatura.vencimento || '';
-            let valorAtual = fatura.amount || fatura.valor || '';
+            document.getElementById('edit-cobranca-id').value = fatura.id;
+            
+            let vencimentoOriginal = fatura.date || fatura.vencimento || '';
+            let dataFormatada = '';
+            if (vencimentoOriginal.includes('/')) {
+                let partes = vencimentoOriginal.split('/');
+                if (partes.length === 3) {
+                    dataFormatada = `${partes[2]}-${partes[1]}-${partes[0]}`;
+                }
+            } else {
+                dataFormatada = vencimentoOriginal;
+            }
 
-            let novoVencimento = prompt("Digite a nova data de vencimento (Ex: DD/MM/AAAA ou AAAA-MM-DD):", vencimentoAtual);
-            if (novoVencimento === null) return;
+            document.getElementById('edit-cobranca-data').value = dataFormatada || new Date().toISOString().split('T')[0];
+            document.getElementById('edit-cobranca-valor').value = fatura.amount || fatura.valor || '';
 
-            let novoValor = prompt("Digite o novo valor da mensalidade (R$):", valorAtual);
-            if (novoValor === null) return;
+            document.getElementById('modal-editar-cobranca').style.display = 'flex';
+        }
 
-            db.collection("financeLogs").doc(financeLogId).update({
-                date: novoVencimento,
-                vencimento: novoVencimento,
-                amount: novoValor,
-                valor: novoValor
-            }).then(() => {
-                alert("Mensalidade atualizada com sucesso!");
-            }).catch(e => {
+        function fecharModalEdicao() {
+            document.getElementById('modal-editar-cobranca').style.display = 'none';
+        }
+
+        async function salvarEdicaoMensalidade() {
+            const id = document.getElementById('edit-cobranca-id').value;
+            const novaDataInput = document.getElementById('edit-cobranca-data').value;
+            const novoValor = document.getElementById('edit-cobranca-valor').value;
+
+            if (!novaDataInput || !novoValor) {
+                return alert("Preencha a data do calendário e o valor corretamente.");
+            }
+
+            let partes = novaDataInput.split('-');
+            let novaDataFormatada = `${partes[2]}/${partes[1]}/${partes[0]}`;
+
+            try {
+                await db.collection("financeLogs").doc(id).update({
+                    date: novaDataFormatada,
+                    vencimento: novaDataFormatada,
+                    amount: novoValor,
+                    valor: novoValor
+                });
+
+                alert("Mensalidade atualizada com sucesso! Sincronizado com a matriz.");
+                fecharModalEdicao();
+            } catch (e) {
                 alert("Erro ao atualizar mensalidade: " + e.message);
-            });
+            }
         }
 
         async function darBaixaApp(financeLogId) {
@@ -578,7 +644,6 @@
             let formaPagamento = formaPagamentoSelect ? formaPagamentoSelect.value : "Pix/Dinheiro";
             let dataPagamentoRaw = dataPagamentoInput ? dataPagamentoInput.value : new Date().toISOString().split('T')[0];
             
-            // Formatar data de AAAA-MM-DD para DD/MM/AAAA para padronizar com o sistema
             let dataPagamentoFormatada = dataPagamentoRaw;
             if (dataPagamentoRaw.includes('-')) {
                 let partes = dataPagamentoRaw.split('-');
