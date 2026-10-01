@@ -81,7 +81,7 @@
 
         <div class="text-center text-[10px] text-blue-300 pb-2">
             <div>Sistema SE7 de Gestão Acadêmica</div>
-            <div>v1.3.6 &bull; Setor Financeiro</div>
+            <div>v1.3.7 &bull; Setor Financeiro</div>
         </div>
     </div>
 
@@ -135,7 +135,7 @@
             </div>
 
             <div class="space-y-4 text-xs">
-                <p class="text-slate-500">Configure os descontos para cada modalidade abaixo. As 3 opções são necessárias para gerar a proposta em PDF para o aluno[cite: 1].</p>
+                <p class="text-slate-500">Configure os descontos para cada modalidade abaixo. As 3 opções são necessárias para gerar a proposta em PDF para o aluno.</p>
                 
                 <div class="grid grid-cols-3 gap-2">
                     <button type="button" onclick="ativarAbaAcordoModal('avista')" id="btn-aba-avista" class="py-2.5 px-2 bg-emerald-600 text-white font-bold rounded-xl text-xs shadow transition">À Vista</button>
@@ -234,7 +234,7 @@
             </div>
 
             <div class="space-y-4 text-xs">
-                <p class="text-slate-500">O aluno analisou e aprovou a proposta[cite: 1]? Selecione abaixo qual opção ele escolheu para fechar o acordo de vez:</p>
+                <p class="text-slate-500">O aluno analisou e aprovou a proposta? Selecione abaixo qual opção ele escolheu para fechar o acordo de vez:</p>
                 
                 <div id="container-opcoes-fechamento" class="space-y-2">
                     <!-- Preenchido via script com as opções criadas na proposta -->
@@ -716,7 +716,7 @@
             selectAluno.innerHTML = `<option value="" disabled selected>Selecione um aluno...</option>` +
                 alunosDoCurso.map(a => `<option value="${a.id}">${a.fullname || a.name || 'Sem Nome'}</option>`).join('');
 
-            container.innerHTML = `<div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">Selecione um aluno acima para visualizar as faturas.</div>`;
+            container.innerHTML = `<div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">Selecione um curso e um aluno acima para visualizar as faturas.</div>`;
         }
 
         function parseDataParaOrdem(dataStr) {
@@ -1140,14 +1140,11 @@
             document.getElementById('painel-negociacao-aluno').style.display = 'none';
         }
 
-        // FUNÇÃO ATUALIZADA: ABRE A PROPOSTA EM FORMATO PDF/IMPRESSÃO EM UMA NOVA ABA PARA ANÁLISE VISUAL
+        // FUNÇÃO ATUALIZADA: GERA PDF COM DADOS PESSOAIS COMPLETOS E EXTRATO DETALHADO DE DÉBITOS
         function gerarPropostaPDF() {
             if (!alunoNegociacaoId) return;
             const aluno = studentsMap[alunoNegociacaoId];
-            const nomeAluno = aluno ? (aluno.fullname || aluno.name) : 'Aluno';
-            const cpfAluno = aluno ? (aluno.cpf || 'Não informado') : '---';
-            const rawCurso = aluno ? (aluno.course || aluno.curso || aluno.turma || aluno.nomeCurso || aluno.courseName || aluno.courseId || 'Não informado') : 'Não informado';
-            const cursoAluno = coursesMap[rawCurso] || coursesMap[normalizarTexto(rawCurso)] || String(rawCurso);
+            if (!aluno) return;
 
             if (!opcoesGeradas.avista || !opcoesGeradas.parcelado || !opcoesGeradas.cartao) {
                 return alert("Configure as 3 opções (À Vista, Parcelado e Cartão) antes de gerar a proposta.");
@@ -1155,7 +1152,71 @@
 
             fecharModalRealizarAcordo();
 
-            // Cria uma janela limpa com o layout do PDF para visualização e impressão imediata
+            const nomeCompleto = aluno.fullname || aluno.name || '---';
+            const codigoMatricula = aluno.code || aluno.matricula || 'S/N';
+            const cpf = aluno.cpf || '---';
+            const rg = aluno.rg || aluno.documento || '---';
+            const sexo = aluno.gender || aluno.sexo || '---';
+            
+            let nascimento = aluno.birthDate || aluno.dob || '---';
+            if (nascimento !== '---' && nascimento.includes('-')) {
+                nascimento = nascimento.split('-').reverse().join('/');
+            }
+
+            const whatsapp = aluno.whatsapp || aluno.phone || aluno.telefone || '---';
+            const email = aluno.email || '---';
+
+            const cep = aluno.cep || '---';
+            const logradouro = aluno.street || aluno.rua || aluno.logradouro || '';
+            const numero = aluno.number || aluno.numero || 'S/N';
+            const bairro = aluno.neighborhood || aluno.bairro || '---';
+            const cidade = aluno.city || aluno.cidade || '---';
+            const estado = aluno.state || aluno.estado || '---';
+
+            let enderecoCompletoFormatado = '';
+            if (logradouro) {
+                enderecoCompletoFormatado = `${logradouro}, nº ${numero} - ${bairro}, ${cidade}/${estado} (CEP: ${cep})`;
+            } else if (aluno.address) {
+                enderecoCompletoFormatado = aluno.address;
+            } else if (aluno.endereco) {
+                enderecoCompletoFormatado = aluno.endereco;
+            } else {
+                enderecoCompletoFormatado = `Rua não informada, nº ${numero} - ${bairro}, ${cidade}/${estado} (CEP: ${cep})`;
+            }
+
+            const rawCurso = aluno.course || aluno.curso || aluno.turma || aluno.nomeCurso || aluno.courseName || aluno.courseId || '';
+            const cursoExibir = coursesMap[rawCurso] || coursesMap[normalizarTexto(rawCurso)] || String(rawCurso || 'Não vinculado');
+
+            // MONTA O EXTRATO DETALHADO DAS FATURAS EM ATRASO
+            const hoje = new Date();
+            hoje.setHours(0, 0, 0, 0);
+
+            let htmlTabelaDebitos = '';
+            faturasAtrasadasGlobal.forEach(f => {
+                const valorOriginal = parseFloat(String(f.amount || f.valor || '0').replace(',', '.')) || 0;
+                const vencimentoStr = f.date || f.vencimento || '';
+                let dataVenc = parseDataParaOrdem(vencimentoStr);
+                dataVenc.setHours(0, 0, 0, 0);
+                
+                let diasAtraso = Math.ceil(Math.abs(hoje - dataVenc) / (1000 * 60 * 60 * 24));
+                let multaParcela = 10.00;
+                let taxaJurosDia = 0.005;
+                let jurosParcela = valorOriginal * taxaJurosDia * diasAtraso;
+                let totalParcelaAtualizada = valorOriginal + multaParcela + jurosParcela;
+
+                htmlTabelaDebitos += `
+                    <tr>
+                        <td style="padding: 8px; border-bottom: 1px solid #e2e8f0;">${f.description || f.descricao || 'Mensalidade'}</td>
+                        <td style="padding: 8px; border-bottom: 1px solid #e2e8f0; text-align: center;">${formatarDataParaExibicao(vencimentoStr)}</td>
+                        <td style="padding: 8px; border-bottom: 1px solid #e2e8f0; text-align: center;">${diasAtraso} dias</td>
+                        <td style="padding: 8px; border-bottom: 1px solid #e2e8f0; text-align: right;">R$ ${valorOriginal.toFixed(2)}</td>
+                        <td style="padding: 8px; border-bottom: 1px solid #e2e8f0; text-align: right;">R$ ${multaParcela.toFixed(2)}</td>
+                        <td style="padding: 8px; border-bottom: 1px solid #e2e8f0; text-align: right;">R$ ${jurosParcela.toFixed(2)}</td>
+                        <td style="padding: 8px; border-bottom: 1px solid #e2e8f0; text-align: right; font-weight: bold;">R$ ${totalParcelaAtualizada.toFixed(2)}</td>
+                    </tr>
+                `;
+            });
+
             let janelaPDF = window.open('', '_blank');
             if (!janelaPDF) {
                 return alert("O navegador bloqueou a abertura da nova aba. Por favor, permita pop-ups para visualizar o PDF.");
@@ -1166,21 +1227,31 @@
                 <html lang="pt-BR">
                 <head>
                     <meta charset="UTF-8">
-                    <title>Proposta de Acordo - ${nomeAluno}</title>
+                    <title>Proposta de Acordo - ${nomeCompleto}</title>
                     <style>
-                        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #1e293b; margin: 0; padding: 40px; background: #f8fafc; }
-                        .sheet { max-width: 800px; margin: 0 auto; background: #ffffff; padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
-                        .header { text-align: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 30px; }
+                        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #1e293b; margin: 0; padding: 30px; background: #f8fafc; }
+                        .sheet { max-width: 850px; margin: 0 auto; background: #ffffff; padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+                        .header { text-align: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 25px; }
                         .header h1 { font-size: 22px; color: #1e3a8a; margin: 0 0 5px 0; }
                         .header p { font-size: 12px; color: #64748b; margin: 0; }
-                        .info-section { margin-bottom: 25px; background: #f1f5f9; padding: 15px 20px; border-radius: 8px; font-size: 13px; }
-                        .info-section div { margin-bottom: 5px; }
-                        .options-container { display: flex; flex-direction: column; gap: 15px; margin-bottom: 30px; }
-                        .option-card { border: 1px solid #cbd5e1; border-radius: 8px; padding: 18px; background: #ffffff; }
-                        .option-card h3 { margin: 0 0 8px 0; font-size: 15px; color: #047857; }
-                        .option-card .value { font-size: 18px; font-weight: bold; color: #0f172a; margin-top: 5px; }
-                        .footer-note { text-align: center; font-size: 11px; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 20px; }
-                        .no-print { text-align: center; margin-bottom: 25px; }
+                        
+                        .section-title { font-size: 13px; font-weight: bold; color: #1e3a8a; text-transform: uppercase; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; margin-bottom: 10px; margin-top: 20px; }
+                        
+                        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 15px; font-size: 12px; background: #f1f5f9; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+                        .info-grid div span { color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 10px; display: block; }
+                        .info-grid div strong { color: #0f172a; font-size: 12px; }
+                        .full-width { grid-column: span 2; }
+
+                        table { width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 25px; }
+                        th { background: #f1f5f9; color: #334155; font-weight: bold; padding: 8px; border-bottom: 2px solid #cbd5e1; text-align: left; }
+                        
+                        .options-container { display: flex; flex-direction: column; gap: 12px; margin-bottom: 25px; }
+                        .option-card { border: 1px solid #cbd5e1; border-radius: 8px; padding: 15px; background: #ffffff; }
+                        .option-card h3 { margin: 0 0 5px 0; font-size: 14px; color: #047857; }
+                        .option-card .value { font-size: 16px; font-weight: bold; color: #0f172a; margin-top: 4px; }
+
+                        .footer-note { text-align: center; font-size: 11px; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 15px; }
+                        .no-print { text-align: center; margin-bottom: 20px; }
                         .btn-print { background: #2563eb; color: white; border: none; padding: 10px 20px; font-size: 14px; font-weight: bold; border-radius: 8px; cursor: pointer; }
                         .btn-print:hover { background: #1d4ed8; }
                         @media print {
@@ -1201,37 +1272,61 @@
                             <p>Setor Financeiro &bull; Termo de Proposta de Acordo Consolidado</p>
                         </div>
 
-                        <div class="info-section">
-                            <div><strong>Aluno(a):</strong> ${nomeAluno}</div>
-                            <div><strong>CPF:</strong> ${cpfAluno}</div>
-                            <div><strong>Curso:</strong> ${cursoAluno}</div>
-                            <div><strong>Data da Emissão:</strong> ${new Date().toLocaleDateString('pt-BR')}</div>
+                        <div class="section-title">1. Dados Cadastrais do Aluno</div>
+                        <div class="info-grid">
+                            <div><span>Nome Completo</span><strong>${nomeCompleto}</strong></div>
+                            <div><span>Nº da Matrícula</span><strong>${codigoMatricula}</strong></div>
+                            <div><span>Data de Nascimento</span><strong>${nascimento}</strong></div>
+                            <div><span>Sexo</span><strong>${sexo}</strong></div>
+                            <div><span>CPF</span><strong>${cpf}</strong></div>
+                            <div><span>RG</span><strong>${rg}</strong></div>
+                            <div><span>WhatsApp / Telefone</span><strong>${whatsapp}</strong></div>
+                            <div><span>E-mail</span><strong>${email}</strong></div>
+                            <div class="full-width"><span>Curso</span><strong>${cursoExibir}</strong></div>
+                            <div class="full-width"><span>Endereço Completo</span><strong>${enderecoCompletoFormatado}</strong></div>
                         </div>
 
-                        <h3 style="font-size: 14px; color: #334155; margin-bottom: 12px; text-transform: uppercase;">Modalidades de Acordo Disponíveis para Escolha:</h3>
+                        <div class="section-title">2. Extrato Detalhado de Débitos em Atraso</div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Descrição</th>
+                                    <th style="text-align: center;">Vencimento</th>
+                                    <th style="text-align: center;">Atraso</th>
+                                    <th style="text-align: right;">Original</th>
+                                    <th style="text-align: right;">Multa</th>
+                                    <th style="text-align: right;">Juros</th>
+                                    <th style="text-align: right;">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${htmlTabelaDebitos}
+                            </tbody>
+                        </table>
 
+                        <div class="section-title">3. Modalidades de Acordo Disponíveis para Escolha</div>
                         <div class="options-container">
                             <div class="option-card">
                                 <h3>Opção 1: Pagamento À Vista</h3>
-                                <div style="font-size: 12px; color: #475569;">Desconto aplicado: 100% sobre Juros e Multa.</div>
+                                <div style="font-size: 11px; color: #475569;">Desconto aplicado: 100% sobre Juros e Multa.</div>
                                 <div class="value">R$ ${opcoesGeradas.avista.valorFinal.toFixed(2)}</div>
                             </div>
 
                             <div class="option-card">
                                 <h3>Opção 2: Parcelado em ${opcoesGeradas.parcelado.infoExtra}</h3>
-                                <div style="font-size: 12px; color: #475569;">Desconto aplicado: 50% sobre Juros e Multa.</div>
-                                <div class="value">R$ ${opcoesGeradas.parcelado.valorFinal.toFixed(2)} <span style="font-size: 12px; font-weight: normal; color: #64748b;">(Parcelas de R$ ${(opcoesGeradas.parcelado.valorFinal / parseInt(opcoesGeradas.parcelado.infoExtra)).toFixed(2)})</span></div>
+                                <div style="font-size: 11px; color: #475569;">Desconto aplicado: 50% sobre Juros e Multa.</div>
+                                <div class="value">R$ ${opcoesGeradas.parcelado.valorFinal.toFixed(2)} <span style="font-size: 11px; font-weight: normal; color: #64748b;">(Parcelas de R$ ${(opcoesGeradas.parcelado.valorFinal / parseInt(opcoesGeradas.parcelado.infoExtra)).toFixed(2)})</span></div>
                             </div>
 
                             <div class="option-card">
                                 <h3>Opção 3: Cartão de Crédito</h3>
-                                <div style="font-size: 12px; color: #475569;">Desconto aplicado: 80% sobre Juros e Multa.</div>
+                                <div style="font-size: 11px; color: #475569;">Desconto aplicado: 80% sobre Juros e Multa.</div>
                                 <div class="value">R$ ${opcoesGeradas.cartao.valorFinal.toFixed(2)}</div>
                             </div>
                         </div>
 
                         <div class="footer-note">
-                            Documento gerado eletronicamente pelo Setor Financeiro SE7.<br>
+                            Documento gerado eletronicamente pelo Setor Financeiro SE7 em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}.<br>
                             Após a escolha da modalidade pelo aluno, efetive o fechamento diretamente no painel de negociações do aplicativo.
                         </div>
                     </div>
