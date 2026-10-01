@@ -81,7 +81,7 @@
 
         <div class="text-center text-[10px] text-blue-300 pb-2">
             <div>Sistema SE7 de Gestão Acadêmica</div>
-            <div>v1.3.0 &bull; Setor Financeiro</div>
+            <div>v1.3.1 &bull; Setor Financeiro</div>
         </div>
     </div>
 
@@ -213,7 +213,7 @@
 
             <div class="flex flex-col gap-2 pt-2">
                 <!-- Botão Gerar Proposta dentro do Modal (aparece após preencher o cartão/última modalidade) -->
-                <button type="button" id="btn-gerar-proposta-modal" onclick="gerarPropostaFinalAcordo()" style="display: none;" class="w-full py-3 bg-white text-emerald-900 hover:bg-emerald-50 font-bold rounded-xl text-xs shadow border border-emerald-300 transition">
+                <button type="button" id="btn-gerar-proposta-modal" onclick="gerarPropostaFinalAcordo()" style="display: none;" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow transition">
                     <i class="fa-solid fa-file-invoice-dollar mr-1"></i> Gerar Proposta
                 </button>
                 <button type="button" onclick="fecharModalRealizarAcordo()" class="w-full py-2.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold rounded-xl text-xs">
@@ -1091,45 +1091,35 @@
                 return alert("Você precisa configurar as 3 opções (À Vista, Parcelado e Cartão) antes de emitir a proposta final.");
             }
 
-            // Nova mensagem de confirmação solicitada
             const desejaGerar = confirm("Você deseja gerar a proposta atual para o aluno?");
             if (!desejaGerar) {
-                // Se clicar em não, permite voltar para edição
                 return;
             }
 
             try {
-                // 1. Dar baixa nas faturas antigas no Firebase
-                for (let fatura of faturasAtrasadasGlobal) {
-                    await db.collection("financeLogs").doc(fatura.id).update({
-                        status: "NEGOCIADO / PROPOSTA EMITIDA",
-                        dataPagamento: new Date().toLocaleDateString('pt-BR'),
-                        formaPagamento: "Acordo Consolidado"
-                    });
-                }
-
-                // 2. Registrar o acordo consolidado no Firebase
-                const novoAcordoId = "acordo_geral_" + Date.now();
-                await db.collection("financeLogs").doc(novoAcordoId).set({
+                // CORREÇÃO: Apenas registramos/salvamos a proposta para envio/análise pelo aluno,
+                // SEM dar baixa nas faturas anteriores e SEM injetar termos na aba de faturas ativas neste momento.
+                const propostaId = "proposta_acordo_" + Date.now();
+                await db.collection("financeLogs").doc(propostaId).set({
                     studentId: alunoNegociacaoId,
                     alunoId: alunoNegociacaoId,
-                    description: `Termo de Acordo Consolidado (3 Modalidades)`,
+                    description: `Proposta de Acordo Emitida (Aguardando Confirmação)`,
                     amount: opcoesGeradas.avista.valorFinal.toFixed(2),
                     valor: opcoesGeradas.avista.valorFinal.toFixed(2),
                     date: new Date().toISOString().split('T')[0],
                     vencimento: new Date().toISOString().split('T')[0],
-                    status: "PENDENTE (ACORDO)",
+                    status: "PROPOSTA EMITIDA (AGUARDANDO)",
                     detalhesOpcoes: opcoesGeradas,
                     criadoEm: new Date().toISOString()
                 });
 
-                console.log(`[Google Drive Sync] Salvando PDF da Proposta Completa na pasta do aluno ${nome}...`);
+                console.log(`[Google Drive Sync] Salvando PDF da Proposta de Acordo na pasta do aluno ${nome}...`);
 
                 // Fechar o modal de acordo
                 fecharModalRealizarAcordo();
 
-                // Simulação de compartilhamento nativo no celular (Web Share API)
-                const textoCompartilhamento = `📄 *Proposta de Acordo SE7* - Aluno(a): ${nome}\n\nOpções geradas e validadas com sucesso!\n• À Vista: R$ ${opcoesGeradas.avista.valorFinal.toFixed(2)}\n• Parcelado (${opcoesGeradas.parcelado.infoExtra}): R$ ${opcoesGeradas.parcelado.valorFinal.toFixed(2)}\n• Cartão de Crédito: R$ ${opcoesGeradas.cartao.valorFinal.toFixed(2)}\n\nDocumento gerado e salvo com segurança no sistema.`;
+                // Simulação de compartilhamento nativo no celular (Web Share API) para mandar ao aluno
+                const textoCompartilhamento = `📄 *Proposta de Acordo SE7* - Aluno(a): ${nome}\n\nProposta gerada com sucesso! Seguem as opções para sua análise:\n• À Vista: R$ ${opcoesGeradas.avista.valorFinal.toFixed(2)}\n• Parcelado (${opcoesGeradas.parcelado.infoExtra}): R$ ${opcoesGeradas.parcelado.valorFinal.toFixed(2)}\n• Cartão de Crédito: R$ ${opcoesGeradas.cartao.valorFinal.toFixed(2)}\n\nAguardando confirmação para fechamento e consolidação do acordo.`;
 
                 if (navigator.share) {
                     try {
@@ -1141,14 +1131,14 @@
                         console.log("Compartilhamento cancelado ou não suportado na intent direta.");
                     }
                 } else {
-                    alert(`✅ Proposta gerada com sucesso para ${nome}!\n\n• PDF gerado e aberto.\n• Faturas anteriores atualizadas.`);
+                    alert(`✅ Proposta gerada com sucesso para ${nome}!\n\n• As opções foram enviadas para análise do aluno.\n• Nenhuma fatura foi baixada ainda, aguardando a confirmação do fechamento do acordo.`);
                 }
                 
                 limparSelecaoNegociacao();
-                mudarAbaApp('financeiro');
+                mudarAbaApp('negociacoes');
 
             } catch (e) {
-                alert("Erro ao registrar proposta final: " + e.message);
+                alert("Erro ao registrar proposta: " + e.message);
             }
         }
 
