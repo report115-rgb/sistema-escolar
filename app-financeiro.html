@@ -81,7 +81,7 @@
 
         <div class="text-center text-[10px] text-blue-300 pb-2">
             <div>Sistema SE7 de Gestão Acadêmica</div>
-            <div>v1.2.5 &bull; Setor Financeiro (Otimizado)</div>
+            <div>v1.2.5 &bull; Setor Financeiro</div>
         </div>
     </div>
 
@@ -102,7 +102,7 @@
             <div class="space-y-3 text-xs">
                 <div>
                     <label class="block font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">Nova Data de Vencimento</label>
-                    <input type="date" id="edit-cobranca-data" min="2024-01-01" max="2035-12-31" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-600">
+                    <input type="date" id="edit-cobranca-data" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-600">
                 </div>
 
                 <div>
@@ -124,7 +124,7 @@
 
     <!-- APLICATIVO PRINCIPAL (PAINEL FINANCEIRO) -->
     <div id="main-app" class="app-screen fixed inset-0 z-40 flex flex-col bg-slate-100 dark:bg-slate-950" style="display: none;">
-        <!-- Cabeçalho Fixo com Botão de Atualizar -->
+        <!-- Cabeçalho Fixo -->
         <header class="bg-blue-900 text-white p-4 flex justify-between items-center shadow-md shrink-0 z-20">
             <div class="flex items-center space-x-3">
                 <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center font-bold text-base shadow">
@@ -135,14 +135,9 @@
                     <p class="text-[10px] text-blue-200" id="header-user-display">Conectado</p>
                 </div>
             </div>
-            <div class="flex items-center space-x-2">
-                <button type="button" onclick="carregarDadosNuvem()" class="w-9 h-9 bg-blue-700 hover:bg-blue-600 text-xs font-semibold rounded-xl shadow flex items-center justify-center transition" title="Atualizar Dados">
-                    <i class="fa-solid fa-rotate"></i>
-                </button>
-                <button type="button" onclick="fazerLogout()" class="w-9 h-9 bg-red-600 hover:bg-red-700 text-xs font-semibold rounded-xl shadow flex items-center justify-center" title="Sair">
-                    <i class="fa-solid fa-power-off"></i>
-                </button>
-            </div>
+            <button type="button" onclick="fazerLogout()" class="w-9 h-9 bg-red-600 hover:bg-red-700 text-xs font-semibold rounded-xl shadow flex items-center justify-center" title="Sair">
+                <i class="fa-solid fa-power-off"></i>
+            </button>
         </header>
 
         <!-- Conteúdo Principal com Rolagem -->
@@ -220,6 +215,35 @@
                 </div>
             </div>
 
+            <!-- ABA 4: NEGOCIAÇÕES DE PENDÊNCIAS -->
+            <div id="tab-negociacoes" class="space-y-3 tab-pane" style="display: none;">
+                <div class="bg-white dark:bg-slate-900 p-4 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 space-y-3">
+                    <h2 class="font-bold text-sm text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
+                        <i class="fa-solid fa-handshake-angle"></i> Aba de Negociações
+                    </h2>
+                    <p class="text-[11px] text-slate-500">Busque o aluno por nome ou CPF para calcular multas e juros diários em tempo real.</p>
+                    
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
+                            <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                        </span>
+                        <input type="text" id="input-busca-negociacao" oninput="pesquisarAlunoNegociacao()" placeholder="Digite o nome ou CPF do aluno..." class="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-emerald-600 focus:outline-none">
+                    </div>
+                </div>
+
+                <!-- Resultados da busca para negociação -->
+                <div id="lista-busca-negociacao-container" class="space-y-2">
+                    <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">
+                        Digite acima o nome ou CPF para localizar o aluno em débito.
+                    </div>
+                </div>
+
+                <!-- Painel de Cálculo e Faturas do Aluno Selecionado para Acordo -->
+                <div id="painel-negociacao-aluno" class="space-y-3" style="display: none;">
+                    <!-- Preenchido via script -->
+                </div>
+            </div>
+
             <!-- TELA DE DETALHES DO ALUNO (FICHA CADASTRAL COMPLETA) -->
             <div id="tab-detalhes-aluno" class="space-y-3 tab-pane" style="display: none;">
                 <div class="bg-white dark:bg-slate-900 p-4 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 space-y-3">
@@ -250,16 +274,20 @@
                     <i class="fa-solid fa-user-plus text-base mb-0.5"></i>
                     <span id="badge-alerta-novos" class="absolute -top-1 -right-2 w-4 h-4 rounded-full animacao-piscar-alerta bg-red-500 text-white" style="display: none;"></span>
                 </div>
-                <span>Novos Alunos</span>
+                <span>Novos</span>
             </button>
             <button onclick="mudarAbaApp('financeiro')" id="nav-btn-fin" class="flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition">
                 <i class="fa-solid fa-wallet text-base mb-0.5"></i>
                 <span>Faturas</span>
             </button>
+            <button onclick="mudarAbaApp('negociacoes')" id="nav-btn-neg" class="flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition">
+                <i class="fa-solid fa-handshake-angle text-base mb-0.5"></i>
+                <span>Negociações</span>
+            </button>
         </nav>
     </div>
 
-    <!-- SCRIPTS DE INTEGRAÇÃO COM FIREBASE OTIMIZADOS (.get EM VEZ DE onSnapshot) -->
+    <!-- SCRIPTS DE INTEGRAÇÃO COM FIREBASE -->
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyBeJ-fqzwiQt0PZEKQ6e8zAPSuh7WRuaHo",
@@ -288,6 +316,7 @@
         let classesMap = {};
         let financeLogs = [];
         let alunoSelecionadoId = null;
+        let alunoNegociacaoId = null;
         let abaOrigemRetorno = 'alunos';
 
         let novosAlunosLidos = JSON.parse(localStorage.getItem('novos_alunos_lidos') || '[]');
@@ -373,16 +402,13 @@
             location.reload();
         }
 
-        // --- BUSCAS PONTUAIS OTIMIZADAS COM .get() EM VEZ DE onSnapshot ---
         async function carregarDadosNuvem() {
             await carregarCursosTurmasMatriz();
 
-            try {
-                // Busca pontual de alunos
-                const studentSnap = await db.collection("students").get();
+            db.collection("students").onSnapshot(snapshot => {
                 students = [];
                 studentsMap = {};
-                studentSnap.forEach(doc => {
+                snapshot.forEach(doc => {
                     const data = { id: doc.id, ...doc.data() };
                     students.push(data);
                     studentsMap[doc.id] = data;
@@ -391,20 +417,22 @@
                 renderizarListaAlunos();
                 renderizarNovosAlunos();
                 atualizarSeletorCursosUI();
+                if (alunoNegociacaoId) selecionarAlunoNegociacao(alunoNegociacaoId);
+            }, error => {
+                console.error("Erro ao carregar alunos:", error);
+            });
 
-                // Busca pontual de faturas
-                const financeSnap = await db.collection("financeLogs").get();
+            db.collection("financeLogs").onSnapshot(snapshot => {
                 financeLogs = [];
-                financeSnap.forEach(doc => financeLogs.push({ id: doc.id, ...doc.data() }));
+                snapshot.forEach(doc => financeLogs.push({ id: doc.id, ...doc.data() }));
                 renderizarFaturasDoAlunoSelecionado();
-                
+                if (alunoNegociacaoId) selecionarAlunoNegociacao(alunoNegociacaoId);
                 if (alunoSelecionadoId && document.getElementById('tab-detalhes-aluno').style.display === 'block') {
                     abrirDetalhesAluno(alunoSelecionadoId, abaOrigemRetorno);
                 }
-            } catch (error) {
-                console.error("Erro ao carregar dados do Firestore:", error);
-                alert("Erro ao conectar com a nuvem. Verifique sua conexão.");
-            }
+            }, error => {
+                console.error("Erro ao carregar faturas:", error);
+            });
         }
 
         async function carregarCursosTurmasMatriz() {
@@ -668,6 +696,180 @@
             container.innerHTML = htmlAcumulado;
         }
 
+        // --- FUNÇÕES DA ABA DE NEGOCIAÇÕES ---
+        function pesquisarAlunoNegociacao() {
+            const termo = normalizarTexto(document.getElementById('input-busca-negociacao').value);
+            const container = document.getElementById('lista-busca-negociacao-container');
+            const painel = document.getElementById('painel-negociacao-aluno');
+            
+            if (!container) return;
+
+            if (termo.length < 2) {
+                container.innerHTML = `<div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">Digite ao menos 2 caracteres para buscar o aluno.</div>`;
+                if (painel) painel.style.display = 'none';
+                alunoNegociacaoId = null;
+                return;
+            }
+
+            const encontrados = students.filter(s => {
+                const nome = normalizarTexto(s.fullname || s.name || '');
+                const cpf = normalizarTexto(s.cpf || '');
+                return nome.includes(termo) || cpf.includes(termo);
+            });
+
+            if (encontrados.length === 0) {
+                container.innerHTML = `<div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">Nenhum aluno encontrado com este nome ou CPF.</div>`;
+                if (painel) painel.style.display = 'none';
+                alunoNegociacaoId = null;
+                return;
+            }
+
+            let html = '';
+            encontrados.forEach(s => {
+                const rawCurso = s.course || s.curso || s.turma || s.nomeCurso || s.courseName || s.courseId || 'Não informado';
+                const cursoExibir = coursesMap[rawCurso] || coursesMap[normalizarTexto(rawCurso)] || String(rawCurso);
+                
+                html += `
+                    <div onclick="selecionarAlunoNegociacao('${s.id}')" class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 flex justify-between items-center active:scale-98 transition cursor-pointer">
+                        <div>
+                            <strong class="text-xs font-bold text-slate-900 dark:text-white">${s.fullname || s.name || 'Sem Nome'}</strong>
+                            <p class="text-[10px] text-slate-400">CPF: ${s.cpf || '---'} &bull; Curso: ${cursoExibir}</p>
+                        </div>
+                        <span class="px-2.5 py-1 bg-emerald-600 text-white text-[10px] font-bold rounded-lg shadow">Negociar Débitos</span>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function selecionarAlunoNegociacao(alunoId) {
+            alunoNegociacaoId = alunoId;
+            const aluno = studentsMap[alunoId];
+            const containerBusca = document.getElementById('lista-busca-negociacao-container');
+            const painel = document.getElementById('painel-negociacao-aluno');
+            
+            if (!aluno || !painel) return;
+
+            // Oculta a listagem da busca e exibe o painel de faturas e cálculos detalhados
+            containerBusca.innerHTML = `
+                <div class="bg-emerald-50 dark:bg-emerald-950/40 p-3 rounded-2xl border border-emerald-200 dark:border-emerald-900 flex justify-between items-center text-xs">
+                    <div>
+                        <span class="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400">Aluno Selecionado:</span>
+                        <strong class="block text-slate-900 dark:text-white">${aluno.fullname || aluno.name}</strong>
+                    </div>
+                    <button onclick="limparSelecaoNegociacao()" class="px-2 py-1 bg-slate-200 dark:bg-slate-800 text-[10px] font-semibold rounded-lg">Trocar Aluno</button>
+                </div>
+            `;
+
+            painel.style.display = 'block';
+
+            // Filtrar apenas faturas pendentes do aluno
+            const faturasPendentes = financeLogs.filter(f => {
+                const pertenceAluno = (f.studentId === alunoId || f.alunoId === alunoId);
+                const jaPago = f.status && f.status.toUpperCase().includes('PAGO');
+                return pertenceAluno && !jaPago;
+            });
+
+            if (faturasPendentes.length === 0) {
+                painel.innerHTML = `
+                    <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">
+                        Este aluno não possui nenhuma mensalidade ou fatura pendente em aberto!
+                    </div>
+                `;
+                return;
+            }
+
+            // Calcular multas e juros diários (0,5% ao mês = (0,5 / 30)% ao dia)
+            const hoje = new Date();
+            let valorTotalOriginalAcumulado = 0;
+            let multaFixaTotalAcumulada = 0;
+            let jurosDiariosTotalAcumulado = 0;
+
+            let htmlFaturasCalc = '';
+
+            faturasPendentes.forEach(f => {
+                const valorOriginal = parseFloat(String(f.amount || f.valor || '0').replace(',', '.')) || 0;
+                valorTotalOriginalAcumulado += valorOriginal;
+
+                const vencimentoStr = f.date || f.vencimento || '';
+                let dataVenc = parseDataParaOrdem(vencimentoStr);
+                
+                let diasAtraso = 0;
+                if (hoje > dataVenc) {
+                    const diffTime = Math.abs(hoje - dataVenc);
+                    diasAtraso = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                }
+
+                // Multa fixa por atraso: R$ 10,00 se houver atraso (> 0 dias)
+                let multaParcela = diasAtraso > 0 ? 10.00 : 0.00;
+                multaFixaTotalAcumulada += multaParcela;
+
+                // Juros diários: 0,5% ao mês proporcional aos dias de atraso
+                // Taxa diária = 0.5% / 30 = 0.01666...% ao dia -> (valorOriginal * (0.5 / 100) / 30) * diasAtraso
+                let jurosParcela = 0;
+                if (diasAtraso > 0) {
+                    const taxaDiaria = (0.5 / 100) / 30;
+                    jurosParcela = valorOriginal * taxaDiaria * diasAtraso;
+                }
+                jurosDiariosTotalAcumulado += jurosParcela;
+
+                const totalParcelaAtualizada = valorOriginal + multaParcela + jurosParcela;
+
+                htmlFaturasCalc += `
+                    <div class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 space-y-2 text-xs">
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold text-slate-900 dark:text-white">${f.description || f.descricao || 'Mensalidade'}</span>
+                            <span class="px-2 py-0.5 bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300 rounded-full text-[10px] font-bold">Vencido (${diasAtraso} dias)</span>
+                        </div>
+                        <div class="text-[10px] text-slate-400">
+                            Vencimento: <strong>${formatarDataParaExibicao(vencimentoStr)}</strong>
+                        </div>
+                        <div class="grid grid-cols-2 gap-1 bg-slate-50 dark:bg-slate-800/50 p-2 rounded-xl text-[10px]">
+                            <div>Valor Original: <strong>R$ ${valorOriginal.toFixed(2)}</strong></div>
+                            <div>Multa Fixa: <strong class="text-amber-600">R$ ${multaParcela.toFixed(2)}</strong></div>
+                            <div>Juros Diários (0.5%/mês): <strong class="text-amber-600">R$ ${jurosParcela.toFixed(2)}</strong></div>
+                            <div>Total Parcela: <strong class="text-emerald-600">R$ ${totalParcelaAtualizada.toFixed(2)}</strong></div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            const valorGeralAtualizado = valorTotalOriginalAcumulado + multaFixaTotalAcumulada + jurosDiariosTotalAcumulado;
+
+            painel.innerHTML = `
+                <div class="bg-gradient-to-br from-emerald-600 to-teal-800 text-white p-4 rounded-3xl shadow-lg space-y-2">
+                    <div class="text-[10px] uppercase font-semibold tracking-wider text-emerald-200">Resumo da Negociação (Em Tempo Real)</div>
+                    <div class="flex justify-between items-end">
+                        <div>
+                            <span class="text-xs opacity-80">Total de Faturas Pendentes: ${faturasPendentes.length}</span>
+                            <h3 class="text-2xl font-bold">R$ ${valorGeralAtualizado.toFixed(2)}</h3>
+                        </div>
+                        <button onclick="gerarAcordoNegociacao('${alunoId}', ${valorGeralAtualizado.toFixed(2)})" class="px-4 py-2 bg-white text-emerald-900 font-bold rounded-xl text-xs shadow hover:bg-emerald-50 transition">
+                            <i class="fa-solid fa-file-invoice-dollar mr-1"></i> Fechar Acordo
+                        </button>
+                    </div>
+                </div>
+
+                <div class="space-y-2 pt-2">
+                    <h4 class="font-bold text-xs uppercase text-slate-500 tracking-wider">Faturas em Aberto com Encargos Calculados:</h4>
+                    ${htmlFaturasCalc}
+                </div>
+            `;
+        }
+
+        function limparSelecaoNegociacao() {
+            alunoNegociacaoId = null;
+            document.getElementById('input-busca-negociacao').value = '';
+            document.getElementById('lista-busca-negociacao-container').innerHTML = `<div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">Digite acima o nome ou CPF para localizar o aluno em débito.</div>`;
+            document.getElementById('painel-negociacao-aluno').style.display = 'none';
+        }
+
+        function gerarAcordoNegociacao(alunoId, valorTotal) {
+            const aluno = studentsMap[alunoId];
+            const nome = aluno ? (aluno.fullname || aluno.name) : 'Aluno';
+            alert(`Proposta de acordo gerada para ${nome} no valor total atualizado de R$ ${valorTotal.toFixed(2)} (já inclusos juros diários e multas fixas de R$ 10,00 por parcela). O aluno pode efetuar o pagamento via Pix ou Caixa.`);
+        }
+
         function abrirModalEditarMensalidadeFinanceiro(financeLogId) {
             const fatura = financeLogs.find(f => f.id === financeLogId);
             if (!fatura) return;
@@ -715,9 +917,8 @@
                     valor: novoValor
                 });
 
-                alert("Mensalidade atualizada com sucesso!");
+                alert("Mensalidade atualizada com sucesso! Sincronizado com a matriz.");
                 fecharModalEdicao();
-                await carregarDadosNuvem();
             } catch (e) {
                 alert("Erro ao atualizar mensalidade: " + e.message);
             }
@@ -747,7 +948,6 @@
                     formaPagamento: formaPagamento
                 });
                 alert("Baixa realizada com sucesso!");
-                await carregarDadosNuvem();
             } catch (e) {
                 alert("Erro ao dar baixa: " + e.message);
             }
@@ -762,8 +962,7 @@
                     dataPagamento: firebase.firestore.FieldValue.delete(),
                     formaPagamento: firebase.firestore.FieldValue.delete()
                 });
-                alert("Pagamento estornado com sucesso!");
-                await carregarDadosNuvem();
+                alert("Pagamento estornado com sucesso! A fatura está pendente novamente.");
             } catch (e) {
                 alert("Erro ao estornar pagamento: " + e.message);
             }
@@ -932,20 +1131,24 @@
             const tabAlunos = document.getElementById('tab-alunos');
             const tabNovos = document.getElementById('tab-novos-alunos');
             const tabFin = document.getElementById('tab-financeiro');
+            const tabNeg = document.getElementById('tab-negociacoes');
             const tabDetalhes = document.getElementById('tab-detalhes-aluno');
             
             const btnAlunos = document.getElementById('nav-btn-alunos');
             const btnNovos = document.getElementById('nav-btn-novos');
             const btnFin = document.getElementById('nav-btn-fin');
+            const btnNeg = document.getElementById('nav-btn-neg');
 
             tabAlunos.style.display = 'none';
             tabNovos.style.display = 'none';
             tabFin.style.display = 'none';
+            tabNeg.style.display = 'none';
             tabDetalhes.style.display = 'none';
 
             btnAlunos.className = "flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition";
             btnNovos.className = "flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition relative";
             btnFin.className = "flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition";
+            btnNeg.className = "flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition";
 
             if (aba === 'alunos') {
                 tabAlunos.style.display = 'block';
@@ -956,6 +1159,9 @@
             } else if (aba === 'financeiro') {
                 tabFin.style.display = 'block';
                 btnFin.className = "flex flex-col items-center text-blue-600 dark:text-blue-400 text-[10px] font-bold transition";
+            } else if (aba === 'negociacoes') {
+                tabNeg.style.display = 'block';
+                btnNeg.className = "flex flex-col items-center text-emerald-600 dark:text-emerald-400 text-[10px] font-bold transition";
             } else if (aba === 'detalhes') {
                 tabDetalhes.style.display = 'block';
             }
