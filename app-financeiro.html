@@ -156,7 +156,7 @@
         ];
 
         let students = [];
-        let coursesList = [];
+        let coursesMap = {}; // Mapeia ID/Nome do curso para o nome oficial
         let financeLogs = [];
         let alunoSelecionadoId = null;
 
@@ -231,12 +231,15 @@
             location.reload();
         }
 
-        function carregarDadosNuvem() {
-            carregarCursosMatriz();
+        async function carregarDadosNuvem() {
+            await carregarCursosMatriz();
 
             db.collection("students").onSnapshot(snapshot => {
                 students = [];
-                snapshot.forEach(doc => students.push({ id: doc.id, ...doc.data() }));
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    students.push({ id: doc.id, ...data });
+                });
                 students.sort((a, b) => (a.fullname || '').localeCompare(b.fullname || ''));
                 renderizarListaAlunos();
             }, error => {
@@ -253,8 +256,8 @@
         }
 
         async function carregarCursosMatriz() {
+            coursesMap = {};
             const nomesColecoes = ["courses", "cursos", "turmas"];
-            let cursosEncontrados = new Set();
 
             for (let col of nomesColecoes) {
                 try {
@@ -263,26 +266,18 @@
                         snap.forEach(doc => {
                             const d = doc.data();
                             const nomeCurso = d.name || d.nome || d.curso || d.title || d.descricao;
-                            if (nomeCurso && typeof nomeCurso === 'string') {
-                                cursosEncontrados.add(nomeCurso.trim());
+                            if (nomeCurso) {
+                                const nomeLimpo = String(nomeCurso).trim();
+                                coursesMap[doc.id] = nomeLimpo;
+                                coursesMap[normalizarTexto(nomeLimpo)] = nomeLimpo;
                             }
                         });
                     }
                 } catch (e) {
-                    console.warn(`Coleção ${col} não encontrada ou sem permissão.`);
+                    console.warn(`Coleção ${col} não acessível.`);
                 }
             }
 
-            if (cursosEncontrados.size === 0) {
-                students.forEach(s => {
-                    const c = s.course || s.curso || s.turma || s.nomeCurso;
-                    if (c && typeof c === 'string' && c.trim() !== '') {
-                        cursosEncontrados.add(c.trim());
-                    }
-                });
-            }
-
-            coursesList = Array.from(cursosEncontrados).sort();
             atualizarSeletorCursosUI();
         }
 
@@ -291,37 +286,56 @@
             if (!selectCurso) return;
 
             const cursoSelecionadoAtual = selectCurso.value;
-            selectCurso.innerHTML = `<option value="">Todos os Cursos</option>`;
             
-            coursesList.forEach(curso => {
+            // Puxa valores únicos de nomes de cursos conhecidos
+            let listaNomesUnicos = new Set(Object.values(coursesMap));
+
+            // Garante que se houver algum curso nos alunos que não está na matriz, ele apareça também
+            students.forEach(s => {
+                const c = s.course || s.curso || s.turma || s.nomeCurso || s.courseName || s.courseId;
+                if (c) {
+                    const nomeFinal = coursesMap[c] || coursesMap[normalizarTexto(c)] || String(c).trim();
+                    listaNomesUnicos.add(nomeFinal);
+                }
+            });
+
+            const cursosOrdenados = Array.from(listaNomesUnicos).sort();
+
+            selectCurso.innerHTML = `<option value="">Todos os Cursos</option>`;
+            cursosOrdenados.forEach(curso => {
                 const selectedAttr = (curso === cursoSelecionadoAtual) ? 'selected' : '';
                 selectCurso.innerHTML += `<option value="${curso}" ${selectedAttr}>${curso}</option>`;
             });
         }
 
+        function normalizarTexto(texto) {
+            if (!texto) return '';
+            return String(texto)
+                .toLowerCase()
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .trim();
+        }
+
         function renderizarListaAlunos() {
             const container = document.getElementById('lista-alunos-container');
-            const termo = document.getElementById('input-busca-aluno').value.toLowerCase().trim();
-            const cursoSelecionado = document.getElementById('select-filtro-curso').value.trim().toLowerCase();
+            const termo = normalizarTexto(document.getElementById('input-busca-aluno').value);
+            const cursoSelecionado = document.getElementById('select-filtro-curso').value;
+            const cursoSelecionadoNorm = normalizarTexto(cursoSelecionado);
+            
             if (!container) return;
 
-            if (coursesList.length === 0 && students.length > 0) {
-                let tempCursos = new Set();
-                students.forEach(s => {
-                    const c = s.course || s.curso || s.turma || s.nomeCurso;
-                    if (c) tempCursos.add(c.trim());
-                });
-                coursesList = Array.from(tempCursos).sort();
-                atualizarSeletorCursosUI();
-            }
-
             const filtrados = students.filter(s => {
-                const nomeAluno = s.fullname || s.name || '';
-                const cpfAluno = s.cpf || '';
-                const cursoAluno = (s.course || s.curso || s.turma || s.nomeCurso || '').trim().toLowerCase();
+                const nomeAluno = normalizarTexto(s.fullname || s.name || '');
+                const cpfAluno = normalizarTexto(s.cpf || '');
+                
+                // Recolhe todas as possibilidades onde o curso pode estar no aluno
+                const rawCurso = s.course || s.curso || s.turma || s.nomeCurso || s.courseName || s.courseId || '';
+                const nomeCursoMapeado = coursesMap[rawCurso] || coursesMap[normalizarTexto(rawCurso)] || String(rawCurso);
+                const cursoAlunoNorm = normalizarTexto(nomeCursoMapeado);
 
-                const bateTexto = nomeAluno.toLowerCase().includes(termo) || cpfAluno.includes(termo);
-                const bateCurso = (cursoSelecionado === "") || (cursoAluno === cursoSelecionado);
+                const bateTexto = nomeAluno.includes(termo) || cpfAluno.includes(termo);
+                const bateCurso = (cursoSelecionadoNorm === "") || (cursoAlunoNorm === cursoSelecionadoNorm || cursoAlunoNorm.includes(cursoSelecionadoNorm));
 
                 return bateTexto && bateCurso;
             });
@@ -333,7 +347,9 @@
 
             container.innerHTML = '';
             filtrados.forEach(s => {
-                const cursoExibir = s.course || s.curso || s.turma || s.nomeCurso || 'Curso não informado';
+                const rawCurso = s.course || s.curso || s.turma || s.nomeCurso || s.courseName || s.courseId || 'Não informado';
+                const cursoExibir = coursesMap[rawCurso] || coursesMap[normalizarTexto(rawCurso)] || String(rawCurso);
+
                 container.innerHTML += `
                     <div onclick="selecionarAlunoFinanceiro('${s.id}')" class="bg-white dark:bg-slate-800 p-3.5 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 flex justify-between items-center active:scale-98 transition cursor-pointer">
                         <div>
