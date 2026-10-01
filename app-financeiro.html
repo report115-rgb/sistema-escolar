@@ -81,7 +81,7 @@
 
         <div class="text-center text-[10px] text-blue-300 pb-2">
             <div>Sistema SE7 de Gestão Acadêmica</div>
-            <div>v1.4.3 &bull; Setor Financeiro</div>
+            <div>v1.4.4 &bull; Setor Financeiro</div>
         </div>
     </div>
 
@@ -223,12 +223,12 @@
         </div>
     </div>
 
-    <!-- MODAL 2: FECHAR ACORDO (EFETIVAÇÃO DEFINITIVA) -->
+    <!-- MODAL 2: APROVAR / FECHAR ACORDO -->
     <div id="modal-fechar-acordo" class="fixed inset-0 z-[5000] flex items-center justify-center bg-black/75 p-4" style="display: none;">
         <div class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-3xl shadow-2xl max-w-lg w-full p-6 space-y-4 border border-slate-200 dark:border-slate-800 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b pb-3 border-slate-200 dark:border-slate-800">
                 <h3 class="font-bold text-sm text-blue-600 dark:text-blue-400 flex items-center gap-2">
-                    <i class="fa-solid fa-handshake"></i> Efetivar / Fechar Acordo com o Aluno
+                    <i class="fa-solid fa-handshake"></i> Aprovar / Efetivar Acordo com o Aluno
                 </h3>
                 <button onclick="fecharModalFecharAcordo()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm">
                     <i class="fa-solid fa-xmark"></i>
@@ -239,7 +239,7 @@
                 <p class="text-slate-500">O aluno analisou e aprovou a proposta? Selecione abaixo qual opção ele escolheu para fechar o acordo de vez:</p>
                 
                 <div id="container-opcoes-fechamento" class="space-y-2">
-                    <!-- Preenchido via script com as opções criadas na proposta -->
+                    <!-- Preenchido via script -->
                 </div>
             </div>
 
@@ -248,7 +248,7 @@
                     Cancelar
                 </button>
                 <button type="button" id="btn-confirmar-fechamento" onclick="executarFechamentoAcordoDefinitivo()" class="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow" style="display: none;">
-                    Fechar Acordo e Atualizar Faturas
+                    Aprovar Acordo e Atualizar Faturas
                 </button>
             </div>
         </div>
@@ -966,7 +966,7 @@
             const hoje = new Date();
             hoje.setHours(0, 0, 0, 0);
 
-            // PRÉ-CÁLCULO DOS DÉBITOS EM ATRASO PARA GARANTIR VALORES CORRETOS
+            // PRÉ-CÁLCULO RIGOROSO DOS DÉBITOS EM ATRASO (ORIGINAL + MULTA + JUROS)
             faturasAtrasadasGlobal = financeLogs.filter(f => {
                 const pertenceAluno = (f.studentId === alunoId || f.alunoId === alunoId);
                 const jaPago = f.status && (f.status.toUpperCase().includes('PAGO') || f.status.includes('NEGOCIADO'));
@@ -1020,12 +1020,15 @@
                                 Valor Negociado Total (Com Juros e Multas): <strong>R$ ${p.amount || p.valor || '0.00'}</strong> &bull; Data: ${p.date || '---'}
                             </div>
                             ${eAguardando ? `
-                                <div class="flex gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-                                    <button type="button" onclick="abrirModalEditarProposta('${p.id}')" class="flex-1 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold text-[10px] shadow">
-                                        <i class="fa-solid fa-pen-to-square mr-1"></i> Editar Proposta
+                                <div class="flex gap-1.5 pt-2 border-t border-slate-100 dark:border-slate-800">
+                                    <button type="button" onclick="abrirModalEditarProposta('${p.id}')" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-[10px] shadow">
+                                        <i class="fa-solid fa-pen-to-square mr-0.5"></i> Editar
                                     </button>
-                                    <button type="button" onclick="excluirPropostaRegistro('${p.id}')" class="flex-1 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold text-[10px] shadow">
-                                        <i class="fa-solid fa-trash mr-1"></i> Excluir Proposta
+                                    <button type="button" onclick="excluirPropostaRegistro('${p.id}')" class="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold text-[10px] shadow">
+                                        <i class="fa-solid fa-trash mr-0.5"></i> Excluir
+                                    </button>
+                                    <button type="button" onclick="abrirModalFecharAcordo()" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold text-[10px] shadow">
+                                        <i class="fa-solid fa-handshake mr-0.5"></i> Aprovar
                                     </button>
                                 </div>
                             ` : ''}
@@ -1092,12 +1095,9 @@
                                 <span class="text-xs opacity-90 font-medium">Total Vencidas: ${faturasAtrasadasGlobal.length}</span>
                                 <h3 class="text-2xl font-bold tracking-tight mt-0.5">R$ ${valorAtualNegociacaoGlobal.toFixed(2)}</h3>
                             </div>
-                            <div class="flex gap-2">
-                                <button type="button" onclick="abrirModalRealizarAcordo()" class="px-3 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-xl text-xs shadow transition">
+                            <div>
+                                <button type="button" onclick="abrirModalRealizarAcordo()" class="px-3.5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-xl text-xs shadow transition">
                                     <i class="fa-solid fa-sliders mr-1"></i> Proposta de Acordo
-                                </button>
-                                <button type="button" onclick="abrirModalFecharAcordo()" class="px-3 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs shadow transition">
-                                    <i class="fa-solid fa-handshake mr-1"></i> Fechar Acordo
                                 </button>
                             </div>
                         </div>
@@ -1242,7 +1242,7 @@
             document.getElementById('painel-negociacao-aluno').style.display = 'none';
         }
 
-        // GERA OU ATUALIZA PROPOSTA USANDO O VALOR TOTAL COM JUROS/MULTA E ABRE PDF
+        // GERA OU ATUALIZA PROPOSTA USANDO EXATAMENTE O VALOR TOTAL ATUALIZADO (ORIGINAL + MULTAS + JUROS)
         async function gerarPropostaPDF() {
             if (!alunoNegociacaoId) return;
             const aluno = studentsMap[alunoNegociacaoId];
@@ -1255,12 +1255,11 @@
             fecharModalRealizarAcordo();
 
             const propostaIdExistente = document.getElementById('edit-proposta-id-ativo').value;
-            // O valor gravado é o total atualizado da dívida com juros/multas da opção à vista ou o montante base
-            const valorTotalNegociadoParaRegistro = opcoesGeradas.avista.valorFinal.toFixed(2);
+            // GRAVA O VALOR TOTAL GERAL DOS DÉBITOS COM JUROS E MULTAS APLICADOS
+            const valorTotalNegociadoParaRegistro = valorAtualNegociacaoGlobal.toFixed(2);
 
             try {
                 if (propostaIdExistente) {
-                    // Atualiza o registro existente sem duplicar
                     await db.collection("financeLogs").doc(propostaIdExistente).update({
                         amount: valorTotalNegociadoParaRegistro,
                         valor: valorTotalNegociadoParaRegistro,
@@ -1269,7 +1268,6 @@
                         atualizadoEm: new Date().toISOString()
                     });
                 } else {
-                    // Cria novo registro
                     const propostaId = "proposta_" + alunoNegociacaoId + "_" + Date.now();
                     await db.collection("financeLogs").doc(propostaId).set({
                         studentId: alunoNegociacaoId,
@@ -1512,7 +1510,7 @@
 
         function abrirModalFecharAcordo() {
             if (!opcoesGeradas.avista || !opcoesGeradas.parcelado || !opcoesGeradas.cartao) {
-                return alert("Você precisa primeiro gerar a proposta configurando as 3 opções no botão 'Proposta de Acordo' antes de fechar o acordo.");
+                // Se o usuário clicar em aprovar direto numa proposta salva anterior sem reabrir o modal, configuramos opções fictícias baseadas no valor salvo ou exigimos gerar
             }
 
             const container = document.getElementById('container-opcoes-fechamento');
@@ -1535,8 +1533,13 @@
                 }
             }
 
+            if (!html) {
+                // Fallback caso não tenha gerado na sessão ativa
+                html = `<div class="p-3 bg-amber-50 text-amber-800 rounded-xl text-xs">Por favor, clique em "Editar" na proposta para carregar as opções de pagamento antes de aprovar.</div>`;
+            }
+
             container.innerHTML = html;
-            btnConfirmar.style.display = 'block';
+            btnConfirmar.style.display = html.includes('radio') ? 'block' : 'none';
             document.getElementById('modal-fechar-acordo').style.display = 'flex';
         }
 
@@ -1555,7 +1558,7 @@
             const aluno = studentsMap[alunoNegociacaoId];
             const nome = aluno ? (aluno.fullname || aluno.name) : 'Aluno';
 
-            if (!confirm(`Deseja realmente fechar o acordo na modalidade ${escolhaKey.toUpperCase()} no valor de R$ ${opEscolhida.valorFinal.toFixed(2)}?\n\nIsso atualizará o status para 'Acordo aceito' e baixará as faturas atrasadas.`)) {
+            if (!confirm(`Deseja realmente aprovar o acordo na modalidade ${escolhaKey.toUpperCase()} no valor de R$ ${opEscolhida.valorFinal.toFixed(2)}?\n\nIsso atualizará o status para 'Acordo aceito' e baixará as faturas atrasadas.`)) {
                 return;
             }
 
