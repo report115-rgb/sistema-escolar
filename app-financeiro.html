@@ -81,7 +81,7 @@
 
         <div class="text-center text-[10px] text-blue-300 pb-2">
             <div>Sistema SE7 de Gestão Acadêmica</div>
-            <div>v1.2.5 &bull; Setor Financeiro</div>
+            <div>v1.2.6 &bull; Setor Financeiro</div>
         </div>
     </div>
 
@@ -221,7 +221,7 @@
                     <h2 class="font-bold text-sm text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
                         <i class="fa-solid fa-handshake-angle"></i> Aba de Negociações
                     </h2>
-                    <p class="text-[11px] text-slate-500">Busque o aluno por nome ou CPF para calcular multas e juros diários em tempo real.</p>
+                    <p class="text-[11px] text-slate-500">Busque o aluno por nome ou CPF para visualizar e negociar apenas as mensalidades em atraso.</p>
                     
                     <div class="relative">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
@@ -234,11 +234,11 @@
                 <!-- Resultados da busca para negociação -->
                 <div id="lista-busca-negociacao-container" class="space-y-2">
                     <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">
-                        Digite acima o nome ou CPF para localizar o aluno em débito.
+                        Digite acima o nome ou CPF para localizar o aluno.
                     </div>
                 </div>
 
-                <!-- Painel de Cálculo e Faturas do Aluno Selecionado para Acordo -->
+                <!-- Painel de Cálculo e Faturas Atrasadas do Aluno Selecionado para Acordo -->
                 <div id="painel-negociacao-aluno" class="space-y-3" style="display: none;">
                     <!-- Preenchido via script -->
                 </div>
@@ -735,7 +735,7 @@
                             <strong class="text-xs font-bold text-slate-900 dark:text-white">${s.fullname || s.name || 'Sem Nome'}</strong>
                             <p class="text-[10px] text-slate-400">CPF: ${s.cpf || '---'} &bull; Curso: ${cursoExibir}</p>
                         </div>
-                        <span class="px-2.5 py-1 bg-emerald-600 text-white text-[10px] font-bold rounded-lg shadow">Negociar Débitos</span>
+                        <span class="px-2.5 py-1 bg-emerald-600 text-white text-[10px] font-bold rounded-lg shadow">Verificar Débitos</span>
                     </div>
                 `;
             });
@@ -750,7 +750,6 @@
             
             if (!aluno || !painel) return;
 
-            // Oculta a listagem da busca e exibe o painel de faturas e cálculos detalhados
             containerBusca.innerHTML = `
                 <div class="bg-emerald-50 dark:bg-emerald-950/40 p-3 rounded-2xl border border-emerald-200 dark:border-emerald-900 flex justify-between items-center text-xs">
                     <div>
@@ -763,66 +762,75 @@
 
             painel.style.display = 'block';
 
-            // Filtrar apenas faturas pendentes do aluno
-            const faturasPendentes = financeLogs.filter(f => {
+            // Data atual de referência para checar o atraso (ex: 01/10/2026)
+            const hoje = new Date();
+            hoje.setHours(0, 0, 0, 0);
+
+            // Filtrar apenas faturas que estejam efetivamente ATRASADAS (vencimento < hoje) e NÃO pagas
+            const faturasAtrasadas = financeLogs.filter(f => {
                 const pertenceAluno = (f.studentId === alunoId || f.alunoId === alunoId);
                 const jaPago = f.status && f.status.toUpperCase().includes('PAGO');
-                return pertenceAluno && !jaPago;
+                
+                if (!pertenceAluno || jaPago) return false;
+
+                const vencimentoStr = f.date || f.vencimento || '';
+                let dataVenc = parseDataParaOrdem(vencimentoStr);
+                dataVenc.setHours(0, 0, 0, 0);
+
+                // Só considera atrasada se a data de vencimento for anterior a hoje
+                return dataVenc < hoje;
             });
 
-            if (faturasPendentes.length === 0) {
+            // Se não houver débitos em atraso, exibe a mensagem solicitada
+            if (faturasAtrasadas.length === 0) {
                 painel.innerHTML = `
-                    <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">
-                        Este aluno não possui nenhuma mensalidade ou fatura pendente em aberto!
+                    <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800 space-y-2">
+                        <div class="w-10 h-10 bg-emerald-100 dark:bg-emerald-950 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-base">
+                            <i class="fa-solid fa-check"></i>
+                        </div>
+                        <strong class="block text-slate-900 dark:text-white text-sm">Aluno sem débitos pendentes em atraso</strong>
+                        <p class="text-[11px] text-slate-400">Este aluno não possui nenhuma mensalidade vencida em períodos anteriores.</p>
                     </div>
                 `;
                 return;
             }
 
-            // Calcular multas e juros diários (0,5% ao mês = (0,5 / 30)% ao dia)
-            const hoje = new Date();
+            // Calcular multas e juros diários (0,5% ao mês = (0,5 / 30)% ao dia) para as faturas atrasadas
             let valorTotalOriginalAcumulado = 0;
             let multaFixaTotalAcumulada = 0;
             let jurosDiariosTotalAcumulado = 0;
 
             let htmlFaturasCalc = '';
 
-            faturasPendentes.forEach(f => {
+            faturasAtrasadas.forEach(f => {
                 const valorOriginal = parseFloat(String(f.amount || f.valor || '0').replace(',', '.')) || 0;
                 valorTotalOriginalAcumulado += valorOriginal;
 
                 const vencimentoStr = f.date || f.vencimento || '';
                 let dataVenc = parseDataParaOrdem(vencimentoStr);
+                dataVenc.setHours(0, 0, 0, 0);
                 
-                let diasAtraso = 0;
-                if (hoje > dataVenc) {
-                    const diffTime = Math.abs(hoje - dataVenc);
-                    diasAtraso = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                }
+                let diasAtraso = Math.ceil(Math.abs(hoje - dataVenc) / (1000 * 60 * 60 * 24));
 
-                // Multa fixa por atraso: R$ 10,00 se houver atraso (> 0 dias)
-                let multaParcela = diasAtraso > 0 ? 10.00 : 0.00;
+                // Multa fixa por atraso: R$ 10,00 por parcela vencida
+                let multaParcela = 10.00;
                 multaFixaTotalAcumulada += multaParcela;
 
                 // Juros diários: 0,5% ao mês proporcional aos dias de atraso
-                // Taxa diária = 0.5% / 30 = 0.01666...% ao dia -> (valorOriginal * (0.5 / 100) / 30) * diasAtraso
-                let jurosParcela = 0;
-                if (diasAtraso > 0) {
-                    const taxaDiaria = (0.5 / 100) / 30;
-                    jurosParcela = valorOriginal * taxaDiaria * diasAtraso;
-                }
+                let taxaDiaria = (0.5 / 100) / 30;
+                let jurosParcela = valorOriginal * taxaDiaria * diasAtraso;
                 jurosDiariosTotalAcumulado += jurosParcela;
 
-                const totalParcelaAtualizada = valorOriginal + multaParcela + jurosParcela;
+                let totalParcelaAtualizada = valorOriginal + multaParcela + jurosParcela;
 
                 htmlFaturasCalc += `
                     <div class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 space-y-2 text-xs">
                         <div class="flex justify-between items-center">
                             <span class="font-bold text-slate-900 dark:text-white">${f.description || f.descricao || 'Mensalidade'}</span>
-                            <span class="px-2 py-0.5 bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300 rounded-full text-[10px] font-bold">Vencido (${diasAtraso} dias)</span>
+                            <span class="px-2 py-0.5 bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300 rounded-full text-[10px] font-bold">Atrasado (${diasAtraso} dias)</span>
                         </div>
                         <div class="text-[10px] text-slate-400">
-                            Vencimento: <strong>${formatarDataParaExibicao(vencimentoStr)}</strong>
+                            Vencimento original: <strong>${formatarDataParaExibicao(vencimentoStr)}</strong>
                         </div>
                         <div class="grid grid-cols-2 gap-1 bg-slate-50 dark:bg-slate-800/50 p-2 rounded-xl text-[10px]">
                             <div>Valor Original: <strong>R$ ${valorOriginal.toFixed(2)}</strong></div>
@@ -838,10 +846,10 @@
 
             painel.innerHTML = `
                 <div class="bg-gradient-to-br from-emerald-600 to-teal-800 text-white p-4 rounded-3xl shadow-lg space-y-2">
-                    <div class="text-[10px] uppercase font-semibold tracking-wider text-emerald-200">Resumo da Negociação (Em Tempo Real)</div>
+                    <div class="text-[10px] uppercase font-semibold tracking-wider text-emerald-200">Resumo da Negociação (Débitos em Atraso)</div>
                     <div class="flex justify-between items-end">
                         <div>
-                            <span class="text-xs opacity-80">Total de Faturas Pendentes: ${faturasPendentes.length}</span>
+                            <span class="text-xs opacity-80">Total de Faturas Vencidas: ${faturasAtrasadas.length}</span>
                             <h3 class="text-2xl font-bold">R$ ${valorGeralAtualizado.toFixed(2)}</h3>
                         </div>
                         <button onclick="gerarAcordoNegociacao('${alunoId}', ${valorGeralAtualizado.toFixed(2)})" class="px-4 py-2 bg-white text-emerald-900 font-bold rounded-xl text-xs shadow hover:bg-emerald-50 transition">
@@ -851,7 +859,7 @@
                 </div>
 
                 <div class="space-y-2 pt-2">
-                    <h4 class="font-bold text-xs uppercase text-slate-500 tracking-wider">Faturas em Aberto com Encargos Calculados:</h4>
+                    <h4 class="font-bold text-xs uppercase text-slate-500 tracking-wider">Faturas Vencidas com Encargos Calculados:</h4>
                     ${htmlFaturasCalc}
                 </div>
             `;
@@ -860,14 +868,14 @@
         function limparSelecaoNegociacao() {
             alunoNegociacaoId = null;
             document.getElementById('input-busca-negociacao').value = '';
-            document.getElementById('lista-busca-negociacao-container').innerHTML = `<div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">Digite acima o nome ou CPF para localizar o aluno em débito.</div>`;
+            document.getElementById('lista-busca-negociacao-container').innerHTML = `<div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">Digite acima o nome ou CPF para localizar o aluno.</div>`;
             document.getElementById('painel-negociacao-aluno').style.display = 'none';
         }
 
         function gerarAcordoNegociacao(alunoId, valorTotal) {
             const aluno = studentsMap[alunoId];
             const nome = aluno ? (aluno.fullname || aluno.name) : 'Aluno';
-            alert(`Proposta de acordo gerada para ${nome} no valor total atualizado de R$ ${valorTotal.toFixed(2)} (já inclusos juros diários e multas fixas de R$ 10,00 por parcela). O aluno pode efetuar o pagamento via Pix ou Caixa.`);
+            alert(`Proposta de acordo gerada para ${nome} no valor total atualizado de R$ ${valorTotal.toFixed(2)} (incluindo juros diários proporcionais e multa fixa de R$ 10,00 por mensalidade em atraso).`);
         }
 
         function abrirModalEditarMensalidadeFinanceiro(financeLogId) {
