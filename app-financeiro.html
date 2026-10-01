@@ -81,7 +81,7 @@
 
         <div class="text-center text-[10px] text-blue-300 pb-2">
             <div>Sistema SE7 de Gestão Acadêmica</div>
-            <div>v1.2.9 &bull; Setor Financeiro</div>
+            <div>v1.3.0 &bull; Setor Financeiro</div>
         </div>
     </div>
 
@@ -135,7 +135,7 @@
             </div>
 
             <div class="space-y-4 text-xs">
-                <p class="text-slate-500">Configure os descontos para cada modalidade abaixo. Todas as 3 opções são necessárias para gerar a proposta completa.</p>
+                <p class="text-slate-500">Configure os descontos para cada modalidade abaixo. As 3 opções são necessárias para liberar a geração da proposta completa.</p>
                 
                 <!-- Abas ou Seletores das 3 Formas -->
                 <div class="grid grid-cols-3 gap-2">
@@ -211,9 +211,13 @@
                 </div>
             </div>
 
-            <div class="flex gap-2 pt-2">
-                <button type="button" onclick="fecharModalRealizarAcordo()" class="flex-1 py-2.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold rounded-xl text-xs">
-                    Fechar
+            <div class="flex flex-col gap-2 pt-2">
+                <!-- Botão Gerar Proposta dentro do Modal (aparece após preencher o cartão/última modalidade) -->
+                <button type="button" id="btn-gerar-proposta-modal" onclick="gerarPropostaFinalAcordo()" style="display: none;" class="w-full py-3 bg-white text-emerald-900 hover:bg-emerald-50 font-bold rounded-xl text-xs shadow border border-emerald-300 transition">
+                    <i class="fa-solid fa-file-invoice-dollar mr-1"></i> Gerar Proposta
+                </button>
+                <button type="button" onclick="fecharModalRealizarAcordo()" class="w-full py-2.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold rounded-xl text-xs">
+                    Fechar / Concluir
                 </button>
             </div>
         </div>
@@ -945,9 +949,6 @@
 
             valorAtualNegociacaoGlobal = valorTotalOriginalGlobal + multaTotalGlobal + jurosTotalGlobal;
 
-            // Verifica se as 3 opções já foram geradas para liberar o botão "Gerar Proposta"
-            const todasGeradas = opcoesGeradas.avista && opcoesGeradas.parcelado && opcoesGeradas.cartao;
-
             painel.innerHTML = `
                 <div class="bg-gradient-to-br from-emerald-600 to-teal-800 text-white p-4 rounded-3xl shadow-lg space-y-3">
                     <div class="text-[10px] uppercase font-semibold tracking-wider text-emerald-200">Resumo da Negociação (Débitos em Atraso)</div>
@@ -956,21 +957,11 @@
                             <span class="text-xs opacity-80">Total Vencidas: ${faturasAtrasadasGlobal.length} | Sem Desconto: R$ ${valorAtualNegociacaoGlobal.toFixed(2)}</span>
                             <h3 class="text-xl font-bold">Gerencie as Opções de Acordo</h3>
                         </div>
-                        <div class="flex flex-wrap gap-1.5">
-                            <button type="button" onclick="abrirModalRealizarAcordo()" class="px-3 py-2 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-xl text-xs shadow transition">
+                        <div>
+                            <button type="button" onclick="abrirModalRealizarAcordo()" class="px-3.5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-xl text-xs shadow transition">
                                 <i class="fa-solid fa-sliders mr-1"></i> Realizar Acordo
                             </button>
-                            <button type="button" id="btn-gerar-proposta-final" onclick="gerarPropostaFinalAcordo()" ${!todasGeradas ? 'disabled' : ''} class="px-3 py-2 ${todasGeradas ? 'bg-white text-emerald-900 hover:bg-emerald-50' : 'bg-slate-300 text-slate-500 cursor-not-allowed opacity-55'} font-bold rounded-xl text-xs shadow transition">
-                                <i class="fa-solid fa-file-invoice-dollar mr-1"></i> Gerar Proposta
-                            </button>
                         </div>
-                    </div>
-                </div>
-
-                <div class="space-y-2 pt-2">
-                    <h4 class="font-bold text-xs uppercase text-slate-500 tracking-wider">Opções de Acordo Configuradas:</h4>
-                    <div id="painel-resumo-opcoes-externo" class="space-y-2">
-                        ${renderizarResumoOpcoesExternoHtml()}
                     </div>
                 </div>
 
@@ -1016,7 +1007,6 @@
                 descMulta = parseFloat(document.getElementById('desc-multa-cartao').value) || 0;
             }
 
-            // Cálculo dos descontos
             let jurosDescontados = jurosTotalGlobal * (descJuros / 100);
             let multaDescontada = multaTotalGlobal * (descMulta / 100);
             
@@ -1034,12 +1024,13 @@
                 multaFinal: multaFinal
             };
 
-            alert(`Opção "${tipo.toUpperCase()}" gerada e presetada com sucesso!`);
+            alert(`Opção "${tipo.toUpperCase()}" gerada e configurada com sucesso!`);
             atualizarListaOpcoesGeradasModal();
         }
 
         function atualizarListaOpcoesGeradasModal() {
             const container = document.getElementById('lista-opcoes-geradas-modal');
+            const btnGerarPropostaModal = document.getElementById('btn-gerar-proposta-modal');
             if (!container) return;
 
             let html = '';
@@ -1070,42 +1061,17 @@
             }
 
             container.innerHTML = html;
+
+            // Se todas as 3 opções (avista, parcelado, cartao) estiverem configuradas, exibe o botão "Gerar Proposta" embaixo
+            const todasGeradas = opcoesGeradas.avista && opcoesGeradas.parcelado && opcoesGeradas.cartao;
+            if (btnGerarPropostaModal) {
+                btnGerarPropostaModal.style.display = todasGeradas ? 'block' : 'none';
+            }
         }
 
         function removerOpcaoGerada(tipo) {
             opcoesGeradas[tipo] = null;
             atualizarListaOpcoesGeradasModal();
-        }
-
-        function renderizarResumoOpcoesExternoHtml() {
-            let html = '';
-            let contador = 0;
-
-            for (let k in opcoesGeradas) {
-                let op = opcoesGeradas[k];
-                if (op) {
-                    contador++;
-                    let nomeFormatado = k === 'avista' ? 'À Vista' : (k === 'parcelado' ? `Parcelado (${op.infoExtra})` : 'Cartão de Crédito');
-                    html += `
-                        <div class="p-3 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 flex justify-between items-center text-xs">
-                            <div>
-                                <strong class="text-emerald-600 dark:text-emerald-400 block">${contador}. ${nomeFormatado}</strong>
-                                <span class="text-[10px] text-slate-400">Juros: ${op.descJuros}% desc | Multa: ${op.descMulta}% desc</span>
-                            </div>
-                            <div class="text-right">
-                                <span class="text-[10px] text-slate-400 block">Valor Final:</span>
-                                <strong class="text-slate-900 dark:text-white text-sm">R$ ${op.valorFinal.toFixed(2)}</strong>
-                            </div>
-                        </div>
-                    `;
-                }
-            }
-
-            if (contador === 0) {
-                return `<div class="p-3 bg-white dark:bg-slate-900 rounded-2xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">Clique em "Realizar Acordo" para configurar e gerar as 3 opções obrigatórias.</div>`;
-            }
-
-            return html;
         }
 
         function limparSelecaoNegociacao() {
@@ -1122,10 +1088,15 @@
             const nome = aluno ? (aluno.fullname || aluno.name) : 'Aluno';
 
             if (!opcoesGeradas.avista || !opcoesGeradas.parcelado || !opcoesGeradas.cartao) {
-                return alert("Você precisa gerar as 3 opções (À Vista, Parcelado e Cartão) antes de emitir a proposta final.");
+                return alert("Você precisa configurar as 3 opções (À Vista, Parcelado e Cartão) antes de emitir a proposta final.");
             }
 
-            if (!confirm(`Deseja emitir e fechar a proposta final de acordo para ${nome}? Isso gerará o PDF completo com as 3 modalidades, fará a baixa das faturas antigas e salvará na pasta do Drive do aluno.`)) return;
+            // Nova mensagem de confirmação solicitada
+            const desejaGerar = confirm("Você deseja gerar a proposta atual para o aluno?");
+            if (!desejaGerar) {
+                // Se clicar em não, permite voltar para edição
+                return;
+            }
 
             try {
                 // 1. Dar baixa nas faturas antigas no Firebase
@@ -1154,7 +1125,24 @@
 
                 console.log(`[Google Drive Sync] Salvando PDF da Proposta Completa na pasta do aluno ${nome}...`);
 
-                alert(`✅ Proposta gerada com sucesso para ${nome}!\n\n• PDF completo com as 3 opções gerado e aberto.\n• Salvo automaticamente na pasta de fluxo do aluno no Google Drive para segurança jurídica.\n• Faturas anteriores atualizadas.`);
+                // Fechar o modal de acordo
+                fecharModalRealizarAcordo();
+
+                // Simulação de compartilhamento nativo no celular (Web Share API)
+                const textoCompartilhamento = `📄 *Proposta de Acordo SE7* - Aluno(a): ${nome}\n\nOpções geradas e validadas com sucesso!\n• À Vista: R$ ${opcoesGeradas.avista.valorFinal.toFixed(2)}\n• Parcelado (${opcoesGeradas.parcelado.infoExtra}): R$ ${opcoesGeradas.parcelado.valorFinal.toFixed(2)}\n• Cartão de Crédito: R$ ${opcoesGeradas.cartao.valorFinal.toFixed(2)}\n\nDocumento gerado e salvo com segurança no sistema.`;
+
+                if (navigator.share) {
+                    try {
+                        await navigator.share({
+                            title: `Proposta de Acordo - ${nome}`,
+                            text: textoCompartilhamento,
+                        });
+                    } catch (err) {
+                        console.log("Compartilhamento cancelado ou não suportado na intent direta.");
+                    }
+                } else {
+                    alert(`✅ Proposta gerada com sucesso para ${nome}!\n\n• PDF gerado e aberto.\n• Faturas anteriores atualizadas.`);
+                }
                 
                 limparSelecaoNegociacao();
                 mudarAbaApp('financeiro');
