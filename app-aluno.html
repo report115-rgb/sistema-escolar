@@ -85,7 +85,7 @@
 
         <div class="text-center text-[10px] text-blue-300 pb-2 space-y-0.5">
             <div class="font-semibold text-blue-200">Sistema SE7 de Gestão Acadêmica</div>
-            <div>v1.2.4 &bull; Central de Atendimento ao Aluno</div>
+            <div>v1.2.5 &bull; Central de Atendimento ao Aluno (Otimizado)</div>
         </div>
     </div>
 
@@ -123,7 +123,7 @@
 
         <div class="text-center text-[10px] text-blue-300 pb-2">
             <div>Sistema SE7 de Gestão Acadêmica</div>
-            <div>v1.2.4 &bull; Central de Atendimento ao Aluno</div>
+            <div>v1.2.5 &bull; Central de Atendimento ao Aluno</div>
         </div>
     </div>
 
@@ -374,7 +374,7 @@
 
     <!-- APLICATIVO PRINCIPAL (DASHBOARD) COM LAYOUT FIXO E SCROLL INTERNO -->
     <div id="main-app" class="app-screen fixed inset-0 z-40 flex flex-col bg-slate-100 dark:bg-slate-950" style="display: none;">
-        <!-- Cabeçalho Fixo -->
+        <!-- Cabeçalho Fixo com Botão de Atualizar -->
         <header class="bg-blue-900 text-white p-4 flex justify-between items-center shadow-md shrink-0 z-20">
             <div class="flex items-center space-x-3">
                 <div class="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center font-bold text-sm overflow-hidden border border-white/20 relative cursor-pointer group" onclick="dispararTrocaFoto()" title="Alterar foto">
@@ -391,8 +391,11 @@
                 </div>
             </div>
 
-            <!-- Botões Superiores: Tema e Sair -->
+            <!-- Botões Superiores: Atualizar, Tema e Sair -->
             <div class="flex items-center space-x-2">
+                <button onclick="carregarDadosPainel()" class="w-9 h-9 bg-blue-700 hover:bg-blue-600 rounded-xl flex items-center justify-center text-sm transition text-white active:scale-95 shadow-md" title="Atualizar Dados">
+                    <i class="fa-solid fa-rotate"></i>
+                </button>
                 <button onclick="alternarDarkMode()" class="w-9 h-9 bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center text-sm transition text-white active:scale-95" title="Alternar Tema (Dia / Noite)">
                     <i id="theme-icon" class="fa-solid fa-moon"></i>
                 </button>
@@ -599,7 +602,7 @@
         </nav>
     </div>
 
-    <!-- Script de Lógica e Transição Suave -->
+    <!-- Script de Lógica Otimizado com Consultas Pontuais (.get) -->
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyBeJ-fqzwiQt0PZEKQ6e8zAPSuh7WRuaHo",
@@ -612,7 +615,6 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // Função dinâmica para definir os documentos obrigatórios (EJA x Técnico)
         function obterDocumentosObrigatoriosAluno() {
             let isEJA = window.cursoAtualEJA || false;
 
@@ -623,7 +625,6 @@
                 { id: "certidao_nasc_cas", label: "Certidão de Nascimento ou Casamento" }
             ];
 
-            // Se NÃO for EJA (ex: curso Técnico), adiciona os documentos do Ensino Médio
             if (!isEJA) {
                 documentosBase.push(
                     { id: "diploma_medio", label: "Diploma do Ensino Médio" },
@@ -1255,228 +1256,226 @@
             }
         }
 
+        // --- CARREGAMENTO DO PAINEL OTIMIZADO COM .get() ---
         async function carregarDadosPainel() {
             if(!alunoLogado) return;
-            document.getElementById('header-aluno-nome').textContent = alunoLogado.fullname || '---';
-            document.getElementById('info-mat').textContent = alunoLogado.code || '---';
-            document.getElementById('info-cpf').textContent = alunoLogado.cpf || '---';
-            document.getElementById('info-rg').textContent = alunoLogado.rg || '---';
 
-            const rawNasc = alunoLogado.birthDate || alunoLogado.dob || '';
-            let nascFormatado = '---';
-            if (rawNasc) {
-                if (rawNasc.includes('-')) {
-                    nascFormatado = rawNasc.split('-').reverse().join('/');
-                } else {
-                    nascFormatado = rawNasc;
-                }
-            }
-            document.getElementById('info-nasc').textContent = nascFormatado;
-
-            document.getElementById('info-email').textContent = alunoLogado.email || '---';
-            document.getElementById('info-tel').textContent = alunoLogado.whatsapp || '---';
-
-            let enderecoFinal = alunoLogado.address || alunoLogado.endereco || '';
-            if (!enderecoFinal && (alunoLogado.rua || alunoLogado.street)) {
-                const rua = alunoLogado.rua || alunoLogado.street || '';
-                const num = alunoLogado.numero || alunoLogado.number || 'S/N';
-                const bairro = alunoLogado.bairro || alunoLogado.neighborhood || '';
-                const cid = alunoLogado.cidade || alunoLogado.city || '';
-                const uf = alunoLogado.estado || alunoLogado.state || '';
-                enderecoFinal = `${rua}, nº ${num} - ${bairro}, ${cid}/${uf}`;
-            }
-            document.getElementById('info-endereco').textContent = enderecoFinal || '---';
-
-            if(alunoLogado.fotoAluno) {
-                document.getElementById('header-avatar-box').innerHTML = `<img src="${alunoLogado.fotoAluno}" class="w-full h-full object-cover">`;
-            }
-
-            // --- ESCUTADOR EM TEMPO REAL PARA DADOS DO ALUNO (NOTAS E FREQUÊNCIA) ---
-            db.collection("students").doc(alunoLogado.id).onSnapshot((studentDoc) => {
+            try {
+                // 1. Atualiza dados do aluno pontualmente
+                const studentDoc = await db.collection("students").doc(alunoLogado.id).get();
                 if (studentDoc.exists) {
                     alunoLogado = { id: studentDoc.id, ...studentDoc.data() };
                     sessionStorage.setItem('aluno_app_logado', JSON.stringify(alunoLogado));
-
-                    renderizarFrequenciaAluno();
                 }
-            });
 
-            // --- CARREGAMENTO DO CURSO E NOTAS ---
-            if(alunoLogado.courseId) {
-                try {
-                    db.collection("courses").doc(alunoLogado.courseId).onSnapshot((doc) => {
-                        if(doc.exists) {
-                            const curso = doc.data();
-                            adaptarPainelPorModalidadeCurso(curso);
-                            
-                            // Atualiza os documentos obrigatórios após identificar o curso
-                            renderizarDocumentosObrigatorios();
-                            verificarTodasPendencias();
+                document.getElementById('header-aluno-nome').textContent = alunoLogado.fullname || '---';
+                document.getElementById('info-mat').textContent = alunoLogado.code || '---';
+                document.getElementById('info-cpf').textContent = alunoLogado.cpf || '---';
+                document.getElementById('info-rg').textContent = alunoLogado.rg || '---';
 
-                            document.getElementById('header-aluno-curso').textContent = curso.name;
-                            document.getElementById('info-curso-completo').textContent = curso.name;
-                            document.getElementById('total-disciplinas-num').textContent = curso.subjects ? curso.subjects.length : 0;
+                const rawNasc = alunoLogado.birthDate || alunoLogado.dob || '';
+                let nascFormatado = '---';
+                if (rawNasc) {
+                    if (rawNasc.includes('-')) {
+                        nascFormatado = rawNasc.split('-').reverse().join('/');
+                    } else {
+                        nascFormatado = rawNasc;
+                    }
+                }
+                document.getElementById('info-nasc').textContent = nascFormatado;
 
-                            const gradesList = document.getElementById('grades-list');
-                            gradesList.innerHTML = '';
-                            if(curso.subjects && curso.subjects.length > 0) {
-                                curso.subjects.forEach(sub => {
-                                    const notasDoAluno = (alunoLogado.grades && (alunoLogado.grades[sub.id] || alunoLogado.grades[sub.name])) 
-                                        ? (alunoLogado.grades[sub.id] || alunoLogado.grades[sub.name]) 
-                                        : null;
+                document.getElementById('info-email').textContent = alunoLogado.email || '---';
+                document.getElementById('info-tel').textContent = alunoLogado.whatsapp || '---';
 
-                                    const ativ = notasDoAluno && notasDoAluno.atividade !== '' ? notasDoAluno.atividade : '-';
-                                    const aval = notasDoAluno && notasDoAluno.avaliacao !== '' ? notasDoAluno.avaliacao : '-';
-                                    const notaFinal = notasDoAluno && notasDoAluno.final !== '' ? notasDoAluno.final : null;
+                let enderecoFinal = alunoLogado.address || alunoLogado.endereco || '';
+                if (!enderecoFinal && (alunoLogado.rua || alunoLogado.street)) {
+                    const rua = alunoLogado.rua || alunoLogado.street || '';
+                    const num = alunoLogado.numero || alunoLogado.number || 'S/N';
+                    const bairro = alunoLogado.bairro || alunoLogado.neighborhood || '';
+                    const cid = alunoLogado.cidade || alunoLogado.city || '';
+                    const uf = alunoLogado.estado || alunoLogado.state || '';
+                    enderecoFinal = `${rua}, nº ${num} - ${bairro}, ${cid}/${uf}`;
+                }
+                document.getElementById('info-endereco').textContent = enderecoFinal || '---';
 
-                                    let badgeStatus = `<span class="px-2 py-0.5 bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 font-bold rounded text-[10px]">Cursando</span>`;
-                                    if (notaFinal !== null) {
-                                        const numFinal = parseFloat(notaFinal);
-                                        const corNota = numFinal >= 6.0 ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300';
-                                        badgeStatus = `<span class="px-2.5 py-1 ${corNota} font-bold rounded-lg text-xs">Final: ${notaFinal}</span>`;
-                                    }
+                if(alunoLogado.fotoAluno) {
+                    document.getElementById('header-avatar-box').innerHTML = `<img src="${alunoLogado.fotoAluno}" class="w-full h-full object-cover">`;
+                }
 
-                                    gradesList.innerHTML += `
-                                        <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-2 text-xs">
-                                            <div class="flex justify-between items-center">
-                                                <strong class="text-slate-800 dark:text-slate-100 text-sm">${sub.name}</strong>
-                                                <div>${badgeStatus}</div>
-                                            </div>
-                                            <div class="grid grid-cols-2 gap-2 pt-1 border-t border-slate-100 dark:border-slate-800 text-[11px] text-slate-500 dark:text-slate-400">
-                                                <div>Atividade Pedagógica (0-5): <strong class="text-slate-800 dark:text-slate-200">${ativ}</strong></div>
-                                                <div class="text-right">Avaliação (0-5): <strong class="text-slate-800 dark:text-slate-200">${aval}</strong></div>
-                                            </div>
+                renderizarFrequenciaAluno();
+
+                // 2. Carrega curso e notas pontualmente
+                if(alunoLogado.courseId) {
+                    const courseDoc = await db.collection("courses").doc(alunoLogado.courseId).get();
+                    if(courseDoc.exists) {
+                        const curso = courseDoc.data();
+                        adaptarPainelPorModalidadeCurso(curso);
+                        
+                        renderizarDocumentosObrigatorios();
+                        await verificarTodasPendencias();
+
+                        document.getElementById('header-aluno-curso').textContent = curso.name;
+                        document.getElementById('info-curso-completo').textContent = curso.name;
+                        document.getElementById('total-disciplinas-num').textContent = curso.subjects ? curso.subjects.length : 0;
+
+                        const gradesList = document.getElementById('grades-list');
+                        gradesList.innerHTML = '';
+                        if(curso.subjects && curso.subjects.length > 0) {
+                            curso.subjects.forEach(sub => {
+                                const notasDoAluno = (alunoLogado.grades && (alunoLogado.grades[sub.id] || alunoLogado.grades[sub.name])) 
+                                    ? (alunoLogado.grades[sub.id] || alunoLogado.grades[sub.name]) 
+                                    : null;
+
+                                const ativ = notasDoAluno && notasDoAluno.atividade !== '' ? notasDoAluno.atividade : '-';
+                                const aval = notasDoAluno && notasDoAluno.avaliacao !== '' ? notasDoAluno.avaliacao : '-';
+                                const notaFinal = notasDoAluno && notasDoAluno.final !== '' ? notasDoAluno.final : null;
+
+                                let badgeStatus = `<span class="px-2 py-0.5 bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 font-bold rounded text-[10px]">Cursando</span>`;
+                                if (notaFinal !== null) {
+                                    const numFinal = parseFloat(notaFinal);
+                                    const corNota = numFinal >= 6.0 ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300';
+                                    badgeStatus = `<span class="px-2.5 py-1 ${corNota} font-bold rounded-lg text-xs">Final: ${notaFinal}</span>`;
+                                }
+
+                                gradesList.innerHTML += `
+                                    <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-2 text-xs">
+                                        <div class="flex justify-between items-center">
+                                            <strong class="text-slate-800 dark:text-slate-100 text-sm">${sub.name}</strong>
+                                            <div>${badgeStatus}</div>
                                         </div>
-                                    `;
-                                });
-                            } else {
-                                gradesList.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">Nenhuma disciplina cadastrada na matriz para este curso.</p>`;
-                            }
+                                        <div class="grid grid-cols-2 gap-2 pt-1 border-t border-slate-100 dark:border-slate-800 text-[11px] text-slate-500 dark:text-slate-400">
+                                            <div>Atividade Pedagógica (0-5): <strong class="text-slate-800 dark:text-slate-200">${ativ}</strong></div>
+                                            <div class="text-right">Avaliação (0-5): <strong class="text-slate-800 dark:text-slate-200">${aval}</strong></div>
+                                        </div>
+                                    </div>
+                                `;
+                            });
+                        } else {
+                            gradesList.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">Nenhuma disciplina cadastrada na matriz para este curso.</p>`;
                         }
-                    });
-                } catch(e) { console.error("Erro ao carregar curso em tempo real:", e); }
-            }
+                    }
+                }
 
-            // --- CALENDÁRIO COM SELETOR DE SEMESTRE E AGRUPAMENTO MENSAL ---
-            if(alunoLogado.classId) {
-                db.collection("classes").doc(alunoLogado.classId).get().then(doc => {
-                    if(doc.exists) {
-                        const turmaData = doc.data();
+                // 3. Carrega calendário e aulas pontualmente
+                if(alunoLogado.classId) {
+                    const turmaDoc = await db.collection("classes").doc(alunoLogado.classId).get();
+                    if(turmaDoc.exists) {
+                        const turmaData = turmaDoc.data();
                         document.getElementById('info-turma').textContent = turmaData.name;
 
-                        db.collection("academicCalendars").where("classId", "==", alunoLogado.classId).onSnapshot((calSnap) => {
-                            eventosCalendarioCache = [];
-                            const semestresDisponiveis = new Set();
+                        const calSnap = await db.collection("academicCalendars").where("classId", "==", alunoLogado.classId).get();
+                        eventosCalendarioCache = [];
+                        const semestresDisponiveis = new Set();
 
-                            calSnap.forEach(calDoc => {
-                                const ev = calDoc.data();
-                                eventosCalendarioCache.push(ev);
-                                if (ev.semestre) semestresDisponiveis.add(ev.semestre);
-                            });
-
-                            const selectSemestre = document.getElementById('select-filtro-semestre');
-                            const valorAtualSelect = selectSemestre.value;
-                            selectSemestre.innerHTML = `<option value="">Todos os Semestres</option>`;
-                            
-                            const selectSemestreFreq = document.getElementById('select-filtro-semestre-freq');
-                            const valorAtualSelectFreq = selectSemestreFreq.value;
-                            selectSemestreFreq.innerHTML = `<option value="">Todos os Semestres</option>`;
-
-                            const semestresOrdenados = Array.from(semestresDisponiveis).sort().reverse();
-                            semestresOrdenados.forEach(sem => {
-                                selectSemestre.innerHTML += `<option value="${sem}">${sem}</option>`;
-                                selectSemestreFreq.innerHTML += `<option value="${sem}">${sem}</option>`;
-                            });
-
-                            if (semestresOrdenados.includes(valorAtualSelect)) {
-                                selectSemestre.value = valorAtualSelect;
-                            } else if (semestresOrdenados.length > 0) {
-                                selectSemestre.value = semestresOrdenados[0];
-                            }
-
-                            if (semestresOrdenados.includes(valorAtualSelectFreq)) {
-                                selectSemestreFreq.value = valorAtualSelectFreq;
-                            } else if (semestresOrdenados.length > 0) {
-                                selectSemestreFreq.value = semestresOrdenados[0];
-                            }
-
-                            renderizarCalendarioAluno();
-                            renderizarFrequenciaAluno();
+                        calSnap.forEach(calDoc => {
+                            const ev = calDoc.data();
+                            eventosCalendarioCache.push(ev);
+                            if (ev.semestre) semestresDisponiveis.add(ev.semestre);
                         });
-                    }
-                });
-            }
 
-            // --- ESCUTADOR EM TEMPO REAL PARA AS FATURAS / FINANCEIRO ---
-            db.collection("financeLogs").where("studentId", "==", alunoLogado.id).onSnapshot(snap => {
-                const finList = document.getElementById('finance-list');
-                if(!finList) return;
-                finList.innerHTML = '';
-                
-                if(snap.empty) {
-                    finList.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">Nenhuma fatura encontrada.</p>`;
-                    return;
+                        const selectSemestre = document.getElementById('select-filtro-semestre');
+                        const valorAtualSelect = selectSemestre.value;
+                        selectSemestre.innerHTML = `<option value="">Todos os Semestres</option>`;
+                        
+                        const selectSemestreFreq = document.getElementById('select-filtro-semestre-freq');
+                        const valorAtualSelectFreq = selectSemestreFreq.value;
+                        selectSemestreFreq.innerHTML = `<option value="">Todos os Semestres</option>`;
+
+                        const semestresOrdenados = Array.from(semestresDisponiveis).sort().reverse();
+                        semestresOrdenados.forEach(sem => {
+                            selectSemestre.innerHTML += `<option value="${sem}">${sem}</option>`;
+                            selectSemestreFreq.innerHTML += `<option value="${sem}">${sem}</option>`;
+                        });
+
+                        if (semestresOrdenados.includes(valorAtualSelect)) {
+                            selectSemestre.value = valorAtualSelect;
+                        } else if (semestresOrdenados.length > 0) {
+                            selectSemestre.value = semestresOrdenados[0];
+                        }
+
+                        if (semestresOrdenados.includes(valorAtualSelectFreq)) {
+                            selectSemestreFreq.value = valorAtualSelectFreq;
+                        } else if (semestresOrdenados.length > 0) {
+                            selectSemestreFreq.value = semestresOrdenados[0];
+                        }
+
+                        renderizarCalendarioAluno();
+                        renderizarFrequenciaAluno();
+                    }
                 }
 
-                let faturas = [];
-                snap.forEach(doc => {
-                    faturas.push({ id: doc.id, ...doc.data() });
-                });
+                // 4. Carrega faturas pontualmente
+                const finSnap = await db.collection("financeLogs").where("studentId", "==", alunoLogado.id).get();
+                const finList = document.getElementById('finance-list');
+                if(finList) {
+                    finList.innerHTML = '';
+                    
+                    if(finSnap.empty) {
+                        finList.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">Nenhuma fatura encontrada.</p>`;
+                    } else {
+                        let faturas = [];
+                        finSnap.forEach(doc => {
+                            faturas.push({ id: doc.id, ...doc.data() });
+                        });
 
-                faturas.sort((a, b) => {
-                    let dataA = a.date || '';
-                    let dataB = b.date || '';
-                    if (dataA.includes('/')) {
-                        const p = dataA.split('/');
-                        dataA = `${p[2]}-${p[1]}-${p[0]}`;
-                    }
-                    if (dataB.includes('/')) {
-                        const p = dataB.split('/');
-                        dataB = `${p[2]}-${p[1]}-${p[0]}`;
-                    }
-                    return dataA.localeCompare(dataB);
-                });
+                        faturas.sort((a, b) => {
+                            let dataA = a.date || '';
+                            let dataB = b.date || '';
+                            if (dataA.includes('/')) {
+                                const p = dataA.split('/');
+                                dataA = `${p[2]}-${p[1]}-${p[0]}`;
+                            }
+                            if (dataB.includes('/')) {
+                                const p = dataB.split('/');
+                                dataB = `${p[2]}-${p[1]}-${p[0]}`;
+                            }
+                            return dataA.localeCompare(dataB);
+                        });
 
-                faturas.forEach(f => {
-                    const statusUpper = (f.status || '').toUpperCase();
-                    const jaPago = statusUpper.includes('PAGO');
-                    const formaPg = f.formaPagamento || 'Manual';
-                    const dataPg = f.dataPagamento ? f.dataPagamento.split('-').reverse().join('/') : '';
+                        faturas.forEach(f => {
+                            const statusUpper = (f.status || '').toUpperCase();
+                            const jaPago = statusUpper.includes('PAGO');
+                            const formaPg = f.formaPagamento || 'Manual';
+                            const dataPg = f.dataPagamento ? f.dataPagamento.split('-').reverse().join('/') : '';
 
-                    let dataVencExibicao = f.date || '';
-                    if (dataVencExibicao.includes('-')) {
-                        const partesData = dataVencExibicao.split('-');
-                        if (partesData.length === 3) {
-                            dataVencExibicao = `${partesData[2]}/${partesData[1]}/${partesData[0]}`;
-                        }
-                    }
+                            let dataVencExibicao = f.date || '';
+                            if (dataVencExibicao.includes('-')) {
+                                const partesData = dataVencExibicao.split('-');
+                                if (partesData.length === 3) {
+                                    dataVencExibicao = `${partesData[2]}/${partesData[1]}/${partesData[0]}`;
+                                }
+                            }
 
-                    finList.innerHTML += `
-                        <div class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-2 text-xs">
-                            <div class="flex justify-between items-start sm:items-center">
-                                <div>
-                                    <strong class="text-slate-900 dark:text-white">${f.description}</strong>
-                                    <p class="text-[10px] text-slate-500 mt-0.5">Vencimento: ${dataVencExibicao} &bull; Valor: R$ ${f.amount}</p>
-                                </div>
-                                <span class="text-[9px] px-2.5 py-1 rounded-full font-bold ${jaPago ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'}">${f.status || 'PENDENTE'}</span>
-                            </div>
-                            ${jaPago ? `
-                                <div class="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1.5 pt-1 border-t border-slate-100 dark:border-slate-800">
-                                    <i class="fa-solid fa-circle-check"></i> Pago via <strong>${formaPg}</strong>${dataPg ? ` em ${dataPg}` : ''}
-                                </div>
-                            ` : `
-                                ${f.invoiceUrl && f.invoiceUrl !== '#' ? `
-                                    <div class="pt-1 border-t border-slate-100 dark:border-slate-800 flex justify-end">
-                                        <a href="${f.invoiceUrl}" target="_blank" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-[10px] shadow">Baixar Boleto</a>
+                            finList.innerHTML += `
+                                <div class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-2 text-xs">
+                                    <div class="flex justify-between items-start sm:items-center">
+                                        <div>
+                                            <strong class="text-slate-900 dark:text-white">${f.description}</strong>
+                                            <p class="text-[10px] text-slate-500 mt-0.5">Vencimento: ${dataVencExibicao} &bull; Valor: R$ ${f.amount}</p>
+                                        </div>
+                                        <span class="text-[9px] px-2.5 py-1 rounded-full font-bold ${jaPago ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'}">${f.status || 'PENDENTE'}</span>
                                     </div>
-                                ` : ''}
-                            `}
-                        </div>
-                    `;
-                });
-            });
+                                    ${jaPago ? `
+                                        <div class="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1.5 pt-1 border-t border-slate-100 dark:border-slate-800">
+                                            <i class="fa-solid fa-circle-check"></i> Pago via <strong>${formaPg}</strong>${dataPg ? ` em ${dataPg}` : ''}
+                                        </div>
+                                    ` : `
+                                        ${f.invoiceUrl && f.invoiceUrl !== '#' ? `
+                                            <div class="pt-1 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+                                                <a href="${f.invoiceUrl}" target="_blank" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-[10px] shadow">Baixar Boleto</a>
+                                            </div>
+                                        ` : ''}
+                                    `}
+                                </div>
+                            `;
+                        });
+                    }
+                }
 
-            await verificarTodasPendencias();
+                await verificarTodasPendencias();
+            } catch(e) {
+                console.error("Erro ao carregar dados do painel do aluno:", e);
+            }
         }
 
         // --- RENDERIZAÇÃO DA FREQUÊNCIA DO ALUNO ---
@@ -1683,7 +1682,6 @@
         function adaptarPainelPorModalidadeCurso(cursoObj) {
             isAlunoEJA = cursoObj && (cursoObj.nivel === 'Supletivo' || cursoObj.sigla === 'EJA' || (cursoObj.name && cursoObj.name.toUpperCase().includes('EJA')));
             
-            // Marca a flag global para o filtro dinâmico de documentos
             window.cursoAtualEJA = isAlunoEJA;
 
             if (isAlunoEJA) {
