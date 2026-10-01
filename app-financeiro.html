@@ -81,7 +81,7 @@
 
         <div class="text-center text-[10px] text-blue-300 pb-2">
             <div>Sistema SE7 de Gestão Acadêmica</div>
-            <div>v1.3.7 &bull; Setor Financeiro</div>
+            <div>v1.3.8 &bull; Setor Financeiro</div>
         </div>
     </div>
 
@@ -716,7 +716,7 @@
             selectAluno.innerHTML = `<option value="" disabled selected>Selecione um aluno...</option>` +
                 alunosDoCurso.map(a => `<option value="${a.id}">${a.fullname || a.name || 'Sem Nome'}</option>`).join('');
 
-            container.innerHTML = `<div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">Selecione um curso e um aluno acima para visualizar as faturas.</div>`;
+            container.innerHTML = `<div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">Selecione um aluno acima para visualizar as faturas.</div>`;
         }
 
         function parseDataParaOrdem(dataStr) {
@@ -1140,7 +1140,7 @@
             document.getElementById('painel-negociacao-aluno').style.display = 'none';
         }
 
-        // FUNÇÃO ATUALIZADA: GERA PDF COM DADOS PESSOAIS COMPLETOS E EXTRATO DETALHADO DE DÉBITOS
+        // FUNÇÃO ATUALIZADA: GERA PDF COM EXTRATO DETALHADO, TOTAIS CONSOLIDADOS E MODALIDADES DE ACORDO
         function gerarPropostaPDF() {
             if (!alunoNegociacaoId) return;
             const aluno = studentsMap[alunoNegociacaoId];
@@ -1187,35 +1187,58 @@
             const rawCurso = aluno.course || aluno.curso || aluno.turma || aluno.nomeCurso || aluno.courseName || aluno.courseId || '';
             const cursoExibir = coursesMap[rawCurso] || coursesMap[normalizarTexto(rawCurso)] || String(rawCurso || 'Não vinculado');
 
-            // MONTA O EXTRATO DETALHADO DAS FATURAS EM ATRASO
+            // MONTA O EXTRATO DETALHADO DAS FATURAS EM ATRASO E OS TOTAIS GERAIS
             const hoje = new Date();
             hoje.setHours(0, 0, 0, 0);
 
             let htmlTabelaDebitos = '';
+            let somaOriginalGeral = 0;
+            let somaMultaGeral = 0;
+            let somaJurosGeral = 0;
+            let somaTotalGeral = 0;
+
             faturasAtrasadasGlobal.forEach(f => {
                 const valorOriginal = parseFloat(String(f.amount || f.valor || '0').replace(',', '.')) || 0;
+                somaOriginalGeral += valorOriginal;
+
                 const vencimentoStr = f.date || f.vencimento || '';
                 let dataVenc = parseDataParaOrdem(vencimentoStr);
                 dataVenc.setHours(0, 0, 0, 0);
                 
                 let diasAtraso = Math.ceil(Math.abs(hoje - dataVenc) / (1000 * 60 * 60 * 24));
                 let multaParcela = 10.00;
+                somaMultaGeral += multaParcela;
+
                 let taxaJurosDia = 0.005;
                 let jurosParcela = valorOriginal * taxaJurosDia * diasAtraso;
+                somaJurosGeral += jurosParcela;
+
                 let totalParcelaAtualizada = valorOriginal + multaParcela + jurosParcela;
+                somaTotalGeral += totalParcelaAtualizada;
 
                 htmlTabelaDebitos += `
                     <tr>
-                        <td style="padding: 8px; border-bottom: 1px solid #e2e8f0;">${f.description || f.descricao || 'Mensalidade'}</td>
-                        <td style="padding: 8px; border-bottom: 1px solid #e2e8f0; text-align: center;">${formatarDataParaExibicao(vencimentoStr)}</td>
-                        <td style="padding: 8px; border-bottom: 1px solid #e2e8f0; text-align: center;">${diasAtraso} dias</td>
-                        <td style="padding: 8px; border-bottom: 1px solid #e2e8f0; text-align: right;">R$ ${valorOriginal.toFixed(2)}</td>
-                        <td style="padding: 8px; border-bottom: 1px solid #e2e8f0; text-align: right;">R$ ${multaParcela.toFixed(2)}</td>
-                        <td style="padding: 8px; border-bottom: 1px solid #e2e8f0; text-align: right;">R$ ${jurosParcela.toFixed(2)}</td>
-                        <td style="padding: 8px; border-bottom: 1px solid #e2e8f0; text-align: right; font-weight: bold;">R$ ${totalParcelaAtualizada.toFixed(2)}</td>
+                        <td style="padding: 7px 8px; border-bottom: 1px solid #e2e8f0;">${f.description || f.descricao || 'Mensalidade'}</td>
+                        <td style="padding: 7px 8px; border-bottom: 1px solid #e2e8f0; text-align: center;">${formatarDataParaExibicao(vencimentoStr)}</td>
+                        <td style="padding: 7px 8px; border-bottom: 1px solid #e2e8f0; text-align: center;">${diasAtraso} dias</td>
+                        <td style="padding: 7px 8px; border-bottom: 1px solid #e2e8f0; text-align: right;">R$ ${valorOriginal.toFixed(2)}</td>
+                        <td style="padding: 7px 8px; border-bottom: 1px solid #e2e8f0; text-align: right;">R$ ${multaParcela.toFixed(2)}</td>
+                        <td style="padding: 7px 8px; border-bottom: 1px solid #e2e8f0; text-align: right;">R$ ${jurosParcela.toFixed(2)}</td>
+                        <td style="padding: 7px 8px; border-bottom: 1px solid #e2e8f0; text-align: right; font-weight: bold;">R$ ${totalParcelaAtualizada.toFixed(2)}</td>
                     </tr>
                 `;
             });
+
+            // Adiciona a linha de totais na tabela conforme solicitado
+            htmlTabelaDebitos += `
+                <tr style="background: #f1f5f9; font-weight: bold;">
+                    <td colspan="3" style="padding: 10px 8px; text-align: right; border-top: 2px solid #cbd5e1;">VALOR TOTAL DA DÍVIDA / TOTAIS:</td>
+                    <td style="padding: 10px 8px; text-align: right; border-top: 2px solid #cbd5e1;">R$ ${somaOriginalGeral.toFixed(2)}</td>
+                    <td style="padding: 10px 8px; text-align: right; border-top: 2px solid #cbd5e1;">R$ ${somaMultaGeral.toFixed(2)}</td>
+                    <td style="padding: 10px 8px; text-align: right; border-top: 2px solid #cbd5e1;">R$ ${somaJurosGeral.toFixed(2)}</td>
+                    <td style="padding: 10px 8px; text-align: right; border-top: 2px solid #cbd5e1; color: #1e3a8a; font-size: 12px;">R$ ${somaTotalGeral.toFixed(2)}</td>
+                </tr>
+            `;
 
             let janelaPDF = window.open('', '_blank');
             if (!janelaPDF) {
@@ -1293,9 +1316,9 @@
                                     <th>Descrição</th>
                                     <th style="text-align: center;">Vencimento</th>
                                     <th style="text-align: center;">Atraso</th>
-                                    <th style="text-align: right;">Original</th>
+                                    <th style="text-align: right;">Valor Original</th>
                                     <th style="text-align: right;">Multa</th>
-                                    <th style="text-align: right;">Juros</th>
+                                    <th style="text-align: right;">Juros/Dia</th>
                                     <th style="text-align: right;">Subtotal</th>
                                 </tr>
                             </thead>
