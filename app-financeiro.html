@@ -81,7 +81,7 @@
 
         <div class="text-center text-[10px] text-blue-300 pb-2">
             <div>Sistema SE7 de Gestão Acadêmica</div>
-            <div>v1.5.0 &bull; Setor Financeiro</div>
+            <div>v1.5.1 &bull; Setor Financeiro</div>
         </div>
     </div>
 
@@ -805,7 +805,18 @@
             const container = document.getElementById('lista-faturas-aluno-container');
             if (!container || !alunoId) return;
 
-            const faturasDoAluno = financeLogs.filter(f => (f.studentId === alunoId || f.alunoId === alunoId));
+            // FILTRAGEM RIGOROSA: Exclui estritamente qualquer registro que seja proposta de acordo ou acordo em andamento
+            const faturasDoAluno = financeLogs.filter(f => {
+                const pertenceAluno = (f.studentId === alunoId || f.alunoId === alunoId);
+                if (!pertenceAluno) return false;
+
+                const status = (f.status || '').toUpperCase();
+                const descricao = (f.description || f.descricao || '').toUpperCase();
+
+                const ePropostaOuAcordoAndamento = status.includes("PROPOSTA") || status.includes("AGUARDANDO") || descricao.includes("PROPOSTA") || descricao.includes("TERMO DE PROPOSTA");
+
+                return !ePropostaOuAcordoAndamento;
+            });
             
             faturasDoAluno.sort((a, b) => {
                 let dataA = parseDataParaOrdem(a.date || a.vencimento);
@@ -908,7 +919,7 @@
 
             const propostasOuAcordos = financeLogs.filter(f => {
                 const status = (f.status || '').toUpperCase();
-                return status.includes("AGUARDANDO APROVAÇÃO") || status.includes("ACORDO ACEITO") || status.includes("ACORDO EFETIVADO");
+                return status.includes("PROPOSTA") || status.includes("AGUARDANDO") || status.includes("ACORDO ACEITO") || status.includes("ACORDO EFETIVADO");
             });
 
             if (propostasOuAcordos.length === 0) {
@@ -937,7 +948,7 @@
                 const cursoExibir = coursesMap[rawCurso] || coursesMap[normalizarTexto(rawCurso)] || String(rawCurso);
 
                 const statusStr = (p.status || '').toUpperCase();
-                const eAguardando = statusStr.includes("AGUARDANDO");
+                const eAguardando = statusStr.includes("AGUARDANDO") || statusStr.includes("PROPOSTA");
                 const corBadge = eAguardando ? "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300" : "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300";
                 const textoStatus = eAguardando ? "Aguardando Aprovação" : "Acordo Aceito / Aprovado";
                 const valorExibir = p.amount || p.valor || '0.00';
@@ -1031,12 +1042,12 @@
             const hoje = new Date();
             hoje.setHours(0, 0, 0, 0);
 
-            // PRÉ-CÁLCULO RIGOROSO DOS DÉBITOS EM ATRASO
             faturasAtrasadasGlobal = financeLogs.filter(f => {
                 const pertenceAluno = (f.studentId === alunoId || f.alunoId === alunoId);
                 const jaPago = f.status && (f.status.toUpperCase().includes('PAGO') || f.status.includes('NEGOCIADO'));
+                const statusLower = (f.status || '').toLowerCase();
                 const descLower = (f.description || f.descricao || '').toLowerCase();
-                const eTermoOuProposta = descLower.includes('termo') || descLower.includes('proposta') || descLower.includes('acordo consolidado');
+                const eTermoOuProposta = statusLower.includes('proposta') || statusLower.includes('aguardando') || descLower.includes('termo') || descLower.includes('proposta') || descLower.includes('acordo consolidado');
                 
                 if (!pertenceAluno || jaPago || eTermoOuProposta) return false;
 
@@ -1066,16 +1077,17 @@
 
             valorAtualNegociacaoGlobal = valorTotalOriginalGlobal + multaTotalGlobal + jurosTotalGlobal;
 
-            const propostasAluno = financeLogs.filter(f => (f.studentId === alunoId || f.alunoId === alunoId) && (f.status && (f.status.includes("AGUARDANDO APROVAÇÃO") || f.status.includes("ACORDO ACEITO") || f.status.includes("ACORDO EFETIVADO"))));
+            const propostasAluno = financeLogs.filter(f => (f.studentId === alunoId || f.alunoId === alunoId) && (f.status && (f.status.includes("PROPOSTA") || f.status.includes("AGUARDANDO") || f.status.includes("ACORDO ACEITO") || f.status.includes("ACORDO EFETIVADO"))));
 
             let htmlPropostasRealizadas = '';
             let temPropostaAtiva = false;
 
             if (propostasAluno.length > 0) {
                 propostasAluno.forEach(p => {
-                    let corStatus = p.status.includes("AGUARDANDO") ? "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300" : "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300";
-                    let textoStatusExibir = p.status.includes("AGUARDANDO") ? "Aguardando aprovação do aluno" : "Acordo aceito";
-                    let eAguardando = p.status.includes("AGUARDANDO");
+                    let statusStr = (p.status || '').toUpperCase();
+                    let eAguardando = statusStr.includes("PROPOSTA") || statusStr.includes("AGUARDANDO");
+                    let corStatus = eAguardando ? "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300" : "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300";
+                    let textoStatusExibir = eAguardando ? "Aguardando aprovação do aluno" : "Acordo aceito";
 
                     if (eAguardando) {
                         temPropostaAtiva = true;
@@ -1359,7 +1371,7 @@
             const valorTotalNegociadoParaRegistro = valorAtualNegociacaoGlobal.toFixed(2);
             const nomeAlunoSalvar = aluno.fullname || aluno.name || 'Aluno';
 
-            // REGISTRA APENAS NA COLEÇÃO DE NEGOCIAÇÕES/PROPOSTAS (NÃO MEXE NA ABA DE FATURAS DO ALUNO)
+            // SALVA ESTRITAMENTE COMO PROPOSTA COM STATUS COMERCIAL (NÃO GERA FATURA)
             try {
                 if (propostaIdExistente) {
                     await db.collection("financeLogs").doc(propostaIdExistente).update({
@@ -1367,7 +1379,7 @@
                         valor: valorTotalNegociadoParaRegistro,
                         nomeAluno: nomeAlunoSalvar,
                         date: new Date().toLocaleDateString('pt-BR'),
-                        status: "AGUARDANDO APROVAÇÃO DO ALUNO",
+                        status: "PROPOSTA DE ACORDO EM ANDAMENTO",
                         opcoesSalvas: opcoesGeradas,
                         atualizadoEm: new Date().toISOString()
                     });
@@ -1377,12 +1389,12 @@
                         studentId: alunoNegociacaoId,
                         alunoId: alunoNegociacaoId,
                         nomeAluno: nomeAlunoSalvar,
-                        description: `Proposta de Acordo Gerada`,
+                        description: `Proposta de Acordo Consolidado`,
                         amount: valorTotalNegociadoParaRegistro,
                         valor: valorTotalNegociadoParaRegistro,
                         date: new Date().toLocaleDateString('pt-BR'),
                         vencimento: new Date().toISOString().split('T')[0],
-                        status: "AGUARDANDO APROVAÇÃO DO ALUNO",
+                        status: "PROPOSTA DE ACORDO EM ANDAMENTO",
                         opcoesSalvas: opcoesGeradas,
                         criadoEm: new Date().toISOString()
                     });
@@ -1655,8 +1667,8 @@
         }
 
         // QUANDO O ACORDO É APROVADO DEFINITIVAMENTE:
-        // 1. As faturas em atraso são baixadas/substituídas.
-        // 2. Se for parcelado, gera as novas faturas/boletos em datas cronológicas.
+        // 1. As faturas em atraso são baixadas.
+        // 2. Os novos boletos/faturas reais são gerados na aba de faturas.
         async function executarFechamentoAcordoDefinitivo() {
             const radioSelecionado = document.querySelector('input[name="opcao-escolhida-fechamento"]:checked');
             if (!radioSelecionado) {
@@ -1673,7 +1685,7 @@
             }
 
             try {
-                // 1. Baixa/substitui faturas antigas em atraso
+                // 1. Baixa faturas antigas em atraso
                 for (let fatura of faturasAtrasadasGlobal) {
                     await db.collection("financeLogs").doc(fatura.id).update({
                         status: "NEGOCIADO (ACORDO)",
@@ -1682,7 +1694,7 @@
                     });
                 }
 
-                // 2. Se for parcelado, gera as novas parcelas cronológicas na aba de faturas
+                // 2. Gera os novos boletos/faturas reais para aparecer na aba Faturas
                 if (escolhaKey === 'parcelado') {
                     let qtdParcelas = parseInt(opEscolhida.infoExtra) || 2;
                     let valorParcela = opEscolhida.valorFinal / qtdParcelas;
@@ -1709,10 +1721,9 @@
                         });
                     }
                 } else {
-                    // À vista ou Cartão gera parcela única consolidada
                     let novaUnicaId = "acordo_unico_" + alunoNegociacaoId + "_" + Date.now();
                     let dataVencUnica = new Date();
-                    dataVencUnica.setDate(dataVencUnica.getDate() + 5); // Ex: 5 dias para pagamento
+                    dataVencUnica.setDate(dataVencUnica.getDate() + 5);
                     let vencUnicaStr = dataVencUnica.toISOString().split('T')[0].split('-').reverse().join('/');
 
                     await db.collection("financeLogs").doc(novaUnicaId).set({
@@ -1729,8 +1740,8 @@
                     });
                 }
 
-                // 3. Atualiza o status da proposta na lista de negociações para "ACORDO ACEITO"
-                const propostasPendentes = financeLogs.filter(f => (f.studentId === alunoNegociacaoId || f.alunoId === alunoNegociacaoId) && f.status && f.status.includes("AGUARDANDO APROVAÇÃO"));
+                // 3. Atualiza o status da proposta para "ACORDO ACEITO"
+                const propostasPendentes = financeLogs.filter(f => (f.studentId === alunoNegociacaoId || f.alunoId === alunoNegociacaoId) && f.status && (f.status.includes("PROPOSTA") || f.status.includes("AGUARDANDO")));
                 
                 if (propostasPendentes.length > 0) {
                     for (let p of propostasPendentes) {
@@ -1742,7 +1753,7 @@
                 }
 
                 fecharModalFecharAcordo();
-                alert(`🎉 Acordo aprovado com sucesso para ${nome}!\n\n• As faturas antigas foram substituídas.\n• As novas faturas/boletos do acordo foram geradas e já estão visíveis na aba de Faturas para ajuste de datas.`);
+                alert(`🎉 Acordo aprovado com sucesso para ${nome}!\n\n• As faturas antigas foram substituídas.\n• As novas faturas/boletos do acordo foram geradas e já estão visíveis na aba de Faturas.`);
                 
                 selecionarAlunoNegociacao(alunoNegociacaoId);
                 renderizarNegociacoesAtivasGeral();
