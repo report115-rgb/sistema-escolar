@@ -82,9 +82,9 @@
                 
                 <!-- SELETOR DE CURSOS -->
                 <div>
-                    <label class="block text-[11px] font-semibold text-gray-600 dark:text-gray-400 uppercase mb-1">Filtrar por Curso / Turma</label>
+                    <label class="block text-[11px] font-semibold text-gray-600 dark:text-gray-400 uppercase mb-1">Selecione o Curso / Turma</label>
                     <select id="select-filtro-curso" onchange="renderizarListaAlunos()" class="w-full px-3 py-2.5 rounded-xl border border-gray-300 dark:border-slate-600 text-xs dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-blue-600 focus:outline-none">
-                        <option value="">Todos os Cursos</option>
+                        <option value="" disabled selected>Selecione um curso...</option>
                     </select>
                 </div>
 
@@ -97,7 +97,10 @@
             </div>
 
             <div id="lista-alunos-container" class="space-y-2">
-                <!-- Os alunos serão carregados aqui dinamicamente -->
+                <!-- Mensagem inicial orientando a seleção -->
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl text-center text-xs text-gray-400">
+                    Selecione um curso acima para exibir os alunos matriculados.
+                </div>
             </div>
         </div>
 
@@ -156,7 +159,7 @@
         ];
 
         let students = [];
-        let coursesMap = {}; // Mapeia ID/Nome do curso para o nome oficial
+        let coursesMap = {};
         let financeLogs = [];
         let alunoSelecionadoId = null;
 
@@ -287,10 +290,8 @@
 
             const cursoSelecionadoAtual = selectCurso.value;
             
-            // Puxa valores únicos de nomes de cursos conhecidos
             let listaNomesUnicos = new Set(Object.values(coursesMap));
 
-            // Garante que se houver algum curso nos alunos que não está na matriz, ele apareça também
             students.forEach(s => {
                 const c = s.course || s.curso || s.turma || s.nomeCurso || s.courseName || s.courseId;
                 if (c) {
@@ -301,7 +302,8 @@
 
             const cursosOrdenados = Array.from(listaNomesUnicos).sort();
 
-            selectCurso.innerHTML = `<option value="">Todos os Cursos</option>`;
+            // Mantém apenas a opção desativada de instrução inicial (sem "Todos os Cursos")
+            selectCurso.innerHTML = `<option value="" disabled selected>Selecione um curso...</option>`;
             cursosOrdenados.forEach(curso => {
                 const selectedAttr = (curso === cursoSelecionadoAtual) ? 'selected' : '';
                 selectCurso.innerHTML += `<option value="${curso}" ${selectedAttr}>${curso}</option>`;
@@ -321,27 +323,33 @@
             const container = document.getElementById('lista-alunos-container');
             const termo = normalizarTexto(document.getElementById('input-busca-aluno').value);
             const cursoSelecionado = document.getElementById('select-filtro-curso').value;
-            const cursoSelecionadoNorm = normalizarTexto(cursoSelecionado);
             
             if (!container) return;
+
+            // Se nenhum curso foi selecionado ainda, exibe a mensagem de orientação padrão
+            if (!cursoSelecionado) {
+                container.innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-2xl text-center text-xs text-gray-400">Selecione um curso acima para exibir os alunos matriculados.</div>`;
+                return;
+            }
+
+            const cursoSelecionadoNorm = normalizarTexto(cursoSelecionado);
 
             const filtrados = students.filter(s => {
                 const nomeAluno = normalizarTexto(s.fullname || s.name || '');
                 const cpfAluno = normalizarTexto(s.cpf || '');
                 
-                // Recolhe todas as possibilidades onde o curso pode estar no aluno
                 const rawCurso = s.course || s.curso || s.turma || s.nomeCurso || s.courseName || s.courseId || '';
                 const nomeCursoMapeado = coursesMap[rawCurso] || coursesMap[normalizarTexto(rawCurso)] || String(rawCurso);
                 const cursoAlunoNorm = normalizarTexto(nomeCursoMapeado);
 
                 const bateTexto = nomeAluno.includes(termo) || cpfAluno.includes(termo);
-                const bateCurso = (cursoSelecionadoNorm === "") || (cursoAlunoNorm === cursoSelecionadoNorm || cursoAlunoNorm.includes(cursoSelecionadoNorm));
+                const bateCurso = (cursoAlunoNorm === cursoSelecionadoNorm || cursoAlunoNorm.includes(cursoSelecionadoNorm));
 
                 return bateTexto && bateCurso;
             });
 
             if (filtrados.length === 0) {
-                container.innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-2xl text-center text-xs text-gray-400">Nenhum aluno encontrado para os filtros selecionados.</div>`;
+                container.innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-2xl text-center text-xs text-gray-400">Nenhum aluno encontrado para este curso.</div>`;
                 return;
             }
 
