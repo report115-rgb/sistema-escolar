@@ -81,7 +81,7 @@
 
         <div class="text-center text-[10px] text-blue-300 pb-2">
             <div>Sistema SE7 de Gestão Acadêmica</div>
-            <div>v1.2.6 &bull; Setor Financeiro</div>
+            <div>v1.2.7 &bull; Setor Financeiro</div>
         </div>
     </div>
 
@@ -762,11 +762,9 @@
 
             painel.style.display = 'block';
 
-            // Data atual de referência para checar o atraso
             const hoje = new Date();
             hoje.setHours(0, 0, 0, 0);
 
-            // Filtrar apenas faturas que estejam efetivamente ATRASADAS (vencimento < hoje) e NÃO pagas
             const faturasAtrasadas = financeLogs.filter(f => {
                 const pertenceAluno = (f.studentId === alunoId || f.alunoId === alunoId);
                 const jaPago = f.status && f.status.toUpperCase().includes('PAGO');
@@ -777,11 +775,9 @@
                 let dataVenc = parseDataParaOrdem(vencimentoStr);
                 dataVenc.setHours(0, 0, 0, 0);
 
-                // Só considera atrasada se a data de vencimento for anterior a hoje
                 return dataVenc < hoje;
             });
 
-            // Se não houver débitos em atraso, exibe a mensagem solicitada
             if (faturasAtrasadas.length === 0) {
                 painel.innerHTML = `
                     <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800 space-y-2">
@@ -795,11 +791,9 @@
                 return;
             }
 
-            // Calcular juros diários (0,5% ao dia sobre o valor) e multa fixa de R$ 10,00 por parcela
             let valorTotalOriginalAcumulado = 0;
             let multaFixaTotalAcumulada = 0;
             let jurosDiariosTotalAcumulado = 0;
-
             let htmlFaturasCalc = '';
 
             faturasAtrasadas.forEach(f => {
@@ -812,11 +806,9 @@
                 
                 let diasAtraso = Math.ceil(Math.abs(hoje - dataVenc) / (1000 * 60 * 60 * 24));
 
-                // Multa fixa por atraso: R$ 10,00 por parcela vencida
                 let multaParcela = 10.00;
                 multaFixaTotalAcumulada += multaParcela;
 
-                // Juros diários: 0,5% ao dia sobre o valor original multiplicado pelos dias em atraso
                 let taxaJurosDia = 0.005;
                 let jurosParcela = valorOriginal * taxaJurosDia * diasAtraso;
                 jurosDiariosTotalAcumulado += jurosParcela;
@@ -845,16 +837,21 @@
             const valorGeralAtualizado = valorTotalOriginalAcumulado + multaFixaTotalAcumulada + jurosDiariosTotalAcumulado;
 
             painel.innerHTML = `
-                <div class="bg-gradient-to-br from-emerald-600 to-teal-800 text-white p-4 rounded-3xl shadow-lg space-y-2">
+                <div class="bg-gradient-to-br from-emerald-600 to-teal-800 text-white p-4 rounded-3xl shadow-lg space-y-3">
                     <div class="text-[10px] uppercase font-semibold tracking-wider text-emerald-200">Resumo da Negociação (Débitos em Atraso)</div>
                     <div class="flex justify-between items-end">
                         <div>
                             <span class="text-xs opacity-80">Total de Faturas Vencidas: ${faturasAtrasadas.length}</span>
                             <h3 class="text-2xl font-bold">R$ ${valorGeralAtualizado.toFixed(2)}</h3>
                         </div>
-                        <button onclick="gerarAcordoNegociacao('${alunoId}', ${valorGeralAtualizado.toFixed(2)})" class="px-4 py-2 bg-white text-emerald-900 font-bold rounded-xl text-xs shadow hover:bg-emerald-50 transition">
-                            <i class="fa-solid fa-file-invoice-dollar mr-1"></i> Fechar Acordo
-                        </button>
+                        <div class="flex gap-2">
+                            <button type="button" onclick="clicarRealizarAcordo('${alunoId}', ${valorGeralAtualizado.toFixed(2)})" class="px-3 py-2 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-xl text-xs shadow transition">
+                                <i class="fa-solid fa-sliders mr-1"></i> Realizar Acordo
+                            </button>
+                            <button type="button" id="btn-fechar-acordo" onclick="gerarAcordoNegociacao('${alunoId}', ${valorGeralAtualizado.toFixed(2)})" disabled class="px-3 py-2 bg-slate-300 text-slate-500 font-bold rounded-xl text-xs shadow cursor-not-allowed opacity-55 transition">
+                                <i class="fa-solid fa-file-invoice-dollar mr-1"></i> Fechar Acordo
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -863,6 +860,17 @@
                     ${htmlFaturasCalc}
                 </div>
             `;
+        }
+
+        // Função acionada ao clicar em "Realizar Acordo" para liberar o botão de Fechar Acordo
+        function clicarRealizarAcordo(alunoId, valorTotal) {
+            const btnFechar = document.getElementById('btn-fechar-acordo');
+            if (btnFechar) {
+                btnFechar.disabled = false;
+                btnFechar.classList.remove('bg-slate-300', 'text-slate-500', 'cursor-not-allowed', 'opacity-55');
+                btnFechar.classList.add('bg-white', 'text-emerald-900', 'hover:bg-emerald-50');
+            }
+            alert("Parâmetros de acordo abertos! Configure as opções de pagamento desejadas. O botão 'Fechar Acordo' agora está habilitado.");
         }
 
         function limparSelecaoNegociacao() {
@@ -875,7 +883,7 @@
         function gerarAcordoNegociacao(alunoId, valorTotal) {
             const aluno = studentsMap[alunoId];
             const nome = aluno ? (aluno.fullname || aluno.name) : 'Aluno';
-            alert(`Proposta de acordo gerada para ${nome} no valor total atualizado de R$ ${valorTotal.toFixed(2)} (incluindo juros diários de 0,5% ao dia e multa fixa de R$ 10,00 por mensalidade em atraso).`);
+            alert(`Acordo fechado e registrado com sucesso para ${nome} no valor total atualizado de R$ ${valorTotal.toFixed(2)}!`);
         }
 
         function abrirModalEditarMensalidadeFinanceiro(financeLogId) {
