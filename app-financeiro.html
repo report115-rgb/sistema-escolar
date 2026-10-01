@@ -1,76 +1,98 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="light">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SE7 Mobile - Setor Financeiro</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Firebase App (Compat) e Firestore -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: { primary: '#1e40af', secondary: '#3b82f6', accent: '#f59e0b' },
-                    keyframes: {
-                        piscarAlerta: {
-                            '0%, 100%': { backgroundColor: '#ef4444', transform: 'scale(1)' },
-                            '50%': { backgroundColor: '#3b82f6', transform: 'scale(1.1)' }
-                        }
-                    },
-                    animation: {
-                        'piscar-alerta': 'piscarAlerta 1.2s infinite ease-in-out'
-                    }
-                }
-            }
-        }
-    </script>
     <style>
+        body { -webkit-tap-highlight-color: transparent; overscroll-behavior-y: none; }
         ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
+
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: scale(0.96) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        @keyframes fadeOutScale {
+            from { opacity: 1; transform: scale(1) translateY(0); }
+            to { opacity: 0; transform: scale(0.96) translateY(10px); }
+        }
+
+        .screen-transition {
+            animation: fadeInScale 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .screen-exit {
+            animation: fadeOutScale 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .tab-pane { animation: fadeInScale 0.25s ease-out forwards; }
+
+        @keyframes piscarAlerta {
+            0% { background-color: #ef4444; opacity: 1; transform: scale(1); }
+            50% { background-color: #3b82f6; opacity: 0.6; transform: scale(1.2); }
+            100% { background-color: #ef4444; opacity: 1; transform: scale(1); }
+        }
+        .animacao-piscar-alerta { animation: piscarAlerta 1.2s infinite ease-in-out; }
     </style>
 </head>
-<body class="bg-slate-100 dark:bg-slate-900 text-gray-800 dark:text-gray-100 font-sans antialiased min-h-screen flex flex-col pb-24">
+<body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans antialiased h-screen overflow-hidden flex flex-col transition-colors duration-200">
 
-    <!-- TELA DE LOGIN DO APP -->
-    <div id="login-modal" class="fixed inset-0 z-[3000] flex items-center justify-center bg-gradient-to-br from-blue-900 via-indigo-900 to-slate-900 p-4">
-        <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl max-w-sm w-full p-6 border border-white/20">
-            <div class="text-center mb-6">
-                <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-600 text-white rounded-2xl text-3xl font-bold mb-3 shadow-lg shadow-blue-500/30">
-                    <i class="fa-solid fa-wallet"></i>
-                </div>
-                <h2 class="text-xl font-bold text-gray-900 dark:text-white">SE7 Financeiro</h2>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Conectado à Matriz (Firebase)</p>
+    <!-- TELA DE LOGIN DO APP FINANCEIRO (PADRÃO IDÊNTICO AO DO ALUNO) -->
+    <div id="login-modal" class="app-screen fixed inset-0 z-50 bg-gradient-to-br from-blue-900 via-indigo-900 to-slate-900 flex flex-col justify-between p-6 text-white overflow-y-auto">
+        <div class="mt-8 flex items-center justify-between">
+            <div class="w-10"></div>
+            <span class="text-xs font-semibold text-blue-200">SE7 &bull; Acesso Restrito</span>
+            <div class="w-10"></div>
+        </div>
+
+        <div class="text-center flex flex-col items-center my-auto">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-blue-600 text-white rounded-3xl text-4xl font-bold mb-4 shadow-xl shadow-blue-500/30">
+                <i class="fa-solid fa-wallet"></i>
             </div>
-            <div class="space-y-4">
+            <h1 class="text-2xl font-bold">SE7 Financeiro</h1>
+            <p class="text-xs text-blue-200 mt-1 mb-4">Conectado à Matriz (Firebase)</p>
+
+            <div class="bg-white text-slate-800 p-6 rounded-3xl shadow-2xl space-y-4 w-full max-w-sm text-left">
                 <div>
-                    <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase mb-1">E-mail ou Usuário</label>
-                    <input type="text" id="login-user" placeholder="Digite seu e-mail" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-blue-600 focus:outline-none text-sm dark:bg-slate-900 dark:text-white">
+                    <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">E-mail ou Usuário</label>
+                    <input type="text" id="login-user" placeholder="Digite seu e-mail" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-600 focus:outline-none">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase mb-1">Senha</label>
-                    <input type="password" id="login-pass" placeholder="••••••••" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-blue-600 focus:outline-none text-sm dark:bg-slate-900 dark:text-white">
+                    <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Senha</label>
+                    <input type="password" id="login-pass" placeholder="••••••••" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-600 focus:outline-none">
                 </div>
-                <button type="button" id="btn-entrar" onclick="fazerLogin()" class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-lg shadow-blue-600/30 transition duration-200 text-sm">
+                <button type="button" id="btn-entrar" onclick="fazerLogin()" class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 transition active:scale-95 text-sm">
                     Entrar no App
                 </button>
             </div>
         </div>
+
+        <div class="text-center text-[10px] text-blue-300 pb-2">
+            <div>Sistema SE7 de Gestão Acadêmica</div>
+            <div>v1.2.4 &bull; Setor Financeiro</div>
+        </div>
     </div>
 
     <!-- MODAL DE EDIÇÃO COM CALENDÁRIO -->
-    <div id="modal-editar-cobranca" class="fixed inset-0 z-[4000] flex items-center justify-center bg-black/60 p-4" style="display: none;">
-        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-sm w-full p-5 space-y-4 border border-slate-200 dark:border-slate-700">
-            <div class="flex justify-between items-center border-b pb-3 border-slate-200 dark:border-slate-700">
-                <h3 class="font-bold text-sm text-gray-900 dark:text-white flex items-center gap-2">
+    <div id="modal-editar-cobranca" class="fixed inset-0 z-[4000] flex items-center justify-center bg-black/70 p-4" style="display: none;">
+        <div class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-3xl shadow-2xl max-w-sm w-full p-6 space-y-4 border border-slate-200 dark:border-slate-800">
+            <div class="flex justify-between items-center border-b pb-3 border-slate-200 dark:border-slate-800">
+                <h3 class="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
                     <i class="fa-solid fa-pen-to-square text-blue-600"></i> Editar Mensalidade
                 </h3>
-                <button onclick="fecharModalEdicao()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-sm">
+                <button onclick="fecharModalEdicao()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
@@ -79,159 +101,158 @@
 
             <div class="space-y-3 text-xs">
                 <div>
-                    <label class="block font-semibold text-gray-600 dark:text-gray-400 uppercase mb-1">Nova Data de Vencimento (Calendário)</label>
-                    <input type="date" id="edit-cobranca-data" min="2024-01-01" max="2035-12-31" class="w-full px-3 py-2 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-600">
+                    <label class="block font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">Nova Data de Vencimento</label>
+                    <input type="date" id="edit-cobranca-data" min="2024-01-01" max="2035-12-31" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-600">
                 </div>
 
                 <div>
-                    <label class="block font-semibold text-gray-600 dark:text-gray-400 uppercase mb-1">Novo Valor (R$)</label>
-                    <input type="text" id="edit-cobranca-valor" placeholder="0,00" class="w-full px-3 py-2 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-600">
+                    <label class="block font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">Novo Valor (R$)</label>
+                    <input type="text" id="edit-cobranca-valor" placeholder="0,00" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-600">
                 </div>
             </div>
 
             <div class="flex gap-2 pt-2">
-                <button type="button" onclick="fecharModalEdicao()" class="flex-1 py-2.5 bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-200 font-semibold rounded-xl text-xs">
+                <button type="button" onclick="fecharModalEdicao()" class="flex-1 py-2.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold rounded-xl text-xs">
                     Cancelar
                 </button>
                 <button type="button" onclick="salvarEdicaoMensalidade()" class="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-xs shadow">
-                    Salvar Alterações
+                    Salvar
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- CABEÇALHO MOBILE -->
-    <header class="bg-blue-900 dark:bg-slate-800 text-white px-4 py-3.5 flex justify-between items-center shadow-md sticky top-0 z-40">
-        <div class="flex items-center space-x-2.5">
-            <div class="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center font-bold text-base shadow">
-                <i class="fa-solid fa-wallet"></i>
-            </div>
-            <div>
-                <h1 class="font-bold text-sm leading-tight">SE7 Financeiro Mobile</h1>
-                <p class="text-[10px] text-blue-200" id="header-user-display">Conectado</p>
-            </div>
-        </div>
-        <button type="button" onclick="fazerLogout()" class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-xs font-semibold rounded-lg shadow">
-            <i class="fa-solid fa-power-off"></i>
-        </button>
-    </header>
-
-    <!-- CONTEÚDO PRINCIPAL -->
-    <main class="max-w-md w-full mx-auto p-4 flex-1 space-y-4">
-        
-        <!-- ABA 1: GESTÃO DE ALUNOS -->
-        <div id="tab-alunos" class="space-y-3">
-            <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 space-y-3">
-                <h2 class="font-bold text-sm text-gray-900 dark:text-white flex items-center gap-2">
-                    <i class="fa-solid fa-users text-blue-600"></i> Consulta de Alunos
-                </h2>
-                
-                <!-- SELETOR DE CURSOS -->
+    <!-- APLICATIVO PRINCIPAL (PAINEL FINANCEIRO) -->
+    <div id="main-app" class="app-screen fixed inset-0 z-40 flex flex-col bg-slate-100 dark:bg-slate-950" style="display: none;">
+        <!-- Cabeçalho Fixo -->
+        <header class="bg-blue-900 text-white p-4 flex justify-between items-center shadow-md shrink-0 z-20">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center font-bold text-base shadow">
+                    <i class="fa-solid fa-wallet"></i>
+                </div>
                 <div>
-                    <label class="block text-[11px] font-semibold text-gray-600 dark:text-gray-400 uppercase mb-1">Selecione o Curso / Turma</label>
-                    <select id="select-filtro-curso" onchange="renderizarListaAlunos()" class="w-full px-3 py-2.5 rounded-xl border border-gray-300 dark:border-slate-600 text-xs dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-blue-600 focus:outline-none">
-                        <option value="" disabled selected>Selecione um curso...</option>
-                    </select>
-                </div>
-
-                <div class="relative">
-                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
-                        <i class="fa-solid fa-magnifying-glass text-xs"></i>
-                    </span>
-                    <input type="text" id="input-busca-aluno" oninput="renderizarListaAlunos()" placeholder="Pesquisar por nome ou CPF..." class="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-300 dark:border-slate-600 text-xs dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-blue-600 focus:outline-none">
+                    <h1 class="font-bold text-sm leading-tight">SE7 Financeiro Mobile</h1>
+                    <p class="text-[10px] text-blue-200" id="header-user-display">Conectado</p>
                 </div>
             </div>
+            <button type="button" onclick="fazerLogout()" class="w-9 h-9 bg-red-600 hover:bg-red-700 text-xs font-semibold rounded-xl shadow flex items-center justify-center" title="Sair">
+                <i class="fa-solid fa-power-off"></i>
+            </button>
+        </header>
 
-            <div id="lista-alunos-container" class="space-y-2">
-                <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl text-center text-xs text-gray-400">
-                    Selecione um curso acima para exibir os alunos matriculados.
-                </div>
-            </div>
-        </div>
-
-        <!-- ABA 2: NOVOS ALUNOS MATRICULADOS -->
-        <div id="tab-novos-alunos" class="space-y-3" style="display: none;">
-            <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 space-y-2">
-                <h2 class="font-bold text-sm text-gray-900 dark:text-white flex items-center gap-2">
-                    <i class="fa-solid fa-user-plus text-blue-600"></i> Novos Alunos Matriculados
-                </h2>
-                <p class="text-[11px] text-gray-500">Alunos recentes aguardando processamento e faturamento.</p>
-            </div>
-
-            <div id="lista-novos-alunos-container" class="space-y-2">
-                <!-- Preenchido dinamicamente -->
-            </div>
-        </div>
-
-        <!-- ABA 3: FATURAS E COBRANÇAS (COM FILTROS POR CURSO E ALUNO) -->
-        <div id="tab-financeiro" class="space-y-3" style="display: none;">
-            <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 space-y-3">
-                <h2 class="font-bold text-sm text-blue-600 dark:text-blue-400 flex items-center gap-2">
-                    <i class="fa-solid fa-wallet"></i> Gestão de Faturas
-                </h2>
-                
-                <!-- 1. SELETOR DE CURSO NAS FATURAS -->
-                <div>
-                    <label class="block text-[11px] font-semibold text-gray-600 dark:text-gray-400 uppercase mb-1">1. Selecione o Curso / Turma</label>
-                    <select id="select-fin-curso" onchange="atualizarSelectAlunosFinanceiro()" class="w-full px-3 py-2.5 rounded-xl border border-gray-300 dark:border-slate-600 text-xs dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-blue-600 focus:outline-none">
-                        <option value="" disabled selected>Selecione um curso...</option>
-                    </select>
-                </div>
-
-                <!-- 2. SELETOR DE ALUNO NAS FATURAS -->
-                <div>
-                    <label class="block text-[11px] font-semibold text-gray-600 dark:text-gray-400 uppercase mb-1">2. Selecione o Aluno</label>
-                    <select id="select-fin-aluno" onchange="renderizarFaturasDoAlunoSelecionado()" class="w-full px-3 py-2.5 rounded-xl border border-gray-300 dark:border-slate-600 text-xs dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-blue-600 focus:outline-none" disabled>
-                        <option value="" disabled selected>Selecione um curso primeiro...</option>
-                    </select>
-                </div>
-            </div>
-
-            <div id="lista-faturas-aluno-container" class="space-y-2">
-                <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl text-center text-xs text-gray-400">
-                    Selecione um curso e um aluno acima para visualizar as faturas.
-                </div>
-            </div>
-        </div>
-
-        <!-- TELA DE DETALHES DO ALUNO (SOMENTE DADOS CADASTRAIS) -->
-        <div id="tab-detalhes-aluno" class="space-y-3" style="display: none;">
-            <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 space-y-3">
-                <div class="flex justify-between items-center">
-                    <h2 class="font-bold text-sm text-blue-600 dark:text-blue-400 flex items-center gap-2">
-                        <i class="fa-solid fa-id-card"></i> Ficha Cadastral do Aluno
+        <!-- Conteúdo Principal com Rolagem -->
+        <main class="flex-1 overflow-y-auto p-4 space-y-4 pb-24">
+            
+            <!-- ABA 1: GESTÃO DE ALUNOS -->
+            <div id="tab-alunos" class="space-y-3 tab-pane">
+                <div class="bg-white dark:bg-slate-900 p-4 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 space-y-3">
+                    <h2 class="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                        <i class="fa-solid fa-users text-blue-600"></i> Consulta de Alunos
                     </h2>
-                    <button onclick="voltarParaOrigemDetalhes()" class="px-2.5 py-1 bg-gray-200 dark:bg-slate-700 text-xs rounded-lg font-semibold">
-                        <i class="fa-solid fa-arrow-left mr-1"></i> Voltar
-                    </button>
+                    
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">Selecione o Curso / Turma</label>
+                        <select id="select-filtro-curso" onchange="renderizarListaAlunos()" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-blue-600 focus:outline-none">
+                            <option value="" disabled selected>Selecione um curso...</option>
+                        </select>
+                    </div>
+
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
+                            <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                        </span>
+                        <input type="text" id="input-busca-aluno" oninput="renderizarListaAlunos()" placeholder="Pesquisar por nome ou CPF..." class="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-blue-600 focus:outline-none">
+                    </div>
+                </div>
+
+                <div id="lista-alunos-container" class="space-y-2">
+                    <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">
+                        Selecione um curso acima para exibir os alunos matriculados.
+                    </div>
                 </div>
             </div>
 
-            <div id="card-dados-aluno" class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 space-y-3 text-xs">
-                <!-- Informações completas de matrícula preenchidas via script -->
-            </div>
-        </div>
+            <!-- ABA 2: NOVOS ALUNOS MATRICULADOS -->
+            <div id="tab-novos-alunos" class="space-y-3 tab-pane" style="display: none;">
+                <div class="bg-white dark:bg-slate-900 p-4 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 space-y-2">
+                    <h2 class="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                        <i class="fa-solid fa-user-plus text-blue-600"></i> Novos Alunos Matriculados
+                    </h2>
+                    <p class="text-[11px] text-slate-500">Alunos recentes aguardando processamento e faturamento.</p>
+                </div>
 
-    </main>
-
-    <!-- BARRA DE NAVEGAÇÃO INFERIOR MOBILE -->
-    <nav class="fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-slate-800 border-t border-gray-200 dark:border-slate-700 py-2 px-4 flex justify-around items-center shadow-lg">
-        <button onclick="mudarAbaApp('alunos')" id="nav-btn-alunos" class="flex flex-col items-center text-blue-600 dark:text-blue-400 text-xs font-bold gap-1">
-            <i class="fa-solid fa-users text-lg"></i>
-            <span>Alunos</span>
-        </button>
-        <button onclick="mudarAbaApp('novos')" id="nav-btn-novos" class="flex flex-col items-center text-gray-400 text-xs font-semibold gap-1 relative">
-            <div class="relative">
-                <i class="fa-solid fa-user-plus text-lg"></i>
-                <span id="badge-alerta-novos" class="absolute -top-1 -right-2 w-3.5 h-3.5 rounded-full animate-piscar-alerta border-2 border-white dark:border-slate-800" style="display: none;"></span>
+                <div id="lista-novos-alunos-container" class="space-y-2">
+                    <!-- Preenchido dinamicamente -->
+                </div>
             </div>
-            <span>Novos Alunos</span>
-        </button>
-        <button onclick="mudarAbaApp('financeiro')" id="nav-btn-fin" class="flex flex-col items-center text-gray-400 text-xs font-semibold gap-1">
-            <i class="fa-solid fa-wallet text-lg"></i>
-            <span>Faturas</span>
-        </button>
-    </nav>
+
+            <!-- ABA 3: FATURAS E COBRANÇAS -->
+            <div id="tab-financeiro" class="space-y-3 tab-pane" style="display: none;">
+                <div class="bg-white dark:bg-slate-900 p-4 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 space-y-3">
+                    <h2 class="font-bold text-sm text-blue-600 dark:text-blue-400 flex items-center gap-2">
+                        <i class="fa-solid fa-wallet"></i> Gestão de Faturas
+                    </h2>
+                    
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">1. Selecione o Curso / Turma</label>
+                        <select id="select-fin-curso" onchange="atualizarSelectAlunosFinanceiro()" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-blue-600 focus:outline-none">
+                            <option value="" disabled selected>Selecione um curso...</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">2. Selecione o Aluno</label>
+                        <select id="select-fin-aluno" onchange="renderizarFaturasDoAlunoSelecionado()" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-blue-600 focus:outline-none" disabled>
+                            <option value="" disabled selected>Selecione um curso primeiro...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="lista-faturas-aluno-container" class="space-y-2">
+                    <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">
+                        Selecione um curso e um aluno acima para visualizar as faturas.
+                    </div>
+                </div>
+            </div>
+
+            <!-- TELA DE DETALHES DO ALUNO -->
+            <div id="tab-detalhes-aluno" class="space-y-3 tab-pane" style="display: none;">
+                <div class="bg-white dark:bg-slate-900 p-4 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <h2 class="font-bold text-sm text-blue-600 dark:text-blue-400 flex items-center gap-2">
+                            <i class="fa-solid fa-id-card"></i> Ficha Cadastral do Aluno
+                        </h2>
+                        <button onclick="voltarParaOrigemDetalhes()" class="px-3 py-1.5 bg-slate-200 dark:bg-slate-800 text-xs rounded-xl font-semibold">
+                            <i class="fa-solid fa-arrow-left mr-1"></i> Voltar
+                        </button>
+                    </div>
+                </div>
+
+                <div id="card-dados-aluno" class="bg-white dark:bg-slate-900 p-4 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 space-y-3 text-xs">
+                    <!-- Informações preenchidas via script -->
+                </div>
+            </div>
+
+        </main>
+
+        <!-- Menu Inferior Fixo Estilo Aluno -->
+        <nav class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-2 py-2 flex justify-around items-center absolute bottom-0 left-0 right-0 shadow-lg z-30">
+            <button onclick="mudarAbaApp('alunos')" id="nav-btn-alunos" class="flex flex-col items-center text-blue-600 dark:text-blue-400 text-[10px] font-bold transition">
+                <i class="fa-solid fa-users text-base mb-0.5"></i> Alunos
+            </button>
+            <button onclick="mudarAbaApp('novos')" id="nav-btn-novos" class="flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition relative">
+                <div class="relative">
+                    <i class="fa-solid fa-user-plus text-base mb-0.5"></i>
+                    <span id="badge-alerta-novos" class="absolute -top-1 -right-2 w-4 h-4 rounded-full animacao-piscar-alerta bg-red-500 text-white" style="display: none;"></span>
+                </div>
+                <span>Novos Alunos</span>
+            </button>
+            <button onclick="mudarAbaApp('financeiro')" id="nav-btn-fin" class="flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition">
+                <i class="fa-solid fa-wallet text-base mb-0.5"></i>
+                <span>Faturas</span>
+            </button>
+        </nav>
+    </div>
 
     <!-- SCRIPTS DE INTEGRAÇÃO COM FIREBASE -->
     <script>
@@ -270,6 +291,8 @@
             if (sessao) {
                 document.getElementById('login-modal').style.display = 'none';
                 document.getElementById('header-user-display').textContent = sessao.nome;
+                const mainApp = document.getElementById('main-app');
+                mainApp.style.display = 'flex';
                 carregarDadosNuvem();
             }
         });
@@ -326,9 +349,17 @@
             }
 
             sessionStorage.setItem('app_financeiro_user', JSON.stringify(userFound));
-            document.getElementById('login-modal').style.display = 'none';
-            document.getElementById('header-user-display').textContent = userFound.nome;
-            carregarDadosNuvem();
+            
+            const loginScreen = document.getElementById('login-modal');
+            loginScreen.classList.add('screen-exit');
+            setTimeout(() => {
+                loginScreen.style.display = 'none';
+                const mainApp = document.getElementById('main-app');
+                mainApp.style.display = 'flex';
+                mainApp.classList.add('screen-transition');
+                document.getElementById('header-user-display').textContent = userFound.nome;
+                carregarDadosNuvem();
+            }, 180);
         }
 
         function fazerLogout() {
@@ -432,7 +463,7 @@
             if (!container) return;
 
             if (!cursoSelecionado) {
-                container.innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-2xl text-center text-xs text-gray-400">Selecione um curso acima para exibir os alunos matriculados.</div>`;
+                container.innerHTML = `<div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">Selecione um curso acima para exibir os alunos matriculados.</div>`;
                 return;
             }
 
@@ -453,7 +484,7 @@
             });
 
             if (filtrados.length === 0) {
-                container.innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-2xl text-center text-xs text-gray-400">Nenhum aluno encontrado para este curso.</div>`;
+                container.innerHTML = `<div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">Nenhum aluno encontrado para este curso.</div>`;
                 return;
             }
 
@@ -463,12 +494,12 @@
                 const cursoExibir = coursesMap[rawCurso] || coursesMap[normalizarTexto(rawCurso)] || String(rawCurso);
 
                 container.innerHTML += `
-                    <div onclick="abrirDetalhesAluno('${s.id}', 'alunos')" class="bg-white dark:bg-slate-800 p-3.5 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 flex justify-between items-center active:scale-98 transition cursor-pointer">
+                    <div onclick="abrirDetalhesAluno('${s.id}', 'alunos')" class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 flex justify-between items-center active:scale-98 transition cursor-pointer">
                         <div>
-                            <strong class="text-xs font-bold text-gray-900 dark:text-white">${s.fullname || s.name || 'Sem Nome'}</strong>
-                            <p class="text-[10px] text-gray-400">Curso: ${cursoExibir} &bull; Matrícula: ${s.code || s.matricula || 'S/N'}</p>
+                            <strong class="text-xs font-bold text-slate-900 dark:text-white">${s.fullname || s.name || 'Sem Nome'}</strong>
+                            <p class="text-[10px] text-slate-400">Curso: ${cursoExibir} &bull; Matrícula: ${s.code || s.matricula || 'S/N'}</p>
                         </div>
-                        <div class="w-8 h-8 bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center text-xs">
+                        <div class="w-8 h-8 bg-blue-50 dark:bg-slate-800 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center text-xs">
                             <i class="fa-solid fa-chevron-right"></i>
                         </div>
                     </div>
@@ -476,7 +507,6 @@
             });
         }
 
-        // --- FUNÇÕES DA ABA DE FINANÇAS COM FILTRO POR CURSO E ALUNO ---
         function atualizarSelectAlunosFinanceiro() {
             const cursoSelecionado = document.getElementById('select-fin-curso').value;
             const selectAluno = document.getElementById('select-fin-aluno');
@@ -496,28 +526,25 @@
 
             if (alunosDoCurso.length === 0) {
                 selectAluno.innerHTML = `<option value="" disabled selected>Nenhum aluno neste curso</option>`;
-                container.innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-2xl text-center text-xs text-gray-400">Nenhum aluno encontrado para este curso.</div>`;
+                container.innerHTML = `<div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">Nenhum aluno encontrado para este curso.</div>`;
                 return;
             }
 
             selectAluno.innerHTML = `<option value="" disabled selected>Selecione um aluno...</option>` +
                 alunosDoCurso.map(a => `<option value="${a.id}">${a.fullname || a.name || 'Sem Nome'}</option>`).join('');
 
-            container.innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-2xl text-center text-xs text-gray-400">Selecione um aluno acima para visualizar as faturas.</div>`;
+            container.innerHTML = `<div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">Selecione um aluno acima para visualizar as faturas.</div>`;
         }
 
-        // Função auxiliar para converter string de data em objeto Date para ordenação cronológica correta
         function parseDataParaOrdem(dataStr) {
             if (!dataStr) return new Date(0);
             let s = String(dataStr).trim();
-            // Formato DD/MM/AAAA
             if (s.includes('/')) {
                 let p = s.split('/');
                 if (p.length === 3) {
                     return new Date(`${p[2]}-${p[1]}-${p[0]}`);
                 }
             }
-            // Formato AAAA-MM-DD
             if (s.includes('-')) {
                 let p = s.split('-');
                 if (p.length === 3) {
@@ -528,18 +555,15 @@
             return isNaN(d) ? new Date(0) : d;
         }
 
-        // Função auxiliar para formatar data estritamente para o padrão DD/MM/AAAA
         function formatarDataParaExibicao(dataStr) {
             if (!dataStr) return '---';
             let s = String(dataStr).trim();
-            // Se estiver em AAAA-MM-DD
             if (s.includes('-')) {
                 let p = s.split('-');
                 if (p.length === 3) {
                     return `${p[2]}/${p[1]}/${p[0]}`;
                 }
             }
-            // Se já estiver em DD/MM/AAAA ou outro formato
             return s;
         }
 
@@ -550,7 +574,6 @@
 
             const faturasDoAluno = financeLogs.filter(f => (f.studentId === alunoId || f.alunoId === alunoId));
             
-            // ORDENAÇÃO CRONOLÓGICA (Da mais antiga para a mais recente com base no vencimento)
             faturasDoAluno.sort((a, b) => {
                 let dataA = parseDataParaOrdem(a.date || a.vencimento);
                 let dataB = parseDataParaOrdem(b.date || b.vencimento);
@@ -561,44 +584,41 @@
             const nomeAluno = alunoObj ? (alunoObj.fullname || alunoObj.name || 'Aluno') : 'Aluno';
 
             if (faturasDoAluno.length === 0) {
-                container.innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-2xl text-center text-xs text-gray-400">Nenhuma fatura encontrada para ${nomeAluno}.</div>`;
+                container.innerHTML = `<div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">Nenhuma fatura encontrada para ${nomeAluno}.</div>`;
                 return;
             }
 
             let htmlAcumulado = '';
             faturasDoAluno.forEach(f => {
                 const jaPago = f.status && f.status.toUpperCase().includes('PAGO');
-                const corBadge = jaPago ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300';
+                const corBadge = jaPago ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300';
                 
-                // Formata a data de vencimento rigorosamente para DD/MM/AAAA
                 const dataVencimentoFormatada = formatarDataParaExibicao(f.date || f.vencimento);
                 const valorAtual = f.amount || f.valor || '0';
                 const dataPag = formatarDataParaExibicao(f.dataPagamento || '---');
                 const formaPag = f.formaPagamento || 'Manual';
 
                 htmlAcumulado += `
-                    <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 space-y-3 text-xs">
+                    <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 space-y-3 text-xs">
                         <div class="flex justify-between items-start">
                             <div>
                                 <strong class="text-blue-600 dark:text-blue-400 text-xs">${nomeAluno}</strong><br>
-                                <span class="text-gray-900 dark:text-white font-semibold">${f.description || f.descricao || 'Cobrança'}</span><br>
-                                <span class="text-gray-400 text-[10px]">Vencimento: ${dataVencimentoFormatada} &bull; Valor: <strong>R$ ${valorAtual}</strong></span>
+                                <span class="text-slate-900 dark:text-white font-semibold">${f.description || f.descricao || 'Cobrança'}</span><br>
+                                <span class="text-slate-400 text-[10px]">Vencimento: ${dataVencimentoFormatada} &bull; Valor: <strong>R$ ${valorAtual}</strong></span>
                             </div>
                             <div class="flex items-center gap-1.5">
                                 <span class="px-2 py-0.5 ${corBadge} rounded-full text-[10px] font-bold">${f.status || 'PENDENTE'}</span>
-                                <!-- Botão Editar Mensalidade (Calendário e Valor) -->
                                 <button type="button" onclick="abrirModalEditarMensalidadeFinanceiro('${f.id}')" class="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[10px] font-semibold shadow transition">
                                     <i class="fa-solid fa-pen-to-square"></i> Editar
                                 </button>
                             </div>
                         </div>
 
-                        <!-- Seção de Baixa com Forma de Pagamento e Data Personalizada -->
                         ${!jaPago ? `
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 pt-2 border-t border-gray-200 dark:border-slate-700 items-center">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 pt-2 border-t border-slate-100 dark:border-slate-800 items-center">
                                 <div>
-                                    <label class="block text-[10px] font-semibold uppercase text-gray-500 mb-1">Forma de Pagamento</label>
-                                    <select id="forma-pagamento-${f.id}" class="w-full px-2 py-1.5 rounded-lg border border-gray-300 dark:border-slate-600 text-xs bg-white dark:bg-slate-900 dark:text-white">
+                                    <label class="block text-[10px] font-semibold uppercase text-slate-400 mb-1">Forma de Pagamento</label>
+                                    <select id="forma-pagamento-${f.id}" class="w-full px-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs bg-white dark:bg-slate-800 dark:text-white">
                                         <option value="Dinheiro">Dinheiro</option>
                                         <option value="Pix" selected>Pix</option>
                                         <option value="Cartão de Crédito">Cartão de Crédito</option>
@@ -608,8 +628,8 @@
                                     </select>
                                 </div>
                                 <div>
-                                    <label class="block text-[10px] font-semibold uppercase text-gray-500 mb-1">Data do Pagamento</label>
-                                    <input type="date" id="data-pagamento-${f.id}" value="${new Date().toISOString().split('T')[0]}" class="w-full px-2 py-1.5 rounded-lg border border-gray-300 dark:border-slate-600 text-xs bg-white dark:bg-slate-900 dark:text-white">
+                                    <label class="block text-[10px] font-semibold uppercase text-slate-400 mb-1">Data do Pagamento</label>
+                                    <input type="date" id="data-pagamento-${f.id}" value="${new Date().toISOString().split('T')[0]}" class="w-full px-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs bg-white dark:bg-slate-800 dark:text-white">
                                 </div>
                                 <div class="col-span-full pt-1">
                                     <button type="button" onclick="darBaixaApp('${f.id}')" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold text-xs shadow transition">
@@ -618,7 +638,7 @@
                                 </div>
                             </div>
                         ` : `
-                            <div class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold pt-1 border-t border-gray-200 dark:border-slate-700">
+                            <div class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold pt-1 border-t border-slate-100 dark:border-slate-800">
                                 <i class="fa-solid fa-circle-check mr-1"></i> Pago em ${dataPag} (${formaPag})
                             </div>
                         `}
@@ -629,7 +649,6 @@
             container.innerHTML = htmlAcumulado;
         }
 
-        // --- FUNÇÕES DE EDIÇÃO COM CALENDÁRIO VISUAL E SALVAMENTO NO FIRESTORE ---
         function abrirModalEditarMensalidadeFinanceiro(financeLogId) {
             const fatura = financeLogs.find(f => f.id === financeLogId);
             if (!fatura) return;
@@ -725,13 +744,13 @@
             });
 
             if (novosMatriculados.length > 0) {
-                badgeAlerta.style.display = 'block';
+                badgeAlerta.style.display = 'flex';
             } else {
                 badgeAlerta.style.display = 'none';
             }
 
             if (novosMatriculados.length === 0) {
-                container.innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-2xl text-center text-xs text-gray-400">Nenhum novo aluno pendente no momento.</div>`;
+                container.innerHTML = `<div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">Nenhum novo aluno pendente no momento.</div>`;
                 return;
             }
 
@@ -741,13 +760,13 @@
                 const cursoExibir = coursesMap[rawCurso] || coursesMap[normalizarTexto(rawCurso)] || String(rawCurso);
 
                 container.innerHTML += `
-                    <div onclick="marcarComoLidoEVerAluno('${s.id}')" class="bg-white dark:bg-slate-800 p-3.5 rounded-2xl shadow-sm border-2 border-blue-500/40 flex justify-between items-center active:scale-98 transition cursor-pointer">
+                    <div onclick="marcarComoLidoEVerAluno('${s.id}')" class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl shadow-sm border-2 border-blue-500/40 flex justify-between items-center active:scale-98 transition cursor-pointer">
                         <div>
                             <div class="flex items-center gap-2">
                                 <span class="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span>
-                                <strong class="text-xs font-bold text-gray-900 dark:text-white">${s.fullname || s.name || 'Sem Nome'}</strong>
+                                <strong class="text-xs font-bold text-slate-900 dark:text-white">${s.fullname || s.name || 'Sem Nome'}</strong>
                             </div>
-                            <p class="text-[10px] text-gray-400 mt-0.5">Curso: ${cursoExibir} &bull; CPF: ${s.cpf || '---'}</p>
+                            <p class="text-[10px] text-slate-400 mt-0.5">Curso: ${cursoExibir} &bull; CPF: ${s.cpf || '---'}</p>
                         </div>
                         <span class="px-2 py-1 bg-blue-600 text-white text-[10px] font-bold rounded-lg shadow">Ver Dados</span>
                     </div>
@@ -776,23 +795,23 @@
 
             cardDados.innerHTML = `
                 <div class="space-y-2.5">
-                    <div><span class="text-gray-400 uppercase text-[10px]">Nome Completo:</span><br><strong class="text-gray-900 dark:text-white text-sm">${aluno.fullname || aluno.name || '---'}</strong></div>
+                    <div><span class="text-slate-400 uppercase text-[10px]">Nome Completo:</span><br><strong class="text-slate-900 dark:text-white text-sm">${aluno.fullname || aluno.name || '---'}</strong></div>
                     
                     <div class="grid grid-cols-2 gap-2">
-                        <div><span class="text-gray-400 uppercase text-[10px]">Matrícula / Código:</span><br><span class="font-semibold">${aluno.code || aluno.matricula || 'S/N'}</span></div>
-                        <div><span class="text-gray-400 uppercase text-[10px]">CPF:</span><br><span class="font-semibold">${aluno.cpf || '---'}</span></div>
+                        <div><span class="text-slate-400 uppercase text-[10px]">Matrícula / Código:</span><br><span class="font-semibold">${aluno.code || aluno.matricula || 'S/N'}</span></div>
+                        <div><span class="text-slate-400 uppercase text-[10px]">CPF:</span><br><span class="font-semibold">${aluno.cpf || '---'}</span></div>
                     </div>
 
                     <div class="grid grid-cols-2 gap-2">
-                        <div><span class="text-gray-400 uppercase text-[10px]">RG:</span><br><span class="font-semibold">${aluno.rg || aluno.documento || '---'}</span></div>
-                        <div><span class="text-gray-400 uppercase text-[10px]">Telefone / Celular:</span><br><span class="font-semibold">${aluno.phone || aluno.telefone || '---'}</span></div>
+                        <div><span class="text-slate-400 uppercase text-[10px]">RG:</span><br><span class="font-semibold">${aluno.rg || aluno.documento || '---'}</span></div>
+                        <div><span class="text-slate-400 uppercase text-[10px]">Telefone / Celular:</span><br><span class="font-semibold">${aluno.phone || aluno.telefone || '---'}</span></div>
                     </div>
 
-                    <div><span class="text-gray-400 uppercase text-[10px]">E-mail:</span><br><span class="font-semibold">${aluno.email || '---'}</span></div>
+                    <div><span class="text-slate-400 uppercase text-[10px]">E-mail:</span><br><span class="font-semibold">${aluno.email || '---'}</span></div>
 
-                    <div><span class="text-gray-400 uppercase text-[10px]">Curso / Turma:</span><br><span class="font-semibold text-blue-600 dark:text-blue-400">${cursoExibir}</span></div>
+                    <div><span class="text-slate-400 uppercase text-[10px]">Curso / Turma:</span><br><span class="font-semibold text-blue-600 dark:text-blue-400">${cursoExibir}</span></div>
 
-                    <div><span class="text-gray-400 uppercase text-[10px]">Endereço Completo:</span><br><span class="font-semibold">${aluno.address || aluno.endereco || aluno.rua || '---'}</span></div>
+                    <div><span class="text-slate-400 uppercase text-[10px]">Endereço Completo:</span><br><span class="font-semibold">${aluno.address || aluno.endereco || aluno.rua || '---'}</span></div>
                 </div>
             `;
 
@@ -818,19 +837,19 @@
             tabFin.style.display = 'none';
             tabDetalhes.style.display = 'none';
 
-            btnAlunos.className = "flex flex-col items-center text-gray-400 text-xs font-semibold gap-1";
-            btnNovos.className = "flex flex-col items-center text-gray-400 text-xs font-semibold gap-1 relative";
-            btnFin.className = "flex flex-col items-center text-gray-400 text-xs font-semibold gap-1";
+            btnAlunos.className = "flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition";
+            btnNovos.className = "flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition relative";
+            btnFin.className = "flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition";
 
             if (aba === 'alunos') {
                 tabAlunos.style.display = 'block';
-                btnAlunos.className = "flex flex-col items-center text-blue-600 dark:text-blue-400 text-xs font-bold gap-1";
+                btnAlunos.className = "flex flex-col items-center text-blue-600 dark:text-blue-400 text-[10px] font-bold transition";
             } else if (aba === 'novos') {
                 tabNovos.style.display = 'block';
-                btnNovos.className = "flex flex-col items-center text-blue-600 dark:text-blue-400 text-xs font-bold gap-1 relative";
+                btnNovos.className = "flex flex-col items-center text-blue-600 dark:text-blue-400 text-[10px] font-bold transition relative";
             } else if (aba === 'financeiro') {
                 tabFin.style.display = 'block';
-                btnFin.className = "flex flex-col items-center text-blue-600 dark:text-blue-400 text-xs font-bold gap-1";
+                btnFin.className = "flex flex-col items-center text-blue-600 dark:text-blue-400 text-[10px] font-bold transition";
             } else if (aba === 'detalhes') {
                 tabDetalhes.style.display = 'block';
             }
