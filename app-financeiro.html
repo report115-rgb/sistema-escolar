@@ -446,10 +446,10 @@
         let classesMap = {};
         let financeLogs = [];
         let institutionData = {
-            name: "SE7 - Sistema de Ensino Técnico e de Transporte",
-            razaoSocial: "SE7 - Sistema de Ensino Técnico e de Transporte",
-            cnpj: "00.000.000/0001-00",
-            address: "Matriz Principal - Pará, Brasil",
+            name: "SISTEMA DE ENSINO TÉCNICO E DE TRANSPORTE – SE7",
+            razaoSocial: "JS & SS SERVIÇOS EDUCACIONAIS E CIA LTDA",
+            cnpj: "31.535.516/0001-64",
+            address: "Travessa Magalhães Barata, 692, Centro, Vigia – PA, CEP 68.780-000",
             logo: ""
         };
         let alunoSelecionadoId = null;
@@ -584,7 +584,7 @@
             });
         }
 
-        // BUSCA ROBUSTA DOS DADOS DA INSTITUIÇÃO EM VÁRIAS COLEÇÕES POSSÍVEIS DO FIREBASE
+        // BUSCA ROBUSTA DOS DADOS DA INSTITUIÇÃO EM VÁRIAS COLEÇÕES POSSÍVEIS DO FIREBASE (COM FALLBACK OFICIAL)
         async function carregarDadosInstituicao() {
             const colecoesPossiveis = ["institution", "settings", "empresa", "config", "escola", "dadosInstituicao"];
             
@@ -749,7 +749,7 @@
             selectAluno.innerHTML = `<option value="" disabled selected>Selecione um aluno...</option>` +
                 alunosDoCurso.map(a => `<option value="${a.id}">${a.fullname || a.name || 'Sem Nome'}</option>`).join('');
 
-            container.innerHTML = `<div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">Selecione um aluno acima para visualizar as faturas.</div>`;
+            container.innerHTML = `<div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">Selecione um curso e um aluno acima para visualizar as faturas.</div>`;
         }
 
         function parseDataParaOrdem(dataStr) {
@@ -1185,10 +1185,10 @@
 
             fecharModalRealizarAcordo();
 
-            const razaoSocial = institutionData.razaoSocial || institutionData.name || "SE7 Sistema Educacional";
-            const cnpjInst = institutionData.cnpj || "00.000.000/0001-00";
+            const razaoSocial = institutionData.razaoSocial || institutionData.name || "JS & SS SERVIÇOS EDUCACIONAIS E CIA LTDA";
+            const cnpjInst = institutionData.cnpj || "31.535.516/0001-64";
             const logoUrl = institutionData.logo || "";
-            const enderecoInst = institutionData.address || "Matriz Principal";
+            const enderecoInst = institutionData.address || "Travessa Magalhães Barata, 692, Centro, Vigia – PA, CEP 68.780-000";
 
             const nomeCompleto = aluno.fullname || aluno.name || '---';
             const codigoMatricula = aluno.code || aluno.matricula || 'S/N';
