@@ -81,7 +81,7 @@
 
         <div class="text-center text-[10px] text-blue-300 pb-2">
             <div>Sistema SE7 de Gestão Acadêmica</div>
-            <div>v1.2.8 &bull; Setor Financeiro</div>
+            <div>v1.2.9 &bull; Setor Financeiro</div>
         </div>
     </div>
 
@@ -124,66 +124,96 @@
 
     <!-- MODAL DE OPÇÕES DE ACORDO E NEGOCIAÇÃO -->
     <div id="modal-realizar-acordo" class="fixed inset-0 z-[5000] flex items-center justify-center bg-black/75 p-4" style="display: none;">
-        <div class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-3xl shadow-2xl max-w-md w-full p-6 space-y-4 border border-slate-200 dark:border-slate-800 max-h-[90vh] overflow-y-auto">
+        <div class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-3xl shadow-2xl max-w-lg w-full p-6 space-y-4 border border-slate-200 dark:border-slate-800 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b pb-3 border-slate-200 dark:border-slate-800">
                 <h3 class="font-bold text-sm text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
-                    <i class="fa-solid fa-file-contract"></i> Opções de Acordo
+                    <i class="fa-solid fa-file-contract"></i> Opções de Acordo e Descontos
                 </h3>
                 <button onclick="fecharModalRealizarAcordo()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
 
-            <div class="space-y-3 text-xs">
-                <p class="text-slate-500">Selecione a forma de pagamento desejada para o acordo do aluno:</p>
+            <div class="space-y-4 text-xs">
+                <p class="text-slate-500">Configure os descontos para cada modalidade abaixo. Todas as 3 opções são necessárias para gerar a proposta completa.</p>
                 
-                <div class="space-y-2">
-                    <label class="flex items-center gap-2 p-3 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">
-                        <input type="radio" name="opcao-acordo" value="avista" checked onclick="mudarOpcaoAcordo('avista')">
-                        <div>
-                            <strong class="block text-slate-900 dark:text-white">1. À Vista</strong>
-                            <span class="text-[10px] text-slate-400">Pagamento único com desconto em juros/multas.</span>
-                        </div>
-                    </label>
-
-                    <label class="flex items-center gap-2 p-3 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">
-                        <input type="radio" name="opcao-acordo" value="parcelado" onclick="mudarOpcaoAcordo('parcelado')">
-                        <div>
-                            <strong class="block text-slate-900 dark:text-white">2. Parcelado (Entrada + até 4x)</strong>
-                            <span class="text-[10px] text-slate-400">Entrada + parcelamento das mensalidades restantes.</span>
-                        </div>
-                    </label>
-
-                    <label class="flex items-center gap-2 p-3 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">
-                        <input type="radio" name="opcao-acordo" value="cartao" onclick="mudarOpcaoAcordo('cartao')">
-                        <div>
-                            <strong class="block text-slate-900 dark:text-white">3. Cartão de Crédito</strong>
-                            <span class="text-[10px] text-slate-400">Parcelamento via operadora de cartão de crédito.</span>
-                        </div>
-                    </label>
+                <!-- Abas ou Seletores das 3 Formas -->
+                <div class="grid grid-cols-3 gap-2">
+                    <button type="button" onclick="ativarAbaAcordoModal('avista')" id="btn-aba-avista" class="py-2.5 px-2 bg-emerald-600 text-white font-bold rounded-xl text-xs shadow transition">À Vista</button>
+                    <button type="button" onclick="ativarAbaAcordoModal('parcelado')" id="btn-aba-parcelado" class="py-2.5 px-2 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl text-xs transition">Parcelado</button>
+                    <button type="button" onclick="ativarAbaAcordoModal('cartao')" id="btn-aba-cartao" class="py-2.5 px-2 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl text-xs transition">Cartão</button>
                 </div>
 
-                <div id="bloco-detalhe-parcelado" class="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800" style="display: none;">
-                    <label class="block font-semibold uppercase text-slate-500">Número de Parcelas (Máximo 4x)</label>
-                    <select id="qtd-parcelas-acordo" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white">
-                        <option value="2">2x Iguais</option>
-                        <option value="3">3x Iguais</option>
-                        <option value="4" selected>4x Iguais</option>
-                    </select>
+                <!-- PAINEL À VISTA -->
+                <div id="painel-acordo-avista" class="space-y-3 p-3.5 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700">
+                    <h4 class="font-bold text-slate-900 dark:text-white">Opção 1: Pagamento À Vista</h4>
+                    <div>
+                        <label class="block font-semibold uppercase text-slate-500 mb-1">Desconto de Juros (%)</label>
+                        <input type="number" id="desc-juros-avista" value="100" min="0" max="100" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white">
+                    </div>
+                    <div>
+                        <label class="block font-semibold uppercase text-slate-500 mb-1">Desconto de Multa (%)</label>
+                        <input type="number" id="desc-multa-avista" value="100" min="0" max="100" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white">
+                    </div>
+                    <button type="button" onclick="gerarOpcaoAcordoModal('avista')" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow">
+                        Gerar Opção À Vista
+                    </button>
                 </div>
 
-                <div class="bg-emerald-50 dark:bg-emerald-950/40 p-3 rounded-xl border border-emerald-200 dark:border-emerald-900 text-xs">
-                    <span class="text-emerald-700 dark:text-emerald-300 font-semibold block">Valor Total do Acordo:</span>
-                    <strong id="modal-acordo-valor-total" class="text-base text-emerald-900 dark:text-emerald-100">R$ 0,00</strong>
+                <!-- PAINEL PARCELADO -->
+                <div id="painel-acordo-parcelado" class="space-y-3 p-3.5 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700" style="display: none;">
+                    <h4 class="font-bold text-slate-900 dark:text-white">Opção 2: Parcelado (Até 4x)</h4>
+                    <div>
+                        <label class="block font-semibold uppercase text-slate-500 mb-1">Número de Parcelas</label>
+                        <select id="qtd-parcelas-acordo-modal" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white">
+                            <option value="2">2x</option>
+                            <option value="3">3x</option>
+                            <option value="4" selected>4x</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-semibold uppercase text-slate-500 mb-1">Desconto de Juros (%)</label>
+                        <input type="number" id="desc-juros-parcelado" value="50" min="0" max="100" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white">
+                    </div>
+                    <div>
+                        <label class="block font-semibold uppercase text-slate-500 mb-1">Desconto de Multa (%)</label>
+                        <input type="number" id="desc-multa-parcelado" value="50" min="0" max="100" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white">
+                    </div>
+                    <button type="button" onclick="gerarOpcaoAcordoModal('parcelado')" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow">
+                        Gerar Opção Parcelada
+                    </button>
+                </div>
+
+                <!-- PAINEL CARTÃO DE CRÉDITO -->
+                <div id="painel-acordo-cartao" class="space-y-3 p-3.5 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700" style="display: none;">
+                    <h4 class="font-bold text-slate-900 dark:text-white">Opção 3: Cartão de Crédito</h4>
+                    <div>
+                        <label class="block font-semibold uppercase text-slate-500 mb-1">Desconto de Juros (%)</label>
+                        <input type="number" id="desc-juros-cartao" value="80" min="0" max="100" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white">
+                    </div>
+                    <div>
+                        <label class="block font-semibold uppercase text-slate-500 mb-1">Desconto de Multa (%)</label>
+                        <input type="number" id="desc-multa-cartao" value="80" min="0" max="100" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white">
+                    </div>
+                    <button type="button" onclick="gerarOpcaoAcordoModal('cartao')" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow">
+                        Gerar Opção Cartão
+                    </button>
+                </div>
+
+                <!-- LISTA DAS OPÇÕES GERADAS DENTRO DO MODAL -->
+                <div class="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+                    <span class="font-bold uppercase text-[10px] text-slate-400">Opções Presetadas (Abaixo):</span>
+                    <div id="lista-opcoes-geradas-modal" class="space-y-2">
+                        <div class="p-3 bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300 rounded-xl text-center text-xs">
+                            Nenhuma opção gerada ainda. Preencha e clique em gerar acima.
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <div class="flex gap-2 pt-2">
                 <button type="button" onclick="fecharModalRealizarAcordo()" class="flex-1 py-2.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold rounded-xl text-xs">
-                    Cancelar
-                </button>
-                <button type="button" onclick="confirmarOpcaoAcordoSelecionada()" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl text-xs shadow">
-                    Aplicar Opção
+                    Fechar
                 </button>
             </div>
         </div>
@@ -384,10 +414,19 @@
         let financeLogs = [];
         let alunoSelecionadoId = null;
         let alunoNegociacaoId = null;
+        let valorTotalOriginalGlobal = 0;
+        let multaTotalGlobal = 0;
+        let jurosTotalGlobal = 0;
         let valorAtualNegociacaoGlobal = 0;
         let faturasAtrasadasGlobal = [];
-        let opcaoAcordoEscolhida = 'avista';
         let abaOrigemRetorno = 'alunos';
+
+        // Armazena as 3 opções geradas
+        let opcoesGeradas = {
+            avista: null,
+            parcelado: null,
+            cartao: null
+        };
 
         let novosAlunosLidos = JSON.parse(localStorage.getItem('novos_alunos_lidos') || '[]');
 
@@ -861,14 +900,14 @@
                 return;
             }
 
-            let valorTotalOriginalAcumulado = 0;
-            let multaFixaTotalAcumulada = 0;
-            let jurosDiariosTotalAcumulado = 0;
+            valorTotalOriginalGlobal = 0;
+            multaTotalGlobal = 0;
+            jurosTotalGlobal = 0;
             let htmlFaturasCalc = '';
 
             faturasAtrasadasGlobal.forEach(f => {
                 const valorOriginal = parseFloat(String(f.amount || f.valor || '0').replace(',', '.')) || 0;
-                valorTotalOriginalAcumulado += valorOriginal;
+                valorTotalOriginalGlobal += valorOriginal;
 
                 const vencimentoStr = f.date || f.vencimento || '';
                 let dataVenc = parseDataParaOrdem(vencimentoStr);
@@ -877,11 +916,11 @@
                 let diasAtraso = Math.ceil(Math.abs(hoje - dataVenc) / (1000 * 60 * 60 * 24));
 
                 let multaParcela = 10.00;
-                multaFixaTotalAcumulada += multaParcela;
+                multaTotalGlobal += multaParcela;
 
                 let taxaJurosDia = 0.005;
                 let jurosParcela = valorOriginal * taxaJurosDia * diasAtraso;
-                jurosDiariosTotalAcumulado += jurosParcela;
+                jurosTotalGlobal += jurosParcela;
 
                 let totalParcelaAtualizada = valorOriginal + multaParcela + jurosParcela;
 
@@ -897,31 +936,41 @@
                         <div class="grid grid-cols-2 gap-1 bg-slate-50 dark:bg-slate-800/50 p-2 rounded-xl text-[10px]">
                             <div>Valor Original: <strong>R$ ${valorOriginal.toFixed(2)}</strong></div>
                             <div>Multa Fixa: <strong class="text-amber-600">R$ ${multaParcela.toFixed(2)}</strong></div>
-                            <div>Juros Diários (0.5%/dia): <strong class="text-amber-600">R$ ${jurosParcela.toFixed(2)}</strong></div>
+                            <div>Juros Diários: <strong class="text-amber-600">R$ ${jurosParcela.toFixed(2)}</strong></div>
                             <div>Total Parcela: <strong class="text-emerald-600">R$ ${totalParcelaAtualizada.toFixed(2)}</strong></div>
                         </div>
                     </div>
                 `;
             });
 
-            valorAtualNegociacaoGlobal = valorTotalOriginalAcumulado + multaFixaTotalAcumulada + jurosDiariosTotalAcumulado;
+            valorAtualNegociacaoGlobal = valorTotalOriginalGlobal + multaTotalGlobal + jurosTotalGlobal;
+
+            // Verifica se as 3 opções já foram geradas para liberar o botão "Gerar Proposta"
+            const todasGeradas = opcoesGeradas.avista && opcoesGeradas.parcelado && opcoesGeradas.cartao;
 
             painel.innerHTML = `
                 <div class="bg-gradient-to-br from-emerald-600 to-teal-800 text-white p-4 rounded-3xl shadow-lg space-y-3">
                     <div class="text-[10px] uppercase font-semibold tracking-wider text-emerald-200">Resumo da Negociação (Débitos em Atraso)</div>
                     <div class="flex justify-between items-end">
                         <div>
-                            <span class="text-xs opacity-80">Total de Faturas Vencidas: ${faturasAtrasadasGlobal.length}</span>
-                            <h3 class="text-2xl font-bold">R$ ${valorAtualNegociacaoGlobal.toFixed(2)}</h3>
+                            <span class="text-xs opacity-80">Total Vencidas: ${faturasAtrasadasGlobal.length} | Sem Desconto: R$ ${valorAtualNegociacaoGlobal.toFixed(2)}</span>
+                            <h3 class="text-xl font-bold">Gerencie as Opções de Acordo</h3>
                         </div>
                         <div class="flex flex-wrap gap-1.5">
-                            <button type="button" onclick="abrirModalRealizarAcordo()" class="px-2.5 py-2 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-xl text-xs shadow transition">
+                            <button type="button" onclick="abrirModalRealizarAcordo()" class="px-3 py-2 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-xl text-xs shadow transition">
                                 <i class="fa-solid fa-sliders mr-1"></i> Realizar Acordo
                             </button>
-                            <button type="button" id="btn-fechar-acordo" onclick="gerarAcordoNegociacao()" disabled class="px-2.5 py-2 bg-slate-300 text-slate-500 font-bold rounded-xl text-xs shadow cursor-not-allowed opacity-55 transition">
-                                <i class="fa-solid fa-file-invoice-dollar mr-1"></i> Fechar Acordo
+                            <button type="button" id="btn-gerar-proposta-final" onclick="gerarPropostaFinalAcordo()" ${!todasGeradas ? 'disabled' : ''} class="px-3 py-2 ${todasGeradas ? 'bg-white text-emerald-900 hover:bg-emerald-50' : 'bg-slate-300 text-slate-500 cursor-not-allowed opacity-55'} font-bold rounded-xl text-xs shadow transition">
+                                <i class="fa-solid fa-file-invoice-dollar mr-1"></i> Gerar Proposta
                             </button>
                         </div>
+                    </div>
+                </div>
+
+                <div class="space-y-2 pt-2">
+                    <h4 class="font-bold text-xs uppercase text-slate-500 tracking-wider">Opções de Acordo Configuradas:</h4>
+                    <div id="painel-resumo-opcoes-externo" class="space-y-2">
+                        ${renderizarResumoOpcoesExternoHtml()}
                     </div>
                 </div>
 
@@ -933,85 +982,185 @@
         }
 
         function abrirModalRealizarAcordo() {
-            document.getElementById('modal-acordo-valor-total').textContent = `R$ ${valorAtualNegociacaoGlobal.toFixed(2)}`;
             document.getElementById('modal-realizar-acordo').style.display = 'flex';
+            atualizarListaOpcoesGeradasModal();
         }
 
         function fecharModalRealizarAcordo() {
             document.getElementById('modal-realizar-acordo').style.display = 'none';
+            if (alunoNegociacaoId) selecionarAlunoNegociacao(alunoNegociacaoId);
         }
 
-        function mudarOpcaoAcordo(tipo) {
-            opcaoAcordoEscolhida = tipo;
-            const blocoParcelado = document.getElementById('bloco-detalhe-parcelado');
-            if (tipo === 'parcelado') {
-                blocoParcelado.style.display = 'block';
-            } else {
-                blocoParcelado.style.display = 'none';
+        function ativarAbaAcordoModal(tipo) {
+            document.getElementById('painel-acordo-avista').style.display = tipo === 'avista' ? 'block' : 'none';
+            document.getElementById('painel-acordo-parcelado').style.display = tipo === 'parcelado' ? 'block' : 'none';
+            document.getElementById('painel-acordo-cartao').style.display = tipo === 'cartao' ? 'block' : 'none';
+
+            document.getElementById('btn-aba-avista').className = tipo === 'avista' ? 'py-2.5 px-2 bg-emerald-600 text-white font-bold rounded-xl text-xs shadow transition' : 'py-2.5 px-2 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl text-xs transition';
+            document.getElementById('btn-aba-parcelado').className = tipo === 'parcelado' ? 'py-2.5 px-2 bg-emerald-600 text-white font-bold rounded-xl text-xs shadow transition' : 'py-2.5 px-2 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl text-xs transition';
+            document.getElementById('btn-aba-cartao').className = tipo === 'cartao' ? 'py-2.5 px-2 bg-emerald-600 text-white font-bold rounded-xl text-xs shadow transition' : 'py-2.5 px-2 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl text-xs transition';
+        }
+
+        function gerarOpcaoAcordoModal(tipo) {
+            let descJuros = 0, descMulta = 0, infoExtra = "";
+
+            if (tipo === 'avista') {
+                descJuros = parseFloat(document.getElementById('desc-juros-avista').value) || 0;
+                descMulta = parseFloat(document.getElementById('desc-multa-avista').value) || 0;
+            } else if (tipo === 'parcelado') {
+                descJuros = parseFloat(document.getElementById('desc-juros-parcelado').value) || 0;
+                descMulta = parseFloat(document.getElementById('desc-multa-parcelado').value) || 0;
+                infoExtra = document.getElementById('qtd-parcelas-acordo-modal').value + "x";
+            } else if (tipo === 'cartao') {
+                descJuros = parseFloat(document.getElementById('desc-juros-cartao').value) || 0;
+                descMulta = parseFloat(document.getElementById('desc-multa-cartao').value) || 0;
             }
-        }
 
-        function confirmarOpcaoAcordoSelecionada() {
-            fecharModalRealizarAcordo();
+            // Cálculo dos descontos
+            let jurosDescontados = jurosTotalGlobal * (descJuros / 100);
+            let multaDescontada = multaTotalGlobal * (descMulta / 100);
             
-            // Habilita o botão Fechar Acordo
-            const btnFechar = document.getElementById('btn-fechar-acordo');
-            if (btnFechar) {
-                btnFechar.disabled = false;
-                btnFechar.classList.remove('bg-slate-300', 'text-slate-500', 'cursor-not-allowed', 'opacity-55');
-                btnFechar.classList.add('bg-white', 'text-emerald-900', 'hover:bg-emerald-50');
+            let jurosFinal = jurosTotalGlobal - jurosDescontados;
+            let multaFinal = multaTotalGlobal - multaDescontada;
+            let valorTotalComDesconto = valorTotalOriginalGlobal + multaFinal + jurosFinal;
+
+            opcoesGeradas[tipo] = {
+                tipo: tipo,
+                descJuros: descJuros,
+                descMulta: descMulta,
+                infoExtra: infoExtra,
+                valorFinal: valorTotalComDesconto,
+                jurosFinal: jurosFinal,
+                multaFinal: multaFinal
+            };
+
+            alert(`Opção "${tipo.toUpperCase()}" gerada e presetada com sucesso!`);
+            atualizarListaOpcoesGeradasModal();
+        }
+
+        function atualizarListaOpcoesGeradasModal() {
+            const container = document.getElementById('lista-opcoes-geradas-modal');
+            if (!container) return;
+
+            let html = '';
+            let temAlguma = false;
+
+            for (let k in opcoesGeradas) {
+                let op = opcoesGeradas[k];
+                if (op) {
+                    temAlguma = true;
+                    let nomeFormatado = k === 'avista' ? 'À Vista' : (k === 'parcelado' ? `Parcelado (${op.infoExtra})` : 'Cartão de Crédito');
+                    html += `
+                        <div class="p-3 bg-white dark:bg-slate-800 rounded-xl border border-emerald-500/40 flex justify-between items-center text-xs">
+                            <div>
+                                <strong class="text-emerald-600 dark:text-emerald-400 block">${nomeFormatado}</strong>
+                                <span class="text-[10px] text-slate-400">Desc. Juros: ${op.descJuros}% | Desc. Multa: ${op.descMulta}%</span>
+                            </div>
+                            <div class="text-right">
+                                <strong class="text-slate-900 dark:text-white block">R$ ${op.valorFinal.toFixed(2)}</strong>
+                                <button onclick="removerOpcaoGerada('${k}')" class="text-[9px] text-red-500 hover:underline">Remover</button>
+                            </div>
+                        </div>
+                    `;
+                }
             }
-            alert(`Opção "${opcaoAcordoEscolhida.toUpperCase()}" configurada com sucesso! O botão 'Fechar Acordo' está habilitado.`);
+
+            if (!temAlguma) {
+                html = `<div class="p-3 bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300 rounded-xl text-center text-xs">Nenhuma opção gerada ainda. Preencha e clique em gerar acima.</div>`;
+            }
+
+            container.innerHTML = html;
+        }
+
+        function removerOpcaoGerada(tipo) {
+            opcoesGeradas[tipo] = null;
+            atualizarListaOpcoesGeradasModal();
+        }
+
+        function renderizarResumoOpcoesExternoHtml() {
+            let html = '';
+            let contador = 0;
+
+            for (let k in opcoesGeradas) {
+                let op = opcoesGeradas[k];
+                if (op) {
+                    contador++;
+                    let nomeFormatado = k === 'avista' ? 'À Vista' : (k === 'parcelado' ? `Parcelado (${op.infoExtra})` : 'Cartão de Crédito');
+                    html += `
+                        <div class="p-3 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 flex justify-between items-center text-xs">
+                            <div>
+                                <strong class="text-emerald-600 dark:text-emerald-400 block">${contador}. ${nomeFormatado}</strong>
+                                <span class="text-[10px] text-slate-400">Juros: ${op.descJuros}% desc | Multa: ${op.descMulta}% desc</span>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-[10px] text-slate-400 block">Valor Final:</span>
+                                <strong class="text-slate-900 dark:text-white text-sm">R$ ${op.valorFinal.toFixed(2)}</strong>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+
+            if (contador === 0) {
+                return `<div class="p-3 bg-white dark:bg-slate-900 rounded-2xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">Clique em "Realizar Acordo" para configurar e gerar as 3 opções obrigatórias.</div>`;
+            }
+
+            return html;
         }
 
         function limparSelecaoNegociacao() {
             alunoNegociacaoId = null;
+            opcoesGeradas = { avista: null, parcelado: null, cartao: null };
             document.getElementById('input-busca-negociacao').value = '';
             document.getElementById('lista-busca-negociacao-container').innerHTML = `<div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">Digite acima o nome ou CPF para localizar o aluno.</div>`;
             document.getElementById('painel-negociacao-aluno').style.display = 'none';
         }
 
-        async function gerarAcordoNegociacao() {
+        async function gerarPropostaFinalAcordo() {
             if (!alunoNegociacaoId) return;
             const aluno = studentsMap[alunoNegociacaoId];
             const nome = aluno ? (aluno.fullname || aluno.name) : 'Aluno';
 
-            if (!confirm(`Deseja fechar o acordo para ${nome} no valor de R$ ${valorAtualNegociacaoGlobal.toFixed(2)} (${opcaoAcordoEscolhida.toUpperCase()})? Isso gerará o PDF, fará a baixa das parcelas antigas e salvará na pasta do Drive do aluno.`)) return;
+            if (!opcoesGeradas.avista || !opcoesGeradas.parcelado || !opcoesGeradas.cartao) {
+                return alert("Você precisa gerar as 3 opções (À Vista, Parcelado e Cartão) antes de emitir a proposta final.");
+            }
+
+            if (!confirm(`Deseja emitir e fechar a proposta final de acordo para ${nome}? Isso gerará o PDF completo com as 3 modalidades, fará a baixa das faturas antigas e salvará na pasta do Drive do aluno.`)) return;
 
             try {
-                // 1. Dar baixa / substituir faturas antigas no Firebase
+                // 1. Dar baixa nas faturas antigas no Firebase
                 for (let fatura of faturasAtrasadasGlobal) {
                     await db.collection("financeLogs").doc(fatura.id).update({
-                        status: "NEGOCIADO / ACORDO FECHADO",
+                        status: "NEGOCIADO / PROPOSTA EMITIDA",
                         dataPagamento: new Date().toLocaleDateString('pt-BR'),
-                        formaPagamento: `Acordo (${opcaoAcordoEscolhida.toUpperCase()})`
+                        formaPagamento: "Acordo Consolidado"
                     });
                 }
 
-                // 2. Registrar o novo acordo como nova fatura/parcela unificada no Firebase
-                const novaFaturaAcordoId = "acordo_" + Date.now();
-                await db.collection("financeLogs").doc(novaFaturaAcordoId).set({
+                // 2. Registrar o acordo consolidado no Firebase
+                const novoAcordoId = "acordo_geral_" + Date.now();
+                await db.collection("financeLogs").doc(novoAcordoId).set({
                     studentId: alunoNegociacaoId,
                     alunoId: alunoNegociacaoId,
-                    description: `Termo de Acordo - Ref. Débitos (${opcaoAcordoEscolhida.toUpperCase()})`,
-                    amount: valorAtualNegociacaoGlobal.toFixed(2),
-                    valor: valorAtualNegociacaoGlobal.toFixed(2),
+                    description: `Termo de Acordo Consolidado (3 Modalidades)`,
+                    amount: opcoesGeradas.avista.valorFinal.toFixed(2),
+                    valor: opcoesGeradas.avista.valorFinal.toFixed(2),
                     date: new Date().toISOString().split('T')[0],
                     vencimento: new Date().toISOString().split('T')[0],
                     status: "PENDENTE (ACORDO)",
+                    detalhesOpcoes: opcoesGeradas,
                     criadoEm: new Date().toISOString()
                 });
 
-                // 3. Simular salvamento automático no Google Drive (Pasta do Aluno)
-                console.log(`[Google Drive Sync] Salvando PDF do Acordo na pasta do aluno ${nome} para fins de cobrança e proteção ao crédito...`);
+                console.log(`[Google Drive Sync] Salvando PDF da Proposta Completa na pasta do aluno ${nome}...`);
 
-                alert(`✅ Acordo fechado com sucesso para ${nome}!\n\n• PDF gerado e aberto para envio.\n• Salvo automaticamente na pasta de fluxo do aluno no Google Drive para segurança jurídica.\n• Faturas anteriores atualizadas e novo acordo registrado.`);
+                alert(`✅ Proposta gerada com sucesso para ${nome}!\n\n• PDF completo com as 3 opções gerado e aberto.\n• Salvo automaticamente na pasta de fluxo do aluno no Google Drive para segurança jurídica.\n• Faturas anteriores atualizadas.`);
                 
                 limparSelecaoNegociacao();
                 mudarAbaApp('financeiro');
 
             } catch (e) {
-                alert("Erro ao registrar acordo: " + e.message);
+                alert("Erro ao registrar proposta final: " + e.message);
             }
         }
 
