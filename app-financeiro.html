@@ -81,7 +81,7 @@
 
         <div class="text-center text-[10px] text-blue-300 pb-2">
             <div>Sistema SE7 de Gestão Acadêmica</div>
-            <div>v1.4.1 &bull; Setor Financeiro</div>
+            <div>v1.4.2 &bull; Setor Financeiro</div>
         </div>
     </div>
 
@@ -584,26 +584,42 @@
             });
         }
 
+        // BUSCA DIRETA E EXATA NO FIREBASE: colecao "config", documento "institution"
         async function carregarDadosInstituicao() {
-            const colecoesPossiveis = ["institution", "settings", "empresa", "config", "escola", "dadosInstituicao"];
-            
-            for (let col of colecoesPossiveis) {
-                try {
-                    const snap = await db.collection(col).get();
-                    if (!snap.empty) {
-                        const dadosDoc = snap.docs[0].data();
-                        institutionData = {
-                            name: dadosDoc.name || dadosDoc.razaoSocial || dadosDoc.nomeInstituicao || dadosDoc.nome || institutionData.name,
-                            razaoSocial: dadosDoc.razaoSocial || dadosDoc.name || dadosDoc.nomeInstituicao || institutionData.razaoSocial,
-                            cnpj: dadosDoc.cnpj || dadosDoc.documento || institutionData.cnpj,
-                            address: dadosDoc.address || dadosDoc.endereco || dadosDoc.logradouro || institutionData.address,
-                            logo: dadosDoc.logo || dadosDoc.logoUrl || dadosDoc.logomarca || dadosDoc.urlLogo || dadosDoc.image || dadosDoc.fileUrl || institutionData.logo
-                        };
-                        break;
+            try {
+                const docRef = db.collection("config").doc("institution");
+                const docSnap = await docRef.get();
+                
+                if (docSnap.exists) {
+                    const dados = docSnap.data();
+                    institutionData = {
+                        name: dados.name || institutionData.name,
+                        razaoSocial: dados.razão || dados.razaoSocial || dados.name || institutionData.razaoSocial,
+                        cnpj: dados.cnpj || institutionData.cnpj,
+                        address: dados.endereço || dados.address || institutionData.address,
+                        logo: dados.logo || dados.logoUrl || dados.logomarca || institutionData.logo
+                    };
+                    console.log("Dados institucionais carregados com sucesso de config/institution:", institutionData);
+                } else {
+                    // Fallback para outras coleções caso config/institution não exista
+                    const colecoesPossiveis = ["institution", "settings", "empresa", "escola", "dadosInstituicao"];
+                    for (let col of colecoesPossiveis) {
+                        const snap = await db.collection(col).get();
+                        if (!snap.empty) {
+                            const dadosDoc = snap.docs[0].data();
+                            institutionData = {
+                                name: dadosDoc.name || dadosDoc.razaoSocial || dadosDoc.nomeInstituicao || dadosDoc.nome || institutionData.name,
+                                razaoSocial: dadosDoc.razão || dadosDoc.razaoSocial || dadosDoc.name || institutionData.razaoSocial,
+                                cnpj: dadosDoc.cnpj || dadosDoc.documento || institutionData.cnpj,
+                                address: dadosDoc.endereço || dadosDoc.address || dadosDoc.endereco || institutionData.address,
+                                logo: dadosDoc.logo || dadosDoc.logoUrl || dadosDoc.logomarca || institutionData.logo
+                            };
+                            break;
+                        }
                     }
-                } catch (e) {
-                    console.warn(`Tentativa falhou na coleção ${col}:`, e);
                 }
+            } catch (e) {
+                console.warn("Erro ao carregar dados institucionais do Firebase:", e);
             }
         }
 
@@ -951,7 +967,6 @@
             const hoje = new Date();
             hoje.setHours(0, 0, 0, 0);
 
-            // Verificar se já existe proposta ou acordo registrado para este aluno
             const propostasAluno = financeLogs.filter(f => (f.studentId === alunoId || f.alunoId === alunoId) && (f.status && (f.status.includes("AGUARDANDO APROVAÇÃO") || f.status.includes("ACORDO ACEITO") || f.status.includes("ACORDO EFETIVADO"))));
 
             let htmlPropostasRealizadas = '';
@@ -1190,7 +1205,7 @@
             document.getElementById('painel-negociacao-aluno').style.display = 'none';
         }
 
-        // GERA PROPOSTA, REGISTRA NO FIREBASE COMO "AGUARDANDO APROVAÇÃO" E ABRE PDF
+        // GERA PROPOSTA, PUXA A LOGOMARCA DE config/institution E ABRE PDF
         async function gerarPropostaPDF() {
             if (!alunoNegociacaoId) return;
             const aluno = studentsMap[alunoNegociacaoId];
@@ -1203,7 +1218,6 @@
             fecharModalRealizarAcordo();
 
             try {
-                // Registrar a proposta gerada com status "AGUARDANDO APROVAÇÃO" no Firestore
                 const propostaId = "proposta_" + alunoNegociacaoId + "_" + Date.now();
                 await db.collection("financeLogs").doc(propostaId).set({
                     studentId: alunoNegociacaoId,
@@ -1220,7 +1234,7 @@
                 console.warn("Erro ao registrar proposta no Firebase:", e);
             }
 
-            const razaoSocial = institutionData.razaoSocial || institutionData.name || "JS & SS SERVIÇOS EDUCACIONAIS E CIA LTDA";
+            const razaoSocial = institutionData.razaoSocial || "JS & SS SERVIÇOS EDUCACIONAIS E CIA LTDA";
             const cnpjInst = institutionData.cnpj || "31.535.516/0001-64";
             const logoUrl = institutionData.logo || "";
             const enderecoInst = institutionData.address || "Travessa Magalhães Barata, 692, Centro, Vigia – PA, CEP 68.780-000";
@@ -1494,7 +1508,6 @@
             }
 
             try {
-                // Atualizar faturas antigas para negociadas
                 for (let fatura of faturasAtrasadasGlobal) {
                     await db.collection("financeLogs").doc(fatura.id).update({
                         status: "NEGOCIADO (ACORDO)",
@@ -1503,7 +1516,6 @@
                     });
                 }
 
-                // Atualizar proposta existente para "ACORDO ACEITO" ou criar registro de acordo aceito
                 const propostasPendentes = financeLogs.filter(f => (f.studentId === alunoNegociacaoId || f.alunoId === alunoNegociacaoId) && f.status && f.status.includes("AGUARDANDO APROVAÇÃO"));
                 
                 if (propostasPendentes.length > 0) {
