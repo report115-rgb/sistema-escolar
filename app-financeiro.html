@@ -81,7 +81,7 @@
 
         <div class="text-center text-[10px] text-blue-300 pb-2">
             <div>Sistema SE7 de Gestão Acadêmica</div>
-            <div>v1.3.8 &bull; Setor Financeiro</div>
+            <div>v1.3.9 &bull; Setor Financeiro</div>
         </div>
     </div>
 
@@ -445,6 +445,7 @@
         let coursesMap = {};
         let classesMap = {};
         let financeLogs = [];
+        let institutionData = null;
         let alunoSelecionadoId = null;
         let alunoNegociacaoId = null;
         let valorTotalOriginalGlobal = 0;
@@ -545,6 +546,7 @@
 
         async function carregarDadosNuvem() {
             await carregarCursosTurmasMatriz();
+            await carregarDadosInstituicao();
 
             db.collection("students").onSnapshot(snapshot => {
                 students = [];
@@ -574,6 +576,23 @@
             }, error => {
                 console.error("Erro ao carregar faturas:", error);
             });
+        }
+
+        async function carregarDadosInstituicao() {
+            try {
+                // Tenta carregar da coleção institution ou settings padrão
+                const snap = await db.collection("institution").get();
+                if (!snap.empty) {
+                    institutionData = snap.docs[0].data();
+                } else {
+                    const snapAlt = await db.collection("settings").get();
+                    if (!snapAlt.empty) {
+                        institutionData = snapAlt.docs[0].data();
+                    }
+                }
+            } catch (e) {
+                console.warn("Erro ao buscar dados da instituição:", e);
+            }
         }
 
         async function carregarCursosTurmasMatriz() {
@@ -1140,7 +1159,7 @@
             document.getElementById('painel-negociacao-aluno').style.display = 'none';
         }
 
-        // FUNÇÃO ATUALIZADA: GERA PDF COM EXTRATO DETALHADO, TOTAIS CONSOLIDADOS E MODALIDADES DE ACORDO
+        // FUNÇÃO ATUALIZADA: GERA PDF COM CABEÇALHO INSTITUCIONAL (LOGOMARCA, RAZÃO SOCIAL, CNPJ E ENDEREÇO) E COR AZUL DO APP
         function gerarPropostaPDF() {
             if (!alunoNegociacaoId) return;
             const aluno = studentsMap[alunoNegociacaoId];
@@ -1151,6 +1170,13 @@
             }
 
             fecharModalRealizarAcordo();
+
+            // Dados da Instituição obtidos do Firebase ou valores padrão institucionais
+            const inst = institutionData || {};
+            const razaoSocial = inst.name || inst.razaoSocial || inst.nomeInstituicao || "SE7 Sistema Educacional de Ensino e Transporte";
+            const cnpjInst = inst.cnpj || "00.000.000/0001-00";
+            const logoUrl = inst.logo || inst.logoUrl || "";
+            const enderecoInst = inst.address || inst.endereco || "Matriz Principal";
 
             const nomeCompleto = aluno.fullname || aluno.name || '---';
             const codigoMatricula = aluno.code || aluno.matricula || 'S/N';
@@ -1229,7 +1255,6 @@
                 `;
             });
 
-            // Adiciona a linha de totais na tabela conforme solicitado
             htmlTabelaDebitos += `
                 <tr style="background: #f1f5f9; font-weight: bold;">
                     <td colspan="3" style="padding: 10px 8px; text-align: right; border-top: 2px solid #cbd5e1;">VALOR TOTAL DA DÍVIDA / TOTAIS:</td>
@@ -1254,9 +1279,12 @@
                     <style>
                         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #1e293b; margin: 0; padding: 30px; background: #f8fafc; }
                         .sheet { max-width: 850px; margin: 0 auto; background: #ffffff; padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
-                        .header { text-align: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 25px; }
-                        .header h1 { font-size: 22px; color: #1e3a8a; margin: 0 0 5px 0; }
-                        .header p { font-size: 12px; color: #64748b; margin: 0; }
+                        
+                        /* Cabeçalho Institucional com a cor azul do app */
+                        .header { background: #1e3a8a; color: white; padding: 25px; border-radius: 10px; display: flex; align-items: center; gap: 20px; margin-bottom: 25px; }
+                        .header img { width: 65px; height: 65px; object-fit: contain; background: white; border-radius: 8px; padding: 4px; }
+                        .header-text h1 { font-size: 18px; margin: 0 0 4px 0; font-weight: bold; }
+                        .header-text p { font-size: 11px; margin: 2px 0; opacity: 0.9; }
                         
                         .section-title { font-size: 13px; font-weight: bold; color: #1e3a8a; text-transform: uppercase; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; margin-bottom: 10px; margin-top: 20px; }
                         
@@ -1281,6 +1309,7 @@
                             .no-print { display: none; }
                             body { background: #ffffff; padding: 0; }
                             .sheet { box-shadow: none; padding: 0; }
+                            .header { background: #1e3a8a !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
                         }
                     </style>
                 </head>
@@ -1291,8 +1320,12 @@
 
                     <div class="sheet">
                         <div class="header">
-                            <h1>SE7 &bull; Sistema Educacional</h1>
-                            <p>Setor Financeiro &bull; Termo de Proposta de Acordo Consolidado</p>
+                            ${logoUrl ? `<img src="${logoUrl}" alt="Logomarca">` : `<div style="width:65px; height:65px; background:white; color:#1e3a8a; border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:20px;">SE7</div>`}
+                            <div class="header-text">
+                                <h1>${razaoSocial}</h1>
+                                <p><strong>CNPJ:</strong> ${cnpjInst} &bull; <strong>Endereço:</strong> ${enderecoInst}</p>
+                                <p>Setor Financeiro &bull; Termo de Proposta de Acordo Consolidado</p>
+                            </div>
                         </div>
 
                         <div class="section-title">1. Dados Cadastrais do Aluno</div>
