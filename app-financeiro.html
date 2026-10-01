@@ -81,7 +81,7 @@
 
         <div class="text-center text-[10px] text-blue-300 pb-2">
             <div>Sistema SE7 de Gestão Acadêmica</div>
-            <div>v1.4.9 &bull; Setor Financeiro</div>
+            <div>v1.5.0 &bull; Setor Financeiro</div>
         </div>
     </div>
 
@@ -249,7 +249,7 @@
                     Cancelar
                 </button>
                 <button type="button" id="btn-confirmar-fechamento" onclick="executarFechamentoAcordoDefinitivo()" class="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow" style="display: none;">
-                    Aprovar Acordo e Atualizar Faturas
+                    Aprovar Acordo e Gerar Faturas
                 </button>
             </div>
         </div>
@@ -906,7 +906,6 @@
             const container = document.getElementById('lista-negociacoes-ativas-container');
             if (!container) return;
 
-            // Filtra faturas/registros que representam propostas em andamento ou acordos aceitos
             const propostasOuAcordos = financeLogs.filter(f => {
                 const status = (f.status || '').toUpperCase();
                 return status.includes("AGUARDANDO APROVAÇÃO") || status.includes("ACORDO ACEITO") || status.includes("ACORDO EFETIVADO");
@@ -1138,7 +1137,6 @@
                 return;
             }
 
-            // SE HOUVER UMA PROPOSTA ATIVA, OCULTA O RESUMO DE DÉBITOS E AS FATURAS VENCIDAS DA TELA
             if (temPropostaAtiva) {
                 painel.innerHTML = `
                     ${cabecalhoAlunoHtml}
@@ -1150,7 +1148,6 @@
                 return;
             }
 
-            // CASO CONTRÁRIO (SEM PROPOSTA ATIVA), EXIBE O FLUXO NORMAL DE CÁLCULO
             let htmlFaturasCalc = '';
             faturasAtrasadasGlobal.forEach(f => {
                 const valorOriginal = parseFloat(String(f.amount || f.valor || '0').replace(',', '.')) || 0;
@@ -1362,6 +1359,7 @@
             const valorTotalNegociadoParaRegistro = valorAtualNegociacaoGlobal.toFixed(2);
             const nomeAlunoSalvar = aluno.fullname || aluno.name || 'Aluno';
 
+            // REGISTRA APENAS NA COLEÇÃO DE NEGOCIAÇÕES/PROPOSTAS (NÃO MEXE NA ABA DE FATURAS DO ALUNO)
             try {
                 if (propostaIdExistente) {
                     await db.collection("financeLogs").doc(propostaIdExistente).update({
@@ -1656,6 +1654,9 @@
             document.getElementById('modal-fechar-acordo').style.display = 'none';
         }
 
+        // QUANDO O ACORDO É APROVADO DEFINITIVAMENTE:
+        // 1. As faturas em atraso são baixadas/substituídas.
+        // 2. Se for parcelado, gera as novas faturas/boletos em datas cronológicas.
         async function executarFechamentoAcordoDefinitivo() {
             const radioSelecionado = document.querySelector('input[name="opcao-escolhida-fechamento"]:checked');
             if (!radioSelecionado) {
@@ -1667,11 +1668,12 @@
             const aluno = studentsMap[alunoNegociacaoId];
             const nome = aluno ? (aluno.fullname || aluno.name) : 'Aluno';
 
-            if (!confirm(`Deseja realmente aprovar o acordo na modalidade ${escolhaKey.toUpperCase()} no valor de R$ ${opEscolhida.valorFinal.toFixed(2)}?\n\nIsso atualizará o status para 'Acordo aceito' e baixará as faturas atrasadas.`)) {
+            if (!confirm(`Deseja realmente aprovar o acordo na modalidade ${escolhaKey.toUpperCase()} no valor de R$ ${opEscolhida.valorFinal.toFixed(2)}?\n\nIsso baixará as faturas antigas e gerará as novas faturas do acordo.`)) {
                 return;
             }
 
             try {
+                // 1. Baixa/substitui faturas antigas em atraso
                 for (let fatura of faturasAtrasadasGlobal) {
                     await db.collection("financeLogs").doc(fatura.id).update({
                         status: "NEGOCIADO (ACORDO)",
@@ -1680,6 +1682,54 @@
                     });
                 }
 
+                // 2. Se for parcelado, gera as novas parcelas cronológicas na aba de faturas
+                if (escolhaKey === 'parcelado') {
+                    let qtdParcelas = parseInt(opEscolhida.infoExtra) || 2;
+                    let valorParcela = opEscolhida.valorFinal / qtdParcelas;
+                    let dataBase = new Date();
+
+                    for (let i = 1; i <= qtdParcelas; i++) {
+                        dataBase.setMonth(dataBase.getMonth() + 1);
+                        let dataVencStr = dataBase.toISOString().split('T')[0];
+                        let partesVenc = dataVencStr.split('-');
+                        let vencFormatado = `${partesVenc[2]}/${partesVenc[1]}/${partesVenc[0]}`;
+
+                        let novaParcelaId = "parcela_acordo_" + alunoNegociacaoId + "_" + i + "_" + Date.now();
+                        await db.collection("financeLogs").doc(novaParcelaId).set({
+                            studentId: alunoNegociacaoId,
+                            alunoId: alunoNegociacaoId,
+                            nomeAluno: nome,
+                            description: `Parcela Acordo ${i}/${qtdParcelas}`,
+                            amount: valorParcela.toFixed(2),
+                            valor: valorParcela.toFixed(2),
+                            date: vencFormatado,
+                            vencimento: vencFormatado,
+                            status: "PENDENTE",
+                            criadoEm: new Date().toISOString()
+                        });
+                    }
+                } else {
+                    // À vista ou Cartão gera parcela única consolidada
+                    let novaUnicaId = "acordo_unico_" + alunoNegociacaoId + "_" + Date.now();
+                    let dataVencUnica = new Date();
+                    dataVencUnica.setDate(dataVencUnica.getDate() + 5); // Ex: 5 dias para pagamento
+                    let vencUnicaStr = dataVencUnica.toISOString().split('T')[0].split('-').reverse().join('/');
+
+                    await db.collection("financeLogs").doc(novaUnicaId).set({
+                        studentId: alunoNegociacaoId,
+                        alunoId: alunoNegociacaoId,
+                        nomeAluno: nome,
+                        description: `Acordo Consolidado - ${escolhaKey.toUpperCase()}`,
+                        amount: opEscolhida.valorFinal.toFixed(2),
+                        valor: opEscolhida.valorFinal.toFixed(2),
+                        date: vencUnicaStr,
+                        vencimento: vencUnicaStr,
+                        status: "PENDENTE",
+                        criadoEm: new Date().toISOString()
+                    });
+                }
+
+                // 3. Atualiza o status da proposta na lista de negociações para "ACORDO ACEITO"
                 const propostasPendentes = financeLogs.filter(f => (f.studentId === alunoNegociacaoId || f.alunoId === alunoNegociacaoId) && f.status && f.status.includes("AGUARDANDO APROVAÇÃO"));
                 
                 if (propostasPendentes.length > 0) {
@@ -1689,24 +1739,10 @@
                             description: `Acordo Aceito - ${escolhaKey.toUpperCase()}`
                         });
                     }
-                } else {
-                    const novoAcordoId = "acordo_aceito_" + Date.now();
-                    await db.collection("financeLogs").doc(novoAcordoId).set({
-                        studentId: alunoNegociacaoId,
-                        alunoId: alunoNegociacaoId,
-                        nomeAluno: nome,
-                        description: `Acordo Aceito - ${escolhaKey.toUpperCase()}`,
-                        amount: opEscolhida.valorFinal.toFixed(2),
-                        valor: opEscolhida.valorFinal.toFixed(2),
-                        date: new Date().toLocaleDateString('pt-BR'),
-                        vencimento: new Date().toISOString().split('T')[0],
-                        status: "ACORDO ACEITO",
-                        criadoEm: new Date().toISOString()
-                    });
                 }
 
                 fecharModalFecharAcordo();
-                alert(`🎉 Acordo aceito com sucesso para ${nome}!\n\n• O registro foi atualizado para 'Acordo aceito'.\n• As faturas atrasadas foram baixadas.`);
+                alert(`🎉 Acordo aprovado com sucesso para ${nome}!\n\n• As faturas antigas foram substituídas.\n• As novas faturas/boletos do acordo foram geradas e já estão visíveis na aba de Faturas para ajuste de datas.`);
                 
                 selecionarAlunoNegociacao(alunoNegociacaoId);
                 renderizarNegociacoesAtivasGeral();
