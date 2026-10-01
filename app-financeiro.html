@@ -79,6 +79,15 @@
                 <h2 class="font-bold text-sm text-gray-900 dark:text-white flex items-center gap-2">
                     <i class="fa-solid fa-users text-blue-600"></i> Consulta de Alunos
                 </h2>
+                
+                <!-- NOVO SELETOR DE CURSOS -->
+                <div>
+                    <label class="block text-[11px] font-semibold text-gray-600 dark:text-gray-400 uppercase mb-1">Filtrar por Curso / Turma</label>
+                    <select id="select-filtro-curso" onchange="renderizarListaAlunos()" class="w-full px-3 py-2.5 rounded-xl border border-gray-300 dark:border-slate-600 text-xs dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-blue-600 focus:outline-none">
+                        <option value="">Todos os Cursos</option>
+                    </select>
+                </div>
+
                 <div class="relative">
                     <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
                         <i class="fa-solid fa-magnifying-glass text-xs"></i>
@@ -171,12 +180,10 @@
 
             let userFound = null;
 
-            // 1. Verifica se é usuário padrão
             const padraoEncontrado = usuariosPadrao.find(u => u.email.toLowerCase() === userInput && u.pass === passInput);
             if (padraoEncontrado) {
                 userFound = padraoEncontrado;
             } else {
-                // 2. Tenta buscar no Firebase Firestore de forma blindada
                 try {
                     const snapshot = await db.collection("systemUsers").get();
                     let usuarioEncontradoNuvem = null;
@@ -228,6 +235,7 @@
                 students = [];
                 snapshot.forEach(doc => students.push({ id: doc.id, ...doc.data() }));
                 students.sort((a, b) => (a.fullname || '').localeCompare(b.fullname || ''));
+                atualizarSeletorCursos();
                 renderizarListaAlunos();
             }, error => {
                 console.error("Erro ao carregar alunos:", error);
@@ -242,27 +250,60 @@
             });
         }
 
+        function atualizarSeletorCursos() {
+            const selectCurso = document.getElementById('select-filtro-curso');
+            if (!selectCurso) return;
+
+            const cursoSelecionadoAtual = selectCurso.value;
+            
+            // Extrai todos os cursos únicos dos alunos cadastrados (suporta campos course, curso ou turma)
+            const cursosSet = new Set();
+            students.forEach(s => {
+                const c = s.course || s.curso || s.turma;
+                if (c && typeof c === 'string' && c.trim() !== '') {
+                    cursosSet.add(c.trim());
+                }
+            });
+
+            const cursosOrdenados = Array.from(cursosSet).sort();
+
+            selectCurso.innerHTML = `<option value="">Todos os Cursos</option>`;
+            cursosOrdenados.forEach(curso => {
+                const selectedAttr = (curso === cursoSelecionadoAtual) ? 'selected' : '';
+                selectCurso.innerHTML += `<option value="${curso}" ${selectedAttr}>${curso}</option>`;
+            });
+        }
+
         function renderizarListaAlunos() {
             const container = document.getElementById('lista-alunos-container');
             const termo = document.getElementById('input-busca-aluno').value.toLowerCase().trim();
+            const cursoSelecionado = document.getElementById('select-filtro-curso').value;
             if (!container) return;
 
-            const filtrados = students.filter(s => 
-                (s.fullname && s.fullname.toLowerCase().includes(termo)) || (s.cpf && s.cpf.includes(termo))
-            );
+            const filtrados = students.filter(s => {
+                const nomeAluno = s.fullname || '';
+                const cpfAluno = s.cpf || '';
+                const cursoAluno = s.course || s.curso || s.turma || '';
+
+                const bateTexto = nomeAluno.toLowerCase().includes(termo) || cpfAluno.includes(termo);
+                const bateCurso = (cursoSelecionado === "") || (cursoAluno.trim() === cursoSelecionado);
+
+                return bateTexto && bateCurso;
+            });
 
             if (filtrados.length === 0) {
-                container.innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-2xl text-center text-xs text-gray-400">Nenhum aluno encontrado.</div>`;
+                container.innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-2xl text-center text-xs text-gray-400">Nenhum aluno encontrado para os filtros selecionados.</div>`;
                 return;
             }
 
             container.innerHTML = '';
             filtrados.forEach(s => {
+                const cursoExibir = s.course || s.curso || s.turma || 'Curso não informado';
                 container.innerHTML += `
                     <div onclick="selecionarAlunoFinanceiro('${s.id}')" class="bg-white dark:bg-slate-800 p-3.5 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 flex justify-between items-center active:scale-98 transition cursor-pointer">
                         <div>
                             <strong class="text-xs font-bold text-gray-900 dark:text-white">${s.fullname || 'Sem Nome'}</strong>
-                            <p class="text-[10px] text-gray-400">Matrícula: ${s.code || 'S/N'} &bull; CPF: ${s.cpf || '---'}</p>
+                            <p class="text-[10px] text-gray-400">Curso: ${cursoExibir} &bull; Matrícula: ${s.code || 'S/N'}</p>
                         </div>
                         <div class="w-8 h-8 bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center text-xs">
                             <i class="fa-solid fa-chevron-right"></i>
