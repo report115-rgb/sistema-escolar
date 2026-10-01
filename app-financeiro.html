@@ -81,7 +81,7 @@
 
         <div class="text-center text-[10px] text-blue-300 pb-2">
             <div>Sistema SE7 de Gestão Acadêmica</div>
-            <div>v1.3.5 &bull; Setor Financeiro</div>
+            <div>v1.3.6 &bull; Setor Financeiro</div>
         </div>
     </div>
 
@@ -212,7 +212,7 @@
 
             <div class="flex flex-col gap-2 pt-2">
                 <button type="button" id="btn-gerar-proposta-modal" onclick="gerarPropostaPDF()" style="display: none;" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow transition">
-                    <i class="fa-solid fa-file-pdf mr-1"></i> Gerar Proposta (PDF) para Enviar ao Aluno
+                    <i class="fa-solid fa-file-pdf mr-1"></i> Visualizar Proposta (PDF) na Tela
                 </button>
                 <button type="button" onclick="fecharModalRealizarAcordo()" class="w-full py-2.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold rounded-xl text-xs">
                     Fechar
@@ -1140,10 +1140,14 @@
             document.getElementById('painel-negociacao-aluno').style.display = 'none';
         }
 
+        // FUNÇÃO ATUALIZADA: ABRE A PROPOSTA EM FORMATO PDF/IMPRESSÃO EM UMA NOVA ABA PARA ANÁLISE VISUAL
         function gerarPropostaPDF() {
             if (!alunoNegociacaoId) return;
             const aluno = studentsMap[alunoNegociacaoId];
-            const nome = aluno ? (aluno.fullname || aluno.name) : 'Aluno';
+            const nomeAluno = aluno ? (aluno.fullname || aluno.name) : 'Aluno';
+            const cpfAluno = aluno ? (aluno.cpf || 'Não informado') : '---';
+            const rawCurso = aluno ? (aluno.course || aluno.curso || aluno.turma || aluno.nomeCurso || aluno.courseName || aluno.courseId || 'Não informado') : 'Não informado';
+            const cursoAluno = coursesMap[rawCurso] || coursesMap[normalizarTexto(rawCurso)] || String(rawCurso);
 
             if (!opcoesGeradas.avista || !opcoesGeradas.parcelado || !opcoesGeradas.cartao) {
                 return alert("Configure as 3 opções (À Vista, Parcelado e Cartão) antes de gerar a proposta.");
@@ -1151,13 +1155,92 @@
 
             fecharModalRealizarAcordo();
 
-            const textoProposta = `📄 *Proposta de Acordo SE7* - Aluno(a): ${nome}\n\nOpções geradas para análise:\n• À Vista: R$ ${opcoesGeradas.avista.valorFinal.toFixed(2)}\n• Parcelado (${opcoesGeradas.parcelado.infoExtra}): R$ ${opcoesGeradas.parcelado.valorFinal.toFixed(2)}\n• Cartão de Crédito: R$ ${opcoesGeradas.cartao.valorFinal.toFixed(2)}\n\n(Proposta pronta para envio em PDF).`;
-
-            if (navigator.share) {
-                navigator.share({ title: `Proposta - ${nome}`, text: textoProposta }).catch(() => {});
-            } else {
-                alert(`✅ PDF da Proposta gerado com sucesso para ${nome}!\n\nEnvie o documento ao aluno e aguarde a resposta dele para clicar em "Fechar Acordo". Nenhuma alteração foi feita nas faturas ainda.`);
+            // Cria uma janela limpa com o layout do PDF para visualização e impressão imediata
+            let janelaPDF = window.open('', '_blank');
+            if (!janelaPDF) {
+                return alert("O navegador bloqueou a abertura da nova aba. Por favor, permita pop-ups para visualizar o PDF.");
             }
+
+            let htmlConteudoPDF = `
+                <!DOCTYPE html>
+                <html lang="pt-BR">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Proposta de Acordo - ${nomeAluno}</title>
+                    <style>
+                        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #1e293b; margin: 0; padding: 40px; background: #f8fafc; }
+                        .sheet { max-width: 800px; margin: 0 auto; background: #ffffff; padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+                        .header { text-align: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 30px; }
+                        .header h1 { font-size: 22px; color: #1e3a8a; margin: 0 0 5px 0; }
+                        .header p { font-size: 12px; color: #64748b; margin: 0; }
+                        .info-section { margin-bottom: 25px; background: #f1f5f9; padding: 15px 20px; border-radius: 8px; font-size: 13px; }
+                        .info-section div { margin-bottom: 5px; }
+                        .options-container { display: flex; flex-direction: column; gap: 15px; margin-bottom: 30px; }
+                        .option-card { border: 1px solid #cbd5e1; border-radius: 8px; padding: 18px; background: #ffffff; }
+                        .option-card h3 { margin: 0 0 8px 0; font-size: 15px; color: #047857; }
+                        .option-card .value { font-size: 18px; font-weight: bold; color: #0f172a; margin-top: 5px; }
+                        .footer-note { text-align: center; font-size: 11px; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 20px; }
+                        .no-print { text-align: center; margin-bottom: 25px; }
+                        .btn-print { background: #2563eb; color: white; border: none; padding: 10px 20px; font-size: 14px; font-weight: bold; border-radius: 8px; cursor: pointer; }
+                        .btn-print:hover { background: #1d4ed8; }
+                        @media print {
+                            .no-print { display: none; }
+                            body { background: #ffffff; padding: 0; }
+                            .sheet { box-shadow: none; padding: 0; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="no-print">
+                        <button class="btn-print" onclick="window.print()"><i class="fa-solid fa-print"></i> Imprimir ou Salvar como PDF</button>
+                    </div>
+
+                    <div class="sheet">
+                        <div class="header">
+                            <h1>SE7 &bull; Sistema Educacional</h1>
+                            <p>Setor Financeiro &bull; Termo de Proposta de Acordo Consolidado</p>
+                        </div>
+
+                        <div class="info-section">
+                            <div><strong>Aluno(a):</strong> ${nomeAluno}</div>
+                            <div><strong>CPF:</strong> ${cpfAluno}</div>
+                            <div><strong>Curso:</strong> ${cursoAluno}</div>
+                            <div><strong>Data da Emissão:</strong> ${new Date().toLocaleDateString('pt-BR')}</div>
+                        </div>
+
+                        <h3 style="font-size: 14px; color: #334155; margin-bottom: 12px; text-transform: uppercase;">Modalidades de Acordo Disponíveis para Escolha:</h3>
+
+                        <div class="options-container">
+                            <div class="option-card">
+                                <h3>Opção 1: Pagamento À Vista</h3>
+                                <div style="font-size: 12px; color: #475569;">Desconto aplicado: 100% sobre Juros e Multa.</div>
+                                <div class="value">R$ ${opcoesGeradas.avista.valorFinal.toFixed(2)}</div>
+                            </div>
+
+                            <div class="option-card">
+                                <h3>Opção 2: Parcelado em ${opcoesGeradas.parcelado.infoExtra}</h3>
+                                <div style="font-size: 12px; color: #475569;">Desconto aplicado: 50% sobre Juros e Multa.</div>
+                                <div class="value">R$ ${opcoesGeradas.parcelado.valorFinal.toFixed(2)} <span style="font-size: 12px; font-weight: normal; color: #64748b;">(Parcelas de R$ ${(opcoesGeradas.parcelado.valorFinal / parseInt(opcoesGeradas.parcelado.infoExtra)).toFixed(2)})</span></div>
+                            </div>
+
+                            <div class="option-card">
+                                <h3>Opção 3: Cartão de Crédito</h3>
+                                <div style="font-size: 12px; color: #475569;">Desconto aplicado: 80% sobre Juros e Multa.</div>
+                                <div class="value">R$ ${opcoesGeradas.cartao.valorFinal.toFixed(2)}</div>
+                            </div>
+                        </div>
+
+                        <div class="footer-note">
+                            Documento gerado eletronicamente pelo Setor Financeiro SE7.<br>
+                            Após a escolha da modalidade pelo aluno, efetive o fechamento diretamente no painel de negociações do aplicativo.
+                        </div>
+                    </div>
+                </body>
+                </html>
+            `;
+
+            janelaPDF.document.write(htmlConteudoPDF);
+            janelaPDF.document.close();
         }
 
         function abrirModalFecharAcordo() {
@@ -1347,7 +1430,6 @@
             const badgeAlerta = document.getElementById('badge-alerta-novos');
             if (!container) return;
 
-            // EXIBE TODOS OS ALUNOS CADASTRADOS QUE AINDA NÃO FORAM ABERTOS (LIDOS) PELO FINANCEIRO
             const novosMatriculados = students.filter(s => !novosAlunosLidos.includes(s.id));
 
             if (novosMatriculados.length > 0) {
