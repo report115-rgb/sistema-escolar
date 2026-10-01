@@ -81,7 +81,7 @@
 
         <div class="text-center text-[10px] text-blue-300 pb-2">
             <div>Sistema SE7 de Gestão Acadêmica</div>
-            <div>v1.4.5 &bull; Setor Financeiro</div>
+            <div>v1.4.6 &bull; Setor Financeiro</div>
         </div>
     </div>
 
@@ -1010,6 +1010,11 @@
                     let textoStatusExibir = p.status.includes("AGUARDANDO") ? "Aguardando aprovação do aluno" : "Acordo aceito";
                     let eAguardando = p.status.includes("AGUARDANDO");
 
+                    // Sincroniza as opções salvas no banco para a memória se existirem
+                    if (eAguardando && p.opcoesSalvas) {
+                        opcoesGeradas = p.opcoesSalvas;
+                    }
+
                     htmlPropostasRealizadas += `
                         <div class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl shadow-sm border border-emerald-500/50 space-y-2 text-xs mb-2">
                             <div class="flex justify-between items-center">
@@ -1027,7 +1032,7 @@
                                     <button type="button" onclick="excluirPropostaRegistro('${p.id}')" class="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold text-[10px] shadow">
                                         <i class="fa-solid fa-trash mr-0.5"></i> Excluir
                                     </button>
-                                    <button type="button" onclick="abrirModalFecharAcordo()" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold text-[10px] shadow">
+                                    <button type="button" onclick="abrirModalFecharAcordoParaProposta('${p.id}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold text-[10px] shadow">
                                         <i class="fa-solid fa-handshake mr-0.5"></i> Aprovar
                                     </button>
                                 </div>
@@ -1121,6 +1126,10 @@
         function abrirModalEditarProposta(propostaId) {
             const prop = financeLogs.find(f => f.id === propostaId);
             if (!prop) return;
+
+            if (prop.opcoesSalvas) {
+                opcoesGeradas = prop.opcoesSalvas;
+            }
 
             document.getElementById('edit-proposta-id-ativo').value = propostaId;
             document.getElementById('titulo-modal-acordo-texto').textContent = "Editar Proposta de Acordo";
@@ -1242,7 +1251,7 @@
             document.getElementById('painel-negociacao-aluno').style.display = 'none';
         }
 
-        // GERA OU ATUALIZA PROPOSTA USANDO EXATAMENTE O VALOR TOTAL ATUALIZADO (ORIGINAL + MULTAS + JUROS)
+        // GERA OU ATUALIZA PROPOSTA E SALVA AS OPÇÕES NO FIREBASE
         async function gerarPropostaPDF() {
             if (!alunoNegociacaoId) return;
             const aluno = studentsMap[alunoNegociacaoId];
@@ -1264,6 +1273,7 @@
                         valor: valorTotalNegociadoParaRegistro,
                         date: new Date().toLocaleDateString('pt-BR'),
                         status: "AGUARDANDO APROVAÇÃO DO ALUNO",
+                        opcoesSalvas: opcoesGeradas, // GRAVA AS OPÇÕES NO BANCO
                         atualizadoEm: new Date().toISOString()
                     });
                 } else {
@@ -1277,6 +1287,7 @@
                         date: new Date().toLocaleDateString('pt-BR'),
                         vencimento: new Date().toISOString().split('T')[0],
                         status: "AGUARDANDO APROVAÇÃO DO ALUNO",
+                        opcoesSalvas: opcoesGeradas, // GRAVA AS OPÇÕES NO BANCO
                         criadoEm: new Date().toISOString()
                     });
                 }
@@ -1390,7 +1401,6 @@
                         .sheet { max-width: 850px; margin: 0 auto; background: #ffffff; padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
                         
                         .header { background: #1e3a8a; color: white; padding: 25px; border-radius: 10px; display: flex; align-items: center; gap: 20px; margin-bottom: 25px; }
-                        /* LOGO EM PNG SEM FUNDO BRANCO OU SOMBRA */
                         .header img { width: 75px; height: 75px; object-fit: contain; background: transparent; border-radius: 0; padding: 0; box-shadow: none; flex-shrink: 0; }
                         .header-text h1 { font-size: 17px; margin: 0 0 4px 0; font-weight: bold; }
                         .header-text p { font-size: 11px; margin: 2px 0; opacity: 0.9; }
@@ -1508,7 +1518,12 @@
             selecionarAlunoNegociacao(alunoNegociacaoId);
         }
 
-        function abrirModalFecharAcordo() {
+        function abrirModalFecharAcordoParaProposta(propostaId) {
+            const prop = financeLogs.find(f => f.id === propostaId);
+            if (prop && prop.opcoesSalvas) {
+                opcoesGeradas = prop.opcoesSalvas;
+            }
+
             const container = document.getElementById('container-opcoes-fechamento');
             const btnConfirmar = document.getElementById('btn-confirmar-fechamento');
             
