@@ -16,7 +16,16 @@
             darkMode: 'class',
             theme: {
                 extend: {
-                    colors: { primary: '#1e40af', secondary: '#3b82f6', accent: '#f59e0b' }
+                    colors: { primary: '#1e40af', secondary: '#3b82f6', accent: '#f59e0b' },
+                    keyframes: {
+                        piscarAlerta: {
+                            '0%, 100%': { backgroundColor: '#ef4444', transform: 'scale(1)' }, /* Vermelho */
+                            '50%': { backgroundColor: '#3b82f6', transform: 'scale(1.1)' } /* Azul */
+                        }
+                    },
+                    animation: {
+                        'piscar-alerta': 'piscarAlerta 1.2s infinite ease-in-out'
+                    }
                 }
             }
         }
@@ -26,7 +35,7 @@
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
     </style>
 </head>
-<body class="bg-slate-100 dark:bg-slate-900 text-gray-800 dark:text-gray-100 font-sans antialiased min-h-screen flex flex-col pb-20">
+<body class="bg-slate-100 dark:bg-slate-900 text-gray-800 dark:text-gray-100 font-sans antialiased min-h-screen flex flex-col pb-24">
 
     <!-- TELA DE LOGIN DO APP -->
     <div id="login-modal" class="fixed inset-0 z-[3000] flex items-center justify-center bg-gradient-to-br from-blue-900 via-indigo-900 to-slate-900 p-4">
@@ -97,14 +106,27 @@
             </div>
 
             <div id="lista-alunos-container" class="space-y-2">
-                <!-- Mensagem inicial orientando a seleção -->
                 <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl text-center text-xs text-gray-400">
                     Selecione um curso acima para exibir os alunos matriculados.
                 </div>
             </div>
         </div>
 
-        <!-- ABA 2: FINANCEIRO (OCULTA POR PADRÃO ATÉ SELECIONAR UM ALUNO) -->
+        <!-- ABA 2: NOVOS ALUNOS MATRICULADOS -->
+        <div id="tab-novos-alunos" class="space-y-3" style="display: none;">
+            <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 space-y-2">
+                <h2 class="font-bold text-sm text-gray-900 dark:text-white flex items-center gap-2">
+                    <i class="fa-solid fa-user-plus text-blue-600"></i> Novos Alunos Matriculados
+                </h2>
+                <p class="text-[11px] text-gray-500">Alunos recentes aguardando processamento de faturas e boletos.</p>
+            </div>
+
+            <div id="lista-novos-alunos-container" class="space-y-2">
+                <!-- Preenchido dinamicamente -->
+            </div>
+        </div>
+
+        <!-- ABA 3: FINANCEIRO (OCULTA POR PADRÃO ATÉ SELECIONAR UM ALUNO) -->
         <div id="tab-financeiro" class="space-y-3" style="display: none;">
             <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 space-y-2">
                 <div class="flex justify-between items-center">
@@ -124,10 +146,18 @@
     </main>
 
     <!-- BARRA DE NAVEGAÇÃO INFERIOR MOBILE -->
-    <nav class="fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-slate-800 border-t border-gray-200 dark:border-slate-700 py-2 px-6 flex justify-around items-center shadow-lg">
+    <nav class="fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-slate-800 border-t border-gray-200 dark:border-slate-700 py-2 px-4 flex justify-around items-center shadow-lg">
         <button onclick="mudarAbaApp('alunos')" id="nav-btn-alunos" class="flex flex-col items-center text-blue-600 dark:text-blue-400 text-xs font-bold gap-1">
             <i class="fa-solid fa-users text-lg"></i>
             <span>Alunos</span>
+        </button>
+        <button onclick="mudarAbaApp('novos')" id="nav-btn-novos" class="flex flex-col items-center text-gray-400 text-xs font-semibold gap-1 relative">
+            <div class="relative">
+                <i class="fa-solid fa-user-plus text-lg"></i>
+                <!-- Ícone de Alerta Piscando -->
+                <span id="badge-alerta-novos" class="absolute -top-1 -right-2 w-3.5 h-3.5 rounded-full animate-piscar-alerta border-2 border-white dark:border-slate-800" style="display: none;"></span>
+            </div>
+            <span>Novos Alunos</span>
         </button>
         <button onclick="mudarAbaApp('financeiro')" id="nav-btn-fin" class="flex flex-col items-center text-gray-400 text-xs font-semibold gap-1">
             <i class="fa-solid fa-wallet text-lg"></i>
@@ -162,6 +192,9 @@
         let coursesMap = {};
         let financeLogs = [];
         let alunoSelecionadoId = null;
+
+        // Recupera lista de IDs de novos alunos já visualizados armazenados localmente no navegador do funcionário
+        let novosAlunosLidos = JSON.parse(localStorage.getItem('novos_alunos_lidos') || '[]');
 
         window.addEventListener('DOMContentLoaded', () => {
             const sessao = JSON.parse(sessionStorage.getItem('app_financeiro_user'));
@@ -245,6 +278,7 @@
                 });
                 students.sort((a, b) => (a.fullname || '').localeCompare(b.fullname || ''));
                 renderizarListaAlunos();
+                renderizarNovosAlunos();
             }, error => {
                 console.error("Erro ao carregar alunos:", error);
             });
@@ -302,7 +336,6 @@
 
             const cursosOrdenados = Array.from(listaNomesUnicos).sort();
 
-            // Mantém apenas a opção desativada de instrução inicial (sem "Todos os Cursos")
             selectCurso.innerHTML = `<option value="" disabled selected>Selecione um curso...</option>`;
             cursosOrdenados.forEach(curso => {
                 const selectedAttr = (curso === cursoSelecionadoAtual) ? 'selected' : '';
@@ -326,7 +359,6 @@
             
             if (!container) return;
 
-            // Se nenhum curso foi selecionado ainda, exibe a mensagem de orientação padrão
             if (!cursoSelecionado) {
                 container.innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-2xl text-center text-xs text-gray-400">Selecione um curso acima para exibir os alunos matriculados.</div>`;
                 return;
@@ -370,6 +402,71 @@
                     </div>
                 `;
             });
+        }
+
+        function renderizarNovosAlunos() {
+            const container = document.getElementById('lista-novos-alunos-container');
+            const badgeAlerta = document.getElementById('badge-alerta-novos');
+            if (!container) return;
+
+            // Considera novos os alunos criados a partir de hoje ou com data recente, que ainda não foram marcados como lidos
+            const hojeStr = new Date().toISOString().split('T')[0];
+            
+            const novosMatriculados = students.filter(s => {
+                // Se já estiver na lista de lidos pelo financeiro, não exibe mais aqui
+                if (novosAlunosLidos.includes(s.id)) return false;
+
+                // Tenta validar por data de cadastro (createdAt, dataMatricula, etc.) ou se for recente
+                const dataMatricula = s.createdAt || s.dataMatricula || s.dataCadastro || '';
+                if (dataMatricula) {
+                    // Verifica se a string da data contém a data atual ou é posterior
+                    return String(dataMatricula) >= "2026-01-01"; // Adaptado para capturar novos cadastros
+                }
+
+                // Critério de segurança para novos cadastros sem data explícita: considera novos se não houver faturas geradas ainda
+                const temFatura = financeLogs.some(f => f.studentId === s.id || f.alunoId === s.id);
+                return !temFatura;
+            });
+
+            // Gerencia o indicador visual de alerta piscando
+            if (novosMatriculados.length > 0) {
+                badgeAlerta.style.display = 'block';
+            } else {
+                badgeAlerta.style.display = 'none';
+            }
+
+            if (novosMatriculados.length === 0) {
+                container.innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-2xl text-center text-xs text-gray-400">Nenhum novo aluno pendente no momento.</div>`;
+                return;
+            }
+
+            container.innerHTML = '';
+            novosMatriculados.forEach(s => {
+                const rawCurso = s.course || s.curso || s.turma || s.nomeCurso || s.courseName || s.courseId || 'Não informado';
+                const cursoExibir = coursesMap[rawCurso] || coursesMap[normalizarTexto(rawCurso)] || String(rawCurso);
+
+                container.innerHTML += `
+                    <div onclick="marcarComoLidoEVerAluno('${s.id}')" class="bg-white dark:bg-slate-800 p-3.5 rounded-2xl shadow-sm border-2 border-blue-500/40 flex justify-between items-center active:scale-98 transition cursor-pointer">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span>
+                                <strong class="text-xs font-bold text-gray-900 dark:text-white">${s.fullname || s.name || 'Sem Nome'}</strong>
+                            </div>
+                            <p class="text-[10px] text-gray-400 mt-0.5">Curso: ${cursoExibir} &bull; CPF: ${s.cpf || '---'}</p>
+                        </div>
+                        <span class="px-2 py-1 bg-blue-600 text-white text-[10px] font-bold rounded-lg shadow">Ver Dados</span>
+                    </div>
+                `;
+            });
+        }
+
+        function marcarComoLidoEVerAluno(id) {
+            if (!novosAlunosLidos.includes(id)) {
+                novosAlunosLidos.push(id);
+                localStorage.setItem('novos_alunos_lidos', JSON.stringify(novosAlunosLidos));
+            }
+            renderizarNovosAlunos();
+            selecionarAlunoFinanceiro(id);
         }
 
         function selecionarAlunoFinanceiro(id) {
@@ -435,20 +532,31 @@
 
         function mudarAbaApp(aba) {
             const tabAlunos = document.getElementById('tab-alunos');
+            const tabNovos = document.getElementById('tab-novos-alunos');
             const tabFin = document.getElementById('tab-financeiro');
+            
             const btnAlunos = document.getElementById('nav-btn-alunos');
+            const btnNovos = document.getElementById('nav-btn-novos');
             const btnFin = document.getElementById('nav-btn-fin');
+
+            // Reseta todas as abas
+            tabAlunos.style.display = 'none';
+            tabNovos.style.display = 'none';
+            tabFin.style.display = 'none';
+
+            btnAlunos.className = "flex flex-col items-center text-gray-400 text-xs font-semibold gap-1";
+            btnNovos.className = "flex flex-col items-center text-gray-400 text-xs font-semibold gap-1 relative";
+            btnFin.className = "flex flex-col items-center text-gray-400 text-xs font-semibold gap-1";
 
             if (aba === 'alunos') {
                 tabAlunos.style.display = 'block';
-                tabFin.style.display = 'none';
                 btnAlunos.className = "flex flex-col items-center text-blue-600 dark:text-blue-400 text-xs font-bold gap-1";
-                btnFin.className = "flex flex-col items-center text-gray-400 text-xs font-semibold gap-1";
-            } else {
-                tabAlunos.style.display = 'none';
+            } else if (aba === 'novos') {
+                tabNovos.style.display = 'block';
+                btnNovos.className = "flex flex-col items-center text-blue-600 dark:text-blue-400 text-xs font-bold gap-1 relative";
+            } else if (aba === 'financeiro') {
                 tabFin.style.display = 'block';
                 btnFin.className = "flex flex-col items-center text-blue-600 dark:text-blue-400 text-xs font-bold gap-1";
-                btnAlunos.className = "flex flex-col items-center text-gray-400 text-xs font-semibold gap-1";
             }
         }
 
