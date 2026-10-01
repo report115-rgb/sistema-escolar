@@ -762,7 +762,7 @@
 
             painel.style.display = 'block';
 
-            // Data atual de referência para checar o atraso (ex: 01/10/2026)
+            // Data atual de referência para checar o atraso
             const hoje = new Date();
             hoje.setHours(0, 0, 0, 0);
 
@@ -795,7 +795,7 @@
                 return;
             }
 
-            // Calcular multas e juros diários (0,5% ao mês = (0,5 / 30)% ao dia) para as faturas atrasadas
+            // Calcular juros diários (0,5% ao dia sobre o valor) e multa fixa de R$ 10,00 por parcela
             let valorTotalOriginalAcumulado = 0;
             let multaFixaTotalAcumulada = 0;
             let jurosDiariosTotalAcumulado = 0;
@@ -816,9 +816,9 @@
                 let multaParcela = 10.00;
                 multaFixaTotalAcumulada += multaParcela;
 
-                // Juros diários: 0,5% ao mês proporcional aos dias de atraso
-                let taxaDiaria = (0.5 / 100) / 30;
-                let jurosParcela = valorOriginal * taxaDiaria * diasAtraso;
+                // Juros diários: 0,5% ao dia sobre o valor original multiplicado pelos dias em atraso
+                let taxaJurosDia = 0.005;
+                let jurosParcela = valorOriginal * taxaJurosDia * diasAtraso;
                 jurosDiariosTotalAcumulado += jurosParcela;
 
                 let totalParcelaAtualizada = valorOriginal + multaParcela + jurosParcela;
@@ -835,7 +835,7 @@
                         <div class="grid grid-cols-2 gap-1 bg-slate-50 dark:bg-slate-800/50 p-2 rounded-xl text-[10px]">
                             <div>Valor Original: <strong>R$ ${valorOriginal.toFixed(2)}</strong></div>
                             <div>Multa Fixa: <strong class="text-amber-600">R$ ${multaParcela.toFixed(2)}</strong></div>
-                            <div>Juros Diários (0.5%/mês): <strong class="text-amber-600">R$ ${jurosParcela.toFixed(2)}</strong></div>
+                            <div>Juros Diários (0.5%/dia): <strong class="text-amber-600">R$ ${jurosParcela.toFixed(2)}</strong></div>
                             <div>Total Parcela: <strong class="text-emerald-600">R$ ${totalParcelaAtualizada.toFixed(2)}</strong></div>
                         </div>
                     </div>
@@ -875,7 +875,7 @@
         function gerarAcordoNegociacao(alunoId, valorTotal) {
             const aluno = studentsMap[alunoId];
             const nome = aluno ? (aluno.fullname || aluno.name) : 'Aluno';
-            alert(`Proposta de acordo gerada para ${nome} no valor total atualizado de R$ ${valorTotal.toFixed(2)} (incluindo juros diários proporcionais e multa fixa de R$ 10,00 por mensalidade em atraso).`);
+            alert(`Proposta de acordo gerada para ${nome} no valor total atualizado de R$ ${valorTotal.toFixed(2)} (incluindo juros diários de 0,5% ao dia e multa fixa de R$ 10,00 por mensalidade em atraso).`);
         }
 
         function abrirModalEditarMensalidadeFinanceiro(financeLogId) {
