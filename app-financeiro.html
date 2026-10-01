@@ -506,12 +506,57 @@
             container.innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-2xl text-center text-xs text-gray-400">Selecione um aluno acima para visualizar as faturas.</div>`;
         }
 
+        // Função auxiliar para converter string de data em objeto Date para ordenação cronológica correta
+        function parseDataParaOrdem(dataStr) {
+            if (!dataStr) return new Date(0);
+            let s = String(dataStr).trim();
+            // Formato DD/MM/AAAA
+            if (s.includes('/')) {
+                let p = s.split('/');
+                if (p.length === 3) {
+                    return new Date(`${p[2]}-${p[1]}-${p[0]}`);
+                }
+            }
+            // Formato AAAA-MM-DD
+            if (s.includes('-')) {
+                let p = s.split('-');
+                if (p.length === 3) {
+                    return new Date(`${p[0]}-${p[1]}-${p[2]}`);
+                }
+            }
+            let d = new Date(s);
+            return isNaN(d) ? new Date(0) : d;
+        }
+
+        // Função auxiliar para formatar data estritamente para o padrão DD/MM/AAAA
+        function formatarDataParaExibicao(dataStr) {
+            if (!dataStr) return '---';
+            let s = String(dataStr).trim();
+            // Se estiver em AAAA-MM-DD
+            if (s.includes('-')) {
+                let p = s.split('-');
+                if (p.length === 3) {
+                    return `${p[2]}/${p[1]}/${p[0]}`;
+                }
+            }
+            // Se já estiver em DD/MM/AAAA ou outro formato
+            return s;
+        }
+
         function renderizarFaturasDoAlunoSelecionado() {
             const alunoId = document.getElementById('select-fin-aluno').value;
             const container = document.getElementById('lista-faturas-aluno-container');
             if (!container || !alunoId) return;
 
             const faturasDoAluno = financeLogs.filter(f => (f.studentId === alunoId || f.alunoId === alunoId));
+            
+            // ORDENAÇÃO CRONOLÓGICA (Da mais antiga para a mais recente com base no vencimento)
+            faturasDoAluno.sort((a, b) => {
+                let dataA = parseDataParaOrdem(a.date || a.vencimento);
+                let dataB = parseDataParaOrdem(b.date || b.vencimento);
+                return dataA - dataB;
+            });
+
             const alunoObj = studentsMap[alunoId];
             const nomeAluno = alunoObj ? (alunoObj.fullname || alunoObj.name || 'Aluno') : 'Aluno';
 
@@ -524,9 +569,11 @@
             faturasDoAluno.forEach(f => {
                 const jaPago = f.status && f.status.toUpperCase().includes('PAGO');
                 const corBadge = jaPago ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300';
-                const dataVencimentoAtual = f.date || f.vencimento || '';
+                
+                // Formata a data de vencimento rigorosamente para DD/MM/AAAA
+                const dataVencimentoFormatada = formatarDataParaExibicao(f.date || f.vencimento);
                 const valorAtual = f.amount || f.valor || '0';
-                const dataPag = f.dataPagamento || '---';
+                const dataPag = formatarDataParaExibicao(f.dataPagamento || '---');
                 const formaPag = f.formaPagamento || 'Manual';
 
                 htmlAcumulado += `
@@ -535,7 +582,7 @@
                             <div>
                                 <strong class="text-blue-600 dark:text-blue-400 text-xs">${nomeAluno}</strong><br>
                                 <span class="text-gray-900 dark:text-white font-semibold">${f.description || f.descricao || 'Cobrança'}</span><br>
-                                <span class="text-gray-400 text-[10px]">Vencimento: ${dataVencimentoAtual} &bull; Valor: <strong>R$ ${valorAtual}</strong></span>
+                                <span class="text-gray-400 text-[10px]">Vencimento: ${dataVencimentoFormatada} &bull; Valor: <strong>R$ ${valorAtual}</strong></span>
                             </div>
                             <div class="flex items-center gap-1.5">
                                 <span class="px-2 py-0.5 ${corBadge} rounded-full text-[10px] font-bold">${f.status || 'PENDENTE'}</span>
