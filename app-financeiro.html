@@ -81,7 +81,7 @@
 
         <div class="text-center text-[10px] text-blue-300 pb-2">
             <div>Sistema SE7 de Gestão Acadêmica</div>
-            <div>v1.3.1 &bull; Setor Financeiro</div>
+            <div>v1.3.2 &bull; Setor Financeiro</div>
         </div>
     </div>
 
@@ -122,12 +122,12 @@
         </div>
     </div>
 
-    <!-- MODAL DE OPÇÕES DE ACORDO E NEGOCIAÇÃO -->
+    <!-- MODAL 1: REALIZAR ACORDO (GERAR PROPOSTA) -->
     <div id="modal-realizar-acordo" class="fixed inset-0 z-[5000] flex items-center justify-center bg-black/75 p-4" style="display: none;">
         <div class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-3xl shadow-2xl max-w-lg w-full p-6 space-y-4 border border-slate-200 dark:border-slate-800 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b pb-3 border-slate-200 dark:border-slate-800">
                 <h3 class="font-bold text-sm text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
-                    <i class="fa-solid fa-file-contract"></i> Opções de Acordo e Descontos
+                    <i class="fa-solid fa-file-contract"></i> Gerar Proposta de Acordo
                 </h3>
                 <button onclick="fecharModalRealizarAcordo()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm">
                     <i class="fa-solid fa-xmark"></i>
@@ -135,9 +135,8 @@
             </div>
 
             <div class="space-y-4 text-xs">
-                <p class="text-slate-500">Configure os descontos para cada modalidade abaixo. As 3 opções são necessárias para liberar a geração da proposta completa.</p>
+                <p class="text-slate-500">Configure os descontos para cada modalidade abaixo. As 3 opções são necessárias para gerar a proposta em PDF para o aluno[cite: 1].</p>
                 
-                <!-- Abas ou Seletores das 3 Formas -->
                 <div class="grid grid-cols-3 gap-2">
                     <button type="button" onclick="ativarAbaAcordoModal('avista')" id="btn-aba-avista" class="py-2.5 px-2 bg-emerald-600 text-white font-bold rounded-xl text-xs shadow transition">À Vista</button>
                     <button type="button" onclick="ativarAbaAcordoModal('parcelado')" id="btn-aba-parcelado" class="py-2.5 px-2 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl text-xs transition">Parcelado</button>
@@ -156,7 +155,7 @@
                         <input type="number" id="desc-multa-avista" value="100" min="0" max="100" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white">
                     </div>
                     <button type="button" onclick="gerarOpcaoAcordoModal('avista')" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow">
-                        Gerar Opção À Vista
+                        Salvar Opção À Vista
                     </button>
                 </div>
 
@@ -180,7 +179,7 @@
                         <input type="number" id="desc-multa-parcelado" value="50" min="0" max="100" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white">
                     </div>
                     <button type="button" onclick="gerarOpcaoAcordoModal('parcelado')" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow">
-                        Gerar Opção Parcelada
+                        Salvar Opção Parcelada
                     </button>
                 </div>
 
@@ -196,28 +195,58 @@
                         <input type="number" id="desc-multa-cartao" value="80" min="0" max="100" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white">
                     </div>
                     <button type="button" onclick="gerarOpcaoAcordoModal('cartao')" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow">
-                        Gerar Opção Cartão
+                        Salvar Opção Cartão
                     </button>
                 </div>
 
-                <!-- LISTA DAS OPÇÕES GERADAS DENTRO DO MODAL -->
+                <!-- LISTA DAS OPÇÕES CONFIGURADAS -->
                 <div class="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-800">
-                    <span class="font-bold uppercase text-[10px] text-slate-400">Opções Presetadas (Abaixo):</span>
+                    <span class="font-bold uppercase text-[10px] text-slate-400">Modalidades Configuradas:</span>
                     <div id="lista-opcoes-geradas-modal" class="space-y-2">
                         <div class="p-3 bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300 rounded-xl text-center text-xs">
-                            Nenhuma opção gerada ainda. Preencha e clique em gerar acima.
+                            Nenhuma opção configurada ainda. Preencha e clique em salvar acima.
                         </div>
                     </div>
                 </div>
             </div>
 
             <div class="flex flex-col gap-2 pt-2">
-                <!-- Botão Gerar Proposta dentro do Modal (aparece após preencher o cartão/última modalidade) -->
-                <button type="button" id="btn-gerar-proposta-modal" onclick="gerarPropostaFinalAcordo()" style="display: none;" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow transition">
-                    <i class="fa-solid fa-file-invoice-dollar mr-1"></i> Gerar Proposta
+                <button type="button" id="btn-gerar-proposta-modal" onclick="gerarPropostaPDF()" style="display: none;" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow transition">
+                    <i class="fa-solid fa-file-pdf mr-1"></i> Gerar Proposta (PDF) para Enviar ao Aluno
                 </button>
                 <button type="button" onclick="fecharModalRealizarAcordo()" class="w-full py-2.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold rounded-xl text-xs">
-                    Fechar / Concluir
+                    Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 2: FECHAR ACORDO (EFETIVAÇÃO DEFINITIVA) -->
+    <div id="modal-fechar-acordo" class="fixed inset-0 z-[5000] flex items-center justify-center bg-black/75 p-4" style="display: none;">
+        <div class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-3xl shadow-2xl max-w-lg w-full p-6 space-y-4 border border-slate-200 dark:border-slate-800 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b pb-3 border-slate-200 dark:border-slate-800">
+                <h3 class="font-bold text-sm text-blue-600 dark:text-blue-400 flex items-center gap-2">
+                    <i class="fa-solid fa-handshake"></i> Efetivar / Fechar Acordo com o Aluno
+                </h3>
+                <button onclick="fecharModalFecharAcordo()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4 text-xs">
+                <p class="text-slate-500">O aluno analisou e aprovou a proposta[cite: 1]? Selecione abaixo qual opção ele escolheu para fechar o acordo de vez:</p>
+                
+                <div id="container-opcoes-fechamento" class="space-y-2">
+                    <!-- Preenchido via script com as opções criadas na proposta -->
+                </div>
+            </div>
+
+            <div class="flex gap-2 pt-2">
+                <button type="button" onclick="fecharModalFecharAcordo()" class="flex-1 py-2.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold rounded-xl text-xs">
+                    Cancelar
+                </button>
+                <button type="button" id="btn-confirmar-fechamento" onclick="executarFechamentoAcordoDefinitivo()" class="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow" style="display: none;">
+                    Fechar Acordo e Atualizar Faturas
                 </button>
             </div>
         </div>
@@ -425,7 +454,7 @@
         let faturasAtrasadasGlobal = [];
         let abaOrigemRetorno = 'alunos';
 
-        // Armazena as 3 opções geradas
+        // Armazena as opções temporárias de acordo para gerar a proposta
         let opcoesGeradas = {
             avista: null,
             parcelado: null,
@@ -878,9 +907,23 @@
             const hoje = new Date();
             hoje.setHours(0, 0, 0, 0);
 
+            // Verifica se já existe um acordo efetivado para este aluno
+            const acordoEfetivado = financeLogs.find(f => (f.studentId === alunoId || f.alunoId === alunoId) && f.status && f.status.includes("ACORDO EFETIVADO"));
+
+            if (acordoEfetivado) {
+                painel.innerHTML = `
+                    <div class="bg-gradient-to-br from-blue-600 to-indigo-800 text-white p-4 rounded-3xl shadow-lg space-y-2">
+                        <div class="text-[10px] uppercase font-semibold tracking-wider text-blue-200">Status da Negociação</div>
+                        <h3 class="text-base font-bold"><i class="fa-solid fa-circle-check mr-1"></i> Acordo Realizado</h3>
+                        <p class="text-xs opacity-90">${acordoEfetivado.description || 'Acordo firmado e faturas consolidadas com sucesso.'}</p>
+                    </div>
+                `;
+                return;
+            }
+
             faturasAtrasadasGlobal = financeLogs.filter(f => {
                 const pertenceAluno = (f.studentId === alunoId || f.alunoId === alunoId);
-                const jaPago = f.status && f.status.toUpperCase().includes('PAGO');
+                const jaPago = f.status && (f.status.toUpperCase().includes('PAGO') || f.status.includes('NEGOCIADO'));
                 
                 if (!pertenceAluno || jaPago) return false;
 
@@ -955,11 +998,14 @@
                     <div class="flex justify-between items-end">
                         <div>
                             <span class="text-xs opacity-80">Total Vencidas: ${faturasAtrasadasGlobal.length} | Sem Desconto: R$ ${valorAtualNegociacaoGlobal.toFixed(2)}</span>
-                            <h3 class="text-xl font-bold">Gerencie as Opções de Acordo</h3>
+                            <h3 class="text-xl font-bold">Gerencie as Opções</h3>
                         </div>
-                        <div>
-                            <button type="button" onclick="abrirModalRealizarAcordo()" class="px-3.5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-xl text-xs shadow transition">
+                        <div class="flex gap-2">
+                            <button type="button" onclick="abrirModalRealizarAcordo()" class="px-3 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-xl text-xs shadow transition">
                                 <i class="fa-solid fa-sliders mr-1"></i> Realizar Acordo
+                            </button>
+                            <button type="button" onclick="abrirModalFecharAcordo()" class="px-3 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs shadow transition">
+                                <i class="fa-solid fa-handshake mr-1"></i> Fechar Acordo
                             </button>
                         </div>
                     </div>
@@ -979,7 +1025,6 @@
 
         function fecharModalRealizarAcordo() {
             document.getElementById('modal-realizar-acordo').style.display = 'none';
-            if (alunoNegociacaoId) selecionarAlunoNegociacao(alunoNegociacaoId);
         }
 
         function ativarAbaAcordoModal(tipo) {
@@ -1024,7 +1069,7 @@
                 multaFinal: multaFinal
             };
 
-            alert(`Opção "${tipo.toUpperCase()}" gerada e configurada com sucesso!`);
+            alert(`Opção "${tipo.toUpperCase()}" configurada com sucesso!`);
             atualizarListaOpcoesGeradasModal();
         }
 
@@ -1057,12 +1102,11 @@
             }
 
             if (!temAlguma) {
-                html = `<div class="p-3 bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300 rounded-xl text-center text-xs">Nenhuma opção gerada ainda. Preencha e clique em gerar acima.</div>`;
+                html = `<div class="p-3 bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300 rounded-xl text-center text-xs">Nenhuma opção configurada ainda. Preencha e clique em salvar acima.</div>`;
             }
 
             container.innerHTML = html;
 
-            // Se todas as 3 opções (avista, parcelado, cartao) estiverem configuradas, exibe o botão "Gerar Proposta" embaixo
             const todasGeradas = opcoesGeradas.avista && opcoesGeradas.parcelado && opcoesGeradas.cartao;
             if (btnGerarPropostaModal) {
                 btnGerarPropostaModal.style.display = todasGeradas ? 'block' : 'none';
@@ -1082,63 +1126,112 @@
             document.getElementById('painel-negociacao-aluno').style.display = 'none';
         }
 
-        async function gerarPropostaFinalAcordo() {
+        // ETAPA 1: APENAS GERAR A PROPOSTA EM PDF (SEM MEXER EM FATURAS E SEM POLUIR O SISTEMA)
+        function gerarPropostaPDF() {
             if (!alunoNegociacaoId) return;
             const aluno = studentsMap[alunoNegociacaoId];
             const nome = aluno ? (aluno.fullname || aluno.name) : 'Aluno';
 
             if (!opcoesGeradas.avista || !opcoesGeradas.parcelado || !opcoesGeradas.cartao) {
-                return alert("Você precisa configurar as 3 opções (À Vista, Parcelado e Cartão) antes de emitir a proposta final.");
+                return alert("Configure as 3 opções (À Vista, Parcelado e Cartão) antes de gerar a proposta.");
             }
 
-            const desejaGerar = confirm("Você deseja gerar a proposta atual para o aluno?");
-            if (!desejaGerar) {
+            fecharModalRealizarAcordo();
+
+            const textoProposta = `📄 *Proposta de Acordo SE7* - Aluno(a): ${nome}\n\nOpções geradas para análise:\n• À Vista: R$ ${opcoesGeradas.avista.valorFinal.toFixed(2)}\n• Parcelado (${opcoesGeradas.parcelado.infoExtra}): R$ ${opcoesGeradas.parcelado.valorFinal.toFixed(2)}\n• Cartão de Crédito: R$ ${opcoesGeradas.cartao.valorFinal.toFixed(2)}\n\n(Proposta pronta para envio em PDF).`;
+
+            if (navigator.share) {
+                navigator.share({ title: `Proposta - ${nome}`, text: textoProposta }).catch(() => {});
+            } else {
+                alert(`✅ PDF da Proposta gerado com sucesso para ${nome}!\n\nEnvie o documento ao aluno e aguarde a resposta dele para clicar em "Fechar Acordo". Nenhuma alteração foi feita nas faturas ainda.`);
+            }
+        }
+
+        // ETAPA 2: ABRIR MODAL DE FECHAR ACORDO
+        function abrirModalFecharAcordo() {
+            if (!opcoesGeradas.avista || !opcoesGeradas.parcelado || !opcoesGeradas.cartao) {
+                return alert("Você precisa primeiro gerar a proposta configurando as 3 opções no botão 'Realizar Acordo' antes de fechar o acordo.");
+            }
+
+            const container = document.getElementById('container-opcoes-fechamento');
+            const btnConfirmar = document.getElementById('btn-confirmar-fechamento');
+            
+            let html = '';
+            for (let k in opcoesGeradas) {
+                let op = opcoesGeradas[k];
+                if (op) {
+                    let nomeFormatado = k === 'avista' ? 'À Vista' : (k === 'parcelado' ? `Parcelado (${op.infoExtra})` : 'Cartão de Crédito');
+                    html += `
+                        <label class="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-100">
+                            <div class="flex items-center gap-2">
+                                <input type="radio" name="opcao-escolhida-fechamento" value="${k}" class="text-blue-600 focus:ring-blue-500">
+                                <span class="font-bold text-slate-900 dark:text-white">${nomeFormatado}</span>
+                            </div>
+                            <span class="font-bold text-emerald-600">R$ ${op.valorFinal.toFixed(2)}</span>
+                        </label>
+                    `;
+                }
+            }
+
+            container.innerHTML = html;
+            btnConfirmar.style.display = 'block';
+            document.getElementById('modal-fechar-acordo').style.display = 'flex';
+        }
+
+        function fecharModalFecharAcordo() {
+            document.getElementById('modal-fechar-acordo').style.display = 'none';
+        }
+
+        // ETAPA 3: EFETIVAR O FECHAMENTO DO ACORDO DEFINITIVAMENTE (BAIXA AS ATRASADAS E CRIA A NOVA PARCELA)
+        async function executarFechamentoAcordoDefinitivo() {
+            const radioSelecionado = document.querySelector('input[name="opcao-escolhida-fechamento"]:checked');
+            if (!radioSelecionado) {
+                return alert("Selecione qual das opções o aluno escolheu para fecharmos o acordo.");
+            }
+
+            const escolhaKey = radioSelecionado.value;
+            const opEscolhida = opcoesGeradas[escolhaKey];
+            const aluno = studentsMap[alunoNegociacaoId];
+            const nome = aluno ? (aluno.fullname || aluno.name) : 'Aluno';
+
+            if (!confirm(`Deseja realmente fechar o acordo na modalidade ${escolhaKey.toUpperCase()} no valor de R$ ${opEscolhida.valorFinal.toFixed(2)}?\n\nIsso irá dar baixa nas faturas atrasadas e registrar o acordo definitivamente.`)) {
                 return;
             }
 
             try {
-                // CORREÇÃO: Apenas registramos/salvamos a proposta para envio/análise pelo aluno,
-                // SEM dar baixa nas faturas anteriores e SEM injetar termos na aba de faturas ativas neste momento.
-                const propostaId = "proposta_acordo_" + Date.now();
-                await db.collection("financeLogs").doc(propostaId).set({
+                // 1. Dar baixa nas faturas atrasadas anteriores
+                for (let fatura of faturasAtrasadasGlobal) {
+                    await db.collection("financeLogs").doc(fatura.id).update({
+                        status: "NEGOCIADO (ACORDO)",
+                        dataPagamento: new Date().toLocaleDateString('pt-BR'),
+                        formaPagamento: "Substituído por Acordo"
+                    });
+                }
+
+                // 2. Criar a nova fatura/termo de acordo definitivo na aba faturas do aluno
+                const novoAcordoId = "acordo_efetivado_" + Date.now();
+                let nomeModalidade = escolhaKey === 'avista' ? 'À Vista' : (escolhaKey === 'parcelado' ? `Parcelado (${opEscolhida.infoExtra})` : 'Cartão de Crédito');
+
+                await db.collection("financeLogs").doc(novoAcordoId).set({
                     studentId: alunoNegociacaoId,
                     alunoId: alunoNegociacaoId,
-                    description: `Proposta de Acordo Emitida (Aguardando Confirmação)`,
-                    amount: opcoesGeradas.avista.valorFinal.toFixed(2),
-                    valor: opcoesGeradas.avista.valorFinal.toFixed(2),
+                    description: `Acordo Efetivado - ${nomeModalidade}`,
+                    amount: opEscolhida.valorFinal.toFixed(2),
+                    valor: opEscolhida.valorFinal.toFixed(2),
                     date: new Date().toISOString().split('T')[0],
                     vencimento: new Date().toISOString().split('T')[0],
-                    status: "PROPOSTA EMITIDA (AGUARDANDO)",
-                    detalhesOpcoes: opcoesGeradas,
+                    status: "ACORDO EFETIVADO (PENDENTE)",
                     criadoEm: new Date().toISOString()
                 });
 
-                console.log(`[Google Drive Sync] Salvando PDF da Proposta de Acordo na pasta do aluno ${nome}...`);
-
-                // Fechar o modal de acordo
-                fecharModalRealizarAcordo();
-
-                // Simulação de compartilhamento nativo no celular (Web Share API) para mandar ao aluno
-                const textoCompartilhamento = `📄 *Proposta de Acordo SE7* - Aluno(a): ${nome}\n\nProposta gerada com sucesso! Seguem as opções para sua análise:\n• À Vista: R$ ${opcoesGeradas.avista.valorFinal.toFixed(2)}\n• Parcelado (${opcoesGeradas.parcelado.infoExtra}): R$ ${opcoesGeradas.parcelado.valorFinal.toFixed(2)}\n• Cartão de Crédito: R$ ${opcoesGeradas.cartao.valorFinal.toFixed(2)}\n\nAguardando confirmação para fechamento e consolidação do acordo.`;
-
-                if (navigator.share) {
-                    try {
-                        await navigator.share({
-                            title: `Proposta de Acordo - ${nome}`,
-                            text: textoCompartilhamento,
-                        });
-                    } catch (err) {
-                        console.log("Compartilhamento cancelado ou não suportado na intent direta.");
-                    }
-                } else {
-                    alert(`✅ Proposta gerada com sucesso para ${nome}!\n\n• As opções foram enviadas para análise do aluno.\n• Nenhuma fatura foi baixada ainda, aguardando a confirmação do fechamento do acordo.`);
-                }
+                fecharModalFecharAcordo();
+                alert(`🎉 Acordo fechado com sucesso para ${nome}!\n\n• As faturas atrasadas foram baixadas.\n• A nova parcela do acordo já está disponível na aba de Faturas do aluno.`);
                 
                 limparSelecaoNegociacao();
-                mudarAbaApp('negociacoes');
+                mudarAbaApp('financeiro');
 
             } catch (e) {
-                alert("Erro ao registrar proposta: " + e.message);
+                alert("Erro ao fechar acordo: " + e.message);
             }
         }
 
