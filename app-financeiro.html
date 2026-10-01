@@ -81,7 +81,7 @@
 
         <div class="text-center text-[10px] text-blue-300 pb-2">
             <div>Sistema SE7 de Gestão Acadêmica</div>
-            <div>v1.4.4 &bull; Setor Financeiro</div>
+            <div>v1.4.5 &bull; Setor Financeiro</div>
         </div>
     </div>
 
@@ -1255,7 +1255,6 @@
             fecharModalRealizarAcordo();
 
             const propostaIdExistente = document.getElementById('edit-proposta-id-ativo').value;
-            // GRAVA O VALOR TOTAL GERAL DOS DÉBITOS COM JUROS E MULTAS APLICADOS
             const valorTotalNegociadoParaRegistro = valorAtualNegociacaoGlobal.toFixed(2);
 
             try {
@@ -1391,7 +1390,8 @@
                         .sheet { max-width: 850px; margin: 0 auto; background: #ffffff; padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
                         
                         .header { background: #1e3a8a; color: white; padding: 25px; border-radius: 10px; display: flex; align-items: center; gap: 20px; margin-bottom: 25px; }
-                        .header img { width: 75px; height: 75px; object-fit: contain; background: white; border-radius: 8px; padding: 4px; box-shadow: 0 2px 6px rgba(0,0,0,0.15); flex-shrink: 0; }
+                        /* LOGO EM PNG SEM FUNDO BRANCO OU SOMBRA */
+                        .header img { width: 75px; height: 75px; object-fit: contain; background: transparent; border-radius: 0; padding: 0; box-shadow: none; flex-shrink: 0; }
                         .header-text h1 { font-size: 17px; margin: 0 0 4px 0; font-weight: bold; }
                         .header-text p { font-size: 11px; margin: 2px 0; opacity: 0.9; }
                         
@@ -1432,7 +1432,7 @@
                             ${logoUrl && logoUrl.trim() !== "" ? `
                                 <img src="${logoUrl.trim()}" alt="Logomarca Oficial">
                             ` : `
-                                <div style="width: 75px; height: 75px; background: white; color: #1e3a8a; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 22px; flex-shrink: 0;">SE7</div>
+                                <div style="width: 75px; height: 75px; background: transparent; color: #ffffff; border-radius: 0; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 22px; flex-shrink: 0;">SE7</div>
                             `}
                             <div class="header-text">
                                 <h1>${razaoSocial}</h1>
@@ -1509,10 +1509,6 @@
         }
 
         function abrirModalFecharAcordo() {
-            if (!opcoesGeradas.avista || !opcoesGeradas.parcelado || !opcoesGeradas.cartao) {
-                // Se o usuário clicar em aprovar direto numa proposta salva anterior sem reabrir o modal, configuramos opções fictícias baseadas no valor salvo ou exigimos gerar
-            }
-
             const container = document.getElementById('container-opcoes-fechamento');
             const btnConfirmar = document.getElementById('btn-confirmar-fechamento');
             
@@ -1534,7 +1530,6 @@
             }
 
             if (!html) {
-                // Fallback caso não tenha gerado na sessão ativa
                 html = `<div class="p-3 bg-amber-50 text-amber-800 rounded-xl text-xs">Por favor, clique em "Editar" na proposta para carregar as opções de pagamento antes de aprovar.</div>`;
             }
 
