@@ -232,10 +232,8 @@
         }
 
         function carregarDadosNuvem() {
-            // Carrega os Cursos da Matriz (buscando nas coleções 'courses', 'cursos' ou 'turmas')
             carregarCursosMatriz();
 
-            // Carrega os Alunos
             db.collection("students").onSnapshot(snapshot => {
                 students = [];
                 snapshot.forEach(doc => students.push({ id: doc.id, ...doc.data() }));
@@ -245,7 +243,6 @@
                 console.error("Erro ao carregar alunos:", error);
             });
 
-            // Carrega os Registros Financeiros
             db.collection("financeLogs").onSnapshot(snapshot => {
                 financeLogs = [];
                 snapshot.forEach(doc => financeLogs.push({ id: doc.id, ...doc.data() }));
@@ -265,7 +262,6 @@
                     if (!snap.empty) {
                         snap.forEach(doc => {
                             const d = doc.data();
-                            // Tenta pegar o nome do curso de várias propriedades possíveis
                             const nomeCurso = d.name || d.nome || d.curso || d.title || d.descricao;
                             if (nomeCurso && typeof nomeCurso === 'string') {
                                 cursosEncontrados.add(nomeCurso.trim());
@@ -277,7 +273,6 @@
                 }
             }
 
-            // Se não encontrar nada nas coleções dedicadas de cursos, varre os alunos como alternativa de segurança
             if (cursosEncontrados.size === 0) {
                 students.forEach(s => {
                     const c = s.course || s.curso || s.turma || s.nomeCurso;
@@ -307,10 +302,9 @@
         function renderizarListaAlunos() {
             const container = document.getElementById('lista-alunos-container');
             const termo = document.getElementById('input-busca-aluno').value.toLowerCase().trim();
-            const cursoSelecionado = document.getElementById('select-filtro-curso').value;
+            const cursoSelecionado = document.getElementById('select-filtro-curso').value.trim().toLowerCase();
             if (!container) return;
 
-            // Se a lista de cursos estiver vazia, tenta atualizar com base nos alunos já carregados
             if (coursesList.length === 0 && students.length > 0) {
                 let tempCursos = new Set();
                 students.forEach(s => {
@@ -324,10 +318,10 @@
             const filtrados = students.filter(s => {
                 const nomeAluno = s.fullname || s.name || '';
                 const cpfAluno = s.cpf || '';
-                const cursoAluno = s.course || s.curso || s.turma || s.nomeCurso || '';
+                const cursoAluno = (s.course || s.curso || s.turma || s.nomeCurso || '').trim().toLowerCase();
 
                 const bateTexto = nomeAluno.toLowerCase().includes(termo) || cpfAluno.includes(termo);
-                const bateCurso = (cursoSelecionado === "") || (cursoAluno.trim() === cursoSelecionado);
+                const bateCurso = (cursoSelecionado === "") || (cursoAluno === cursoSelecionado);
 
                 return bateTexto && bateCurso;
             });
