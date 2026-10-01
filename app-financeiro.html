@@ -81,7 +81,7 @@
 
         <div class="text-center text-[10px] text-blue-300 pb-2">
             <div>Sistema SE7 de Gestão Acadêmica</div>
-            <div>v1.4.0 &bull; Setor Financeiro</div>
+            <div>v1.4.1 &bull; Setor Financeiro</div>
         </div>
     </div>
 
@@ -122,7 +122,7 @@
         </div>
     </div>
 
-    <!-- MODAL 1: REALIZAR ACORDO (GERAR PROPOSTA) -->
+    <!-- MODAL 1: PROPOSTA DE ACORDO -->
     <div id="modal-realizar-acordo" class="fixed inset-0 z-[5000] flex items-center justify-center bg-black/75 p-4" style="display: none;">
         <div class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-3xl shadow-2xl max-w-lg w-full p-6 space-y-4 border border-slate-200 dark:border-slate-800 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b pb-3 border-slate-200 dark:border-slate-800">
@@ -212,7 +212,7 @@
 
             <div class="flex flex-col gap-2 pt-2">
                 <button type="button" id="btn-gerar-proposta-modal" onclick="gerarPropostaPDF()" style="display: none;" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow transition">
-                    <i class="fa-solid fa-file-pdf mr-1"></i> Visualizar Proposta (PDF) na Tela
+                    <i class="fa-solid fa-file-pdf mr-1"></i> Gerar Proposta e Visualizar PDF na Tela
                 </button>
                 <button type="button" onclick="fecharModalRealizarAcordo()" class="w-full py-2.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold rounded-xl text-xs">
                     Fechar
@@ -584,7 +584,6 @@
             });
         }
 
-        // BUSCA ROBUSTA DOS DADOS DA INSTITUIÇÃO E LOGOMARCA EM VÁRIAS COLEÇÕES DO FIREBASE
         async function carregarDadosInstituicao() {
             const colecoesPossiveis = ["institution", "settings", "empresa", "config", "escola", "dadosInstituicao"];
             
@@ -600,7 +599,6 @@
                             address: dadosDoc.address || dadosDoc.endereco || dadosDoc.logradouro || institutionData.address,
                             logo: dadosDoc.logo || dadosDoc.logoUrl || dadosDoc.logomarca || dadosDoc.urlLogo || dadosDoc.image || dadosDoc.fileUrl || institutionData.logo
                         };
-                        console.log(`Dados da instituição encontrados na coleção: ${col}`, institutionData);
                         break;
                     }
                 } catch (e) {
@@ -953,17 +951,27 @@
             const hoje = new Date();
             hoje.setHours(0, 0, 0, 0);
 
-            const acordoEfetivado = financeLogs.find(f => (f.studentId === alunoId || f.alunoId === alunoId) && f.status && f.status.includes("ACORDO EFETIVADO"));
+            // Verificar se já existe proposta ou acordo registrado para este aluno
+            const propostasAluno = financeLogs.filter(f => (f.studentId === alunoId || f.alunoId === alunoId) && (f.status && (f.status.includes("AGUARDANDO APROVAÇÃO") || f.status.includes("ACORDO ACEITO") || f.status.includes("ACORDO EFETIVADO"))));
 
-            if (acordoEfetivado) {
-                painel.innerHTML = `
-                    <div class="bg-gradient-to-br from-blue-600 to-indigo-800 text-white p-4 rounded-3xl shadow-lg space-y-2">
-                        <div class="text-[10px] uppercase font-semibold tracking-wider text-blue-200">Status da Negociação</div>
-                        <h3 class="text-base font-bold"><i class="fa-solid fa-circle-check mr-1"></i> Acordo Realizado</h3>
-                        <p class="text-xs opacity-90">${acordoEfetivado.description || 'Acordo firmado e faturas consolidadas com sucesso.'}</p>
-                    </div>
-                `;
-                return;
+            let htmlPropostasRealizadas = '';
+            if (propostasAluno.length > 0) {
+                propostasAluno.forEach(p => {
+                    let corStatus = p.status.includes("AGUARDANDO") ? "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300" : "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300";
+                    let textoStatusExibir = p.status.includes("AGUARDANDO") ? "Aguardando aprovação do aluno" : "Acordo aceito";
+
+                    htmlPropostasRealizadas += `
+                        <div class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl shadow-sm border border-emerald-500/50 space-y-2 text-xs mb-2">
+                            <div class="flex justify-between items-center">
+                                <span class="font-bold text-slate-900 dark:text-white">${p.description || 'Proposta de Acordo'}</span>
+                                <span class="px-2 py-0.5 ${corStatus} rounded-full text-[10px] font-bold">${textoStatusExibir}</span>
+                            </div>
+                            <div class="text-[10px] text-slate-400">
+                                Valor Negociado: <strong>R$ ${p.amount || p.valor || '0.00'}</strong> &bull; Data: ${p.date || '---'}
+                            </div>
+                        </div>
+                    `;
+                });
             }
 
             faturasAtrasadasGlobal = financeLogs.filter(f => {
@@ -981,7 +989,7 @@
                 return dataVenc < hoje;
             });
 
-            if (faturasAtrasadasGlobal.length === 0) {
+            if (faturasAtrasadasGlobal.length === 0 && propostasAluno.length === 0) {
                 painel.innerHTML = `
                     <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800 space-y-2">
                         <div class="w-10 h-10 bg-emerald-100 dark:bg-emerald-950 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-base">
@@ -1040,28 +1048,37 @@
             valorAtualNegociacaoGlobal = valorTotalOriginalGlobal + multaTotalGlobal + jurosTotalGlobal;
 
             painel.innerHTML = `
-                <div class="bg-gradient-to-br from-emerald-600 to-teal-800 text-white p-4 rounded-3xl shadow-lg space-y-3">
-                    <div class="text-[10px] uppercase font-semibold tracking-wider text-emerald-200">Resumo da Negociação (Débitos em Atraso)</div>
-                    <div class="flex justify-between items-end">
-                        <div>
-                            <span class="text-xs opacity-90 font-medium">Total Vencidas: ${faturasAtrasadasGlobal.length}</span>
-                            <h3 class="text-2xl font-bold tracking-tight mt-0.5">R$ ${valorAtualNegociacaoGlobal.toFixed(2)}</h3>
-                        </div>
-                        <div class="flex gap-2">
-                            <button type="button" onclick="abrirModalRealizarAcordo()" class="px-3 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-xl text-xs shadow transition">
-                                <i class="fa-solid fa-sliders mr-1"></i> Realizar Acordo
-                            </button>
-                            <button type="button" onclick="abrirModalFecharAcordo()" class="px-3 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs shadow transition">
-                                <i class="fa-solid fa-handshake mr-1"></i> Fechar Acordo
-                            </button>
+                ${htmlPropostasRealizadas ? `
+                    <div class="space-y-2 pt-1">
+                        <h4 class="font-bold text-xs uppercase text-emerald-600 tracking-wider">Propostas Realizadas / Registros:</h4>
+                        ${htmlPropostasRealizadas}
+                    </div>
+                ` : ''}
+
+                ${faturasAtrasadasGlobal.length > 0 ? `
+                    <div class="bg-gradient-to-br from-emerald-600 to-teal-800 text-white p-4 rounded-3xl shadow-lg space-y-3">
+                        <div class="text-[10px] uppercase font-semibold tracking-wider text-emerald-200">Resumo da Negociação (Débitos em Atraso)</div>
+                        <div class="flex justify-between items-end">
+                            <div>
+                                <span class="text-xs opacity-90 font-medium">Total Vencidas: ${faturasAtrasadasGlobal.length}</span>
+                                <h3 class="text-2xl font-bold tracking-tight mt-0.5">R$ ${valorAtualNegociacaoGlobal.toFixed(2)}</h3>
+                            </div>
+                            <div class="flex gap-2">
+                                <button type="button" onclick="abrirModalRealizarAcordo()" class="px-3 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-xl text-xs shadow transition">
+                                    <i class="fa-solid fa-sliders mr-1"></i> Proposta de Acordo
+                                </button>
+                                <button type="button" onclick="abrirModalFecharAcordo()" class="px-3 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs shadow transition">
+                                    <i class="fa-solid fa-handshake mr-1"></i> Fechar Acordo
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="space-y-2 pt-2">
-                    <h4 class="font-bold text-xs uppercase text-slate-500 tracking-wider">Faturas Vencidas com Encargos Calculados:</h4>
-                    ${htmlFaturasCalc}
-                </div>
+                    <div class="space-y-2 pt-2">
+                        <h4 class="font-bold text-xs uppercase text-slate-500 tracking-wider">Faturas Vencidas com Encargos Calculados:</h4>
+                        ${htmlFaturasCalc}
+                    </div>
+                ` : ''}
             `;
         }
 
@@ -1173,8 +1190,8 @@
             document.getElementById('painel-negociacao-aluno').style.display = 'none';
         }
 
-        // GERA PDF GARANTINDO A LOGOMARCA OFICIAL DA INSTITUIÇÃO NO CABEÇALHO
-        function gerarPropostaPDF() {
+        // GERA PROPOSTA, REGISTRA NO FIREBASE COMO "AGUARDANDO APROVAÇÃO" E ABRE PDF
+        async function gerarPropostaPDF() {
             if (!alunoNegociacaoId) return;
             const aluno = studentsMap[alunoNegociacaoId];
             if (!aluno) return;
@@ -1184,6 +1201,24 @@
             }
 
             fecharModalRealizarAcordo();
+
+            try {
+                // Registrar a proposta gerada com status "AGUARDANDO APROVAÇÃO" no Firestore
+                const propostaId = "proposta_" + alunoNegociacaoId + "_" + Date.now();
+                await db.collection("financeLogs").doc(propostaId).set({
+                    studentId: alunoNegociacaoId,
+                    alunoId: alunoNegociacaoId,
+                    description: `Proposta de Acordo Gerada`,
+                    amount: opcoesGeradas.avista.valorFinal.toFixed(2),
+                    valor: opcoesGeradas.avista.valorFinal.toFixed(2),
+                    date: new Date().toLocaleDateString('pt-BR'),
+                    vencimento: new Date().toISOString().split('T')[0],
+                    status: "AGUARDANDO APROVAÇÃO DO ALUNO",
+                    criadoEm: new Date().toISOString()
+                });
+            } catch (e) {
+                console.warn("Erro ao registrar proposta no Firebase:", e);
+            }
 
             const razaoSocial = institutionData.razaoSocial || institutionData.name || "JS & SS SERVIÇOS EDUCACIONAIS E CIA LTDA";
             const cnpjInst = institutionData.cnpj || "31.535.516/0001-64";
@@ -1291,7 +1326,6 @@
                         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #1e293b; margin: 0; padding: 30px; background: #f8fafc; }
                         .sheet { max-width: 850px; margin: 0 auto; background: #ffffff; padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
                         
-                        /* Cabeçalho Institucional com a cor azul do app */
                         .header { background: #1e3a8a; color: white; padding: 25px; border-radius: 10px; display: flex; align-items: center; gap: 20px; margin-bottom: 25px; }
                         .header img { width: 75px; height: 75px; object-fit: contain; background: white; border-radius: 8px; padding: 4px; box-shadow: 0 2px 6px rgba(0,0,0,0.15); flex-shrink: 0; }
                         .header-text h1 { font-size: 17px; margin: 0 0 4px 0; font-weight: bold; }
@@ -1398,7 +1432,7 @@
 
                         <div class="footer-note">
                             Documento gerado eletronicamente pelo Setor Financeiro SE7 em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}.<br>
-                            Após a escolha da modalidade pelo aluno, efetive o fechamento diretamente no painel de negociações do aplicativo.
+                            Status atual: Aguardando aprovação do aluno.
                         </div>
                     </div>
                 </body>
@@ -1407,11 +1441,12 @@
 
             janelaPDF.document.write(htmlConteudoPDF);
             janelaPDF.document.close();
+            selecionarAlunoNegociacao(alunoNegociacaoId);
         }
 
         function abrirModalFecharAcordo() {
             if (!opcoesGeradas.avista || !opcoesGeradas.parcelado || !opcoesGeradas.cartao) {
-                return alert("Você precisa primeiro gerar a proposta configurando as 3 opções no botão 'Realizar Acordo' antes de fechar o acordo.");
+                return alert("Você precisa primeiro gerar a proposta configurando as 3 opções no botão 'Proposta de Acordo' antes de fechar o acordo.");
             }
 
             const container = document.getElementById('container-opcoes-fechamento');
@@ -1454,11 +1489,12 @@
             const aluno = studentsMap[alunoNegociacaoId];
             const nome = aluno ? (aluno.fullname || aluno.name) : 'Aluno';
 
-            if (!confirm(`Deseja realmente fechar o acordo na modalidade ${escolhaKey.toUpperCase()} no valor de R$ ${opEscolhida.valorFinal.toFixed(2)}?\n\nIsso irá dar baixa nas faturas atrasadas e registrar o acordo definitivamente.`)) {
+            if (!confirm(`Deseja realmente fechar o acordo na modalidade ${escolhaKey.toUpperCase()} no valor de R$ ${opEscolhida.valorFinal.toFixed(2)}?\n\nIsso atualizará o status para 'Acordo aceito' e baixará as faturas atrasadas.`)) {
                 return;
             }
 
             try {
+                // Atualizar faturas antigas para negociadas
                 for (let fatura of faturasAtrasadasGlobal) {
                     await db.collection("financeLogs").doc(fatura.id).update({
                         status: "NEGOCIADO (ACORDO)",
@@ -1467,26 +1503,35 @@
                     });
                 }
 
-                const novoAcordoId = "acordo_efetivado_" + Date.now();
-                let nomeModalidade = escolhaKey === 'avista' ? 'À Vista' : (escolhaKey === 'parcelado' ? `Parcelado (${opEscolhida.infoExtra})` : 'Cartão de Crédito');
-
-                await db.collection("financeLogs").doc(novoAcordoId).set({
-                    studentId: alunoNegociacaoId,
-                    alunoId: alunoNegociacaoId,
-                    description: `Acordo Efetivado - ${nomeModalidade}`,
-                    amount: opEscolhida.valorFinal.toFixed(2),
-                    valor: opEscolhida.valorFinal.toFixed(2),
-                    date: new Date().toISOString().split('T')[0],
-                    vencimento: new Date().toISOString().split('T')[0],
-                    status: "ACORDO EFETIVADO (PENDENTE)",
-                    criadoEm: new Date().toISOString()
-                });
+                // Atualizar proposta existente para "ACORDO ACEITO" ou criar registro de acordo aceito
+                const propostasPendentes = financeLogs.filter(f => (f.studentId === alunoNegociacaoId || f.alunoId === alunoNegociacaoId) && f.status && f.status.includes("AGUARDANDO APROVAÇÃO"));
+                
+                if (propostasPendentes.length > 0) {
+                    for (let p of propostasPendentes) {
+                        await db.collection("financeLogs").doc(p.id).update({
+                            status: "ACORDO ACEITO",
+                            description: `Acordo Aceito - ${escolhaKey.toUpperCase()}`
+                        });
+                    }
+                } else {
+                    const novoAcordoId = "acordo_aceito_" + Date.now();
+                    await db.collection("financeLogs").doc(novoAcordoId).set({
+                        studentId: alunoNegociacaoId,
+                        alunoId: alunoNegociacaoId,
+                        description: `Acordo Aceito - ${escolhaKey.toUpperCase()}`,
+                        amount: opEscolhida.valorFinal.toFixed(2),
+                        valor: opEscolhida.valorFinal.toFixed(2),
+                        date: new Date().toLocaleDateString('pt-BR'),
+                        vencimento: new Date().toISOString().split('T')[0],
+                        status: "ACORDO ACEITO",
+                        criadoEm: new Date().toISOString()
+                    });
+                }
 
                 fecharModalFecharAcordo();
-                alert(`🎉 Acordo fechado com sucesso para ${nome}!\n\n• As faturas atrasadas foram baixadas.\n• A nova parcela do acordo já está disponível na aba de Faturas do aluno.`);
+                alert(`🎉 Acordo aceito com sucesso para ${nome}!\n\n• O registro foi atualizado para 'Acordo aceito'.\n• As faturas atrasadas foram baixadas.`);
                 
-                limparSelecaoNegociacao();
-                mudarAbaApp('financeiro');
+                selecionarAlunoNegociacao(alunoNegociacaoId);
 
             } catch (e) {
                 alert("Erro ao fechar acordo: " + e.message);
