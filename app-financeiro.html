@@ -19,8 +19,8 @@
                     colors: { primary: '#1e40af', secondary: '#3b82f6', accent: '#f59e0b' },
                     keyframes: {
                         piscarAlerta: {
-                            '0%, 100%': { backgroundColor: '#ef4444', transform: 'scale(1)' }, /* Vermelho */
-                            '50%': { backgroundColor: '#3b82f6', transform: 'scale(1.1)' } /* Azul */
+                            '0%, 100%': { backgroundColor: '#ef4444', transform: 'scale(1)' },
+                            '50%': { backgroundColor: '#3b82f6', transform: 'scale(1.1)' }
                         }
                     },
                     animation: {
@@ -82,7 +82,7 @@
     <!-- CONTEÚDO PRINCIPAL -->
     <main class="max-w-md w-full mx-auto p-4 flex-1 space-y-4">
         
-        <!-- ABA 1: GESTÃO DE ALUNOS -->
+        <!-- ABA 1: GESTÃO DE ALUNOS (CONSULTA DE DADOS CADASTRAIS) -->
         <div id="tab-alunos" class="space-y-3">
             <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 space-y-3">
                 <h2 class="font-bold text-sm text-gray-900 dark:text-white flex items-center gap-2">
@@ -118,7 +118,7 @@
                 <h2 class="font-bold text-sm text-gray-900 dark:text-white flex items-center gap-2">
                     <i class="fa-solid fa-user-plus text-blue-600"></i> Novos Alunos Matriculados
                 </h2>
-                <p class="text-[11px] text-gray-500">Alunos recentes aguardando processamento de faturas e boletos.</p>
+                <p class="text-[11px] text-gray-500">Alunos recentes aguardando processamento e faturamento.</p>
             </div>
 
             <div id="lista-novos-alunos-container" class="space-y-2">
@@ -126,20 +126,50 @@
             </div>
         </div>
 
-        <!-- ABA 3: FINANCEIRO (OCULTA POR PADRÃO ATÉ SELECIONAR UM ALUNO) -->
+        <!-- ABA 3: FATURAS E COBRANÇAS -->
         <div id="tab-financeiro" class="space-y-3" style="display: none;">
-            <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 space-y-2">
+            <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 space-y-3">
+                <h2 class="font-bold text-sm text-blue-600 dark:text-blue-400 flex items-center gap-2">
+                    <i class="fa-solid fa-wallet"></i> Gestão de Faturas
+                </h2>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
+                        <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                    </span>
+                    <input type="text" id="input-busca-fatura" oninput="renderizarListaFaturasGeral()" placeholder="Pesquisar faturas por nome do aluno..." class="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-300 dark:border-slate-600 text-xs dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-blue-600 focus:outline-none">
+                </div>
+            </div>
+
+            <div id="lista-faturas-geral-container" class="space-y-2">
+                <!-- Lista geral de faturas -->
+            </div>
+        </div>
+
+        <!-- TELA DE DETALHES DO ALUNO (ABRIR DADOS CADASTRAIS) -->
+        <div id="tab-detalhes-aluno" class="space-y-3" style="display: none;">
+            <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 space-y-3">
                 <div class="flex justify-between items-center">
-                    <h2 class="font-bold text-sm text-blue-600 dark:text-blue-400" id="fin-aluno-nome">Nome do Aluno</h2>
-                    <button onclick="voltarParaListaAlunos()" class="px-2.5 py-1 bg-gray-200 dark:bg-slate-700 text-xs rounded-lg font-semibold">
+                    <h2 class="font-bold text-sm text-blue-600 dark:text-blue-400 flex items-center gap-2">
+                        <i class="fa-solid fa-id-card"></i> Dados Cadastrais do Aluno
+                    </h2>
+                    <button onclick="voltarParaOrigemDetalhes()" class="px-2.5 py-1 bg-gray-200 dark:bg-slate-700 text-xs rounded-lg font-semibold">
                         <i class="fa-solid fa-arrow-left mr-1"></i> Voltar
                     </button>
                 </div>
-                <p class="text-[11px] text-gray-500" id="fin-aluno-detalhes">Matrícula: ---</p>
             </div>
 
-            <div id="lista-cobrancas-container" class="space-y-2">
-                <!-- Cobranças do aluno selecionado -->
+            <div id="card-dados-aluno" class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 space-y-3 text-xs">
+                <!-- Informações detalhadas do aluno preenchidas via script -->
+            </div>
+
+            <!-- Faturas deste aluno específico dentro da tela de dados cadastrais -->
+            <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 space-y-2">
+                <h3 class="font-bold text-xs text-gray-900 dark:text-white flex items-center gap-2">
+                    <i class="fa-solid fa-file-invoice-dollar text-emerald-600"></i> Faturas e Mensalidades do Aluno
+                </h3>
+                <div id="lista-cobrancas-aluno-container" class="space-y-2 pt-2">
+                    <!-- Faturas do aluno -->
+                </div>
             </div>
         </div>
 
@@ -154,7 +184,6 @@
         <button onclick="mudarAbaApp('novos')" id="nav-btn-novos" class="flex flex-col items-center text-gray-400 text-xs font-semibold gap-1 relative">
             <div class="relative">
                 <i class="fa-solid fa-user-plus text-lg"></i>
-                <!-- Ícone de Alerta Piscando -->
                 <span id="badge-alerta-novos" class="absolute -top-1 -right-2 w-3.5 h-3.5 rounded-full animate-piscar-alerta border-2 border-white dark:border-slate-800" style="display: none;"></span>
             </div>
             <span>Novos Alunos</span>
@@ -192,8 +221,8 @@
         let coursesMap = {};
         let financeLogs = [];
         let alunoSelecionadoId = null;
+        let abaOrigemRetorno = 'alunos'; // Controla para onde voltar ao fechar os dados do aluno
 
-        // Recupera lista de IDs de novos alunos já visualizados armazenados localmente no navegador do funcionário
         let novosAlunosLidos = JSON.parse(localStorage.getItem('novos_alunos_lidos') || '[]');
 
         window.addEventListener('DOMContentLoaded', () => {
@@ -273,8 +302,7 @@
             db.collection("students").onSnapshot(snapshot => {
                 students = [];
                 snapshot.forEach(doc => {
-                    const data = doc.data();
-                    students.push({ id: doc.id, ...data });
+                    students.push({ id: doc.id, ...doc.data() });
                 });
                 students.sort((a, b) => (a.fullname || '').localeCompare(b.fullname || ''));
                 renderizarListaAlunos();
@@ -286,7 +314,8 @@
             db.collection("financeLogs").onSnapshot(snapshot => {
                 financeLogs = [];
                 snapshot.forEach(doc => financeLogs.push({ id: doc.id, ...doc.data() }));
-                if (alunoSelecionadoId) selecionarAlunoFinanceiro(alunoSelecionadoId);
+                renderizarListaFaturasGeral();
+                if (alunoSelecionadoId) abrirDetalhesAluno(alunoSelecionadoId, abaOrigemRetorno);
             }, error => {
                 console.error("Erro ao carregar faturas:", error);
             });
@@ -323,7 +352,6 @@
             if (!selectCurso) return;
 
             const cursoSelecionadoAtual = selectCurso.value;
-            
             let listaNomesUnicos = new Set(Object.values(coursesMap));
 
             students.forEach(s => {
@@ -391,7 +419,7 @@
                 const cursoExibir = coursesMap[rawCurso] || coursesMap[normalizarTexto(rawCurso)] || String(rawCurso);
 
                 container.innerHTML += `
-                    <div onclick="selecionarAlunoFinanceiro('${s.id}')" class="bg-white dark:bg-slate-800 p-3.5 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 flex justify-between items-center active:scale-98 transition cursor-pointer">
+                    <div onclick="abrirDetalhesAluno('${s.id}', 'alunos')" class="bg-white dark:bg-slate-800 p-3.5 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 flex justify-between items-center active:scale-98 transition cursor-pointer">
                         <div>
                             <strong class="text-xs font-bold text-gray-900 dark:text-white">${s.fullname || s.name || 'Sem Nome'}</strong>
                             <p class="text-[10px] text-gray-400">Curso: ${cursoExibir} &bull; Matrícula: ${s.code || s.matricula || 'S/N'}</p>
@@ -409,26 +437,12 @@
             const badgeAlerta = document.getElementById('badge-alerta-novos');
             if (!container) return;
 
-            // Considera novos os alunos criados a partir de hoje ou com data recente, que ainda não foram marcados como lidos
-            const hojeStr = new Date().toISOString().split('T')[0];
-            
             const novosMatriculados = students.filter(s => {
-                // Se já estiver na lista de lidos pelo financeiro, não exibe mais aqui
                 if (novosAlunosLidos.includes(s.id)) return false;
-
-                // Tenta validar por data de cadastro (createdAt, dataMatricula, etc.) ou se for recente
-                const dataMatricula = s.createdAt || s.dataMatricula || s.dataCadastro || '';
-                if (dataMatricula) {
-                    // Verifica se a string da data contém a data atual ou é posterior
-                    return String(dataMatricula) >= "2026-01-01"; // Adaptado para capturar novos cadastros
-                }
-
-                // Critério de segurança para novos cadastros sem data explícita: considera novos se não houver faturas geradas ainda
                 const temFatura = financeLogs.some(f => f.studentId === s.id || f.alunoId === s.id);
                 return !temFatura;
             });
 
-            // Gerencia o indicador visual de alerta piscando
             if (novosMatriculados.length > 0) {
                 badgeAlerta.style.display = 'block';
             } else {
@@ -466,32 +480,94 @@
                 localStorage.setItem('novos_alunos_lidos', JSON.stringify(novosAlunosLidos));
             }
             renderizarNovosAlunos();
-            selecionarAlunoFinanceiro(id);
+            abrirDetalhesAluno(id, 'novos');
         }
 
-        function selecionarAlunoFinanceiro(id) {
+        function renderizarListaFaturasGeral() {
+            const container = document.getElementById('lista-faturas-geral-container');
+            const termo = normalizarTexto(document.getElementById('input-busca-fatura')?.value || '');
+            if (!container) return;
+
+            if (financeLogs.length === 0) {
+                container.innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-2xl text-center text-xs text-gray-400">Nenhuma fatura cadastrada no sistema.</div>`;
+                return;
+            }
+
+            container.innerHTML = '';
+            financeLogs.forEach(f => {
+                const alunoObj = students.find(s => s.id === (f.studentId || f.alunoId));
+                const nomeAluno = alunoObj ? (alunoObj.fullname || alunoObj.name || 'Aluno') : 'Aluno Desconhecido';
+
+                if (termo && !normalizarTexto(nomeAluno).includes(termo)) return;
+
+                const jaPago = f.status && f.status.toUpperCase().includes('PAGO');
+                const corBadge = jaPago ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300';
+                const dataPag = f.dataPagamento || '---';
+                const formaPag = f.formaPagamento || 'Manual';
+
+                container.innerHTML += `
+                    <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 space-y-2 text-xs">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <strong class="text-blue-600 dark:text-blue-400 text-xs">${nomeAluno}</strong><br>
+                                <span class="text-gray-900 dark:text-white font-semibold">${f.description || f.descricao || 'Cobrança'}</span><br>
+                                <span class="text-gray-400 text-[10px]">Vencimento: ${f.date || f.vencimento || '---'} &bull; Valor: <strong>R$ ${f.amount || f.valor || '0,00'}</strong></span>
+                            </div>
+                            <span class="px-2 py-0.5 ${corBadge} rounded-full text-[10px] font-bold">${f.status || 'PENDENTE'}</span>
+                        </div>
+                        ${!jaPago ? `
+                            <button onclick="darBaixaApp('${f.id}')" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold text-xs shadow transition">
+                                <i class="fa-solid fa-check mr-1"></i> Dar Baixa (Pix / Dinheiro)
+                            </button>
+                        ` : `
+                            <div class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold pt-1">
+                                <i class="fa-solid fa-circle-check mr-1"></i> Pago em ${dataPag} (${formaPag})
+                            </div>
+                        `}
+                    </div>
+                `;
+            });
+        }
+
+        function abrirDetalhesAluno(id, origem) {
             alunoSelecionadoId = id;
+            abaOrigemRetorno = origem;
             const aluno = students.find(s => s.id === id);
             if (!aluno) return;
 
-            document.getElementById('fin-aluno-nome').textContent = aluno.fullname || aluno.name || '---';
-            document.getElementById('fin-aluno-detalhes').textContent = `Matrícula: ${aluno.code || aluno.matricula || 'S/N'} | CPF: ${aluno.cpf || '---'}`;
+            const cardDados = document.getElementById('card-dados-aluno');
+            const rawCurso = aluno.course || aluno.curso || aluno.turma || aluno.nomeCurso || aluno.courseName || aluno.courseId || 'Não informado';
+            const cursoExibir = coursesMap[rawCurso] || coursesMap[normalizarTexto(rawCurso)] || String(rawCurso);
 
-            const container = document.getElementById('lista-cobrancas-container');
+            cardDados.innerHTML = `
+                <div><span class="text-gray-400 uppercase text-[10px]">Nome Completo:</span><br><strong class="text-gray-900 dark:text-white text-sm">${aluno.fullname || aluno.name || '---'}</strong></div>
+                <div class="grid grid-cols-2 gap-2 pt-1">
+                    <div><span class="text-gray-400 uppercase text-[10px]">Matrícula:</span><br><span class="font-semibold">${aluno.code || aluno.matricula || 'S/N'}</span></div>
+                    <div><span class="text-gray-400 uppercase text-[10px]">CPF:</span><br><span class="font-semibold">${aluno.cpf || '---'}</span></div>
+                </div>
+                <div><span class="text-gray-400 uppercase text-[10px]">Curso / Turma:</span><br><span class="font-semibold text-blue-600 dark:text-blue-400">${cursoExibir}</span></div>
+                <div class="grid grid-cols-2 gap-2 pt-1">
+                    <div><span class="text-gray-400 uppercase text-[10px]">E-mail:</span><br><span class="font-semibold">${aluno.email || '---'}</span></div>
+                    <div><span class="text-gray-400 uppercase text-[10px]">Telefone:</span><br><span class="font-semibold">${aluno.phone || aluno.telefone || '---'}</span></div>
+                </div>
+            `;
+
+            // Carregar faturas do aluno na tela de detalhes
+            const containerFaturas = document.getElementById('lista-cobrancas-aluno-container');
             const cobrancas = financeLogs.filter(f => f.studentId === id || f.alunoId === id);
 
             if (cobrancas.length === 0) {
-                container.innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-2xl text-center text-xs text-gray-400">Nenhuma fatura encontrada para este aluno.</div>`;
+                containerFaturas.innerHTML = `<div class="p-3 text-center text-xs text-gray-400">Nenhuma fatura encontrada para este aluno.</div>`;
             } else {
-                container.innerHTML = '';
+                containerFaturas.innerHTML = '';
                 cobrancas.forEach(f => {
                     const jaPago = f.status && f.status.toUpperCase().includes('PAGO');
                     const corBadge = jaPago ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300';
                     const dataPag = f.dataPagamento || '---';
                     const formaPag = f.formaPagamento || 'Manual';
                     
-                    container.innerHTML += `
-                        <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 space-y-2 text-xs">
+                    containerFaturas.innerHTML += `
+                        <div class="bg-slate-50 dark:bg-slate-900 p-3 rounded-xl border border-gray-200 dark:border-slate-700 space-y-2">
                             <div class="flex justify-between items-start">
                                 <div>
                                     <strong class="text-gray-900 dark:text-white text-xs">${f.description || f.descricao || 'Cobrança'}</strong><br>
@@ -500,7 +576,7 @@
                                 <span class="px-2 py-0.5 ${corBadge} rounded-full text-[10px] font-bold">${f.status || 'PENDENTE'}</span>
                             </div>
                             ${!jaPago ? `
-                                <button onclick="darBaixaApp('${f.id}')" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold text-xs shadow transition">
+                                <button onclick="darBaixaApp('${f.id}')" class="w-full py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold text-xs shadow transition">
                                     <i class="fa-solid fa-check mr-1"></i> Dar Baixa (Pix / Dinheiro)
                                 </button>
                             ` : `
@@ -513,7 +589,11 @@
                 });
             }
 
-            mudarAbaApp('financeiro');
+            mudarAbaApp('detalhes');
+        }
+
+        function voltarParaOrigemDetalhes() {
+            mudarAbaApp(abaOrigemRetorno);
         }
 
         async function darBaixaApp(financeLogId) {
@@ -534,6 +614,7 @@
             const tabAlunos = document.getElementById('tab-alunos');
             const tabNovos = document.getElementById('tab-novos-alunos');
             const tabFin = document.getElementById('tab-financeiro');
+            const tabDetalhes = document.getElementById('tab-detalhes-aluno');
             
             const btnAlunos = document.getElementById('nav-btn-alunos');
             const btnNovos = document.getElementById('nav-btn-novos');
@@ -543,6 +624,7 @@
             tabAlunos.style.display = 'none';
             tabNovos.style.display = 'none';
             tabFin.style.display = 'none';
+            tabDetalhes.style.display = 'none';
 
             btnAlunos.className = "flex flex-col items-center text-gray-400 text-xs font-semibold gap-1";
             btnNovos.className = "flex flex-col items-center text-gray-400 text-xs font-semibold gap-1 relative";
@@ -557,11 +639,10 @@
             } else if (aba === 'financeiro') {
                 tabFin.style.display = 'block';
                 btnFin.className = "flex flex-col items-center text-blue-600 dark:text-blue-400 text-xs font-bold gap-1";
+                renderizarListaFaturasGeral();
+            } else if (aba === 'detalhes') {
+                tabDetalhes.style.display = 'block';
             }
-        }
-
-        function voltarParaListaAlunos() {
-            mudarAbaApp('alunos');
         }
     </script>
 </body>
