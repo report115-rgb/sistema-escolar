@@ -81,7 +81,7 @@
 
         <div class="text-center text-[10px] text-blue-300 pb-2">
             <div>Sistema SE7 de Gestão Acadêmica</div>
-            <div>v1.3.4 &bull; Setor Financeiro</div>
+            <div>v1.3.5 &bull; Setor Financeiro</div>
         </div>
     </div>
 
@@ -308,7 +308,7 @@
                     <h2 class="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
                         <i class="fa-solid fa-user-plus text-blue-600"></i> Novos Alunos Matriculados
                     </h2>
-                    <p class="text-[11px] text-slate-500">Alunos recentes aguardando processamento e faturamento.</p>
+                    <p class="text-[11px] text-slate-500">Lista geral de alunos recém-matriculados aguardando conferência para emissão de boletos. Ao abrir o cadastro de um aluno, ele sairá desta lista automaticamente.</p>
                 </div>
 
                 <div id="lista-novos-alunos-container" class="space-y-2">
@@ -1006,7 +1006,6 @@
 
             valorAtualNegociacaoGlobal = valorTotalOriginalGlobal + multaTotalGlobal + jurosTotalGlobal;
 
-            // PAINEL DE RESUMO ATUALIZADO COM O VALOR GRANDE NO LUGAR DE "GERENCIAR OPÇÕES"
             painel.innerHTML = `
                 <div class="bg-gradient-to-br from-emerald-600 to-teal-800 text-white p-4 rounded-3xl shadow-lg space-y-3">
                     <div class="text-[10px] uppercase font-semibold tracking-wider text-emerald-200">Resumo da Negociação (Débitos em Atraso)</div>
@@ -1348,11 +1347,8 @@
             const badgeAlerta = document.getElementById('badge-alerta-novos');
             if (!container) return;
 
-            const novosMatriculados = students.filter(s => {
-                if (novosAlunosLidos.includes(s.id)) return false;
-                const temFatura = financeLogs.some(f => f.studentId === s.id || f.alunoId === s.id);
-                return !temFatura;
-            });
+            // EXIBE TODOS OS ALUNOS CADASTRADOS QUE AINDA NÃO FORAM ABERTOS (LIDOS) PELO FINANCEIRO
+            const novosMatriculados = students.filter(s => !novosAlunosLidos.includes(s.id));
 
             if (novosMatriculados.length > 0) {
                 badgeAlerta.style.display = 'flex';
@@ -1361,7 +1357,7 @@
             }
 
             if (novosMatriculados.length === 0) {
-                container.innerHTML = `<div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">Nenhum novo aluno pendente no momento.</div>`;
+                container.innerHTML = `<div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">Todos os novos alunos já foram conferidos! Nenhum pendente no momento.</div>`;
                 return;
             }
 
