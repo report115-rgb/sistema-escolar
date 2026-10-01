@@ -126,22 +126,34 @@
             </div>
         </div>
 
-        <!-- ABA 3: FATURAS E COBRANÇAS -->
+        <!-- ABA 3: FATURAS E COBRANÇAS (COM FILTROS POR CURSO E ALUNO) -->
         <div id="tab-financeiro" class="space-y-3" style="display: none;">
             <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 space-y-3">
                 <h2 class="font-bold text-sm text-blue-600 dark:text-blue-400 flex items-center gap-2">
                     <i class="fa-solid fa-wallet"></i> Gestão de Faturas
                 </h2>
-                <div class="relative">
-                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
-                        <i class="fa-solid fa-magnifying-glass text-xs"></i>
-                    </span>
-                    <input type="text" id="input-busca-fatura" oninput="renderizarListaFaturasGeral()" placeholder="Pesquisar faturas por nome do aluno..." class="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-300 dark:border-slate-600 text-xs dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-blue-600 focus:outline-none">
+                
+                <!-- 1. SELETOR DE CURSO NAS FATURAS -->
+                <div>
+                    <label class="block text-[11px] font-semibold text-gray-600 dark:text-gray-400 uppercase mb-1">1. Selecione o Curso / Turma</label>
+                    <select id="select-fin-curso" onchange="atualizarSelectAlunosFinanceiro()" class="w-full px-3 py-2.5 rounded-xl border border-gray-300 dark:border-slate-600 text-xs dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-blue-600 focus:outline-none">
+                        <option value="" disabled selected>Selecione um curso...</option>
+                    </select>
+                </div>
+
+                <!-- 2. SELETOR DE ALUNO NAS FATURAS -->
+                <div>
+                    <label class="block text-[11px] font-semibold text-gray-600 dark:text-gray-400 uppercase mb-1">2. Selecione o Aluno</label>
+                    <select id="select-fin-aluno" onchange="renderizarFaturasDoAlunoSelecionado()" class="w-full px-3 py-2.5 rounded-xl border border-gray-300 dark:border-slate-600 text-xs dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-blue-600 focus:outline-none" disabled>
+                        <option value="" disabled selected>Selecione um curso primeiro...</option>
+                    </select>
                 </div>
             </div>
 
-            <div id="lista-faturas-geral-container" class="space-y-2">
-                <!-- Lista geral de faturas -->
+            <div id="lista-faturas-aluno-container" class="space-y-2">
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl text-center text-xs text-gray-400">
+                    Selecione um curso e um aluno acima para visualizar as faturas.
+                </div>
             </div>
         </div>
 
@@ -208,6 +220,7 @@
         ];
 
         let students = [];
+        let studentsMap = {};
         let coursesMap = {};
         let financeLogs = [];
         let alunoSelecionadoId = null;
@@ -291,12 +304,16 @@
 
             db.collection("students").onSnapshot(snapshot => {
                 students = [];
+                studentsMap = {};
                 snapshot.forEach(doc => {
-                    students.push({ id: doc.id, ...doc.data() });
+                    const data = { id: doc.id, ...doc.data() };
+                    students.push(data);
+                    studentsMap[doc.id] = data;
                 });
                 students.sort((a, b) => (a.fullname || '').localeCompare(b.fullname || ''));
                 renderizarListaAlunos();
                 renderizarNovosAlunos();
+                atualizarSeletorCursosUI();
             }, error => {
                 console.error("Erro ao carregar alunos:", error);
             });
@@ -304,7 +321,7 @@
             db.collection("financeLogs").onSnapshot(snapshot => {
                 financeLogs = [];
                 snapshot.forEach(doc => financeLogs.push({ id: doc.id, ...doc.data() }));
-                renderizarListaFaturasGeral();
+                renderizarFaturasDoAlunoSelecionado();
                 if (alunoSelecionadoId && document.getElementById('tab-detalhes-aluno').style.display === 'block') {
                     abrirDetalhesAluno(alunoSelecionadoId, abaOrigemRetorno);
                 }
@@ -341,9 +358,8 @@
 
         function atualizarSeletorCursosUI() {
             const selectCurso = document.getElementById('select-filtro-curso');
-            if (!selectCurso) return;
-
-            const cursoSelecionadoAtual = selectCurso.value;
+            const selectFinCurso = document.getElementById('select-fin-curso');
+            
             let listaNomesUnicos = new Set(Object.values(coursesMap));
 
             students.forEach(s => {
@@ -355,12 +371,11 @@
             });
 
             const cursosOrdenados = Array.from(listaNomesUnicos).sort();
+            const optionsHtml = `<option value="" disabled selected>Selecione um curso...</option>` + 
+                cursosOrdenados.map(curso => `<option value="${curso}">${curso}</option>`).join('');
 
-            selectCurso.innerHTML = `<option value="" disabled selected>Selecione um curso...</option>`;
-            cursosOrdenados.forEach(curso => {
-                const selectedAttr = (curso === cursoSelecionadoAtual) ? 'selected' : '';
-                selectCurso.innerHTML += `<option value="${curso}" ${selectedAttr}>${curso}</option>`;
-            });
+            if (selectCurso) selectCurso.innerHTML = optionsHtml;
+            if (selectFinCurso) selectFinCurso.innerHTML = optionsHtml;
         }
 
         function normalizarTexto(texto) {
@@ -424,6 +439,83 @@
             });
         }
 
+        // --- FUNÇÕES DA ABA DE FINANÇAS COM FILTRO POR CURSO E ALUNO ---
+        function atualizarSelectAlunosFinanceiro() {
+            const cursoSelecionado = document.getElementById('select-fin-curso').value;
+            const selectAluno = document.getElementById('select-fin-aluno');
+            const container = document.getElementById('lista-faturas-aluno-container');
+            
+            if (!selectAluno) return;
+
+            selectAluno.disabled = false;
+            const cursoSelecionadoNorm = normalizarTexto(cursoSelecionado);
+
+            const alunosDoCurso = students.filter(s => {
+                const rawCurso = s.course || s.curso || s.turma || s.nomeCurso || s.courseName || s.courseId || '';
+                const nomeCursoMapeado = coursesMap[rawCurso] || coursesMap[normalizarTexto(rawCurso)] || String(rawCurso);
+                const cursoAlunoNorm = normalizarTexto(nomeCursoMapeado);
+                return cursoAlunoNorm === cursoSelecionadoNorm || cursoAlunoNorm.includes(cursoSelecionadoNorm);
+            });
+
+            if (alunosDoCurso.length === 0) {
+                selectAluno.innerHTML = `<option value="" disabled selected>Nenhum aluno neste curso</option>`;
+                container.innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-2xl text-center text-xs text-gray-400">Nenhum aluno encontrado para este curso.</div>`;
+                return;
+            }
+
+            selectAluno.innerHTML = `<option value="" disabled selected>Selecione um aluno...</option>` +
+                alunosDoCurso.map(a => `<option value="${a.id}">${a.fullname || a.name || 'Sem Nome'}</option>`).join('');
+
+            container.innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-2xl text-center text-xs text-gray-400">Selecione um aluno acima para visualizar as faturas.</div>`;
+        }
+
+        function renderizarFaturasDoAlunoSelecionado() {
+            const alunoId = document.getElementById('select-fin-aluno').value;
+            const container = document.getElementById('lista-faturas-aluno-container');
+            if (!container || !alunoId) return;
+
+            const faturasDoAluno = financeLogs.filter(f => (f.studentId === alunoId || f.alunoId === alunoId));
+            const alunoObj = studentsMap[alunoId];
+            const nomeAluno = alunoObj ? (alunoObj.fullname || alunoObj.name || 'Aluno') : 'Aluno';
+
+            if (faturasDoAluno.length === 0) {
+                container.innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-2xl text-center text-xs text-gray-400">Nenhuma fatura encontrada para ${nomeAluno}.</div>`;
+                return;
+            }
+
+            let htmlAcumulado = '';
+            faturasDoAluno.forEach(f => {
+                const jaPago = f.status && f.status.toUpperCase().includes('PAGO');
+                const corBadge = jaPago ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300';
+                const dataPag = f.dataPagamento || '---';
+                const formaPag = f.formaPagamento || 'Manual';
+
+                htmlAcumulado += `
+                    <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 space-y-2 text-xs">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <strong class="text-blue-600 dark:text-blue-400 text-xs">${nomeAluno}</strong><br>
+                                <span class="text-gray-900 dark:text-white font-semibold">${f.description || f.descricao || 'Cobrança'}</span><br>
+                                <span class="text-gray-400 text-[10px]">Vencimento: ${f.date || f.vencimento || '---'} &bull; Valor: <strong>R$ ${f.amount || f.valor || '0,00'}</strong></span>
+                            </div>
+                            <span class="px-2 py-0.5 ${corBadge} rounded-full text-[10px] font-bold">${f.status || 'PENDENTE'}</span>
+                        </div>
+                        ${!jaPago ? `
+                            <button onclick="darBaixaApp('${f.id}')" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold text-xs shadow transition">
+                                <i class="fa-solid fa-check mr-1"></i> Dar Baixa (Pix / Dinheiro)
+                            </button>
+                        ` : `
+                            <div class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold pt-1">
+                                <i class="fa-solid fa-circle-check mr-1"></i> Pago em ${dataPag} (${formaPag})
+                            </div>
+                        `}
+                    </div>
+                `;
+            });
+
+            container.innerHTML = htmlAcumulado;
+        }
+
         function renderizarNovosAlunos() {
             const container = document.getElementById('lista-novos-alunos-container');
             const badgeAlerta = document.getElementById('badge-alerta-novos');
@@ -475,63 +567,16 @@
             abrirDetalhesAluno(id, 'novos');
         }
 
-        function renderizarListaFaturasGeral() {
-            const container = document.getElementById('lista-faturas-geral-container');
-            const termo = normalizarTexto(document.getElementById('input-busca-fatura')?.value || '');
-            if (!container) return;
-
-            if (financeLogs.length === 0) {
-                container.innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-2xl text-center text-xs text-gray-400">Nenhuma fatura cadastrada no sistema.</div>`;
-                return;
-            }
-
-            container.innerHTML = '';
-            financeLogs.forEach(f => {
-                const alunoObj = students.find(s => s.id === (f.studentId || f.alunoId));
-                const nomeAluno = alunoObj ? (alunoObj.fullname || alunoObj.name || 'Aluno') : 'Aluno Desconhecido';
-
-                if (termo && !normalizarTexto(nomeAluno).includes(termo)) return;
-
-                const jaPago = f.status && f.status.toUpperCase().includes('PAGO');
-                const corBadge = jaPago ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300';
-                const dataPag = f.dataPagamento || '---';
-                const formaPag = f.formaPagamento || 'Manual';
-
-                container.innerHTML += `
-                    <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 space-y-2 text-xs">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <strong class="text-blue-600 dark:text-blue-400 text-xs">${nomeAluno}</strong><br>
-                                <span class="text-gray-900 dark:text-white font-semibold">${f.description || f.descricao || 'Cobrança'}</span><br>
-                                <span class="text-gray-400 text-[10px]">Vencimento: ${f.date || f.vencimento || '---'} &bull; Valor: <strong>R$ ${f.amount || f.valor || '0,00'}</strong></span>
-                            </div>
-                            <span class="px-2 py-0.5 ${corBadge} rounded-full text-[10px] font-bold">${f.status || 'PENDENTE'}</span>
-                        </div>
-                        ${!jaPago ? `
-                            <button onclick="darBaixaApp('${f.id}')" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold text-xs shadow transition">
-                                <i class="fa-solid fa-check mr-1"></i> Dar Baixa (Pix / Dinheiro)
-                            </button>
-                        ` : `
-                            <div class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold pt-1">
-                                <i class="fa-solid fa-circle-check mr-1"></i> Pago em ${dataPag} (${formaPag})
-                            </div>
-                        `}
-                    </div>
-                `;
-            });
-        }
-
         function abrirDetalhesAluno(id, origem) {
             alunoSelecionadoId = id;
             abaOrigemRetorno = origem;
-            const aluno = students.find(s => s.id === id);
+            const aluno = studentsMap[id];
             if (!aluno) return;
 
             const cardDados = document.getElementById('card-dados-aluno');
             const rawCurso = aluno.course || aluno.curso || aluno.turma || aluno.nomeCurso || aluno.courseName || aluno.courseId || 'Não informado';
             const cursoExibir = coursesMap[rawCurso] || coursesMap[normalizarTexto(rawCurso)] || String(rawCurso);
 
-            // Monta a ficha cadastral completa com todos os campos do sistema
             cardDados.innerHTML = `
                 <div class="space-y-2.5">
                     <div><span class="text-gray-400 uppercase text-[10px]">Nome Completo:</span><br><strong class="text-gray-900 dark:text-white text-sm">${aluno.fullname || aluno.name || '---'}</strong></div>
@@ -585,7 +630,6 @@
             const btnNovos = document.getElementById('nav-btn-novos');
             const btnFin = document.getElementById('nav-btn-fin');
 
-            // Reseta todas as abas
             tabAlunos.style.display = 'none';
             tabNovos.style.display = 'none';
             tabFin.style.display = 'none';
@@ -604,7 +648,6 @@
             } else if (aba === 'financeiro') {
                 tabFin.style.display = 'block';
                 btnFin.className = "flex flex-col items-center text-blue-600 dark:text-blue-400 text-xs font-bold gap-1";
-                renderizarListaFaturasGeral();
             } else if (aba === 'detalhes') {
                 tabDetalhes.style.display = 'block';
             }
