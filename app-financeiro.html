@@ -116,7 +116,7 @@
         </div>
     </div>
 
-    <!-- MODAL DE EDIÇÃO COM CALENDÁRIO -->
+    <!-- MODAL DE EDIÇÃO DA COBRANÇA (ATUALIZADO COM DESCRIÇÃO, DATA E VALOR) -->
     <div id="modal-editar-cobranca" class="fixed inset-0 z-[4000] flex items-center justify-center bg-black/70 p-4" style="display: none;">
         <div class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-3xl shadow-2xl max-w-sm w-full p-6 space-y-4 border border-slate-200 dark:border-slate-800">
             <div class="flex justify-between items-center border-b pb-3 border-slate-200 dark:border-slate-800">
@@ -131,6 +131,11 @@
             <input type="hidden" id="edit-cobranca-id">
 
             <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">Descrição (Ex: Mensalidade 11)</label>
+                    <input type="text" id="edit-cobranca-descricao" placeholder="Ex: Mensalidade 11" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-600">
+                </div>
+
                 <div>
                     <label class="block font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">Nova Data de Vencimento</label>
                     <input type="date" id="edit-cobranca-data" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-600">
@@ -676,7 +681,6 @@
 
         async function carregarDadosInstituicao() {
             try {
-                // Caminho exato solicitado: config -> institution
                 const docRef = db.collection("config").doc("institution");
                 const docSnap = await docRef.get();
                 
@@ -1152,7 +1156,6 @@
                 return dataVenc < hoje;
             });
 
-            // Ordem cronológica
             faturasAtrasadasGlobal.sort((a, b) => {
                 let dataA = parseDataParaOrdem(a.date || a.vencimento);
                 let dataB = parseDataParaOrdem(b.date || b.vencimento);
@@ -1865,6 +1868,7 @@
             if (!fatura) return;
 
             document.getElementById('edit-cobranca-id').value = fatura.id;
+            document.getElementById('edit-cobranca-descricao').value = fatura.description || fatura.descricao || '';
             
             let vencimentoOriginal = fatura.date || fatura.vencimento || '';
             let dataFormatada = '';
@@ -1889,11 +1893,12 @@
 
         async function salvarEdicaoMensalidade() {
             const id = document.getElementById('edit-cobranca-id').value;
+            const novaDescricao = document.getElementById('edit-cobranca-descricao').value.trim();
             const novaDataInput = document.getElementById('edit-cobranca-data').value;
             const novoValor = document.getElementById('edit-cobranca-valor').value;
 
-            if (!novaDataInput || !novoValor) {
-                return alert("Preencha a data do calendário e o valor corretamente.");
+            if (!novaDescricao || !novaDataInput || !novoValor) {
+                return alert("Preencha a descrição, a data e o valor corretamente.");
             }
 
             let partes = novaDataInput.split('-');
@@ -1901,6 +1906,8 @@
 
             try {
                 await db.collection("financeLogs").doc(id).update({
+                    description: novaDescricao,
+                    descricao: novaDescricao,
                     date: novaDataFormatada,
                     vencimento: novaDataFormatada,
                     amount: novoValor,
