@@ -268,9 +268,16 @@
                     <p class="text-[10px] text-blue-200" id="header-user-display">Conectado</p>
                 </div>
             </div>
-            <button type="button" onclick="fazerLogout()" class="w-9 h-9 bg-red-600 hover:bg-red-700 text-xs font-semibold rounded-xl shadow flex items-center justify-center" title="Sair">
-                <i class="fa-solid fa-power-off"></i>
-            </button>
+            <div class="flex items-center space-x-2">
+                <!-- Botão de Atualizar Tela (F5 / Recarregamento Completo) -->
+                <button type="button" onclick="atualizarTelaCompleta()" class="w-9 h-9 bg-emerald-600 hover:bg-emerald-700 text-xs font-semibold rounded-xl shadow flex items-center justify-center transition" title="Atualizar Sistema">
+                    <i class="fa-solid fa-rotate"></i>
+                </button>
+                <!-- Botão de Sair -->
+                <button type="button" onclick="fazerLogout()" class="w-9 h-9 bg-red-600 hover:bg-red-700 text-xs font-semibold rounded-xl shadow flex items-center justify-center transition" title="Sair">
+                    <i class="fa-solid fa-power-off"></i>
+                </button>
+            </div>
         </header>
 
         <!-- Conteúdo Principal com Rolagem -->
@@ -483,6 +490,11 @@
                 carregarDadosNuvem();
             }
         });
+
+        // FUNÇÃO DE ATUALIZAÇÃO COMPLETA DA TELA (EQUIVALENTE AO F5)
+        function atualizarTelaCompleta() {
+            location.reload();
+        }
 
         async function fazerLogin() {
             const userInput = document.getElementById('login-user').value.trim().toLowerCase();
@@ -989,7 +1001,6 @@
             const container = document.getElementById('lista-busca-negociacao-container');
             const painel = document.getElementById('painel-negociacao-aluno');
             
-            // Atualiza a exibição da lista de negociações ativas (some quando digita, reaparece se apagar)
             renderizarNegociacoesAtivasGeral();
 
             if (!container) return;
@@ -2063,4 +2074,3 @@
     </script>
 </body>
 </html>
-```[cite: 1]
