@@ -45,6 +45,37 @@
             100% { background-color: #ef4444; opacity: 1; transform: scale(1); }
         }
         .animacao-piscar-alerta { animation: piscarAlerta 1.2s infinite ease-in-out; }
+
+        /* --- CONFIGURAÇÃO DE IMPRESSÃO PROFISSIONAL (WEBVIEW / MOBILE) --- */
+        @media print {
+            /* Força cores reais e fundos dos cabeçalhos na impressão */
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
+            /* Oculta tudo na página principal do app */
+            body > *:not(#modal-visualizador-termo) {
+                display: none !important;
+            }
+            /* Oculta o modal de fundo escuro e os botões de ação superior */
+            #modal-visualizador-termo {
+                position: absolute !important;
+                inset: 0 !important;
+                background: white !important;
+                padding: 0 !important;
+                backdrop-filter: none !important;
+            }
+            #modal-visualizador-termo > div:first-child {
+                display: none !important; /* Esconde a barra de botões Fechar/Imprimir */
+            }
+            #modal-visualizador-termo > div:nth-child(2) {
+                padding: 0 !important;
+                background: white !important;
+                box-shadow: none !important;
+                overflow: visible !important;
+            }
+        }
     </style>
 </head>
 <body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans antialiased h-screen overflow-hidden flex flex-col transition-colors duration-200">
@@ -1642,7 +1673,7 @@
                 </div>
             `;
 
-            // Exibe direto no Modal Nativo do WebView (Sem falhar e sem travar abas)
+            // Exibe direto no Modal Nativo do WebView
             document.getElementById('conteudo-termo-Dinamico').innerHTML = htmlCompletoTermo;
             document.getElementById('modal-visualizador-termo').style.display = 'flex';
 
