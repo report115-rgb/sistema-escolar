@@ -112,7 +112,7 @@
 
         <div class="text-center text-[10px] text-blue-300 pb-2">
             <div>Sistema SE7 de Gestão Acadêmica</div>
-            <div>v1.6.0 &bull; Setor Financeiro</div>
+            <div>v1.6.1 &bull; Setor Financeiro</div>
         </div>
     </div>
 
@@ -676,16 +676,17 @@
 
         async function carregarDadosInstituicao() {
             try {
+                // Caminho exato solicitado: config -> institution
                 const docRef = db.collection("config").doc("institution");
                 const docSnap = await docRef.get();
                 
                 if (docSnap.exists) {
                     const dados = docSnap.data();
                     institutionData = {
-                        name: dados.name || institutionData.name,
-                        razaoSocial: dados.razão || dados.razaoSocial || dados.name || institutionData.razaoSocial,
+                        name: dados.name || dados.nome || institutionData.name,
+                        razaoSocial: dados.razao || dados.razão || dados.razaoSocial || dados.name || institutionData.razaoSocial,
                         cnpj: dados.cnpj || institutionData.cnpj,
-                        address: dados.endereço || dados.address || institutionData.address,
+                        address: dados.endereço || dados.address || dados.endereco || institutionData.address,
                         logo: dados.logo || dados.logoUrl || dados.logomarca || institutionData.logo
                     };
                 } else {
@@ -695,8 +696,8 @@
                         if (!snap.empty) {
                             const dadosDoc = snap.docs[0].data();
                             institutionData = {
-                                name: dadosDoc.name || dadosDoc.razaoSocial || dadosDoc.nomeInstituicao || dadosDoc.nome || institutionData.name,
-                                razaoSocial: dadosDoc.razão || dadosDoc.razaoSocial || dadosDoc.name || institutionData.razaoSocial,
+                                name: dadosDoc.name || dadosDoc.nome || institutionData.name,
+                                razaoSocial: dadosDoc.rasal || dadosDoc.razão || dadosDoc.razaoSocial || dadosDoc.name || institutionData.razaoSocial,
                                 cnpj: dadosDoc.cnpj || dadosDoc.documento || institutionData.cnpj,
                                 address: dadosDoc.endereço || dadosDoc.address || dadosDoc.endereco || institutionData.address,
                                 logo: dadosDoc.logo || dadosDoc.logoUrl || dadosDoc.logomarca || institutionData.logo
