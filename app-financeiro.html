@@ -112,7 +112,7 @@
 
         <div class="text-center text-[10px] text-blue-300 pb-2">
             <div>Sistema SE7 de Gestão Acadêmica</div>
-            <div>v1.5.7 &bull; Setor Financeiro</div>
+            <div>v1.5.8 &bull; Setor Financeiro</div>
         </div>
     </div>
 
@@ -197,7 +197,7 @@
                     <h4 class="font-bold text-slate-900 dark:text-white">Opção 2: Parcelado (Até 5x)</h4>
                     <div>
                         <label class="block font-semibold uppercase text-slate-500 mb-1">Número de Parcelas</label>
-                        <select id="qtd-parcelas-acordo-modal" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white">
+                        <select id="qtd-parcelas-acordo-modal" onchange="atualizarPreviaParcelasModal()" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white">
                             <option value="2">2x</option>
                             <option value="3">3x</option>
                             <option value="4">4x</option>
@@ -206,12 +206,19 @@
                     </div>
                     <div>
                         <label class="block font-semibold uppercase text-slate-500 mb-1">Desconto de Juros (%)</label>
-                        <input type="number" id="desc-juros-parcelado" value="50" min="0" max="100" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white">
+                        <input type="number" id="desc-juros-parcelado" value="50" min="0" max="100" oninput="atualizarPreviaParcelasModal()" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white">
                     </div>
                     <div>
                         <label class="block font-semibold uppercase text-slate-500 mb-1">Desconto de Multa (%)</label>
-                        <input type="number" id="desc-multa-parcelado" value="50" min="0" max="100" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white">
+                        <input type="number" id="desc-multa-parcelado" value="50" min="0" max="100" oninput="atualizarPreviaParcelasModal()" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white">
                     </div>
+                    
+                    <!-- PRÉVIA CALCULADA DO VALOR DE CADA PARCELA -->
+                    <div class="p-3 bg-emerald-100/60 dark:bg-emerald-950/50 rounded-xl border border-emerald-300 dark:border-emerald-800 text-xs text-emerald-900 dark:text-emerald-200 flex justify-between items-center">
+                        <span>Valor de cada parcela:</span>
+                        <strong id="previa-valor-parcela" class="text-sm">R$ 0,00</strong>
+                    </div>
+
                     <button type="button" onclick="gerarOpcaoAcordoModal('parcelado')" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow">
                         Salvar Opção Parcelada
                     </button>
@@ -1145,7 +1152,7 @@
                 return dataVenc < hoje;
             });
 
-            // GARANTE ORDEM CRONOLÓGICA DAS FATURAS ATRASADAS (DA MAIS ANTIGA PARA A MAIS RECENTE)
+            // Ordem cronológica
             faturasAtrasadasGlobal.sort((a, b) => {
                 let dataA = parseDataParaOrdem(a.date || a.vencimento);
                 let dataB = parseDataParaOrdem(b.date || b.vencimento);
@@ -1312,7 +1319,7 @@
                     </div>
 
                     <div class="space-y-2 pt-2">
-                        <h4 class="font-bold text-xs uppercase text-slate-500 tracking-wider">Faturas Vencidas com Encargos Calculados (Multa R$ 10 + 5% a.m. - Ordem Cronológica):</h4>
+                        <h4 class="font-bold text-xs uppercase text-slate-500 tracking-wider">Faturas Vencidas com Encargos Calculados (Ordem Cronológica):</h4>
                         ${htmlFaturasCalc}
                     </div>
                 ` : ''}
@@ -1330,6 +1337,7 @@
             document.getElementById('titulo-modal-acordo-texto').textContent = "Gerar Proposta de Acordo";
             document.getElementById('modal-realizar-acordo').style.display = 'flex';
             atualizarListaOpcoesGeradasModal();
+            atualizarPreviaParcelasModal();
         }
 
         function abrirModalEditarProposta(propostaId) {
@@ -1344,6 +1352,7 @@
             document.getElementById('titulo-modal-acordo-texto').textContent = "Editar Proposta de Acordo";
             document.getElementById('modal-realizar-acordo').style.display = 'flex';
             atualizarListaOpcoesGeradasModal();
+            atualizarPreviaParcelasModal();
         }
 
         async function excluirPropostaRegistro(propostaId) {
@@ -1372,6 +1381,27 @@
             document.getElementById('btn-aba-cartao').className = tipo === 'cartao' ? 'py-2.5 px-2 bg-emerald-600 text-white font-bold rounded-xl text-xs shadow transition' : 'py-2.5 px-2 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl text-xs transition';
         }
 
+        // FUNÇÃO DE CÁLCULO E PRÉVIA EM TEMPO REAL DO VALOR DE CADA PARCELA
+        function atualizarPreviaParcelasModal() {
+            const descJuros = parseFloat(document.getElementById('desc-juros-parcelado').value) || 0;
+            const descMulta = parseFloat(document.getElementById('desc-multa-parcelado').value) || 0;
+            const qtdParcelas = parseInt(document.getElementById('qtd-parcelas-acordo-modal').value) || 2;
+
+            let jurosDescontados = jurosTotalGlobal * (descJuros / 100);
+            let multaDescontada = multaTotalGlobal * (descMulta / 100);
+            
+            let jurosFinal = jurosTotalGlobal - jurosDescontados;
+            let multaFinal = multaTotalGlobal - multaDescontada;
+            let valorTotalComDesconto = valorTotalOriginalGlobal + multaFinal + jurosFinal;
+
+            let valorParcela = valorTotalComDesconto / qtdParcelas;
+
+            const previaEl = document.getElementById('previa-valor-parcela');
+            if (previaEl) {
+                previaEl.textContent = `${qtdParcelas}x de R$ ${valorParcela.toFixed(2)} (Total: R$ ${valorTotalComDesconto.toFixed(2)})`;
+            }
+        }
+
         function gerarOpcaoAcordoModal(tipo) {
             let descJuros = 0, descMulta = 0, infoExtra = "";
 
@@ -1381,7 +1411,12 @@
             } else if (tipo === 'parcelado') {
                 descJuros = parseFloat(document.getElementById('desc-juros-parcelado').value) || 0;
                 descMulta = parseFloat(document.getElementById('desc-multa-parcelado').value) || 0;
-                infoExtra = document.getElementById('qtd-parcelas-acordo-modal').value + "x";
+                let qtd = parseInt(document.getElementById('qtd-parcelas-acordo-modal').value) || 2;
+                let jDescontado = jurosTotalGlobal * (descJuros / 100);
+                let mDescontada = multaTotalGlobal * (descMulta / 100);
+                let tFinal = valorTotalOriginalGlobal + (multaTotalGlobal - mDescontada) + (jurosTotalGlobal - jDescontado);
+                let vParc = tFinal / qtd;
+                infoExtra = `${qtd}x de R$ ${vParc.toFixed(2)}`;
             } else if (tipo === 'cartao') {
                 descJuros = parseFloat(document.getElementById('desc-juros-cartao').value) || 0;
                 descMulta = parseFloat(document.getElementById('desc-multa-cartao').value) || 0;
@@ -1548,7 +1583,6 @@
             let somaJurosGeral = 0;
             let somaTotalGeral = 0;
 
-            // Já ordenadas cronologicamente
             faturasAtrasadasGlobal.forEach(f => {
                 const valorOriginal = parseFloat(String(f.amount || f.valor || '0').replace(',', '.')) || 0;
                 somaOriginalGeral += valorOriginal;
@@ -1591,7 +1625,6 @@
                 </tr>
             `;
 
-            // HTML Interno do Termo exibido perfeitamente no Modal do WebView
             let htmlCompletoTermo = `
                 <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #1e293b; padding: 10px;">
                     <!-- CABEÇALHO COM FUNDO ESCURO UNIFICADO E LOGO TRANSPARENTE -->
@@ -1661,7 +1694,7 @@
                     <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 12px; border-radius: 8px; margin-top: 10px; font-size: 12px;">
                         <strong style="color: #047857; font-size: 13px;">Opção B: Parcelado em ${opcoesGeradas.parcelado.infoExtra}</strong>
                         <p style="margin: 5px 0;">Desconto Aplicado: <strong>${opcoesGeradas.parcelado.descJuros}% de Juros</strong> e <strong>${opcoesGeradas.parcelado.descMulta}% de Multa</strong>.</p>
-                        <p style="font-size: 14px; margin: 0; color: #065f46;"><strong>Valor Total Parcelado (${opcoesGeradas.parcelado.infoExtra}): R$ ${opcoesGeradas.parcelado.valorFinal.toFixed(2)}</strong> (Dividido em ${opcoesGeradas.parcelado.infoExtra})</p>
+                        <p style="font-size: 14px; margin: 0; color: #065f46;"><strong>Valor Total Parcelado: R$ ${opcoesGeradas.parcelado.valorFinal.toFixed(2)}</strong> (${opcoesGeradas.parcelado.infoExtra})</p>
                     </div>
 
                     <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 12px; border-radius: 8px; margin-top: 10px; font-size: 12px;">
@@ -1685,7 +1718,6 @@
                 </div>
             `;
 
-            // Exibe direto no Modal Nativo do WebView
             document.getElementById('conteudo-termo-Dinamico').innerHTML = htmlCompletoTermo;
             document.getElementById('modal-visualizador-termo').style.display = 'flex';
 
