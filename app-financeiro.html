@@ -805,7 +805,6 @@
             const container = document.getElementById('lista-faturas-aluno-container');
             if (!container || !alunoId) return;
 
-            // FILTRAGEM RIGOROSA: Exclui estritamente qualquer registro que seja proposta de acordo ou acordo em andamento
             const faturasDoAluno = financeLogs.filter(f => {
                 const pertenceAluno = (f.studentId === alunoId || f.alunoId === alunoId);
                 if (!pertenceAluno) return false;
@@ -915,7 +914,15 @@
         // --- FUNÇÕES DA ABA DE NEGOCIAÇÕES ---
         function renderizarNegociacoesAtivasGeral() {
             const container = document.getElementById('lista-negociacoes-ativas-container');
+            const termoBusca = document.getElementById('input-busca-negociacao').value.trim();
+            
             if (!container) return;
+
+            // Se houver texto digitado na busca, esconde automaticamente a lista de negociações ativas
+            if (termoBusca.length > 0) {
+                container.innerHTML = '';
+                return;
+            }
 
             const propostasOuAcordos = financeLogs.filter(f => {
                 const status = (f.status || '').toUpperCase();
@@ -977,10 +984,14 @@
         }
 
         function pesquisarAlunoNegociacao() {
-            const termo = normalizarTexto(document.getElementById('input-busca-negociacao').value);
+            const termoInput = document.getElementById('input-busca-negociacao').value;
+            const termo = normalizarTexto(termoInput);
             const container = document.getElementById('lista-busca-negociacao-container');
             const painel = document.getElementById('painel-negociacao-aluno');
             
+            // Atualiza a exibição da lista de negociações ativas (some quando digita, reaparece se apagar)
+            renderizarNegociacoesAtivasGeral();
+
             if (!container) return;
 
             if (termo.length < 2) {
@@ -1371,7 +1382,6 @@
             const valorTotalNegociadoParaRegistro = valorAtualNegociacaoGlobal.toFixed(2);
             const nomeAlunoSalvar = aluno.fullname || aluno.name || 'Aluno';
 
-            // SALVA ESTRITAMENTE COMO PROPOSTA COM STATUS COMERCIAL (NÃO GERA FATURA)
             try {
                 if (propostaIdExistente) {
                     await db.collection("financeLogs").doc(propostaIdExistente).update({
@@ -1666,9 +1676,6 @@
             document.getElementById('modal-fechar-acordo').style.display = 'none';
         }
 
-        // QUANDO O ACORDO É APROVADO DEFINITIVAMENTE:
-        // 1. As faturas em atraso são baixadas.
-        // 2. Os novos boletos/faturas reais são gerados na aba de faturas.
         async function executarFechamentoAcordoDefinitivo() {
             const radioSelecionado = document.querySelector('input[name="opcao-escolhida-fechamento"]:checked');
             if (!radioSelecionado) {
@@ -1685,7 +1692,6 @@
             }
 
             try {
-                // 1. Baixa faturas antigas em atraso
                 for (let fatura of faturasAtrasadasGlobal) {
                     await db.collection("financeLogs").doc(fatura.id).update({
                         status: "NEGOCIADO (ACORDO)",
@@ -1694,7 +1700,6 @@
                     });
                 }
 
-                // 2. Gera os novos boletos/faturas reais para aparecer na aba Faturas
                 if (escolhaKey === 'parcelado') {
                     let qtdParcelas = parseInt(opEscolhida.infoExtra) || 2;
                     let valorParcela = opEscolhida.valorFinal / qtdParcelas;
@@ -1740,7 +1745,6 @@
                     });
                 }
 
-                // 3. Atualiza o status da proposta para "ACORDO ACEITO"
                 const propostasPendentes = financeLogs.filter(f => (f.studentId === alunoNegociacaoId || f.alunoId === alunoNegociacaoId) && f.status && (f.status.includes("PROPOSTA") || f.status.includes("AGUARDANDO")));
                 
                 if (propostasPendentes.length > 0) {
@@ -2059,3 +2063,4 @@
     </script>
 </body>
 </html>
+```[cite: 1]
