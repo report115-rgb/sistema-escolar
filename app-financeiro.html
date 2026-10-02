@@ -1529,9 +1529,37 @@
                             color-adjust: exact !important;
                         }
 
+                        /* REGRA PARA OCULTAR O BOTÃO DE FECHAR NA HORA DE IMPRIMIR O DOCUMENTO */
+                        @media print {
+                            .no-print {
+                                display: none !important;
+                            }
+                        }
+
                         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #1e293b; margin: 0; padding: 20px; background: #f8fafc; }
-                        .container { max-width: 800px; margin: 0 auto; background: #ffffff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+                        .container { max-width: 800px; margin: 0 auto; background: #ffffff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); position: relative; }
                         
+                        /* BOTÃO DE VOLTAR / FECHAR ABA NO TOPO */
+                        .btn-voltar-topo {
+                            display: inline-flex;
+                            align-items: center;
+                            gap: 8px;
+                            background: #e2e8f0;
+                            color: #334155;
+                            padding: 8px 14px;
+                            border-radius: 8px;
+                            font-size: 12px;
+                            font-weight: bold;
+                            text-decoration: none;
+                            margin-bottom: 20px;
+                            border: none;
+                            cursor: pointer;
+                            transition: background 0.2s;
+                        }
+                        .btn-voltar-topo:hover {
+                            background: #cbd5e1;
+                        }
+
                         /* CABEÇALHO COM FUNDO ESCURO UNIFICADO E LOGO TRANSPARENTE (SEM FUNDO BRANCO) */
                         .header { background: #1e3a8a !important; color: #ffffff !important; padding: 20px 25px; border-radius: 10px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px; }
                         .header-left { display: flex; align-items: center; gap: 15px; }
@@ -1554,6 +1582,14 @@
                 </head>
                 <body>
                     <div class="container">
+                        <!-- BOTÃO DE VOLTAR / FECHAR ABA NO TOPO (OCULTO NA IMPRESSÃO) -->
+                        <div class="no-print">
+                            <button onclick="window.close();" class="btn-voltar-topo">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                Fechar Aba / Voltar
+                            </button>
+                        </div>
+
                         <!-- CABEÇALHO PROFISSIONAL UNIFICADO COM LOGO SEM FUNDO BRANCO -->
                         <div class="header">
                             <div class="header-left">
