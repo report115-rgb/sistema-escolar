@@ -81,7 +81,7 @@
 
         <div class="text-center text-[10px] text-blue-300 pb-2">
             <div>Sistema SE7 de Gestão Acadêmica</div>
-            <div>v1.5.2 &bull; Setor Financeiro</div>
+            <div>v1.5.3 &bull; Setor Financeiro</div>
         </div>
     </div>
 
@@ -1575,8 +1575,8 @@
                     </div>
 
                     <div class="flex gap-2 pt-2">
-                        <button type="button" onclick="baixarPropostaComoArquivoMobile('${nomeCompleto}')" class="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow transition flex items-center justify-center gap-1.5">
-                            <i class="fa-solid fa-download"></i> Baixar / Salvar em PDF
+                        <button type="button" onclick="compartilharOuAbrirNavegadorMobile('${nomeCompleto}')" class="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow transition flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-share-nodes"></i> Compartilhar / Abrir no Navegador
                         </button>
                         <button type="button" onclick="document.getElementById('modal-visualizador-proposta').remove()" class="py-3 px-4 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold rounded-xl text-xs">
                             Fechar
@@ -1590,7 +1590,7 @@
             renderizarNegociacoesAtivasGeral();
         }
 
-        function baixarPropostaComoArquivoMobile(nomeAluno) {
+        async function compartilharOuAbrirNavegadorMobile(nomeAluno) {
             const conteudoHTML = document.getElementById('conteudo-proposta-imprimir').innerHTML;
             
             const cabecalhoCompleto = `
@@ -1613,17 +1613,49 @@
                     <div style="margin-top: 20px; font-size: 10px; text-align: center; color: #64748b;">
                         Documento gerado pelo Aplicativo SE7 Financeiro Mobile em ${new Date().toLocaleDateString('pt-BR')}.
                     </div>
-                    <script>
-                        window.onload = function() {
-                            window.print();
-                        }
-                    <\/script>
                 </body>
                 </html>
             `;
 
+            const blob = new Blob([cabecalhoCompleto], { type: 'text/html;charset=utf-8' });
+            const file = new File([blob], `Proposta_Acordo_${nomeAluno.replace(/\s+/g, '_')}.html`, { type: 'text/html' });
+
+            // 1. TENTA ABRIR O COMPARTILHAMENTO NATIVO DO ANDROID (CHAMA O MENU DE COMPARTILHAR DO CELULAR)
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                try {
+                    await navigator.share({
+                        title: 'Proposta de Acordo - ' + nomeAluno,
+                        text: 'Segue em anexo a proposta de acordo consolidada.',
+                        files: [file]
+                    });
+                    return;
+                } catch (err) {
+                    if (err.name !== 'AbortError') {
+                        console.warn("Erro no share com arquivos, tentando link...", err);
+                    } else {
+                        return; // Usuário cancelou o compartilhamento
+                    }
+                }
+            }
+
+            // 2. SE O COMPARTILHAMENTO DE ARQUIVO NÃO FOR SUPORTADO, USA A API DE SHARE SIMPLES OU ABRE NO NAVEGADOR EXTERNO
             const encodedUri = 'data:text/html;charset=utf-8,' + encodeURIComponent(cabecalhoCompleto);
-            const novaJanela = window.open(encodedUri, '_blank');
+            
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: 'Proposta de Acordo - ' + nomeAluno,
+                        text: 'Proposta de acordo gerada para ' + nomeAluno,
+                        url: encodedUri
+                    });
+                    return;
+                } catch (e) {
+                    if (e.name === 'AbortError') return;
+                }
+            }
+
+            // 3. FALLBACK FINAL: Abre em uma nova aba forçando o navegador padrão do celular a assumir a página
+            const novaJanela = window.open(encodedUri, '_system');
             if (!novaJanela) {
                 window.location.href = encodedUri;
             }
