@@ -46,7 +46,6 @@
         }
         .animacao-piscar-alerta { animation: piscarAlerta 1.2s infinite ease-in-out; }
 
-        /* --- CONFIGURAÇÃO DE IMPRESSÃO PROFISSIONAL (WEBVIEW / MOBILE) --- */
         @media print {
             * {
                 -webkit-print-color-adjust: exact !important;
@@ -64,7 +63,7 @@
                 backdrop-filter: none !important;
             }
             #modal-visualizador-termo > div:first-child {
-                display: none !important; /* Esconde a barra de botões Fechar/Imprimir */
+                display: none !important;
             }
             #modal-visualizador-termo > div:nth-child(2) {
                 padding: 0 !important;
@@ -109,11 +108,11 @@
 
         <div class="text-center text-[10px] text-blue-300 pb-2">
             <div>Sistema SE7 de Gestão Acadêmica</div>
-            <div>v1.6.6 &bull; Setor Financeiro</div>
+            <div>v1.6.7 &bull; Setor Financeiro</div>
         </div>
     </div>
 
-    <!-- MODAL DE EDIÇÃO DE MENSALIDADE (COM DATA E VALOR) -->
+    <!-- MODAL DE EDIÇÃO DE MENSALIDADE -->
     <div id="modal-editar-cobranca" class="fixed inset-0 z-[4000] flex items-center justify-center bg-black/70 p-4" style="display: none;">
         <div class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-3xl shadow-2xl max-w-sm w-full p-6 space-y-4 border border-slate-200 dark:border-slate-800">
             <div class="flex justify-between items-center border-b pb-3 border-slate-200 dark:border-slate-800">
@@ -173,7 +172,6 @@
                     <button type="button" onclick="ativarAbaAcordoModal('cartao')" id="btn-aba-cartao" class="py-2.5 px-2 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl text-xs transition">Cartão</button>
                 </div>
 
-                <!-- PAINEL À VISTA -->
                 <div id="painel-acordo-avista" class="space-y-3 p-3.5 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700">
                     <h4 class="font-bold text-slate-900 dark:text-white">Opção 1: Pagamento À Vista</h4>
                     <div>
@@ -189,7 +187,6 @@
                     </button>
                 </div>
 
-                <!-- PAINEL PARCELADO (ATÉ 5X) -->
                 <div id="painel-acordo-parcelado" class="space-y-3 p-3.5 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700" style="display: none;">
                     <h4 class="font-bold text-slate-900 dark:text-white">Opção 2: Parcelado (Até 5x)</h4>
                     <div>
@@ -210,7 +207,6 @@
                         <input type="number" id="desc-multa-parcelado" value="50" min="0" max="100" oninput="atualizarPreviaParcelasModal()" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white">
                     </div>
                     
-                    <!-- PRÉVIA CALCULADA DO VALOR DE CADA PARCELA -->
                     <div class="p-3 bg-emerald-100/60 dark:bg-emerald-950/50 rounded-xl border border-emerald-300 dark:border-emerald-800 text-xs text-emerald-900 dark:text-emerald-200 flex justify-between items-center">
                         <span>Valor de cada parcela:</span>
                         <strong id="previa-valor-parcela" class="text-sm">R$ 0,00</strong>
@@ -221,7 +217,6 @@
                     </button>
                 </div>
 
-                <!-- PAINEL CARTÃO DE CRÉDITO -->
                 <div id="painel-acordo-cartao" class="space-y-3 p-3.5 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700" style="display: none;">
                     <h4 class="font-bold text-slate-900 dark:text-white">Opção 3: Cartão de Crédito</h4>
                     <div>
@@ -237,7 +232,6 @@
                     </button>
                 </div>
 
-                <!-- LISTA DAS OPÇÕES CONFIGURADAS -->
                 <div class="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-800">
                     <span class="font-bold uppercase text-[10px] text-slate-400">Modalidades Configuradas:</span>
                     <div id="lista-opcoes-geradas-modal" class="space-y-2">
@@ -813,7 +807,6 @@
                             </div>
                             <div class="flex items-center gap-1.5">
                                 <span class="px-2 py-0.5 ${corBadge} rounded-full text-[10px] font-bold">${f.status || 'PENDENTE'}</span>
-                                <!-- BOTÃO DE EDITAR MENSALIDADE -->
                                 <button type="button" onclick="abrirModalEditarMensalidadeFinanceiro('${f.id}')" class="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[10px] font-semibold shadow transition" title="Editar Mensalidade">
                                     <i class="fa-solid fa-pen-to-square"></i>
                                 </button>
@@ -849,7 +842,7 @@
             }).join('');
         }
 
-        // --- ABA DE NEGOCIAÇÕES ORIGINAL RESTAURADA ---
+        // --- ABA DE NEGOCIAÇÕES ---
         function renderizarNegociacoesAtivasGeral() {
             const container = document.getElementById('lista-negociacoes-ativas-container');
             const termoBusca = document.getElementById('input-busca-negociacao').value.trim();
@@ -1115,7 +1108,7 @@
             if (btnGerar) btnGerar.style.display = todas ? 'block' : 'none';
         }
 
-        // GERAR / VISUALIZAR TERMO COMPLETO ORIGINAL
+        // GERAR / VISUALIZAR O TERMO DE ACORDO EXATAMENTE COMO NO PDF ORIGINAL
         async function gerarPropostaPDF() {
             if (!alunoNegociacaoId) return;
             const aluno = studentsMap[alunoNegociacaoId];
@@ -1156,76 +1149,147 @@
                 }
             } catch (e) { console.error(e); }
 
-            // MONTAGEN COMPLETA DO TERMO ORIGINAL
             const razaoSocial = institutionData.razaoSocial || "JS & SS SERVIÇOS EDUCACIONAIS E CIA LTDA";
             const cnpjInst = institutionData.cnpj || "31.535.516/0001-64";
-            const logoUrl = institutionData.logo || "";
-            const enderecoInst = institutionData.address || "Travessa Magalhães Barata, 692, Centro, Vigia – PA";
+            const enderecoInst = institutionData.address || "Travessa Magalhães Barata, 692, Centro, Vigia – PA, CEP 68.780-000";
 
             const nomeCompleto = aluno.fullname || aluno.name || '---';
             const cpf = aluno.cpf || '---';
             const rg = aluno.rg || '---';
             const whatsapp = aluno.whatsapp || aluno.telefone || '---';
+            const endereco = aluno.address || aluno.endereco || '---';
+            const dataNasc = aluno.birthdate || aluno.dataNascimento || '---';
+            const sexo = aluno.gender || aluno.sexo || '---';
+            const matricula = aluno.code || aluno.matricula || '---';
             const rawCurso = aluno.course || aluno.curso || aluno.turma || '';
             const cursoExibir = coursesMap[rawCurso] || coursesMap[normalizarTexto(rawCurso)] || String(rawCurso || 'Não vinculado');
 
             let htmlTabelaDebitos = '';
+            let somaOrig = 0, somaMulta = 0, somaJuros = 0, somaTotal = 0;
+            const hoje = new Date();
+
             faturasAtrasadasGlobal.forEach(f => {
-                const valorOriginal = parseFloat(String(f.amount || f.valor || '0').replace(',', '.')) || 0;
+                let dataVenc = parseDataParaOrdem(f.date || f.vencimento);
+                let diasAtraso = Math.ceil(Math.abs(hoje - dataVenc) / (1000 * 60 * 60 * 24));
+                let meses = diasAtraso / 30;
+                let valOrig = parseFloat(String(f.amount || f.valor || '0').replace(',', '.')) || 0;
+                let multa = 10.00;
+                let juros = valOrig * 0.05 * meses;
+                let totalParc = valOrig + multa + juros;
+
+                somaOrig += valOrig;
+                somaMulta += multa;
+                somaJuros += juros;
+                somaTotal += totalParc;
+
                 htmlTabelaDebitos += `
                     <tr>
-                        <td style="padding: 7px; border-bottom: 1px solid #e2e8f0;">${f.description || f.descricao || 'Mensalidade'}</td>
-                        <td style="padding: 7px; border-bottom: 1px solid #e2e8f0; text-align: center;">${formatarDataParaExibicao(f.date || f.vencimento)}</td>
-                        <td style="padding: 7px; border-bottom: 1px solid #e2e8f0; text-align: right;">R$ ${valorOriginal.toFixed(2)}</td>
+                        <td style="padding: 6px; border-bottom: 1px solid #e2e8f0;">${f.description || f.descricao || 'Mensalidade'}</td>
+                        <td style="padding: 6px; border-bottom: 1px solid #e2e8f0; text-align: center;">${formatarDataParaExibicao(f.date || f.vencimento)}</td>
+                        <td style="padding: 6px; border-bottom: 1px solid #e2e8f0; text-align: center;">${diasAtraso} dias</td>
+                        <td style="padding: 6px; border-bottom: 1px solid #e2e8f0; text-align: right;">R$ ${valOrig.toFixed(2)}</td>
+                        <td style="padding: 6px; border-bottom: 1px solid #e2e8f0; text-align: right;">R$ ${multa.toFixed(2)}</td>
+                        <td style="padding: 6px; border-bottom: 1px solid #e2e8f0; text-align: right;">R$ ${juros.toFixed(2)}</td>
+                        <td style="padding: 6px; border-bottom: 1px solid #e2e8f0; text-align: right; font-weight: bold;">R$ ${totalParc.toFixed(2)}</td>
                     </tr>
                 `;
             });
 
+            let dataHoraGeracao = new Date().toLocaleString('pt-BR');
+
             let htmlCompletoTermo = `
-                <div style="font-family: 'Segoe UI', Tahoma, sans-serif; color: #1e293b; padding: 10px;">
-                    <div style="background: #1e3a8a; color: #ffffff; padding: 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <div>
-                            <h1 style="font-size: 15px; margin: 0 0 5px 0;">${razaoSocial}</h1>
-                            <p style="font-size: 11px; margin: 0; color: #cbd5e1;">CNPJ: ${cnpjInst} &bull; ${enderecoInst}</p>
-                        </div>
-                        <strong style="font-size: 12px; color: #93c5fd;">SETOR FINANCEIRO</strong>
+                <div style="font-family: Arial, sans-serif; color: #1e293b; padding: 10px; font-size: 11px;">
+                    <div style="text-align: center; border-bottom: 2px solid #1e3a8a; padding-bottom: 10px; margin-bottom: 15px;">
+                        <h2 style="font-size: 14px; margin: 0; color: #1e3a8a; font-weight: bold;">${razaoSocial}</h2>
+                        <p style="font-size: 10px; margin: 2px 0;">CNPJ: ${cnpjInst}</p>
+                        <p style="font-size: 10px; margin: 0; color: #475569;">Endereço: ${enderecoInst}</p>
+                        <div style="margin-top: 6px; font-weight: bold; font-size: 10px; color: #2563eb;">EMITIDO POR: Setor Financeiro</div>
                     </div>
 
-                    <h2 style="text-align: center; font-size: 16px; color: #1e3a8a; margin-bottom: 15px; text-transform: uppercase;">TERMO DE PROPOSTA DE ACORDO FINANCEIRO</h2>
+                    <h1 style="text-align: center; font-size: 13px; color: #1e3a8a; margin: 15px 0; text-transform: uppercase; font-weight: bold;">TERMO DE PROPOSTA DE ACORDO FINANCEIRO</h1>
 
-                    <div style="background: #f1f5f9; padding: 14px; border-radius: 10px; font-size: 12px; margin-bottom: 15px;">
-                        <strong>Aluno(a):</strong> ${nomeCompleto} &bull; <strong>CPF:</strong> ${cpf}<br>
-                        <strong>Curso:</strong> ${cursoExibir} &bull; <strong>WhatsApp:</strong> ${whatsapp}
-                    </div>
-
-                    <h3 style="font-size: 13px; color: #1e3a8a; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; margin-bottom: 10px;">Demonstrativo de Débitos</h3>
-                    <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 20px;">
-                        <thead>
-                            <tr style="background: #1e3a8a; color: #fff;">
-                                <th style="padding: 8px; text-align: left;">Descrição</th>
-                                <th style="padding: 8px; text-align: center;">Vencimento</th>
-                                <th style="padding: 8px; text-align: right;">Valor</th>
+                    <div style="margin-bottom: 15px;">
+                        <h3 style="font-size: 12px; background: #f1f5f9; padding: 5px 8px; margin: 0 0 8px 0; color: #1e3a8a; border-left: 3px solid #1e3a8a;">1. IDENTIFICAÇÃO DO ALUNO</h3>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+                            <tr>
+                                <td style="padding: 3px 0;"><strong>Nome Completo:</strong> ${nomeCompleto}</td>
+                                <td style="padding: 3px 0;"><strong>CPF:</strong> ${cpf}</td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            ${htmlTabelaDebitos}
-                        </tbody>
-                    </table>
-
-                    <h3 style="font-size: 13px; color: #1e3a8a; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; margin-bottom: 10px;">Opções de Acordo Disponíveis</h3>
-                    <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 12px; border-radius: 8px; font-size: 12px; margin-bottom: 8px;">
-                        <strong style="color: #047857;">Opção A: À Vista</strong><br>Valor: <strong>R$ ${opcoesGeradas.avista.valorFinal.toFixed(2)}</strong>
-                    </div>
-                    <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 12px; border-radius: 8px; font-size: 12px; margin-bottom: 8px;">
-                        <strong style="color: #047857;">Opção B: Parcelado (${opcoesGeradas.parcelado.infoExtra})</strong><br>Valor: <strong>R$ ${opcoesGeradas.parcelado.valorFinal.toFixed(2)}</strong>
-                    </div>
-                    <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 12px; border-radius: 8px; font-size: 12px; margin-bottom: 15px;">
-                        <strong style="color: #047857;">Opção C: Cartão de Crédito</strong><br>Valor: <strong>R$ ${opcoesGeradas.cartao.valorFinal.toFixed(2)}</strong>
+                            <tr>
+                                <td style="padding: 3px 0;"><strong>Endereço Completo:</strong> ${endereco}</td>
+                                <td style="padding: 3px 0;"><strong>Matrícula:</strong> ${matricula}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 3px 0;"><strong>Data de Nascimento:</strong> ${dataNasc}</td>
+                                <td style="padding: 3px 0;"><strong>Sexo:</strong> ${sexo} | <strong>WhatsApp:</strong> ${whatsapp}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 3px 0;" colspan="2"><strong>Curso e Turma:</strong> ${cursoExibir} | <strong>RG:</strong> ${rg}</td>
+                            </tr>
+                        </table>
                     </div>
 
-                    <div style="margin-top: 40px; display: flex; justify-content: space-between; text-align: center; font-size: 11px;">
-                        <div style="width: 45%; border-top: 1px solid #1e293b; padding-top: 5px;">Setor Financeiro / Tesouraria</div>
-                        <div style="width: 45%; border-top: 1px solid #1e293b; padding-top: 5px;">${nomeCompleto} (Aluno)</div>
+                    <div style="margin-bottom: 15px;">
+                        <h3 style="font-size: 12px; background: #f1f5f9; padding: 5px 8px; margin: 0 0 8px 0; color: #1e3a8a; border-left: 3px solid #1e3a8a;">2. DEMONSTRATIVO DE DÉBITOS EM ATRASO (ORDEM CRONOLÓGICA)</h3>
+                        <p style="margin: 0 0 6px 0;">Quantidade total de parcelas em atraso: <strong>${faturasAtrasadasGlobal.length} parcela(s)</strong></p>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 10px;">
+                            <thead>
+                                <tr style="background: #1e3a8a; color: white;">
+                                    <th style="padding: 6px; text-align: left;">Descrição</th>
+                                    <th style="padding: 6px; text-align: center;">Vencimento</th>
+                                    <th style="padding: 6px; text-align: center;">Atraso</th>
+                                    <th style="padding: 6px; text-align: right;">Valor Original</th>
+                                    <th style="padding: 6px; text-align: right;">Multa</th>
+                                    <th style="padding: 6px; text-align: right;">Juros (5% a.m.)</th>
+                                    <th style="padding: 6px; text-align: right;">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${htmlTabelaDebitos}
+                                <tr style="background: #e2e8f0; font-weight: bold;">
+                                    <td colspan="3" style="padding: 6px; text-align: left;">VALOR TOTAL DA DÍVIDA / TOTAIS:</td>
+                                    <td style="padding: 6px; text-align: right;">R$ ${somaOrig.toFixed(2)}</td>
+                                    <td style="padding: 6px; text-align: right;">R$ ${somaMulta.toFixed(2)}</td>
+                                    <td style="padding: 6px; text-align: right;">R$ ${somaJuros.toFixed(2)}</td>
+                                    <td style="padding: 6px; text-align: right;">R$ ${somaTotal.toFixed(2)}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <h3 style="font-size: 12px; background: #f1f5f9; padding: 5px 8px; margin: 0 0 8px 0; color: #1e3a8a; border-left: 3px solid #1e3a8a;">3. OPÇÕES DE ACORDO DISPONÍVEIS PARA ESCOLHA</h3>
+                        
+                        <div style="margin-bottom: 8px; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                            <strong>Opção A: Pagamento À Vista</strong><br>
+                            Desconto Aplicado: ${opcoesGeradas.avista.descJuros}% de Juros e ${opcoesGeradas.avista.descMulta}% de Multa.<br>
+                            <strong>Valor Total À Vista: R$ ${opcoesGeradas.avista.valorFinal.toFixed(2)}</strong>
+                        </div>
+
+                        <div style="margin-bottom: 8px; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                            <strong>Opção B: Parcelado em ${opcoesGeradas.parcelado.infoExtra} de R$ ${(opcoesGeradas.parcelado.valorFinal / parseInt(opcoesGeradas.parcelado.infoExtra)).toFixed(2)}</strong><br>
+                            Desconto Aplicado: ${opcoesGeradas.parcelado.descJuros}% de Juros e ${opcoesGeradas.parcelado.descMulta}% de Multa.<br>
+                            <strong>Valor Total Parcelado: R$ ${opcoesGeradas.parcelado.valorFinal.toFixed(2)} (${opcoesGeradas.parcelado.infoExtra} de R$ ${(opcoesGeradas.parcelado.valorFinal / parseInt(opcoesGeradas.parcelado.infoExtra)).toFixed(2)})</strong>
+                        </div>
+
+                        <div style="margin-bottom: 8px; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                            <strong>Opção C: Pagamento via Cartão de Crédito</strong><br>
+                            Desconto Aplicado: ${opcoesGeradas.cartao.descJuros}% de Juros e ${opcoesGeradas.cartao.descMulta}% de Multa.<br>
+                            <strong>Valor Total no Cartão: R$ ${opcoesGeradas.cartao.valorFinal.toFixed(2)}</strong>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 40px; display: flex; justify-content: space-between; text-align: center; font-size: 10px;">
+                        <div style="width: 45%; border-top: 1px solid #1e293b; padding-top: 4px;">
+                            ${razaoSocial}<br>Setor Financeiro / Tesouraria
+                        </div>
+                        <div style="width: 45%; border-top: 1px solid #1e293b; padding-top: 4px;">
+                            ${nomeCompleto}<br>Assinatura / Concordância do Aluno
+                        </div>
+                    </div>
+
+                    <div style="text-align: center; margin-top: 25px; font-size: 9px; color: #64748b;">
+                        Documento gerado eletronicamente pelo Aplicativo SE7 Financeiro Mobile em ${dataHoraGeracao}.
                     </div>
                 </div>
             `;
