@@ -112,7 +112,7 @@
 
         <div class="text-center text-[10px] text-blue-300 pb-2">
             <div>Sistema SE7 de Gestão Acadêmica</div>
-            <div>v1.5.6 &bull; Setor Financeiro</div>
+            <div>v1.5.7 &bull; Setor Financeiro</div>
         </div>
     </div>
 
@@ -1145,6 +1145,13 @@
                 return dataVenc < hoje;
             });
 
+            // GARANTE ORDEM CRONOLÓGICA DAS FATURAS ATRASADAS (DA MAIS ANTIGA PARA A MAIS RECENTE)
+            faturasAtrasadasGlobal.sort((a, b) => {
+                let dataA = parseDataParaOrdem(a.date || a.vencimento);
+                let dataB = parseDataParaOrdem(b.date || b.vencimento);
+                return dataA - dataB;
+            });
+
             valorTotalOriginalGlobal = 0;
             multaTotalGlobal = 0;
             jurosTotalGlobal = 0;
@@ -1157,9 +1164,8 @@
                 let dataVenc = parseDataParaOrdem(vencimentoStr);
                 dataVenc.setHours(0, 0, 0, 0);
                 
-                // Nova regra: 5% de juros ao mês por atraso (calculando meses de atraso com base na diferença de dias / 30)
                 let diasAtraso = Math.ceil(Math.abs(hoje - dataVenc) / (1000 * 60 * 60 * 24));
-                let mesesAtraso = diasAtraso / 30; // Proporção ou quantidade de meses em atraso
+                let mesesAtraso = diasAtraso / 30;
                 
                 multaTotalGlobal += 10.00;
                 jurosTotalGlobal += (valorOriginal * 0.05 * mesesAtraso);
@@ -1306,7 +1312,7 @@
                     </div>
 
                     <div class="space-y-2 pt-2">
-                        <h4 class="font-bold text-xs uppercase text-slate-500 tracking-wider">Faturas Vencidas com Encargos Calculados (Multa R$ 10 + 5% a.m.):</h4>
+                        <h4 class="font-bold text-xs uppercase text-slate-500 tracking-wider">Faturas Vencidas com Encargos Calculados (Multa R$ 10 + 5% a.m. - Ordem Cronológica):</h4>
                         ${htmlFaturasCalc}
                     </div>
                 ` : ''}
@@ -1542,6 +1548,7 @@
             let somaJurosGeral = 0;
             let somaTotalGeral = 0;
 
+            // Já ordenadas cronologicamente
             faturasAtrasadasGlobal.forEach(f => {
                 const valorOriginal = parseFloat(String(f.amount || f.valor || '0').replace(',', '.')) || 0;
                 somaOriginalGeral += valorOriginal;
@@ -1623,7 +1630,7 @@
                         </div>
                     </div>
 
-                    <h2 style="font-size: 13px; color: #1e3a8a; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; margin-top: 25px; margin-bottom: 10px;">2. Demonstrativo de Débitos em Atraso (Multa R$ 10,00 + Juros de 5% a.m.)</h2>
+                    <h2 style="font-size: 13px; color: #1e3a8a; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; margin-top: 25px; margin-bottom: 10px;">2. Demonstrativo de Débitos em Atraso (Ordem Cronológica)</h2>
                     <div style="overflow-x: auto;">
                         <table style="width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 10px; margin-bottom: 15px;">
                             <thead>
