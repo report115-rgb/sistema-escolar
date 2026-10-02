@@ -46,6 +46,7 @@
         }
         .animacao-piscar-alerta { animation: piscarAlerta 1.2s infinite ease-in-out; }
 
+        /* --- CONFIGURAÇÃO DE IMPRESSÃO PROFISSIONAL (WEBVIEW / MOBILE) --- */
         @media print {
             * {
                 -webkit-print-color-adjust: exact !important;
@@ -63,7 +64,7 @@
                 backdrop-filter: none !important;
             }
             #modal-visualizador-termo > div:first-child {
-                display: none !important;
+                display: none !important; /* Esconde a barra de botões Fechar/Imprimir */
             }
             #modal-visualizador-termo > div:nth-child(2) {
                 padding: 0 !important;
@@ -108,11 +109,11 @@
 
         <div class="text-center text-[10px] text-blue-300 pb-2">
             <div>Sistema SE7 de Gestão Acadêmica</div>
-            <div>v1.6.5 &bull; Setor Financeiro</div>
+            <div>v1.6.6 &bull; Setor Financeiro</div>
         </div>
     </div>
 
-    <!-- MODAL DE EDIÇÃO DE MENSALIDADE -->
+    <!-- MODAL DE EDIÇÃO DE MENSALIDADE (COM DATA E VALOR) -->
     <div id="modal-editar-cobranca" class="fixed inset-0 z-[4000] flex items-center justify-center bg-black/70 p-4" style="display: none;">
         <div class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-3xl shadow-2xl max-w-sm w-full p-6 space-y-4 border border-slate-200 dark:border-slate-800">
             <div class="flex justify-between items-center border-b pb-3 border-slate-200 dark:border-slate-800">
@@ -128,17 +129,12 @@
 
             <div class="space-y-3 text-xs">
                 <div>
-                    <label class="block font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">Descrição / Número (Ex: Mensalidade 11/17)</label>
-                    <input type="text" id="edit-cobranca-descricao" placeholder="Ex: Mensalidade 11/17" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-600">
-                </div>
-
-                <div>
-                    <label class="block font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">Data de Vencimento</label>
+                    <label class="block font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">Nova Data de Vencimento</label>
                     <input type="date" id="edit-cobranca-data" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-600">
                 </div>
 
                 <div>
-                    <label class="block font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">Valor (R$)</label>
+                    <label class="block font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">Novo Valor (R$)</label>
                     <input type="text" id="edit-cobranca-valor" placeholder="0,00" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-600">
                 </div>
             </div>
@@ -148,7 +144,7 @@
                     Cancelar
                 </button>
                 <button type="button" onclick="salvarEdicaoMensalidade()" class="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-xs shadow">
-                    Salvar na Matriz
+                    Salvar
                 </button>
             </div>
         </div>
@@ -169,7 +165,7 @@
             <input type="hidden" id="edit-proposta-id-ativo" value="">
 
             <div class="space-y-4 text-xs">
-                <p class="text-slate-500">Configure os descontos para cada modalidade abaixo. As 3 opções são necessárias para visualizar ou atualizar a proposta em PDF para o aluno.</p>
+                <p class="text-slate-500">Configure os descontos para cada modalidade abaixo. As 3 opções são necessárias para gerar a proposta em PDF para o aluno.</p>
                 
                 <div class="grid grid-cols-3 gap-2">
                     <button type="button" onclick="ativarAbaAcordoModal('avista')" id="btn-aba-avista" class="py-2.5 px-2 bg-emerald-600 text-white font-bold rounded-xl text-xs shadow transition">À Vista</button>
@@ -177,6 +173,7 @@
                     <button type="button" onclick="ativarAbaAcordoModal('cartao')" id="btn-aba-cartao" class="py-2.5 px-2 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl text-xs transition">Cartão</button>
                 </div>
 
+                <!-- PAINEL À VISTA -->
                 <div id="painel-acordo-avista" class="space-y-3 p-3.5 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700">
                     <h4 class="font-bold text-slate-900 dark:text-white">Opção 1: Pagamento À Vista</h4>
                     <div>
@@ -192,6 +189,7 @@
                     </button>
                 </div>
 
+                <!-- PAINEL PARCELADO (ATÉ 5X) -->
                 <div id="painel-acordo-parcelado" class="space-y-3 p-3.5 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700" style="display: none;">
                     <h4 class="font-bold text-slate-900 dark:text-white">Opção 2: Parcelado (Até 5x)</h4>
                     <div>
@@ -212,6 +210,7 @@
                         <input type="number" id="desc-multa-parcelado" value="50" min="0" max="100" oninput="atualizarPreviaParcelasModal()" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white">
                     </div>
                     
+                    <!-- PRÉVIA CALCULADA DO VALOR DE CADA PARCELA -->
                     <div class="p-3 bg-emerald-100/60 dark:bg-emerald-950/50 rounded-xl border border-emerald-300 dark:border-emerald-800 text-xs text-emerald-900 dark:text-emerald-200 flex justify-between items-center">
                         <span>Valor de cada parcela:</span>
                         <strong id="previa-valor-parcela" class="text-sm">R$ 0,00</strong>
@@ -222,6 +221,7 @@
                     </button>
                 </div>
 
+                <!-- PAINEL CARTÃO DE CRÉDITO -->
                 <div id="painel-acordo-cartao" class="space-y-3 p-3.5 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700" style="display: none;">
                     <h4 class="font-bold text-slate-900 dark:text-white">Opção 3: Cartão de Crédito</h4>
                     <div>
@@ -237,6 +237,7 @@
                     </button>
                 </div>
 
+                <!-- LISTA DAS OPÇÕES CONFIGURADAS -->
                 <div class="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-800">
                     <span class="font-bold uppercase text-[10px] text-slate-400">Modalidades Configuradas:</span>
                     <div id="lista-opcoes-geradas-modal" class="space-y-2">
@@ -248,7 +249,7 @@
             </div>
 
             <div class="flex flex-col gap-2 pt-2">
-                <button type="button" id="btn-gerar-proposta-modal" onclick="gerarOuAtualizarPropostaPDF()" style="display: none;" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow transition">
+                <button type="button" id="btn-gerar-proposta-modal" onclick="gerarPropostaPDF()" style="display: none;" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow transition">
                     <i class="fa-solid fa-file-pdf mr-1"></i> Visualizar Proposta na Tela
                 </button>
                 <button type="button" onclick="fecharModalRealizarAcordo()" class="w-full py-2.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold rounded-xl text-xs">
@@ -812,6 +813,7 @@
                             </div>
                             <div class="flex items-center gap-1.5">
                                 <span class="px-2 py-0.5 ${corBadge} rounded-full text-[10px] font-bold">${f.status || 'PENDENTE'}</span>
+                                <!-- BOTÃO DE EDITAR MENSALIDADE -->
                                 <button type="button" onclick="abrirModalEditarMensalidadeFinanceiro('${f.id}')" class="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[10px] font-semibold shadow transition" title="Editar Mensalidade">
                                     <i class="fa-solid fa-pen-to-square"></i>
                                 </button>
@@ -847,7 +849,7 @@
             }).join('');
         }
 
-        // --- ABA DE NEGOCIAÇÕES ---
+        // --- ABA DE NEGOCIAÇÕES ORIGINAL RESTAURADA ---
         function renderizarNegociacoesAtivasGeral() {
             const container = document.getElementById('lista-negociacoes-ativas-container');
             const termoBusca = document.getElementById('input-busca-negociacao').value.trim();
@@ -993,13 +995,11 @@
                         <div class="text-[10px] text-slate-400">
                             Valor Negociado Total: <strong>R$ ${p.amount || p.valor || '0.00'}</strong> &bull; Data: ${p.date || '---'}
                         </div>
-                        ${eAwr ? `
-                            <div class="flex gap-1.5 pt-2 border-t">
-                                <button type="button" onclick="abrirModalEditarProposta('${p.id}')" class="px-2.5 py-1 bg-blue-600 text-white rounded-lg font-semibold text-[10px]">Visualizar / Editar</button>
-                                <button type="button" onclick="excluirPropostaRegistro('${p.id}')" class="px-2.5 py-1 bg-red-600 text-white rounded-lg font-semibold text-[10px]">Excluir</button>
-                                <button type="button" onclick="abrirModalFecharAcordoParaProposta('${p.id}')" class="px-2.5 py-1 bg-emerald-600 text-white rounded-lg font-semibold text-[10px]">Aprovar / Fechar</button>
-                            </div>
-                        ` : ''}
+                        <div class="flex gap-1.5 pt-2 border-t">
+                            <button type="button" onclick="abrirModalEditarProposta('${p.id}')" class="px-2.5 py-1 bg-blue-600 text-white rounded-lg font-semibold text-[10px]">Visualizar / Editar</button>
+                            <button type="button" onclick="excluirPropostaRegistro('${p.id}')" class="px-2.5 py-1 bg-red-600 text-white rounded-lg font-semibold text-[10px]">Excluir</button>
+                            ${eAwr ? `<button type="button" onclick="abrirModalFecharAcordoParaProposta('${p.id}')" class="px-2.5 py-1 bg-emerald-600 text-white rounded-lg font-semibold text-[10px]">Aprovar / Fechar</button>` : ''}
+                        </div>
                     </div>
                 `;
             });
@@ -1020,26 +1020,23 @@
                 return;
             }
 
-            if (temPropostaAtiva) {
-                painel.innerHTML = `${cabecalho}<div class="space-y-2"><h4 class="font-bold text-xs uppercase text-emerald-600">Propostas Realizadas:</h4>${htmlProps}</div>`;
-                return;
-            }
-
             painel.innerHTML = `
                 ${cabecalho}
-                ${htmlProps ? `<div class="space-y-2"><h4 class="font-bold text-xs uppercase text-emerald-600">Propostas:</h4>${htmlProps}</div>` : ''}
-                <div class="bg-gradient-to-br from-emerald-600 to-teal-800 text-white p-4 rounded-3xl shadow-lg space-y-3">
-                    <div class="text-[10px] uppercase font-semibold text-emerald-200">Resumo da Negociação (Débitos em Atraso)</div>
-                    <div class="flex justify-between items-end">
-                        <div>
-                            <span class="text-xs opacity-90">Total Vencidas: ${faturasAtrasadasGlobal.length} parcelas</span>
-                            <h3 class="text-2xl font-bold mt-0.5">R$ ${valorAtualNegociacaoGlobal.toFixed(2)}</h3>
+                ${htmlProps ? `<div class="space-y-2"><h4 class="font-bold text-xs uppercase text-emerald-600">Propostas Realizadas:</h4>${htmlProps}</div>` : ''}
+                ${!temPropostaAtiva && faturasAtrasadasGlobal.length > 0 ? `
+                    <div class="bg-gradient-to-br from-emerald-600 to-teal-800 text-white p-4 rounded-3xl shadow-lg space-y-3">
+                        <div class="text-[10px] uppercase font-semibold text-emerald-200">Resumo da Negociação (Débitos em Atraso)</div>
+                        <div class="flex justify-between items-end">
+                            <div>
+                                <span class="text-xs opacity-90">Total Vencidas: ${faturasAtrasadasGlobal.length} parcelas</span>
+                                <h3 class="text-2xl font-bold mt-0.5">R$ ${valorAtualNegociacaoGlobal.toFixed(2)}</h3>
+                            </div>
+                            <button type="button" onclick="abrirModalRealizarAcordo()" class="px-3.5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-xl text-xs shadow">
+                                <i class="fa-solid fa-sliders mr-1"></i> Gerar Proposta de Acordo
+                            </button>
                         </div>
-                        <button type="button" onclick="abrirModalRealizarAcordo()" class="px-3.5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-xl text-xs shadow">
-                            <i class="fa-solid fa-sliders mr-1"></i> Gerar Proposta de Acordo
-                        </button>
                     </div>
-                </div>
+                ` : ''}
             `;
         }
 
@@ -1066,7 +1063,7 @@
             }
 
             document.getElementById('edit-proposta-id-ativo').value = propostaId;
-            document.getElementById('titulo-modal-acordo-texto').textContent = "Visualizar / Editar Proposta de Acordo";
+            document.getElementById('titulo-modal-acordo-texto').textContent = "Visualizar / Editar Proposta";
             document.getElementById('modal-realizar-acordo').style.display = 'flex';
             atualizarListaOpcoesGeradasModal();
             atualizarPreviaParcelasModal();
@@ -1118,14 +1115,14 @@
             if (btnGerar) btnGerar.style.display = todas ? 'block' : 'none';
         }
 
-        // CORREÇÃO: Atualiza a proposta existente em vez de criar uma duplicada
-        async function gerarOuAtualizarPropostaPDF() {
+        // GERAR / VISUALIZAR TERMO COMPLETO ORIGINAL
+        async function gerarPropostaPDF() {
             if (!alunoNegociacaoId) return;
             const aluno = studentsMap[alunoNegociacaoId];
             if (!aluno) return;
 
             if (!opcoesGeradas.avista || !opcoesGeradas.parcelado || !opcoesGeradas.cartao) {
-                return alert("Configure as 3 opções antes de visualizar.");
+                return alert("Configure as 3 opções antes de gerar o termo.");
             }
 
             fecharModalRealizarAcordo();
@@ -1157,59 +1154,117 @@
                         criadoEm: new Date().toISOString()
                     });
                 }
-            } catch (e) {
-                console.error(e);
-            }
+            } catch (e) { console.error(e); }
 
-            // Exibe o termo na tela
-            exibirTermoNaTela(aluno);
-        }
-
-        function exibirTermoNaTela(aluno) {
+            // MONTAGEN COMPLETA DO TERMO ORIGINAL
             const razaoSocial = institutionData.razaoSocial || "JS & SS SERVIÇOS EDUCACIONAIS E CIA LTDA";
             const cnpjInst = institutionData.cnpj || "31.535.516/0001-64";
-            const enderecoInst = institutionData.address || "Travessa Magalhães Barata, 692, Vigia – PA";
+            const logoUrl = institutionData.logo || "";
+            const enderecoInst = institutionData.address || "Travessa Magalhães Barata, 692, Centro, Vigia – PA";
+
+            const nomeCompleto = aluno.fullname || aluno.name || '---';
+            const cpf = aluno.cpf || '---';
+            const rg = aluno.rg || '---';
+            const whatsapp = aluno.whatsapp || aluno.telefone || '---';
+            const rawCurso = aluno.course || aluno.curso || aluno.turma || '';
+            const cursoExibir = coursesMap[rawCurso] || coursesMap[normalizarTexto(rawCurso)] || String(rawCurso || 'Não vinculado');
+
+            let htmlTabelaDebitos = '';
+            faturasAtrasadasGlobal.forEach(f => {
+                const valorOriginal = parseFloat(String(f.amount || f.valor || '0').replace(',', '.')) || 0;
+                htmlTabelaDebitos += `
+                    <tr>
+                        <td style="padding: 7px; border-bottom: 1px solid #e2e8f0;">${f.description || f.descricao || 'Mensalidade'}</td>
+                        <td style="padding: 7px; border-bottom: 1px solid #e2e8f0; text-align: center;">${formatarDataParaExibicao(f.date || f.vencimento)}</td>
+                        <td style="padding: 7px; border-bottom: 1px solid #e2e8f0; text-align: right;">R$ ${valorOriginal.toFixed(2)}</td>
+                    </tr>
+                `;
+            });
 
             let htmlCompletoTermo = `
-                <div style="font-family: sans-serif; padding: 15px;">
-                    <h2 style="text-align: center; color: #1e3a8a;">TERMO DE PROPOSTA DE ACORDO FINANCEIRO</h2>
-                    <p><strong>Aluno(a):</strong> ${aluno.fullname || aluno.name}</p>
-                    <p><strong>CPF:</strong> ${aluno.cpf || '---'}</p>
-                    <hr style="margin: 15px 0;">
-                    <h3 style="color: #047857;">Opções de Pagamento Configuradas:</h3>
-                    <p><strong>À Vista:</strong> R$ ${opcoesGeradas.avista ? opcoesGeradas.avista.valorFinal.toFixed(2) : '0,00'}</p>
-                    <p><strong>Parcelado:</strong> R$ ${opcoesGeradas.parcelado ? opcoesGeradas.parcelado.valorFinal.toFixed(2) : '0,00'}</p>
-                    <p><strong>Cartão de Crédito:</strong> R$ ${opcoesGeradas.cartao ? opcoesGeradas.cartao.valorFinal.toFixed(2) : '0,00'}</p>
+                <div style="font-family: 'Segoe UI', Tahoma, sans-serif; color: #1e293b; padding: 10px;">
+                    <div style="background: #1e3a8a; color: #ffffff; padding: 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <div>
+                            <h1 style="font-size: 15px; margin: 0 0 5px 0;">${razaoSocial}</h1>
+                            <p style="font-size: 11px; margin: 0; color: #cbd5e1;">CNPJ: ${cnpjInst} &bull; ${enderecoInst}</p>
+                        </div>
+                        <strong style="font-size: 12px; color: #93c5fd;">SETOR FINANCEIRO</strong>
+                    </div>
+
+                    <h2 style="text-align: center; font-size: 16px; color: #1e3a8a; margin-bottom: 15px; text-transform: uppercase;">TERMO DE PROPOSTA DE ACORDO FINANCEIRO</h2>
+
+                    <div style="background: #f1f5f9; padding: 14px; border-radius: 10px; font-size: 12px; margin-bottom: 15px;">
+                        <strong>Aluno(a):</strong> ${nomeCompleto} &bull; <strong>CPF:</strong> ${cpf}<br>
+                        <strong>Curso:</strong> ${cursoExibir} &bull; <strong>WhatsApp:</strong> ${whatsapp}
+                    </div>
+
+                    <h3 style="font-size: 13px; color: #1e3a8a; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; margin-bottom: 10px;">Demonstrativo de Débitos</h3>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 20px;">
+                        <thead>
+                            <tr style="background: #1e3a8a; color: #fff;">
+                                <th style="padding: 8px; text-align: left;">Descrição</th>
+                                <th style="padding: 8px; text-align: center;">Vencimento</th>
+                                <th style="padding: 8px; text-align: right;">Valor</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${htmlTabelaDebitos}
+                        </tbody>
+                    </table>
+
+                    <h3 style="font-size: 13px; color: #1e3a8a; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; margin-bottom: 10px;">Opções de Acordo Disponíveis</h3>
+                    <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 12px; border-radius: 8px; font-size: 12px; margin-bottom: 8px;">
+                        <strong style="color: #047857;">Opção A: À Vista</strong><br>Valor: <strong>R$ ${opcoesGeradas.avista.valorFinal.toFixed(2)}</strong>
+                    </div>
+                    <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 12px; border-radius: 8px; font-size: 12px; margin-bottom: 8px;">
+                        <strong style="color: #047857;">Opção B: Parcelado (${opcoesGeradas.parcelado.infoExtra})</strong><br>Valor: <strong>R$ ${opcoesGeradas.parcelado.valorFinal.toFixed(2)}</strong>
+                    </div>
+                    <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 12px; border-radius: 8px; font-size: 12px; margin-bottom: 15px;">
+                        <strong style="color: #047857;">Opção C: Cartão de Crédito</strong><br>Valor: <strong>R$ ${opcoesGeradas.cartao.valorFinal.toFixed(2)}</strong>
+                    </div>
+
+                    <div style="margin-top: 40px; display: flex; justify-content: space-between; text-align: center; font-size: 11px;">
+                        <div style="width: 45%; border-top: 1px solid #1e293b; padding-top: 5px;">Setor Financeiro / Tesouraria</div>
+                        <div style="width: 45%; border-top: 1px solid #1e293b; padding-top: 5px;">${nomeCompleto} (Aluno)</div>
+                    </div>
                 </div>
             `;
+
             document.getElementById('conteudo-termo-Dinamico').innerHTML = htmlCompletoTermo;
             document.getElementById('modal-visualizador-termo').style.display = 'flex';
+            selecionarAlunoNegociacao(alunoNegociacaoId);
+            renderizarNegociacoesAtivasGeral();
         }
 
         function fecharVisualizadorTermo() { document.getElementById('modal-visualizador-termo').style.display = 'none'; }
 
-        function abrirModalEditarProposta(id) { abrirModalRealizarAcordo(); document.getElementById('edit-proposta-id-ativo').value = id; }
         async function excluirPropostaRegistro(id) {
-            if (confirm("Excluir proposta?")) { await db.collection("financeLogs").doc(id).delete(); selecionarAlunoNegociacao(alunoNegociacaoId); }
+            if (confirm("Excluir esta proposta?")) { await db.collection("financeLogs").doc(id).delete(); selecionarAlunoNegociacao(alunoNegociacaoId); }
         }
+
         function abrirModalFecharAcordoParaProposta(id) {
             document.getElementById('modal-fechar-acordo').style.display = 'flex';
-            document.getElementById('container-opcoes-fechamento').innerHTML = `<label><input type="radio" name="opcao-escolhida-fechamento" value="avista" checked> À Vista</label>`;
+            document.getElementById('container-opcoes-fechamento').innerHTML = `<label class="flex items-center gap-2"><input type="radio" name="opcao-escolhida-fechamento" value="avista" checked> Aprovar Acordo</label>`;
             document.getElementById('btn-confirmar-fechamento').style.display = 'block';
         }
+
         function fecharModalFecharAcordo() { document.getElementById('modal-fechar-acordo').style.display = 'none'; }
+
         async function executarFechamentoAcordoDefinitivo() {
             fecharModalFecharAcordo();
-            alert("Acordo efetivado com sucesso!");
+            alert("Acordo aprovado e efetivado com sucesso!");
             selecionarAlunoNegociacao(alunoNegociacaoId);
         }
 
-        // --- FUNÇÕES DE EDIÇÃO DE MENSALIDADE ---
+        // --- FUNÇÕES DE EDIÇÃO DA MENSALIDADE ---
         function abrirModalEditarMensalidadeFinanceiro(id) {
             const fatura = financeLogs.find(f => f.id === id);
             if (!fatura) return;
+
             document.getElementById('edit-cobranca-id').value = fatura.id;
-            document.getElementById('edit-cobranca-descricao').value = fatura.description || fatura.descricao || '';
+            let venc = fatura.date || fatura.vencimento || '';
+            if (venc.includes('/')) { let p = venc.split('/'); venc = `${p[2]}-${p[1]}-${p[0]}`; }
+            document.getElementById('edit-cobranca-data').value = venc;
             document.getElementById('edit-cobranca-valor').value = fatura.amount || fatura.valor || '';
             document.getElementById('modal-editar-cobranca').style.display = 'flex';
         }
@@ -1218,27 +1273,46 @@
 
         async function salvarEdicaoMensalidade() {
             const id = document.getElementById('edit-cobranca-id').value;
-            const desc = document.getElementById('edit-cobranca-descricao').value.trim();
-            const val = document.getElementById('edit-cobranca-valor').value.trim();
+            const dataInput = document.getElementById('edit-cobranca-data').value;
+            const valor = document.getElementById('edit-cobranca-valor').value.trim();
 
-            await db.collection("financeLogs").doc(id).update({ description: desc, descricao: desc, amount: val, valor: val });
-            alert("Mensalidade atualizada!");
-            fecharModalEdicao();
-            renderizarFaturasDoAlunoSelecionado();
+            let p = dataInput.split('-');
+            let dataFormatada = `${p[2]}/${p[1]}/${p[0]}`;
+
+            try {
+                await db.collection("financeLogs").doc(id).update({
+                    date: dataFormatada,
+                    vencimento: dataFormatada,
+                    amount: valor,
+                    valor: valor
+                });
+                alert("Mensalidade atualizada e sincronizada com sucesso!");
+                fecharModalEdicao();
+                renderizarFaturasDoAlunoSelecionado();
+            } catch (e) { alert("Erro: " + e.message); }
         }
 
         async function excluirFaturaRegistro(id) {
-            if (confirm("Excluir fatura?")) { await db.collection("financeLogs").doc(id).delete(); }
+            if (confirm("Deseja realmente excluir esta fatura?")) { await db.collection("financeLogs").doc(id).delete(); }
         }
 
         async function darBaixaApp(id) {
-            await db.collection("financeLogs").doc(id).update({ status: "PAGO", dataPagamento: new Date().toLocaleDateString('pt-BR') });
-            alert("Baixa realizada!");
+            let forma = document.getElementById(`forma-pagamento-${id}`).value;
+            let dataRaw = document.getElementById(`data-pagamento-${id}`).value;
+            let p = dataRaw.split('-');
+            let dataFormatada = `${p[2]}/${p[1]}/${p[0]}`;
+
+            try {
+                await db.collection("financeLogs").doc(id).update({ status: "PAGO", dataPagamento: dataFormatada, formaPagamento: forma });
+                alert("Baixa realizada com sucesso!");
+            } catch (e) { alert(e.message); }
         }
 
         async function estornarBaixaApp(id) {
-            await db.collection("financeLogs").doc(id).update({ status: "PENDENTE", dataPagamento: firebase.firestore.FieldValue.delete() });
-            alert("Estornado!");
+            try {
+                await db.collection("financeLogs").doc(id).update({ status: "PENDENTE", dataPagamento: firebase.firestore.FieldValue.delete(), formaPagamento: firebase.firestore.FieldValue.delete() });
+                alert("Pagamento estornado!");
+            } catch (e) { alert(e.message); }
         }
 
         function renderizarNovosAlunos() {
