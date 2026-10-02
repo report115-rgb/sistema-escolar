@@ -81,7 +81,7 @@
 
         <div class="text-center text-[10px] text-blue-300 pb-2">
             <div>Sistema SE7 de Gestão Acadêmica</div>
-            <div>v1.5.4 &bull; Setor Financeiro</div>
+            <div>v1.5.5 &bull; Setor Financeiro</div>
         </div>
     </div>
 
@@ -1525,10 +1525,10 @@
                         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #1e293b; margin: 0; padding: 20px; background: #f8fafc; }
                         .container { max-width: 800px; margin: 0 auto; background: #ffffff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
                         
-                        /* CABEÇALHO CORRIGIDO COM FUNDO ESCURO UNIFICADO E ORGANIZADO */
+                        /* CABEÇALHO COM FUNDO ESCURO UNIFICADO E LOGO TRANSPARENTE (SEM FUNDO BRANCO) */
                         .header { background: #1e3a8a; color: #ffffff; padding: 20px 25px; border-radius: 10px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px; }
                         .header-left { display: flex; align-items: center; gap: 15px; }
-                        .logo-area { width: 55px; height: 55px; background: #ffffff; color: #1e3a8a; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; flex-shrink: 0; overflow: hidden; }
+                        .logo-area { width: 55px; height: 55px; background: transparent; color: #ffffff; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; flex-shrink: 0; overflow: hidden; }
                         .logo-area img { max-width: 100%; max-height: 100%; object-fit: contain; }
                         .inst-info h1 { font-size: 14px; margin: 0 0 3px 0; font-weight: bold; letter-spacing: 0.3px; color: #ffffff; }
                         .inst-info p { font-size: 10px; color: #cbd5e1; margin: 0; line-height: 1.3; }
@@ -1539,15 +1539,15 @@
                         h2 { font-size: 14px; color: #1e3a8a; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; margin-top: 25px; margin-bottom: 10px; }
                         table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 10px; margin-bottom: 15px; }
                         th { background: #1e3a8a; color: #fff; text-align: left; padding: 8px; font-weight: bold; }
-                        .grid-dados { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px; background: #f1f5f9; padding: 12px; border-radius: 8px; }
-                        .grid-dados div { margin-bottom: 4px; }
+                        .grid-dados { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 11px; background: #f1f5f9; padding: 14px; border-radius: 8px; }
+                        .grid-dados div { margin-bottom: 2px; }
                         .opcoes-box { background: #f0fdf4; border: 1px solid #bbf7d0; padding: 12px; border-radius: 8px; margin-top: 10px; font-size: 12px; }
                         .footer { margin-top: 30px; text-align: center; font-size: 10px; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 10px; }
                     </style>
                 </head>
                 <body>
                     <div class="container">
-                        <!-- CABEÇALHO PROFISSIONAL UNIFICADO -->
+                        <!-- CABEÇALHO PROFISSIONAL UNIFICADO COM LOGO SEM FUNDO BRANCO -->
                         <div class="header">
                             <div class="header-left">
                                 <div class="logo-area">${logoUrl ? `<img src="${logoUrl}" alt="Logo">` : 'SE7'}</div>
@@ -1566,14 +1566,19 @@
 
                         <h2>1. Identificação do Aluno</h2>
                         <div class="grid-dados">
-                            <div><strong>Nome Completo:</strong> ${nomeCompleto}</div>
-                            <div><strong>Matrícula:</strong> ${codigoMatricula}</div>
-                            <div><strong>CPF:</strong> ${cpf}</div>
-                            <div><strong>RG:</strong> ${rg}</div>
-                            <div><strong>Sexo:</strong> ${sexo} &bull; <strong>Nascimento:</strong> ${nascimento}</div>
-                            <div><strong>WhatsApp:</strong> ${whatsapp}</div>
-                            <div style="grid-column: span 2;"><strong>Curso/Turma:</strong> ${cursoExibir}</div>
-                            <div style="grid-column: span 2;"><strong>Endereço:</strong> ${enderecoCompletoFormatado}</div>
+                            <div>
+                                <strong>Nome Completo:</strong><br>${nomeCompleto}<br><br>
+                                <strong>CPF:</strong><br>${cpf}<br><br>
+                                <strong>Data de Nascimento:</strong><br>${nascimento}<br><br>
+                                <strong>Sexo:</strong><br>${sexo}<br><br>
+                                <strong>Curso e Turma:</strong><br>${cursoExibir}
+                            </div>
+                            <div>
+                                <strong>Endereço Completo:</strong><br>${enderecoCompletoFormatado}<br><br>
+                                <strong>Matrícula:</strong><br>${codigoMatricula}<br><br>
+                                <strong>RG:</strong><br>${rg}<br><br>
+                                <strong>WhatsApp:</strong><br>${whatsapp}
+                            </div>
                         </div>
 
                         <h2>2. Demonstrativo de Débitos em Atraso (Com Encargos)</h2>
