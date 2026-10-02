@@ -48,28 +48,25 @@
 
         /* --- CONFIGURAÇÃO DE IMPRESSÃO PROFISSIONAL (WEBVIEW / MOBILE) --- */
         @media print {
-            /* Força cores reais e fundos dos cabeçalhos na impressão */
             * {
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
                 color-adjust: exact !important;
             }
-            /* Oculta tudo na página principal do app */
-            body > *:not(#modal-visualizador-termo) {
+            body > *:not(#modal-visualizador-termo):not(#modal-visualizador-declaracao) {
                 display: none !important;
             }
-            /* Oculta o modal de fundo escuro e os botões de ação superior */
-            #modal-visualizador-termo {
+            #modal-visualizador-termo, #modal-visualizador-declaracao {
                 position: absolute !important;
                 inset: 0 !important;
                 background: white !important;
                 padding: 0 !important;
                 backdrop-filter: none !important;
             }
-            #modal-visualizador-termo > div:first-child {
-                display: none !important; /* Esconde a barra de botões Fechar/Imprimir */
+            #modal-visualizador-termo > div:first-child, #modal-visualizador-declaracao > div:first-child {
+                display: none !important;
             }
-            #modal-visualizador-termo > div:nth-child(2) {
+            #modal-visualizador-termo > div:nth-child(2), #modal-visualizador-declaracao > div:nth-child(2) {
                 padding: 0 !important;
                 background: white !important;
                 box-shadow: none !important;
@@ -218,7 +215,6 @@
                         <input type="number" id="desc-multa-parcelado" value="50" min="0" max="100" oninput="atualizarPreviaParcelasModal()" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white">
                     </div>
                     
-                    <!-- PRÉVIA CALCULADA DO VALOR DE CADA PARCELA -->
                     <div class="p-3 bg-emerald-100/60 dark:bg-emerald-950/50 rounded-xl border border-emerald-300 dark:border-emerald-800 text-xs text-emerald-900 dark:text-emerald-200 flex justify-between items-center">
                         <span>Valor de cada parcela:</span>
                         <strong id="previa-valor-parcela" class="text-sm">R$ 0,00</strong>
@@ -255,7 +251,7 @@
                     </div>
                 </div>
 
-                <!-- CAIXA DE TEXTO DE OBSERVAÇÕES (SOLICITADA) -->
+                <!-- CAIXA DE TEXTO DE OBSERVAÇÕES -->
                 <div class="space-y-1 pt-2">
                     <label class="block font-bold uppercase text-[10px] text-slate-500 dark:text-slate-400">Observações / Informações Adicionais para o Aluno</label>
                     <textarea id="obs-proposta-acordo" rows="3" placeholder="Digite aqui orientações, prazos ou informações pertinentes para o aluno..." class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs focus:ring-2 focus:ring-emerald-600 focus:outline-none"></textarea>
@@ -288,9 +284,7 @@
             <div class="space-y-4 text-xs">
                 <p class="text-slate-500">O aluno analisou e aprovou a proposta? Selecione abaixo qual opção ele escolheu para fechar o acordo de vez:</p>
                 
-                <div id="container-opcoes-fechamento" class="space-y-2">
-                    <!-- Preenchido via script -->
-                </div>
+                <div id="container-opcoes-fechamento" class="space-y-2"></div>
             </div>
 
             <div class="flex gap-2 pt-2">
@@ -304,9 +298,8 @@
         </div>
     </div>
 
-    <!-- MODAL INTEGRADO PARA VISUALIZAÇÃO DO TERMO (COMPATÍVEL COM WEBVIEW) -->
+    <!-- MODAL INTEGRADO PARA VISUALIZAÇÃO DO TERMO (PROPOSTA) -->
     <div id="modal-visualizador-termo" class="fixed inset-0 z-[6000] flex flex-col bg-slate-900/90 backdrop-blur-md p-2 sm:p-6" style="display: none;">
-        <!-- Barra Superior Fixa do Modal com Botão de Fechar Perfeito para Mobile/WebView -->
         <div class="bg-white dark:bg-slate-900 px-4 py-3 rounded-2xl shadow-xl flex justify-between items-center mb-2 shrink-0 border border-slate-200 dark:border-slate-800">
             <div class="flex items-center gap-2">
                 <div class="w-8 h-8 bg-blue-600 text-white rounded-xl flex items-center justify-center text-xs">
@@ -318,22 +311,44 @@
                 </div>
             </div>
             <div class="flex items-center gap-2">
-                <!-- Botão de Imprimir Direto -->
                 <button type="button" onclick="window.print()" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow transition flex items-center gap-1.5">
                     <i class="fa-solid fa-print"></i> <span class="hidden sm:inline">Imprimir</span>
                 </button>
-                <!-- Botão de Fechar / Voltar (Funciona 100% no WebView) -->
                 <button type="button" onclick="fecharVisualizadorTermo()" class="px-3.5 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:text-white text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl shadow transition flex items-center gap-1.5">
                     <i class="fa-solid fa-xmark"></i> Fechar
                 </button>
             </div>
         </div>
 
-        <!-- Área de Exibição do Termo -->
         <div class="flex-1 bg-white rounded-2xl shadow-2xl overflow-y-auto p-4 sm:p-8">
-            <div id="conteudo-termo-Dinamico" class="max-w-3xl mx-auto">
-                <!-- Inserido dinamicamente via script -->
+            <div id="conteudo-termo-Dinamico" class="max-w-3xl mx-auto"></div>
+        </div>
+    </div>
+
+    <!-- MODAL INTEGRADO PARA VISUALIZAÇÃO DA DECLARAÇÃO DE QUITAÇÃO -->
+    <div id="modal-visualizador-declaracao" class="fixed inset-0 z-[6000] flex flex-col bg-slate-900/90 backdrop-blur-md p-2 sm:p-6" style="display: none;">
+        <div class="bg-white dark:bg-slate-900 px-4 py-3 rounded-2xl shadow-xl flex justify-between items-center mb-2 shrink-0 border border-slate-200 dark:border-slate-800">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-emerald-600 text-white rounded-xl flex items-center justify-center text-xs">
+                    <i class="fa-solid fa-certificate"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-xs sm:text-sm text-slate-900 dark:text-white">Declaração de Quitação de Débito</h3>
+                    <p class="text-[10px] text-slate-400">Visualização pronta para impressão ou conferência</p>
+                </div>
             </div>
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="window.print()" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-print"></i> <span class="hidden sm:inline">Imprimir</span>
+                </button>
+                <button type="button" onclick="fecharVisualizadorDeclaracao()" class="px-3.5 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:text-white text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl shadow transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-xmark"></i> Fechar
+                </button>
+            </div>
+        </div>
+
+        <div class="flex-1 bg-white rounded-2xl shadow-2xl overflow-y-auto p-4 sm:p-8">
+            <div id="conteudo-declaracao-Dinamico" class="max-w-3xl mx-auto"></div>
         </div>
     </div>
 
@@ -351,11 +366,9 @@
                 </div>
             </div>
             <div class="flex items-center space-x-2">
-                <!-- Botão de Atualizar Tela (F5 / Recarregamento Completo) -->
                 <button type="button" onclick="atualizarTelaCompleta()" class="w-9 h-9 bg-emerald-600 hover:bg-emerald-700 text-xs font-semibold rounded-xl shadow flex items-center justify-center transition" title="Atualizar Sistema">
                     <i class="fa-solid fa-rotate"></i>
                 </button>
-                <!-- Botão de Sair -->
                 <button type="button" onclick="fazerLogout()" class="w-9 h-9 bg-red-600 hover:bg-red-700 text-xs font-semibold rounded-xl shadow flex items-center justify-center transition" title="Sair">
                     <i class="fa-solid fa-power-off"></i>
                 </button>
@@ -403,9 +416,7 @@
                     <p class="text-[11px] text-slate-500">Lista geral de alunos recém-matriculados aguardando conferência para emissão de boletos. Ao abrir o cadastro de um aluno, ele sairá desta lista automaticamente.</p>
                 </div>
 
-                <div id="lista-novos-alunos-container" class="space-y-2">
-                    <!-- Preenchido dinamicamente -->
-                </div>
+                <div id="lista-novos-alunos-container" class="space-y-2"></div>
             </div>
 
             <!-- ABA 3: FATURAS E COBRANÇAS -->
@@ -453,23 +464,29 @@
                     </div>
                 </div>
 
-                <!-- LISTA AUTOMÁTICA DE NEGOCIAÇÕES EM ANDAMENTO / APROVADAS -->
-                <div id="lista-negociacoes-ativas-container" class="space-y-2">
-                    <!-- Preenchido via script ao abrir a aba -->
+                <div id="lista-negociacoes-ativas-container" class="space-y-2"></div>
+                <div id="lista-busca-negociacao-container" class="space-y-2"></div>
+                <div id="painel-negociacao-aluno" class="space-y-3" style="display: none;"></div>
+            </div>
+
+            <!-- ABA 5: DECLARAÇÃO DE QUITAÇÃO -->
+            <div id="tab-quitacao" class="space-y-3 tab-pane" style="display: none;">
+                <div class="bg-white dark:bg-slate-900 p-4 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 space-y-2">
+                    <h2 class="font-bold text-sm text-indigo-600 dark:text-indigo-400 flex items-center gap-2">
+                        <i class="fa-solid fa-certificate"></i> Declaração de Quitação de Débito
+                    </h2>
+                    <p class="text-[11px] text-slate-500">Alunos que quitaram integralmente todas as suas faturas e mensalidades aparecem listados abaixo automaticamente com a opção de emitir a declaração oficial.</p>
                 </div>
 
-                <!-- Resultados da busca para negociação (quando pesquisar) -->
-                <div id="lista-busca-negociacao-container" class="space-y-2"></div>
-
-                <!-- Painel de Cálculo e Faturas Atrasadas do Aluno Selecionado para Acordo -->
-                <div id="painel-negociacao-aluno" class="space-y-3" style="display: none;">
-                    <!-- Preenchido via script -->
+                <div id="lista-alunos-quites-container" class="space-y-2">
+                    <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">
+                        Carregando alunos quites...
+                    </div>
                 </div>
             </div>
 
-            <!-- TELA DE DETALHES DO ALUNO (FICHA CADASTRAL COMPLETA - COM CABEÇALHO FIXO) -->
+            <!-- TELA DE DETALHES DO ALUNO -->
             <div id="tab-detalhes-aluno" class="flex flex-col h-full tab-pane" style="display: none;">
-                <!-- Cabeçalho Fixo da Ficha -->
                 <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 mb-3 shrink-0 flex justify-between items-center">
                     <h2 class="font-bold text-sm text-blue-600 dark:text-blue-400 flex items-center gap-2">
                         <i class="fa-solid fa-id-card"></i> Ficha Cadastral do Aluno
@@ -479,35 +496,36 @@
                     </button>
                 </div>
 
-                <!-- Conteúdo com rolagem independente -->
                 <div class="flex-1 overflow-y-auto space-y-3 pb-6">
-                    <div id="card-dados-aluno" class="bg-white dark:bg-slate-900 p-5 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 space-y-4 text-xs">
-                        <!-- Informações completas preenchidas via script -->
-                    </div>
+                    <div id="card-dados-aluno" class="bg-white dark:bg-slate-900 p-5 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 space-y-4 text-xs"></div>
                 </div>
             </div>
 
         </main>
 
-        <!-- Menu Inferior Fixo Estilo Aluno -->
-        <nav class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-2 py-2 flex justify-around items-center absolute bottom-0 left-0 right-0 shadow-lg z-30">
-            <button onclick="mudarAbaApp('alunos')" id="nav-btn-alunos" class="flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition">
-                <i class="fa-solid fa-users text-base mb-0.5"></i> Alunos
+        <!-- Menu Inferior Fixo com 5 Abas -->
+        <nav class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-1 py-2 flex justify-around items-center absolute bottom-0 left-0 right-0 shadow-lg z-30">
+            <button onclick="mudarAbaApp('alunos')" id="nav-btn-alunos" class="flex flex-col items-center text-slate-400 dark:text-slate-500 text-[9px] font-bold transition">
+                <i class="fa-solid fa-users text-sm mb-0.5"></i> Alunos
             </button>
-            <button onclick="mudarAbaApp('novos')" id="nav-btn-novos" class="flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition relative">
+            <button onclick="mudarAbaApp('novos')" id="nav-btn-novos" class="flex flex-col items-center text-slate-400 dark:text-slate-500 text-[9px] font-bold transition relative">
                 <div class="relative">
-                    <i class="fa-solid fa-user-plus text-base mb-0.5"></i>
-                    <span id="badge-alerta-novos" class="absolute -top-1 -right-2 w-4 h-4 rounded-full animacao-piscar-alerta bg-red-500 text-white" style="display: none;"></span>
+                    <i class="fa-solid fa-user-plus text-sm mb-0.5"></i>
+                    <span id="badge-alerta-novos" class="absolute -top-1 -right-2 w-3.5 h-3.5 rounded-full animacao-piscar-alerta bg-red-500 text-white" style="display: none;"></span>
                 </div>
                 <span>Novos</span>
             </button>
-            <button onclick="mudarAbaApp('financeiro')" id="nav-btn-fin" class="flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition">
-                <i class="fa-solid fa-wallet text-base mb-0.5"></i>
+            <button onclick="mudarAbaApp('financeiro')" id="nav-btn-fin" class="flex flex-col items-center text-slate-400 dark:text-slate-500 text-[9px] font-bold transition">
+                <i class="fa-solid fa-wallet text-sm mb-0.5"></i>
                 <span>Faturas</span>
             </button>
-            <button onclick="mudarAbaApp('negociacoes')" id="nav-btn-neg" class="flex flex-col items-center text-emerald-600 dark:text-emerald-400 text-[10px] font-bold transition">
-                <i class="fa-solid fa-handshake-angle text-base mb-0.5"></i>
-                <span>Negociações</span>
+            <button onclick="mudarAbaApp('negociacoes')" id="nav-btn-neg" class="flex flex-col items-center text-slate-400 dark:text-slate-500 text-[9px] font-bold transition">
+                <i class="fa-solid fa-handshake-angle text-sm mb-0.5"></i>
+                <span>Acordos</span>
+            </button>
+            <button onclick="mudarAbaApp('quitacao')" id="nav-btn-quit" class="flex flex-col items-center text-slate-400 dark:text-slate-500 text-[9px] font-bold transition">
+                <i class="fa-solid fa-certificate text-sm mb-0.5"></i>
+                <span>Quitação</span>
             </button>
         </nav>
     </div>
@@ -602,10 +620,7 @@
                     snapshot.forEach(doc => {
                         const dados = doc.data();
                         const emailBanco = (dados.email || "").trim().toLowerCase();
-                        
-                        if (emailBanco === userInput) {
-                            usuarioEncontradoNuvem = dados;
-                        }
+                        if (emailBanco === userInput) usuarioEncontradoNuvem = dados;
                     });
 
                     if (usuarioEncontradoNuvem) {
@@ -618,20 +633,15 @@
                             };
                         }
                     }
-                } catch (e) {
-                    console.error("Erro ao validar login no Firebase:", e);
-                }
+                } catch (e) { console.error("Erro ao validar login no Firebase:", e); }
             }
 
             btnEntrar.textContent = "Entrar no App";
             btnEntrar.disabled = false;
 
-            if (!userFound) {
-                return alert("E-mail ou senha inválidos! Verifique suas credenciais no sistema matriz.");
-            }
+            if (!userFound) return alert("E-mail ou senha inválidos! Verifique suas credenciais no sistema matriz.");
 
             sessionStorage.setItem('app_financeiro_user', JSON.stringify(userFound));
-            
             const loginScreen = document.getElementById('login-modal');
             loginScreen.classList.add('screen-exit');
             setTimeout(() => {
@@ -666,30 +676,27 @@
                 renderizarNovosAlunos();
                 atualizarSeletorCursosUI();
                 renderizarNegociacoesAtivasGeral();
+                renderizarAlunosQuitesGeral();
                 if (alunoNegociacaoId) selecionarAlunoNegociacao(alunoNegociacaoId);
-            }, error => {
-                console.error("Erro ao carregar alunos:", error);
-            });
+            }, error => { console.error("Erro ao carregar alunos:", error); });
 
             db.collection("financeLogs").onSnapshot(snapshot => {
                 financeLogs = [];
                 snapshot.forEach(doc => financeLogs.push({ id: doc.id, ...doc.data() }));
                 renderizarFaturasDoAlunoSelecionado();
                 renderizarNegociacoesAtivasGeral();
+                renderizarAlunosQuitesGeral();
                 if (alunoNegociacaoId) selecionarAlunoNegociacao(alunoNegociacaoId);
                 if (alunoSelecionadoId && document.getElementById('tab-detalhes-aluno').style.display === 'flex') {
                     abrirDetalhesAluno(alunoSelecionadoId, abaOrigemRetorno);
                 }
-            }, error => {
-                console.error("Erro ao carregar faturas:", error);
-            });
+            }, error => { console.error("Erro ao carregar faturas:", error); });
         }
 
         async function carregarDadosInstituicao() {
             try {
                 const docRef = db.collection("config").doc("institution");
                 const docSnap = await docRef.get();
-                
                 if (docSnap.exists) {
                     const dados = docSnap.data();
                     institutionData = {
@@ -699,32 +706,13 @@
                         address: dados.endereço || dados.address || dados.endereco || institutionData.address,
                         logo: dados.logo || dados.logoUrl || dados.logomarca || institutionData.logo
                     };
-                } else {
-                    const colecoesPossiveis = ["institution", "settings", "empresa", "escola", "dadosInstituicao"];
-                    for (let col of colecoesPossiveis) {
-                        const snap = await db.collection(col).get();
-                        if (!snap.empty) {
-                            const dadosDoc = snap.docs[0].data();
-                            institutionData = {
-                                name: dadosDoc.name || dadosDoc.nome || institutionData.name,
-                                razaoSocial: dadosDoc.rasal || dadosDoc.razão || dadosDoc.razaoSocial || dadosDoc.name || institutionData.razaoSocial,
-                                cnpj: dadosDoc.cnpj || dadosDoc.documento || institutionData.cnpj,
-                                address: dadosDoc.endereço || dadosDoc.address || dadosDoc.endereco || institutionData.address,
-                                logo: dadosDoc.logo || dadosDoc.logoUrl || dadosDoc.logomarca || institutionData.logo
-                            };
-                            break;
-                        }
-                    }
                 }
-            } catch (e) {
-                console.warn("Erro ao carregar dados institucionais do Firebase:", e);
-            }
+            } catch (e) { console.warn("Erro ao carregar dados institucionais:", e); }
         }
 
         async function carregarCursosTurmasMatriz() {
             coursesMap = {};
             classesMap = {};
-
             try {
                 const cSnap = await db.collection("courses").get();
                 cSnap.forEach(doc => {
@@ -735,7 +723,7 @@
                         coursesMap[normalizarTexto(nome)] = String(nome).trim();
                     }
                 });
-            } catch (e) { console.warn("Erro ao carregar courses:", e); }
+            } catch (e) { console.warn("Erro courses:", e); }
 
             try {
                 const tSnap = await db.collection("classes").get();
@@ -747,15 +735,13 @@
                         classesMap[normalizarTexto(nome)] = String(nome).trim();
                     }
                 });
-            } catch (e) { console.warn("Erro ao carregar classes:", e); }
-
+            } catch (e) { console.warn("Erro classes:", e); }
             atualizarSeletorCursosUI();
         }
 
         function atualizarSeletorCursosUI() {
             const selectCurso = document.getElementById('select-filtro-curso');
             const selectFinCurso = document.getElementById('select-fin-curso');
-            
             let listaNomesUnicos = new Set(Object.values(coursesMap));
 
             students.forEach(s => {
@@ -776,18 +762,13 @@
 
         function normalizarTexto(texto) {
             if (!texto) return '';
-            return String(texto)
-                .toLowerCase()
-                .normalize("NFD")
-                .replace(/[\u0300-\u036f]/g, "")
-                .trim();
+            return String(texto).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
         }
 
         function renderizarListaAlunos() {
             const container = document.getElementById('lista-alunos-container');
             const termo = normalizarTexto(document.getElementById('input-busca-aluno').value);
             const cursoSelecionado = document.getElementById('select-filtro-curso').value;
-            
             if (!container) return;
 
             if (!cursoSelecionado) {
@@ -796,19 +777,13 @@
             }
 
             const cursoSelecionadoNorm = normalizarTexto(cursoSelecionado);
-
             const filtrados = students.filter(s => {
                 const nomeAluno = normalizarTexto(s.fullname || s.name || '');
                 const cpfAluno = normalizarTexto(s.cpf || '');
-                
                 const rawCurso = s.course || s.curso || s.turma || s.nomeCurso || s.courseName || s.courseId || '';
                 const nomeCursoMapeado = coursesMap[rawCurso] || coursesMap[normalizarTexto(rawCurso)] || String(rawCurso);
                 const cursoAlunoNorm = normalizarTexto(nomeCursoMapeado);
-
-                const bateTexto = nomeAluno.includes(termo) || cpfAluno.includes(termo);
-                const bateCurso = (cursoAlunoNorm === cursoSelecionadoNorm || cursoAlunoNorm.includes(cursoSelecionadoNorm));
-
-                return bateTexto && bateCurso;
+                return (nomeAluno.includes(termo) || cpfAluno.includes(termo)) && (cursoAlunoNorm === cursoSelecionadoNorm || cursoAlunoNorm.includes(cursoSelecionadoNorm));
             });
 
             if (filtrados.length === 0) {
@@ -820,7 +795,6 @@
             filtrados.forEach(s => {
                 const rawCurso = s.course || s.curso || s.turma || s.nomeCurso || s.courseName || s.courseId || 'Não informado';
                 const cursoExibir = coursesMap[rawCurso] || coursesMap[normalizarTexto(rawCurso)] || String(rawCurso);
-
                 container.innerHTML += `
                     <div onclick="abrirDetalhesAluno('${s.id}', 'alunos')" class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 flex justify-between items-center active:scale-98 transition cursor-pointer">
                         <div>
@@ -839,12 +813,10 @@
             const cursoSelecionado = document.getElementById('select-fin-curso').value;
             const selectAluno = document.getElementById('select-fin-aluno');
             const container = document.getElementById('lista-faturas-aluno-container');
-            
             if (!selectAluno) return;
 
             selectAluno.disabled = false;
             const cursoSelecionadoNorm = normalizarTexto(cursoSelecionado);
-
             const alunosDoCurso = students.filter(s => {
                 const rawCurso = s.course || s.curso || s.turma || s.nomeCurso || s.courseName || s.courseId || '';
                 const nomeCursoMapeado = coursesMap[rawCurso] || coursesMap[normalizarTexto(rawCurso)] || String(rawCurso);
@@ -869,15 +841,11 @@
             let s = String(dataStr).trim();
             if (s.includes('/')) {
                 let p = s.split('/');
-                if (p.length === 3) {
-                    return new Date(`${p[2]}-${p[1]}-${p[0]}`);
-                }
+                if (p.length === 3) return new Date(`${p[2]}-${p[1]}-${p[0]}`);
             }
             if (s.includes('-')) {
                 let p = s.split('-');
-                if (p.length === 3) {
-                    return new Date(`${p[0]}-${p[1]}-${p[2]}`);
-                }
+                if (p.length === 3) return new Date(`${p[0]}-${p[1]}-${p[2]}`);
             }
             let d = new Date(s);
             return isNaN(d) ? new Date(0) : d;
@@ -888,9 +856,7 @@
             let s = String(dataStr).trim();
             if (s.includes('-')) {
                 let p = s.split('-');
-                if (p.length === 3) {
-                    return `${p[2]}/${p[1]}/${p[0]}`;
-                }
+                if (p.length === 3) return `${p[2]}/${p[1]}/${p[0]}`;
             }
             return s;
         }
@@ -903,21 +869,13 @@
             const faturasDoAluno = financeLogs.filter(f => {
                 const pertenceAluno = (f.studentId === alunoId || f.alunoId === alunoId);
                 if (!pertenceAluno) return false;
-
                 const status = (f.status || '').toUpperCase();
                 const descricao = (f.description || f.descricao || '').toUpperCase();
-
                 const ePropostaOuAcordoAndamento = status.includes("PROPOSTA") || status.includes("AGUARDANDO") || descricao.includes("PROPOSTA") || descricao.includes("TERMO DE PROPOSTA");
-
                 return !ePropostaOuAcordoAndamento;
             });
             
-            faturasDoAluno.sort((a, b) => {
-                let dataA = parseDataParaOrdem(a.date || a.vencimento);
-                let dataB = parseDataParaOrdem(b.date || b.vencimento);
-                return dataA - dataB;
-            });
-
+            faturasDoAluno.sort((a, b) => parseDataParaOrdem(a.date || a.vencimento) - parseDataParaOrdem(b.date || b.vencimento));
             const alunoObj = studentsMap[alunoId];
             const nomeAluno = alunoObj ? (alunoObj.fullname || alunoObj.name || 'Aluno') : 'Aluno';
 
@@ -930,7 +888,6 @@
             faturasDoAluno.forEach(f => {
                 const jaPago = f.status && f.status.toUpperCase().includes('PAGO');
                 const corBadge = jaPago ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300';
-                
                 const dataVencimentoFormatada = formatarDataParaExibicao(f.date || f.vencimento);
                 const valorAtual = f.amount || f.valor || '0';
                 const dataPag = formatarDataParaExibicao(f.dataPagamento || '---');
@@ -949,7 +906,7 @@
                                 <button type="button" onclick="abrirModalEditarMensalidadeFinanceiro('${f.id}')" class="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[10px] font-semibold shadow transition" title="Editar">
                                     <i class="fa-solid fa-pen-to-square"></i>
                                 </button>
-                                <button type="button" onclick="excluirFaturaRegistro('${f.id}')" class="px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg text-[10px] font-semibold shadow transition" title="Excluir Fatura/Acordo">
+                                <button type="button" onclick="excluirFaturaRegistro('${f.id}')" class="px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg text-[10px] font-semibold shadow transition" title="Excluir Fatura">
                                     <i class="fa-solid fa-trash"></i>
                                 </button>
                             </div>
@@ -991,26 +948,162 @@
                     </div>
                 `;
             });
-
             container.innerHTML = htmlAcumulado;
         }
 
         async function excluirFaturaRegistro(faturaId) {
             if (!confirm("Deseja realmente excluir permanentemente esta fatura ou registro do sistema?")) return;
-
             try {
                 await db.collection("financeLogs").doc(faturaId).delete();
                 alert("Registro excluído com sucesso!");
-            } catch (e) {
-                alert("Erro ao excluir registro: " + e.message);
-            }
+            } catch (e) { alert("Erro ao excluir registro: " + e.message); }
         }
 
-        // --- FUNÇÕES DA ABA DE NEGOCIAÇÕES ---
+        // --- ABA DE DECLARAÇÃO DE QUITAÇÃO ---
+        function renderizarAlunosQuitesGeral() {
+            const container = document.getElementById('lista-alunos-quites-container');
+            if (!container) return;
+
+            const alunosQuites = students.filter(s => {
+                const faturasAluno = financeLogs.filter(f => (f.studentId === s.id || f.alunoId === s.id));
+                if (faturasAluno.length === 0) return false;
+
+                return faturasAluno.every(f => {
+                    const status = (f.status || '').toUpperCase();
+                    const desc = (f.description || f.descricao || '').toUpperCase();
+                    if (status.includes("PROPOSTA") || status.includes("AGUARDANDO") || desc.includes("PROPOSTA")) return true;
+                    return status.includes("PAGO") || status.includes("NEGOCIADO");
+                });
+            });
+
+            if (alunosQuites.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800 space-y-1">
+                        <i class="fa-solid fa-certificate text-slate-300 text-xl mb-1"></i>
+                        <p class="font-semibold text-slate-700 dark:text-slate-300">Nenhum aluno com quitação integral de débitos no momento.</p>
+                        <p class="text-[10px]">Os alunos aparecerão aqui automaticamente assim que todas as suas mensalidades estiverem pagas.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            alunosQuites.forEach(s => {
+                const rawCurso = s.course || s.curso || s.turma || s.nomeCurso || s.courseName || s.courseId || 'Não informado';
+                const cursoExibir = coursesMap[rawCurso] || coursesMap[normalizarTexto(rawCurso)] || String(rawCurso);
+
+                html += `
+                    <div class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 flex justify-between items-center transition">
+                        <div>
+                            <strong class="text-xs font-bold text-slate-900 dark:text-white">${s.fullname || s.name || 'Sem Nome'}</strong>
+                            <p class="text-[10px] text-slate-400">CPF: ${s.cpf || '---'} &bull; Curso: ${cursoExibir}</p>
+                        </div>
+                        <button type="button" onclick="gerarDeclaracaoQuitacao('${s.id}')" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-[10px] shadow transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-certificate"></i> Gerar Declaração
+                        </button>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function gerarDeclaracaoQuitacao(alunoId) {
+            const aluno = studentsMap[alunoId];
+            if (!aluno) return;
+
+            const razaoSocial = institutionData.razaoSocial || "JS & SS SERVIÇOS EDUCACIONAIS E CIA LTDA";
+            const cnpjInst = institutionData.cnpj || "31.535.516/0001-64";
+            const logoUrl = institutionData.logo || "";
+            const enderecoInst = institutionData.address || "Travessa Magalhães Barata, 692, Centro, Vigia – PA, CEP 68.780-000";
+
+            const nomeCompleto = aluno.fullname || aluno.name || '---';
+            const codigoMatricula = aluno.code || aluno.matricula || 'S/N';
+            const cpf = aluno.cpf || '---';
+            const rg = aluno.rg || aluno.documento || '---';
+            const sexo = aluno.gender || aluno.sexo || '---';
+            let nascimento = aluno.birthDate || aluno.dob || '---';
+            if (nascimento !== '---' && nascimento.includes('-')) nascimento = nascimento.split('-').reverse().join('/');
+            const whatsapp = aluno.whatsapp || aluno.phone || aluno.telefone || '---';
+            const cep = aluno.cep || '---';
+            const logradouro = aluno.street || aluno.rua || aluno.logradouro || '';
+            const numero = aluno.number || aluno.numero || 'S/N';
+            const bairro = aluno.neighborhood || aluno.bairro || '---';
+            const cidade = aluno.city || aluno.cidade || '---';
+            const estado = aluno.state || aluno.estado || '---';
+
+            let enderecoCompletoFormatado = logradouro ? `${logradouro}, nº ${numero} - ${bairro}, ${cidade}/${estado} (CEP: ${cep})` : (aluno.address || aluno.endereco || `Rua não informada, nº ${numero}`);
+            const rawCurso = aluno.course || aluno.curso || aluno.turma || aluno.nomeCurso || aluno.courseName || aluno.courseId || '';
+            const cursoExibir = coursesMap[rawCurso] || coursesMap[normalizarTexto(rawCurso)] || String(rawCurso || 'Não vinculado');
+
+            let htmlDeclaracao = `
+                <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #1e293b; padding: 10px;">
+                    <div style="background: #1e3a8a; color: #ffffff; padding: 25px 30px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px;">
+                        <div style="display: flex; align-items: center; gap: 20px;">
+                            <div style="width: 75px; height: 75px; background: transparent; color: #ffffff; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 22px; flex-shrink: 0; overflow: hidden;">
+                                ${logoUrl ? `<img src="${logoUrl}" alt="Logo" style="max-width:100%; max-height:100%; object-fit:contain;">` : 'SE7'}
+                            </div>
+                            <div>
+                                <h1 style="font-size: 16px; margin: 0 0 6px 0; font-weight: bold; color: #ffffff;">${razaoSocial}</h1>
+                                <p style="font-size: 12px; color: #cbd5e1; margin: 0; line-height: 1.4;"><strong>CNPJ:</strong> ${cnpjInst}<br><strong>Endereço:</strong> ${enderecoInst}</p>
+                            </div>
+                        </div>
+                        <div style="text-align: right; border-left: 1px solid rgba(255, 255, 255, 0.2); padding-left: 20px;">
+                            <span style="font-size: 11px; text-transform: uppercase; color: #93c5fd; font-weight: bold; display: block;">Emitido por</span>
+                            <strong style="font-size: 13px; color: #ffffff;">Setor Financeiro</strong>
+                        </div>
+                    </div>
+
+                    <h2 style="text-align: center; font-size: 17px; color: #1e3a8a; margin-bottom: 20px; text-transform: uppercase; font-weight: bold;">DECLARAÇÃO DE QUITAÇÃO DE DÉBITO</h2>
+
+                    <h2 style="font-size: 14px; color: #1e3a8a; text-transform: uppercase; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 6px; margin-top: 25px; margin-bottom: 12px; font-weight: bold;">1. Identificação do Aluno</h2>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 12px; background: #f1f5f9; padding: 16px; border-radius: 10px;">
+                        <div>
+                            <strong>Nome Completo:</strong><br>${nomeCompleto}<br><br>
+                            <strong>CPF:</strong><br>${cpf}<br><br>
+                            <strong>Data de Nascimento:</strong><br>${nascimento}<br><br>
+                            <strong>Sexo:</strong><br>${sexo}<br><br>
+                            <strong>Curso e Turma:</strong><br>${cursoExibir}
+                        </div>
+                        <div>
+                            <strong>Endereço Completo:</strong><br>${enderecoCompletoFormatado}<br><br>
+                            <strong>Matrícula:</strong><br>${codigoMatricula}<br><br>
+                            <strong>RG:</strong><br>${rg}<br><br>
+                            <strong>WhatsApp:</strong><br>${whatsapp}
+                        </div>
+                    </div>
+
+                    <h2 style="font-size: 14px; color: #1e3a8a; text-transform: uppercase; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 6px; margin-top: 25px; margin-bottom: 12px; font-weight: bold;">2. Declaração Oficial</h2>
+                    <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 20px; border-radius: 10px; font-size: 13px; color: #065f46; line-height: 1.6; text-align: justify; margin-top: 10px;">
+                        Declaro para os devidos fins que o(a) aluno(a) <strong>${nomeCompleto}</strong>, inscrito(a) no CPF sob o nº <strong>${cpf}</strong> e matrícula nº <strong>${codigoMatricula}</strong>, vinculado(a) ao curso <strong>${cursoExibir}</strong>, <strong>não possui débitos pendentes</strong> com esta instituição de ensino. Dando por total quitação aos seus débitos referentes aos períodos letivos faturados até a presente data.
+                    </div>
+
+                    <div style="margin-top: 55px; display: flex; justify-content: space-between; text-align: center;">
+                        <div style="width: 45%; border-top: 1.5px solid #1e293b; padding-top: 6px; font-size: 11px;">
+                            ${razaoSocial}<br>Setor Financeiro / Tesouraria
+                        </div>
+                        <div style="width: 45%; border-top: 1.5px solid #1e293b; padding-top: 6px; font-size: 11px;">
+                            ${nomeCompleto}<br>Aluno(a) / Interessado(a)
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 35px; text-align: center; font-size: 10px; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 10px;">
+                        Documento gerado eletronicamente pelo Aplicativo SE7 Financeiro Mobile em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}.
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('conteudo-declaracao-Dinamico').innerHTML = htmlDeclaracao;
+            document.getElementById('modal-visualizador-declaracao').style.display = 'flex';
+        }
+
+        function fecharVisualizadorDeclaracao() {
+            document.getElementById('modal-visualizador-declaracao').style.display = 'none';
+        }
+
+        // --- NEGOCIAÇÕES ---
         function renderizarNegociacoesAtivasGeral() {
             const container = document.getElementById('lista-negociacoes-ativas-container');
             const termoBusca = document.getElementById('input-busca-negociacao').value.trim();
-            
             if (!container) return;
 
             if (termoBusca.length > 0) {
@@ -1034,20 +1127,14 @@
                 return;
             }
 
-            let html = `
-                <div class="space-y-2">
-                    <span class="font-bold text-xs uppercase text-slate-500 tracking-wider block px-1">Alunos com Negociações em Andamento ou Aprovadas:</span>
-            `;
-
+            let html = `<div class="space-y-2"><span class="font-bold text-xs uppercase text-slate-500 tracking-wider block px-1">Alunos com Negociações em Andamento ou Aprovadas:</span>`;
             propostasOuAcordos.forEach(p => {
                 const alunoId = p.studentId || p.alunoId;
                 const aluno = studentsMap[alunoId] || { fullname: p.nomeAluno || 'Aluno Cadastrado', cpf: '---' };
                 const nomeAluno = aluno.fullname || aluno.name || 'Aluno';
                 const cpfAluno = aluno.cpf || '---';
-
                 const rawCurso = aluno.course || aluno.curso || aluno.turma || aluno.nomeCurso || aluno.courseName || aluno.courseId || '---';
                 const cursoExibir = coursesMap[rawCurso] || coursesMap[normalizarTexto(rawCurso)] || String(rawCurso);
-
                 const statusStr = (p.status || '').toUpperCase();
                 const eAguardando = statusStr.includes("AGUARDANDO") || statusStr.includes("PROPOSTA");
                 const corBadge = eAguardando ? "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300" : "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300";
@@ -1072,7 +1159,6 @@
                     </div>
                 `;
             });
-
             html += `</div>`;
             container.innerHTML = html;
         }
@@ -1082,9 +1168,7 @@
             const termo = normalizarTexto(termoInput);
             const container = document.getElementById('lista-busca-negociacao-container');
             const painel = document.getElementById('painel-negociacao-aluno');
-            
             renderizarNegociacoesAtivasGeral();
-
             if (!container) return;
 
             if (termo.length < 2) {
@@ -1093,12 +1177,7 @@
                 return;
             }
 
-            const encontrados = students.filter(s => {
-                const nome = normalizarTexto(s.fullname || s.name || '');
-                const cpf = normalizarTexto(s.cpf || '');
-                return nome.includes(termo) || cpf.includes(termo);
-            });
-
+            const encontrados = students.filter(s => normalizarTexto(s.fullname || s.name || '').includes(termo) || normalizarTexto(s.cpf || '').includes(termo));
             if (encontrados.length === 0) {
                 container.innerHTML = `<div class="bg-white dark:bg-slate-900 p-4 rounded-2xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">Nenhum aluno encontrado com este nome ou CPF.</div>`;
                 if (painel) painel.style.display = 'none';
@@ -1109,7 +1188,6 @@
             encontrados.forEach(s => {
                 const rawCurso = s.course || s.curso || s.turma || s.nomeCurso || s.courseName || s.courseId || 'Não informado';
                 const cursoExibir = coursesMap[rawCurso] || coursesMap[normalizarTexto(rawCurso)] || String(rawCurso);
-                
                 html += `
                     <div onclick="selecionarAlunoNegociacao('${s.id}')" class="bg-white dark:bg-slate-900 p-3 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 flex justify-between items-center active:scale-98 transition cursor-pointer">
                         <div>
@@ -1130,17 +1208,13 @@
             const containerBusca = document.getElementById('lista-busca-negociacao-container');
             const containerAtivas = document.getElementById('lista-negociacoes-ativas-container');
             const painel = document.getElementById('painel-negociacao-aluno');
-            
             if (!aluno || !painel) return;
 
             containerBusca.innerHTML = '';
             if (containerAtivas) containerAtivas.innerHTML = '';
-
             const rawCursoAluno = aluno.course || aluno.curso || aluno.turma || aluno.nomeCurso || aluno.courseName || aluno.courseId || '---';
             const cursoAlunoExibir = coursesMap[rawCursoAluno] || coursesMap[normalizarTexto(rawCursoAluno)] || String(rawCursoAluno);
-
             document.getElementById('input-busca-negociacao').value = '';
-
             painel.style.display = 'block';
 
             const hoje = new Date();
@@ -1152,62 +1226,43 @@
                 const statusLower = (f.status || '').toLowerCase();
                 const descLower = (f.description || f.descricao || '').toLowerCase();
                 const eTermoOuProposta = statusLower.includes('proposta') || statusLower.includes('aguardando') || descLower.includes('termo') || descLower.includes('proposta') || descLower.includes('acordo consolidado');
-                
                 if (!pertenceAluno || jaPago || eTermoOuProposta) return false;
 
                 const vencimentoStr = f.date || f.vencimento || '';
                 let dataVenc = parseDataParaOrdem(vencimentoStr);
                 dataVenc.setHours(0, 0, 0, 0);
-
                 return dataVenc < hoje;
             });
 
-            faturasAtrasadasGlobal.sort((a, b) => {
-                let dataA = parseDataParaOrdem(a.date || a.vencimento);
-                let dataB = parseDataParaOrdem(b.date || b.vencimento);
-                return dataA - dataB;
-            });
+            faturasAtrasadasGlobal.sort((a, b) => parseDataParaOrdem(a.date || a.vencimento) - parseDataParaOrdem(b.date || b.vencimento));
 
             valorTotalOriginalGlobal = 0;
             multaTotalGlobal = 0;
             jurosTotalGlobal = 0;
-
             faturasAtrasadasGlobal.forEach(f => {
                 const valorOriginal = parseFloat(String(f.amount || f.valor || '0').replace(',', '.')) || 0;
                 valorTotalOriginalGlobal += valorOriginal;
-
-                const vencimentoStr = f.date || f.vencimento || '';
-                let dataVenc = parseDataParaOrdem(vencimentoStr);
+                let dataVenc = parseDataParaOrdem(f.date || f.vencimento);
                 dataVenc.setHours(0, 0, 0, 0);
-                
                 let diasAtraso = Math.ceil(Math.abs(hoje - dataVenc) / (1000 * 60 * 60 * 24));
                 let mesesAtraso = diasAtraso / 30;
-                
                 multaTotalGlobal += 10.00;
                 jurosTotalGlobal += (valorOriginal * 0.05 * mesesAtraso);
             });
-
             valorAtualNegociacaoGlobal = valorTotalOriginalGlobal + multaTotalGlobal + jurosTotalGlobal;
 
             const propostasAluno = financeLogs.filter(f => (f.studentId === alunoId || f.alunoId === alunoId) && (f.status && (f.status.includes("PROPOSTA") || f.status.includes("AGUARDANDO") || f.status.includes("ACORDO ACEITO") || f.status.includes("ACORDO EFETIVADO"))));
 
             let htmlPropostasRealizadas = '';
             let temPropostaAtiva = false;
-
             if (propostasAluno.length > 0) {
                 propostasAluno.forEach(p => {
                     let statusStr = (p.status || '').toUpperCase();
                     let eAguardando = statusStr.includes("PROPOSTA") || statusStr.includes("AGUARDANDO");
                     let corStatus = eAguardando ? "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300" : "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300";
                     let textoStatusExibir = eAguardando ? "Aguardando aprovação do aluno" : "Acordo aceito";
-
-                    if (eAguardando) {
-                        temPropostaAtiva = true;
-                    }
-
-                    if (eAguardando && p.opcoesSalvas) {
-                        opcoesGeradas = p.opcoesSalvas;
-                    }
+                    if (eAguardando) temPropostaAtiva = true;
+                    if (eAguardando && p.opcoesSalvas) opcoesGeradas = p.opcoesSalvas;
 
                     htmlPropostasRealizadas += `
                         <div class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl shadow-sm border border-emerald-500/50 space-y-2 text-xs mb-2">
@@ -1216,7 +1271,7 @@
                                 <span class="px-2 py-0.5 ${corStatus} rounded-full text-[10px] font-bold">${textoStatusExibir}</span>
                             </div>
                             <div class="text-[10px] text-slate-400">
-                                Valor Negociado Total (Com Juros e Multas): <strong>R$ ${p.amount || p.valor || '0.00'}</strong> &bull; Data: ${p.date || '---'}
+                                Valor Negociado Total: <strong>R$ ${p.amount || p.valor || '0.00'}</strong> &bull; Data: ${p.date || '---'}
                             </div>
                             ${eAguardando ? `
                                 <div class="flex gap-1.5 pt-2 border-t border-slate-100 dark:border-slate-800">
@@ -1262,13 +1317,7 @@
             }
 
             if (temPropostaAtiva) {
-                painel.innerHTML = `
-                    ${cabecalhoAlunoHtml}
-                    <div class="space-y-2 pt-1">
-                        <h4 class="font-bold text-xs uppercase text-emerald-600 tracking-wider">Propostas Realizadas / Registros:</h4>
-                        ${htmlPropostasRealizadas}
-                    </div>
-                `;
+                painel.innerHTML = `${cabecalhoAlunoHtml}<div class="space-y-2 pt-1"><h4 class="font-bold text-xs uppercase text-emerald-600 tracking-wider">Propostas Realizadas / Registros:</h4>${htmlPropostasRealizadas}</div>`;
                 return;
             }
 
@@ -1289,9 +1338,7 @@
                             <span class="font-bold text-slate-900 dark:text-white">${f.description || f.descricao || 'Mensalidade'}</span>
                             <span class="px-2 py-0.5 bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300 rounded-full text-[10px] font-bold">Atrasado (${diasAtraso} dias)</span>
                         </div>
-                        <div class="text-[10px] text-slate-400">
-                            Vencimento original: <strong>${formatarDataParaExibicao(f.date || f.vencimento)}</strong>
-                        </div>
+                        <div class="text-[10px] text-slate-400">Vencimento original: <strong>${formatarDataParaExibicao(f.date || f.vencimento)}</strong></div>
                         <div class="grid grid-cols-2 gap-1 bg-slate-50 dark:bg-slate-800/50 p-2 rounded-xl text-[10px]">
                             <div>Valor Original: <strong>R$ ${valorOriginal.toFixed(2)}</strong></div>
                             <div>Multa Fixa: <strong class="text-amber-600">R$ ${multaParcela.toFixed(2)}</strong></div>
@@ -1304,34 +1351,25 @@
 
             painel.innerHTML = `
                 ${cabecalhoAlunoHtml}
-                ${htmlPropostasRealizadas ? `
-                    <div class="space-y-2 pt-1">
-                        <h4 class="font-bold text-xs uppercase text-emerald-600 tracking-wider">Propostas Realizadas / Registros:</h4>
-                        ${htmlPropostasRealizadas}
-                    </div>
-                ` : ''}
-
-                ${faturasAtrasadasGlobal.length > 0 ? `
-                    <div class="bg-gradient-to-br from-emerald-600 to-teal-800 text-white p-4 rounded-3xl shadow-lg space-y-3">
-                        <div class="text-[10px] uppercase font-semibold tracking-wider text-emerald-200">Resumo da Negociação (Débitos em Atraso)</div>
-                        <div class="flex justify-between items-end">
-                            <div>
-                                <span class="text-xs opacity-90 font-medium">Total Vencidas: ${faturasAtrasadasGlobal.length} parcelas</span>
-                                <h3 class="text-2xl font-bold tracking-tight mt-0.5">R$ ${valorAtualNegociacaoGlobal.toFixed(2)}</h3>
-                            </div>
-                            <div>
-                                <button type="button" onclick="abrirModalRealizarAcordo()" class="px-3.5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-xl text-xs shadow transition">
-                                    <i class="fa-solid fa-sliders mr-1"></i> Proposta de Acordo
-                                </button>
-                            </div>
+                ${htmlPropostasRealizadas ? `<div class="space-y-2 pt-1"><h4 class="font-bold text-xs uppercase text-emerald-600 tracking-wider">Propostas Realizadas / Registros:</h4>${htmlPropostasRealizadas}</div>` : ''}
+                <div class="bg-gradient-to-br from-emerald-600 to-teal-800 text-white p-4 rounded-3xl shadow-lg space-y-3">
+                    <div class="text-[10px] uppercase font-semibold tracking-wider text-emerald-200">Resumo da Negociação (Débitos em Atraso)</div>
+                    <div class="flex justify-between items-end">
+                        <div>
+                            <span class="text-xs opacity-90 font-medium">Total Vencidas: ${faturasAtrasadasGlobal.length} parcelas</span>
+                            <h3 class="text-2xl font-bold tracking-tight mt-0.5">R$ ${valorAtualNegociacaoGlobal.toFixed(2)}</h3>
+                        </div>
+                        <div>
+                            <button type="button" onclick="abrirModalRealizarAcordo()" class="px-3.5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-xl text-xs shadow transition">
+                                <i class="fa-solid fa-sliders mr-1"></i> Proposta de Acordo
+                            </button>
                         </div>
                     </div>
-
-                    <div class="space-y-2 pt-2">
-                        <h4 class="font-bold text-xs uppercase text-slate-500 tracking-wider">Faturas Vencidas com Encargos Calculados (Ordem Cronológica):</h4>
-                        ${htmlFaturasCalc}
-                    </div>
-                ` : ''}
+                </div>
+                <div class="space-y-2 pt-2">
+                    <h4 class="font-bold text-xs uppercase text-slate-500 tracking-wider">Faturas Vencidas com Encargos Calculados:</h4>
+                    ${htmlFaturasCalc}
+                </div>
             `;
         }
 
@@ -1353,11 +1391,7 @@
         function abrirModalEditarProposta(propostaId) {
             const prop = financeLogs.find(f => f.id === propostaId);
             if (!prop) return;
-
-            if (prop.opcoesSalvas) {
-                opcoesGeradas = prop.opcoesSalvas;
-            }
-
+            if (prop.opcoesSalvas) opcoesGeradas = prop.opcoesSalvas;
             document.getElementById('edit-proposta-id-ativo').value = propostaId;
             document.getElementById('titulo-modal-acordo-texto').textContent = "Editar Proposta de Acordo";
             document.getElementById('obs-proposta-acordo').value = prop.observacoes || prop.obs || "";
@@ -1373,20 +1407,15 @@
                 alert("Proposta excluída com sucesso!");
                 if (alunoNegociacaoId) selecionarAlunoNegociacao(alunoNegociacaoId);
                 renderizarNegociacoesAtivasGeral();
-            } catch (e) {
-                alert("Erro ao excluir proposta: " + e.message);
-            }
+            } catch (e) { alert("Erro ao excluir proposta: " + e.message); }
         }
 
-        function fecharModalRealizarAcordo() {
-            document.getElementById('modal-realizar-acordo').style.display = 'none';
-        }
+        function fecharModalRealizarAcordo() { document.getElementById('modal-realizar-acordo').style.display = 'none'; }
 
         function ativarAbaAcordoModal(tipo) {
             document.getElementById('painel-acordo-avista').style.display = tipo === 'avista' ? 'block' : 'none';
             document.getElementById('painel-acordo-parcelado').style.display = tipo === 'parcelado' ? 'block' : 'none';
             document.getElementById('painel-acordo-cartao').style.display = tipo === 'cartao' ? 'block' : 'none';
-
             document.getElementById('btn-aba-avista').className = tipo === 'avista' ? 'py-2.5 px-2 bg-emerald-600 text-white font-bold rounded-xl text-xs shadow transition' : 'py-2.5 px-2 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl text-xs transition';
             document.getElementById('btn-aba-parcelado').className = tipo === 'parcelado' ? 'py-2.5 px-2 bg-emerald-600 text-white font-bold rounded-xl text-xs shadow transition' : 'py-2.5 px-2 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl text-xs transition';
             document.getElementById('btn-aba-cartao').className = tipo === 'cartao' ? 'py-2.5 px-2 bg-emerald-600 text-white font-bold rounded-xl text-xs shadow transition' : 'py-2.5 px-2 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl text-xs transition';
@@ -1396,25 +1425,16 @@
             const descJuros = parseFloat(document.getElementById('desc-juros-parcelado').value) || 0;
             const descMulta = parseFloat(document.getElementById('desc-multa-parcelado').value) || 0;
             const qtdParcelas = parseInt(document.getElementById('qtd-parcelas-acordo-modal').value) || 2;
-
             let jurosDescontados = jurosTotalGlobal * (descJuros / 100);
             let multaDescontada = multaTotalGlobal * (descMulta / 100);
-            
-            let jurosFinal = jurosTotalGlobal - jurosDescontados;
-            let multaFinal = multaTotalGlobal - multaDescontada;
-            let valorTotalComDesconto = valorTotalOriginalGlobal + multaFinal + jurosFinal;
-
+            let valorTotalComDesconto = valorTotalOriginalGlobal + (multaTotalGlobal - multaDescontada) + (jurosTotalGlobal - jurosDescontados);
             let valorParcela = valorTotalComDesconto / qtdParcelas;
-
             const previaEl = document.getElementById('previa-valor-parcela');
-            if (previaEl) {
-                previaEl.textContent = `${qtdParcelas}x de R$ ${valorParcela.toFixed(2)} (Total: R$ ${valorTotalComDesconto.toFixed(2)})`;
-            }
+            if (previaEl) previaEl.textContent = `${qtdParcelas}x de R$ ${valorParcela.toFixed(2)} (Total: R$ ${valorTotalComDesconto.toFixed(2)})`;
         }
 
         function gerarOpcaoAcordoModal(tipo) {
             let descJuros = 0, descMulta = 0, infoExtra = "";
-
             if (tipo === 'avista') {
                 descJuros = parseFloat(document.getElementById('desc-juros-avista').value) || 0;
                 descMulta = parseFloat(document.getElementById('desc-multa-avista').value) || 0;
@@ -1425,30 +1445,13 @@
                 let jDescontado = jurosTotalGlobal * (descJuros / 100);
                 let mDescontada = multaTotalGlobal * (descMulta / 100);
                 let tFinal = valorTotalOriginalGlobal + (multaTotalGlobal - mDescontada) + (jurosTotalGlobal - jDescontado);
-                let vParc = tFinal / qtd;
-                infoExtra = `${qtd}x de R$ ${vParc.toFixed(2)}`;
+                infoExtra = `${qtd}x de R$ ${(tFinal / qtd).toFixed(2)}`;
             } else if (tipo === 'cartao') {
                 descJuros = parseFloat(document.getElementById('desc-juros-cartao').value) || 0;
                 descMulta = parseFloat(document.getElementById('desc-multa-cartao').value) || 0;
             }
-
-            let jurosDescontados = jurosTotalGlobal * (descJuros / 100);
-            let multaDescontada = multaTotalGlobal * (descMulta / 100);
-            
-            let jurosFinal = jurosTotalGlobal - jurosDescontados;
-            let multaFinal = multaTotalGlobal - multaDescontada;
-            let valorTotalComDesconto = valorTotalOriginalGlobal + multaFinal + jurosFinal;
-
-            opcoesGeradas[tipo] = {
-                tipo: tipo,
-                descJuros: descJuros,
-                descMulta: descMulta,
-                infoExtra: infoExtra,
-                valorFinal: valorTotalComDesconto,
-                jurosFinal: jurosFinal,
-                multaFinal: multaFinal
-            };
-
+            let valorTotalComDesconto = valorTotalOriginalGlobal + (multaTotalGlobal * (1 - descMulta/100)) + (jurosTotalGlobal * (1 - descJuros/100));
+            opcoesGeradas[tipo] = { tipo, descJuros, descMulta, infoExtra, valorFinal: valorTotalComDesconto };
             alert(`Opção "${tipo.toUpperCase()}" configurada com sucesso!`);
             atualizarListaOpcoesGeradasModal();
         }
@@ -1460,7 +1463,6 @@
 
             let html = '';
             let temAlguma = false;
-
             for (let k in opcoesGeradas) {
                 let op = opcoesGeradas[k];
                 if (op) {
@@ -1480,17 +1482,9 @@
                     `;
                 }
             }
-
-            if (!temAlguma) {
-                html = `<div class="p-3 bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300 rounded-xl text-center text-xs">Nenhuma opção configurada ainda. Preencha e clique em salvar acima.</div>`;
-            }
-
+            if (!temAlguma) html = `<div class="p-3 bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300 rounded-xl text-center text-xs">Nenhuma opção configurada ainda. Preencha e clique em salvar acima.</div>`;
             container.innerHTML = html;
-
-            const todasGeradas = opcoesGeradas.avista && opcoesGeradas.parcelado && opcoesGeradas.cartao;
-            if (btnGerarPropostaModal) {
-                btnGerarPropostaModal.style.display = todasGeradas ? 'block' : 'none';
-            }
+            if (btnGerarPropostaModal) btnGerarPropostaModal.style.display = (opcoesGeradas.avista && opcoesGeradas.parcelado && opcoesGeradas.cartao) ? 'block' : 'none';
         }
 
         function removerOpcaoGerada(tipo) {
@@ -1502,13 +1496,9 @@
             if (!alunoNegociacaoId) return;
             const aluno = studentsMap[alunoNegociacaoId];
             if (!aluno) return;
-
-            if (!opcoesGeradas.avista || !opcoesGeradas.parcelado || !opcoesGeradas.cartao) {
-                return alert("Configure as 3 opções (À Vista, Parcelado e Cartão) antes de gerar a proposta.");
-            }
+            if (!opcoesGeradas.avista || !opcoesGeradas.parcelado || !opcoesGeradas.cartao) return alert("Configure as 3 opções antes de gerar a proposta.");
 
             fecharModalRealizarAcordo();
-
             const propostaIdExistente = document.getElementById('edit-proposta-id-ativo').value;
             const valorTotalNegociadoParaRegistro = valorAtualNegociacaoGlobal.toFixed(2);
             const nomeAlunoSalvar = aluno.fullname || aluno.name || 'Aluno';
@@ -1517,104 +1507,62 @@
             try {
                 if (propostaIdExistente) {
                     await db.collection("financeLogs").doc(propostaIdExistente).update({
-                        amount: valorTotalNegociadoParaRegistro,
-                        valor: valorTotalNegociadoParaRegistro,
-                        nomeAluno: nomeAlunoSalvar,
-                        date: new Date().toLocaleDateString('pt-BR'),
-                        status: "PROPOSTA DE ACORDO EM ANDAMENTO",
-                        opcoesSalvas: opcoesGeradas,
-                        observacoes: observacoesTexto,
-                        obs: observacoesTexto,
-                        atualizadoEm: new Date().toISOString()
+                        amount: valorTotalNegociadoParaRegistro, valor: valorTotalNegociadoParaRegistro,
+                        nomeAluno: nomeAlunoSalvar, date: new Date().toLocaleDateString('pt-BR'),
+                        status: "PROPOSTA DE ACORDO EM ANDAMENTO", opcoesSalvas: opcoesGeradas,
+                        observacoes: observacoesTexto, obs: observacoesTexto, atualizadoEm: new Date().toISOString()
                     });
                 } else {
                     const propostaId = "proposta_" + alunoNegociacaoId + "_" + Date.now();
                     await db.collection("financeLogs").doc(propostaId).set({
-                        studentId: alunoNegociacaoId,
-                        alunoId: alunoNegociacaoId,
-                        nomeAluno: nomeAlunoSalvar,
-                        description: `Proposta de Acordo Consolidado`,
-                        amount: valorTotalNegociadoParaRegistro,
-                        valor: valorTotalNegociadoParaRegistro,
-                        date: new Date().toLocaleDateString('pt-BR'),
-                        vencimento: new Date().toISOString().split('T')[0],
-                        status: "PROPOSTA DE ACORDO EM ANDAMENTO",
-                        opcoesSalvas: opcoesGeradas,
-                        observacoes: observacoesTexto,
-                        obs: observacoesTexto,
-                        criadoEm: new Date().toISOString()
+                        studentId: alunoNegociacaoId, alunoId: alunoNegociacaoId, nomeAluno: nomeAlunoSalvar,
+                        description: `Proposta de Acordo Consolidado`, amount: valorTotalNegociadoParaRegistro,
+                        valor: valorTotalNegociadoParaRegistro, date: new Date().toLocaleDateString('pt-BR'),
+                        vencimento: new Date().toISOString().split('T')[0], status: "PROPOSTA DE ACORDO EM ANDAMENTO",
+                        opcoesSalvas: opcoesGeradas, observacoes: observacoesTexto, obs: observacoesTexto, criadoEm: new Date().toISOString()
                     });
                 }
-            } catch (e) {
-                console.warn("Erro ao salvar proposta no Firebase:", e);
-            }
+            } catch (e) { console.warn("Erro ao salvar proposta:", e); }
 
             const razaoSocial = institutionData.razaoSocial || "JS & SS SERVIÇOS EDUCACIONAIS E CIA LTDA";
             const cnpjInst = institutionData.cnpj || "31.535.516/0001-64";
             const logoUrl = institutionData.logo || "";
             const enderecoInst = institutionData.address || "Travessa Magalhães Barata, 692, Centro, Vigia – PA, CEP 68.780-000";
-
             const nomeCompleto = aluno.fullname || aluno.name || '---';
             const codigoMatricula = aluno.code || aluno.matricula || 'S/N';
             const cpf = aluno.cpf || '---';
             const rg = aluno.rg || aluno.documento || '---';
             const sexo = aluno.gender || aluno.sexo || '---';
-            
             let nascimento = aluno.birthDate || aluno.dob || '---';
-            if (nascimento !== '---' && nascimento.includes('-')) {
-                nascimento = nascimento.split('-').reverse().join('/');
-            }
-
+            if (nascimento !== '---' && nascimento.includes('-')) nascimento = nascimento.split('-').reverse().join('/');
             const whatsapp = aluno.whatsapp || aluno.phone || aluno.telefone || '---';
-            const email = aluno.email || '---';
-
             const cep = aluno.cep || '---';
             const logradouro = aluno.street || aluno.rua || aluno.logradouro || '';
             const numero = aluno.number || aluno.numero || 'S/N';
             const bairro = aluno.neighborhood || aluno.bairro || '---';
             const cidade = aluno.city || aluno.cidade || '---';
             const estado = aluno.state || aluno.estado || '---';
-
-            let enderecoCompletoFormatado = '';
-            if (logradouro) {
-                enderecoCompletoFormatado = `${logradouro}, nº ${numero} - ${bairro}, ${cidade}/${estado} (CEP: ${cep})`;
-            } else if (aluno.address) {
-                enderecoCompletoFormatado = aluno.address;
-            } else if (aluno.endereco) {
-                enderecoCompletoFormatado = aluno.endereco;
-            } else {
-                enderecoCompletoFormatado = `Rua não informada, nº ${numero} - ${bairro}, ${cidade}/${estado} (CEP: ${cep})`;
-            }
-
+            let enderecoCompletoFormatado = logradouro ? `${logradouro}, nº ${numero} - ${bairro}, ${cidade}/${estado} (CEP: ${cep})` : (aluno.address || aluno.endereco || `Rua não informada, nº ${numero}`);
             const rawCurso = aluno.course || aluno.curso || aluno.turma || aluno.nomeCurso || aluno.courseName || aluno.courseId || '';
             const cursoExibir = coursesMap[rawCurso] || coursesMap[normalizarTexto(rawCurso)] || String(rawCurso || 'Não vinculado');
 
             const hoje = new Date();
             hoje.setHours(0, 0, 0, 0);
-
             let htmlTabelaDebitos = '';
-            let somaOriginalGeral = 0;
-            let somaMultaGeral = 0;
-            let somaJurosGeral = 0;
-            let somaTotalGeral = 0;
-            let qtdParcelasAtrasadas = faturasAtrasadasGlobal.length;
+            let somaOriginalGeral = 0, somaMultaGeral = 0, somaJurosGeral = 0, somaTotalGeral = 0;
 
             faturasAtrasadasGlobal.forEach(f => {
                 const valorOriginal = parseFloat(String(f.amount || f.valor || '0').replace(',', '.')) || 0;
                 somaOriginalGeral += valorOriginal;
-
                 const vencimentoStr = f.date || f.vencimento || '';
                 let dataVenc = parseDataParaOrdem(vencimentoStr);
                 dataVenc.setHours(0, 0, 0, 0);
-                
                 let diasAtraso = Math.ceil(Math.abs(hoje - dataVenc) / (1000 * 60 * 60 * 24));
                 let mesesAtraso = diasAtraso / 30;
                 let multaParcela = 10.00;
                 somaMultaGeral += multaParcela;
-
                 let jurosParcela = valorOriginal * 0.05 * mesesAtraso;
                 somaJurosGeral += jurosParcela;
-
                 let totalParcelaAtualizada = valorOriginal + multaParcela + jurosParcela;
                 somaTotalGeral += totalParcelaAtualizada;
 
@@ -1633,29 +1581,28 @@
 
             htmlTabelaDebitos += `
                 <tr style="background: #f1f5f9; font-weight: bold;">
-                    <td colspan="3" style="padding: 10px 8px; text-align: right; border-top: 2px solid #cbd5e1;">VALOR TOTAL DA DÍVIDA / TOTAIS:</td>
-                    <td style="padding: 10px 8px; text-align: right; border-top: 2px solid #cbd5e1; white-space: nowrap;">R$ ${somaOriginalGeral.toFixed(2)}</td>
-                    <td style="padding: 10px 8px; text-align: right; border-top: 2px solid #cbd5e1; white-space: nowrap;">R$ ${somaMultaGeral.toFixed(2)}</td>
-                    <td style="padding: 10px 8px; text-align: right; border-top: 2px solid #cbd5e1; white-space: nowrap;">R$ ${somaJurosGeral.toFixed(2)}</td>
-                    <td style="padding: 10px 8px; text-align: right; border-top: 2px solid #cbd5e1; color: #1e3a8a; font-size: 13px; white-space: nowrap;">R$ ${somaTotalGeral.toFixed(2)}</td>
+                    <td colspan="3" style="padding: 10px 8px; text-align: right; border-top: 2px solid #cbd5e1;">TOTAIS:</td>
+                    <td style="padding: 10px 8px; text-align: right; border-top: 2px solid #cbd5e1;">R$ ${somaOriginalGeral.toFixed(2)}</td>
+                    <td style="padding: 10px 8px; text-align: right; border-top: 2px solid #cbd5e1;">R$ ${somaMultaGeral.toFixed(2)}</td>
+                    <td style="padding: 10px 8px; text-align: right; border-top: 2px solid #cbd5e1;">R$ ${somaJurosGeral.toFixed(2)}</td>
+                    <td style="padding: 10px 8px; text-align: right; border-top: 2px solid #cbd5e1; color: #1e3a8a;">R$ ${somaTotalGeral.toFixed(2)}</td>
                 </tr>
             `;
 
             let htmlCompletoTermo = `
                 <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #1e293b; padding: 10px;">
-                    <!-- CABEÇALHO REORGANIZADO E AMPLIADO -->
                     <div style="background: #1e3a8a; color: #ffffff; padding: 25px 30px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px;">
                         <div style="display: flex; align-items: center; gap: 20px;">
                             <div style="width: 75px; height: 75px; background: transparent; color: #ffffff; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 22px; flex-shrink: 0; overflow: hidden;">
                                 ${logoUrl ? `<img src="${logoUrl}" alt="Logo" style="max-width:100%; max-height:100%; object-fit:contain;">` : 'SE7'}
                             </div>
                             <div>
-                                <h1 style="font-size: 16px; margin: 0 0 6px 0; font-weight: bold; letter-spacing: 0.3px; color: #ffffff;">${razaoSocial}</h1>
+                                <h1 style="font-size: 16px; margin: 0 0 6px 0; font-weight: bold; color: #ffffff;">${razaoSocial}</h1>
                                 <p style="font-size: 12px; color: #cbd5e1; margin: 0; line-height: 1.4;"><strong>CNPJ:</strong> ${cnpjInst}<br><strong>Endereço:</strong> ${enderecoInst}</p>
                             </div>
                         </div>
                         <div style="text-align: right; border-left: 1px solid rgba(255, 255, 255, 0.2); padding-left: 20px;">
-                            <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #93c5fd; font-weight: bold; display: block;">Emitido por</span>
+                            <span style="font-size: 11px; text-transform: uppercase; color: #93c5fd; font-weight: bold; display: block;">Emitido por</span>
                             <strong style="font-size: 13px; color: #ffffff;">Setor Financeiro</strong>
                         </div>
                     </div>
@@ -1679,8 +1626,7 @@
                         </div>
                     </div>
 
-                    <h2 style="font-size: 14px; color: #1e3a8a; text-transform: uppercase; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 6px; margin-top: 25px; margin-bottom: 12px; font-weight: bold;">2. Demonstrativo de Débitos em Atraso (Ordem Cronológica)</h2>
-                    <p style="font-size: 12px; color: #475569; margin-bottom: 8px;">Quantidade total de parcelas em atraso: <strong>${qtdParcelasAtrasadas} parcela(s)</strong></p>
+                    <h2 style="font-size: 14px; color: #1e3a8a; text-transform: uppercase; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 6px; margin-top: 25px; margin-bottom: 12px; font-weight: bold;">2. Demonstrativo de Débitos em Atraso</h2>
                     <div style="overflow-x: auto;">
                         <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 5px; margin-bottom: 15px;">
                             <thead>
@@ -1690,76 +1636,50 @@
                                     <th style="padding: 9px; text-align: center;">Atraso</th>
                                     <th style="padding: 9px; text-align: right;">Valor Original</th>
                                     <th style="padding: 9px; text-align: right;">Multa</th>
-                                    <th style="padding: 9px; text-align: right;">Juros (5% a.m.)</th>
+                                    <th style="padding: 9px; text-align: right;">Juros</th>
                                     <th style="padding: 9px; text-align: right;">Total Parcela</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                ${htmlTabelaDebitos}
-                            </tbody>
+                            <tbody>${htmlTabelaDebitos}</tbody>
                         </table>
                     </div>
 
-                    <h2 style="font-size: 14px; color: #1e3a8a; text-transform: uppercase; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 6px; margin-top: 25px; margin-bottom: 12px; font-weight: bold;">3. Opções de Acordo Disponíveis para Escolha</h2>
-                    
+                    <h2 style="font-size: 14px; color: #1e3a8a; text-transform: uppercase; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 6px; margin-top: 25px; margin-bottom: 12px; font-weight: bold;">3. Opções de Acordo Disponíveis</h2>
                     <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 14px; border-radius: 10px; margin-top: 10px; font-size: 12px;">
-                        <strong style="color: #047857; font-size: 13px;">Opção A: Pagamento À Vista</strong>
-                        <p style="margin: 5px 0;">Desconto Aplicado: <strong>${opcoesGeradas.avista.descJuros}% de Juros</strong> e <strong>${opcoesGeradas.avista.descMulta}% de Multa</strong>.</p>
-                        <p style="font-size: 14px; margin: 0; color: #065f46;"><strong>Valor Total À Vista: R$ ${opcoesGeradas.avista.valorFinal.toFixed(2)}</strong></p>
+                        <strong style="color: #047857;">Opção A: Pagamento À Vista</strong><br>Valor Total: R$ ${opcoesGeradas.avista.valorFinal.toFixed(2)}
                     </div>
-
                     <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 14px; border-radius: 10px; margin-top: 10px; font-size: 12px;">
-                        <strong style="color: #047857; font-size: 13px;">Opção B: Parcelado em ${opcoesGeradas.parcelado.infoExtra}</strong>
-                        <p style="margin: 5px 0;">Desconto Aplicado: <strong>${opcoesGeradas.parcelado.descJuros}% de Juros</strong> e <strong>${opcoesGeradas.parcelado.descMulta}% de Multa</strong>.</p>
-                        <p style="font-size: 14px; margin: 0; color: #065f46;"><strong>Valor Total Parcelado: R$ ${opcoesGeradas.parcelado.valorFinal.toFixed(2)}</strong> (${opcoesGeradas.parcelado.infoExtra})</p>
+                        <strong style="color: #047857;">Opção B: Parcelado (${opcoesGeradas.parcelado.infoExtra})</strong><br>Valor Total: R$ ${opcoesGeradas.parcelado.valorFinal.toFixed(2)}
                     </div>
-
                     <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 14px; border-radius: 10px; margin-top: 10px; font-size: 12px;">
-                        <strong style="color: #047857; font-size: 13px;">Opção C: Pagamento via Cartão de Crédito</strong>
-                        <p style="margin: 5px 0;">Desconto Aplicado: <strong>${opcoesGeradas.cartao.descJuros}% de Juros</strong> e <strong>${opcoesGeradas.cartao.descMulta}% de Multa</strong>.</p>
-                        <p style="font-size: 14px; margin: 0; color: #065f46;"><strong>Valor Total no Cartão: R$ ${opcoesGeradas.cartao.valorFinal.toFixed(2)}</strong></p>
+                        <strong style="color: #047857;">Opção C: Cartão de Crédito</strong><br>Valor Total: R$ ${opcoesGeradas.cartao.valorFinal.toFixed(2)}
                     </div>
 
                     ${observacoesTexto ? `
-                        <h2 style="font-size: 14px; color: #1e3a8a; text-transform: uppercase; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 6px; margin-top: 25px; margin-bottom: 12px; font-weight: bold;">4. Observações e Informações Importantes</h2>
-                        <div style="background: #fffbeb; border: 1px solid #fde68a; padding: 14px; border-radius: 10px; font-size: 12px; color: #92400e; line-height: 1.5; white-space: pre-wrap;">${observacoesTexto}</div>
+                        <h2 style="font-size: 14px; color: #1e3a8a; text-transform: uppercase; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 6px; margin-top: 25px; margin-bottom: 12px; font-weight: bold;">4. Observações</h2>
+                        <div style="background: #fffbeb; border: 1px solid #fde68a; padding: 14px; border-radius: 10px; font-size: 12px; color: #92400e; white-space: pre-wrap;">${observacoesTexto}</div>
                     ` : ''}
 
                     <div style="margin-top: 45px; display: flex; justify-content: space-between; text-align: center;">
-                        <div style="width: 45%; border-top: 1.5px solid #1e293b; padding-top: 6px; font-size: 11px;">
-                            ${razaoSocial}<br>Setor Financeiro / Tesouraria
-                        </div>
-                        <div style="width: 45%; border-top: 1.5px solid #1e293b; padding-top: 6px; font-size: 11px;">
-                            ${nomeCompleto}<br>Assinatura / Concordância do Aluno
-                        </div>
-                    </div>
-
-                    <div style="margin-top: 35px; text-align: center; font-size: 10px; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 10px;">
-                        Documento gerado eletronicamente pelo Aplicativo SE7 Financeiro Mobile em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}.
+                        <div style="width: 45%; border-top: 1.5px solid #1e293b; padding-top: 6px; font-size: 11px;">${razaoSocial}<br>Setor Financeiro</div>
+                        <div style="width: 45%; border-top: 1.5px solid #1e293b; padding-top: 6px; font-size: 11px;">${nomeCompleto}<br>Assinatura do Aluno</div>
                     </div>
                 </div>
             `;
 
             document.getElementById('conteudo-termo-Dinamico').innerHTML = htmlCompletoTermo;
             document.getElementById('modal-visualizador-termo').style.display = 'flex';
-
             selecionarAlunoNegociacao(alunoNegociacaoId);
             renderizarNegociacoesAtivasGeral();
         }
 
-        function fecharVisualizadorTermo() {
-            document.getElementById('modal-visualizador-termo').style.display = 'none';
-        }
+        function fecharVisualizadorTermo() { document.getElementById('modal-visualizador-termo').style.display = 'none'; }
 
         function abrirModalFecharAcordoParaProposta(propostaId) {
             const prop = financeLogs.find(f => f.id === propostaId);
-            if (prop && prop.opcoesSalvas) {
-                opcoesGeradas = prop.opcoesSalvas;
-            }
-
+            if (prop && prop.opcoesSalvas) opcoesGeradas = prop.opcoesSalvas;
             const container = document.getElementById('container-opcoes-fechamento');
             const btnConfirmar = document.getElementById('btn-confirmar-fechamento');
-            
             let html = '';
             for (let k in opcoesGeradas) {
                 let op = opcoesGeradas[k];
@@ -1776,211 +1696,114 @@
                     `;
                 }
             }
-
-            if (!html) {
-                html = `<div class="p-3 bg-amber-50 text-amber-800 rounded-xl text-xs">Por favor, clique em "Editar" na proposta para carregar as opções de pagamento antes de aprovar.</div>`;
-            }
-
-            container.innerHTML = html;
+            container.innerHTML = html || `<div class="p-3 bg-amber-50 text-amber-800 rounded-xl text-xs">Carregue as opções editando a proposta primeiro.</div>`;
             btnConfirmar.style.display = html.includes('radio') ? 'block' : 'none';
             document.getElementById('modal-fechar-acordo').style.display = 'flex';
         }
 
-        function fecharModalFecharAcordo() {
-            document.getElementById('modal-fechar-acordo').style.display = 'none';
-        }
+        function fecharModalFecharAcordo() { document.getElementById('modal-fechar-acordo').style.display = 'none'; }
 
         async function executarFechamentoAcordoDefinitivo() {
             const radioSelecionado = document.querySelector('input[name="opcao-escolhida-fechamento"]:checked');
-            if (!radioSelecionado) {
-                return alert("Selecione qual das opções o aluno escolheu para fecharmos o acordo.");
-            }
-
+            if (!radioSelecionado) return alert("Selecione qual das opções o aluno escolheu.");
             const escolhaKey = radioSelecionado.value;
             const opEscolhida = opcoesGeradas[escolhaKey];
             const aluno = studentsMap[alunoNegociacaoId];
             const nome = aluno ? (aluno.fullname || aluno.name) : 'Aluno';
 
-            if (!confirm(`Deseja realmente aprovar o acordo na modalidade ${escolhaKey.toUpperCase()} no valor de R$ ${opEscolhida.valorFinal.toFixed(2)}?\n\nIsso baixará as faturas antigas e gerará as novas faturas do acordo.`)) {
-                return;
-            }
+            if (!confirm(`Deseja realmente aprovar o acordo na modalidade ${escolhaKey.toUpperCase()} no valor de R$ ${opEscolhida.valorFinal.toFixed(2)}?`)) return;
 
             try {
                 for (let fatura of faturasAtrasadasGlobal) {
-                    await db.collection("financeLogs").doc(fatura.id).update({
-                        status: "NEGOCIADO (ACORDO)",
-                        dataPagamento: new Date().toLocaleDateString('pt-BR'),
-                        formaPagamento: "Substituído por Acordo"
-                    });
+                    await db.collection("financeLogs").doc(fatura.id).update({ status: "NEGOCIADO (ACORDO)", dataPagamento: new Date().toLocaleDateString('pt-BR'), formaPagamento: "Substituído por Acordo" });
                 }
 
                 if (escolhaKey === 'parcelado') {
                     let qtdParcelas = parseInt(opEscolhida.infoExtra) || 2;
                     let valorParcela = opEscolhida.valorFinal / qtdParcelas;
                     let dataBase = new Date();
-
                     for (let i = 1; i <= qtdParcelas; i++) {
                         dataBase.setMonth(dataBase.getMonth() + 1);
                         let dataVencStr = dataBase.toISOString().split('T')[0];
                         let partesVenc = dataVencStr.split('-');
                         let vencFormatado = `${partesVenc[2]}/${partesVenc[1]}/${partesVenc[0]}`;
-
-                        let novaParcelaId = "parcela_acordo_" + alunoNegociacaoId + "_" + i + "_" + Date.now();
-                        await db.collection("financeLogs").doc(novaParcelaId).set({
-                            studentId: alunoNegociacaoId,
-                            alunoId: alunoNegociacaoId,
-                            nomeAluno: nome,
-                            description: `Parcela Acordo ${i}/${qtdParcelas}`,
-                            amount: valorParcela.toFixed(2),
-                            valor: valorParcela.toFixed(2),
-                            date: vencFormatado,
-                            vencimento: vencFormatado,
-                            status: "PENDENTE",
-                            criadoEm: new Date().toISOString()
+                        await db.collection("financeLogs").doc("parcela_acordo_" + alunoNegociacaoId + "_" + i + "_" + Date.now()).set({
+                            studentId: alunoNegociacaoId, alunoId: alunoNegociacaoId, nomeAluno: nome,
+                            description: `Parcela Acordo ${i}/${qtdParcelas}`, amount: valorParcela.toFixed(2),
+                            valor: valorParcela.toFixed(2), date: vencFormatado, vencimento: vencFormatado, status: "PENDENTE", criadoEm: new Date().toISOString()
                         });
                     }
                 } else {
-                    let novaUnicaId = "acordo_unico_" + alunoNegociacaoId + "_" + Date.now();
                     let dataVencUnica = new Date();
                     dataVencUnica.setDate(dataVencUnica.getDate() + 5);
                     let vencUnicaStr = dataVencUnica.toISOString().split('T')[0].split('-').reverse().join('/');
-
-                    await db.collection("financeLogs").doc(novaUnicaId).set({
-                        studentId: alunoNegociacaoId,
-                        alunoId: alunoNegociacaoId,
-                        nomeAluno: nome,
-                        description: `Acordo Consolidado - ${escolhaKey.toUpperCase()}`,
-                        amount: opEscolhida.valorFinal.toFixed(2),
-                        valor: opEscolhida.valorFinal.toFixed(2),
-                        date: vencUnicaStr,
-                        vencimento: vencUnicaStr,
-                        status: "PENDENTE",
-                        criadoEm: new Date().toISOString()
+                    await db.collection("financeLogs").doc("acordo_unico_" + alunoNegociacaoId + "_" + Date.now()).set({
+                        studentId: alunoNegociacaoId, alunoId: alunoNegociacaoId, nomeAluno: nome,
+                        description: `Acordo Consolidado - ${escolhaKey.toUpperCase()}`, amount: opEscolhida.valorFinal.toFixed(2),
+                        valor: opEscolhida.valorFinal.toFixed(2), date: vencUnicaStr, vencimento: vencUnicaStr, status: "PENDENTE", criadoEm: new Date().toISOString()
                     });
                 }
 
                 const propostasPendentes = financeLogs.filter(f => (f.studentId === alunoNegociacaoId || f.alunoId === alunoNegociacaoId) && f.status && (f.status.includes("PROPOSTA") || f.status.includes("AGUARDANDO")));
-                
-                if (propostasPendentes.length > 0) {
-                    for (let p of propostasPendentes) {
-                        await db.collection("financeLogs").doc(p.id).update({
-                            status: "ACORDO ACEITO",
-                            description: `Acordo Aceito - ${escolhaKey.toUpperCase()}`
-                        });
-                    }
+                for (let p of propostasPendentes) {
+                    await db.collection("financeLogs").doc(p.id).update({ status: "ACORDO ACEITO", description: `Acordo Aceito - ${escolhaKey.toUpperCase()}` });
                 }
 
                 fecharModalFecharAcordo();
-                alert(`🎉 Acordo aprovado com sucesso para ${nome}!\n\n• As faturas antigas foram substituídas.\n• As novas faturas/boletos do acordo foram geradas e já estão visíveis na aba de Faturas.`);
-                
+                alert(`🎉 Acordo aprovado com sucesso para ${nome}!`);
                 selecionarAlunoNegociacao(alunoNegociacaoId);
                 renderizarNegociacoesAtivasGeral();
-
-            } catch (e) {
-                alert("Erro ao fechar acordo: " + e.message);
-            }
+            } catch (e) { alert("Erro ao fechar acordo: " + e.message); }
         }
 
         function abrirModalEditarMensalidadeFinanceiro(financeLogId) {
             const fatura = financeLogs.find(f => f.id === financeLogId);
             if (!fatura) return;
-
             document.getElementById('edit-cobranca-id').value = fatura.id;
             document.getElementById('edit-cobranca-descricao').value = fatura.description || fatura.descricao || '';
-            
             let vencimentoOriginal = fatura.date || fatura.vencimento || '';
-            let dataFormatada = '';
-            if (vencimentoOriginal.includes('/')) {
-                let partes = vencimentoOriginal.split('/');
-                if (partes.length === 3) {
-                    dataFormatada = `${partes[2]}-${partes[1]}-${partes[0]}`;
-                }
-            } else {
-                dataFormatada = vencimentoOriginal;
-            }
-
+            let dataFormatada = vencimentoOriginal.includes('/') ? vencimentoOriginal.split('/').reverse().join('-') : vencimentoOriginal;
             document.getElementById('edit-cobranca-data').value = dataFormatada || new Date().toISOString().split('T')[0];
             document.getElementById('edit-cobranca-valor').value = fatura.amount || fatura.valor || '';
-
             document.getElementById('modal-editar-cobranca').style.display = 'flex';
         }
 
-        function fecharModalEdicao() {
-            document.getElementById('modal-editar-cobranca').style.display = 'none';
-        }
+        function fecharModalEdicao() { document.getElementById('modal-editar-cobranca').style.display = 'none'; }
 
         async function salvarEdicaoMensalidade() {
             const id = document.getElementById('edit-cobranca-id').value;
             const novaDescricao = document.getElementById('edit-cobranca-descricao').value.trim();
             const novaDataInput = document.getElementById('edit-cobranca-data').value;
             const novoValor = document.getElementById('edit-cobranca-valor').value;
-
-            if (!novaDescricao || !novaDataInput || !novoValor) {
-                return alert("Preencha a descrição, a data e o valor corretamente.");
-            }
-
+            if (!novaDescricao || !novaDataInput || !novoValor) return alert("Preencha todos os campos.");
             let partes = novaDataInput.split('-');
             let novaDataFormatada = `${partes[2]}/${partes[1]}/${partes[0]}`;
 
             try {
-                await db.collection("financeLogs").doc(id).update({
-                    description: novaDescricao,
-                    descricao: novaDescricao,
-                    date: novaDataFormatada,
-                    vencimento: novaDataFormatada,
-                    amount: novoValor,
-                    valor: novoValor
-                });
-
-                alert("Mensalidade atualizada com sucesso! Sincronizado com a matriz.");
+                await db.collection("financeLogs").doc(id).update({ description: novaDescricao, descricao: novaDescricao, date: novaDataFormatada, vencimento: novaDataFormatada, amount: novoValor, valor: novoValor });
+                alert("Mensalidade atualizada com sucesso!");
                 fecharModalEdicao();
-            } catch (e) {
-                alert("Erro ao atualizar mensalidade: " + e.message);
-            }
+            } catch (e) { alert("Erro ao atualizar: " + e.message); }
         }
 
         async function darBaixaApp(financeLogId) {
-            let formaPagamentoSelect = document.getElementById(`forma-pagamento-${financeLogId}`);
-            let dataPagamentoInput = document.getElementById(`data-pagamento-${financeLogId}`);
+            let formaPagamento = document.getElementById(`forma-pagamento-${financeLogId}`)?.value || "Pix";
+            let dataPagRaw = document.getElementById(`data-pagamento-${financeLogId}`)?.value || new Date().toISOString().split('T')[0];
+            let dataPagFormatada = dataPagRaw.includes('-') ? dataPagRaw.split('-').reverse().join('/') : dataPagRaw;
 
-            let formaPagamento = formaPagamentoSelect ? formaPagamentoSelect.value : "Pix/Dinheiro";
-            let dataPagamentoRaw = dataPagamentoInput ? dataPagamentoInput.value : new Date().toISOString().split('T')[0];
-            
-            let dataPagamentoFormatada = dataPagamentoRaw;
-            if (dataPagamentoRaw.includes('-')) {
-                let partes = dataPagamentoRaw.split('-');
-                if (partes.length === 3) {
-                    dataPagamentoFormatada = `${partes[2]}/${partes[1]}/${partes[0]}`;
-                }
-            }
-
-            if (!confirm(`Confirmar o recebimento via ${formaPagamento} em ${dataPagamentoFormatada} e dar baixa nesta mensalidade?`)) return;
-            
+            if (!confirm(`Confirmar o recebimento via ${formaPagamento}?`)) return;
             try {
-                await db.collection("financeLogs").doc(financeLogId).update({
-                    status: "PAGO (Baixa App Mobile)",
-                    dataPagamento: dataPagamentoFormatada,
-                    formaPagamento: formaPagamento
-                });
+                await db.collection("financeLogs").doc(financeLogId).update({ status: "PAGO (Baixa App Mobile)", dataPagamento: dataPagFormatada, formaPagamento: formaPagamento });
                 alert("Baixa realizada com sucesso!");
-            } catch (e) {
-                alert("Erro ao dar baixa: " + e.message);
-            }
+            } catch (e) { alert("Erro ao dar baixa: " + e.message); }
         }
 
         async function estornarBaixaApp(financeLogId) {
-            if (!confirm("Deseja realmente estornar este pagamento? A fatura voltará a ficar pendente.")) return;
-
+            if (!confirm("Deseja realmente estornar este pagamento?")) return;
             try {
-                await db.collection("financeLogs").doc(financeLogId).update({
-                    status: "PENDENTE",
-                    dataPagamento: firebase.firestore.FieldValue.delete(),
-                    formaPagamento: firebase.firestore.FieldValue.delete()
-                });
-                alert("Pagamento estornado com sucesso! A fatura está pendente novamente.");
-            } catch (e) {
-                alert("Erro ao estornar pagamento: " + e.message);
-            }
+                await db.collection("financeLogs").doc(financeLogId).update({ status: "PENDENTE", dataPagamento: firebase.firestore.FieldValue.delete(), formaPagamento: firebase.firestore.FieldValue.delete() });
+                alert("Pagamento estornado com sucesso!");
+            } catch (e) { alert("Erro ao estornar: " + e.message); }
         }
 
         function renderizarNovosAlunos() {
@@ -1989,15 +1812,10 @@
             if (!container) return;
 
             const novosMatriculados = students.filter(s => !novosAlunosLidos.includes(s.id));
-
-            if (novosMatriculados.length > 0) {
-                badgeAlerta.style.display = 'flex';
-            } else {
-                badgeAlerta.style.display = 'none';
-            }
+            if (badgeAlerta) badgeAlerta.style.display = novosMatriculados.length > 0 ? 'flex' : 'none';
 
             if (novosMatriculados.length === 0) {
-                container.innerHTML = `<div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">Todos os novos alunos já foram conferidos! Nenhum pendente no momento.</div>`;
+                container.innerHTML = `<div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">Nenhum novo aluno pendente no momento.</div>`;
                 return;
             }
 
@@ -2005,7 +1823,6 @@
             novosMatriculados.forEach(s => {
                 const rawCurso = s.course || s.curso || s.turma || s.nomeCurso || s.courseName || s.courseId || 'Não informado';
                 const cursoExibir = coursesMap[rawCurso] || coursesMap[normalizarTexto(rawCurso)] || String(rawCurso);
-
                 container.innerHTML += `
                     <div onclick="marcarComoLidoEVerAluno('${s.id}')" class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl shadow-sm border-2 border-blue-500/40 flex justify-between items-center active:scale-98 transition cursor-pointer">
                         <div>
@@ -2037,49 +1854,31 @@
             if (!aluno) return;
 
             const cardDados = document.getElementById('card-dados-aluno');
-            
             const nomeCompleto = aluno.fullname || aluno.name || '---';
             const codigoMatricula = aluno.code || aluno.matricula || 'S/N';
             const cpf = aluno.cpf || '---';
             const rg = aluno.rg || aluno.documento || '---';
             const sexo = aluno.gender || aluno.sexo || '---';
-            
             let nascimento = aluno.birthDate || aluno.dob || '---';
-            if (nascimento !== '---' && nascimento.includes('-')) {
-                nascimento = nascimento.split('-').reverse().join('/');
-            }
-
+            if (nascimento !== '---' && nascimento.includes('-')) nascimento = nascimento.split('-').reverse().join('/');
             const whatsapp = aluno.whatsapp || aluno.phone || aluno.telefone || '---';
             const email = aluno.email || '---';
-
             const cep = aluno.cep || '---';
             const logradouro = aluno.street || aluno.rua || aluno.logradouro || '';
             const numero = aluno.number || aluno.numero || 'S/N';
             const bairro = aluno.neighborhood || aluno.bairro || '---';
             const cidade = aluno.city || aluno.cidade || '---';
             const estado = aluno.state || aluno.estado || '---';
-
-            let enderecoCompletoFormatado = '';
-            if (logradouro) {
-                enderecoCompletoFormatado = `${logradouro}, nº ${numero} - ${bairro}, ${cidade}/${estado} (CEP: ${cep})`;
-            } else if (aluno.address) {
-                enderecoCompletoFormatado = aluno.address;
-            } else if (aluno.endereco) {
-                enderecoCompletoFormatado = aluno.endereco;
-            } else {
-                enderecoCompletoFormatado = `Rua não informada, nº ${numero} - ${bairro}, ${cidade}/${estado} (CEP: ${cep})`;
-            }
-
+            let enderecoCompletoFormatado = logradouro ? `${logradouro}, nº ${numero} - ${bairro}, ${cidade}/${estado} (CEP: ${cep})` : (aluno.address || aluno.endereco || `Rua não informada, nº ${numero}`);
             const rawCurso = aluno.course || aluno.curso || aluno.turma || aluno.nomeCurso || aluno.courseName || aluno.courseId || '';
             const cursoExibir = coursesMap[rawCurso] || coursesMap[normalizarTexto(rawCurso)] || String(rawCurso || 'Não vinculado');
-            
             const rawTurma = aluno.classId || aluno.turmaId || aluno.turma || '';
             const turmaExibir = classesMap[rawTurma] || classesMap[normalizarTexto(rawTurma)] || String(rawTurma || 'Não vinculada');
 
             cardDados.innerHTML = `
                 <div class="space-y-4">
                     <div>
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 border-b border-slate-100 dark:border-slate-800 pb-1 mb-2">1. Dados Pessoais</h3>
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-blue-600 border-b pb-1 mb-2">1. Dados Pessoais</h3>
                         <div class="space-y-2">
                             <div><span class="text-slate-400 uppercase text-[10px]">Nome Completo:</span><br><strong class="text-slate-900 dark:text-white text-sm">${nomeCompleto}</strong></div>
                             <div class="grid grid-cols-2 gap-2">
@@ -2092,90 +1891,61 @@
                             </div>
                         </div>
                     </div>
-
                     <div>
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 border-b border-slate-100 dark:border-slate-800 pb-1 mb-2">2. Contato</h3>
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-blue-600 border-b pb-1 mb-2">2. Contato</h3>
                         <div class="grid grid-cols-2 gap-2">
-                            <div><span class="text-slate-400 uppercase text-[10px]">WhatsApp / Telefone:</span><br><span class="font-semibold">${whatsapp}</span></div>
+                            <div><span class="text-slate-400 uppercase text-[10px]">WhatsApp:</span><br><span class="font-semibold">${whatsapp}</span></div>
                             <div><span class="text-slate-400 uppercase text-[10px]">E-mail:</span><br><span class="font-semibold truncate block">${email}</span></div>
                         </div>
                     </div>
-
                     <div>
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 border-b border-slate-100 dark:border-slate-800 pb-1 mb-2">3. Endereço Completo</h3>
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-blue-600 border-b pb-1 mb-2">3. Endereço Completo</h3>
                         <div class="space-y-2">
-                            <div class="grid grid-cols-2 gap-2">
-                                <div><span class="text-slate-400 uppercase text-[10px]">CEP:</span><br><span class="font-semibold">${cep}</span></div>
-                                <div><span class="text-slate-400 uppercase text-[10px]">Cidade / Estado:</span><br><span class="font-semibold">${cidade}/${estado}</span></div>
-                            </div>
-                            <div class="grid grid-cols-2 gap-2">
-                                <div><span class="text-slate-400 uppercase text-[10px]">Logradouro (Rua):</span><br><span class="font-semibold">${logradouro || 'Não informado'}</span></div>
-                                <div><span class="text-slate-400 uppercase text-[10px]">Número:</span><br><span class="font-semibold">${numero}</span></div>
-                            </div>
-                            <div><span class="text-slate-400 uppercase text-[10px]">Bairro:</span><br><span class="font-semibold">${bairro}</span></div>
-                            <div class="bg-slate-50 dark:bg-slate-800/50 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 mt-1">
-                                <span class="text-slate-400 uppercase text-[9px] block mb-0.5">Endereço Completo (Pronto para Boletos):</span>
-                                <span class="font-bold text-slate-900 dark:text-white">${enderecoCompletoFormatado}</span>
-                            </div>
+                            <div><span class="text-slate-400 uppercase text-[10px]">Endereço Completo:</span><br><span class="font-bold text-slate-900 dark:text-white">${enderecoCompletoFormatado}</span></div>
                         </div>
                     </div>
-
                     <div>
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 border-b border-slate-100 dark:border-slate-800 pb-1 mb-2">4. Vínculo Acadêmico</h3>
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-blue-600 border-b pb-1 mb-2">4. Vínculo Acadêmico</h3>
                         <div class="space-y-2">
-                            <div><span class="text-slate-400 uppercase text-[10px]">Nº da Matrícula:</span><br><span class="font-semibold font-mono text-blue-600 dark:text-blue-400">${codigoMatricula}</span></div>
-                            <div><span class="text-slate-400 uppercase text-[10px]">Curso:</span><br><span class="font-semibold text-slate-900 dark:text-white">${cursoExibir}</span></div>
-                            <div><span class="text-slate-400 uppercase text-[10px]">Turma:</span><br><span class="font-semibold text-slate-900 dark:text-white">${turmaExibir}</span></div>
+                            <div><span class="text-slate-400 uppercase text-[10px]">Matrícula:</span><br><span class="font-semibold font-mono text-blue-600">${codigoMatricula}</span></div>
+                            <div><span class="text-slate-400 uppercase text-[10px]">Curso:</span><br><span class="font-semibold">${cursoExibir}</span></div>
+                            <div><span class="text-slate-400 uppercase text-[10px]">Turma:</span><br><span class="font-semibold">${turmaExibir}</span></div>
                         </div>
                     </div>
                 </div>
             `;
-
             mudarAbaApp('detalhes');
         }
 
-        function voltarParaOrigemDetalhes() {
-            mudarAbaApp(abaOrigemRetorno);
-        }
+        function voltarParaOrigemDetalhes() { mudarAbaApp(abaOrigemRetorno); }
 
         function mudarAbaApp(aba) {
-            const tabAlunos = document.getElementById('tab-alunos');
-            const tabNovos = document.getElementById('tab-novos-alunos');
-            const tabFin = document.getElementById('tab-financeiro');
-            const tabNeg = document.getElementById('tab-negociacoes');
-            const tabDetalhes = document.getElementById('tab-detalhes-aluno');
-            
-            const btnAlunos = document.getElementById('nav-btn-alunos');
-            const btnNovos = document.getElementById('nav-btn-novos');
-            const btnFin = document.getElementById('nav-btn-fin');
-            const btnNeg = document.getElementById('nav-btn-neg');
-
-            tabAlunos.style.display = 'none';
-            tabNovos.style.display = 'none';
-            tabFin.style.display = 'none';
-            tabNeg.style.display = 'none';
-            tabDetalhes.style.display = 'none';
-
-            btnAlunos.className = "flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition";
-            btnNovos.className = "flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition relative";
-            btnFin.className = "flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition";
-            btnNeg.className = "flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition";
+            ['tab-alunos', 'tab-novos-alunos', 'tab-financeiro', 'tab-negociacoes', 'tab-quitacao', 'tab-detalhes-aluno'].forEach(id => {
+                document.getElementById(id).style.display = 'none';
+            });
+            ['nav-btn-alunos', 'nav-btn-novos', 'nav-btn-fin', 'nav-btn-neg', 'nav-btn-quit'].forEach(id => {
+                document.getElementById(id).className = "flex flex-col items-center text-slate-400 dark:text-slate-500 text-[9px] font-bold transition";
+            });
 
             if (aba === 'alunos') {
-                tabAlunos.style.display = 'block';
-                btnAlunos.className = "flex flex-col items-center text-blue-600 dark:text-blue-400 text-[10px] font-bold transition";
+                document.getElementById('tab-alunos').style.display = 'block';
+                document.getElementById('nav-btn-alunos').className = "flex flex-col items-center text-blue-600 dark:text-blue-400 text-[9px] font-bold transition";
             } else if (aba === 'novos') {
-                tabNovos.style.display = 'block';
-                btnNovos.className = "flex flex-col items-center text-blue-600 dark:text-blue-400 text-[10px] font-bold transition relative";
+                document.getElementById('tab-novos-alunos').style.display = 'block';
+                document.getElementById('nav-btn-novos').className = "flex flex-col items-center text-blue-600 dark:text-blue-400 text-[9px] font-bold transition relative";
             } else if (aba === 'financeiro') {
-                tabFin.style.display = 'block';
-                btnFin.className = "flex flex-col items-center text-blue-600 dark:text-blue-400 text-[10px] font-bold transition";
+                document.getElementById('tab-financeiro').style.display = 'block';
+                document.getElementById('nav-btn-fin').className = "flex flex-col items-center text-blue-600 dark:text-blue-400 text-[9px] font-bold transition";
             } else if (aba === 'negociacoes') {
-                tabNeg.style.display = 'block';
-                btnNeg.className = "flex flex-col items-center text-emerald-600 dark:text-emerald-400 text-[10px] font-bold transition";
+                document.getElementById('tab-negociacoes').style.display = 'block';
+                document.getElementById('nav-btn-neg').className = "flex flex-col items-center text-emerald-600 dark:text-emerald-400 text-[9px] font-bold transition";
                 renderizarNegociacoesAtivasGeral();
+            } else if (aba === 'quitacao') {
+                document.getElementById('tab-quitacao').style.display = 'block';
+                document.getElementById('nav-btn-quit').className = "flex flex-col items-center text-indigo-600 dark:text-indigo-400 text-[9px] font-bold transition";
+                renderizarAlunosQuitesGeral();
             } else if (aba === 'detalhes') {
-                tabDetalhes.style.display = 'flex';
+                document.getElementById('tab-detalhes-aluno').style.display = 'flex';
             }
         }
     </script>
