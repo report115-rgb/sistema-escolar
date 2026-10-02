@@ -81,7 +81,7 @@
 
         <div class="text-center text-[10px] text-blue-300 pb-2">
             <div>Sistema SE7 de Gestão Acadêmica</div>
-            <div>v1.5.1 &bull; Setor Financeiro</div>
+            <div>v1.5.2 &bull; Setor Financeiro</div>
         </div>
     </div>
 
@@ -1613,21 +1613,20 @@
                     <div style="margin-top: 20px; font-size: 10px; text-align: center; color: #64748b;">
                         Documento gerado pelo Aplicativo SE7 Financeiro Mobile em ${new Date().toLocaleDateString('pt-BR')}.
                     </div>
+                    <script>
+                        window.onload = function() {
+                            window.print();
+                        }
+                    <\/script>
                 </body>
                 </html>
             `;
 
-            const blob = new Blob([cabecalhoCompleto], { type: 'text/html;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `Proposta_Acordo_${nomeAluno.replace(/\s+/g, '_')}.html`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            
-            alert("Download iniciado! O arquivo foi salvo nas pastas de Downloads do seu celular.");
+            const encodedUri = 'data:text/html;charset=utf-8,' + encodeURIComponent(cabecalhoCompleto);
+            const novaJanela = window.open(encodedUri, '_blank');
+            if (!novaJanela) {
+                window.location.href = encodedUri;
+            }
         }
 
         function abrirModalFecharAcordoParaProposta(propostaId) {
