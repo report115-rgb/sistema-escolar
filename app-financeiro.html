@@ -108,7 +108,7 @@
 
         <div class="text-center text-[10px] text-blue-300 pb-2">
             <div>Sistema SE7 de Gestão Acadêmica</div>
-            <div>v1.6.4 &bull; Setor Financeiro</div>
+            <div>v1.6.5 &bull; Setor Financeiro</div>
         </div>
     </div>
 
@@ -169,7 +169,7 @@
             <input type="hidden" id="edit-proposta-id-ativo" value="">
 
             <div class="space-y-4 text-xs">
-                <p class="text-slate-500">Configure os descontos para cada modalidade abaixo. As 3 opções são necessárias para gerar a proposta em PDF para o aluno.</p>
+                <p class="text-slate-500">Configure os descontos para cada modalidade abaixo. As 3 opções são necessárias para visualizar ou atualizar a proposta em PDF para o aluno.</p>
                 
                 <div class="grid grid-cols-3 gap-2">
                     <button type="button" onclick="ativarAbaAcordoModal('avista')" id="btn-aba-avista" class="py-2.5 px-2 bg-emerald-600 text-white font-bold rounded-xl text-xs shadow transition">À Vista</button>
@@ -248,7 +248,7 @@
             </div>
 
             <div class="flex flex-col gap-2 pt-2">
-                <button type="button" id="btn-gerar-proposta-modal" onclick="gerarPropostaPDF()" style="display: none;" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow transition">
+                <button type="button" id="btn-gerar-proposta-modal" onclick="gerarOuAtualizarPropostaPDF()" style="display: none;" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow transition">
                     <i class="fa-solid fa-file-pdf mr-1"></i> Visualizar Proposta na Tela
                 </button>
                 <button type="button" onclick="fecharModalRealizarAcordo()" class="w-full py-2.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold rounded-xl text-xs">
@@ -847,7 +847,7 @@
             }).join('');
         }
 
-        // --- ABA DE NEGOCIAÇÕES COMPLETA RESTAURADA ---
+        // --- ABA DE NEGOCIAÇÕES ---
         function renderizarNegociacoesAtivasGeral() {
             const container = document.getElementById('lista-negociacoes-ativas-container');
             const termoBusca = document.getElementById('input-busca-negociacao').value.trim();
@@ -914,7 +914,7 @@
             const encontrados = students.filter(s => normalizarTexto(s.fullname || s.name || '').includes(termo) || normalizarTexto(s.cpf || '').includes(termo));
             
             if (encontrados.length === 0) {
-                container.innerHTML = `<div class="bg-white dark:bg-slate-900 p-4 rounded-2xl text-center text-xs text-slate-400 border border-slate-200">Nenhum aluno encontrado.</div>`;
+                container.innerHTML = `<div class="bg-white dark:bg-slate-900 p-4 rounded-2xl text-center text-xs text-slate-400">Nenhum aluno encontrado.</div>`;
                 return;
             }
 
@@ -995,7 +995,7 @@
                         </div>
                         ${eAwr ? `
                             <div class="flex gap-1.5 pt-2 border-t">
-                                <button type="button" onclick="abrirModalEditarProposta('${p.id}')" class="px-2.5 py-1 bg-blue-600 text-white rounded-lg font-semibold text-[10px]">Editar</button>
+                                <button type="button" onclick="abrirModalEditarProposta('${p.id}')" class="px-2.5 py-1 bg-blue-600 text-white rounded-lg font-semibold text-[10px]">Visualizar / Editar</button>
                                 <button type="button" onclick="excluirPropostaRegistro('${p.id}')" class="px-2.5 py-1 bg-red-600 text-white rounded-lg font-semibold text-[10px]">Excluir</button>
                                 <button type="button" onclick="abrirModalFecharAcordoParaProposta('${p.id}')" class="px-2.5 py-1 bg-emerald-600 text-white rounded-lg font-semibold text-[10px]">Aprovar / Fechar</button>
                             </div>
@@ -1057,6 +1057,21 @@
             atualizarPreviaParcelasModal();
         }
 
+        function abrirModalEditarProposta(propostaId) {
+            const prop = financeLogs.find(f => f.id === propostaId);
+            if (!prop) return;
+
+            if (prop.opcoesSalvas) {
+                opcoesGeradas = prop.opcoesSalvas;
+            }
+
+            document.getElementById('edit-proposta-id-ativo').value = propostaId;
+            document.getElementById('titulo-modal-acordo-texto').textContent = "Visualizar / Editar Proposta de Acordo";
+            document.getElementById('modal-realizar-acordo').style.display = 'flex';
+            atualizarListaOpcoesGeradasModal();
+            atualizarPreviaParcelasModal();
+        }
+
         function fecharModalRealizarAcordo() { document.getElementById('modal-realizar-acordo').style.display = 'none'; }
 
         function ativarAbaAcordoModal(tipo) {
@@ -1103,27 +1118,77 @@
             if (btnGerar) btnGerar.style.display = todas ? 'block' : 'none';
         }
 
-        async function gerarPropostaPDF() {
+        // CORREÇÃO: Atualiza a proposta existente em vez de criar uma duplicada
+        async function gerarOuAtualizarPropostaPDF() {
+            if (!alunoNegociacaoId) return;
+            const aluno = studentsMap[alunoNegociacaoId];
+            if (!aluno) return;
+
+            if (!opcoesGeradas.avista || !opcoesGeradas.parcelado || !opcoesGeradas.cartao) {
+                return alert("Configure as 3 opções antes de visualizar.");
+            }
+
             fecharModalRealizarAcordo();
-            const propostaId = "proposta_" + alunoNegociacaoId + "_" + Date.now();
-            await db.collection("financeLogs").doc(propostaId).set({
-                studentId: alunoNegociacaoId,
-                alunoId: alunoNegociacaoId,
-                nomeAluno: studentsMap[alunoNegociacaoId].fullname,
-                description: `Proposta de Acordo Consolidado`,
-                amount: valorAtualNegociacaoGlobal.toFixed(2),
-                valor: valorAtualNegociacaoGlobal.toFixed(2),
-                date: new Date().toLocaleDateString('pt-BR'),
-                status: "PROPOSTA DE ACORDO EM ANDAMENTO",
-                opcoesSalvas: opcoesGeradas,
-                criadoEm: new Date().toISOString()
-            });
-            alert("Proposta gerada com sucesso!");
-            selecionarAlunoNegociacao(alunoNegociacaoId);
-            renderizarNegociacoesAtivasGeral();
+
+            const propostaIdExistente = document.getElementById('edit-proposta-id-ativo').value;
+            const valorTotalNegociado = valorAtualNegociacaoGlobal.toFixed(2);
+            const nomeAlunoSalvar = aluno.fullname || aluno.name || 'Aluno';
+
+            try {
+                if (propostaIdExistente) {
+                    await db.collection("financeLogs").doc(propostaIdExistente).update({
+                        amount: valorTotalNegociado,
+                        valor: valorTotalNegociado,
+                        opcoesSalvas: opcoesGeradas,
+                        atualizadoEm: new Date().toISOString()
+                    });
+                } else {
+                    const novaId = "proposta_" + alunoNegociacaoId + "_" + Date.now();
+                    await db.collection("financeLogs").doc(novaId).set({
+                        studentId: alunoNegociacaoId,
+                        alunoId: alunoNegociacaoId,
+                        nomeAluno: nomeAlunoSalvar,
+                        description: `Proposta de Acordo Consolidado`,
+                        amount: valorTotalNegociado,
+                        valor: valorTotalNegociado,
+                        date: new Date().toLocaleDateString('pt-BR'),
+                        status: "PROPOSTA DE ACORDO EM ANDAMENTO",
+                        opcoesSalvas: opcoesGeradas,
+                        criadoEm: new Date().toISOString()
+                    });
+                }
+            } catch (e) {
+                console.error(e);
+            }
+
+            // Exibe o termo na tela
+            exibirTermoNaTela(aluno);
         }
 
-        function abrirModalEditarProposta(id) { abrirModalRealizarAcordo(); }
+        function exibirTermoNaTela(aluno) {
+            const razaoSocial = institutionData.razaoSocial || "JS & SS SERVIÇOS EDUCACIONAIS E CIA LTDA";
+            const cnpjInst = institutionData.cnpj || "31.535.516/0001-64";
+            const enderecoInst = institutionData.address || "Travessa Magalhães Barata, 692, Vigia – PA";
+
+            let htmlCompletoTermo = `
+                <div style="font-family: sans-serif; padding: 15px;">
+                    <h2 style="text-align: center; color: #1e3a8a;">TERMO DE PROPOSTA DE ACORDO FINANCEIRO</h2>
+                    <p><strong>Aluno(a):</strong> ${aluno.fullname || aluno.name}</p>
+                    <p><strong>CPF:</strong> ${aluno.cpf || '---'}</p>
+                    <hr style="margin: 15px 0;">
+                    <h3 style="color: #047857;">Opções de Pagamento Configuradas:</h3>
+                    <p><strong>À Vista:</strong> R$ ${opcoesGeradas.avista ? opcoesGeradas.avista.valorFinal.toFixed(2) : '0,00'}</p>
+                    <p><strong>Parcelado:</strong> R$ ${opcoesGeradas.parcelado ? opcoesGeradas.parcelado.valorFinal.toFixed(2) : '0,00'}</p>
+                    <p><strong>Cartão de Crédito:</strong> R$ ${opcoesGeradas.cartao ? opcoesGeradas.cartao.valorFinal.toFixed(2) : '0,00'}</p>
+                </div>
+            `;
+            document.getElementById('conteudo-termo-Dinamico').innerHTML = htmlCompletoTermo;
+            document.getElementById('modal-visualizador-termo').style.display = 'flex';
+        }
+
+        function fecharVisualizadorTermo() { document.getElementById('modal-visualizador-termo').style.display = 'none'; }
+
+        function abrirModalEditarProposta(id) { abrirModalRealizarAcordo(); document.getElementById('edit-proposta-id-ativo').value = id; }
         async function excluirPropostaRegistro(id) {
             if (confirm("Excluir proposta?")) { await db.collection("financeLogs").doc(id).delete(); selecionarAlunoNegociacao(alunoNegociacaoId); }
         }
