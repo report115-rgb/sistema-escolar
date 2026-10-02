@@ -46,6 +46,7 @@
         }
         .animacao-piscar-alerta { animation: piscarAlerta 1.2s infinite ease-in-out; }
 
+        /* --- CONFIGURAÇÃO DE IMPRESSÃO PROFISSIONAL (WEBVIEW / MOBILE) --- */
         @media print {
             * {
                 -webkit-print-color-adjust: exact !important;
@@ -108,11 +109,11 @@
 
         <div class="text-center text-[10px] text-blue-300 pb-2">
             <div>Sistema SE7 de Gestão Acadêmica</div>
-            <div>v1.6.7 &bull; Setor Financeiro</div>
+            <div>v1.6.2 &bull; Setor Financeiro</div>
         </div>
     </div>
 
-    <!-- MODAL DE EDIÇÃO DE MENSALIDADE -->
+    <!-- MODAL DE EDIÇÃO DE MENSALIDADE (ATUALIZADO COM DESCRIÇÃO/NÚMERO) -->
     <div id="modal-editar-cobranca" class="fixed inset-0 z-[4000] flex items-center justify-center bg-black/70 p-4" style="display: none;">
         <div class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-3xl shadow-2xl max-w-sm w-full p-6 space-y-4 border border-slate-200 dark:border-slate-800">
             <div class="flex justify-between items-center border-b pb-3 border-slate-200 dark:border-slate-800">
@@ -128,12 +129,17 @@
 
             <div class="space-y-3 text-xs">
                 <div>
-                    <label class="block font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">Nova Data de Vencimento</label>
+                    <label class="block font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">Descrição / Número (Ex: Mensalidade 11/17)</label>
+                    <input type="text" id="edit-cobranca-descricao" placeholder="Ex: Mensalidade 11/17" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-600">
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">Data de Vencimento</label>
                     <input type="date" id="edit-cobranca-data" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-600">
                 </div>
 
                 <div>
-                    <label class="block font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">Novo Valor (R$)</label>
+                    <label class="block font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">Valor (R$)</label>
                     <input type="text" id="edit-cobranca-valor" placeholder="0,00" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-600">
                 </div>
             </div>
@@ -143,7 +149,7 @@
                     Cancelar
                 </button>
                 <button type="button" onclick="salvarEdicaoMensalidade()" class="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-xs shadow">
-                    Salvar
+                    Salvar na Matriz
                 </button>
             </div>
         </div>
@@ -172,6 +178,7 @@
                     <button type="button" onclick="ativarAbaAcordoModal('cartao')" id="btn-aba-cartao" class="py-2.5 px-2 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl text-xs transition">Cartão</button>
                 </div>
 
+                <!-- PAINEL À VISTA -->
                 <div id="painel-acordo-avista" class="space-y-3 p-3.5 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700">
                     <h4 class="font-bold text-slate-900 dark:text-white">Opção 1: Pagamento À Vista</h4>
                     <div>
@@ -187,6 +194,7 @@
                     </button>
                 </div>
 
+                <!-- PAINEL PARCELADO (ATÉ 5X) -->
                 <div id="painel-acordo-parcelado" class="space-y-3 p-3.5 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700" style="display: none;">
                     <h4 class="font-bold text-slate-900 dark:text-white">Opção 2: Parcelado (Até 5x)</h4>
                     <div>
@@ -217,6 +225,7 @@
                     </button>
                 </div>
 
+                <!-- PAINEL CARTÃO DE CRÉDITO -->
                 <div id="painel-acordo-cartao" class="space-y-3 p-3.5 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700" style="display: none;">
                     <h4 class="font-bold text-slate-900 dark:text-white">Opção 3: Cartão de Crédito</h4>
                     <div>
@@ -408,7 +417,7 @@
                     <h2 class="font-bold text-sm text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
                         <i class="fa-solid fa-handshake-angle"></i> Aba de Negociações
                     </h2>
-                    <p class="text-[11px] text-slate-500">Alunos com negociações em andamento ou aprovadas aparecem listados abaixo automaticamente. Você também pode buscar por nome ou CPF.</p>
+                    <p class="text-[11px] text-slate-500">Alunos com negociações em andamento ou aprovadas.</p>
                     
                     <div class="relative">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
@@ -590,9 +599,9 @@
                     studentsMap[doc.id] = data;
                 });
                 students.sort((a, b) => (a.fullname || '').localeCompare(b.fullname || ''));
-                atualizarSeletorCursosUI();
                 renderizarListaAlunos();
                 renderizarNovosAlunos();
+                atualizarSeletorCursosUI();
                 renderizarNegociacoesAtivasGeral();
                 if (alunoNegociacaoId) selecionarAlunoNegociacao(alunoNegociacaoId);
             });
@@ -632,10 +641,7 @@
                 cSnap.forEach(doc => {
                     const d = doc.data();
                     const nome = d.name || d.nome || d.curso;
-                    if (nome) { 
-                        coursesMap[doc.id] = String(nome).trim(); 
-                        coursesMap[normalizarTexto(nome)] = String(nome).trim(); 
-                    }
+                    if (nome) { coursesMap[doc.id] = String(nome).trim(); coursesMap[normalizarTexto(nome)] = String(nome).trim(); }
                 });
             } catch (e) {}
 
@@ -644,10 +650,7 @@
                 tSnap.forEach(doc => {
                     const d = doc.data();
                     const nome = d.name || d.nome || d.turma;
-                    if (nome) { 
-                        classesMap[doc.id] = String(nome).trim(); 
-                        classesMap[normalizarTexto(nome)] = String(nome).trim(); 
-                    }
+                    if (nome) { classesMap[doc.id] = String(nome).trim(); classesMap[normalizarTexto(nome)] = String(nome).trim(); }
                 });
             } catch (e) {}
             atualizarSeletorCursosUI();
@@ -659,11 +662,8 @@
             let listaNomesUnicos = new Set(Object.values(coursesMap));
 
             students.forEach(s => {
-                const c = s.course || s.curso || s.turma || s.nomeCurso || s.courseName || s.courseId;
-                if (c) {
-                    const nomeFinal = coursesMap[c] || coursesMap[normalizarTexto(c)] || String(c).trim();
-                    listaNomesUnicos.add(nomeFinal);
-                }
+                const c = s.course || s.curso || s.turma || s.courseName;
+                if (c) listaNomesUnicos.add(coursesMap[c] || coursesMap[normalizarTexto(c)] || String(c).trim());
             });
 
             const cursosOrdenados = Array.from(listaNomesUnicos).sort();
@@ -690,70 +690,46 @@
                 return;
             }
 
-            const cursoSelecionadoNorm = normalizarTexto(cursoSelecionado);
-
             const filtrados = students.filter(s => {
                 const nomeAluno = normalizarTexto(s.fullname || s.name || '');
                 const cpfAluno = normalizarTexto(s.cpf || '');
-                
-                const rawCurso = s.course || s.curso || s.turma || s.nomeCurso || s.courseName || s.courseId || '';
-                const nomeCursoMapeado = coursesMap[rawCurso] || coursesMap[normalizarTexto(rawCurso)] || String(rawCurso);
-                const cursoAlunoNorm = normalizarTexto(nomeCursoMapeado);
-
-                const bateTexto = nomeAluno.includes(termo) || cpfAluno.includes(termo);
-                const bateCurso = (cursoAlunoNorm === cursoSelecionadoNorm || cursoAlunoNorm.includes(cursoSelecionadoNorm));
-
-                return bateTexto && bateCurso;
+                const rawCurso = s.course || s.curso || s.turma || s.courseName || '';
+                const cursoAlunoNorm = normalizarTexto(coursesMap[rawCurso] || coursesMap[normalizarTexto(rawCurso)] || String(rawCurso));
+                return (nomeAluno.includes(termo) || cpfAluno.includes(termo)) && cursoAlunoNorm.includes(normalizarTexto(cursoSelecionado));
             });
 
             if (filtrados.length === 0) {
-                container.innerHTML = `<div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">Nenhum aluno encontrado para este curso.</div>`;
+                container.innerHTML = `<div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">Nenhum aluno encontrado.</div>`;
                 return;
             }
 
-            container.innerHTML = filtrados.map(s => {
-                const rawCurso = s.course || s.curso || s.turma || s.nomeCurso || s.courseName || s.courseId || 'Não informado';
-                const cursoExibir = coursesMap[rawCurso] || coursesMap[normalizarTexto(rawCurso)] || String(rawCurso);
-                return `
-                    <div onclick="abrirDetalhesAluno('${s.id}', 'alunos')" class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 flex justify-between items-center active:scale-98 transition cursor-pointer">
-                        <div>
-                            <strong class="text-xs font-bold text-slate-900 dark:text-white">${s.fullname || s.name || 'Sem Nome'}</strong>
-                            <p class="text-[10px] text-slate-400">Curso: ${cursoExibir} &bull; Matrícula: ${s.code || s.matricula || 'S/N'}</p>
-                        </div>
-                        <div class="w-8 h-8 bg-blue-50 dark:bg-slate-800 text-blue-600 rounded-xl flex items-center justify-center text-xs">
-                            <i class="fa-solid fa-chevron-right"></i>
-                        </div>
+            container.innerHTML = filtrados.map(s => `
+                <div onclick="abrirDetalhesAluno('${s.id}', 'alunos')" class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 flex justify-between items-center active:scale-98 transition cursor-pointer">
+                    <div>
+                        <strong class="text-xs font-bold text-slate-900 dark:text-white">${s.fullname || s.name || 'Sem Nome'}</strong>
+                        <p class="text-[10px] text-slate-400">Matrícula: ${s.code || s.matricula || 'S/N'}</p>
                     </div>
-                `;
-            }).join('');
+                    <div class="w-8 h-8 bg-blue-50 dark:bg-slate-800 text-blue-600 rounded-xl flex items-center justify-center text-xs">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </div>
+                </div>
+            `).join('');
         }
 
         function atualizarSelectAlunosFinanceiro() {
             const cursoSelecionado = document.getElementById('select-fin-curso').value;
             const selectAluno = document.getElementById('select-fin-aluno');
-            const container = document.getElementById('lista-faturas-aluno-container');
             if (!selectAluno) return;
 
             selectAluno.disabled = false;
-            const cursoSelecionadoNorm = normalizarTexto(cursoSelecionado);
-
             const alunosDoCurso = students.filter(s => {
-                const rawCurso = s.course || s.curso || s.turma || s.nomeCurso || s.courseName || s.courseId || '';
-                const nomeCursoMapeado = coursesMap[rawCurso] || coursesMap[normalizarTexto(rawCurso)] || String(rawCurso);
-                const cursoAlunoNorm = normalizarTexto(nomeCursoMapeado);
-                return cursoAlunoNorm === cursoSelecionadoNorm || cursoAlunoNorm.includes(cursoSelecionadoNorm);
+                const rawCurso = s.course || s.curso || s.turma || s.courseName || '';
+                const nomeCurso = coursesMap[rawCurso] || coursesMap[normalizarTexto(rawCurso)] || String(rawCurso);
+                return normalizarTexto(nomeCurso).includes(normalizarTexto(cursoSelecionado));
             });
-
-            if (alunosDoCurso.length === 0) {
-                selectAluno.innerHTML = `<option value="" disabled selected>Nenhum aluno neste curso</option>`;
-                container.innerHTML = `<div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">Nenhum aluno encontrado para este curso.</div>`;
-                return;
-            }
 
             selectAluno.innerHTML = `<option value="" disabled selected>Selecione um aluno...</option>` +
                 alunosDoCurso.map(a => `<option value="${a.id}">${a.fullname || a.name || 'Sem Nome'}</option>`).join('');
-
-            container.innerHTML = `<div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">Selecione um aluno acima para visualizar as faturas.</div>`;
         }
 
         function parseDataParaOrdem(dataStr) {
@@ -807,6 +783,7 @@
                             </div>
                             <div class="flex items-center gap-1.5">
                                 <span class="px-2 py-0.5 ${corBadge} rounded-full text-[10px] font-bold">${f.status || 'PENDENTE'}</span>
+                                <!-- BOTÃO DE EDITAR MENSALIDADE -->
                                 <button type="button" onclick="abrirModalEditarMensalidadeFinanceiro('${f.id}')" class="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[10px] font-semibold shadow transition" title="Editar Mensalidade">
                                     <i class="fa-solid fa-pen-to-square"></i>
                                 </button>
@@ -842,539 +819,95 @@
             }).join('');
         }
 
-        // --- ABA DE NEGOCIAÇÕES ---
-        function renderizarNegociacoesAtivasGeral() {
-            const container = document.getElementById('lista-negociacoes-ativas-container');
-            const termoBusca = document.getElementById('input-busca-negociacao').value.trim();
-            if (!container || termoBusca.length > 0) {
-                if (container && termoBusca.length > 0) container.innerHTML = '';
-                return;
-            }
-
-            const propostasOuAcordos = financeLogs.filter(f => {
-                const status = (f.status || '').toUpperCase();
-                return status.includes("PROPOSTA") || status.includes("AGUARDANDO") || status.includes("ACORDO ACEITO") || status.includes("ACORDO EFETIVADO");
-            });
-
-            if (propostasOuAcordos.length === 0) {
-                container.innerHTML = `
-                    <div class="bg-white dark:bg-slate-900 p-5 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800 space-y-1">
-                        <i class="fa-solid fa-folder-open text-slate-300 text-xl mb-1"></i>
-                        <p class="font-semibold text-slate-700 dark:text-slate-300">Nenhuma negociação em andamento no momento.</p>
-                        <p class="text-[10px]">Pesquise pelo nome ou CPF do aluno acima para iniciar um acordo.</p>
-                    </div>
-                `;
-                return;
-            }
-
-            container.innerHTML = `
-                <div class="space-y-2">
-                    <span class="font-bold text-xs uppercase text-slate-500 block px-1">Negociações em Andamento ou Aprovadas:</span>
-                    ${propostasOuAcordos.map(p => {
-                        const alunoId = p.studentId || p.alunoId;
-                        const aluno = studentsMap[alunoId] || { fullname: p.nomeAluno || 'Aluno', cpf: '---' };
-                        const statusStr = (p.status || '').toUpperCase();
-                        const eAguardando = statusStr.includes("AGUARDANDO") || statusStr.includes("PROPOSTA");
-                        const corBadge = eAguardando ? "bg-amber-100 text-amber-800" : "bg-emerald-100 text-emerald-800";
-                        const textoStatus = eAguardando ? "Aguardando Aprovação" : "Acordo Aprovado";
-
-                        return `
-                            <div class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 space-y-2">
-                                <div class="flex justify-between items-start">
-                                    <div>
-                                        <strong class="text-xs font-bold text-slate-900 dark:text-white">${aluno.fullname || aluno.name}</strong>
-                                        <p class="text-[10px] text-slate-400">CPF: ${aluno.cpf || '---'}</p>
-                                    </div>
-                                    <span class="px-2 py-0.5 ${corBadge} rounded-full text-[10px] font-bold">${textoStatus}</span>
-                                </div>
-                                <div class="flex justify-between items-center text-[10px] text-slate-500 border-t pt-2">
-                                    <span>Valor: <strong>R$ ${p.amount || p.valor || '0.00'}</strong></span>
-                                    <button type="button" onclick="selecionarAlunoNegociacao('${alunoId}')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[10px] shadow">
-                                        <i class="fa-solid fa-folder-open mr-1"></i> Ver Situação / Detalhes
-                                    </button>
-                                </div>
-                            </div>
-                        `;
-                    }).join('')}
-                </div>
-            `;
-        }
-
-        function pesquisarAlunoNegociacao() {
-            const termo = normalizarTexto(document.getElementById('input-busca-negociacao').value);
-            const container = document.getElementById('lista-busca-negociacao-container');
-            renderizarNegociacoesAtivasGeral();
-            if (!container || termo.length < 2) { container.innerHTML = ''; return; }
-
-            const encontrados = students.filter(s => normalizarTexto(s.fullname || s.name || '').includes(termo) || normalizarTexto(s.cpf || '').includes(termo));
-            
-            if (encontrados.length === 0) {
-                container.innerHTML = `<div class="bg-white dark:bg-slate-900 p-4 rounded-2xl text-center text-xs text-slate-400">Nenhum aluno encontrado.</div>`;
-                return;
-            }
-
-            container.innerHTML = `<div class="space-y-1"><span class="font-bold text-[10px] uppercase text-slate-400 px-1">Resultados da Busca:</span>` + 
-                encontrados.map(s => `
-                    <div onclick="selecionarAlunoNegociacao('${s.id}')" class="bg-white dark:bg-slate-900 p-3 rounded-2xl shadow-sm border flex justify-between items-center cursor-pointer active:scale-98">
-                        <div>
-                            <strong class="text-xs font-bold text-slate-900 dark:text-white">${s.fullname || s.name}</strong>
-                            <p class="text-[10px] text-slate-400">CPF: ${s.cpf || '---'}</p>
-                        </div>
-                        <span class="px-2.5 py-1 bg-emerald-600 text-white text-[10px] font-bold rounded-lg shadow">Verificar Débitos</span>
-                    </div>
-                `).join('') + `</div>`;
-        }
-
-        function selecionarAlunoNegociacao(alunoId) {
-            alunoNegociacaoId = alunoId;
-            const aluno = studentsMap[alunoId];
-            const containerBusca = document.getElementById('lista-busca-negociacao-container');
-            const containerAtivas = document.getElementById('lista-negociacoes-ativas-container');
-            const painel = document.getElementById('painel-negociacao-aluno');
-            
-            if (!aluno || !painel) return;
-
-            containerBusca.innerHTML = '';
-            if (containerAtivas) containerAtivas.innerHTML = '';
-            document.getElementById('input-busca-negociacao').value = '';
-            painel.style.display = 'block';
-
-            const hoje = new Date();
-            hoje.setHours(0, 0, 0, 0);
-
-            faturasAtrasadasGlobal = financeLogs.filter(f => {
-                const pertenceAluno = (f.studentId === alunoId || f.alunoId === alunoId);
-                const jaPago = f.status && (f.status.toUpperCase().includes('PAGO') || f.status.includes('NEGOCIADO'));
-                const statusLower = (f.status || '').toLowerCase();
-                const descLower = (f.description || f.descricao || '').toLowerCase();
-                const eTermoOuProposta = statusLower.includes('proposta') || statusLower.includes('aguardando') || descLower.includes('termo');
-                
-                if (!pertenceAluno || jaPago || eTermoOuProposta) return false;
-
-                let dataVenc = parseDataParaOrdem(f.date || f.vencimento);
-                dataVenc.setHours(0, 0, 0, 0);
-                return dataVenc < hoje;
-            });
-
-            faturasAtrasadasGlobal.sort((a, b) => parseDataParaOrdem(a.date || a.vencimento) - parseDataParaOrdem(b.date || b.vencimento));
-
-            valorTotalOriginalGlobal = 0; multaTotalGlobal = 0; jurosTotalGlobal = 0;
-            faturasAtrasadasGlobal.forEach(f => {
-                const val = parseFloat(String(f.amount || f.valor || '0').replace(',', '.')) || 0;
-                valorTotalOriginalGlobal += val;
-                let dataVenc = parseDataParaOrdem(f.date || f.vencimento);
-                let dias = Math.ceil(Math.abs(hoje - dataVenc) / (1000 * 60 * 60 * 24));
-                let meses = dias / 30;
-                multaTotalGlobal += 10.00;
-                jurosTotalGlobal += (val * 0.05 * meses);
-            });
-            valorAtualNegociacaoGlobal = valorTotalOriginalGlobal + multaTotalGlobal + jurosTotalGlobal;
-
-            const propostasAluno = financeLogs.filter(f => (f.studentId === alunoId || f.alunoId === alunoId) && (f.status && (f.status.includes("PROPOSTA") || f.status.includes("AGUARDANDO") || f.status.includes("ACORDO ACEITO"))));
-
-            let htmlProps = '';
-            let temPropostaAtiva = false;
-            propostasAluno.forEach(p => {
-                let eAwr = (p.status || '').toUpperCase().includes("PROPOSTA") || (p.status || '').toUpperCase().includes("AGUARDANDO");
-                if (eAwr) temPropostaAtiva = true;
-                if (eAwr && p.opcoesSalvas) opcoesGeradas = p.opcoesSalvas;
-
-                htmlProps += `
-                    <div class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl shadow-sm border border-emerald-500/50 space-y-2 text-xs mb-2">
-                        <div class="flex justify-between items-center">
-                            <span class="font-bold text-slate-900 dark:text-white">${p.description || 'Proposta de Acordo'}</span>
-                            <span class="px-2 py-0.5 ${eAwr ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'} rounded-full text-[10px] font-bold">${eAwr ? 'Aguardando Aprovação' : 'Acordo Aceito'}</span>
-                        </div>
-                        <div class="text-[10px] text-slate-400">
-                            Valor Negociado Total: <strong>R$ ${p.amount || p.valor || '0.00'}</strong> &bull; Data: ${p.date || '---'}
-                        </div>
-                        <div class="flex gap-1.5 pt-2 border-t">
-                            <button type="button" onclick="abrirModalEditarProposta('${p.id}')" class="px-2.5 py-1 bg-blue-600 text-white rounded-lg font-semibold text-[10px]">Visualizar / Editar</button>
-                            <button type="button" onclick="excluirPropostaRegistro('${p.id}')" class="px-2.5 py-1 bg-red-600 text-white rounded-lg font-semibold text-[10px]">Excluir</button>
-                            ${eAwr ? `<button type="button" onclick="abrirModalFecharAcordoParaProposta('${p.id}')" class="px-2.5 py-1 bg-emerald-600 text-white rounded-lg font-semibold text-[10px]">Aprovar / Fechar</button>` : ''}
-                        </div>
-                    </div>
-                `;
-            });
-
-            let cabecalho = `
-                <div class="bg-emerald-50 dark:bg-emerald-950/40 p-3.5 rounded-2xl border border-emerald-200 flex justify-between items-center text-xs mb-2">
-                    <div>
-                        <span class="text-[10px] uppercase font-bold text-emerald-600">Aluno Selecionado:</span>
-                        <strong class="block text-slate-900 dark:text-white text-sm">${aluno.fullname || aluno.name}</strong>
-                        <span class="text-[10px] text-slate-500">CPF: ${aluno.cpf || '---'}</span>
-                    </div>
-                    <button onclick="voltarListaNegociacoesGeral()" class="px-2.5 py-1.5 bg-slate-200 dark:bg-slate-800 text-[10px] font-semibold rounded-lg">Voltar à Lista</button>
-                </div>
-            `;
-
-            if (faturasAtrasadasGlobal.length === 0 && propostasAluno.length === 0) {
-                painel.innerHTML = `${cabecalho}<div class="bg-white p-6 rounded-3xl text-center text-xs text-slate-400 border">Aluno sem débitos pendentes em atraso.</div>`;
-                return;
-            }
-
-            painel.innerHTML = `
-                ${cabecalho}
-                ${htmlProps ? `<div class="space-y-2"><h4 class="font-bold text-xs uppercase text-emerald-600">Propostas Realizadas:</h4>${htmlProps}</div>` : ''}
-                ${!temPropostaAtiva && faturasAtrasadasGlobal.length > 0 ? `
-                    <div class="bg-gradient-to-br from-emerald-600 to-teal-800 text-white p-4 rounded-3xl shadow-lg space-y-3">
-                        <div class="text-[10px] uppercase font-semibold text-emerald-200">Resumo da Negociação (Débitos em Atraso)</div>
-                        <div class="flex justify-between items-end">
-                            <div>
-                                <span class="text-xs opacity-90">Total Vencidas: ${faturasAtrasadasGlobal.length} parcelas</span>
-                                <h3 class="text-2xl font-bold mt-0.5">R$ ${valorAtualNegociacaoGlobal.toFixed(2)}</h3>
-                            </div>
-                            <button type="button" onclick="abrirModalRealizarAcordo()" class="px-3.5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-xl text-xs shadow">
-                                <i class="fa-solid fa-sliders mr-1"></i> Gerar Proposta de Acordo
-                            </button>
-                        </div>
-                    </div>
-                ` : ''}
-            `;
-        }
-
-        function voltarListaNegociacoesGeral() {
-            alunoNegociacaoId = null;
-            document.getElementById('painel-negociacao-aluno').style.display = 'none';
-            renderizarNegociacoesAtivasGeral();
-        }
-
-        function abrirModalRealizarAcordo() {
-            document.getElementById('edit-proposta-id-ativo').value = "";
-            document.getElementById('titulo-modal-acordo-texto').textContent = "Gerar Proposta de Acordo";
-            document.getElementById('modal-realizar-acordo').style.display = 'flex';
-            atualizarListaOpcoesGeradasModal();
-            atualizarPreviaParcelasModal();
-        }
-
-        function abrirModalEditarProposta(propostaId) {
-            const prop = financeLogs.find(f => f.id === propostaId);
-            if (!prop) return;
-
-            if (prop.opcoesSalvas) {
-                opcoesGeradas = prop.opcoesSalvas;
-            }
-
-            document.getElementById('edit-proposta-id-ativo').value = propostaId;
-            document.getElementById('titulo-modal-acordo-texto').textContent = "Visualizar / Editar Proposta";
-            document.getElementById('modal-realizar-acordo').style.display = 'flex';
-            atualizarListaOpcoesGeradasModal();
-            atualizarPreviaParcelasModal();
-        }
-
-        function fecharModalRealizarAcordo() { document.getElementById('modal-realizar-acordo').style.display = 'none'; }
-
-        function ativarAbaAcordoModal(tipo) {
-            document.getElementById('painel-acordo-avista').style.display = tipo === 'avista' ? 'block' : 'none';
-            document.getElementById('painel-acordo-parcelado').style.display = tipo === 'parcelado' ? 'block' : 'none';
-            document.getElementById('painel-acordo-cartao').style.display = tipo === 'cartao' ? 'block' : 'none';
-        }
-
-        function atualizarPreviaParcelasModal() {
-            const descJuros = parseFloat(document.getElementById('desc-juros-parcelado').value) || 0;
-            const descMulta = parseFloat(document.getElementById('desc-multa-parcelado').value) || 0;
-            const qtd = parseInt(document.getElementById('qtd-parcelas-acordo-modal').value) || 2;
-            let tFinal = valorTotalOriginalGlobal + (multaTotalGlobal * (1 - descMulta/100)) + (jurosTotalGlobal * (1 - descJuros/100));
-            document.getElementById('previa-valor-parcela').textContent = `${qtd}x de R$ ${(tFinal / qtd).toFixed(2)} (Total: R$ ${tFinal.toFixed(2)})`;
-        }
-
-        function gerarOpcaoAcordoModal(tipo) {
-            let descJuros = parseFloat(document.getElementById(`desc-juros-${tipo}`).value) || 0;
-            let descMulta = parseFloat(document.getElementById(`desc-multa-${tipo}`).value) || 0;
-            let infoExtra = tipo === 'parcelado' ? `${document.getElementById('qtd-parcelas-acordo-modal').value}x` : '';
-            let tFinal = valorTotalOriginalGlobal + (multaTotalGlobal * (1 - descMulta/100)) + (jurosTotalGlobal * (1 - descJuros/100));
-
-            opcoesGeradas[tipo] = { tipo, descJuros, descMulta, infoExtra, valorFinal: tFinal };
-            alert(`Opção "${tipo.toUpperCase()}" configurada com sucesso!`);
-            atualizarListaOpcoesGeradasModal();
-        }
-
-        function atualizarListaOpcoesGeradasModal() {
-            const container = document.getElementById('lista-opcoes-geradas-modal');
-            const btnGerar = document.getElementById('btn-gerar-proposta-modal');
-            if (!container) return;
-
-            let html = '';
-            let todas = true;
-            for (let k in opcoesGeradas) {
-                let op = opcoesGeradas[k];
-                if (op) {
-                    html += `<div class="p-2 bg-slate-50 dark:bg-slate-800 rounded-lg flex justify-between text-xs"><span>${k.toUpperCase()}</span><strong>R$ ${op.valorFinal.toFixed(2)}</strong></div>`;
-                } else {
-                    todas = false;
-                }
-            }
-            container.innerHTML = html || 'Nenhuma opção configurada.';
-            if (btnGerar) btnGerar.style.display = todas ? 'block' : 'none';
-        }
-
-        // GERAR / VISUALIZAR O TERMO DE ACORDO EXATAMENTE COMO NO PDF ORIGINAL
-        async function gerarPropostaPDF() {
-            if (!alunoNegociacaoId) return;
-            const aluno = studentsMap[alunoNegociacaoId];
-            if (!aluno) return;
-
-            if (!opcoesGeradas.avista || !opcoesGeradas.parcelado || !opcoesGeradas.cartao) {
-                return alert("Configure as 3 opções antes de gerar o termo.");
-            }
-
-            fecharModalRealizarAcordo();
-
-            const propostaIdExistente = document.getElementById('edit-proposta-id-ativo').value;
-            const valorTotalNegociado = valorAtualNegociacaoGlobal.toFixed(2);
-            const nomeAlunoSalvar = aluno.fullname || aluno.name || 'Aluno';
-
-            try {
-                if (propostaIdExistente) {
-                    await db.collection("financeLogs").doc(propostaIdExistente).update({
-                        amount: valorTotalNegociado,
-                        valor: valorTotalNegociado,
-                        opcoesSalvas: opcoesGeradas,
-                        atualizadoEm: new Date().toISOString()
-                    });
-                } else {
-                    const novaId = "proposta_" + alunoNegociacaoId + "_" + Date.now();
-                    await db.collection("financeLogs").doc(novaId).set({
-                        studentId: alunoNegociacaoId,
-                        alunoId: alunoNegociacaoId,
-                        nomeAluno: nomeAlunoSalvar,
-                        description: `Proposta de Acordo Consolidado`,
-                        amount: valorTotalNegociado,
-                        valor: valorTotalNegociado,
-                        date: new Date().toLocaleDateString('pt-BR'),
-                        status: "PROPOSTA DE ACORDO EM ANDAMENTO",
-                        opcoesSalvas: opcoesGeradas,
-                        criadoEm: new Date().toISOString()
-                    });
-                }
-            } catch (e) { console.error(e); }
-
-            const razaoSocial = institutionData.razaoSocial || "JS & SS SERVIÇOS EDUCACIONAIS E CIA LTDA";
-            const cnpjInst = institutionData.cnpj || "31.535.516/0001-64";
-            const enderecoInst = institutionData.address || "Travessa Magalhães Barata, 692, Centro, Vigia – PA, CEP 68.780-000";
-
-            const nomeCompleto = aluno.fullname || aluno.name || '---';
-            const cpf = aluno.cpf || '---';
-            const rg = aluno.rg || '---';
-            const whatsapp = aluno.whatsapp || aluno.telefone || '---';
-            const endereco = aluno.address || aluno.endereco || '---';
-            const dataNasc = aluno.birthdate || aluno.dataNascimento || '---';
-            const sexo = aluno.gender || aluno.sexo || '---';
-            const matricula = aluno.code || aluno.matricula || '---';
-            const rawCurso = aluno.course || aluno.curso || aluno.turma || '';
-            const cursoExibir = coursesMap[rawCurso] || coursesMap[normalizarTexto(rawCurso)] || String(rawCurso || 'Não vinculado');
-
-            let htmlTabelaDebitos = '';
-            let somaOrig = 0, somaMulta = 0, somaJuros = 0, somaTotal = 0;
-            const hoje = new Date();
-
-            faturasAtrasadasGlobal.forEach(f => {
-                let dataVenc = parseDataParaOrdem(f.date || f.vencimento);
-                let diasAtraso = Math.ceil(Math.abs(hoje - dataVenc) / (1000 * 60 * 60 * 24));
-                let meses = diasAtraso / 30;
-                let valOrig = parseFloat(String(f.amount || f.valor || '0').replace(',', '.')) || 0;
-                let multa = 10.00;
-                let juros = valOrig * 0.05 * meses;
-                let totalParc = valOrig + multa + juros;
-
-                somaOrig += valOrig;
-                somaMulta += multa;
-                somaJuros += juros;
-                somaTotal += totalParc;
-
-                htmlTabelaDebitos += `
-                    <tr>
-                        <td style="padding: 6px; border-bottom: 1px solid #e2e8f0;">${f.description || f.descricao || 'Mensalidade'}</td>
-                        <td style="padding: 6px; border-bottom: 1px solid #e2e8f0; text-align: center;">${formatarDataParaExibicao(f.date || f.vencimento)}</td>
-                        <td style="padding: 6px; border-bottom: 1px solid #e2e8f0; text-align: center;">${diasAtraso} dias</td>
-                        <td style="padding: 6px; border-bottom: 1px solid #e2e8f0; text-align: right;">R$ ${valOrig.toFixed(2)}</td>
-                        <td style="padding: 6px; border-bottom: 1px solid #e2e8f0; text-align: right;">R$ ${multa.toFixed(2)}</td>
-                        <td style="padding: 6px; border-bottom: 1px solid #e2e8f0; text-align: right;">R$ ${juros.toFixed(2)}</td>
-                        <td style="padding: 6px; border-bottom: 1px solid #e2e8f0; text-align: right; font-weight: bold;">R$ ${totalParc.toFixed(2)}</td>
-                    </tr>
-                `;
-            });
-
-            let dataHoraGeracao = new Date().toLocaleString('pt-BR');
-
-            let htmlCompletoTermo = `
-                <div style="font-family: Arial, sans-serif; color: #1e293b; padding: 10px; font-size: 11px;">
-                    <div style="text-align: center; border-bottom: 2px solid #1e3a8a; padding-bottom: 10px; margin-bottom: 15px;">
-                        <h2 style="font-size: 14px; margin: 0; color: #1e3a8a; font-weight: bold;">${razaoSocial}</h2>
-                        <p style="font-size: 10px; margin: 2px 0;">CNPJ: ${cnpjInst}</p>
-                        <p style="font-size: 10px; margin: 0; color: #475569;">Endereço: ${enderecoInst}</p>
-                        <div style="margin-top: 6px; font-weight: bold; font-size: 10px; color: #2563eb;">EMITIDO POR: Setor Financeiro</div>
-                    </div>
-
-                    <h1 style="text-align: center; font-size: 13px; color: #1e3a8a; margin: 15px 0; text-transform: uppercase; font-weight: bold;">TERMO DE PROPOSTA DE ACORDO FINANCEIRO</h1>
-
-                    <div style="margin-bottom: 15px;">
-                        <h3 style="font-size: 12px; background: #f1f5f9; padding: 5px 8px; margin: 0 0 8px 0; color: #1e3a8a; border-left: 3px solid #1e3a8a;">1. IDENTIFICAÇÃO DO ALUNO</h3>
-                        <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
-                            <tr>
-                                <td style="padding: 3px 0;"><strong>Nome Completo:</strong> ${nomeCompleto}</td>
-                                <td style="padding: 3px 0;"><strong>CPF:</strong> ${cpf}</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 3px 0;"><strong>Endereço Completo:</strong> ${endereco}</td>
-                                <td style="padding: 3px 0;"><strong>Matrícula:</strong> ${matricula}</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 3px 0;"><strong>Data de Nascimento:</strong> ${dataNasc}</td>
-                                <td style="padding: 3px 0;"><strong>Sexo:</strong> ${sexo} | <strong>WhatsApp:</strong> ${whatsapp}</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 3px 0;" colspan="2"><strong>Curso e Turma:</strong> ${cursoExibir} | <strong>RG:</strong> ${rg}</td>
-                            </tr>
-                        </table>
-                    </div>
-
-                    <div style="margin-bottom: 15px;">
-                        <h3 style="font-size: 12px; background: #f1f5f9; padding: 5px 8px; margin: 0 0 8px 0; color: #1e3a8a; border-left: 3px solid #1e3a8a;">2. DEMONSTRATIVO DE DÉBITOS EM ATRASO (ORDEM CRONOLÓGICA)</h3>
-                        <p style="margin: 0 0 6px 0;">Quantidade total de parcelas em atraso: <strong>${faturasAtrasadasGlobal.length} parcela(s)</strong></p>
-                        <table style="width: 100%; border-collapse: collapse; font-size: 10px;">
-                            <thead>
-                                <tr style="background: #1e3a8a; color: white;">
-                                    <th style="padding: 6px; text-align: left;">Descrição</th>
-                                    <th style="padding: 6px; text-align: center;">Vencimento</th>
-                                    <th style="padding: 6px; text-align: center;">Atraso</th>
-                                    <th style="padding: 6px; text-align: right;">Valor Original</th>
-                                    <th style="padding: 6px; text-align: right;">Multa</th>
-                                    <th style="padding: 6px; text-align: right;">Juros (5% a.m.)</th>
-                                    <th style="padding: 6px; text-align: right;">Total</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${htmlTabelaDebitos}
-                                <tr style="background: #e2e8f0; font-weight: bold;">
-                                    <td colspan="3" style="padding: 6px; text-align: left;">VALOR TOTAL DA DÍVIDA / TOTAIS:</td>
-                                    <td style="padding: 6px; text-align: right;">R$ ${somaOrig.toFixed(2)}</td>
-                                    <td style="padding: 6px; text-align: right;">R$ ${somaMulta.toFixed(2)}</td>
-                                    <td style="padding: 6px; text-align: right;">R$ ${somaJuros.toFixed(2)}</td>
-                                    <td style="padding: 6px; text-align: right;">R$ ${somaTotal.toFixed(2)}</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div style="margin-bottom: 20px;">
-                        <h3 style="font-size: 12px; background: #f1f5f9; padding: 5px 8px; margin: 0 0 8px 0; color: #1e3a8a; border-left: 3px solid #1e3a8a;">3. OPÇÕES DE ACORDO DISPONÍVEIS PARA ESCOLHA</h3>
-                        
-                        <div style="margin-bottom: 8px; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px;">
-                            <strong>Opção A: Pagamento À Vista</strong><br>
-                            Desconto Aplicado: ${opcoesGeradas.avista.descJuros}% de Juros e ${opcoesGeradas.avista.descMulta}% de Multa.<br>
-                            <strong>Valor Total À Vista: R$ ${opcoesGeradas.avista.valorFinal.toFixed(2)}</strong>
-                        </div>
-
-                        <div style="margin-bottom: 8px; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px;">
-                            <strong>Opção B: Parcelado em ${opcoesGeradas.parcelado.infoExtra} de R$ ${(opcoesGeradas.parcelado.valorFinal / parseInt(opcoesGeradas.parcelado.infoExtra)).toFixed(2)}</strong><br>
-                            Desconto Aplicado: ${opcoesGeradas.parcelado.descJuros}% de Juros e ${opcoesGeradas.parcelado.descMulta}% de Multa.<br>
-                            <strong>Valor Total Parcelado: R$ ${opcoesGeradas.parcelado.valorFinal.toFixed(2)} (${opcoesGeradas.parcelado.infoExtra} de R$ ${(opcoesGeradas.parcelado.valorFinal / parseInt(opcoesGeradas.parcelado.infoExtra)).toFixed(2)})</strong>
-                        </div>
-
-                        <div style="margin-bottom: 8px; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px;">
-                            <strong>Opção C: Pagamento via Cartão de Crédito</strong><br>
-                            Desconto Aplicado: ${opcoesGeradas.cartao.descJuros}% de Juros e ${opcoesGeradas.cartao.descMulta}% de Multa.<br>
-                            <strong>Valor Total no Cartão: R$ ${opcoesGeradas.cartao.valorFinal.toFixed(2)}</strong>
-                        </div>
-                    </div>
-
-                    <div style="margin-top: 40px; display: flex; justify-content: space-between; text-align: center; font-size: 10px;">
-                        <div style="width: 45%; border-top: 1px solid #1e293b; padding-top: 4px;">
-                            ${razaoSocial}<br>Setor Financeiro / Tesouraria
-                        </div>
-                        <div style="width: 45%; border-top: 1px solid #1e293b; padding-top: 4px;">
-                            ${nomeCompleto}<br>Assinatura / Concordância do Aluno
-                        </div>
-                    </div>
-
-                    <div style="text-align: center; margin-top: 25px; font-size: 9px; color: #64748b;">
-                        Documento gerado eletronicamente pelo Aplicativo SE7 Financeiro Mobile em ${dataHoraGeracao}.
-                    </div>
-                </div>
-            `;
-
-            document.getElementById('conteudo-termo-Dinamico').innerHTML = htmlCompletoTermo;
-            document.getElementById('modal-visualizador-termo').style.display = 'flex';
-            selecionarAlunoNegociacao(alunoNegociacaoId);
-            renderizarNegociacoesAtivasGeral();
-        }
-
-        function fecharVisualizadorTermo() { document.getElementById('modal-visualizador-termo').style.display = 'none'; }
-
-        async function excluirPropostaRegistro(id) {
-            if (confirm("Excluir esta proposta?")) { await db.collection("financeLogs").doc(id).delete(); selecionarAlunoNegociacao(alunoNegociacaoId); }
-        }
-
-        function abrirModalFecharAcordoParaProposta(id) {
-            document.getElementById('modal-fechar-acordo').style.display = 'flex';
-            document.getElementById('container-opcoes-fechamento').innerHTML = `<label class="flex items-center gap-2"><input type="radio" name="opcao-escolhida-fechamento" value="avista" checked> Aprovar Acordo</label>`;
-            document.getElementById('btn-confirmar-fechamento').style.display = 'block';
-        }
-
-        function fecharModalFecharAcordo() { document.getElementById('modal-fechar-acordo').style.display = 'none'; }
-
-        async function executarFechamentoAcordoDefinitivo() {
-            fecharModalFecharAcordo();
-            alert("Acordo aprovado e efetivado com sucesso!");
-            selecionarAlunoNegociacao(alunoNegociacaoId);
-        }
-
-        // --- FUNÇÕES DE EDIÇÃO DA MENSALIDADE ---
-        function abrirModalEditarMensalidadeFinanceiro(id) {
-            const fatura = financeLogs.find(f => f.id === id);
+        // --- FUNÇÕES DE EDIÇÃO DA MENSALIDADE SOLICITADA ---
+        function abrirModalEditarMensalidadeFinanceiro(financeLogId) {
+            const fatura = financeLogs.find(f => f.id === financeLogId);
             if (!fatura) return;
 
             document.getElementById('edit-cobranca-id').value = fatura.id;
-            let venc = fatura.date || fatura.vencimento || '';
-            if (venc.includes('/')) { let p = venc.split('/'); venc = `${p[2]}-${p[1]}-${p[0]}`; }
-            document.getElementById('edit-cobranca-data').value = venc;
+            document.getElementById('edit-cobranca-descricao').value = fatura.description || fatura.descricao || '';
+            
+            let vencimentoOriginal = fatura.date || fatura.vencimento || '';
+            let dataFormatada = '';
+            if (vencimentoOriginal.includes('/')) {
+                let partes = vencimentoOriginal.split('/');
+                if (partes.length === 3) dataFormatada = `${partes[2]}-${partes[1]}-${partes[0]}`;
+            } else {
+                dataFormatada = vencimentoOriginal;
+            }
+
+            document.getElementById('edit-cobranca-data').value = dataFormatada || new Date().toISOString().split('T')[0];
             document.getElementById('edit-cobranca-valor').value = fatura.amount || fatura.valor || '';
+
             document.getElementById('modal-editar-cobranca').style.display = 'flex';
         }
 
-        function fecharModalEdicao() { document.getElementById('modal-editar-cobranca').style.display = 'none'; }
+        function fecharModalEdicao() {
+            document.getElementById('modal-editar-cobranca').style.display = 'none';
+        }
 
         async function salvarEdicaoMensalidade() {
             const id = document.getElementById('edit-cobranca-id').value;
-            const dataInput = document.getElementById('edit-cobranca-data').value;
-            const valor = document.getElementById('edit-cobranca-valor').value.trim();
+            const novaDescricao = document.getElementById('edit-cobranca-descricao').value.trim();
+            const novaDataInput = document.getElementById('edit-cobranca-data').value;
+            const novoValor = document.getElementById('edit-cobranca-valor').value.trim();
 
-            let p = dataInput.split('-');
-            let dataFormatada = `${p[2]}/${p[1]}/${p[0]}`;
+            if (!novaDescricao || !novaDataInput || !novoValor) {
+                return alert("Preencha todos os campos da mensalidade.");
+            }
+
+            let partes = novaDataInput.split('-');
+            let novaDataFormatada = `${partes[2]}/${partes[1]}/${partes[0]}`;
 
             try {
                 await db.collection("financeLogs").doc(id).update({
-                    date: dataFormatada,
-                    vencimento: dataFormatada,
-                    amount: valor,
-                    valor: valor
+                    description: novaDescricao,
+                    descricao: novaDescricao,
+                    date: novaDataFormatada,
+                    vencimento: novaDataFormatada,
+                    amount: novoValor,
+                    valor: novoValor
                 });
-                alert("Mensalidade atualizada e sincronizada com sucesso!");
+
+                alert("Mensalidade editada e sincronizada com sucesso na Matriz!");
                 fecharModalEdicao();
                 renderizarFaturasDoAlunoSelecionado();
-            } catch (e) { alert("Erro: " + e.message); }
+            } catch (e) {
+                alert("Erro ao atualizar mensalidade: " + e.message);
+            }
         }
 
-        async function excluirFaturaRegistro(id) {
-            if (confirm("Deseja realmente excluir esta fatura?")) { await db.collection("financeLogs").doc(id).delete(); }
+        async function excluirFaturaRegistro(faturaId) {
+            if (!confirm("Deseja realmente excluir esta fatura?")) return;
+            try {
+                await db.collection("financeLogs").doc(faturaId).delete();
+                alert("Fatura excluída com sucesso!");
+            } catch (e) { alert(e.message); }
         }
 
-        async function darBaixaApp(id) {
-            let forma = document.getElementById(`forma-pagamento-${id}`).value;
-            let dataRaw = document.getElementById(`data-pagamento-${id}`).value;
-            let p = dataRaw.split('-');
-            let dataFormatada = `${p[2]}/${p[1]}/${p[0]}`;
+        async function darBaixaApp(financeLogId) {
+            let forma = document.getElementById(`forma-pagamento-${financeLogId}`).value;
+            let dataRaw = document.getElementById(`data-pagamento-${financeLogId}`).value;
+            let partes = dataRaw.split('-');
+            let dataFormatada = `${partes[2]}/${partes[1]}/${partes[0]}`;
 
             try {
-                await db.collection("financeLogs").doc(id).update({ status: "PAGO", dataPagamento: dataFormatada, formaPagamento: forma });
+                await db.collection("financeLogs").doc(financeLogId).update({
+                    status: "PAGO",
+                    dataPagamento: dataFormatada,
+                    formaPagamento: forma
+                });
                 alert("Baixa realizada com sucesso!");
             } catch (e) { alert(e.message); }
         }
 
-        async function estornarBaixaApp(id) {
+        async function estornarBaixaApp(financeLogId) {
             try {
-                await db.collection("financeLogs").doc(id).update({ status: "PENDENTE", dataPagamento: firebase.firestore.FieldValue.delete(), formaPagamento: firebase.firestore.FieldValue.delete() });
+                await db.collection("financeLogs").doc(financeLogId).update({
+                    status: "PENDENTE",
+                    dataPagamento: firebase.firestore.FieldValue.delete(),
+                    formaPagamento: firebase.firestore.FieldValue.delete()
+                });
                 alert("Pagamento estornado!");
             } catch (e) { alert(e.message); }
         }
@@ -1383,16 +916,56 @@
             const container = document.getElementById('lista-novos-alunos-container');
             const badgeAlerta = document.getElementById('badge-alerta-novos');
             if (!container) return;
-            const novos = students.filter(s => !novosAlunosLidos.includes(s.id));
-            badgeAlerta.style.display = novos.length > 0 ? 'flex' : 'none';
-            container.innerHTML = novos.length === 0 ? `<div class="bg-white p-6 rounded-3xl text-center text-xs text-slate-400 border">Nenhum aluno novo.</div>` :
-                novos.map(s => `<div onclick="abrirDetalhesAluno('${s.id}', 'novos')" class="bg-white p-3.5 rounded-2xl border cursor-pointer"><strong>${s.fullname || s.name}</strong></div>`).join('');
+
+            const novosMatriculados = students.filter(s => !novosAlunosLidos.includes(s.id));
+            badgeAlerta.style.display = novosMatriculados.length > 0 ? 'flex' : 'none';
+
+            if (novosMatriculados.length === 0) {
+                container.innerHTML = `<div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">Nenhum aluno novo pendente.</div>`;
+                return;
+            }
+
+            container.innerHTML = novosMatriculados.map(s => `
+                <div onclick="marcarComoLidoEVerAluno('${s.id}')" class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl shadow-sm border-2 border-blue-500/40 flex justify-between items-center cursor-pointer">
+                    <div>
+                        <strong class="text-xs font-bold text-slate-900 dark:text-white">${s.fullname || s.name}</strong>
+                        <p class="text-[10px] text-slate-400">CPF: ${s.cpf || '---'}</p>
+                    </div>
+                    <span class="px-2 py-1 bg-blue-600 text-white text-[10px] font-bold rounded-lg shadow">Ver</span>
+                </div>
+            `).join('');
+        }
+
+        function marcarComoLidoEVerAluno(id) {
+            if (!novosAlunosLidos.includes(id)) {
+                novosAlunosLidos.push(id);
+                localStorage.setItem('novos_alunos_lidos', JSON.stringify(novosAlunosLidos));
+            }
+            renderizarNovosAlunos();
+            abrirDetalhesAluno(id, 'novos');
         }
 
         function abrirDetalhesAluno(id, origem) {
-            alunoSelecionadoId = id; abaOrigemRetorno = origem;
+            alunoSelecionadoId = id;
+            abaOrigemRetorno = origem;
             const aluno = studentsMap[id];
-            document.getElementById('card-dados-aluno').innerHTML = `<p><strong>Nome:</strong> ${aluno.fullname || aluno.name}</p><p><strong>CPF:</strong> ${aluno.cpf || '---'}</p>`;
+            if (!aluno) return;
+
+            document.getElementById('card-dados-aluno').innerHTML = `
+                <div class="space-y-4">
+                    <div>
+                        <h3 class="text-xs font-bold uppercase text-blue-600 border-b pb-1 mb-2">Dados Pessoais</h3>
+                        <p><strong>Nome:</strong> ${aluno.fullname || aluno.name}</p>
+                        <p><strong>CPF:</strong> ${aluno.cpf || '---'}</p>
+                        <p><strong>WhatsApp:</strong> ${aluno.whatsapp || aluno.telefone || '---'}</p>
+                    </div>
+                    <div>
+                        <h3 class="text-xs font-bold uppercase text-blue-600 border-b pb-1 mb-2">Vínculo</h3>
+                        <p><strong>Matrícula:</strong> ${aluno.code || aluno.matricula || 'S/N'}</p>
+                        <p><strong>Curso:</strong> ${aluno.course || aluno.curso || '---'}</p>
+                    </div>
+                </div>
+            `;
             mudarAbaApp('detalhes');
         }
 
@@ -1402,10 +975,11 @@
             ['tab-alunos', 'tab-novos-alunos', 'tab-financeiro', 'tab-negociacoes', 'tab-detalhes-aluno'].forEach(id => {
                 document.getElementById(id).style.display = 'none';
             });
+
             if (aba === 'alunos') document.getElementById('tab-alunos').style.display = 'block';
             else if (aba === 'novos') document.getElementById('tab-novos-alunos').style.display = 'block';
             else if (aba === 'financeiro') document.getElementById('tab-financeiro').style.display = 'block';
-            else if (aba === 'negociacoes') { document.getElementById('tab-negociacoes').style.display = 'block'; renderizarNegociacoesAtivasGeral(); }
+            else if (aba === 'negociacoes') document.getElementById('tab-negociacoes').style.display = 'block';
             else if (aba === 'detalhes') document.getElementById('tab-detalhes-aluno').style.display = 'flex';
         }
     </script>
