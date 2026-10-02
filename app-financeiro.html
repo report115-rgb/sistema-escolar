@@ -48,17 +48,14 @@
 
         /* --- CONFIGURAÇÃO DE IMPRESSÃO PROFISSIONAL (WEBVIEW / MOBILE) --- */
         @media print {
-            /* Força cores reais e fundos dos cabeçalhos na impressão */
             * {
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
                 color-adjust: exact !important;
             }
-            /* Oculta tudo na página principal do app */
             body > *:not(#modal-visualizador-termo) {
                 display: none !important;
             }
-            /* Oculta o modal de fundo escuro e os botões de ação superior */
             #modal-visualizador-termo {
                 position: absolute !important;
                 inset: 0 !important;
@@ -67,7 +64,7 @@
                 backdrop-filter: none !important;
             }
             #modal-visualizador-termo > div:first-child {
-                display: none !important; /* Esconde a barra de botões Fechar/Imprimir */
+                display: none !important;
             }
             #modal-visualizador-termo > div:nth-child(2) {
                 padding: 0 !important;
@@ -112,11 +109,11 @@
 
         <div class="text-center text-[10px] text-blue-300 pb-2">
             <div>Sistema SE7 de Gestão Acadêmica</div>
-            <div>v1.6.1 &bull; Setor Financeiro</div>
+            <div>v1.6.2 &bull; Setor Financeiro</div>
         </div>
     </div>
 
-    <!-- MODAL DE EDIÇÃO COM CALENDÁRIO -->
+    <!-- MODAL DE EDIÇÃO DE MENSALIDADE (ATUALIZADO COM DESCRIÇÃO/NÚMERO) -->
     <div id="modal-editar-cobranca" class="fixed inset-0 z-[4000] flex items-center justify-center bg-black/70 p-4" style="display: none;">
         <div class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-3xl shadow-2xl max-w-sm w-full p-6 space-y-4 border border-slate-200 dark:border-slate-800">
             <div class="flex justify-between items-center border-b pb-3 border-slate-200 dark:border-slate-800">
@@ -132,12 +129,17 @@
 
             <div class="space-y-3 text-xs">
                 <div>
-                    <label class="block font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">Nova Data de Vencimento</label>
+                    <label class="block font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">Descrição / Número (Ex: Mensalidade 11/17)</label>
+                    <input type="text" id="edit-cobranca-descricao" placeholder="Ex: Mensalidade 11/17" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-600">
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">Data de Vencimento</label>
                     <input type="date" id="edit-cobranca-data" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-600">
                 </div>
 
                 <div>
-                    <label class="block font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">Novo Valor (R$)</label>
+                    <label class="block font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">Valor (R$)</label>
                     <input type="text" id="edit-cobranca-valor" placeholder="0,00" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-600">
                 </div>
             </div>
@@ -147,7 +149,7 @@
                     Cancelar
                 </button>
                 <button type="button" onclick="salvarEdicaoMensalidade()" class="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-xs shadow">
-                    Salvar
+                    Salvar na Matriz
                 </button>
             </div>
         </div>
@@ -213,7 +215,6 @@
                         <input type="number" id="desc-multa-parcelado" value="50" min="0" max="100" oninput="atualizarPreviaParcelasModal()" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white">
                     </div>
                     
-                    <!-- PRÉVIA CALCULADA DO VALOR DE CADA PARCELA -->
                     <div class="p-3 bg-emerald-100/60 dark:bg-emerald-950/50 rounded-xl border border-emerald-300 dark:border-emerald-800 text-xs text-emerald-900 dark:text-emerald-200 flex justify-between items-center">
                         <span>Valor de cada parcela:</span>
                         <strong id="previa-valor-parcela" class="text-sm">R$ 0,00</strong>
@@ -240,7 +241,6 @@
                     </button>
                 </div>
 
-                <!-- LISTA DAS OPÇÕES CONFIGURADAS -->
                 <div class="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-800">
                     <span class="font-bold uppercase text-[10px] text-slate-400">Modalidades Configuradas:</span>
                     <div id="lista-opcoes-geradas-modal" class="space-y-2">
@@ -276,10 +276,7 @@
 
             <div class="space-y-4 text-xs">
                 <p class="text-slate-500">O aluno analisou e aprovou a proposta? Selecione abaixo qual opção ele escolheu para fechar o acordo de vez:</p>
-                
-                <div id="container-opcoes-fechamento" class="space-y-2">
-                    <!-- Preenchido via script -->
-                </div>
+                <div id="container-opcoes-fechamento" class="space-y-2"></div>
             </div>
 
             <div class="flex gap-2 pt-2">
@@ -293,9 +290,8 @@
         </div>
     </div>
 
-    <!-- MODAL INTEGRADO PARA VISUALIZAÇÃO DO TERMO (COMPATÍVEL COM WEBVIEW) -->
+    <!-- MODAL INTEGRADO PARA VISUALIZAÇÃO DO TERMO -->
     <div id="modal-visualizador-termo" class="fixed inset-0 z-[6000] flex flex-col bg-slate-900/90 backdrop-blur-md p-2 sm:p-6" style="display: none;">
-        <!-- Barra Superior Fixa do Modal com Botão de Fechar Perfeito para Mobile/WebView -->
         <div class="bg-white dark:bg-slate-900 px-4 py-3 rounded-2xl shadow-xl flex justify-between items-center mb-2 shrink-0 border border-slate-200 dark:border-slate-800">
             <div class="flex items-center gap-2">
                 <div class="w-8 h-8 bg-blue-600 text-white rounded-xl flex items-center justify-center text-xs">
@@ -307,28 +303,22 @@
                 </div>
             </div>
             <div class="flex items-center gap-2">
-                <!-- Botão de Imprimir Direto -->
                 <button type="button" onclick="window.print()" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow transition flex items-center gap-1.5">
                     <i class="fa-solid fa-print"></i> <span class="hidden sm:inline">Imprimir</span>
                 </button>
-                <!-- Botão de Fechar / Voltar (Funciona 100% no WebView) -->
                 <button type="button" onclick="fecharVisualizadorTermo()" class="px-3.5 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:text-white text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl shadow transition flex items-center gap-1.5">
                     <i class="fa-solid fa-xmark"></i> Fechar
                 </button>
             </div>
         </div>
 
-        <!-- Área de Exibição do Termo -->
         <div class="flex-1 bg-white rounded-2xl shadow-2xl overflow-y-auto p-4 sm:p-8">
-            <div id="conteudo-termo-Dinamico" class="max-w-3xl mx-auto">
-                <!-- Inserido dinamicamente via script -->
-            </div>
+            <div id="conteudo-termo-Dinamico" class="max-w-3xl mx-auto"></div>
         </div>
     </div>
 
     <!-- APLICATIVO PRINCIPAL (PAINEL FINANCEIRO) -->
     <div id="main-app" class="app-screen fixed inset-0 z-40 flex flex-col bg-slate-100 dark:bg-slate-950" style="display: none;">
-        <!-- Cabeçalho Fixo -->
         <header class="bg-blue-900 text-white p-4 flex justify-between items-center shadow-md shrink-0 z-20">
             <div class="flex items-center space-x-3">
                 <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center font-bold text-base shadow">
@@ -340,18 +330,15 @@
                 </div>
             </div>
             <div class="flex items-center space-x-2">
-                <!-- Botão de Atualizar Tela (F5 / Recarregamento Completo) -->
                 <button type="button" onclick="atualizarTelaCompleta()" class="w-9 h-9 bg-emerald-600 hover:bg-emerald-700 text-xs font-semibold rounded-xl shadow flex items-center justify-center transition" title="Atualizar Sistema">
                     <i class="fa-solid fa-rotate"></i>
                 </button>
-                <!-- Botão de Sair -->
                 <button type="button" onclick="fazerLogout()" class="w-9 h-9 bg-red-600 hover:bg-red-700 text-xs font-semibold rounded-xl shadow flex items-center justify-center transition" title="Sair">
                     <i class="fa-solid fa-power-off"></i>
                 </button>
             </div>
         </header>
 
-        <!-- Conteúdo Principal com Rolagem -->
         <main class="flex-1 overflow-y-auto p-4 space-y-4 pb-24">
             
             <!-- ABA 1: GESTÃO DE ALUNOS -->
@@ -389,12 +376,10 @@
                     <h2 class="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
                         <i class="fa-solid fa-user-plus text-blue-600"></i> Novos Alunos Matriculados
                     </h2>
-                    <p class="text-[11px] text-slate-500">Lista geral de alunos recém-matriculados aguardando conferência para emissão de boletos. Ao abrir o cadastro de um aluno, ele sairá desta lista automaticamente.</p>
+                    <p class="text-[11px] text-slate-500">Lista geral de alunos recém-matriculados aguardando conferência para emissão de boletos.</p>
                 </div>
 
-                <div id="lista-novos-alunos-container" class="space-y-2">
-                    <!-- Preenchido dinamicamente -->
-                </div>
+                <div id="lista-novos-alunos-container" class="space-y-2"></div>
             </div>
 
             <!-- ABA 3: FATURAS E COBRANÇAS -->
@@ -432,7 +417,7 @@
                     <h2 class="font-bold text-sm text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
                         <i class="fa-solid fa-handshake-angle"></i> Aba de Negociações
                     </h2>
-                    <p class="text-[11px] text-slate-500">Alunos com negociações em andamento ou aprovadas aparecem listados abaixo automaticamente. Você também pode buscar por nome ou CPF para iniciar um novo acordo.</p>
+                    <p class="text-[11px] text-slate-500">Alunos com negociações em andamento ou aprovadas.</p>
                     
                     <div class="relative">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
@@ -442,23 +427,13 @@
                     </div>
                 </div>
 
-                <!-- LISTA AUTOMÁTICA DE NEGOCIAÇÕES EM ANDAMENTO / APROVADAS -->
-                <div id="lista-negociacoes-ativas-container" class="space-y-2">
-                    <!-- Preenchido via script ao abrir a aba -->
-                </div>
-
-                <!-- Resultados da busca para negociação (quando pesquisar) -->
+                <div id="lista-negociacoes-ativas-container" class="space-y-2"></div>
                 <div id="lista-busca-negociacao-container" class="space-y-2"></div>
-
-                <!-- Painel de Cálculo e Faturas Atrasadas do Aluno Selecionado para Acordo -->
-                <div id="painel-negociacao-aluno" class="space-y-3" style="display: none;">
-                    <!-- Preenchido via script -->
-                </div>
+                <div id="painel-negociacao-aluno" class="space-y-3" style="display: none;"></div>
             </div>
 
-            <!-- TELA DE DETALHES DO ALUNO (FICHA CADASTRAL COMPLETA - COM CABEÇALHO FIXO) -->
+            <!-- FICHA CADASTRAL DO ALUNO -->
             <div id="tab-detalhes-aluno" class="flex flex-col h-full tab-pane" style="display: none;">
-                <!-- Cabeçalho Fixo da Ficha -->
                 <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 mb-3 shrink-0 flex justify-between items-center">
                     <h2 class="font-bold text-sm text-blue-600 dark:text-blue-400 flex items-center gap-2">
                         <i class="fa-solid fa-id-card"></i> Ficha Cadastral do Aluno
@@ -468,17 +443,13 @@
                     </button>
                 </div>
 
-                <!-- Conteúdo com rolagem independente -->
                 <div class="flex-1 overflow-y-auto space-y-3 pb-6">
-                    <div id="card-dados-aluno" class="bg-white dark:bg-slate-900 p-5 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 space-y-4 text-xs">
-                        <!-- Informações completas preenchidas via script -->
-                    </div>
+                    <div id="card-dados-aluno" class="bg-white dark:bg-slate-900 p-5 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 space-y-4 text-xs"></div>
                 </div>
             </div>
 
         </main>
 
-        <!-- Menu Inferior Fixo Estilo Aluno -->
         <nav class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-2 py-2 flex justify-around items-center absolute bottom-0 left-0 right-0 shadow-lg z-30">
             <button onclick="mudarAbaApp('alunos')" id="nav-btn-alunos" class="flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition">
                 <i class="fa-solid fa-users text-base mb-0.5"></i> Alunos
@@ -545,12 +516,7 @@
         let faturasAtrasadasGlobal = [];
         let abaOrigemRetorno = 'alunos';
 
-        let opcoesGeradas = {
-            avista: null,
-            parcelado: null,
-            cartao: null
-        };
-
+        let opcoesGeradas = { avista: null, parcelado: null, cartao: null };
         let novosAlunosLidos = JSON.parse(localStorage.getItem('novos_alunos_lidos') || '[]');
 
         window.addEventListener('DOMContentLoaded', () => {
@@ -564,9 +530,7 @@
             }
         });
 
-        function atualizarTelaCompleta() {
-            location.reload();
-        }
+        function atualizarTelaCompleta() { location.reload(); }
 
         async function fazerLogin() {
             const userInput = document.getElementById('login-user').value.trim().toLowerCase();
@@ -579,52 +543,36 @@
             btnEntrar.disabled = true;
 
             let userFound = null;
-
             const padraoEncontrado = usuariosPadrao.find(u => u.email.toLowerCase() === userInput && u.pass === passInput);
             if (padraoEncontrado) {
                 userFound = padraoEncontrado;
             } else {
                 try {
                     const snapshot = await db.collection("systemUsers").get();
-                    let usuarioEncontradoNuvem = null;
-
                     snapshot.forEach(doc => {
                         const dados = doc.data();
-                        const emailBanco = (dados.email || "").trim().toLowerCase();
-                        
-                        if (emailBanco === userInput) {
-                            usuarioEncontradoNuvem = dados;
+                        if ((dados.email || "").trim().toLowerCase() === userInput) {
+                            if (String(dados.pass || dados.senha || "").trim() === passInput) {
+                                userFound = {
+                                    nome: dados.nome || dados.name || "Funcionário",
+                                    email: dados.email,
+                                    perfil: dados.perfil || "financeiro"
+                                };
+                            }
                         }
                     });
-
-                    if (usuarioEncontradoNuvem) {
-                        const senhaCadastrada = String(usuarioEncontradoNuvem.pass || usuarioEncontradoNuvem.senha || usuarioEncontradoNuvem.password || "").trim();
-                        if (senhaCadastrada === passInput) {
-                            userFound = {
-                                nome: usuarioEncontradoNuvem.nome || usuarioEncontradoNuvem.name || "Funcionário",
-                                email: usuarioEncontradoNuvem.email,
-                                perfil: usuarioEncontradoNuvem.perfil || "financeiro"
-                            };
-                        }
-                    }
-                } catch (e) {
-                    console.error("Erro ao validar login no Firebase:", e);
-                }
+                } catch (e) { console.error(e); }
             }
 
             btnEntrar.textContent = "Entrar no App";
             btnEntrar.disabled = false;
 
-            if (!userFound) {
-                return alert("E-mail ou senha inválidos! Verifique suas credenciais no sistema matriz.");
-            }
+            if (!userFound) return alert("E-mail ou senha inválidos!");
 
             sessionStorage.setItem('app_financeiro_user', JSON.stringify(userFound));
-            
-            const loginScreen = document.getElementById('login-modal');
-            loginScreen.classList.add('screen-exit');
+            document.getElementById('login-modal').classList.add('screen-exit');
             setTimeout(() => {
-                loginScreen.style.display = 'none';
+                document.getElementById('login-modal').style.display = 'none';
                 const mainApp = document.getElementById('main-app');
                 mainApp.style.display = 'flex';
                 mainApp.classList.add('screen-transition');
@@ -646,7 +594,7 @@
                 students = [];
                 studentsMap = {};
                 snapshot.forEach(doc => {
-                    const data = { id: doc.id, collections: 'students', ...doc.data() };
+                    const data = { id: doc.id, ...doc.data() };
                     students.push(data);
                     studentsMap[doc.id] = data;
                 });
@@ -656,8 +604,6 @@
                 atualizarSeletorCursosUI();
                 renderizarNegociacoesAtivasGeral();
                 if (alunoNegociacaoId) selecionarAlunoNegociacao(alunoNegociacaoId);
-            }, error => {
-                console.error("Erro ao carregar alunos:", error);
             });
 
             db.collection("financeLogs").onSnapshot(snapshot => {
@@ -669,91 +615,55 @@
                 if (alunoSelecionadoId && document.getElementById('tab-detalhes-aluno').style.display === 'flex') {
                     abrirDetalhesAluno(alunoSelecionadoId, abaOrigemRetorno);
                 }
-            }, error => {
-                console.error("Erro ao carregar faturas:", error);
             });
         }
 
         async function carregarDadosInstituicao() {
             try {
-                // Caminho exato solicitado: config -> institution
-                const docRef = db.collection("config").doc("institution");
-                const docSnap = await docRef.get();
-                
+                const docSnap = await db.collection("config").doc("institution").get();
                 if (docSnap.exists) {
                     const dados = docSnap.data();
                     institutionData = {
                         name: dados.name || dados.nome || institutionData.name,
-                        razaoSocial: dados.razao || dados.razão || dados.razaoSocial || dados.name || institutionData.razaoSocial,
+                        razaoSocial: dados.razao || dados.razaoSocial || dados.name || institutionData.razaoSocial,
                         cnpj: dados.cnpj || institutionData.cnpj,
-                        address: dados.endereço || dados.address || dados.endereco || institutionData.address,
-                        logo: dados.logo || dados.logoUrl || dados.logomarca || institutionData.logo
+                        address: dados.endereço || dados.address || institutionData.address,
+                        logo: dados.logo || dados.logoUrl || institutionData.logo
                     };
-                } else {
-                    const colecoesPossiveis = ["institution", "settings", "empresa", "escola", "dadosInstituicao"];
-                    for (let col of colecoesPossiveis) {
-                        const snap = await db.collection(col).get();
-                        if (!snap.empty) {
-                            const dadosDoc = snap.docs[0].data();
-                            institutionData = {
-                                name: dadosDoc.name || dadosDoc.nome || institutionData.name,
-                                razaoSocial: dadosDoc.rasal || dadosDoc.razão || dadosDoc.razaoSocial || dadosDoc.name || institutionData.razaoSocial,
-                                cnpj: dadosDoc.cnpj || dadosDoc.documento || institutionData.cnpj,
-                                address: dadosDoc.endereço || dadosDoc.address || dadosDoc.endereco || institutionData.address,
-                                logo: dadosDoc.logo || dadosDoc.logoUrl || dadosDoc.logomarca || institutionData.logo
-                            };
-                            break;
-                        }
-                    }
                 }
-            } catch (e) {
-                console.warn("Erro ao carregar dados institucionais do Firebase:", e);
-            }
+            } catch (e) { console.warn(e); }
         }
 
         async function carregarCursosTurmasMatriz() {
-            coursesMap = {};
-            classesMap = {};
-
+            coursesMap = {}; classesMap = {};
             try {
                 const cSnap = await db.collection("courses").get();
                 cSnap.forEach(doc => {
                     const d = doc.data();
                     const nome = d.name || d.nome || d.curso;
-                    if (nome) {
-                        coursesMap[doc.id] = String(nome).trim();
-                        coursesMap[normalizarTexto(nome)] = String(nome).trim();
-                    }
+                    if (nome) { coursesMap[doc.id] = String(nome).trim(); coursesMap[normalizarTexto(nome)] = String(nome).trim(); }
                 });
-            } catch (e) { console.warn("Erro ao carregar courses:", e); }
+            } catch (e) {}
 
             try {
                 const tSnap = await db.collection("classes").get();
                 tSnap.forEach(doc => {
                     const d = doc.data();
                     const nome = d.name || d.nome || d.turma;
-                    if (nome) {
-                        classesMap[doc.id] = String(nome).trim();
-                        classesMap[normalizarTexto(nome)] = String(nome).trim();
-                    }
+                    if (nome) { classesMap[doc.id] = String(nome).trim(); classesMap[normalizarTexto(nome)] = String(nome).trim(); }
                 });
-            } catch (e) { console.warn("Erro ao carregar classes:", e); }
-
+            } catch (e) {}
             atualizarSeletorCursosUI();
         }
 
         function atualizarSeletorCursosUI() {
             const selectCurso = document.getElementById('select-filtro-curso');
             const selectFinCurso = document.getElementById('select-fin-curso');
-            
             let listaNomesUnicos = new Set(Object.values(coursesMap));
 
             students.forEach(s => {
-                const c = s.course || s.curso || s.turma || s.nomeCurso || s.courseName || s.courseId;
-                if (c) {
-                    const nomeFinal = coursesMap[c] || coursesMap[normalizarTexto(c)] || String(c).trim();
-                    listaNomesUnicos.add(nomeFinal);
-                }
+                const c = s.course || s.curso || s.turma || s.courseName;
+                if (c) listaNomesUnicos.add(coursesMap[c] || coursesMap[normalizarTexto(c)] || String(c).trim());
             });
 
             const cursosOrdenados = Array.from(listaNomesUnicos).sort();
@@ -766,18 +676,13 @@
 
         function normalizarTexto(texto) {
             if (!texto) return '';
-            return String(texto)
-                .toLowerCase()
-                .normalize("NFD")
-                .replace(/[\u0300-\u036f]/g, "")
-                .trim();
+            return String(texto).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
         }
 
         function renderizarListaAlunos() {
             const container = document.getElementById('lista-alunos-container');
             const termo = normalizarTexto(document.getElementById('input-busca-aluno').value);
             const cursoSelecionado = document.getElementById('select-filtro-curso').value;
-            
             if (!container) return;
 
             if (!cursoSelecionado) {
@@ -785,90 +690,52 @@
                 return;
             }
 
-            const cursoSelecionadoNorm = normalizarTexto(cursoSelecionado);
-
             const filtrados = students.filter(s => {
                 const nomeAluno = normalizarTexto(s.fullname || s.name || '');
                 const cpfAluno = normalizarTexto(s.cpf || '');
-                
-                const rawCurso = s.course || s.curso || s.turma || s.nomeCurso || s.courseName || s.courseId || '';
-                const nomeCursoMapeado = coursesMap[rawCurso] || coursesMap[normalizarTexto(rawCurso)] || String(rawCurso);
-                const cursoAlunoNorm = normalizarTexto(nomeCursoMapeado);
-
-                const bateTexto = nomeAluno.includes(termo) || cpfAluno.includes(termo);
-                const bateCurso = (cursoAlunoNorm === cursoSelecionadoNorm || cursoAlunoNorm.includes(cursoSelecionadoNorm));
-
-                return bateTexto && bateCurso;
+                const rawCurso = s.course || s.curso || s.turma || s.courseName || '';
+                const cursoAlunoNorm = normalizarTexto(coursesMap[rawCurso] || coursesMap[normalizarTexto(rawCurso)] || String(rawCurso));
+                return (nomeAluno.includes(termo) || cpfAluno.includes(termo)) && cursoAlunoNorm.includes(normalizarTexto(cursoSelecionado));
             });
 
             if (filtrados.length === 0) {
-                container.innerHTML = `<div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">Nenhum aluno encontrado para este curso.</div>`;
+                container.innerHTML = `<div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">Nenhum aluno encontrado.</div>`;
                 return;
             }
 
-            container.innerHTML = '';
-            filtrados.forEach(s => {
-                const rawCurso = s.course || s.curso || s.turma || s.nomeCurso || s.courseName || s.courseId || 'Não informado';
-                const cursoExibir = coursesMap[rawCurso] || coursesMap[normalizarTexto(rawCurso)] || String(rawCurso);
-
-                container.innerHTML += `
-                    <div onclick="abrirDetalhesAluno('${s.id}', 'alunos')" class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 flex justify-between items-center active:scale-98 transition cursor-pointer">
-                        <div>
-                            <strong class="text-xs font-bold text-slate-900 dark:text-white">${s.fullname || s.name || 'Sem Nome'}</strong>
-                            <p class="text-[10px] text-slate-400">Curso: ${cursoExibir} &bull; Matrícula: ${s.code || s.matricula || 'S/N'}</p>
-                        </div>
-                        <div class="w-8 h-8 bg-blue-50 dark:bg-slate-800 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center text-xs">
-                            <i class="fa-solid fa-chevron-right"></i>
-                        </div>
+            container.innerHTML = filtrados.map(s => `
+                <div onclick="abrirDetalhesAluno('${s.id}', 'alunos')" class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 flex justify-between items-center active:scale-98 transition cursor-pointer">
+                    <div>
+                        <strong class="text-xs font-bold text-slate-900 dark:text-white">${s.fullname || s.name || 'Sem Nome'}</strong>
+                        <p class="text-[10px] text-slate-400">Matrícula: ${s.code || s.matricula || 'S/N'}</p>
                     </div>
-                `;
-            });
+                    <div class="w-8 h-8 bg-blue-50 dark:bg-slate-800 text-blue-600 rounded-xl flex items-center justify-center text-xs">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </div>
+                </div>
+            `).join('');
         }
 
         function atualizarSelectAlunosFinanceiro() {
             const cursoSelecionado = document.getElementById('select-fin-curso').value;
             const selectAluno = document.getElementById('select-fin-aluno');
-            const container = document.getElementById('lista-faturas-aluno-container');
-            
             if (!selectAluno) return;
 
             selectAluno.disabled = false;
-            const cursoSelecionadoNorm = normalizarTexto(cursoSelecionado);
-
             const alunosDoCurso = students.filter(s => {
-                const rawCurso = s.course || s.curso || s.turma || s.nomeCurso || s.courseName || s.courseId || '';
-                const nomeCursoMapeado = coursesMap[rawCurso] || coursesMap[normalizarTexto(rawCurso)] || String(rawCurso);
-                const cursoAlunoNorm = normalizarTexto(nomeCursoMapeado);
-                return cursoAlunoNorm === cursoSelecionadoNorm || cursoAlunoNorm.includes(cursoSelecionadoNorm);
+                const rawCurso = s.course || s.curso || s.turma || s.courseName || '';
+                const nomeCurso = coursesMap[rawCurso] || coursesMap[normalizarTexto(rawCurso)] || String(rawCurso);
+                return normalizarTexto(nomeCurso).includes(normalizarTexto(cursoSelecionado));
             });
-
-            if (alunosDoCurso.length === 0) {
-                selectAluno.innerHTML = `<option value="" disabled selected>Nenhum aluno neste curso</option>`;
-                container.innerHTML = `<div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">Nenhum aluno encontrado para este curso.</div>`;
-                return;
-            }
 
             selectAluno.innerHTML = `<option value="" disabled selected>Selecione um aluno...</option>` +
                 alunosDoCurso.map(a => `<option value="${a.id}">${a.fullname || a.name || 'Sem Nome'}</option>`).join('');
-
-            container.innerHTML = `<div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">Selecione um curso e um aluno acima para visualizar as faturas.</div>`;
         }
 
         function parseDataParaOrdem(dataStr) {
             if (!dataStr) return new Date(0);
             let s = String(dataStr).trim();
-            if (s.includes('/')) {
-                let p = s.split('/');
-                if (p.length === 3) {
-                    return new Date(`${p[2]}-${p[1]}-${p[0]}`);
-                }
-            }
-            if (s.includes('-')) {
-                let p = s.split('-');
-                if (p.length === 3) {
-                    return new Date(`${p[0]}-${p[1]}-${p[2]}`);
-                }
-            }
+            if (s.includes('/')) { let p = s.split('/'); if (p.length === 3) return new Date(`${p[2]}-${p[1]}-${p[0]}`); }
             let d = new Date(s);
             return isNaN(d) ? new Date(0) : d;
         }
@@ -876,12 +743,7 @@
         function formatarDataParaExibicao(dataStr) {
             if (!dataStr) return '---';
             let s = String(dataStr).trim();
-            if (s.includes('-')) {
-                let p = s.split('-');
-                if (p.length === 3) {
-                    return `${p[2]}/${p[1]}/${p[0]}`;
-                }
-            }
+            if (s.includes('-')) { let p = s.split('-'); if (p.length === 3) return `${p[2]}/${p[1]}/${p[0]}`; }
             return s;
         }
 
@@ -891,988 +753,85 @@
             if (!container || !alunoId) return;
 
             const faturasDoAluno = financeLogs.filter(f => {
-                const pertenceAluno = (f.studentId === alunoId || f.alunoId === alunoId);
-                if (!pertenceAluno) return false;
-
+                if (f.studentId !== alunoId && f.alunoId !== alunoId) return false;
                 const status = (f.status || '').toUpperCase();
                 const descricao = (f.description || f.descricao || '').toUpperCase();
-
-                const ePropostaOuAcordoAndamento = status.includes("PROPOSTA") || status.includes("AGUARDANDO") || descricao.includes("PROPOSTA") || descricao.includes("TERMO DE PROPOSTA");
-
-                return !ePropostaOuAcordoAndamento;
+                return !status.includes("PROPOSTA") && !descricao.includes("PROPOSTA");
             });
             
-            faturasDoAluno.sort((a, b) => {
-                let dataA = parseDataParaOrdem(a.date || a.vencimento);
-                let dataB = parseDataParaOrdem(b.date || b.vencimento);
-                return dataA - dataB;
-            });
+            faturasDoAluno.sort((a, b) => parseDataParaOrdem(a.date || a.vencimento) - parseDataParaOrdem(b.date || b.vencimento));
 
             const alunoObj = studentsMap[alunoId];
             const nomeAluno = alunoObj ? (alunoObj.fullname || alunoObj.name || 'Aluno') : 'Aluno';
 
             if (faturasDoAluno.length === 0) {
-                container.innerHTML = `<div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">Nenhuma fatura encontrada para ${nomeAluno}.</div>`;
+                container.innerHTML = `<div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">Nenhuma fatura encontrada.</div>`;
                 return;
             }
 
-            let htmlAcumulado = '';
-            faturasDoAluno.forEach(f => {
+            container.innerHTML = faturasDoAluno.map(f => {
                 const jaPago = f.status && f.status.toUpperCase().includes('PAGO');
                 const corBadge = jaPago ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300';
                 
-                const dataVencimentoFormatada = formatarDataParaExibicao(f.date || f.vencimento);
-                const valorAtual = f.amount || f.valor || '0';
-                const dataPag = formatarDataParaExibicao(f.dataPagamento || '---');
-                const formaPag = f.formaPagamento || 'Manual';
-
-                htmlAcumulado += `
+                return `
                     <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 space-y-3 text-xs">
                         <div class="flex justify-between items-start">
                             <div>
                                 <strong class="text-blue-600 dark:text-blue-400 text-xs">${nomeAluno}</strong><br>
                                 <span class="text-slate-900 dark:text-white font-semibold">${f.description || f.descricao || 'Cobrança'}</span><br>
-                                <span class="text-slate-400 text-[10px]">Vencimento: ${dataVencimentoFormatada} &bull; Valor: <strong>R$ ${valorAtual}</strong></span>
+                                <span class="text-slate-400 text-[10px]">Vencimento: ${formatarDataParaExibicao(f.date || f.vencimento)} &bull; Valor: <strong>R$ ${f.amount || f.valor || '0'}</strong></span>
                             </div>
                             <div class="flex items-center gap-1.5">
                                 <span class="px-2 py-0.5 ${corBadge} rounded-full text-[10px] font-bold">${f.status || 'PENDENTE'}</span>
-                                <button type="button" onclick="abrirModalEditarMensalidadeFinanceiro('${f.id}')" class="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[10px] font-semibold shadow transition" title="Editar">
+                                <!-- BOTÃO DE EDITAR MENSALIDADE -->
+                                <button type="button" onclick="abrirModalEditarMensalidadeFinanceiro('${f.id}')" class="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[10px] font-semibold shadow transition" title="Editar Mensalidade">
                                     <i class="fa-solid fa-pen-to-square"></i>
                                 </button>
-                                <button type="button" onclick="excluirFaturaRegistro('${f.id}')" class="px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg text-[10px] font-semibold shadow transition" title="Excluir Fatura/Acordo">
+                                <button type="button" onclick="excluirFaturaRegistro('${f.id}')" class="px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg text-[10px] font-semibold shadow transition" title="Excluir">
                                     <i class="fa-solid fa-trash"></i>
                                 </button>
                             </div>
                         </div>
 
                         ${!jaPago ? `
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 pt-2 border-t border-slate-100 dark:border-slate-800 items-center">
-                                <div>
-                                    <label class="block text-[10px] font-semibold uppercase text-slate-400 mb-1">Forma de Pagamento</label>
-                                    <select id="forma-pagamento-${f.id}" class="w-full px-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs bg-white dark:bg-slate-800 dark:text-white">
-                                        <option value="Dinheiro">Dinheiro</option>
-                                        <option value="Pix" selected>Pix</option>
-                                        <option value="Cartão de Crédito">Cartão de Crédito</option>
-                                        <option value="Cartão de Débito">Cartão de Débito</option>
-                                        <option value="Boleto">Boleto</option>
-                                        <option value="Transferência">Transferência</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-[10px] font-semibold uppercase text-slate-400 mb-1">Data do Pagamento</label>
-                                    <input type="date" id="data-pagamento-${f.id}" value="${new Date().toISOString().split('T')[0]}" class="w-full px-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs bg-white dark:bg-slate-800 dark:text-white">
-                                </div>
-                                <div class="col-span-full pt-1">
-                                    <button type="button" onclick="darBaixaApp('${f.id}')" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold text-xs shadow transition">
-                                        <i class="fa-solid fa-check mr-1"></i> Dar Baixa (Comprovante / Registro)
+                            <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100 dark:border-slate-800 items-center">
+                                <select id="forma-pagamento-${f.id}" class="px-2 py-1.5 rounded-lg border text-xs bg-white dark:bg-slate-800 dark:text-white">
+                                    <option value="Pix" selected>Pix</option>
+                                    <option value="Dinheiro">Dinheiro</option>
+                                    <option value="Cartão de Crédito">Cartão de Crédito</option>
+                                    <option value="Boleto">Boleto</option>
+                                </select>
+                                <input type="date" id="data-pagamento-${f.id}" value="${new Date().toISOString().split('T')[0]}" class="px-2 py-1.5 rounded-lg border text-xs bg-white dark:bg-slate-800 dark:text-white">
+                                <div class="col-span-full">
+                                    <button type="button" onclick="darBaixaApp('${f.id}')" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold text-xs shadow">
+                                        Dar Baixa
                                     </button>
                                 </div>
                             </div>
                         ` : `
-                            <div class="pt-2 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
-                                <div class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
-                                    <i class="fa-solid fa-circle-check mr-1"></i> Pago em ${dataPag} (${formaPag})
-                                </div>
-                                <button type="button" onclick="estornarBaixaApp('${f.id}')" class="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg text-[10px] font-bold shadow transition">
-                                    <i class="fa-solid fa-rotate-left mr-1"></i> Estornar Pagamento
-                                </button>
+                            <div class="pt-2 border-t flex justify-between items-center text-[10px] text-emerald-600">
+                                <span>Pago em ${formatarDataParaExibicao(f.dataPagamento)}</span>
+                                <button type="button" onclick="estornarBaixaApp('${f.id}')" class="px-2 py-1 bg-red-600 text-white rounded-lg">Estornar</button>
                             </div>
                         `}
                     </div>
                 `;
-            });
-
-            container.innerHTML = htmlAcumulado;
+            }).join('');
         }
 
-        async function excluirFaturaRegistro(faturaId) {
-            if (!confirm("Deseja realmente excluir permanentemente esta fatura ou registro do sistema?")) return;
-
-            try {
-                await db.collection("financeLogs").doc(faturaId).delete();
-                alert("Registro excluído com sucesso!");
-            } catch (e) {
-                alert("Erro ao excluir registro: " + e.message);
-            }
-        }
-
-        // --- FUNÇÕES DA ABA DE NEGOCIAÇÕES ---
-        function renderizarNegociacoesAtivasGeral() {
-            const container = document.getElementById('lista-negociacoes-ativas-container');
-            const termoBusca = document.getElementById('input-busca-negociacao').value.trim();
-            
-            if (!container) return;
-
-            if (termoBusca.length > 0) {
-                container.innerHTML = '';
-                return;
-            }
-
-            const propostasOuAcordos = financeLogs.filter(f => {
-                const status = (f.status || '').toUpperCase();
-                return status.includes("PROPOSTA") || status.includes("AGUARDANDO") || status.includes("ACORDO ACEITO") || status.includes("ACORDO EFETIVADO");
-            });
-
-            if (propostasOuAcordos.length === 0) {
-                container.innerHTML = `
-                    <div class="bg-white dark:bg-slate-900 p-5 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800 space-y-1">
-                        <i class="fa-solid fa-folder-open text-slate-300 text-xl mb-1"></i>
-                        <p class="font-semibold text-slate-700 dark:text-slate-300">Nenhuma negociação em andamento ou aprovada no momento.</p>
-                        <p class="text-[10px]">Utilize a busca abaixo caso queira iniciar uma negociação para um novo aluno.</p>
-                    </div>
-                `;
-                return;
-            }
-
-            let html = `
-                <div class="space-y-2">
-                    <span class="font-bold text-xs uppercase text-slate-500 tracking-wider block px-1">Alunos com Negociações em Andamento ou Aprovadas:</span>
-            `;
-
-            propostasOuAcordos.forEach(p => {
-                const alunoId = p.studentId || p.alunoId;
-                const aluno = studentsMap[alunoId] || { fullname: p.nomeAluno || 'Aluno Cadastrado', cpf: '---' };
-                const nomeAluno = aluno.fullname || aluno.name || 'Aluno';
-                const cpfAluno = aluno.cpf || '---';
-
-                const rawCurso = aluno.course || aluno.curso || aluno.turma || aluno.nomeCurso || aluno.courseName || aluno.courseId || '---';
-                const cursoExibir = coursesMap[rawCurso] || coursesMap[normalizarTexto(rawCurso)] || String(rawCurso);
-
-                const statusStr = (p.status || '').toUpperCase();
-                const eAguardando = statusStr.includes("AGUARDANDO") || statusStr.includes("PROPOSTA");
-                const corBadge = eAguardando ? "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300" : "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300";
-                const textoStatus = eAguardando ? "Aguardando Aprovação" : "Acordo Aceito / Aprovado";
-                const valorExibir = p.amount || p.valor || '0.00';
-
-                html += `
-                    <div class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 space-y-2 transition">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <strong class="text-xs font-bold text-slate-900 dark:text-white">${nomeAluno}</strong>
-                                <p class="text-[10px] text-slate-400">CPF: ${cpfAluno} &bull; Curso: ${cursoExibir}</p>
-                            </div>
-                            <span class="px-2 py-0.5 ${corBadge} rounded-full text-[10px] font-bold">${textoStatus}</span>
-                        </div>
-                        <div class="flex justify-between items-center text-[10px] text-slate-500 border-t border-slate-100 dark:border-slate-800 pt-2">
-                            <span>Valor do Acordo: <strong>R$ ${valorExibir}</strong></span>
-                            <button type="button" onclick="selecionarAlunoNegociacao('${alunoId}')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[10px] shadow transition">
-                                <i class="fa-solid fa-folder-open mr-1"></i> Ver Situação / Detalhes
-                            </button>
-                        </div>
-                    </div>
-                `;
-            });
-
-            html += `</div>`;
-            container.innerHTML = html;
-        }
-
-        function pesquisarAlunoNegociacao() {
-            const termoInput = document.getElementById('input-busca-negociacao').value;
-            const termo = normalizarTexto(termoInput);
-            const container = document.getElementById('lista-busca-negociacao-container');
-            const painel = document.getElementById('painel-negociacao-aluno');
-            
-            renderizarNegociacoesAtivasGeral();
-
-            if (!container) return;
-
-            if (termo.length < 2) {
-                container.innerHTML = ``;
-                if (painel) painel.style.display = 'none';
-                return;
-            }
-
-            const encontrados = students.filter(s => {
-                const nome = normalizarTexto(s.fullname || s.name || '');
-                const cpf = normalizarTexto(s.cpf || '');
-                return nome.includes(termo) || cpf.includes(termo);
-            });
-
-            if (encontrados.length === 0) {
-                container.innerHTML = `<div class="bg-white dark:bg-slate-900 p-4 rounded-2xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">Nenhum aluno encontrado com este nome ou CPF.</div>`;
-                if (painel) painel.style.display = 'none';
-                return;
-            }
-
-            let html = `<div class="space-y-1"><span class="font-bold text-[10px] uppercase text-slate-400 px-1">Resultados da Busca:</span>`;
-            encontrados.forEach(s => {
-                const rawCurso = s.course || s.curso || s.turma || s.nomeCurso || s.courseName || s.courseId || 'Não informado';
-                const cursoExibir = coursesMap[rawCurso] || coursesMap[normalizarTexto(rawCurso)] || String(rawCurso);
-                
-                html += `
-                    <div onclick="selecionarAlunoNegociacao('${s.id}')" class="bg-white dark:bg-slate-900 p-3 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 flex justify-between items-center active:scale-98 transition cursor-pointer">
-                        <div>
-                            <strong class="text-xs font-bold text-slate-900 dark:text-white">${s.fullname || s.name || 'Sem Nome'}</strong>
-                            <p class="text-[10px] text-slate-400">CPF: ${s.cpf || '---'} &bull; Curso: ${cursoExibir}</p>
-                        </div>
-                        <span class="px-2.5 py-1 bg-emerald-600 text-white text-[10px] font-bold rounded-lg shadow">Verificar Débitos</span>
-                    </div>
-                `;
-            });
-            html += `</div>`;
-            container.innerHTML = html;
-        }
-
-        function selecionarAlunoNegociacao(alunoId) {
-            alunoNegociacaoId = alunoId;
-            const aluno = studentsMap[alunoId];
-            const containerBusca = document.getElementById('lista-busca-negociacao-container');
-            const containerAtivas = document.getElementById('lista-negociacoes-ativas-container');
-            const painel = document.getElementById('painel-negociacao-aluno');
-            
-            if (!aluno || !painel) return;
-
-            containerBusca.innerHTML = '';
-            if (containerAtivas) containerAtivas.innerHTML = '';
-
-            const rawCursoAluno = aluno.course || aluno.curso || aluno.turma || aluno.nomeCurso || aluno.courseName || aluno.courseId || '---';
-            const cursoAlunoExibir = coursesMap[rawCursoAluno] || coursesMap[normalizarTexto(rawCursoAluno)] || String(rawCursoAluno);
-
-            document.getElementById('input-busca-negociacao').value = '';
-
-            painel.style.display = 'block';
-
-            const hoje = new Date();
-            hoje.setHours(0, 0, 0, 0);
-
-            faturasAtrasadasGlobal = financeLogs.filter(f => {
-                const pertenceAluno = (f.studentId === alunoId || f.alunoId === alunoId);
-                const jaPago = f.status && (f.status.toUpperCase().includes('PAGO') || f.status.includes('NEGOCIADO'));
-                const statusLower = (f.status || '').toLowerCase();
-                const descLower = (f.description || f.descricao || '').toLowerCase();
-                const eTermoOuProposta = statusLower.includes('proposta') || statusLower.includes('aguardando') || descLower.includes('termo') || descLower.includes('proposta') || descLower.includes('acordo consolidado');
-                
-                if (!pertenceAluno || jaPago || eTermoOuProposta) return false;
-
-                const vencimentoStr = f.date || f.vencimento || '';
-                let dataVenc = parseDataParaOrdem(vencimentoStr);
-                dataVenc.setHours(0, 0, 0, 0);
-
-                return dataVenc < hoje;
-            });
-
-            // Ordem cronológica
-            faturasAtrasadasGlobal.sort((a, b) => {
-                let dataA = parseDataParaOrdem(a.date || a.vencimento);
-                let dataB = parseDataParaOrdem(b.date || b.vencimento);
-                return dataA - dataB;
-            });
-
-            valorTotalOriginalGlobal = 0;
-            multaTotalGlobal = 0;
-            jurosTotalGlobal = 0;
-
-            faturasAtrasadasGlobal.forEach(f => {
-                const valorOriginal = parseFloat(String(f.amount || f.valor || '0').replace(',', '.')) || 0;
-                valorTotalOriginalGlobal += valorOriginal;
-
-                const vencimentoStr = f.date || f.vencimento || '';
-                let dataVenc = parseDataParaOrdem(vencimentoStr);
-                dataVenc.setHours(0, 0, 0, 0);
-                
-                let diasAtraso = Math.ceil(Math.abs(hoje - dataVenc) / (1000 * 60 * 60 * 24));
-                let mesesAtraso = diasAtraso / 30;
-                
-                multaTotalGlobal += 10.00;
-                jurosTotalGlobal += (valorOriginal * 0.05 * mesesAtraso);
-            });
-
-            valorAtualNegociacaoGlobal = valorTotalOriginalGlobal + multaTotalGlobal + jurosTotalGlobal;
-
-            const propostasAluno = financeLogs.filter(f => (f.studentId === alunoId || f.alunoId === alunoId) && (f.status && (f.status.includes("PROPOSTA") || f.status.includes("AGUARDANDO") || f.status.includes("ACORDO ACEITO") || f.status.includes("ACORDO EFETIVADO"))));
-
-            let htmlPropostasRealizadas = '';
-            let temPropostaAtiva = false;
-
-            if (propostasAluno.length > 0) {
-                propostasAluno.forEach(p => {
-                    let statusStr = (p.status || '').toUpperCase();
-                    let eAguardando = statusStr.includes("PROPOSTA") || statusStr.includes("AGUARDANDO");
-                    let corStatus = eAguardando ? "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300" : "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300";
-                    let textoStatusExibir = eAguardando ? "Aguardando aprovação do aluno" : "Acordo aceito";
-
-                    if (eAguardando) {
-                        temPropostaAtiva = true;
-                    }
-
-                    if (eAguardando && p.opcoesSalvas) {
-                        opcoesGeradas = p.opcoesSalvas;
-                    }
-
-                    htmlPropostasRealizadas += `
-                        <div class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl shadow-sm border border-emerald-500/50 space-y-2 text-xs mb-2">
-                            <div class="flex justify-between items-center">
-                                <span class="font-bold text-slate-900 dark:text-white">${p.description || 'Proposta de Acordo'}</span>
-                                <span class="px-2 py-0.5 ${corStatus} rounded-full text-[10px] font-bold">${textoStatusExibir}</span>
-                            </div>
-                            <div class="text-[10px] text-slate-400">
-                                Valor Negociado Total (Com Juros e Multas): <strong>R$ ${p.amount || p.valor || '0.00'}</strong> &bull; Data: ${p.date || '---'}
-                            </div>
-                            ${eAguardando ? `
-                                <div class="flex gap-1.5 pt-2 border-t border-slate-100 dark:border-slate-800">
-                                    <button type="button" onclick="abrirModalEditarProposta('${p.id}')" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-[10px] shadow">
-                                        <i class="fa-solid fa-pen-to-square mr-0.5"></i> Editar
-                                    </button>
-                                    <button type="button" onclick="excluirPropostaRegistro('${p.id}')" class="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold text-[10px] shadow">
-                                        <i class="fa-solid fa-trash mr-0.5"></i> Excluir
-                                    </button>
-                                    <button type="button" onclick="abrirModalFecharAcordoParaProposta('${p.id}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold text-[10px] shadow">
-                                        <i class="fa-solid fa-handshake mr-0.5"></i> Aprovar
-                                    </button>
-                                </div>
-                            ` : ''}
-                        </div>
-                    `;
-                });
-            }
-
-            let cabecalhoAlunoHtml = `
-                <div class="bg-emerald-50 dark:bg-emerald-950/40 p-3.5 rounded-2xl border border-emerald-200 dark:border-emerald-900 flex justify-between items-center text-xs mb-2">
-                    <div>
-                        <span class="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400">Aluno Selecionado:</span>
-                        <strong class="block text-slate-900 dark:text-white text-sm">${aluno.fullname || aluno.name}</strong>
-                        <span class="text-[10px] text-slate-500">Curso: ${cursoAlunoExibir} &bull; CPF: ${aluno.cpf || '---'}</span>
-                    </div>
-                    <button onclick="voltarListaNegociacoesGeral()" class="px-2.5 py-1.5 bg-slate-200 dark:bg-slate-800 text-[10px] font-semibold rounded-lg shadow">Voltar à Lista</button>
-                </div>
-            `;
-
-            if (faturasAtrasadasGlobal.length === 0 && propostasAluno.length === 0) {
-                painel.innerHTML = `
-                    ${cabecalhoAlunoHtml}
-                    <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800 space-y-2">
-                        <div class="w-10 h-10 bg-emerald-100 dark:bg-emerald-950 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-base">
-                            <i class="fa-solid fa-check"></i>
-                        </div>
-                        <strong class="block text-slate-900 dark:text-white text-sm">Aluno sem débitos pendentes em atraso</strong>
-                        <p class="text-[11px] text-slate-400">Este aluno não possui nenhuma mensalidade vencida em períodos anteriores.</p>
-                    </div>
-                `;
-                return;
-            }
-
-            if (temPropostaAtiva) {
-                painel.innerHTML = `
-                    ${cabecalhoAlunoHtml}
-                    <div class="space-y-2 pt-1">
-                        <h4 class="font-bold text-xs uppercase text-emerald-600 tracking-wider">Propostas Realizadas / Registros:</h4>
-                        ${htmlPropostasRealizadas}
-                    </div>
-                `;
-                return;
-            }
-
-            let htmlFaturasCalc = '';
-            faturasAtrasadasGlobal.forEach(f => {
-                const valorOriginal = parseFloat(String(f.amount || f.valor || '0').replace(',', '.')) || 0;
-                let dataVenc = parseDataParaOrdem(f.date || f.vencimento);
-                dataVenc.setHours(0, 0, 0, 0);
-                let diasAtraso = Math.ceil(Math.abs(hoje - dataVenc) / (1000 * 60 * 60 * 24));
-                let mesesAtraso = diasAtraso / 30;
-                let multaParcela = 10.00;
-                let jurosParcela = valorOriginal * 0.05 * mesesAtraso;
-                let totalParcelaAtualizada = valorOriginal + multaParcela + jurosParcela;
-
-                htmlFaturasCalc += `
-                    <div class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 space-y-2 text-xs">
-                        <div class="flex justify-between items-center">
-                            <span class="font-bold text-slate-900 dark:text-white">${f.description || f.descricao || 'Mensalidade'}</span>
-                            <span class="px-2 py-0.5 bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300 rounded-full text-[10px] font-bold">Atrasado (${diasAtraso} dias)</span>
-                        </div>
-                        <div class="text-[10px] text-slate-400">
-                            Vencimento original: <strong>${formatarDataParaExibicao(f.date || f.vencimento)}</strong>
-                        </div>
-                        <div class="grid grid-cols-2 gap-1 bg-slate-50 dark:bg-slate-800/50 p-2 rounded-xl text-[10px]">
-                            <div>Valor Original: <strong>R$ ${valorOriginal.toFixed(2)}</strong></div>
-                            <div>Multa Fixa: <strong class="text-amber-600">R$ ${multaParcela.toFixed(2)}</strong></div>
-                            <div>Juros Mensais (5%/mês): <strong class="text-amber-600">R$ ${jurosParcela.toFixed(2)}</strong></div>
-                            <div>Total Parcela: <strong class="text-emerald-600">R$ ${totalParcelaAtualizada.toFixed(2)}</strong></div>
-                        </div>
-                    </div>
-                `;
-            });
-
-            painel.innerHTML = `
-                ${cabecalhoAlunoHtml}
-                ${htmlPropostasRealizadas ? `
-                    <div class="space-y-2 pt-1">
-                        <h4 class="font-bold text-xs uppercase text-emerald-600 tracking-wider">Propostas Realizadas / Registros:</h4>
-                        ${htmlPropostasRealizadas}
-                    </div>
-                ` : ''}
-
-                ${faturasAtrasadasGlobal.length > 0 ? `
-                    <div class="bg-gradient-to-br from-emerald-600 to-teal-800 text-white p-4 rounded-3xl shadow-lg space-y-3">
-                        <div class="text-[10px] uppercase font-semibold tracking-wider text-emerald-200">Resumo da Negociação (Débitos em Atraso)</div>
-                        <div class="flex justify-between items-end">
-                            <div>
-                                <span class="text-xs opacity-90 font-medium">Total Vencidas: ${faturasAtrasadasGlobal.length} parcelas</span>
-                                <h3 class="text-2xl font-bold tracking-tight mt-0.5">R$ ${valorAtualNegociacaoGlobal.toFixed(2)}</h3>
-                            </div>
-                            <div>
-                                <button type="button" onclick="abrirModalRealizarAcordo()" class="px-3.5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-xl text-xs shadow transition">
-                                    <i class="fa-solid fa-sliders mr-1"></i> Proposta de Acordo
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="space-y-2 pt-2">
-                        <h4 class="font-bold text-xs uppercase text-slate-500 tracking-wider">Faturas Vencidas com Encargos Calculados (Ordem Cronológica):</h4>
-                        ${htmlFaturasCalc}
-                    </div>
-                ` : ''}
-            `;
-        }
-
-        function voltarListaNegociacoesGeral() {
-            alunoNegociacaoId = null;
-            document.getElementById('painel-negociacao-aluno').style.display = 'none';
-            renderizarNegociacoesAtivasGeral();
-        }
-
-        function abrirModalRealizarAcordo() {
-            document.getElementById('edit-proposta-id-ativo').value = "";
-            document.getElementById('titulo-modal-acordo-texto').textContent = "Gerar Proposta de Acordo";
-            document.getElementById('modal-realizar-acordo').style.display = 'flex';
-            atualizarListaOpcoesGeradasModal();
-            atualizarPreviaParcelasModal();
-        }
-
-        function abrirModalEditarProposta(propostaId) {
-            const prop = financeLogs.find(f => f.id === propostaId);
-            if (!prop) return;
-
-            if (prop.opcoesSalvas) {
-                opcoesGeradas = prop.opcoesSalvas;
-            }
-
-            document.getElementById('edit-proposta-id-ativo').value = propostaId;
-            document.getElementById('titulo-modal-acordo-texto').textContent = "Editar Proposta de Acordo";
-            document.getElementById('modal-realizar-acordo').style.display = 'flex';
-            atualizarListaOpcoesGeradasModal();
-            atualizarPreviaParcelasModal();
-        }
-
-        async function excluirPropostaRegistro(propostaId) {
-            if (!confirm("Deseja realmente excluir esta proposta de acordo?")) return;
-            try {
-                await db.collection("financeLogs").doc(propostaId).delete();
-                alert("Proposta excluída com sucesso!");
-                if (alunoNegociacaoId) selecionarAlunoNegociacao(alunoNegociacaoId);
-                renderizarNegociacoesAtivasGeral();
-            } catch (e) {
-                alert("Erro ao excluir proposta: " + e.message);
-            }
-        }
-
-        function fecharModalRealizarAcordo() {
-            document.getElementById('modal-realizar-acordo').style.display = 'none';
-        }
-
-        function ativarAbaAcordoModal(tipo) {
-            document.getElementById('painel-acordo-avista').style.display = tipo === 'avista' ? 'block' : 'none';
-            document.getElementById('painel-acordo-parcelado').style.display = tipo === 'parcelado' ? 'block' : 'none';
-            document.getElementById('painel-acordo-cartao').style.display = tipo === 'cartao' ? 'block' : 'none';
-
-            document.getElementById('btn-aba-avista').className = tipo === 'avista' ? 'py-2.5 px-2 bg-emerald-600 text-white font-bold rounded-xl text-xs shadow transition' : 'py-2.5 px-2 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl text-xs transition';
-            document.getElementById('btn-aba-parcelado').className = tipo === 'parcelado' ? 'py-2.5 px-2 bg-emerald-600 text-white font-bold rounded-xl text-xs shadow transition' : 'py-2.5 px-2 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl text-xs transition';
-            document.getElementById('btn-aba-cartao').className = tipo === 'cartao' ? 'py-2.5 px-2 bg-emerald-600 text-white font-bold rounded-xl text-xs shadow transition' : 'py-2.5 px-2 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl text-xs transition';
-        }
-
-        function atualizarPreviaParcelasModal() {
-            const descJuros = parseFloat(document.getElementById('desc-juros-parcelado').value) || 0;
-            const descMulta = parseFloat(document.getElementById('desc-multa-parcelado').value) || 0;
-            const qtdParcelas = parseInt(document.getElementById('qtd-parcelas-acordo-modal').value) || 2;
-
-            let jurosDescontados = jurosTotalGlobal * (descJuros / 100);
-            let multaDescontada = multaTotalGlobal * (descMulta / 100);
-            
-            let jurosFinal = jurosTotalGlobal - jurosDescontados;
-            let multaFinal = multaTotalGlobal - multaDescontada;
-            let valorTotalComDesconto = valorTotalOriginalGlobal + multaFinal + jurosFinal;
-
-            let valorParcela = valorTotalComDesconto / qtdParcelas;
-
-            const previaEl = document.getElementById('previa-valor-parcela');
-            if (previaEl) {
-                previaEl.textContent = `${qtdParcelas}x de R$ ${valorParcela.toFixed(2)} (Total: R$ ${valorTotalComDesconto.toFixed(2)})`;
-            }
-        }
-
-        function gerarOpcaoAcordoModal(tipo) {
-            let descJuros = 0, descMulta = 0, infoExtra = "";
-
-            if (tipo === 'avista') {
-                descJuros = parseFloat(document.getElementById('desc-juros-avista').value) || 0;
-                descMulta = parseFloat(document.getElementById('desc-multa-avista').value) || 0;
-            } else if (tipo === 'parcelado') {
-                descJuros = parseFloat(document.getElementById('desc-juros-parcelado').value) || 0;
-                descMulta = parseFloat(document.getElementById('desc-multa-parcelado').value) || 0;
-                let qtd = parseInt(document.getElementById('qtd-parcelas-acordo-modal').value) || 2;
-                let jDescontado = jurosTotalGlobal * (descJuros / 100);
-                let mDescontada = multaTotalGlobal * (descMulta / 100);
-                let tFinal = valorTotalOriginalGlobal + (multaTotalGlobal - mDescontada) + (jurosTotalGlobal - jDescontado);
-                let vParc = tFinal / qtd;
-                infoExtra = `${qtd}x de R$ ${vParc.toFixed(2)}`;
-            } else if (tipo === 'cartao') {
-                descJuros = parseFloat(document.getElementById('desc-juros-cartao').value) || 0;
-                descMulta = parseFloat(document.getElementById('desc-multa-cartao').value) || 0;
-            }
-
-            let jurosDescontados = jurosTotalGlobal * (descJuros / 100);
-            let multaDescontada = multaTotalGlobal * (descMulta / 100);
-            
-            let jurosFinal = jurosTotalGlobal - jurosDescontados;
-            let multaFinal = multaTotalGlobal - multaDescontada;
-            let valorTotalComDesconto = valorTotalOriginalGlobal + multaFinal + jurosFinal;
-
-            opcoesGeradas[tipo] = {
-                tipo: tipo,
-                descJuros: descJuros,
-                descMulta: descMulta,
-                infoExtra: infoExtra,
-                valorFinal: valorTotalComDesconto,
-                jurosFinal: jurosFinal,
-                multaFinal: multaFinal
-            };
-
-            alert(`Opção "${tipo.toUpperCase()}" configurada com sucesso!`);
-            atualizarListaOpcoesGeradasModal();
-        }
-
-        function atualizarListaOpcoesGeradasModal() {
-            const container = document.getElementById('lista-opcoes-geradas-modal');
-            const btnGerarPropostaModal = document.getElementById('btn-gerar-proposta-modal');
-            if (!container) return;
-
-            let html = '';
-            let temAlguma = false;
-
-            for (let k in opcoesGeradas) {
-                let op = opcoesGeradas[k];
-                if (op) {
-                    temAlguma = true;
-                    let nomeFormatado = k === 'avista' ? 'À Vista' : (k === 'parcelado' ? `Parcelado (${op.infoExtra})` : 'Cartão de Crédito');
-                    html += `
-                        <div class="p-3 bg-white dark:bg-slate-800 rounded-xl border border-emerald-500/40 flex justify-between items-center text-xs">
-                            <div>
-                                <strong class="text-emerald-600 dark:text-emerald-400 block">${nomeFormatado}</strong>
-                                <span class="text-[10px] text-slate-400">Desc. Juros: ${op.descJuros}% | Desc. Multa: ${op.descMulta}%</span>
-                            </div>
-                            <div class="text-right">
-                                <strong class="text-slate-900 dark:text-white block">R$ ${op.valorFinal.toFixed(2)}</strong>
-                                <button onclick="removerOpcaoGerada('${k}')" class="text-[9px] text-red-500 hover:underline">Remover</button>
-                            </div>
-                        </div>
-                    `;
-                }
-            }
-
-            if (!temAlguma) {
-                html = `<div class="p-3 bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300 rounded-xl text-center text-xs">Nenhuma opção configurada ainda. Preencha e clique em salvar acima.</div>`;
-            }
-
-            container.innerHTML = html;
-
-            const todasGeradas = opcoesGeradas.avista && opcoesGeradas.parcelado && opcoesGeradas.cartao;
-            if (btnGerarPropostaModal) {
-                btnGerarPropostaModal.style.display = todasGeradas ? 'block' : 'none';
-            }
-        }
-
-        function removerOpcaoGerada(tipo) {
-            opcoesGeradas[tipo] = null;
-            atualizarListaOpcoesGeradasModal();
-        }
-
-        async function gerarPropostaPDF() {
-            if (!alunoNegociacaoId) return;
-            const aluno = studentsMap[alunoNegociacaoId];
-            if (!aluno) return;
-
-            if (!opcoesGeradas.avista || !opcoesGeradas.parcelado || !opcoesGeradas.cartao) {
-                return alert("Configure as 3 opções (À Vista, Parcelado e Cartão) antes de gerar a proposta.");
-            }
-
-            fecharModalRealizarAcordo();
-
-            const propostaIdExistente = document.getElementById('edit-proposta-id-ativo').value;
-            const valorTotalNegociadoParaRegistro = valorAtualNegociacaoGlobal.toFixed(2);
-            const nomeAlunoSalvar = aluno.fullname || aluno.name || 'Aluno';
-
-            try {
-                if (propostaIdExistente) {
-                    await db.collection("financeLogs").doc(propostaIdExistente).update({
-                        amount: valorTotalNegociadoParaRegistro,
-                        valor: valorTotalNegociadoParaRegistro,
-                        nomeAluno: nomeAlunoSalvar,
-                        date: new Date().toLocaleDateString('pt-BR'),
-                        status: "PROPOSTA DE ACORDO EM ANDAMENTO",
-                        opcoesSalvas: opcoesGeradas,
-                        atualizadoEm: new Date().toISOString()
-                    });
-                } else {
-                    const propostaId = "proposta_" + alunoNegociacaoId + "_" + Date.now();
-                    await db.collection("financeLogs").doc(propostaId).set({
-                        studentId: alunoNegociacaoId,
-                        alunoId: alunoNegociacaoId,
-                        nomeAluno: nomeAlunoSalvar,
-                        description: `Proposta de Acordo Consolidado`,
-                        amount: valorTotalNegociadoParaRegistro,
-                        valor: valorTotalNegociadoParaRegistro,
-                        date: new Date().toLocaleDateString('pt-BR'),
-                        vencimento: new Date().toISOString().split('T')[0],
-                        status: "PROPOSTA DE ACORDO EM ANDAMENTO",
-                        opcoesSalvas: opcoesGeradas,
-                        criadoEm: new Date().toISOString()
-                    });
-                }
-            } catch (e) {
-                console.warn("Erro ao salvar proposta no Firebase:", e);
-            }
-
-            const razaoSocial = institutionData.razaoSocial || "JS & SS SERVIÇOS EDUCACIONAIS E CIA LTDA";
-            const cnpjInst = institutionData.cnpj || "31.535.516/0001-64";
-            const logoUrl = institutionData.logo || "";
-            const enderecoInst = institutionData.address || "Travessa Magalhães Barata, 692, Centro, Vigia – PA, CEP 68.780-000";
-
-            const nomeCompleto = aluno.fullname || aluno.name || '---';
-            const codigoMatricula = aluno.code || aluno.matricula || 'S/N';
-            const cpf = aluno.cpf || '---';
-            const rg = aluno.rg || aluno.documento || '---';
-            const sexo = aluno.gender || aluno.sexo || '---';
-            
-            let nascimento = aluno.birthDate || aluno.dob || '---';
-            if (nascimento !== '---' && nascimento.includes('-')) {
-                nascimento = nascimento.split('-').reverse().join('/');
-            }
-
-            const whatsapp = aluno.whatsapp || aluno.phone || aluno.telefone || '---';
-            const email = aluno.email || '---';
-
-            const cep = aluno.cep || '---';
-            const logradouro = aluno.street || aluno.rua || aluno.logradouro || '';
-            const numero = aluno.number || aluno.numero || 'S/N';
-            const bairro = aluno.neighborhood || aluno.bairro || '---';
-            const cidade = aluno.city || aluno.cidade || '---';
-            const estado = aluno.state || aluno.estado || '---';
-
-            let enderecoCompletoFormatado = '';
-            if (logradouro) {
-                enderecoCompletoFormatado = `${logradouro}, nº ${numero} - ${bairro}, ${cidade}/${estado} (CEP: ${cep})`;
-            } else if (aluno.address) {
-                enderecoCompletoFormatado = aluno.address;
-            } else if (aluno.endereco) {
-                enderecoCompletoFormatado = aluno.endereco;
-            } else {
-                enderecoCompletoFormatado = `Rua não informada, nº ${numero} - ${bairro}, ${cidade}/${estado} (CEP: ${cep})`;
-            }
-
-            const rawCurso = aluno.course || aluno.curso || aluno.turma || aluno.nomeCurso || aluno.courseName || aluno.courseId || '';
-            const cursoExibir = coursesMap[rawCurso] || coursesMap[normalizarTexto(rawCurso)] || String(rawCurso || 'Não vinculado');
-
-            const hoje = new Date();
-            hoje.setHours(0, 0, 0, 0);
-
-            let htmlTabelaDebitos = '';
-            let somaOriginalGeral = 0;
-            let somaMultaGeral = 0;
-            let somaJurosGeral = 0;
-            let somaTotalGeral = 0;
-            let qtdParcelasAtrasadas = faturasAtrasadasGlobal.length;
-
-            faturasAtrasadasGlobal.forEach(f => {
-                const valorOriginal = parseFloat(String(f.amount || f.valor || '0').replace(',', '.')) || 0;
-                somaOriginalGeral += valorOriginal;
-
-                const vencimentoStr = f.date || f.vencimento || '';
-                let dataVenc = parseDataParaOrdem(vencimentoStr);
-                dataVenc.setHours(0, 0, 0, 0);
-                
-                let diasAtraso = Math.ceil(Math.abs(hoje - dataVenc) / (1000 * 60 * 60 * 24));
-                let mesesAtraso = diasAtraso / 30;
-                let multaParcela = 10.00;
-                somaMultaGeral += multaParcela;
-
-                let jurosParcela = valorOriginal * 0.05 * mesesAtraso;
-                somaJurosGeral += jurosParcela;
-
-                let totalParcelaAtualizada = valorOriginal + multaParcela + jurosParcela;
-                somaTotalGeral += totalParcelaAtualizada;
-
-                htmlTabelaDebitos += `
-                    <tr>
-                        <td style="padding: 7px 8px; border-bottom: 1px solid #e2e8f0;">${f.description || f.descricao || 'Mensalidade'}</td>
-                        <td style="padding: 7px 8px; border-bottom: 1px solid #e2e8f0; text-align: center;">${formatarDataParaExibicao(vencimentoStr)}</td>
-                        <td style="padding: 7px 8px; border-bottom: 1px solid #e2e8f0; text-align: center;">${diasAtraso} dias</td>
-                        <td style="padding: 7px 8px; border-bottom: 1px solid #e2e8f0; text-align: right; white-space: nowrap;">R$ ${valorOriginal.toFixed(2)}</td>
-                        <td style="padding: 7px 8px; border-bottom: 1px solid #e2e8f0; text-align: right; white-space: nowrap;">R$ ${multaParcela.toFixed(2)}</td>
-                        <td style="padding: 7px 8px; border-bottom: 1px solid #e2e8f0; text-align: right; white-space: nowrap;">R$ ${jurosParcela.toFixed(2)}</td>
-                        <td style="padding: 7px 8px; border-bottom: 1px solid #e2e8f0; text-align: right; font-weight: bold; white-space: nowrap;">R$ ${totalParcelaAtualizada.toFixed(2)}</td>
-                    </tr>
-                `;
-            });
-
-            htmlTabelaDebitos += `
-                <tr style="background: #f1f5f9; font-weight: bold;">
-                    <td colspan="3" style="padding: 10px 8px; text-align: right; border-top: 2px solid #cbd5e1;">VALOR TOTAL DA DÍVIDA / TOTAIS:</td>
-                    <td style="padding: 10px 8px; text-align: right; border-top: 2px solid #cbd5e1; white-space: nowrap;">R$ ${somaOriginalGeral.toFixed(2)}</td>
-                    <td style="padding: 10px 8px; text-align: right; border-top: 2px solid #cbd5e1; white-space: nowrap;">R$ ${somaMultaGeral.toFixed(2)}</td>
-                    <td style="padding: 10px 8px; text-align: right; border-top: 2px solid #cbd5e1; white-space: nowrap;">R$ ${somaJurosGeral.toFixed(2)}</td>
-                    <td style="padding: 10px 8px; text-align: right; border-top: 2px solid #cbd5e1; color: #1e3a8a; font-size: 13px; white-space: nowrap;">R$ ${somaTotalGeral.toFixed(2)}</td>
-                </tr>
-            `;
-
-            let htmlCompletoTermo = `
-                <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #1e293b; padding: 10px;">
-                    <!-- CABEÇALHO REORGANIZADO E AMPLIADO -->
-                    <div style="background: #1e3a8a; color: #ffffff; padding: 25px 30px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px;">
-                        <div style="display: flex; align-items: center; gap: 20px;">
-                            <div style="width: 75px; height: 75px; background: transparent; color: #ffffff; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 22px; flex-shrink: 0; overflow: hidden;">
-                                ${logoUrl ? `<img src="${logoUrl}" alt="Logo" style="max-width:100%; max-height:100%; object-fit:contain;">` : 'SE7'}
-                            </div>
-                            <div>
-                                <h1 style="font-size: 16px; margin: 0 0 6px 0; font-weight: bold; letter-spacing: 0.3px; color: #ffffff;">${razaoSocial}</h1>
-                                <p style="font-size: 12px; color: #cbd5e1; margin: 0; line-height: 1.4;"><strong>CNPJ:</strong> ${cnpjInst}<br><strong>Endereço:</strong> ${enderecoInst}</p>
-                            </div>
-                        </div>
-                        <div style="text-align: right; border-left: 1px solid rgba(255, 255, 255, 0.2); padding-left: 20px;">
-                            <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #93c5fd; font-weight: bold; display: block;">Emitido por</span>
-                            <strong style="font-size: 13px; color: #ffffff;">Setor Financeiro</strong>
-                        </div>
-                    </div>
-
-                    <h2 style="text-align: center; font-size: 17px; color: #1e3a8a; margin-bottom: 20px; text-transform: uppercase; font-weight: bold;">TERMO DE PROPOSTA DE ACORDO FINANCEIRO</h2>
-
-                    <h2 style="font-size: 14px; color: #1e3a8a; text-transform: uppercase; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 6px; margin-top: 25px; margin-bottom: 12px; font-weight: bold;">1. Identificação do Aluno</h2>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 12px; background: #f1f5f9; padding: 16px; border-radius: 10px;">
-                        <div>
-                            <strong>Nome Completo:</strong><br>${nomeCompleto}<br><br>
-                            <strong>CPF:</strong><br>${cpf}<br><br>
-                            <strong>Data de Nascimento:</strong><br>${nascimento}<br><br>
-                            <strong>Sexo:</strong><br>${sexo}<br><br>
-                            <strong>Curso e Turma:</strong><br>${cursoExibir}
-                        </div>
-                        <div>
-                            <strong>Endereço Completo:</strong><br>${enderecoCompletoFormatado}<br><br>
-                            <strong>Matrícula:</strong><br>${codigoMatricula}<br><br>
-                            <strong>RG:</strong><br>${rg}<br><br>
-                            <strong>WhatsApp:</strong><br>${whatsapp}
-                        </div>
-                    </div>
-
-                    <h2 style="font-size: 14px; color: #1e3a8a; text-transform: uppercase; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 6px; margin-top: 25px; margin-bottom: 12px; font-weight: bold;">2. Demonstrativo de Débitos em Atraso (Ordem Cronológica)</h2>
-                    <p style="font-size: 12px; color: #475569; margin-bottom: 8px;">Quantidade total de parcelas em atraso: <strong>${qtdParcelasAtrasadas} parcela(s)</strong></p>
-                    <div style="overflow-x: auto;">
-                        <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 5px; margin-bottom: 15px;">
-                            <thead>
-                                <tr style="background: #1e3a8a; color: #fff;">
-                                    <th style="padding: 9px; text-align: left;">Descrição</th>
-                                    <th style="padding: 9px; text-align: center;">Vencimento</th>
-                                    <th style="padding: 9px; text-align: center;">Atraso</th>
-                                    <th style="padding: 9px; text-align: right;">Valor Original</th>
-                                    <th style="padding: 9px; text-align: right;">Multa</th>
-                                    <th style="padding: 9px; text-align: right;">Juros (5% a.m.)</th>
-                                    <th style="padding: 9px; text-align: right;">Total Parcela</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${htmlTabelaDebitos}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <h2 style="font-size: 14px; color: #1e3a8a; text-transform: uppercase; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 6px; margin-top: 25px; margin-bottom: 12px; font-weight: bold;">3. Opções de Acordo Disponíveis para Escolha</h2>
-                    
-                    <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 14px; border-radius: 10px; margin-top: 10px; font-size: 12px;">
-                        <strong style="color: #047857; font-size: 13px;">Opção A: Pagamento À Vista</strong>
-                        <p style="margin: 5px 0;">Desconto Aplicado: <strong>${opcoesGeradas.avista.descJuros}% de Juros</strong> e <strong>${opcoesGeradas.avista.descMulta}% de Multa</strong>.</p>
-                        <p style="font-size: 14px; margin: 0; color: #065f46;"><strong>Valor Total À Vista: R$ ${opcoesGeradas.avista.valorFinal.toFixed(2)}</strong></p>
-                    </div>
-
-                    <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 14px; border-radius: 10px; margin-top: 10px; font-size: 12px;">
-                        <strong style="color: #047857; font-size: 13px;">Opção B: Parcelado em ${opcoesGeradas.parcelado.infoExtra}</strong>
-                        <p style="margin: 5px 0;">Desconto Aplicado: <strong>${opcoesGeradas.parcelado.descJuros}% de Juros</strong> e <strong>${opcoesGeradas.parcelado.descMulta}% de Multa</strong>.</p>
-                        <p style="font-size: 14px; margin: 0; color: #065f46;"><strong>Valor Total Parcelado: R$ ${opcoesGeradas.parcelado.valorFinal.toFixed(2)}</strong> (${opcoesGeradas.parcelado.infoExtra})</p>
-                    </div>
-
-                    <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 14px; border-radius: 10px; margin-top: 10px; font-size: 12px;">
-                        <strong style="color: #047857; font-size: 13px;">Opção C: Pagamento via Cartão de Crédito</strong>
-                        <p style="margin: 5px 0;">Desconto Aplicado: <strong>${opcoesGeradas.cartao.descJuros}% de Juros</strong> e <strong>${opcoesGeradas.cartao.descMulta}% de Multa</strong>.</p>
-                        <p style="font-size: 14px; margin: 0; color: #065f46;"><strong>Valor Total no Cartão: R$ ${opcoesGeradas.cartao.valorFinal.toFixed(2)}</strong></p>
-                    </div>
-
-                    <div style="margin-top: 45px; display: flex; justify-content: space-between; text-align: center;">
-                        <div style="width: 45%; border-top: 1.5px solid #1e293b; padding-top: 6px; font-size: 11px;">
-                            ${razaoSocial}<br>Setor Financeiro / Tesouraria
-                        </div>
-                        <div style="width: 45%; border-top: 1.5px solid #1e293b; padding-top: 6px; font-size: 11px;">
-                            ${nomeCompleto}<br>Assinatura / Concordância do Aluno
-                        </div>
-                    </div>
-
-                    <div style="margin-top: 35px; text-align: center; font-size: 10px; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 10px;">
-                        Documento gerado eletronicamente pelo Aplicativo SE7 Financeiro Mobile em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}.
-                    </div>
-                </div>
-            `;
-
-            document.getElementById('conteudo-termo-Dinamico').innerHTML = htmlCompletoTermo;
-            document.getElementById('modal-visualizador-termo').style.display = 'flex';
-
-            selecionarAlunoNegociacao(alunoNegociacaoId);
-            renderizarNegociacoesAtivasGeral();
-        }
-
-        function fecharVisualizadorTermo() {
-            document.getElementById('modal-visualizador-termo').style.display = 'none';
-        }
-
-        function abrirModalFecharAcordoParaProposta(propostaId) {
-            const prop = financeLogs.find(f => f.id === propostaId);
-            if (prop && prop.opcoesSalvas) {
-                opcoesGeradas = prop.opcoesSalvas;
-            }
-
-            const container = document.getElementById('container-opcoes-fechamento');
-            const btnConfirmar = document.getElementById('btn-confirmar-fechamento');
-            
-            let html = '';
-            for (let k in opcoesGeradas) {
-                let op = opcoesGeradas[k];
-                if (op) {
-                    let nomeFormatado = k === 'avista' ? 'À Vista' : (k === 'parcelado' ? `Parcelado (${op.infoExtra})` : 'Cartão de Crédito');
-                    html += `
-                        <label class="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-100">
-                            <div class="flex items-center gap-2">
-                                <input type="radio" name="opcao-escolhida-fechamento" value="${k}" class="text-blue-600 focus:ring-blue-500">
-                                <span class="font-bold text-slate-900 dark:text-white">${nomeFormatado}</span>
-                            </div>
-                            <span class="font-bold text-emerald-600">R$ ${op.valorFinal.toFixed(2)}</span>
-                        </label>
-                    `;
-                }
-            }
-
-            if (!html) {
-                html = `<div class="p-3 bg-amber-50 text-amber-800 rounded-xl text-xs">Por favor, clique em "Editar" na proposta para carregar as opções de pagamento antes de aprovar.</div>`;
-            }
-
-            container.innerHTML = html;
-            btnConfirmar.style.display = html.includes('radio') ? 'block' : 'none';
-            document.getElementById('modal-fechar-acordo').style.display = 'flex';
-        }
-
-        function fecharModalFecharAcordo() {
-            document.getElementById('modal-fechar-acordo').style.display = 'none';
-        }
-
-        async function executarFechamentoAcordoDefinitivo() {
-            const radioSelecionado = document.querySelector('input[name="opcao-escolhida-fechamento"]:checked');
-            if (!radioSelecionado) {
-                return alert("Selecione qual das opções o aluno escolheu para fecharmos o acordo.");
-            }
-
-            const escolhaKey = radioSelecionado.value;
-            const opEscolhida = opcoesGeradas[escolhaKey];
-            const aluno = studentsMap[alunoNegociacaoId];
-            const nome = aluno ? (aluno.fullname || aluno.name) : 'Aluno';
-
-            if (!confirm(`Deseja realmente aprovar o acordo na modalidade ${escolhaKey.toUpperCase()} no valor de R$ ${opEscolhida.valorFinal.toFixed(2)}?\n\nIsso baixará as faturas antigas e gerará as novas faturas do acordo.`)) {
-                return;
-            }
-
-            try {
-                for (let fatura of faturasAtrasadasGlobal) {
-                    await db.collection("financeLogs").doc(fatura.id).update({
-                        status: "NEGOCIADO (ACORDO)",
-                        dataPagamento: new Date().toLocaleDateString('pt-BR'),
-                        formaPagamento: "Substituído por Acordo"
-                    });
-                }
-
-                if (escolhaKey === 'parcelado') {
-                    let qtdParcelas = parseInt(opEscolhida.infoExtra) || 2;
-                    let valorParcela = opEscolhida.valorFinal / qtdParcelas;
-                    let dataBase = new Date();
-
-                    for (let i = 1; i <= qtdParcelas; i++) {
-                        dataBase.setMonth(dataBase.getMonth() + 1);
-                        let dataVencStr = dataBase.toISOString().split('T')[0];
-                        let partesVenc = dataVencStr.split('-');
-                        let vencFormatado = `${partesVenc[2]}/${partesVenc[1]}/${partesVenc[0]}`;
-
-                        let novaParcelaId = "parcela_acordo_" + alunoNegociacaoId + "_" + i + "_" + Date.now();
-                        await db.collection("financeLogs").doc(novaParcelaId).set({
-                            studentId: alunoNegociacaoId,
-                            alunoId: alunoNegociacaoId,
-                            nomeAluno: nome,
-                            description: `Parcela Acordo ${i}/${qtdParcelas}`,
-                            amount: valorParcela.toFixed(2),
-                            valor: valorParcela.toFixed(2),
-                            date: vencFormatado,
-                            vencimento: vencFormatado,
-                            status: "PENDENTE",
-                            criadoEm: new Date().toISOString()
-                        });
-                    }
-                } else {
-                    let novaUnicaId = "acordo_unico_" + alunoNegociacaoId + "_" + Date.now();
-                    let dataVencUnica = new Date();
-                    dataVencUnica.setDate(dataVencUnica.getDate() + 5);
-                    let vencUnicaStr = dataVencUnica.toISOString().split('T')[0].split('-').reverse().join('/');
-
-                    await db.collection("financeLogs").doc(novaUnicaId).set({
-                        studentId: alunoNegociacaoId,
-                        alunoId: alunoNegociacaoId,
-                        nomeAluno: nome,
-                        description: `Acordo Consolidado - ${escolhaKey.toUpperCase()}`,
-                        amount: opEscolhida.valorFinal.toFixed(2),
-                        valor: opEscolhida.valorFinal.toFixed(2),
-                        date: vencUnicaStr,
-                        vencimento: vencUnicaStr,
-                        status: "PENDENTE",
-                        criadoEm: new Date().toISOString()
-                    });
-                }
-
-                const propostasPendentes = financeLogs.filter(f => (f.studentId === alunoNegociacaoId || f.alunoId === alunoNegociacaoId) && f.status && (f.status.includes("PROPOSTA") || f.status.includes("AGUARDANDO")));
-                
-                if (propostasPendentes.length > 0) {
-                    for (let p of propostasPendentes) {
-                        await db.collection("financeLogs").doc(p.id).update({
-                            status: "ACORDO ACEITO",
-                            description: `Acordo Aceito - ${escolhaKey.toUpperCase()}`
-                        });
-                    }
-                }
-
-                fecharModalFecharAcordo();
-                alert(`🎉 Acordo aprovado com sucesso para ${nome}!\n\n• As faturas antigas foram substituídas.\n• As novas faturas/boletos do acordo foram geradas e já estão visíveis na aba de Faturas.`);
-                
-                selecionarAlunoNegociacao(alunoNegociacaoId);
-                renderizarNegociacoesAtivasGeral();
-
-            } catch (e) {
-                alert("Erro ao fechar acordo: " + e.message);
-            }
-        }
-
+        // --- FUNÇÕES DE EDIÇÃO DA MENSALIDADE SOLICITADA ---
         function abrirModalEditarMensalidadeFinanceiro(financeLogId) {
             const fatura = financeLogs.find(f => f.id === financeLogId);
             if (!fatura) return;
 
             document.getElementById('edit-cobranca-id').value = fatura.id;
+            document.getElementById('edit-cobranca-descricao').value = fatura.description || fatura.descricao || '';
             
             let vencimentoOriginal = fatura.date || fatura.vencimento || '';
             let dataFormatada = '';
             if (vencimentoOriginal.includes('/')) {
                 let partes = vencimentoOriginal.split('/');
-                if (partes.length === 3) {
-                    dataFormatada = `${partes[2]}-${partes[1]}-${partes[0]}`;
-                }
+                if (partes.length === 3) dataFormatada = `${partes[2]}-${partes[1]}-${partes[0]}`;
             } else {
                 dataFormatada = vencimentoOriginal;
             }
@@ -1889,11 +848,12 @@
 
         async function salvarEdicaoMensalidade() {
             const id = document.getElementById('edit-cobranca-id').value;
+            const novaDescricao = document.getElementById('edit-cobranca-descricao').value.trim();
             const novaDataInput = document.getElementById('edit-cobranca-data').value;
-            const novoValor = document.getElementById('edit-cobranca-valor').value;
+            const novoValor = document.getElementById('edit-cobranca-valor').value.trim();
 
-            if (!novaDataInput || !novoValor) {
-                return alert("Preencha a data do calendário e o valor corretamente.");
+            if (!novaDescricao || !novaDataInput || !novoValor) {
+                return alert("Preencha todos os campos da mensalidade.");
             }
 
             let partes = novaDataInput.split('-');
@@ -1901,61 +861,55 @@
 
             try {
                 await db.collection("financeLogs").doc(id).update({
+                    description: novaDescricao,
+                    descricao: novaDescricao,
                     date: novaDataFormatada,
                     vencimento: novaDataFormatada,
                     amount: novoValor,
                     valor: novoValor
                 });
 
-                alert("Mensalidade atualizada com sucesso! Sincronizado com a matriz.");
+                alert("Mensalidade editada e sincronizada com sucesso na Matriz!");
                 fecharModalEdicao();
+                renderizarFaturasDoAlunoSelecionado();
             } catch (e) {
                 alert("Erro ao atualizar mensalidade: " + e.message);
             }
         }
 
+        async function excluirFaturaRegistro(faturaId) {
+            if (!confirm("Deseja realmente excluir esta fatura?")) return;
+            try {
+                await db.collection("financeLogs").doc(faturaId).delete();
+                alert("Fatura excluída com sucesso!");
+            } catch (e) { alert(e.message); }
+        }
+
         async function darBaixaApp(financeLogId) {
-            let formaPagamentoSelect = document.getElementById(`forma-pagamento-${financeLogId}`);
-            let dataPagamentoInput = document.getElementById(`data-pagamento-${financeLogId}`);
+            let forma = document.getElementById(`forma-pagamento-${financeLogId}`).value;
+            let dataRaw = document.getElementById(`data-pagamento-${financeLogId}`).value;
+            let partes = dataRaw.split('-');
+            let dataFormatada = `${partes[2]}/${partes[1]}/${partes[0]}`;
 
-            let formaPagamento = formaPagamentoSelect ? formaPagamentoSelect.value : "Pix/Dinheiro";
-            let dataPagamentoRaw = dataPagamentoInput ? dataPagamentoInput.value : new Date().toISOString().split('T')[0];
-            
-            let dataPagamentoFormatada = dataPagamentoRaw;
-            if (dataPagamentoRaw.includes('-')) {
-                let partes = dataPagamentoRaw.split('-');
-                if (partes.length === 3) {
-                    dataPagamentoFormatada = `${partes[2]}/${partes[1]}/${partes[0]}`;
-                }
-            }
-
-            if (!confirm(`Confirmar o recebimento via ${formaPagamento} em ${dataPagamentoFormatada} e dar baixa nesta mensalidade?`)) return;
-            
             try {
                 await db.collection("financeLogs").doc(financeLogId).update({
-                    status: "PAGO (Baixa App Mobile)",
-                    dataPagamento: dataPagamentoFormatada,
-                    formaPagamento: formaPagamento
+                    status: "PAGO",
+                    dataPagamento: dataFormatada,
+                    formaPagamento: forma
                 });
                 alert("Baixa realizada com sucesso!");
-            } catch (e) {
-                alert("Erro ao dar baixa: " + e.message);
-            }
+            } catch (e) { alert(e.message); }
         }
 
         async function estornarBaixaApp(financeLogId) {
-            if (!confirm("Deseja realmente estornar este pagamento? A fatura voltará a ficar pendente.")) return;
-
             try {
                 await db.collection("financeLogs").doc(financeLogId).update({
                     status: "PENDENTE",
                     dataPagamento: firebase.firestore.FieldValue.delete(),
                     formaPagamento: firebase.firestore.FieldValue.delete()
                 });
-                alert("Pagamento estornado com sucesso! A fatura está pendente novamente.");
-            } catch (e) {
-                alert("Erro ao estornar pagamento: " + e.message);
-            }
+                alert("Pagamento estornado!");
+            } catch (e) { alert(e.message); }
         }
 
         function renderizarNovosAlunos() {
@@ -1964,36 +918,22 @@
             if (!container) return;
 
             const novosMatriculados = students.filter(s => !novosAlunosLidos.includes(s.id));
-
-            if (novosMatriculados.length > 0) {
-                badgeAlerta.style.display = 'flex';
-            } else {
-                badgeAlerta.style.display = 'none';
-            }
+            badgeAlerta.style.display = novosMatriculados.length > 0 ? 'flex' : 'none';
 
             if (novosMatriculados.length === 0) {
-                container.innerHTML = `<div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">Todos os novos alunos já foram conferidos! Nenhum pendente no momento.</div>`;
+                container.innerHTML = `<div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">Nenhum aluno novo pendente.</div>`;
                 return;
             }
 
-            container.innerHTML = '';
-            novosMatriculados.forEach(s => {
-                const rawCurso = s.course || s.curso || s.turma || s.nomeCurso || s.courseName || s.courseId || 'Não informado';
-                const cursoExibir = coursesMap[rawCurso] || coursesMap[normalizarTexto(rawCurso)] || String(rawCurso);
-
-                container.innerHTML += `
-                    <div onclick="marcarComoLidoEVerAluno('${s.id}')" class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl shadow-sm border-2 border-blue-500/40 flex justify-between items-center active:scale-98 transition cursor-pointer">
-                        <div>
-                            <div class="flex items-center gap-2">
-                                <span class="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span>
-                                <strong class="text-xs font-bold text-slate-900 dark:text-white">${s.fullname || s.name || 'Sem Nome'}</strong>
-                            </div>
-                            <p class="text-[10px] text-slate-400 mt-0.5">Curso: ${cursoExibir} &bull; CPF: ${s.cpf || '---'}</p>
-                        </div>
-                        <span class="px-2 py-1 bg-blue-600 text-white text-[10px] font-bold rounded-lg shadow">Ver Dados</span>
+            container.innerHTML = novosMatriculados.map(s => `
+                <div onclick="marcarComoLidoEVerAluno('${s.id}')" class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl shadow-sm border-2 border-blue-500/40 flex justify-between items-center cursor-pointer">
+                    <div>
+                        <strong class="text-xs font-bold text-slate-900 dark:text-white">${s.fullname || s.name}</strong>
+                        <p class="text-[10px] text-slate-400">CPF: ${s.cpf || '---'}</p>
                     </div>
-                `;
-            });
+                    <span class="px-2 py-1 bg-blue-600 text-white text-[10px] font-bold rounded-lg shadow">Ver</span>
+                </div>
+            `).join('');
         }
 
         function marcarComoLidoEVerAluno(id) {
@@ -2011,147 +951,36 @@
             const aluno = studentsMap[id];
             if (!aluno) return;
 
-            const cardDados = document.getElementById('card-dados-aluno');
-            
-            const nomeCompleto = aluno.fullname || aluno.name || '---';
-            const codigoMatricula = aluno.code || aluno.matricula || 'S/N';
-            const cpf = aluno.cpf || '---';
-            const rg = aluno.rg || aluno.documento || '---';
-            const sexo = aluno.gender || aluno.sexo || '---';
-            
-            let nascimento = aluno.birthDate || aluno.dob || '---';
-            if (nascimento !== '---' && nascimento.includes('-')) {
-                nascimento = nascimento.split('-').reverse().join('/');
-            }
-
-            const whatsapp = aluno.whatsapp || aluno.phone || aluno.telefone || '---';
-            const email = aluno.email || '---';
-
-            const cep = aluno.cep || '---';
-            const logradouro = aluno.street || aluno.rua || aluno.logradouro || '';
-            const numero = aluno.number || aluno.numero || 'S/N';
-            const bairro = aluno.neighborhood || aluno.bairro || '---';
-            const cidade = aluno.city || aluno.cidade || '---';
-            const estado = aluno.state || aluno.estado || '---';
-
-            let enderecoCompletoFormatado = '';
-            if (logradouro) {
-                enderecoCompletoFormatado = `${logradouro}, nº ${numero} - ${bairro}, ${cidade}/${estado} (CEP: ${cep})`;
-            } else if (aluno.address) {
-                enderecoCompletoFormatado = aluno.address;
-            } else if (aluno.endereco) {
-                enderecoCompletoFormatado = aluno.endereco;
-            } else {
-                enderecoCompletoFormatado = `Rua não informada, nº ${numero} - ${bairro}, ${cidade}/${estado} (CEP: ${cep})`;
-            }
-
-            const rawCurso = aluno.course || aluno.curso || aluno.turma || aluno.nomeCurso || aluno.courseName || aluno.courseId || '';
-            const cursoExibir = coursesMap[rawCurso] || coursesMap[normalizarTexto(rawCurso)] || String(rawCurso || 'Não vinculado');
-            
-            const rawTurma = aluno.classId || aluno.turmaId || aluno.turma || '';
-            const turmaExibir = classesMap[rawTurma] || classesMap[normalizarTexto(rawTurma)] || String(rawTurma || 'Não vinculada');
-
-            cardDados.innerHTML = `
+            document.getElementById('card-dados-aluno').innerHTML = `
                 <div class="space-y-4">
                     <div>
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 border-b border-slate-100 dark:border-slate-800 pb-1 mb-2">1. Dados Pessoais</h3>
-                        <div class="space-y-2">
-                            <div><span class="text-slate-400 uppercase text-[10px]">Nome Completo:</span><br><strong class="text-slate-900 dark:text-white text-sm">${nomeCompleto}</strong></div>
-                            <div class="grid grid-cols-2 gap-2">
-                                <div><span class="text-slate-400 uppercase text-[10px]">Data de Nascimento:</span><br><span class="font-semibold">${nascimento}</span></div>
-                                <div><span class="text-slate-400 uppercase text-[10px]">Sexo:</span><br><span class="font-semibold">${sexo}</span></div>
-                            </div>
-                            <div class="grid grid-cols-2 gap-2">
-                                <div><span class="text-slate-400 uppercase text-[10px]">CPF:</span><br><span class="font-semibold">${cpf}</span></div>
-                                <div><span class="text-slate-400 uppercase text-[10px]">RG:</span><br><span class="font-semibold">${rg}</span></div>
-                            </div>
-                        </div>
+                        <h3 class="text-xs font-bold uppercase text-blue-600 border-b pb-1 mb-2">Dados Pessoais</h3>
+                        <p><strong>Nome:</strong> ${aluno.fullname || aluno.name}</p>
+                        <p><strong>CPF:</strong> ${aluno.cpf || '---'}</p>
+                        <p><strong>WhatsApp:</strong> ${aluno.whatsapp || aluno.telefone || '---'}</p>
                     </div>
-
                     <div>
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 border-b border-slate-100 dark:border-slate-800 pb-1 mb-2">2. Contato</h3>
-                        <div class="grid grid-cols-2 gap-2">
-                            <div><span class="text-slate-400 uppercase text-[10px]">WhatsApp / Telefone:</span><br><span class="font-semibold">${whatsapp}</span></div>
-                            <div><span class="text-slate-400 uppercase text-[10px]">E-mail:</span><br><span class="font-semibold truncate block">${email}</span></div>
-                        </div>
-                    </div>
-
-                    <div>
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 border-b border-slate-100 dark:border-slate-800 pb-1 mb-2">3. Endereço Completo</h3>
-                        <div class="space-y-2">
-                            <div class="grid grid-cols-2 gap-2">
-                                <div><span class="text-slate-400 uppercase text-[10px]">CEP:</span><br><span class="font-semibold">${cep}</span></div>
-                                <div><span class="text-slate-400 uppercase text-[10px]">Cidade / Estado:</span><br><span class="font-semibold">${cidade}/${estado}</span></div>
-                            </div>
-                            <div class="grid grid-cols-2 gap-2">
-                                <div><span class="text-slate-400 uppercase text-[10px]">Logradouro (Rua):</span><br><span class="font-semibold">${logradouro || 'Não informado'}</span></div>
-                                <div><span class="text-slate-400 uppercase text-[10px]">Número:</span><br><span class="font-semibold">${numero}</span></div>
-                            </div>
-                            <div><span class="text-slate-400 uppercase text-[10px]">Bairro:</span><br><span class="font-semibold">${bairro}</span></div>
-                            <div class="bg-slate-50 dark:bg-slate-800/50 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 mt-1">
-                                <span class="text-slate-400 uppercase text-[9px] block mb-0.5">Endereço Completo (Pronto para Boletos):</span>
-                                <span class="font-bold text-slate-900 dark:text-white">${enderecoCompletoFormatado}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div>
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 border-b border-slate-100 dark:border-slate-800 pb-1 mb-2">4. Vínculo Acadêmico</h3>
-                        <div class="space-y-2">
-                            <div><span class="text-slate-400 uppercase text-[10px]">Nº da Matrícula:</span><br><span class="font-semibold font-mono text-blue-600 dark:text-blue-400">${codigoMatricula}</span></div>
-                            <div><span class="text-slate-400 uppercase text-[10px]">Curso:</span><br><span class="font-semibold text-slate-900 dark:text-white">${cursoExibir}</span></div>
-                            <div><span class="text-slate-400 uppercase text-[10px]">Turma:</span><br><span class="font-semibold text-slate-900 dark:text-white">${turmaExibir}</span></div>
-                        </div>
+                        <h3 class="text-xs font-bold uppercase text-blue-600 border-b pb-1 mb-2">Vínculo</h3>
+                        <p><strong>Matrícula:</strong> ${aluno.code || aluno.matricula || 'S/N'}</p>
+                        <p><strong>Curso:</strong> ${aluno.course || aluno.curso || '---'}</p>
                     </div>
                 </div>
             `;
-
             mudarAbaApp('detalhes');
         }
 
-        function voltarParaOrigemDetalhes() {
-            mudarAbaApp(abaOrigemRetorno);
-        }
+        function voltarParaOrigemDetalhes() { mudarAbaApp(abaOrigemRetorno); }
 
         function mudarAbaApp(aba) {
-            const tabAlunos = document.getElementById('tab-alunos');
-            const tabNovos = document.getElementById('tab-novos-alunos');
-            const tabFin = document.getElementById('tab-financeiro');
-            const tabNeg = document.getElementById('tab-negociacoes');
-            const tabDetalhes = document.getElementById('tab-detalhes-aluno');
-            
-            const btnAlunos = document.getElementById('nav-btn-alunos');
-            const btnNovos = document.getElementById('nav-btn-novos');
-            const btnFin = document.getElementById('nav-btn-fin');
-            const btnNeg = document.getElementById('nav-btn-neg');
+            ['tab-alunos', 'tab-novos-alunos', 'tab-financeiro', 'tab-negociacoes', 'tab-detalhes-aluno'].forEach(id => {
+                document.getElementById(id).style.display = 'none';
+            });
 
-            tabAlunos.style.display = 'none';
-            tabNovos.style.display = 'none';
-            tabFin.style.display = 'none';
-            tabNeg.style.display = 'none';
-            tabDetalhes.style.display = 'none';
-
-            btnAlunos.className = "flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition";
-            btnNovos.className = "flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition relative";
-            btnFin.className = "flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition";
-            btnNeg.className = "flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition";
-
-            if (aba === 'alunos') {
-                tabAlunos.style.display = 'block';
-                btnAlunos.className = "flex flex-col items-center text-blue-600 dark:text-blue-400 text-[10px] font-bold transition";
-            } else if (aba === 'novos') {
-                tabNovos.style.display = 'block';
-                btnNovos.className = "flex flex-col items-center text-blue-600 dark:text-blue-400 text-[10px] font-bold transition relative";
-            } else if (aba === 'financeiro') {
-                tabFin.style.display = 'block';
-                btnFin.className = "flex flex-col items-center text-blue-600 dark:text-blue-400 text-[10px] font-bold transition";
-            } else if (aba === 'negociacoes') {
-                tabNeg.style.display = 'block';
-                btnNeg.className = "flex flex-col items-center text-emerald-600 dark:text-emerald-400 text-[10px] font-bold transition";
-                renderizarNegociacoesAtivasGeral();
-            } else if (aba === 'detalhes') {
-                tabDetalhes.style.display = 'flex';
-            }
+            if (aba === 'alunos') document.getElementById('tab-alunos').style.display = 'block';
+            else if (aba === 'novos') document.getElementById('tab-novos-alunos').style.display = 'block';
+            else if (aba === 'financeiro') document.getElementById('tab-financeiro').style.display = 'block';
+            else if (aba === 'negociacoes') document.getElementById('tab-negociacoes').style.display = 'block';
+            else if (aba === 'detalhes') document.getElementById('tab-detalhes-aluno').style.display = 'flex';
         }
     </script>
 </body>
