@@ -215,7 +215,7 @@
 
             <div class="flex flex-col gap-2 pt-2">
                 <button type="button" id="btn-gerar-proposta-modal" onclick="gerarPropostaPDF()" style="display: none;" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow transition">
-                    <i class="fa-solid fa-file-pdf mr-1"></i> Gerar Proposta e Abrir em Nova Aba
+                    <i class="fa-solid fa-file-pdf mr-1"></i> Visualizar Proposta na Tela
                 </button>
                 <button type="button" onclick="fecharModalRealizarAcordo()" class="w-full py-2.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold rounded-xl text-xs">
                     Fechar
@@ -251,6 +251,39 @@
                 <button type="button" id="btn-confirmar-fechamento" onclick="executarFechamentoAcordoDefinitivo()" class="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow" style="display: none;">
                     Aprovar Acordo e Gerar Faturas
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL INTEGRADO PARA VISUALIZAÇÃO DO TERMO (COMPATÍVEL COM WEBVIEW) -->
+    <div id="modal-visualizador-termo" class="fixed inset-0 z-[6000] flex flex-col bg-slate-900/90 backdrop-blur-md p-2 sm:p-6" style="display: none;">
+        <!-- Barra Superior Fixa do Modal com Botão de Fechar Perfeito para Mobile/WebView -->
+        <div class="bg-white dark:bg-slate-900 px-4 py-3 rounded-2xl shadow-xl flex justify-between items-center mb-2 shrink-0 border border-slate-200 dark:border-slate-800">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-blue-600 text-white rounded-xl flex items-center justify-center text-xs">
+                    <i class="fa-solid fa-file-contract"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-xs sm:text-sm text-slate-900 dark:text-white">Termo de Proposta de Acordo</h3>
+                    <p class="text-[10px] text-slate-400">Visualização pronta para impressão ou conferência</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <!-- Botão de Imprimir Direto -->
+                <button type="button" onclick="window.print()" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-print"></i> <span class="hidden sm:inline">Imprimir</span>
+                </button>
+                <!-- Botão de Fechar / Voltar (Funciona 100% no WebView) -->
+                <button type="button" onclick="fecharVisualizadorTermo()" class="px-3.5 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:text-white text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl shadow transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-xmark"></i> Fechar
+                </button>
+            </div>
+        </div>
+
+        <!-- Área de Exibição do Termo -->
+        <div class="flex-1 bg-white rounded-2xl shadow-2xl overflow-y-auto p-4 sm:p-8">
+            <div id="conteudo-termo-Dinamico" class="max-w-3xl mx-auto">
+                <!-- Inserido dinamicamente via script -->
             </div>
         </div>
     </div>
@@ -1515,181 +1548,110 @@
                 </tr>
             `;
 
+            // HTML Interno do Termo exibido perfeitamente no Modal do WebView
             let htmlCompletoTermo = `
-                <!DOCTYPE html>
-                <html lang="pt-BR">
-                <head>
-                    <meta charset="UTF-8">
-                    <title>Termo de Proposta de Acordo - ${nomeCompleto}</title>
-                    <style>
-                        /* FORÇA AS CORES REAIS NA IMPRESSÃO */
-                        * {
-                            -webkit-print-color-adjust: exact !important;
-                            print-color-adjust: exact !important;
-                            color-adjust: exact !important;
-                        }
-
-                        /* REGRA PARA OCULTAR O BOTÃO DE FECHAR NA HORA DE IMPRIMIR O DOCUMENTO */
-                        @media print {
-                            .no-print {
-                                display: none !important;
-                            }
-                        }
-
-                        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #1e293b; margin: 0; padding: 20px; background: #f8fafc; }
-                        .container { max-width: 800px; margin: 0 auto; background: #ffffff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); position: relative; }
-                        
-                        /* BOTÃO DE VOLTAR / FECHAR ABA NO TOPO */
-                        .btn-voltar-topo {
-                            display: inline-flex;
-                            align-items: center;
-                            gap: 8px;
-                            background: #e2e8f0;
-                            color: #334155;
-                            padding: 8px 14px;
-                            border-radius: 8px;
-                            font-size: 12px;
-                            font-weight: bold;
-                            text-decoration: none;
-                            margin-bottom: 20px;
-                            border: none;
-                            cursor: pointer;
-                            transition: background 0.2s;
-                        }
-                        .btn-voltar-topo:hover {
-                            background: #cbd5e1;
-                        }
-
-                        /* CABEÇALHO COM FUNDO ESCURO UNIFICADO E LOGO TRANSPARENTE (SEM FUNDO BRANCO) */
-                        .header { background: #1e3a8a !important; color: #ffffff !important; padding: 20px 25px; border-radius: 10px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px; }
-                        .header-left { display: flex; align-items: center; gap: 15px; }
-                        .logo-area { width: 55px; height: 55px; background: transparent; color: #ffffff; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; flex-shrink: 0; overflow: hidden; }
-                        .logo-area img { max-width: 100%; max-height: 100%; object-fit: contain; }
-                        .inst-info h1 { font-size: 14px; margin: 0 0 3px 0; font-weight: bold; letter-spacing: 0.3px; color: #ffffff !important; }
-                        .inst-info p { font-size: 10px; color: #cbd5e1 !important; margin: 0; line-height: 1.3; }
-                        .header-right { text-align: right; border-left: 1px solid rgba(255, 255, 255, 0.2); padding-left: 15px; }
-                        .header-right span { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #93c5fd !important; font-weight: bold; display: block; }
-                        .header-right strong { font-size: 11px; color: #ffffff !important; }
-
-                        h2 { font-size: 14px; color: #1e3a8a; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; margin-top: 25px; margin-bottom: 10px; }
-                        table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 10px; margin-bottom: 15px; }
-                        th { background: #1e3a8a !important; color: #fff !important; text-align: left; padding: 8px; font-weight: bold; }
-                        .grid-dados { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 11px; background: #f1f5f9 !important; padding: 14px; border-radius: 8px; }
-                        .grid-dados div { margin-bottom: 2px; }
-                        .opcoes-box { background: #f0fdf4 !important; border: 1px solid #bbf7d0; padding: 12px; border-radius: 8px; margin-top: 10px; font-size: 12px; }
-                        .footer { margin-top: 30px; text-align: center; font-size: 10px; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 10px; }
-                    </style>
-                </head>
-                <body>
-                    <div class="container">
-                        <!-- BOTÃO DE VOLTAR / FECHAR ABA NO TOPO (OCULTO NA IMPRESSÃO) -->
-                        <div class="no-print">
-                            <button onclick="window.close();" class="btn-voltar-topo">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                                Fechar Aba / Voltar
-                            </button>
-                        </div>
-
-                        <!-- CABEÇALHO PROFISSIONAL UNIFICADO COM LOGO SEM FUNDO BRANCO -->
-                        <div class="header">
-                            <div class="header-left">
-                                <div class="logo-area">${logoUrl ? `<img src="${logoUrl}" alt="Logo">` : 'SE7'}</div>
-                                <div class="inst-info">
-                                    <h1>${razaoSocial}</h1>
-                                    <p><strong>CNPJ:</strong> ${cnpjInst}<br><strong>Endereço:</strong> ${enderecoInst}</p>
-                                </div>
-                            </div>
-                            <div class="header-right">
-                                <span>Emitido por</span>
-                                <strong>Setor Financeiro</strong>
-                            </div>
-                        </div>
-
-                        <h2 style="text-align: center; font-size: 18px; color: #1e3a8a; margin-bottom: 20px;">TERMO DE PROPOSTA DE ACORDO FINANCEIRO</h2>
-
-                        <h2>1. Identificação do Aluno</h2>
-                        <div class="grid-dados">
-                            <div>
-                                <strong>Nome Completo:</strong><br>${nomeCompleto}<br><br>
-                                <strong>CPF:</strong><br>${cpf}<br><br>
-                                <strong>Data de Nascimento:</strong><br>${nascimento}<br><br>
-                                <strong>Sexo:</strong><br>${sexo}<br><br>
-                                <strong>Curso e Turma:</strong><br>${cursoExibir}
+                <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #1e293b; padding: 10px;">
+                    <!-- CABEÇALHO COM FUNDO ESCURO UNIFICADO E LOGO TRANSPARENTE -->
+                    <div style="background: #1e3a8a; color: #ffffff; padding: 20px 25px; border-radius: 10px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px;">
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <div style="width: 55px; height: 55px; background: transparent; color: #ffffff; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; flex-shrink: 0; overflow: hidden;">
+                                ${logoUrl ? `<img src="${logoUrl}" alt="Logo" style="max-width:100%; max-height:100%; object-fit:contain;">` : 'SE7'}
                             </div>
                             <div>
-                                <strong>Endereço Completo:</strong><br>${enderecoCompletoFormatado}<br><br>
-                                <strong>Matrícula:</strong><br>${codigoMatricula}<br><br>
-                                <strong>RG:</strong><br>${rg}<br><br>
-                                <strong>WhatsApp:</strong><br>${whatsapp}
+                                <h1 style="font-size: 14px; margin: 0 0 3px 0; font-weight: bold; letter-spacing: 0.3px; color: #ffffff;">${razaoSocial}</h1>
+                                <p style="font-size: 10px; color: #cbd5e1; margin: 0; line-height: 1.3;"><strong>CNPJ:</strong> ${cnpjInst}<br><strong>Endereço:</strong> ${enderecoInst}</p>
                             </div>
                         </div>
+                        <div style="text-align: right; border-left: 1px solid rgba(255, 255, 255, 0.2); padding-left: 15px;">
+                            <span style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #93c5fd; font-weight: bold; display: block;">Emitido por</span>
+                            <strong style="font-size: 11px; color: #ffffff;">Setor Financeiro</strong>
+                        </div>
+                    </div>
 
-                        <h2>2. Demonstrativo de Débitos em Atraso (Com Encargos)</h2>
-                        <table>
+                    <h2 style="text-align: center; font-size: 16px; color: #1e3a8a; margin-bottom: 20px; text-transform: uppercase;">TERMO DE PROPOSTA DE ACORDO FINANCEIRO</h2>
+
+                    <h2 style="font-size: 13px; color: #1e3a8a; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; margin-top: 25px; margin-bottom: 10px;">1. Identificação do Aluno</h2>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 11px; background: #f1f5f9; padding: 14px; border-radius: 8px;">
+                        <div>
+                            <strong>Nome Completo:</strong><br>${nomeCompleto}<br><br>
+                            <strong>CPF:</strong><br>${cpf}<br><br>
+                            <strong>Data de Nascimento:</strong><br>${nascimento}<br><br>
+                            <strong>Sexo:</strong><br>${sexo}<br><br>
+                            <strong>Curso e Turma:</strong><br>${cursoExibir}
+                        </div>
+                        <div>
+                            <strong>Endereço Completo:</strong><br>${enderecoCompletoFormatado}<br><br>
+                            <strong>Matrícula:</strong><br>${codigoMatricula}<br><br>
+                            <strong>RG:</strong><br>${rg}<br><br>
+                            <strong>WhatsApp:</strong><br>${whatsapp}
+                        </div>
+                    </div>
+
+                    <h2 style="font-size: 13px; color: #1e3a8a; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; margin-top: 25px; margin-bottom: 10px;">2. Demonstrativo de Débitos em Atraso (Com Encargos)</h2>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 10px; margin-bottom: 15px;">
                             <thead>
-                                <tr>
-                                    <th>Descrição</th>
-                                    <th style="text-align: center;">Vencimento</th>
-                                    <th style="text-align: center;">Atraso</th>
-                                    <th style="text-align: right;">Valor Original</th>
-                                    <th style="text-align: right;">Multa</th>
-                                    <th style="text-align: right;">Juros</th>
-                                    <th style="text-align: right;">Total Parcela</th>
+                                <tr style="background: #1e3a8a; color: #fff;">
+                                    <th style="padding: 8px; text-align: left;">Descrição</th>
+                                    <th style="padding: 8px; text-align: center;">Vencimento</th>
+                                    <th style="padding: 8px; text-align: center;">Atraso</th>
+                                    <th style="padding: 8px; text-align: right;">Valor Original</th>
+                                    <th style="padding: 8px; text-align: right;">Multa</th>
+                                    <th style="padding: 8px; text-align: right;">Juros</th>
+                                    <th style="padding: 8px; text-align: right;">Total Parcela</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 ${htmlTabelaDebitos}
                             </tbody>
                         </table>
+                    </div>
 
-                        <h2>3. Opções de Acordo Disponíveis para Escolha</h2>
-                        
-                        <div class="opcoes-box">
-                            <strong style="color: #047857; font-size: 13px;">Opção A: Pagamento À Vista</strong>
-                            <p style="margin: 5px 0;">Desconto Aplicado: <strong>${opcoesGeradas.avista.descJuros}% de Juros</strong> e <strong>${opcoesGeradas.avista.descMulta}% de Multa</strong>.</p>
-                            <p style="font-size: 14px; margin: 0; color: #065f46;"><strong>Valor Total À Vista: R$ ${opcoesGeradas.avista.valorFinal.toFixed(2)}</strong></p>
+                    <h2 style="font-size: 13px; color: #1e3a8a; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; margin-top: 25px; margin-bottom: 10px;">3. Opções de Acordo Disponíveis para Escolha</h2>
+                    
+                    <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 12px; border-radius: 8px; margin-top: 10px; font-size: 12px;">
+                        <strong style="color: #047857; font-size: 13px;">Opção A: Pagamento À Vista</strong>
+                        <p style="margin: 5px 0;">Desconto Aplicado: <strong>${opcoesGeradas.avista.descJuros}% de Juros</strong> e <strong>${opcoesGeradas.avista.descMulta}% de Multa</strong>.</p>
+                        <p style="font-size: 14px; margin: 0; color: #065f46;"><strong>Valor Total À Vista: R$ ${opcoesGeradas.avista.valorFinal.toFixed(2)}</strong></p>
+                    </div>
+
+                    <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 12px; border-radius: 8px; margin-top: 10px; font-size: 12px;">
+                        <strong style="color: #047857; font-size: 13px;">Opção B: Parcelado em ${opcoesGeradas.parcelado.infoExtra}</strong>
+                        <p style="margin: 5px 0;">Desconto Aplicado: <strong>${opcoesGeradas.parcelado.descJuros}% de Juros</strong> e <strong>${opcoesGeradas.parcelado.descMulta}% de Multa</strong>.</p>
+                        <p style="font-size: 14px; margin: 0; color: #065f46;"><strong>Valor Total Parcelado (${opcoesGeradas.parcelado.infoExtra}): R$ ${opcoesGeradas.parcelado.valorFinal.toFixed(2)}</strong> (Dividido em ${opcoesGeradas.parcelado.infoExtra})</p>
+                    </div>
+
+                    <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 12px; border-radius: 8px; margin-top: 10px; font-size: 12px;">
+                        <strong style="color: #047857; font-size: 13px;">Opção C: Pagamento via Cartão de Crédito</strong>
+                        <p style="margin: 5px 0;">Desconto Aplicado: <strong>${opcoesGeradas.cartao.descJuros}% de Juros</strong> e <strong>${opcoesGeradas.cartao.descMulta}% de Multa</strong>.</p>
+                        <p style="font-size: 14px; margin: 0; color: #065f46;"><strong>Valor Total no Cartão: R$ ${opcoesGeradas.cartao.valorFinal.toFixed(2)}</strong></p>
+                    </div>
+
+                    <div style="margin-top: 40px; display: flex; justify-content: space-between; text-align: center;">
+                        <div style="width: 45%; border-top: 1px solid #1e293b; padding-top: 5px; font-size: 11px;">
+                            ${razaoSocial}<br>Setor Financeiro / Tesouraria
                         </div>
-
-                        <div class="opcoes-box">
-                            <strong style="color: #047857; font-size: 13px;">Opção B: Parcelado em ${opcoesGeradas.parcelado.infoExtra}</strong>
-                            <p style="margin: 5px 0;">Desconto Aplicado: <strong>${opcoesGeradas.parcelado.descJuros}% de Juros</strong> e <strong>${opcoesGeradas.parcelado.descMulta}% de Multa</strong>.</p>
-                            <p style="font-size: 14px; margin: 0; color: #065f46;"><strong>Valor Total Parcelado (${opcoesGeradas.parcelado.infoExtra}): R$ ${opcoesGeradas.parcelado.valorFinal.toFixed(2)}</strong> (Dividido em ${opcoesGeradas.parcelado.infoExtra})</p>
-                        </div>
-
-                        <div class="opcoes-box">
-                            <strong style="color: #047857; font-size: 13px;">Opção C: Pagamento via Cartão de Crédito</strong>
-                            <p style="margin: 5px 0;">Desconto Aplicado: <strong>${opcoesGeradas.cartao.descJuros}% de Juros</strong> e <strong>${opcoesGeradas.cartao.descMulta}% de Multa</strong>.</p>
-                            <p style="font-size: 14px; margin: 0; color: #065f46;"><strong>Valor Total no Cartão: R$ ${opcoesGeradas.cartao.valorFinal.toFixed(2)}</strong></p>
-                        </div>
-
-                        <div style="margin-top: 40px; display: flex; justify-content: space-between; text-align: center;">
-                            <div style="width: 45%; border-top: 1px solid #1e293b; padding-top: 5px; font-size: 11px;">
-                                ${razaoSocial}<br>Setor Financeiro / Tesouraria
-                            </div>
-                            <div style="width: 45%; border-top: 1px solid #1e293b; padding-top: 5px; font-size: 11px;">
-                                ${nomeCompleto}<br>Assinatura / Concordância do Aluno
-                            </div>
-                        </div>
-
-                        <div class="footer">
-                            Documento gerado eletronicamente pelo Aplicativo SE7 Financeiro Mobile em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}.
+                        <div style="width: 45%; border-top: 1px solid #1e293b; padding-top: 5px; font-size: 11px;">
+                            ${nomeCompleto}<br>Assinatura / Concordância do Aluno
                         </div>
                     </div>
-                </body>
-                </html>
+
+                    <div style="margin-top: 30px; text-align: center; font-size: 10px; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 10px;">
+                        Documento gerado eletronicamente pelo Aplicativo SE7 Financeiro Mobile em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}.
+                    </div>
+                </div>
             `;
 
-            // Abre instantaneamente em uma nova aba do navegador do celular
-            const blob = new Blob([htmlCompletoTermo], { type: 'text/html;charset=utf-8' });
-            const urlBlob = URL.createObjectURL(blob);
-            
-            const novaJanela = window.open(urlBlob, '_blank');
-            if (!novaJanela) {
-                window.location.href = urlBlob;
-            }
+            // Exibe direto no Modal Nativo do WebView (Sem falhar e sem travar abas)
+            document.getElementById('conteudo-termo-Dinamico').innerHTML = htmlCompletoTermo;
+            document.getElementById('modal-visualizador-termo').style.display = 'flex';
 
             selecionarAlunoNegociacao(alunoNegociacaoId);
             renderizarNegociacoesAtivasGeral();
+        }
+
+        function fecharVisualizadorTermo() {
+            document.getElementById('modal-visualizador-termo').style.display = 'none';
         }
 
         function abrirModalFecharAcordoParaProposta(propostaId) {
