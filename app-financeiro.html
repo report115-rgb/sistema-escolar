@@ -1522,11 +1522,34 @@
                     <meta charset="UTF-8">
                     <title>Termo de Proposta de Acordo - ${nomeCompleto}</title>
                     <style>
-                        /* FORÇA O NAVEGADOR A IMPRIMIR EXATAMENTE AS CORES DA TELA (IMPEDE INVERSÃO/ALTERAÇÃO) */
+                        /* FORÇA AS CORES REAIS NA IMPRESSÃO */
                         * {
                             -webkit-print-color-adjust: exact !important;
                             print-color-adjust: exact !important;
                             color-adjust: exact !important;
+                        }
+
+                        /* REQUISITO: IMPRIME APENAS A ÁREA DO DOCUMENTO (.container) */
+                        @media print {
+                            body * {
+                                display: none !important;
+                            }
+                            .container, .container * {
+                                display: block !important;
+                            }
+                            body, html {
+                                background: #ffffff !important;
+                                margin: 0 !important;
+                                padding: 0 !important;
+                            }
+                            .container {
+                                width: 100% !important;
+                                max-width: 100% !important;
+                                margin: 0 !important;
+                                padding: 10px !important;
+                                box-shadow: none !important;
+                                border-radius: 0 !important;
+                            }
                         }
 
                         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #1e293b; margin: 0; padding: 20px; background: #f8fafc; }
