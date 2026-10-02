@@ -1515,7 +1515,6 @@
                 </tr>
             `;
 
-            // CRIAÇÃO DO MODAL FLUTUANTE SEGURO PARA O APP MOBILE
             let modalExistente = document.getElementById('modal-visualizador-proposta');
             if (modalExistente) modalExistente.remove();
 
@@ -1533,7 +1532,7 @@
                         </button>
                     </div>
 
-                    <div class="space-y-4 text-xs max-h-[60vh] overflow-y-auto p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700">
+                    <div id="conteudo-proposta-imprimir" class="space-y-4 text-xs max-h-[60vh] overflow-y-auto p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700">
                         <div class="flex items-center gap-3 bg-blue-900 text-white p-3 rounded-xl">
                             <div class="font-bold text-lg">SE7</div>
                             <div>
@@ -1576,8 +1575,8 @@
                     </div>
 
                     <div class="flex gap-2 pt-2">
-                        <button type="button" onclick="window.print()" class="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow transition flex items-center justify-center gap-1.5">
-                            <i class="fa-solid fa-print"></i> Imprimir / Salvar PDF
+                        <button type="button" onclick="baixarPropostaComoArquivoMobile('${nomeCompleto}')" class="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow transition flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-download"></i> Baixar / Salvar em PDF
                         </button>
                         <button type="button" onclick="document.getElementById('modal-visualizador-proposta').remove()" class="py-3 px-4 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold rounded-xl text-xs">
                             Fechar
@@ -1589,6 +1588,46 @@
             document.body.appendChild(divModal);
             selecionarAlunoNegociacao(alunoNegociacaoId);
             renderizarNegociacoesAtivasGeral();
+        }
+
+        function baixarPropostaComoArquivoMobile(nomeAluno) {
+            const conteudoHTML = document.getElementById('conteudo-proposta-imprimir').innerHTML;
+            
+            const cabecalhoCompleto = `
+                <!DOCTYPE html>
+                <html lang="pt-BR">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Proposta de Acordo - ${nomeAluno}</title>
+                    <style>
+                        body { font-family: 'Segoe UI', Tahoma, sans-serif; padding: 20px; color: #1e293b; background: #fff; }
+                        .bg-blue-900 { background: #1e3a8a; color: #fff; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+                        .bg-white { background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 10px; }
+                        strong { color: #0f172a; }
+                        .text-emerald-600 { color: #059669; font-weight: bold; }
+                    </style>
+                </head>
+                <body>
+                    <h2 style="color: #1e3a8a; border-bottom: 2px solid #1e3a8a; padding-bottom: 5px;">SE7 &bull; Termo de Proposta de Acordo</h2>
+                    ${conteudoHTML}
+                    <div style="margin-top: 20px; font-size: 10px; text-align: center; color: #64748b;">
+                        Documento gerado pelo Aplicativo SE7 Financeiro Mobile em ${new Date().toLocaleDateString('pt-BR')}.
+                    </div>
+                </body>
+                </html>
+            `;
+
+            const blob = new Blob([cabecalhoCompleto], { type: 'text/html;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Proposta_Acordo_${nomeAluno.replace(/\s+/g, '_')}.html`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            alert("Download iniciado! O arquivo foi salvo nas pastas de Downloads do seu celular.");
         }
 
         function abrirModalFecharAcordoParaProposta(propostaId) {
