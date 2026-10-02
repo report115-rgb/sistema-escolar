@@ -385,21 +385,23 @@
                 </div>
             </div>
 
-            <!-- TELA DE DETALHES DO ALUNO (FICHA CADASTRAL COMPLETA) -->
-            <div id="tab-detalhes-aluno" class="space-y-3 tab-pane" style="display: none;">
-                <div class="bg-white dark:bg-slate-900 p-4 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 space-y-3">
-                    <div class="flex justify-between items-center">
-                        <h2 class="font-bold text-sm text-blue-600 dark:text-blue-400 flex items-center gap-2">
-                            <i class="fa-solid fa-id-card"></i> Ficha Cadastral do Aluno
-                        </h2>
-                        <button onclick="voltarParaOrigemDetalhes()" class="px-3 py-1.5 bg-slate-200 dark:bg-slate-800 text-xs rounded-xl font-semibold">
-                            <i class="fa-solid fa-arrow-left mr-1"></i> Voltar
-                        </button>
-                    </div>
+            <!-- TELA DE DETALHES DO ALUNO (FICHA CADASTRAL COMPLETA - COM CABEÇALHO FIXO) -->
+            <div id="tab-detalhes-aluno" class="flex flex-col h-full tab-pane" style="display: none;">
+                <!-- Cabeçalho Fixo da Ficha -->
+                <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 mb-3 shrink-0 flex justify-between items-center">
+                    <h2 class="font-bold text-sm text-blue-600 dark:text-blue-400 flex items-center gap-2">
+                        <i class="fa-solid fa-id-card"></i> Ficha Cadastral do Aluno
+                    </h2>
+                    <button onclick="voltarParaOrigemDetalhes()" class="px-3 py-1.5 bg-slate-200 dark:bg-slate-800 text-xs rounded-xl font-semibold">
+                        <i class="fa-solid fa-arrow-left mr-1"></i> Voltar
+                    </button>
                 </div>
 
-                <div id="card-dados-aluno" class="bg-white dark:bg-slate-900 p-5 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 space-y-4 text-xs">
-                    <!-- Informações completas preenchidas via script -->
+                <!-- Conteúdo com rolagem independente -->
+                <div class="flex-1 overflow-y-auto space-y-3 pb-6">
+                    <div id="card-dados-aluno" class="bg-white dark:bg-slate-900 p-5 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 space-y-4 text-xs">
+                        <!-- Informações completas preenchidas via script -->
+                    </div>
                 </div>
             </div>
 
@@ -594,7 +596,7 @@
                 renderizarFaturasDoAlunoSelecionado();
                 renderizarNegociacoesAtivasGeral();
                 if (alunoNegociacaoId) selecionarAlunoNegociacao(alunoNegociacaoId);
-                if (alunoSelecionadoId && document.getElementById('tab-detalhes-aluno').style.display === 'block') {
+                if (alunoSelecionadoId && document.getElementById('tab-detalhes-aluno').style.display === 'flex') {
                     abrirDetalhesAluno(alunoSelecionadoId, abaOrigemRetorno);
                 }
             }, error => {
@@ -930,7 +932,6 @@
             
             if (!container) return;
 
-            // Se houver texto digitado na busca, esconde automaticamente a lista de negociações ativas
             if (termoBusca.length > 0) {
                 container.innerHTML = '';
                 return;
@@ -2068,7 +2069,7 @@
                 btnNeg.className = "flex flex-col items-center text-emerald-600 dark:text-emerald-400 text-[10px] font-bold transition";
                 renderizarNegociacoesAtivasGeral();
             } else if (aba === 'detalhes') {
-                tabDetalhes.style.display = 'block';
+                tabDetalhes.style.display = 'flex';
             }
         }
     </script>
