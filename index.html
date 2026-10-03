@@ -3714,74 +3714,46 @@ function carregarDatasCalendarioParaFrequencia() {
     }
 }
 
-async function addOrUpdateStudent() {
-    const editIdEl = document.getElementById('edit-student-id');
-    const editId = editIdEl ? editIdEl.value : '';
-    
-    const fullname = document.getElementById('nomeAluno').value.trim();
-    const email = document.getElementById('emailAluno').value.trim();
-    const cpf = document.getElementById('cpfAluno').value.trim();
-    const courseId = document.getElementById('input-student-course').value;
-    const classId = document.getElementById('input-student-class').value;
+	async function addOrUpdateStudent() {
+            const editId = document.getElementById('edit-student-id').value;
+            const fullname = document.getElementById('nomeAluno').value.trim();
+            const email = document.getElementById('emailAluno').value.trim();
+            const cpf = document.getElementById('cpfAluno').value.trim();
+            const courseId = document.getElementById('input-student-course').value;
+            const classId = document.getElementById('input-student-class').value;
 
-    if (!fullname || !email || !cpf || !courseId || !classId) {
-        alert("Preencha todos os campos!");
-        return;
-    }
+            if (!fullname || !email || !cpf || !courseId || !classId) return alert("Preencha todos os campos!");
+            if (!validarCPF(cpf)) return alert("CPF inválido!");
 
-    // Validação de CPF segura (só executa se a função existir)
-    if (typeof validarCPF === 'function' && !validarCPF(cpf)) {
-        alert("CPF inválido!");
-        return;
-    }
+            const cursoObj = courses.find(c => c.id === courseId);
 
-    const studentData = {
-        fullname,
-        dob: document.getElementById('dataNascimento').value || '',
-        sexo: document.getElementById('sexoAluno').value || '',
-        whatsapp: document.getElementById('whatsappAluno').value.trim() || '',
-        email,
-        rg: document.getElementById('rgAluno').value.trim() || '',
-        cpf,
-        cep: document.getElementById('cepAluno').value.trim() || '',
-        endereco: document.getElementById('enderecoAluno').value.trim() || '',
-        numero: document.getElementById('numeroAluno').value.trim() || '',
-        bairro: document.getElementById('bairroAluno').value.trim() || '',
-        cidade: document.getElementById('cidadeAluno').value.trim() || '',
-        estado: document.getElementById('estadoAluno').value.trim() || '',
-        courseId,
-        classId,
-        fotoAluno: (typeof fotoRostoBase64Temp !== 'undefined') ? fotoRostoBase64Temp : ""
-    };
+            const studentData = {
+        fullname, dob: document.getElementById('dataNascimento').value,
+        sexo: document.getElementById('sexoAluno').value, whatsapp: document.getElementById('whatsappAluno').value.trim(),
+        email, rg: document.getElementById('rgAluno').value.trim(), cpf,
+        cep: document.getElementById('cepAluno').value.trim(), endereco: document.getElementById('enderecoAluno').value.trim(),
+        numero: document.getElementById('numeroAluno').value.trim(), bairro: document.getElementById('bairroAluno').value.trim(),
+        cidade: document.getElementById('cidadeAluno').value.trim(), estado: document.getElementById('estadoAluno').value.trim(),
+        courseId, classId,
+        fotoAluno: fotoRostoBase64Temp || "" // <--- ADICIONE ESTA LINHA AQUI PARA SALVAR A FOTO NA NUVEM
+    };
 
-    try {
-        if (editId) {
-            await db.collection("students").doc(editId).update(studentData);
-            if (typeof closeNewStudentModal === 'function') closeNewStudentModal();
-            if (typeof fotoRostoBase64Temp !== 'undefined') fotoRostoBase64Temp = "";
-            alert("Dados do aluno atualizados com sucesso!");
-        } else {
-            const code = `MAT-${new Date().getFullYear()}-${Date.now().toString().slice(-5)}`;
-            studentData.code = code;
-            studentData.status = "Ativo";
-            studentData.senhaAluno = code;
-            studentData.documentos = {};
+            if (editId) {
+                await db.collection("students").doc(editId).update(studentData);
+                closeNewStudentModal();
+                alert("Dados do aluno atualizados com sucesso!");
+            } else {
+                const code = `MAT-${new Date().getFullYear()}-${Date.now().toString().slice(-5)}`;
+                studentData.code = code;
+                studentData.status = "Ativo";
+                studentData.senhaAluno = code;
+                studentData.documentos = {};
+                studentData.fotoAluno = "";
 
-            await db.collection("students").add(studentData);
-            if (typeof closeNewStudentModal === 'function') closeNewStudentModal();
-            if (typeof fotoRostoBase64Temp !== 'undefined') fotoRostoBase64Temp = "";
-            alert("Aluno cadastrado com sucesso!");
-        }
-        
-        // Atualiza a listagem de alunos na tela se a função existir
-        if (typeof carregarListaAlunos === 'function') {
-            carregarListaAlunos();
-        }
-    } catch (error) {
-        console.error("Erro ao salvar aluno no Firestore:", error);
-        alert("Erro ao salvar os dados do aluno. Verifique o console.");
-    }
-}
+                const docRef = await db.collection("students").add(studentData);
+                const novoAlunoId = docRef.id;
+                closeNewStudentModal();
+		fotoRostoBase64Temp = "";
 
                 // --- GATILHO AUTOMÁTICO DE GERAÇÃO FINANCEIRA ---
                 try {
