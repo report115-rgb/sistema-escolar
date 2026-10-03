@@ -723,7 +723,7 @@
                     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-subjects')">Disciplinas</button>
                     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-classes')">Turmas</button>
                     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-calendar')">Calendário Semestral</button>
-                    <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-teachers')">Professores</button>
+                    <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200" onclick="openSubTab(event, 'subtab-teachers')">Colaboradores</button>
                     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-templates')">Edição de Documentos</button>
                     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-institution')">Instituição</button>
 		    <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-asaas')">Asaas</button>
@@ -1033,25 +1033,69 @@
                     <div id="admin-calendar-view" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
                 </div>
 
-                <!-- SUBABA PROFESSORES -->
-                <div id="subtab-teachers" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
-                    <div>
-                        <label class="block text-xs font-semibold mb-1">Nome Completo</label>
-                        <input type="text" id="input-teacher-name" placeholder="Prof. Carlos Silva" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-semibold mb-1">Formação</label>
-                            <input type="text" id="input-teacher-formation" placeholder="Bacharel / Pós" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold mb-1">Conselho de Classe</label>
-                            <input type="text" id="input-teacher-council" placeholder="OAB/PA 00.000" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                        </div>
-                    </div>
-                    <button onclick="saveTeacher()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow">Cadastrar Professor</button>
-                    <ul class="data-list divide-y divide-gray-200 dark:divide-slate-700 mt-4" id="teachers-list"></ul>
-                </div>
+                <!-- SUBABA COLABORADORES (ANTIGA PROFESSORES) -->
+<div id="subtab-teachers" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
+    <div class="flex justify-between items-center border-b border-gray-200 dark:border-slate-700 pb-2">
+        <h3 class="font-bold text-sm text-blue-600 dark:text-blue-400"><i class="fa-solid fa-id-card-clip mr-1.5"></i> Cadastro Geral de Colaboradores (Ponto & Facial)</h3>
+        <span class="text-xs text-gray-500">Gestão para Folha de Ponto e Totem</span>
+    </div>
+
+    <input type="hidden" id="edit-teacher-id" value="">
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+            <label class="block text-xs font-semibold mb-1">Nome Completo</label>
+            <input type="text" id="input-teacher-name" placeholder="Ex: Carlos Silva" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 dark:text-white">
+        </div>
+        <div>
+            <label class="block text-xs font-semibold mb-1">Cargo / Função</label>
+            <select id="input-teacher-cargo" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 dark:text-white">
+                <option value="Professor">Professor(a)</option>
+                <option value="Secretaria">Secretaria / Atendimento</option>
+                <option value="Limpeza">Funcionário(a) de Limpeza</option>
+                <option value="Coordenação">Coordenação Pedagógica</option>
+                <option value="Financeiro">Financeiro / Administrativo</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+            <label class="block text-xs font-semibold mb-1">Formação / Especialidade</label>
+            <input type="text" id="input-teacher-formation" placeholder="Ex: Licenciatura em Letras / Pós" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 dark:text-white">
+        </div>
+        <div>
+            <label class="block text-xs font-semibold mb-1">Conselho de Classe / Registro</label>
+            <input type="text" id="input-teacher-council" placeholder="Ex: OAB/PA 00.000 ou RG" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 dark:text-white">
+        </div>
+        <div>
+            <label class="block text-xs font-semibold mb-1">ID / Matrícula para o Totem Facial</label>
+            <input type="text" id="input-teacher-pin" placeholder="Ex: COLAB-001" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 dark:text-white font-mono">
+        </div>
+    </div>
+
+    <div class="flex gap-2 pt-2">
+        <button type="button" onclick="saveTeacher()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow transition">Salvar Colaborador</button>
+        <button type="button" id="btn-cancel-edit-teacher" onclick="cancelarEdicaoColaborador()" class="px-4 py-2.5 bg-gray-500 text-white text-xs font-semibold rounded-lg shadow" style="display: none;">Cancelar</button>
+    </div>
+
+    <div class="mt-4">
+        <h4 class="font-bold text-xs text-gray-700 dark:text-gray-300 mb-2">Colaboradores Cadastrados na Instituição</h4>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead>
+                    <tr class="border-b border-gray-200 dark:border-slate-700 text-gray-500">
+                        <th class="p-2.5">Nome / ID Totem</th>
+                        <th class="p-2.5">Cargo / Função</th>
+                        <th class="p-2.5">Formação / Registro</th>
+                        <th class="p-2.5 text-right">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="teachers-list" class="divide-y divide-gray-200 dark:divide-slate-700"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
 
                 <!-- SUBABA EDIÇÃO DE DOCUMENTOS -->
 <div id="subtab-templates" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
@@ -2464,24 +2508,104 @@ async function removerUsuarioSistemaFirebase(id) {
         }
 
         async function saveTeacher() {
-            const fullname = document.getElementById('input-teacher-name').value.trim();
-            if (!fullname) return alert("Preencha o nome!");
-            await db.collection("teachers").add({ fullname, formation: document.getElementById('input-teacher-formation').value.trim(), council: document.getElementById('input-teacher-council').value.trim() });
-            document.getElementById('input-teacher-name').value = '';
-            alert("Professor cadastrado!");
-        }
+    const editId = document.getElementById('edit-teacher-id').value;
+    const fullname = document.getElementById('input-teacher-name').value.trim();
+    const cargo = document.getElementById('input-teacher-cargo').value;
+    const formation = document.getElementById('input-teacher-formation').value.trim();
+    const council = document.getElementById('input-teacher-council').value.trim();
+    const pin = document.getElementById('input-teacher-pin').value.trim() || `COLAB-${Date.now().toString().slice(-4)}`;
 
-        function renderTeachers() {
-            const list = document.getElementById('teachers-list');
-            if(list) {
-                list.innerHTML = '';
-                teachers.forEach(t => list.innerHTML += `<li class="py-2 text-xs"><strong>${t.fullname}</strong> (${t.formation || 'N/I'})</li>`);
-            }
-            ['attendance-teacher-select', 'grade-teacher-select'].forEach(id => {
-                const el = document.getElementById(id);
-                if(el) { el.innerHTML = '<option value="">Selecione...</option>'; teachers.forEach(t => el.insertAdjacentHTML('beforeend', `<option value="${t.id}">${t.fullname}</option>`)); }
-            });
+    if (!fullname) return alert("Preencha o nome completo do colaborador!");
+
+    const teacherData = { fullname, cargo, formation, council, pin };
+
+    if (editId) {
+        await db.collection("teachers").doc(editId).update(teacherData);
+        alert("Colaborador atualizado com sucesso!");
+        cancelarEdicaoColaborador();
+    } else {
+        await db.collection("teachers").add(teacherData);
+        alert("Colaborador cadastrado com sucesso!");
+        document.getElementById('input-teacher-name').value = '';
+        document.getElementById('input-teacher-formation').value = '';
+        document.getElementById('input-teacher-council').value = '';
+        document.getElementById('input-teacher-pin').value = '';
+    }
+}
+
+function renderTeachers() {
+    const list = document.getElementById('teachers-list');
+    if(list) {
+        list.innerHTML = '';
+        if (teachers.length === 0) {
+            list.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-gray-400">Nenhum colaborador cadastrado.</td></tr>`;
+            return;
         }
+        teachers.forEach(t => {
+            let corBadge = 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300';
+            if (t.cargo === 'Secretaria') corBadge = 'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300';
+            if (t.cargo === 'Limpeza') corBadge = 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300';
+            if (t.cargo === 'Coordenação') corBadge = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300';
+
+            list.innerHTML += `
+                <tr class="border-b border-gray-100 dark:border-slate-700">
+                    <td class="p-2.5">
+                        <strong class="text-gray-900 dark:text-white">${t.fullname}</strong><br>
+                        <span class="text-[10px] text-gray-400 font-mono">ID Totem: ${t.pin || '---'}</span>
+                    </td>
+                    <td class="p-2.5"><span class="px-2 py-0.5 ${corBadge} rounded text-[10px] font-bold">${t.cargo || 'Professor'}</span></td>
+                    <td class="p-2.5">${t.formation || '---'} <br><span class="text-[10px] text-gray-400">${t.council || ''}</span></td>
+                    <td class="p-2.5 text-right space-x-1">
+                        <button onclick="editarColaborador('${t.id}')" class="px-2 py-1 bg-blue-600 text-white rounded text-[11px] font-semibold"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="excluirColaborador('${t.id}')" class="px-2 py-1 bg-red-600 text-white rounded text-[11px] font-semibold"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    // Mantém os selects de professores atualizados onde forem necessários (ex: Frequência/Notas)
+    ['attendance-teacher-select', 'grade-teacher-select'].forEach(id => {
+        const el = document.getElementById(id);
+        if(el) { 
+            el.innerHTML = '<option value="">Selecione...</option>'; 
+            teachers.filter(t => !t.cargo || t.cargo === 'Professor' || t.cargo === 'Coordenação').forEach(t => {
+                el.insertAdjacentHTML('beforeend', `<option value="${t.id}">${t.fullname}</option>`);
+            }); 
+        }
+    });
+}
+
+function editarColaborador(id) {
+    const t = teachers.find(item => item.id === id);
+    if (!t) return;
+    document.getElementById('edit-teacher-id').value = t.id;
+    document.getElementById('input-teacher-name').value = t.fullname || '';
+    document.getElementById('input-teacher-cargo').value = t.cargo || 'Professor';
+    document.getElementById('input-teacher-formation').value = t.formation || '';
+    document.getElementById('input-teacher-council').value = t.council || '';
+    document.getElementById('input-teacher-pin').value = t.pin || '';
+    document.getElementById('btn-cancel-edit-teacher').style.display = 'inline-block';
+}
+
+function cancelarEdicaoColaborador() {
+    document.getElementById('edit-teacher-id').value = '';
+    document.getElementById('input-teacher-name').value = '';
+    document.getElementById('input-teacher-formation').value = '';
+    document.getElementById('input-teacher-council').value = '';
+    document.getElementById('input-teacher-pin').value = '';
+    document.getElementById('btn-cancel-edit-teacher').style.display = 'none';
+}
+
+async function excluirColaborador(id) {
+    if (!confirm("Deseja realmente excluir este colaborador?")) return;
+    try {
+        await db.collection("teachers").doc(id).delete();
+        alert("Colaborador excluído com sucesso!");
+    } catch (e) {
+        alert("Erro ao excluir: " + e.message);
+    }
+}
 
         function calcularTotalCurso() {
             const parcelas = parseInt(document.getElementById('input-course-parcelas').value) || 0;
