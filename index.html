@@ -2514,22 +2514,11 @@ async function removerUsuarioSistemaFirebase(id) {
     const cargo = document.getElementById('input-teacher-cargo').value;
     const formation = document.getElementById('input-teacher-formation').value.trim();
     const council = document.getElementById('input-teacher-council').value.trim();
+    const pin = document.getElementById('input-teacher-pin').value.trim() || `COLAB-${Date.now().toString().slice(-4)}`;
 
     if (!fullname) return alert("Preencha o nome completo do colaborador!");
 
-    let pinFinal = '';
-
-    if (editId) {
-        // Se estiver editando, mantém o PIN que ele já tinha
-        const colaboradorAntigo = teachers.find(t => t.id === editId);
-        pinFinal = colaboradorAntigo ? (colaboradorAntigo.pin || `COLAB-${Math.floor(1000 + Math.random() * 9000)}`) : `COLAB-${Math.floor(1000 + Math.random() * 9000)}`;
-    } else {
-        // Se for novo cadastro, gera o ID sequencial automático (ex: COLAB-001, COLAB-002...)
-        const proximoNumero = teachers.length + 1;
-        pinFinal = `COLAB-${String(proximoNumero).padStart(3, '0')}`;
-    }
-
-    const teacherData = { fullname, cargo, formation, council, pin: pinFinal };
+    const teacherData = { fullname, cargo, formation, council, pin };
 
     if (editId) {
         await db.collection("teachers").doc(editId).update(teacherData);
@@ -2537,8 +2526,7 @@ async function removerUsuarioSistemaFirebase(id) {
         cancelarEdicaoColaborador();
     } else {
         await db.collection("teachers").add(teacherData);
-        alert(`Colaborador cadastrado com sucesso!\nID Gerado para o Totem: ${pinFinal}`);
-        
+        alert("Colaborador cadastrado com sucesso!");
         document.getElementById('input-teacher-name').value = '';
         document.getElementById('input-teacher-formation').value = '';
         document.getElementById('input-teacher-council').value = '';
