@@ -3729,11 +3729,13 @@ function carregarDatasCalendarioParaFrequencia() {
         return;
     }
 
-    // Validação de CPF segura (só executa se a função existir)
     if (typeof validarCPF === 'function' && !validarCPF(cpf)) {
         alert("CPF inválido!");
         return;
     }
+
+    // Busca o objeto do curso com segurança
+    const cursoObj = (typeof courses !== 'undefined') ? courses.find(c => c.id === courseId) : null;
 
     const studentData = {
         fullname,
@@ -3767,31 +3769,22 @@ function carregarDatasCalendarioParaFrequencia() {
             studentData.senhaAluno = code;
             studentData.documentos = {};
 
-            await db.collection("students").add(studentData);
+            const docRef = await db.collection("students").add(studentData);
+            
             if (typeof closeNewStudentModal === 'function') closeNewStudentModal();
             if (typeof fotoRostoBase64Temp !== 'undefined') fotoRostoBase64Temp = "";
-            alert("Aluno cadastrado com sucesso!");
-        }
-        
-        // Atualiza a listagem de alunos na tela se a função existir
-        if (typeof carregarListaAlunos === 'function') {
-            carregarListaAlunos();
-        }
-    } catch (error) {
-        console.error("Erro ao salvar aluno no Firestore:", error);
-        alert("Erro ao salvar os dados do aluno. Verifique o console.");
-    }
-}
 
-                // --- GATILHO AUTOMÁTICO DE GERAÇÃO FINANCEIRA ---
-                try {
+            // --- GATILHO AUTOMÁTICO DE GERAÇÃO FINANCEIRA (Agora posicionado corretamente) ---
+            try {
+                if (typeof notificarCentralWhatsAppMatriz === 'function') {
                     notificarCentralWhatsAppMatriz(studentData, cursoObj ? cursoObj.name : "Curso Geral");
-                    
-                    if (cursoObj && cursoObj.valorParcela && cursoObj.qtdParcelas) {
-                        const qtdP = cursoObj.qtdParcelas;
-                        const valP = cursoObj.valorParcela;
-                        const valDesc = cursoObj.valorDesconto || valP;
-                        const diaVenc = cursoObj.vencimento || 10;
+                }
+                
+                if (cursoObj && cursoObj.valorParcela && cursoObj.qtdParcelas) {
+                    const qtdP = cursoObj.qtdParcelas;
+                    const valP = cursoObj.valorParcela;
+                    const valDesc = cursoObj.valorDesconto || valP;
+                    const diaVenc = cursoObj.vencimento || 10;
                         
                         for (let i = 1; i <= qtdP; i++) {
                             const dataV = new Date();
