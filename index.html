@@ -1127,54 +1127,54 @@
                 </div>
 
                 <!-- SUBABA INSTITUIÇÃO -->
-                <div id="subtab-institution" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-semibold mb-1">Nome da Instituição</label>
-                            <input type="text" id="input-inst-name" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold mb-1">Razão Social</label>
-                            <input type="text" id="input-inst-razao" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-semibold mb-1">CNPJ</label>
-                            <input type="text" id="input-inst-cnpj" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold mb-1">E-mail</label>
-                            <input type="text" id="input-inst-email" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-semibold mb-1">Telefone / WhatsApp</label>
-                            <input type="text" id="input-inst-tel" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold mb-1">Endereço</label>
-                            <input type="text" id="input-inst-end" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold mb-1 text-blue-600 dark:text-blue-400 font-bold">URL do Web App do Google Apps Script (Integração Google Drive)</label>
-                        <input type="text" id="input-gdrive-url" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-3 py-2 rounded-lg border border-blue-300 dark:border-slate-600 text-sm dark:bg-slate-900 font-mono text-xs">
-                        <p class="text-[11px] text-gray-500 mt-1">Cole aqui a URL gerada ao publicar o seu projeto no Google Apps Script.</p>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold mb-1">Upload de Logomarca</label>
-                        <input type="file" id="input-logo-file" accept="image/*" onchange="handleLogoUpload(event)" class="text-xs">
-                        <div id="logo-preview" class="mt-2 w-32 h-16 border border-dashed rounded flex items-center justify-center text-xs text-gray-400 bg-gray-50 dark:bg-slate-900">Sem logo</div>
-                        <button type="button" onclick="removeLogo()" class="mt-1 px-2 py-1 bg-red-600 text-white text-[10px] rounded">Remover Logo</button>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold mb-1">Texto Descritivo de Login</label>
-                        <textarea id="input-login-desc" rows="2" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></textarea>
-                    </div>
-                    <button onclick="salvarBrandingNaNuvem()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow">Salvar Configurações</button>
-                </div>
+<div id="subtab-institution" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+            <label class="block text-xs font-semibold mb-1">Nome da Instituição</label>
+            <input type="text" id="input-inst-name" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+        </div>
+        <div>
+            <label class="block text-xs font-semibold mb-1">Razão Social</label>
+            <input type="text" id="input-inst-razao" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+        </div>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+            <label class="block text-xs font-semibold mb-1">CNPJ</label>
+            <input type="text" id="input-inst-cnpj" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+        </div>
+        <div>
+            <label class="block text-xs font-semibold mb-1">E-mail</label>
+            <input type="text" id="input-inst-email" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+        </div>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+            <label class="block text-xs font-semibold mb-1">Telefone / WhatsApp</label>
+            <input type="text" id="input-inst-tel" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+        </div>
+        <div>
+            <label class="block text-xs font-semibold mb-1">Endereço</label>
+            <input type="text" id="input-inst-end" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+        </div>
+    </div>
+    <div>
+        <label class="block text-xs font-semibold mb-1 text-blue-600 dark:text-blue-400 font-bold">URL do Web App do Google Apps Script (Integração Google Drive)</label>
+        <input type="text" id="input-gdrive-url" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-3 py-2 rounded-lg border border-blue-300 dark:border-slate-600 text-sm dark:bg-slate-900 font-mono text-xs">
+        <p class="text-[11px] text-gray-500 mt-1">Cole aqui a URL gerada ao publicar o seu projeto no Google Apps Script.</p>
+    </div>
+    <div>
+        <label class="block text-xs font-semibold mb-1">Upload de Logomarca</label>
+        <input type="file" id="input-logo-file" accept="image/*" onchange="handleLogoUpload(event)" class="text-xs">
+        <div id="logo-preview" class="mt-2 w-32 h-16 border border-dashed rounded flex items-center justify-center text-xs text-gray-400 bg-gray-50 dark:bg-slate-900">Sem logo</div>
+        <button type="button" onclick="removeLogo()" class="mt-1 px-2 py-1 bg-red-600 text-white text-[10px] rounded">Remover Logo</button>
+    </div>
+    <div>
+        <label class="block text-xs font-semibold mb-1">Texto Descritivo de Login</label>
+        <textarea id="input-login-desc" rows="2" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></textarea>
+    </div>
+    <button onclick="salvarBrandingNaNuvem()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow">Salvar Configurações</button>
+</div>
 
 <!-- SUBABA ASAAS (INTEGRAÇÃO DE COBRANÇAS) -->
 <div id="subtab-asaas" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
