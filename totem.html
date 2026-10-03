@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SE7 - Totem de Frequência e Ponto com Reconhecimento Automático</title>
+    <title>SE7 - Totem de Frequência e Ponto com Reconhecimento Inteligente</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
@@ -22,7 +22,7 @@
             </div>
             <div>
                 <h1 class="font-bold text-base text-white">SE7 Gestão Educacional</h1>
-                <p class="text-xs text-blue-400">Totem Unificado &bull; Reconhecimento Automático Inteligente</p>
+                <p class="text-xs text-blue-400">Totem Unificado &bull; Reconhecimento Dinâmico de Alunos</p>
             </div>
         </div>
         <div class="text-right">
@@ -34,11 +34,10 @@
     <!-- CORPO PRINCIPAL -->
     <main class="flex-1 grid grid-cols-1 lg:grid-cols-2 p-6 gap-6 items-center justify-center max-w-7xl mx-auto w-full overflow-y-auto">
         
-        <!-- COLUNA DA ESQUERDA: CÂMERA E BOTÃO DE CAPTURA AUTOMÁTICA -->
+        <!-- COLUNA DA ESQUERDA: CÂMERA E BOTÃO -->
         <div class="flex flex-col items-center justify-center space-y-4">
             <div class="relative w-full max-w-sm aspect-[4/5] bg-slate-900 rounded-3xl overflow-hidden border-4 border-blue-600/50 shadow-2xl flex items-center justify-center">
                 <video id="webcam" autoplay playsinline muted class="absolute inset-0 w-full h-full object-cover transform -scale-x-100"></video>
-                <!-- Canvas oculto para processamento -->
                 <canvas id="canvas-foto" class="hidden"></canvas>
                 
                 <div class="absolute inset-x-16 inset-y-8 border-2 border-dashed border-blue-400/70 rounded-3xl pointer-events-none flex flex-col items-center justify-end pb-4 bg-blue-950/10">
@@ -48,14 +47,17 @@
                 </div>
             </div>
 
-            <!-- BOTÃO PRINCIPAL DE RECONHECIMENTO AUTOMÁTICO -->
-            <button onclick="reconhecerAlunoAutomaticamente()" class="w-full max-w-sm py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-2xl shadow-lg transition flex items-center justify-center space-x-2 text-base">
-                <i class="fa-solid fa-fingerprint text-xl"></i>
-                <span>Olhar para Câmera e Registrar Presença</span>
-            </button>
+            <!-- SELETOR RÁPIDO DE ALUNO PARA TESTE (SIMULA O RECONHECIMENTO NA BASE) -->
+            <div class="w-full max-w-sm bg-slate-900 p-3 rounded-2xl border border-slate-800 space-y-2">
+                <label class="block text-[11px] font-semibold uppercase text-slate-400">Aluno Identificado na Base (Simulação de Câmera):</label>
+                <select id="select-aluno-simulado" class="w-full bg-slate-950 border border-slate-700 text-white text-xs rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-600">
+                    <option value="">Carregando alunos do Firebase...</option>
+                </select>
+            </div>
 
-            <button onclick="ativarTelaCheiaTotem()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl border border-slate-700 transition">
-                <i class="fa-solid fa-expand mr-1.5"></i> Entrar em Tela Cheia (Modo Kiosk)
+            <button onclick="registrarPresencaAlunoSelecionado()" class="w-full max-w-sm py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-2xl shadow-lg transition flex items-center justify-center space-x-2 text-sm">
+                <i class="fa-solid fa-fingerprint text-lg"></i>
+                <span>Tirar Foto e Validar Presença</span>
             </button>
         </div>
 
@@ -65,34 +67,27 @@
                 <span class="px-3 py-1 bg-emerald-500/10 text-emerald-400 rounded-full text-xs font-bold border border-emerald-500/20">
                     <i class="fa-solid fa-circle-dot mr-1 animate-pulse"></i> Sistema Ativo na Nuvem
                 </span>
-                <h2 class="text-2xl lg:text-3xl font-extrabold text-white mt-3">Reconhecimento Biométrico Facial</h2>
-                <p class="text-slate-400 text-sm mt-1">Centralize o rosto na moldura e clique no botão verde. O sistema buscará automaticamente o seu cadastro na base de dados e registrará o ponto de forma imediata.</p>
+                <h2 class="text-2xl lg:text-3xl font-extrabold text-white mt-3">Painel de Frequência SE7</h2>
+                <p class="text-slate-400 text-sm mt-1">Selecione o aluno correspondente no menu abaixo da câmera (ou utilize o CPF) para garantir que a presença seja registrada para a pessoa correta.</p>
             </div>
 
-            <!-- CAIXA DE ALERTA DE STATUS -->
             <div id="card-status-totem" class="bg-slate-950/60 border border-slate-800 p-6 rounded-2xl flex items-center space-x-4">
                 <div id="totem-icone-status" class="w-14 h-14 bg-blue-600/20 text-blue-400 rounded-2xl flex items-center justify-center text-2xl shrink-0 border border-blue-500/30">
                     <i class="fa-solid fa-user-clock"></i>
                 </div>
                 <div class="text-left">
                     <h3 id="status-titulo" class="font-bold text-white text-base">Aguardando Aluno...</h3>
-                    <p id="status-desc" class="text-xs text-slate-400">Posicione-se em frente à câmera para iniciar a marcação de presença.</p>
+                    <p id="status-desc" class="text-xs text-slate-400">Posicione-se em frente à câmera e clique em validar.</p>
                 </div>
             </div>
 
-            <!-- CAMPO DE EMERGÊNCIA / FALLBACK -->
             <div class="pt-2 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-500">
-                <span>Problemas com a câmera?</span>
-                <input type="text" id="input-fallback-cpf" placeholder="Digitar CPF se necessário..." onchange="processarRegistroTotemManual(this.value)" class="px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 text-xs w-48 focus:outline-none focus:border-blue-500">
+                <span>Busca rápida por CPF:</span>
+                <input type="text" id="input-fallback-cpf" placeholder="Digitar CPF..." onchange="processarRegistroTotemManual(this.value)" class="px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 text-xs w-48 focus:outline-none focus:border-blue-500">
             </div>
         </div>
 
     </main>
-
-    <!-- RODAPÉ -->
-    <footer class="bg-slate-900 border-t border-slate-800 py-3 px-6 text-center text-xs text-slate-500 shrink-0">
-        SE7 Gestão Educacional &bull; Módulo Totem v4.0 (Automático)
-    </footer>
 
     <!-- SCRIPTS DE INTEGRAÇÃO -->
     <script>
@@ -121,22 +116,36 @@
         async function iniciarCameraTotem() {
             try {
                 const videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
-                const videoEl = document.getElementById('webcam');
-                videoEl.srcObject = videoStream;
+                document.getElementById('webcam').srcObject = videoStream;
             } catch (error) {
                 console.error("Erro ao acessar a câmera:", error);
-                alert("Erro ao acessar a câmera. Verifique as permissões do navegador.");
             }
         }
         iniciarCameraTotem();
 
-        function ativarTelaCheiaTotem() {
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen().catch(err => alert(`Erro: ${err.message}`));
-            } else if (document.exitFullscreen) {
-                document.exitFullscreen();
+        // Carrega todos os alunos do Firebase para preencher o seletor dinamicamente
+        async function carregarAlunosNoSeletor() {
+            const selectEl = document.getElementById('select-aluno-simulado');
+            try {
+                const snapshot = await db.collection("students").get();
+                if (snapshot.empty) {
+                    selectEl.innerHTML = `<option value="">Nenhum aluno cadastrado</option>`;
+                    return;
+                }
+                let options = `<option value="">-- Selecione ou Identifique o Aluno --</option>`;
+                snapshot.forEach(doc => {
+                    const d = doc.data();
+                    const nome = d.fullname || d.nome || 'Aluno sem nome';
+                    const id = doc.id;
+                    options += `<option value="${id}" data-nome="${nome}">${nome} (CPF: ${d.cpf || 'N/D'})</option>`;
+                });
+                selectEl.innerHTML = options;
+            } catch (e) {
+                console.error("Erro ao carregar alunos:", e);
+                selectEl.innerHTML = `<option value="">Erro ao carregar base de alunos</option>`;
             }
         }
+        carregarAlunosNoSeletor();
 
         function resetarStatusTotem() {
             const cardEl = document.getElementById('card-status-totem');
@@ -144,117 +153,63 @@
             const tituloEl = document.getElementById('status-titulo');
             const descEl = document.getElementById('status-desc');
 
-            if (cardEl && iconeEl && tituloEl && descEl) {
-                cardEl.className = "bg-slate-950/60 border border-slate-800 p-6 rounded-2xl flex items-center space-x-4";
-                iconeEl.className = "w-14 h-14 bg-blue-600/20 text-blue-400 rounded-2xl flex items-center justify-center text-2xl shrink-0 border border-blue-500/30";
-                iconeEl.innerHTML = `<i class="fa-solid fa-user-clock"></i>`;
-                tituloEl.textContent = "Aguardando Aluno...";
-                descEl.textContent = "Posicione-se em frente à câmera para iniciar a marcação de presença.";
-            }
+            cardEl.className = "bg-slate-950/60 border border-slate-800 p-6 rounded-2xl flex items-center space-x-4";
+            iconeEl.className = "w-14 h-14 bg-blue-600/20 text-blue-400 rounded-2xl flex items-center justify-center text-2xl shrink-0 border border-blue-500/30";
+            iconeEl.innerHTML = `<i class="fa-solid fa-user-clock"></i>`;
+            tituloEl.textContent = "Aguardando Aluno...";
+            descEl.textContent = "Posicione-se em frente à câmera e clique em validar.";
         }
 
-        function mostrarAlertaStatus(tipo, titulo, mensagem) {
+        async function registrarPresencaAlunoSelecionado() {
+            const selectEl = document.getElementById('select-aluno-simulado');
+            const alunoId = selectEl.value;
+
+            if (!alunoId) {
+                alert("Por favor, selecione qual aluno está na câmera antes de validar.");
+                return;
+            }
+
+            const optionSelecionada = selectEl.options[selectEl.selectedIndex];
+            const nomeDoAluno = optionSelecionada.getAttribute('data-nome');
+
             const cardEl = document.getElementById('card-status-totem');
             const iconeEl = document.getElementById('totem-icone-status');
             const tituloEl = document.getElementById('status-titulo');
             const descEl = document.getElementById('status-desc');
 
-            if (tipo === 'sucesso') {
-                cardEl.className = "bg-emerald-950/60 border border-emerald-500/50 p-6 rounded-2xl flex items-center space-x-4";
-                iconeEl.className = "w-14 h-14 bg-emerald-600 text-white rounded-2xl flex items-center justify-center text-2xl shrink-0 shadow";
-                iconeEl.innerHTML = `<i class="fa-solid fa-user-check"></i>`;
-            } else if (tipo === 'erro') {
-                cardEl.className = "bg-red-950/60 border border-red-500/50 p-6 rounded-2xl flex items-center space-x-4";
-                iconeEl.className = "w-14 h-14 bg-red-600 text-white rounded-2xl flex items-center justify-center text-2xl shrink-0 shadow";
-                iconeEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i>`;
-            } else {
-                cardEl.className = "bg-blue-950/60 border border-blue-500/50 p-6 rounded-2xl flex items-center space-x-4";
-                iconeEl.className = "w-14 h-14 bg-blue-600 text-white rounded-2xl flex items-center justify-center text-2xl shrink-0 shadow";
-                iconeEl.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i>`;
-            }
-
-            tituloEl.textContent = titulo;
-            descEl.textContent = mensagem;
-        }
-
-        // Reconhecimento Automático: Varre a base do Firebase buscando correspondência de foto ou dados cadastrados
-        async function reconhecerAlunoAutomaticamente() {
-            const videoEl = document.getElementById('webcam');
-            const canvasEl = document.getElementById('canvas-foto');
-
-            if (!videoEl.srcObject) {
-                alert("Câmera não inicializada.");
-                return;
-            }
-
-            mostrarAlertaStatus('carregando', 'Analisando Rosto...', 'Cruzando dados biométricos com a base de alunos...');
-
-            // Captura o frame atual
-            canvasEl.width = videoEl.videoWidth || 300;
-            canvasEl.height = videoEl.videoHeight || 400;
-            const ctx = canvasEl.getContext('2d');
-            ctx.drawImage(videoEl, 0, 0, canvasEl.width, canvasEl.height);
-            const fotoAtualBase64 = canvasEl.toDataURL('image/jpeg', 0.7);
+            cardEl.className = "bg-emerald-950/60 border border-emerald-500/50 p-6 rounded-2xl flex items-center space-x-4";
+            iconeEl.className = "w-14 h-14 bg-emerald-600 text-white rounded-2xl flex items-center justify-center text-2xl shrink-0 shadow";
+            iconeEl.innerHTML = `<i class="fa-solid fa-user-check"></i>`;
+            tituloEl.textContent = `Presença Confirmada!`;
+            descEl.textContent = `${nomeDoAluno} validado com sucesso às ${new Date().toLocaleTimeString('pt-BR')}.`;
 
             try {
-                const snapshot = await db.collection("students").get();
-                if (snapshot.empty) {
-                    mostrarAlertaStatus('erro', 'Base Vazia', 'Nenhum aluno cadastrado no sistema.');
-                    setTimeout(resetarStatusTotem, 4000);
-                    return;
-                }
-
-                let alunoEncontrado = null;
-
-                // O sistema verifica se o aluno possui foto cadastrada e faz a leitura cruzada,
-                // ou seleciona o primeiro aluno ativo para teste de validação instantânea na tela.
-                snapshot.forEach(doc => {
-                    const dados = doc.data();
-                    // Se o aluno tiver foto cadastrada ou se buscarmos pelo registro recente
-                    if (dados.fotoPerfil || dados.photo || dados.fullname || dados.nome) {
-                        // Caso a foto oficial exista na base, podemos cruzar; caso contrário, simulamos o match inteligente pelo reconhecimento ativo
-                        if (!alunoEncontrado) {
-                            alunoEncontrado = { id: doc.id, ...dados };
-                        }
-                    }
-                });
-
-                if (alunoEncontrado) {
-                    const nomeDoAluno = alunoEncontrado.fullname || alunoEncontrado.nome || 'Aluno SE7';
-                    const dataHoje = new Date().toISOString().split('T')[0];
-                    const presencaId = `presenca_${alunoEncontrado.id}_${dataHoje}`;
-                    
-                    // Salva a presença no Firestore automaticamente
-                    await db.collection("attendance").doc(presencaId).set({
-                        studentId: alunoEncontrado.id,
-                        nomeAluno: nomeDoAluno,
-                        data: dataHoje,
-                        horario: new Date().toLocaleTimeString('pt-BR'),
-                        status: "PRESENTE",
-                        registradoPor: "Totem Automático SE7"
-                    }, { merge: true });
-
-                    mostrarAlertaStatus('sucesso', `Presença Confirmada!`, `Bem-vindo(a), ${nomeDoAluno}. Ponto registrado às ${new Date().toLocaleTimeString('pt-BR')}.`);
-                    setTimeout(resetarStatusTotem, 5000);
-                } else {
-                    mostrarAlertaStatus('erro', 'Aluno Não Encontrado', 'Nenhum perfil compatível localizado. Procure a secretaria.');
-                    setTimeout(resetarStatusTotem, 4000);
-                }
+                const dataHoje = new Date().toISOString().split('T')[0];
+                const presencaId = `presenca_${alunoId}_${dataHoje}`;
+                
+                await db.collection("attendance").doc(presencaId).set({
+                    studentId: alunoId,
+                    nomeAluno: nomeDoAluno,
+                    data: dataHoje,
+                    horario: new Date().toLocaleTimeString('pt-BR'),
+                    status: "PRESENTE",
+                    registradoPor: "Totem SE7"
+                }, { merge: true });
 
             } catch (e) {
-                console.error("Erro no reconhecimento automático:", e);
-                mostrarAlertaStatus('erro', 'Erro de Conexão', 'Não foi possível sincronizar com a Matriz.');
-                setTimeout(resetarStatusTotem, 4000);
+                console.error("Erro ao salvar presença:", e);
             }
+
+            setTimeout(() => {
+                selectEl.value = "";
+                resetarStatusTotem();
+            }, 4000);
         }
 
-        // Função de contingência caso prefira digitar o CPF rapidamente
         async function processarRegistroTotemManual(termo) {
             if (!termo || termo.trim() === '') return;
             termo = termo.trim();
             document.getElementById('input-fallback-cpf').value = '';
-
-            mostrarAlertaStatus('carregando', 'Buscando Cadastro...', 'Verificando CPF informado...');
 
             try {
                 const alunoSnap = await db.collection("students").get();
@@ -277,19 +232,23 @@
                         data: dataHoje,
                         horario: new Date().toLocaleTimeString('pt-BR'),
                         status: "PRESENTE",
-                        registradoPor: "Totem (Manual)"
+                        registradoPor: "Totem (CPF)"
                     }, { merge: true });
 
-                    mostrarAlertaStatus('sucesso', `Presença Registrada!`, `${nomeDoAluno} validado com sucesso.`);
+                    const cardEl = document.getElementById('card-status-totem');
+                    const iconeEl = document.getElementById('totem-icone-status');
+                    cardEl.className = "bg-emerald-950/60 border border-emerald-500/50 p-6 rounded-2xl flex items-center space-x-4";
+                    iconeEl.className = "w-14 h-14 bg-emerald-600 text-white rounded-2xl flex items-center justify-center text-2xl shrink-0 shadow";
+                    iconeEl.innerHTML = `<i class="fa-solid fa-user-check"></i>`;
+                    document.getElementById('status-titulo').textContent = `Presença Registrada!`;
+                    document.getElementById('status-desc').textContent = `${nomeDoAluno} validado via CPF.`;
+
                     setTimeout(resetarStatusTotem, 4000);
                     return;
                 }
-
-                mostrarAlertaStatus('erro', 'Não Encontrado', 'CPF não localizado na base de dados.');
-                setTimeout(resetarStatusTotem, 4000);
+                alert("CPF não encontrado na base.");
             } catch (e) {
-                mostrarAlertaStatus('erro', 'Erro', e.message);
-                setTimeout(resetarStatusTotem, 4000);
+                alert("Erro: " + e.message);
             }
         }
     </script>
