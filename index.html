@@ -2647,6 +2647,15 @@ function editarColaborador(id) {
     document.getElementById('input-teacher-formation').value = t.formation || '';
     document.getElementById('input-teacher-council').value = t.council || '';
     document.getElementById('input-teacher-pin').value = t.pin || '';
+
+    // Restaura os horários salvos
+    if (t.horarios) {
+        document.getElementById('input-teacher-entrada-1').value = t.horarios.entrada1 || '08:00';
+        document.getElementById('input-teacher-saida-1').value = t.horarios.saida1 || '12:00';
+        document.getElementById('input-teacher-entrada-2').value = t.horarios.entrada2 || '14:00';
+        document.getElementById('input-teacher-saida-2').value = t.horarios.saida2 || '18:00';
+    }
+
     document.getElementById('btn-cancel-edit-teacher').style.display = 'inline-block';
 }
 
