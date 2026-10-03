@@ -2550,35 +2550,48 @@ async function removerUsuarioSistemaFirebase(id) {
     const cargo = document.getElementById('input-teacher-cargo').value;
     const formation = document.getElementById('input-teacher-formation').value.trim();
     const council = document.getElementById('input-teacher-council').value.trim();
+    const pinInput = document.getElementById('input-teacher-pin');
+
+    // Captura os horários da jornada de trabalho
+    const entrada1 = document.getElementById('input-teacher-entrada-1').value || "08:00";
+    const saida1 = document.getElementById('input-teacher-saida-1').value || "12:00";
+    const entrada2 = document.getElementById('input-teacher-entrada-2').value || "14:00";
+    const saida2 = document.getElementById('input-teacher-saida-2').value || "18:00";
 
     if (!fullname) return alert("Preencha o nome completo do colaborador!");
 
-    let pinFinal = '';
+    let pinFinal = pinInput ? pinInput.value.trim() : '';
 
-    if (editId) {
-        // Se estiver editando, mantém o PIN que ele já tinha
-        const colaboradorAntigo = teachers.find(t => t.id === editId);
-        pinFinal = colaboradorAntigo ? (colaboradorAntigo.pin || `COLAB-${Math.floor(1000 + Math.random() * 9000)}`) : `COLAB-${Math.floor(1000 + Math.random() * 9000)}`;
-    } else {
-        // Se for novo cadastro, gera o ID sequencial automático (ex: COLAB-001, COLAB-002...)
+    if (!pinFinal) {
         const proximoNumero = teachers.length + 1;
         pinFinal = `COLAB-${String(proximoNumero).padStart(3, '0')}`;
     }
 
-    const teacherData = { fullname, cargo, formation, council, pin: pinFinal };
+    const teacherData = { 
+        fullname, 
+        cargo, 
+        formation, 
+        council, 
+        pin: pinFinal,
+        horarios: { entrada1, saida1, entrada2, saida2 } 
+    };
 
-    if (editId) {
-        await db.collection("teachers").doc(editId).update(teacherData);
-        alert("Colaborador atualizado com sucesso!");
-        cancelarEdicaoColaborador();
-    } else {
-        await db.collection("teachers").add(teacherData);
-        alert(`Colaborador cadastrado com sucesso!\nID Gerado para o Totem: ${pinFinal}`);
-        
-        document.getElementById('input-teacher-name').value = '';
-        document.getElementById('input-teacher-formation').value = '';
-        document.getElementById('input-teacher-council').value = '';
-        document.getElementById('input-teacher-pin').value = '';
+    try {
+        if (editId) {
+            await db.collection("teachers").doc(editId).update(teacherData);
+            alert("Colaborador e horários atualizados com sucesso!");
+            cancelarEdicaoColaborador();
+        } else {
+            await db.collection("teachers").add(teacherData);
+            alert(`Colaborador cadastrado com sucesso!\nID Totem: ${pinFinal}\nHorários configurados.`);
+            
+            document.getElementById('input-teacher-name').value = '';
+            document.getElementById('input-teacher-formation').value = '';
+            document.getElementById('input-teacher-council').value = '';
+            atualizarPinAutomaticoColaborador();
+        }
+    } catch (e) {
+        alert("Erro ao salvar colaborador: " + e.message);
     }
 }
 
