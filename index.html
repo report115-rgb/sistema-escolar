@@ -347,6 +347,7 @@
             <button class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-slate-600" onclick="openTab(event, 'tab-student-finance')"><i class="fa-solid fa-wallet mr-1.5"></i> Financeiro</button>
             <button class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-slate-600" onclick="openTab(event, 'tab-history')"><i class="fa-solid fa-file-pdf mr-1.5"></i> Emissão de Documentos</button>
             <button class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-slate-600" id="nav-btn-settings" onclick="openTab(event, 'tab-settings')"><i class="fa-solid fa-gear mr-1.5"></i> Sistema</button>
+	    <button class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-slate-600" onclick="openTab(event, 'tab-gestao-totem')"><i class="fa-solid fa-face-recognition mr-1.5"></i> Totem e Ponto</button>
            </nav>
     </div>
 
@@ -706,8 +707,8 @@
                 <button type="button" onclick="emitirDocumentoSelecionado()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-sm shadow">Emitir e Salvar em PDF</button>
             </div>
         </div>
-        
-        <!-- SISTEMA (CONFIGURAÇÕES) -->
+
+            <!-- SISTEMA (CONFIGURAÇÕES) -->
         <div id="tab-settings" class="tab-content space-y-4" style="display: none;">
             <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-md p-6 border border-gray-200 dark:border-slate-700">
                 <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4 pb-2 border-b border-gray-100 dark:border-slate-700">Configurações do Sistema</h2>
@@ -1267,6 +1268,134 @@
         </table>
     </div>
 </div>
+
+<!-- ABA DE GESTÃO DO TOTEM E BIOMETRIA NA MATRIZ -->
+<div id="tab-gestao-totem" class="tab-content space-y-4" style="display: none;">
+    <div class="bg-white dark:bg-slate-900 p-5 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 space-y-3">
+        <div class="flex justify-between items-center">
+            <div>
+                <h2 class="font-bold text-sm text-blue-600 dark:text-blue-400 flex items-center gap-2">
+                    <i class="fa-solid fa-face-recognition"></i> Gestão do Totem de Frequência e Ponto
+                </h2>
+                <p class="text-[11px] text-slate-500 mt-0.5">Gerencie os acessos, visualize os registros em tempo real e monitore as frequências e pontos batidos.</p>
+            </div>
+            <button onclick="carregarLogsTotemMatriz()" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow transition flex items-center gap-1.5">
+                <i class="fa-solid fa-rotate"></i> Atualizar Registros
+            </button>
+        </div>
+    </div>
+
+    <!-- SELEÇÃO DE SUB-ABAS INTERNAS (ALUNOS X FUNCIONÁRIOS) -->
+    <div class="grid grid-cols-2 gap-2">
+        <button type="button" onclick="mudarSubAbaTotem('frequencias')" id="btn-sub-freq" class="py-2.5 bg-blue-600 text-white font-bold rounded-xl text-xs shadow transition">
+            <i class="fa-solid fa-user-check mr-1"></i> Frequência de Alunos
+        </button>
+        <button type="button" onclick="mudarSubAbaTotem('pontos')" id="btn-sub-ponto" class="py-2.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl text-xs transition">
+            <i class="fa-solid fa-business-time mr-1"></i> Ponto de Funcionários
+        </button>
+    </div>
+
+    <!-- PAINEL 1: FREQUÊNCIAS DOS ALUNOS -->
+    <div id="sub-painel-frequencias" class="space-y-2">
+        <div class="bg-white dark:bg-slate-900 p-4 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 space-y-3">
+            <h3 class="font-bold text-xs text-slate-800 dark:text-white uppercase tracking-wider">Frequências Registradas pelo Totem</h3>
+            <div id="lista-frequencias-totem-container" class="space-y-2 max-h-[60vh] overflow-y-auto">
+                <div class="text-center py-6 text-xs text-slate-400">Carregando registros de presença...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PAINEL 2: PONTO DOS FUNCIONÁRIOS -->
+    <div id="sub-painel-pontos" class="space-y-2" style="display: none;">
+        <div class="bg-white dark:bg-slate-900 p-4 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 space-y-3">
+            <h3 class="font-bold text-xs text-slate-800 dark:text-white uppercase tracking-wider">Controle de Horas / Ponto Eletrônico</h3>
+            <div id="lista-pontos-totem-container" class="space-y-2 max-h-[60vh] overflow-y-auto">
+                <div class="text-center py-6 text-xs text-slate-400">Carregando registros de ponto...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Funções de controle da sub-aba do totem na matriz
+    function mudarSubAbaTotem(tipo) {
+        const isFreq = tipo === 'frequencias';
+        document.getElementById('sub-painel-frequencias').style.display = isFreq ? 'block' : 'none';
+        document.getElementById('sub-painel-pontos').style.display = isFreq ? 'none' : 'block';
+        
+        document.getElementById('btn-sub-freq').className = isFreq ? 
+            "py-2.5 bg-blue-600 text-white font-bold rounded-xl text-xs shadow transition" : 
+            "py-2.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl text-xs transition";
+            
+        document.getElementById('btn-sub-ponto').className = !isFreq ? 
+            "py-2.5 bg-blue-600 text-white font-bold rounded-xl text-xs shadow transition" : 
+            "py-2.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl text-xs transition";
+            
+        if (isFreq) carregarFrequenciasTotemMatriz();
+        else carregarPontosTotemMatriz();
+    }
+
+    async function carregarLogsTotemMatriz() {
+        carregarFrequenciasTotemMatriz();
+        carregarPontosTotemMatriz();
+    }
+
+    async function carregarFrequenciasTotemMatriz() {
+        const container = document.getElementById('lista-frequencias-totem-container');
+        if (!container) return;
+        try {
+            const snapshot = await db.collection("attendance").orderBy("data", "desc").get();
+            if (snapshot.empty) {
+                container.innerHTML = `<div class="text-center py-6 text-xs text-slate-400">Nenhuma presença registrada pelo totem ainda.</div>`;
+                return;
+            }
+            let html = '';
+            snapshot.forEach(doc => {
+                const d = doc.data();
+                html += `
+                    <div class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700 flex justify-between items-center text-xs">
+                        <div>
+                            <strong class="text-slate-900 dark:text-white">${d.nomeAluno || 'Aluno'}</strong>
+                            <p class="text-[10px] text-slate-400">Data: ${d.data} &bull; Horário: <span class="text-emerald-600 font-bold">${d.horario || '---'}</span></p>
+                        </div>
+                        <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 rounded-full text-[10px] font-bold">${d.status || 'PRESENTE'}</span>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        } catch (e) {
+            container.innerHTML = `<div class="text-center py-6 text-xs text-red-500">Erro ao carregar frequências: ${e.message}</div>`;
+        }
+    }
+
+    async function carregarPontosTotemMatriz() {
+        const container = document.getElementById('lista-pontos-totem-container');
+        if (!container) return;
+        try {
+            const snapshot = await db.collection("employeeLogs").orderBy("data", "desc").get();
+            if (snapshot.empty) {
+                container.innerHTML = `<div class="text-center py-6 text-xs text-slate-400">Nenhum ponto de funcionário registrado ainda.</div>`;
+                return;
+            }
+            let html = '';
+            snapshot.forEach(doc => {
+                const d = doc.data();
+                html += `
+                    <div class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700 flex justify-between items-center text-xs">
+                        <div>
+                            <strong class="text-slate-900 dark:text-white">${d.nomeFuncionario || 'Funcionário'}</strong>
+                            <p class="text-[10px] text-slate-400">Data: ${d.data} &bull; Horário: <span class="text-blue-600 font-bold">${d.horario || '---'}</span></p>
+                        </div>
+                        <span class="px-2 py-0.5 bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 rounded-full text-[10px] font-bold">${d.tipo || 'ENTRADA'}</span>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        } catch (e) {
+            container.innerHTML = `<div class="text-center py-6 text-xs text-red-500">Erro ao carregar pontos: ${e.message}</div>`;
+        }
+    }
+</script>
 
     <!-- RODAPÉ -->
     <footer class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border-t border-gray-200 dark:border-slate-700 py-2.5 px-6 text-center text-xs text-gray-500 dark:text-gray-400 flex flex-col sm:flex-row justify-between items-center gap-2 shadow-lg">
