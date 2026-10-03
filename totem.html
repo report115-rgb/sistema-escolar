@@ -89,7 +89,7 @@
 
     <!-- RODAPÉ -->
     <footer class="bg-slate-900 border-t border-slate-800 py-3 px-6 text-center text-xs text-slate-500 shrink-0">
-        SE7 Gestão Educacional &bull; Módulo Totem com Inteligência Artificial v1.4
+        SE7 Gestão Educacional &bull; Módulo Totem com Inteligência Artificial v1.5
     </footer>
 
     <!-- SCRIPTS DE INTEGRAÇÃO E IA -->
@@ -168,7 +168,8 @@
                 statusTitulo.textContent = "Carregando Modelos de IA...";
                 statusDesc.textContent = "Baixando redes neurais de reconhecimento facial...";
 
-                const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
+                // URL oficial e estável para carregamento dos modelos na Vercel
+                const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
                 
                 await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
                 await faceapi.nets.faceLandmarkTinyNet.loadFromUri(MODEL_URL);
