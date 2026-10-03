@@ -723,7 +723,7 @@
                     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-subjects')">Disciplinas</button>
                     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-classes')">Turmas</button>
                     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-calendar')">Calendário Semestral</button>
-                    <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-teachers')">Professores</button>
+                   <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-collaborators')">Colaboradores</button>
                     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-templates')">Edição de Documentos</button>
                     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-institution')">Instituição</button>
 		    <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-asaas')">Asaas</button>
@@ -1033,25 +1033,73 @@
                     <div id="admin-calendar-view" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
                 </div>
 
-                <!-- SUBABA PROFESSORES -->
-                <div id="subtab-teachers" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
-                    <div>
-                        <label class="block text-xs font-semibold mb-1">Nome Completo</label>
-                        <input type="text" id="input-teacher-name" placeholder="Prof. Carlos Silva" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-semibold mb-1">Formação</label>
-                            <input type="text" id="input-teacher-formation" placeholder="Bacharel / Pós" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold mb-1">Conselho de Classe</label>
-                            <input type="text" id="input-teacher-council" placeholder="OAB/PA 00.000" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                        </div>
-                    </div>
-                    <button onclick="saveTeacher()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow">Cadastrar Professor</button>
-                    <ul class="data-list divide-y divide-gray-200 dark:divide-slate-700 mt-4" id="teachers-list"></ul>
-                </div>
+                <!-- SUBABA COLABORADORES -->
+                <div id="subtab-collaborators" class="subtab-content space-y-4" style="display: none;">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-md p-6 border border-gray-200 dark:border-slate-700">
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4 pb-2 border-b border-gray-100 dark:border-slate-700">Cadastro e Gestão de Colaboradores</h3>
+        
+        <!-- Formulário de Cadastro -->
+        <form id="collaborator-form" onsubmit="salvarColaborador(event)" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 pb-6 border-b border-gray-100 dark:border-slate-700">
+            <input type="hidden" id="collab-id">
+            <div>
+                <label class="block text-xs font-semibold mb-1 text-gray-700 dark:text-gray-300">Nome Completo</label>
+                <input type="text" id="collab-name" required class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 text-gray-900 dark:text-white">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold mb-1 text-gray-700 dark:text-gray-300">Função / Categoria</label>
+                <select id="collab-role" required class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 text-gray-900 dark:text-white">
+                    <option value="">Selecione a função...</option>
+                    <option value="Professor">Professor(a)</option>
+                    <option value="Secretaria">Secretaria / Administrativo</option>
+                    <option value="Coordenacao">Coordenação</option>
+                    <option value="Limpeza">Limpeza / Apoio Operacional</option>
+                    <option value="Outros">Outros</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold mb-1 text-gray-700 dark:text-gray-300">Telefone / WhatsApp</label>
+                <input type="text" id="collab-phone" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 text-gray-900 dark:text-white">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold mb-1 text-gray-700 dark:text-gray-300">E-mail</label>
+                <input type="email" id="collab-email" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 text-gray-900 dark:text-white">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold mb-1 text-gray-700 dark:text-gray-300">Turno de Trabalho</label>
+                <select id="collab-shift" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 text-gray-900 dark:text-white">
+                    <option value="Matutino">Matutino</option>
+                    <option value="Vespertino">Vespertino</option>
+                    <option value="Noturno">Noturno</option>
+                    <option value="Integral">Integral</option>
+                </select>
+            </div>
+            <div class="flex items-end">
+                <button type="submit" class="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-sm shadow transition-colors">Salvar Colaborador</button>
+            </div>
+        </form>
+
+        <!-- Tabela de Listagem -->
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="border-b border-gray-200 dark:border-slate-700 text-xs font-semibold text-gray-600 dark:text-gray-400">
+                        <th class="py-3 px-4">Nome</th>
+                        <th class="py-3 px-4">Função</th>
+                        <th class="py-3 px-4">Turno</th>
+                        <th class="py-3 px-4">Contato</th>
+                        <th class="py-3 px-4 text-right">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="collaborators-table-body" class="text-sm divide-y divide-gray-100 dark:divide-slate-700">
+                    <!-- Os dados do Firebase serão carregados aqui dinamicamente -->
+                    <tr>
+                        <td colspan="5" class="py-4 text-center text-gray-500 dark:text-gray-400 text-xs">Carregando colaboradores...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 
                 <!-- SUBABA EDIÇÃO DE DOCUMENTOS -->
                 <div id="subtab-templates" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
@@ -2319,7 +2367,9 @@ async function removerUsuarioSistemaFirebase(id) {
     if(subtabId === 'subtab-calendar') setTimeout(renderizarCalendarioSemestralAdmin, 200);
     if(subtabId === 'subtab-portal-calendario') setTimeout(renderizarCalendarioSemestralPortalAluno, 200);
     if(subtabId === 'subtab-audit') setTimeout(renderizarLogsAuditoria, 200);
-}
+    if (subTabId === 'subtab-collaborators') {
+        carregarColaboradores();
+    }
 
         // FUNÇÃO PARA GERENCIAR AS SUB-SUBABAS DE CURSOS
         function openSubSubTab(evt, subsubtabId) {
@@ -5622,6 +5672,115 @@ async function salvarEdicaoVencimentoValor(financeLogId) {
         alert("Erro ao atualizar na nuvem: " + error.message);
     }
 }
-	</script>
+	
+// Função para carregar os colaboradores do Firebase Firestore
+async function carregarColaboradores() {
+    const tbody = document.getElementById('collaborators-table-body');
+    if (!tbody) return;
+    
+    tbody.innerHTML = `<tr><td colspan="5" class="py-4 text-center text-gray-500 text-xs">Carregando colaboradores...</td></tr>`;
+
+    try {
+        // Altere 'collaborators' caso utilize outro nome de coleção no seu Firestore
+        const snapshot = await db.collection('collaborators').orderBy('name').get();
+        
+        if (snapshot.empty) {
+            tbody.innerHTML = `<tr><td colspan="5" class="py-4 text-center text-gray-500 text-xs">Nenhum colaborador cadastrado.</td></tr>`;
+            return;
+        }
+
+        let html = '';
+        snapshot.forEach(doc => {
+            const c = doc.data();
+            const id = doc.id;
+            html += `
+                <tr class="hover:bg-gray-50 dark:hover:bg-slate-700/50">
+                    <td class="py-3 px-4 font-medium text-gray-900 dark:text-white">${c.name || '---'}</td>
+                    <td class="py-3 px-4">
+                        <span class="px-2.5 py-1 text-[10px] font-bold rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300">${c.role || 'Outros'}</span>
+                    </td>
+                    <td class="py-3 px-4 text-gray-600 dark:text-gray-300 text-xs">${c.shift || '---'}</td>
+                    <td class="py-3 px-4 text-gray-600 dark:text-gray-300 text-xs">${c.phone || c.email || '---'}</td>
+                    <td class="py-3 px-4 text-right space-x-2">
+                        <button onclick="editarColaborador('${id}', '${c.name}', '${c.role}', '${c.phone || ''}', '${c.email || ''}', '${c.shift || ''}')" class="text-blue-600 hover:text-blue-800 text-xs font-semibold">Editar</button>
+                        <button onclick="excluirColaborador('${id}')" class="text-red-600 hover:text-red-800 text-xs font-semibold">Excluir</button>
+                    </td>
+                </tr>
+            `;
+        });
+        tbody.innerHTML = html;
+    } catch (error) {
+        console.error("Erro ao carregar colaboradores:", error);
+        tbody.innerHTML = `<tr><td colspan="5" class="py-4 text-center text-red-500 text-xs">Erro ao carregar dados do banco.</td></tr>`;
+    }
+}
+
+// Função para salvar ou atualizar um colaborador no Firebase
+async function salvarColaborador(event) {
+    event.preventDefault();
+    
+    const id = document.getElementById('collab-id').value;
+    const name = document.getElementById('collab-name').value;
+    const role = document.getElementById('collab-role').value;
+    const phone = document.getElementById('collab-phone').value;
+    const email = document.getElementById('collab-email').value;
+    const shift = document.getElementById('collab-shift').value;
+
+    const dadosColaborador = {
+        name,
+        role,
+        phone,
+        email,
+        shift,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    try {
+        if (id) {
+            // Atualiza registro existente
+            await db.collection('collaborators').doc(id).update(dadosColaborador);
+            alert('Colaborador atualizado com sucesso!');
+        } else {
+            // Cria novo registro
+            dadosColaborador.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+            await db.collection('collaborators').add(dadosColaborador);
+            alert('Colaborador cadastrado com sucesso!');
+        }
+
+        // Limpa formulário e recarrega a tabela
+        document.getElementById('collaborator-form').reset();
+        document.getElementById('collab-id').value = '';
+        carregarColaboradores();
+    } catch (error) {
+        console.error("Erro ao salvar colaborador:", error);
+        alert('Erro ao salvar os dados. Verifique o console.');
+    }
+}
+
+// Preenche o formulário para edição
+function editarColaborador(id, name, role, phone, email, shift) {
+    document.getElementById('collab-id').value = id;
+    document.getElementById('collab-name').value = name;
+    document.getElementById('collab-role').value = role;
+    document.getElementById('collab-phone').value = phone;
+    document.getElementById('collab-email').value = email;
+    document.getElementById('collab-shift').value = shift;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Exclui um colaborador do banco
+async function excluirColaborador(id) {
+    if (confirm('Deseja realmente excluir este colaborador?')) {
+        try {
+            await db.collection('collaborators').doc(id).delete();
+            alert('Colaborador excluído com sucesso!');
+            carregarColaboradores();
+        } catch (error) {
+            console.error("Erro ao excluir:", error);
+            alert('Erro ao excluir o registro.');
+        }
+    }
+}
+</script>
 </body>
 </html>
