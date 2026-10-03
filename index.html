@@ -3817,28 +3817,43 @@ function carregarDatasCalendarioParaFrequencia() {
 }
 
         function editarAluno(id) {
-            const aluno = students.find(s => s.id === id);
-            if (!aluno) return;
-            document.getElementById('edit-student-id').value = aluno.id;
-            document.getElementById('modal-student-title').textContent = `Editar Aluno: ${aluno.fullname}`;
-            document.getElementById('nomeAluno').value = aluno.fullname || '';
-            document.getElementById('dataNascimento').value = aluno.dob || '';
-            document.getElementById('sexoAluno').value = aluno.sexo || '';
-            document.getElementById('whatsappAluno').value = aluno.whatsapp || '';
-            document.getElementById('emailAluno').value = aluno.email || '';
-            document.getElementById('rgAluno').value = aluno.rg || '';
-            document.getElementById('cpfAluno').value = aluno.cpf || '';
-            document.getElementById('cepAluno').value = aluno.cep || '';
-            document.getElementById('enderecoAluno').value = aluno.endereco || '';
-            document.getElementById('numeroAluno').value = aluno.numero || '';
-            document.getElementById('bairroAluno').value = aluno.bairro || '';
-            document.getElementById('cidadeAluno').value = aluno.cidade || '';
-            document.getElementById('estadoAluno').value = aluno.estado || '';
-            document.getElementById('input-student-course').value = aluno.courseId || '';
-            filterTurmasByCourse();
-            document.getElementById('input-student-class').value = aluno.classId || '';
-            document.getElementById('new-student-modal').style.display = 'flex';
-        }
+    const aluno = students.find(s => s.id === id);
+    if (!aluno) return;
+
+    document.getElementById('edit-student-id').value = aluno.id;
+    document.getElementById('modal-student-title').textContent = `Editar Aluno: ${aluno.fullname}`;
+    document.getElementById('nomeAluno').value = aluno.fullname || '';
+    document.getElementById('dataNascimento').value = aluno.dob || '';
+    document.getElementById('sexoAluno').value = aluno.sexo || '';
+    document.getElementById('whatsappAluno').value = aluno.whatsapp || '';
+    document.getElementById('emailAluno').value = aluno.email || '';
+    document.getElementById('rgAluno').value = aluno.rg || '';
+    document.getElementById('cpfAluno').value = aluno.cpf || '';
+    document.getElementById('cepAluno').value = aluno.cep || '';
+    document.getElementById('enderecoAluno').value = aluno.endereco || '';
+    document.getElementById('numeroAluno').value = aluno.numero || '';
+    document.getElementById('bairroAluno').value = aluno.bairro || '';
+    document.getElementById('cidadeAluno').value = aluno.cidade || '';
+    document.getElementById('estadoAluno').value = aluno.estado || '';
+    document.getElementById('input-student-course').value = aluno.courseId || '';
+    
+    filterTurmasByCourse();
+    
+    document.getElementById('input-student-class').value = aluno.classId || '';
+
+    // --- CARREGA A FOTO DO ALUNO PARA A EDIÇÃO ---
+    // Atribui a foto existente na base para a variável temporária de controle
+    fotoRostoBase64Temp = aluno.fotoAluno || '';
+
+    // Se você tiver uma tag <img> na tela para mostrar o preview da foto do rosto, atualize-a aqui:
+    const imgPreview = document.getElementById('foto-rosto-preview'); // Substitua pelo ID real da imagem na sua interface, se houver
+    if (imgPreview) {
+        imgPreview.src = aluno.fotoAluno ? aluno.fotoAluno : ''; // ou uma imagem padrão de placeholder se estiver vazia
+    }
+    // ---------------------------------------------
+
+    document.getElementById('new-student-modal').style.display = 'flex';
+}
 
         async function deletarInformacoesTotaisAluno(id) {
             const aluno = students.find(s => s.id === id);
