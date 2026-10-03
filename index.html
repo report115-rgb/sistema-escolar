@@ -4233,52 +4233,38 @@ function renderizarCobrancasAlunoSelecionadoFinanceiro(studentId) {
     const container = document.getElementById('container-cobrancas-aluno-financeiro');
     if(!container) return;
     if(!studentId) {
-        container.innerHTML = `<p class="text-xs text-gray-400">Selecione um aluno acima para visualizar as mensalidades e parcelas.</p>`;
+        container.innerHTML = '<p class="text-xs text-gray-400">Selecione um aluno acima para visualizar as mensalidades e parcelas.</p>';
         return;
     }
     const aluno = students.find(s => s.id === studentId);
     let cobrancasAluno = financeLogs.filter(f => f.studentId === studentId);
 
     if(cobrancasAluno.length === 0) {
-        container.innerHTML = `<p class="text-xs text-gray-400">Nenhuma cobrança encontrada para ${aluno ? aluno.fullname : 'este aluno'}.</p>`;
+        container.innerHTML = '<p class="text-xs text-gray-400">Nenhuma cobrança encontrada para este aluno.</p>';
         return;
     }
 
-    // Ordenação cronológica (da data mais antiga para a mais recente)
     cobrancasAluno.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
 
-    container.innerHTML = `<div class="font-bold text-xs text-blue-600 dark:text-blue-400 mb-2">Histórico de Cobranças (Modo Consulta) para ${aluno ? aluno.fullname : ''}:</div>`;
+    container.innerHTML = '<div class="font-bold text-xs text-blue-600 dark:text-blue-400 mb-2">Histórico de Cobranças (Modo Consulta):</div>';
 
     cobrancasAluno.forEach((f) => {
         const jaPago = f.status && f.status.toUpperCase().includes('PAGO');
         const corBadge = jaPago ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300';
         const textoStatus = f.status || 'PENDENTE';
 
-        // Formatação da data de AAAA-MM-DD para DD/MM/AAAA
         let dataFormatada = f.date;
         if (f.date && f.date.includes('-')) {
-            const [ano, mes, dia] = f.date.split('-');
-            dataFormatada = `${dia}/${mes}/${ano}`;
+            const partes = f.date.split('-');
+            dataFormatada = partes[2] + '/' + partes[1] + '/' + partes[0];
         }
 
-        container.innerHTML += `
-            <div class="bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700 flex flex-col gap-2 text-xs">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <strong class="text-gray-900 dark:text-white text-sm">${f.description}</strong><br>
-                        <span class="text-gray-500">Vencimento: <strong>${dataFormatada}</strong> &bull; Valor: <strong>R$ ${f.amount}</strong> ${f.discountAmount ? `(Pontualidade: R$ ${f.discountAmount})` : ''}</span>
-                    </div>
-                    <div>
-                        <span class="px-2.5 py-1 ${corBadge} rounded-lg text-[11px] font-bold shadow-xs">${textoStatus}</span>
-                    </div>
-                </div>
-                ${jaPago && f.dataPagamento ? `
-                    <div class="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-slate-800 p-2 rounded border border-emerald-200 dark:border-slate-700">
-                        <i class="fa-solid fa-circle-check mr-1"></i> Quitado via <strong>${f.formaPagamento \vert{}\vert{} 'Baixa Financeira'}</strong> em${f.dataPagamento}
-                    </div>
-                ` : ''}
-            </div>
-        `;
+        let textoQuitacao = '';
+        if (jaPago && f.dataPagamento) {
+            textoQuitacao = '<div class="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-slate-800 p-2 rounded border border-emerald-200 dark:border-slate-700"><i class="fa-solid fa-circle-check mr-1"></i> Quitado em ' + f.dataPagamento + '</div>';
+        }
+
+        container.innerHTML += '<div class="bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700 flex flex-col gap-2 text-xs"><div class="flex justify-between items-center"><div><strong class="text-gray-900 dark:text-white text-sm">' + f.description + '</strong><br><span class="text-gray-500">Vencimento: <strong>' + dataFormatada + '</strong> &bull; Valor: <strong>R$ ' + f.amount + '</strong></span></div><div><span class="px-2.5 py-1 ' + corBadge + ' rounded-lg text-[11px] font-bold shadow-xs">' + textoStatus + '</span></div></div>' + textoQuitacao + '</div>';
     });
 }
         // --- FUNÇÃO TEMPORÁRIA PARA DAR BAIXA MANUAL ---
