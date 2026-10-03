@@ -89,7 +89,7 @@
 
     <!-- RODAPÉ -->
     <footer class="bg-slate-900 border-t border-slate-800 py-3 px-6 text-center text-xs text-slate-500 shrink-0">
-        SE7 Gestão Educacional &bull; Módulo Totem com Inteligência Artificial v1.2
+        SE7 Gestão Educacional &bull; Módulo Totem com Inteligência Artificial v1.3
     </footer>
 
     <!-- SCRIPTS DE INTEGRAÇÃO E IA -->
@@ -152,7 +152,9 @@
                 statusTitulo.textContent = "Carregando Modelos de IA...";
                 statusDesc.textContent = "Baixando redes neurais de reconhecimento facial...";
 
-                const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
+                // URL otimizada e compatível com HTTPS/Vercel via JSDelivr
+                const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
+                
                 await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
                 await faceapi.nets.faceLandmarkTinyNet.loadFromUri(MODEL_URL);
                 await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
@@ -164,7 +166,7 @@
                 
                 iniciarLoopReconhecimentoFacial();
             } catch (e) {
-                console.error("Erro ao carregar modelos de IA:", e);
+                console.error("Erro ao carregar modelos de IA na Vercel:", e);
                 statusTitulo.textContent = "Modo Manual Ativo";
                 statusDesc.textContent = "Utilize o campo abaixo com CPF ou Matrícula.";
                 badgeIA.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-amber-400 mr-1"></i> IA Indisponível`;
@@ -180,7 +182,6 @@
                 if (!modelosCarregados || !videoEl || videoEl.paused || videoEl.ended) return;
 
                 const agora = Date.now();
-                // Evita leituras consecutivas para a mesma pessoa em menos de 8 segundos
                 if (agora - tempoUltimoReconhecimento < 8000) return;
 
                 try {
@@ -200,7 +201,7 @@
                 const snapshot = await db.collection("students").get();
                 if (snapshot.empty) return;
 
-                let melhorMatch = { aluno: null, distancia: 0.55 }; // Limiar de precisão da biometria
+                let melhorMatch = { aluno: null, distancia: 0.55 };
 
                 for (const doc of snapshot.docs) {
                     const aluno = doc.data();
@@ -218,7 +219,7 @@
                                 }
                             }
                         } catch (errFoto) {
-                            // Ignora imagens corrompidas ou inválidas e continua a busca
+                            // Ignora imagens inválidas
                         }
                     }
                 }
@@ -248,7 +249,7 @@
                     iconeEl.className = "w-14 h-14 bg-emerald-600 text-white rounded-2xl flex items-center justify-center text-2xl shrink-0 shadow";
                     iconeEl.innerHTML = `<i class="fa-solid fa-face-smile"></i>`;
                     tituloEl.textContent = `Presença Confirmada: ${alunoEncontrado.fullname}`;
-                    descEl.textContent = `Reconhecido por IA às ${new Date().toLocaleTimeString('pt-BR')}. Sincronizado com a Matriz.`;
+                    descEl.textContent = `Reconhecido por IA às ${new Date().toLocaleTimeString('pt-BR')}. Sincronizado com a Matriz.[cite: 3]`;
                 }
             } catch (e) {
                 console.error("Erro na verificação biométrica:", e);
