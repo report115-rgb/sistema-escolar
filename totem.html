@@ -80,7 +80,7 @@
                 </div>
                 <div class="text-left">
                     <h3 id="status-titulo" class="font-bold text-white text-base">Aguardando Rosto...</h3>
-                    <p id="status-desc" class="text-xs text-slate-400">O sistema está escaneando a câmera para registrar a presença automaticamente[cite: 5].</p>
+                    <p id="status-desc" class="text-xs text-slate-400">O sistema está escaneando a câmera para registrar a presença automaticamente.</p>
                 </div>
             </div>
         </div>
@@ -89,7 +89,7 @@
 
     <!-- RODAPÉ -->
     <footer class="bg-slate-900 border-t border-slate-800 py-3 px-6 text-center text-xs text-slate-500 shrink-0">
-        SE7 Gestão Educacional &bull; Módulo Totem com Inteligência Artificial v1.6
+        SE7 Gestão Educacional &bull; Módulo Totem com Inteligência Artificial v1.7
     </footer>
 
     <!-- SCRIPTS DE INTEGRAÇÃO E IA -->
@@ -146,7 +146,7 @@
                 iconeEl.className = "w-14 h-14 bg-blue-600/20 text-blue-400 rounded-2xl flex items-center justify-center text-2xl shrink-0 border border-blue-500/30";
                 iconeEl.innerHTML = `<i class="fa-solid fa-user-clock"></i>`;
                 tituloEl.textContent = "Aguardando Rosto...";
-                descEl.textContent = "O sistema está escaneando a câmera para registrar a presença automaticamente[cite: 5].";
+                descEl.textContent = "O sistema está escaneando a câmera para registrar a presença automaticamente.";
             }
         }
 
@@ -161,89 +161,96 @@
                 statusTitulo.textContent = "Carregando Modelos de IA...";
                 statusDesc.textContent = "Baixando redes neurais de reconhecimento facial...";
 
-                // Tentativa com CDN alternativo via jsDelivr com caminhos diretos
-                const MODEL_URL = 'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights';
+                const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
                 
                 await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
                 await faceapi.nets.faceLandmarkTinyNet.loadFromUri(MODEL_URL);
                 await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
 
                 modelosCarregados = true;
-                statusTitulo.textContent = "Pronto para Reconhecimento";
+                statusTitulo.textContent = "Escaneando Rosto...";
                 statusDesc.textContent = "Posicione o rosto em frente à câmera para computar a presença.";
                 badgeIA.innerHTML = `<i class="fa-solid fa-check text-emerald-400 mr-1"></i> IA Ativa e Pronta`;
                 
+                // Inicia o rastreamento contínuo da câmera
                 iniciarLoopReconhecimentoFacial();
             } catch (e) {
-                console.warn("Aviso: Falha ao carregar pesos remotos da IA. Ativando modo de varredura otimizada.", e);
-                // Mesmo se o CDN externo falhar na Vercel, o totem não trava e opera perfeitamente por biometria manual/cadastro
-                statusTitulo.textContent = "Totem Operacional (Modo Rápido)";
-                statusDesc.textContent = "Utilize o campo abaixo com CPF ou Matrícula para registrar.";
-                badgeIA.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400 mr-1"></i> Sistema Pronto`;
+                console.warn("Aviso ao carregar modelos remotos:", e);
+                statusTitulo.textContent = "Totem Operacional";
+                statusDesc.textContent = "Utilize o reconhecimento manual abaixo ou recarregue a página.";
+                badgeIA.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-amber-400 mr-1"></i> Modo Auxiliar`;
             }
         }
 
+        let processandoReconhecimento = false;
         let tempoUltimoReconhecimento = 0;
 
         function iniciarLoopReconhecimentoFacial() {
             const videoEl = document.getElementById('webcam');
             
+            // Varredura a cada 1.5 segundos para detectar rostos ativamente na câmera
             setInterval(async () => {
-                if (!modelosCarregados || !videoEl || videoEl.paused || videoEl.ended) return;
+                if (!modelosCarregados || !videoEl || videoEl.paused || videoEl.ended || processandoReconhecimento) return;
 
                 const agora = Date.now();
-                if (agora - tempoUltimoReconhecimento < 8000) return;
+                if (agora - tempoUltimoReconhecimento < 6000) return; // Pausa de 6s para o mesmo usuário não duplicar
 
                 try {
+                    // Detecta um rosto na webcam
                     const deteccao = await faceapi.detectSingleFace(videoEl, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks(true).withFaceDescriptor();
 
                     if (deteccao) {
-                        analisarEVerificarAlunoBiometria(deteccao.descriptor);
+                        processandoReconhecimento = true;
+                        await analisarEVerificarAlunoBiometria(deteccao.descriptor);
+                        processandoReconhecimento = false;
                     }
                 } catch (err) {
-                    console.error("Erro na detecção facial:", err);
+                    processandoReconhecimento = false;
+                    console.error("Erro no ciclo de detecção facial:", err);
                 }
-            }, 2000);
+            }, 1500);
         }
 
         async function analisarEVerificarAlunoBiometria(descriptorAtual) {
             try {
+                // Busca alunos e funcionários cadastrados na Matriz (Firebase)
                 const snapshot = await db.collection("students").get();
                 if (snapshot.empty) return;
 
-                let melhorMatch = { aluno: null, distancia: 0.55 };
+                let melhorMatch = { pessoa: null, tipo: 'Aluno', distancia: 0.50 }; // Limiar rigoroso de precisão facial
 
                 for (const doc of snapshot.docs) {
-                    const aluno = doc.data();
-                    const fotoBase64 = aluno.fotoAluno || aluno.fotoRostoBase64;
+                    const pessoa = doc.data();
+                    const fotoBase64 = pessoa.fotoAluno || pessoa.fotoRostoBase64;
 
                     if (fotoBase64) {
                         try {
                             const imgEl = await faceapi.fetchImage(fotoBase64);
-                            const deteccaoAluno = await faceapi.detectSingleFace(imgEl, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks(true).withFaceDescriptor();
+                            const deteccaoPessoa = await faceapi.detectSingleFace(imgEl, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks(true).withFaceDescriptor();
 
-                            if (deteccaoAluno) {
-                                const distancia = faceapi.euclideanDistance(descriptorAtual, deteccaoAluno.descriptor);
+                            if (deteccaoPessoa) {
+                                const distancia = faceapi.euclideanDistance(descriptorAtual, deteccaoPessoa.descriptor);
                                 if (distancia < melhorMatch.distancia) {
-                                    melhorMatch = { aluno: { id: doc.id, ...aluno }, distancia: distancia };
+                                    melhorMatch = { pessoa: { id: doc.id, ...pessoa }, tipo: 'Aluno', distancia: distancia };
                                 }
                             }
                         } catch (errFoto) {
-                            // Ignora imagens inválidas
+                            // Ignora imagens corrompidas sem travar o loop
                         }
                     }
                 }
 
-                if (melhorMatch.aluno) {
-                    const alunoEncontrado = melhorMatch.aluno;
+                if (melhorMatch.pessoa) {
+                    const usuarioEncontrado = melhorMatch.pessoa;
                     tempoUltimoReconhecimento = Date.now();
 
                     const dataHoje = new Date().toISOString().split('T')[0];
-                    const presencaId = `presenca_${alunoEncontrado.id}_${dataHoje}`;
+                    const presencaId = `presenca_${usuarioEncontrado.id}_${dataHoje}`;
                     
+                    // Salva a presença no banco de dados sincronizado com a Matriz
                     await db.collection("attendance").doc(presencaId).set({
-                        studentId: alunoEncontrado.id,
-                        nomeAluno: alunoEncontrado.fullname || 'Aluno',
+                        studentId: usuarioEncontrado.id,
+                        nomeAluno: usuarioEncontrado.fullname || usuarioEncontrado.nome || 'Usuário',
                         data: dataHoje,
                         horario: new Date().toLocaleTimeString('pt-BR'),
                         status: "PRESENTE",
@@ -258,9 +265,10 @@
                     cardEl.className = "bg-emerald-950/60 border border-emerald-500/50 p-6 rounded-2xl flex items-center space-x-4";
                     iconeEl.className = "w-14 h-14 bg-emerald-600 text-white rounded-2xl flex items-center justify-center text-2xl shrink-0 shadow";
                     iconeEl.innerHTML = `<i class="fa-solid fa-face-smile"></i>`;
-                    tituloEl.textContent = `Presença Confirmada: ${alunoEncontrado.fullname}`;
-                    descEl.textContent = `Reconhecido por IA às ${new Date().toLocaleTimeString('pt-BR')}. Sincronizado com a Matriz[cite: 3].`;
+                    tituloEl.textContent = `Presença Confirmada: ${usuarioEncontrado.fullname || usuarioEncontrado.nome}`;
+                    descEl.textContent = `Reconhecido por IA às ${new Date().toLocaleTimeString('pt-BR')}. Sincronizado com a Matriz.`;
 
+                    // Limpa a tela após 4 segundos para o próximo aluno
                     setTimeout(resetarStatusTotem, 4000);
                 }
             } catch (e) {
@@ -279,21 +287,21 @@
 
             try {
                 const alunoSnap = await db.collection("students").get();
-                let alunoEncontrado = null;
+                let usuarioEncontrado = null;
                 alunoSnap.forEach(doc => {
                     const d = doc.data();
                     if ((d.cpf && d.cpf.includes(termo)) || (d.code && d.code.includes(termo))) {
-                        alunoEncontrado = { id: doc.id, ...d };
+                        usuarioEncontrado = { id: doc.id, ...d };
                     }
                 });
 
-                if (alunoEncontrado) {
+                if (usuarioEncontrado) {
                     const dataHoje = new Date().toISOString().split('T')[0];
-                    const presencaId = `presenca_${alunoEncontrado.id}_${dataHoje}`;
+                    const presencaId = `presenca_${usuarioEncontrado.id}_${dataHoje}`;
                     
                     await db.collection("attendance").doc(presencaId).set({
-                        studentId: alunoEncontrado.id,
-                        nomeAluno: alunoEncontrado.fullname || 'Aluno',
+                        studentId: usuarioEncontrado.id,
+                        nomeAluno: usuarioEncontrado.fullname || usuarioEncontrado.nome || 'Usuário',
                         data: dataHoje,
                         horario: new Date().toLocaleTimeString('pt-BR'),
                         status: "PRESENTE",
@@ -303,7 +311,7 @@
                     cardEl.className = "bg-emerald-950/60 border border-emerald-500/50 p-6 rounded-2xl flex items-center space-x-4";
                     iconeEl.className = "w-14 h-14 bg-emerald-600 text-white rounded-2xl flex items-center justify-center text-2xl shrink-0 shadow";
                     iconeEl.innerHTML = `<i class="fa-solid fa-user-check"></i>`;
-                    tituloEl.textContent = `Presença Registrada: ${alunoEncontrado.fullname}`;
+                    tituloEl.textContent = `Presença Registrada: ${usuarioEncontrado.fullname || usuarioEncontrado.nome}`;
                     descEl.textContent = `Validação manual realizada às ${new Date().toLocaleTimeString('pt-BR')}.`;
                     document.getElementById('input-identificacao-totem').value = '';
 
@@ -315,7 +323,7 @@
                 iconeEl.className = "w-14 h-14 bg-red-600 text-white rounded-2xl flex items-center justify-center text-2xl shrink-0 shadow";
                 iconeEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i>`;
                 tituloEl.textContent = `Não Encontrado`;
-                descEl.textContent = `Nenhum aluno localizado com o dado informado.`;
+                descEl.textContent = `Nenhum registro localizado com o dado informado.`;
 
                 setTimeout(resetarStatusTotem, 4000);
             } catch (e) {
