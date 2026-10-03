@@ -2597,6 +2597,23 @@ async function removerUsuarioSistemaFirebase(id) {
         let currentLogoDataUrl = "", courses = [], classes = [], students = [], teachers = [], financeLogs = [], academicCalendars = [];
         let globalInstitutionData = {};
         let alunoLogadoCache = null;
+	let fotoRostoBase64Temp = ""; // <--- Cole aqui
+
+	function processarFotoRostoAluno(event) {
+    	const file = event.target.files[0];
+    	if (!file) return;
+    	if (!file.type.startsWith("image/")) return alert("O arquivo deve ser uma imagem válida.");
+
+    	const reader = new FileReader();
+    	reader.onload = function(evt) {
+        fotoRostoBase64Temp = evt.target.result;
+        const preview = document.getElementById('preview-foto-cadastro');
+        if (preview) {
+            preview.innerHTML = `<img src="${fotoRostoBase64Temp}" class="w-full h-full object-cover">`;
+        }
+    };
+    reader.readAsDataURL(file);
+}
 
         function carregarDadosDaNuvem() {
             db.collection("config").doc("institution").onSnapshot((doc) => {
