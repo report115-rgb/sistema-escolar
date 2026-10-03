@@ -3799,28 +3799,42 @@ function carregarDatasCalendarioParaFrequencia() {
         }
 
         function editarAluno(id) {
-            const aluno = students.find(s => s.id === id);
-            if (!aluno) return;
-            document.getElementById('edit-student-id').value = aluno.id;
-            document.getElementById('modal-student-title').textContent = `Editar Aluno: ${aluno.fullname}`;
-            document.getElementById('nomeAluno').value = aluno.fullname || '';
-            document.getElementById('dataNascimento').value = aluno.dob || '';
-            document.getElementById('sexoAluno').value = aluno.sexo || '';
-            document.getElementById('whatsappAluno').value = aluno.whatsapp || '';
-            document.getElementById('emailAluno').value = aluno.email || '';
-            document.getElementById('rgAluno').value = aluno.rg || '';
-            document.getElementById('cpfAluno').value = aluno.cpf || '';
-            document.getElementById('cepAluno').value = aluno.cep || '';
-            document.getElementById('enderecoAluno').value = aluno.endereco || '';
-            document.getElementById('numeroAluno').value = aluno.numero || '';
-            document.getElementById('bairroAluno').value = aluno.bairro || '';
-            document.getElementById('cidadeAluno').value = aluno.cidade || '';
-            document.getElementById('estadoAluno').value = aluno.estado || '';
-            document.getElementById('input-student-course').value = aluno.courseId || '';
-            filterTurmasByCourse();
-            document.getElementById('input-student-class').value = aluno.classId || '';
-            document.getElementById('new-student-modal').style.display = 'flex';
+    const aluno = students.find(s => s.id === id);
+    if (!aluno) return;
+    
+    document.getElementById('edit-student-id').value = aluno.id;
+    document.getElementById('modal-student-title').textContent = `Editar Aluno: ${aluno.fullname}`;
+    document.getElementById('nomeAluno').value = aluno.fullname || '';
+    document.getElementById('dataNascimento').value = aluno.dob || '';
+    document.getElementById('sexoAluno').value = aluno.sexo || '';
+    document.getElementById('whatsappAluno').value = aluno.whatsapp || '';
+    document.getElementById('emailAluno').value = aluno.email || '';
+    document.getElementById('rgAluno').value = aluno.rg || '';
+    document.getElementById('cpfAluno').value = aluno.cpf || '';
+    document.getElementById('cepAluno').value = aluno.cep || '';
+    document.getElementById('enderecoAluno').value = aluno.endereco || '';
+    document.getElementById('numeroAluno').value = aluno.numero || '';
+    document.getElementById('bairroAluno').value = aluno.bairro || '';
+    document.getElementById('cidadeAluno').value = aluno.cidade || '';
+    document.getElementById('estadoAluno').value = aluno.estado || '';
+    document.getElementById('input-student-course').value = aluno.courseId || '';
+    filterTurmasByCourse();
+    document.getElementById('input-student-class').value = aluno.classId || '';
+
+    // --- CARREGAR A FOTO DO ALUNO AO EDITAR ---
+    fotoRostoBase64Temp = aluno.fotoAluno || '';
+    const preview = document.getElementById('preview-foto-cadastro');
+    if (preview) {
+        if (fotoRostoBase64Temp) {
+            preview.innerHTML = `<img src="${fotoRostoBase64Temp}" class="w-full h-full object-cover">`;
+        } else {
+            preview.innerHTML = `<span class="text-[10px] text-gray-400 text-center p-1">Sem Foto</span>`;
         }
+    }
+    // ------------------------------------------
+
+    document.getElementById('new-student-modal').style.display = 'flex';
+}
 
         async function deletarInformacoesTotaisAluno(id) {
             const aluno = students.find(s => s.id === id);
