@@ -89,7 +89,7 @@
 
     <!-- RODAPÉ -->
     <footer class="bg-slate-900 border-t border-slate-800 py-3 px-6 text-center text-xs text-slate-500 shrink-0">
-        SE7 Gestão Educacional &bull; Módulo Totem com Inteligência Artificial v1.7
+        SE7 Gestão Educacional &bull; Módulo Totem com Inteligência Artificial v1.8
     </footer>
 
     <!-- SCRIPTS DE INTEGRAÇÃO E IA -->
@@ -161,7 +161,8 @@
                 statusTitulo.textContent = "Carregando Modelos de IA...";
                 statusDesc.textContent = "Baixando redes neurais de reconhecimento facial...";
 
-                const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
+                // Utilizando CDN do jsDelivr conectado direto ao repositório oficial de pesos para evitar bloqueios na Vercel
+                const MODEL_URL = 'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights';
                 
                 await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
                 await faceapi.nets.faceLandmarkTinyNet.loadFromUri(MODEL_URL);
@@ -172,13 +173,12 @@
                 statusDesc.textContent = "Posicione o rosto em frente à câmera para computar a presença.";
                 badgeIA.innerHTML = `<i class="fa-solid fa-check text-emerald-400 mr-1"></i> IA Ativa e Pronta`;
                 
-                // Inicia o rastreamento contínuo da câmera
                 iniciarLoopReconhecimentoFacial();
             } catch (e) {
-                console.warn("Aviso ao carregar modelos remotos:", e);
-                statusTitulo.textContent = "Totem Operacional";
-                statusDesc.textContent = "Utilize o reconhecimento manual abaixo ou recarregue a página.";
-                badgeIA.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-amber-400 mr-1"></i> Modo Auxiliar`;
+                console.error("Erro crítico ao carregar modelos:", e);
+                statusTitulo.textContent = "Erro ao Carregar IA";
+                statusDesc.textContent = "Verifique a conexão ou utilize a identificação manual abaixo.";
+                badgeIA.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-red-400 mr-1"></i> Falha na IA`;
             }
         }
 
@@ -188,15 +188,13 @@
         function iniciarLoopReconhecimentoFacial() {
             const videoEl = document.getElementById('webcam');
             
-            // Varredura a cada 1.5 segundos para detectar rostos ativamente na câmera
             setInterval(async () => {
                 if (!modelosCarregados || !videoEl || videoEl.paused || videoEl.ended || processandoReconhecimento) return;
 
                 const agora = Date.now();
-                if (agora - tempoUltimoReconhecimento < 6000) return; // Pausa de 6s para o mesmo usuário não duplicar
+                if (agora - tempoUltimoReconhecimento < 6000) return;
 
                 try {
-                    // Detecta um rosto na webcam
                     const deteccao = await faceapi.detectSingleFace(videoEl, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks(true).withFaceDescriptor();
 
                     if (deteccao) {
@@ -213,11 +211,10 @@
 
         async function analisarEVerificarAlunoBiometria(descriptorAtual) {
             try {
-                // Busca alunos e funcionários cadastrados na Matriz (Firebase)
                 const snapshot = await db.collection("students").get();
                 if (snapshot.empty) return;
 
-                let melhorMatch = { pessoa: null, tipo: 'Aluno', distancia: 0.50 }; // Limiar rigoroso de precisão facial
+                let melhorMatch = { pessoa: null, distancia: 0.50 };
 
                 for (const doc of snapshot.docs) {
                     const pessoa = doc.data();
@@ -231,11 +228,11 @@
                             if (deteccaoPessoa) {
                                 const distancia = faceapi.euclideanDistance(descriptorAtual, deteccaoPessoa.descriptor);
                                 if (distancia < melhorMatch.distancia) {
-                                    melhorMatch = { pessoa: { id: doc.id, ...pessoa }, tipo: 'Aluno', distancia: distancia };
+                                    melhorMatch = { pessoa: { id: doc.id, ...pessoa }, distancia: distancia };
                                 }
                             }
                         } catch (errFoto) {
-                            // Ignora imagens corrompidas sem travar o loop
+                            // Ignora imagens inválidas
                         }
                     }
                 }
@@ -247,7 +244,6 @@
                     const dataHoje = new Date().toISOString().split('T')[0];
                     const presencaId = `presenca_${usuarioEncontrado.id}_${dataHoje}`;
                     
-                    // Salva a presença no banco de dados sincronizado com a Matriz
                     await db.collection("attendance").doc(presencaId).set({
                         studentId: usuarioEncontrado.id,
                         nomeAluno: usuarioEncontrado.fullname || usuarioEncontrado.nome || 'Usuário',
@@ -268,7 +264,6 @@
                     tituloEl.textContent = `Presença Confirmada: ${usuarioEncontrado.fullname || usuarioEncontrado.nome}`;
                     descEl.textContent = `Reconhecido por IA às ${new Date().toLocaleTimeString('pt-BR')}. Sincronizado com a Matriz.`;
 
-                    // Limpa a tela após 4 segundos para o próximo aluno
                     setTimeout(resetarStatusTotem, 4000);
                 }
             } catch (e) {
