@@ -3753,6 +3753,8 @@ function carregarDatasCalendarioParaFrequencia() {
                 const docRef = await db.collection("students").add(studentData);
                 const novoAlunoId = docRef.id;
                 closeNewStudentModal();
+		fotoRostoBase64Temp = ""; 
+            }
 
                 // --- GATILHO AUTOMÁTICO DE GERAÇÃO FINANCEIRA ---
                 try {
