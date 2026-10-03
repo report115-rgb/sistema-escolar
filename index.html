@@ -3715,12 +3715,14 @@ function carregarDatasCalendarioParaFrequencia() {
 }
 
 async function addOrUpdateStudent() {
-    const editId = document.getElementById('edit-student-id').value;
-    const fullname = document.getElementById('nomeAluno').value.trim();
-    const email = document.getElementById('emailAluno').value.trim();
-    const cpf = document.getElementById('cpfAluno').value.trim();
-    const courseId = document.getElementById('input-student-course').value;
-    const classId = document.getElementById('input-student-class').value;
+    const editIdEl = document.getElementById('edit-student-id');
+    const editId = editIdEl ? editIdEl.value : '';
+    
+    const fullname = document.getElementById('nomeAluno').value.trim();
+    const email = document.getElementById('emailAluno').value.trim();
+    const cpf = document.getElementById('cpfAluno').value.trim();
+    const courseId = document.getElementById('input-student-course').value;
+    const classId = document.getElementById('input-student-class').value;
 
     if (!fullname || !email || !cpf || !courseId || !classId) {
         alert("Preencha todos os campos!");
@@ -3749,8 +3751,8 @@ async function addOrUpdateStudent() {
         estado: document.getElementById('estadoAluno').value.trim() || '',
         courseId,
         classId,
-        fotoAluno: fotoRostoBase64Temp || "" // <--- Mantém a foto correta aqui
-    };
+        fotoAluno: (typeof fotoRostoBase64Temp !== 'undefined') ? fotoRostoBase64Temp : ""
+    };
 
     try {
         if (editId) {
