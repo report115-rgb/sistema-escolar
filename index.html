@@ -1069,9 +1069,10 @@
             <input type="text" id="input-teacher-council" placeholder="Ex: OAB/PA 00.000 ou RG" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 dark:text-white">
         </div>
         <div>
-            <label class="block text-xs font-semibold mb-1">ID / Matrícula para o Totem Facial</label>
-            <input type="text" id="input-teacher-pin" placeholder="Ex: COLAB-001" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 dark:text-white font-mono">
-        </div>
+            <div>
+    <label class="block text-xs font-semibold mb-1">ID / Matrícula Automática (Totem)</label>
+    <input type="text" id="input-teacher-pin" readonly placeholder="Gerado automaticamente..." class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm bg-gray-100 dark:bg-slate-900 dark:text-white font-mono font-bold text-blue-600">
+</div>
     </div>
 
     <div class="flex gap-2 pt-2">
@@ -2513,11 +2514,22 @@ async function removerUsuarioSistemaFirebase(id) {
     const cargo = document.getElementById('input-teacher-cargo').value;
     const formation = document.getElementById('input-teacher-formation').value.trim();
     const council = document.getElementById('input-teacher-council').value.trim();
-    const pin = document.getElementById('input-teacher-pin').value.trim() || `COLAB-${Date.now().toString().slice(-4)}`;
 
     if (!fullname) return alert("Preencha o nome completo do colaborador!");
 
-    const teacherData = { fullname, cargo, formation, council, pin };
+    let pinFinal = '';
+
+    if (editId) {
+        // Se estiver editando, mantém o PIN que ele já tinha
+        const colaboradorAntigo = teachers.find(t => t.id === editId);
+        pinFinal = colaboradorAntigo ? (colaboradorAntigo.pin || `COLAB-${Math.floor(1000 + Math.random() * 9000)}`) : `COLAB-${Math.floor(1000 + Math.random() * 9000)}`;
+    } else {
+        // Se for novo cadastro, gera o ID sequencial automático (ex: COLAB-001, COLAB-002...)
+        const proximoNumero = teachers.length + 1;
+        pinFinal = `COLAB-${String(proximoNumero).padStart(3, '0')}`;
+    }
+
+    const teacherData = { fullname, cargo, formation, council, pin: pinFinal };
 
     if (editId) {
         await db.collection("teachers").doc(editId).update(teacherData);
@@ -2525,7 +2537,8 @@ async function removerUsuarioSistemaFirebase(id) {
         cancelarEdicaoColaborador();
     } else {
         await db.collection("teachers").add(teacherData);
-        alert("Colaborador cadastrado com sucesso!");
+        alert(`Colaborador cadastrado com sucesso!\nID Gerado para o Totem: ${pinFinal}`);
+        
         document.getElementById('input-teacher-name').value = '';
         document.getElementById('input-teacher-formation').value = '';
         document.getElementById('input-teacher-council').value = '';
