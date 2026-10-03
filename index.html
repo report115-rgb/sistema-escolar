@@ -3799,69 +3799,55 @@ function carregarDatasCalendarioParaFrequencia() {
         }
 
         function editarAluno(id) {
-    // 1. Garante que o array students existe e tem itens
-    if (!Array.isArray(students)) {
-        console.error("O array 'students' não está definido ou não é um array.");
+    if (typeof students === 'undefined' || !Array.isArray(students)) {
+        console.error("A lista de alunos não está carregada.");
         return;
     }
 
-    // 2. Tenta encontrar o aluno
     const aluno = students.find(s => s.id === id);
-    if (!aluno) {
-        console.warn(`Aluno com ID ${id} não foi encontrado na lista local.`);
-        return;
-    }
+    if (!aluno) return;
     
-    // 3. Preenche os campos com segurança (usando ?. e checando o elemento)
-    const setVal = (elementId, value) => {
-        const el = document.getElementById(elementId);
-        if (el) el.value = value || '';
-    };
-
-    const editIdEl = document.getElementById('edit-student-id');
-    if (editIdEl) editIdEl.value = aluno.id || '';
-
-    const modalTitleEl = document.getElementById('modal-student-title');
-    if (modalTitleEl) modalTitleEl.textContent = `Editar Aluno: ${aluno.fullname || 'Sem Nome'}`;
-
-    setVal('nomeAluno', aluno.fullname);
-    setVal('dataNascimento', aluno.dob);
-    setVal('sexoAluno', aluno.sexo);
-    setVal('whatsappAluno', aluno.whatsapp);
-    setVal('emailAluno', aluno.email);
-    setVal('rgAluno', aluno.rg);
-    setVal('cpfAluno', aluno.cpf);
-    setVal('cepAluno', aluno.cep);
-    setVal('enderecoAluno', aluno.endereco);
-    setVal('numeroAluno', aluno.numero);
-    setVal('bairroAluno', aluno.bairro);
-    setVal('cidadeAluno', aluno.cidade);
-    setVal('estadoAluno', aluno.estado);
-    setVal('input-student-course', aluno.courseId);
-
+    document.getElementById('edit-student-id').value = aluno.id;
+    document.getElementById('modal-student-title').textContent = `Editar Aluno: ${aluno.fullname || ''}`;
+    document.getElementById('nomeAluno').value = aluno.fullname || '';
+    document.getElementById('dataNascimento').value = aluno.dob || '';
+    document.getElementById('sexoAluno').value = aluno.sexo || '';
+    document.getElementById('whatsappAluno').value = aluno.whatsapp || '';
+    document.getElementById('emailAluno').value = aluno.email || '';
+    document.getElementById('rgAluno').value = aluno.rg || '';
+    document.getElementById('cpfAluno').value = aluno.cpf || '';
+    document.getElementById('cepAluno').value = aluno.cep || '';
+    document.getElementById('enderecoAluno').value = aluno.endereco || '';
+    document.getElementById('numeroAluno').value = aluno.numero || '';
+    document.getElementById('bairroAluno').value = aluno.bairro || '';
+    document.getElementById('cidadeAluno').value = aluno.cidade || '';
+    document.getElementById('estadoAluno').value = aluno.estado || '';
+    document.getElementById('input-student-course').value = aluno.courseId || '';
+    
     if (typeof filterTurmasByCourse === 'function') {
         filterTurmasByCourse();
     }
+    
+    document.getElementById('input-student-class').value = aluno.classId || '';
 
-    setVal('input-student-class', aluno.classId);
-
-    // 4. Carregamento seguro da foto
-    fotoRostoBase64Temp = aluno.fotoAluno || '';
+    // --- CARREGAR A FOTO DO ALUNO AO EDITAR ---
+    if (typeof fotoRostoBase64Temp !== 'undefined') {
+        fotoRostoBase64Temp = aluno.fotoAluno || '';
+    }
+    
     const preview = document.getElementById('preview-foto-cadastro');
     if (preview) {
-        if (fotoRostoBase64Temp) {
-            preview.innerHTML = `<img src="${fotoRostoBase64Temp}" class="w-full h-full object-cover">`;
+        if (aluno.fotoAluno) {
+            preview.innerHTML = `<img src="${aluno.fotoAluno}" class="w-full h-full object-cover">`;
         } else {
             preview.innerHTML = `<span class="text-[10px] text-gray-400 text-center p-1">Sem Foto</span>`;
         }
     }
+    // ------------------------------------------
 
-    // 5. Exibe o modal
     const modal = document.getElementById('new-student-modal');
     if (modal) {
         modal.style.display = 'flex';
-    } else {
-        console.error("Modal 'new-student-modal' não foi encontrado no DOM.");
     }
 }
 
