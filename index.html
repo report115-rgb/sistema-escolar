@@ -3728,14 +3728,15 @@ function carregarDatasCalendarioParaFrequencia() {
             const cursoObj = courses.find(c => c.id === courseId);
 
             const studentData = {
-                fullname, dob: document.getElementById('dataNascimento').value,
-                sexo: document.getElementById('sexoAluno').value, whatsapp: document.getElementById('whatsappAluno').value.trim(),
-                email, rg: document.getElementById('rgAluno').value.trim(), cpf,
-                cep: document.getElementById('cepAluno').value.trim(), endereco: document.getElementById('enderecoAluno').value.trim(),
-                numero: document.getElementById('numeroAluno').value.trim(), bairro: document.getElementById('bairroAluno').value.trim(),
-                cidade: document.getElementById('cidadeAluno').value.trim(), estado: document.getElementById('estadoAluno').value.trim(),
-                courseId, classId
-            };
+        fullname, dob: document.getElementById('dataNascimento').value,
+        sexo: document.getElementById('sexoAluno').value, whatsapp: document.getElementById('whatsappAluno').value.trim(),
+        email, rg: document.getElementById('rgAluno').value.trim(), cpf,
+        cep: document.getElementById('cepAluno').value.trim(), endereco: document.getElementById('enderecoAluno').value.trim(),
+        numero: document.getElementById('numeroAluno').value.trim(), bairro: document.getElementById('bairroAluno').value.trim(),
+        cidade: document.getElementById('cidadeAluno').value.trim(), estado: document.getElementById('estadoAluno').value.trim(),
+        courseId, classId,
+        fotoAluno: fotoRostoBase64Temp || "" // <--- ADICIONE ESTA LINHA AQUI PARA SALVAR A FOTO NA NUVEM
+    };
 
             if (editId) {
                 await db.collection("students").doc(editId).update(studentData);
