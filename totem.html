@@ -89,7 +89,7 @@
 
     <!-- RODAPÉ -->
     <footer class="bg-slate-900 border-t border-slate-800 py-3 px-6 text-center text-xs text-slate-500 shrink-0">
-        SE7 Gestão Educacional &bull; Módulo Totem com Inteligência Artificial v1.3
+        SE7 Gestão Educacional &bull; Módulo Totem com Inteligência Artificial v1.4
     </footer>
 
     <!-- SCRIPTS DE INTEGRAÇÃO E IA -->
@@ -138,6 +138,22 @@
             }
         }
 
+        // Função para resetar a tela de status para o estado padrão ("Aguardando Rosto...")
+        function resetarStatusTotem() {
+            const cardEl = document.getElementById('card-status-totem');
+            const iconeEl = document.getElementById('totem-icone-status');
+            const tituloEl = document.getElementById('status-titulo');
+            const descEl = document.getElementById('status-desc');
+
+            if (cardEl && iconeEl && tituloEl && descEl) {
+                cardEl.className = "bg-slate-950/60 border border-slate-800 p-6 rounded-2xl flex items-center space-x-4";
+                iconeEl.className = "w-14 h-14 bg-blue-600/20 text-blue-400 rounded-2xl flex items-center justify-center text-2xl shrink-0 border border-blue-500/30";
+                iconeEl.innerHTML = `<i class="fa-solid fa-user-clock"></i>`;
+                tituloEl.textContent = "Aguardando Rosto...";
+                descEl.textContent = "O sistema está escaneando a câmera para registrar a presença automaticamente.";
+            }
+        }
+
         // ==========================================
         // CARREGAMENTO DOS MODELOS DE IA (FACE-API.JS)
         // ==========================================
@@ -152,7 +168,6 @@
                 statusTitulo.textContent = "Carregando Modelos de IA...";
                 statusDesc.textContent = "Baixando redes neurais de reconhecimento facial...";
 
-                // URL otimizada e compatível com HTTPS/Vercel via JSDelivr
                 const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
                 
                 await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
@@ -249,7 +264,10 @@
                     iconeEl.className = "w-14 h-14 bg-emerald-600 text-white rounded-2xl flex items-center justify-center text-2xl shrink-0 shadow";
                     iconeEl.innerHTML = `<i class="fa-solid fa-face-smile"></i>`;
                     tituloEl.textContent = `Presença Confirmada: ${alunoEncontrado.fullname}`;
-                    descEl.textContent = `Reconhecido por IA às ${new Date().toLocaleTimeString('pt-BR')}. Sincronizado com a Matriz.[cite: 3]`;
+                    descEl.textContent = `Reconhecido por IA às ${new Date().toLocaleTimeString('pt-BR')}. Sincronizado com a Matriz[cite: 3].`;
+
+                    // Reseta o status após 4 segundos para o próximo aluno
+                    setTimeout(resetarStatusTotem, 4000);
                 }
             } catch (e) {
                 console.error("Erro na verificação biométrica:", e);
@@ -297,6 +315,9 @@
                     tituloEl.textContent = `Presença Registrada: ${alunoEncontrado.fullname}`;
                     descEl.textContent = `Validação manual realizada às ${new Date().toLocaleTimeString('pt-BR')}.`;
                     document.getElementById('input-identificacao-totem').value = '';
+
+                    // Reseta o status após 4 segundos para o próximo aluno
+                    setTimeout(resetarStatusTotem, 4000);
                     return;
                 }
 
@@ -305,6 +326,9 @@
                 iconeEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i>`;
                 tituloEl.textContent = `Não Encontrado`;
                 descEl.textContent = `Nenhum aluno localizado com o dado informado.`;
+
+                // Reseta o erro após 4 segundos
+                setTimeout(resetarStatusTotem, 4000);
             } catch (e) {
                 alert("Erro ao registrar: " + e.message);
             }
