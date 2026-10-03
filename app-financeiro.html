@@ -109,7 +109,7 @@
 
         <div class="text-center text-[10px] text-blue-300 pb-2">
             <div>Sistema SE7 de Gestão Acadêmica</div>
-            <div>v1.6.1 &bull; Setor Financeiro</div>
+            <div>v1.6.2 &bull; Setor Financeiro</div>
         </div>
     </div>
 
@@ -150,6 +150,58 @@
                 </button>
                 <button type="button" onclick="salvarEdicaoMensalidade()" class="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-xs shadow">
                     Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE GERAR FATURA MANUAL -->
+    <div id="modal-gerar-financeiro-manual" class="fixed inset-0 z-[5000] flex items-center justify-center bg-black/70 p-4" style="display: none;">
+        <div class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-3xl shadow-2xl max-w-sm w-full p-6 space-y-4 border border-slate-200 dark:border-slate-800">
+            <div class="flex justify-between items-center border-b pb-3 border-slate-200 dark:border-slate-800">
+                <h3 class="font-bold text-sm text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
+                    <i class="fa-solid fa-file-invoice-dollar"></i> Gerar Fatura Manual
+                </h3>
+                <button onclick="fecharModalGerarFinanceiroManual()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">Selecionar Aluno</label>
+                    <select id="modal-manual-aluno-select" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-600">
+                        <option value="">Carregando alunos...</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">Descrição (Ex: Mensalidade Avulsa)</label>
+                    <input type="text" id="modal-manual-descricao" placeholder="Ex: Mensalidade Avulsa" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-600">
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">Data de Vencimento</label>
+                    <input type="date" id="modal-manual-vencimento" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-600">
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">Valor (R$)</label>
+                    <input type="text" id="modal-manual-valor" placeholder="0,00" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-600">
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">Valor com Desconto de Pontualidade (Opcional)</label>
+                    <input type="text" id="modal-manual-desconto" placeholder="0,00" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-600">
+                </div>
+            </div>
+
+            <div class="flex gap-2 pt-2">
+                <button type="button" onclick="fecharModalGerarFinanceiroManual()" class="flex-1 py-2.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold rounded-xl text-xs">
+                    Cancelar
+                </button>
+                <button type="button" onclick="salvarFinanceiroManualApp()" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl text-xs shadow">
+                    Gerar Fatura
                 </button>
             </div>
         </div>
@@ -422,9 +474,17 @@
             <!-- ABA 3: FATURAS E COBRANÇAS -->
             <div id="tab-financeiro" class="space-y-3 tab-pane" style="display: none;">
                 <div class="bg-white dark:bg-slate-900 p-4 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 space-y-3">
-                    <h2 class="font-bold text-sm text-blue-600 dark:text-blue-400 flex items-center gap-2">
-                        <i class="fa-solid fa-wallet"></i> Gestão de Faturas
-                    </h2>
+                    <div class="flex justify-between items-center flex-wrap gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
+                        <div>
+                            <h2 class="font-bold text-sm text-blue-600 dark:text-blue-400 flex items-center gap-2">
+                                <i class="fa-solid fa-wallet"></i> Gestão de Faturas
+                            </h2>
+                            <p class="text-[10px] text-slate-400">Consulte e gerencie as faturas e cobranças dos alunos.</p>
+                        </div>
+                        <button type="button" onclick="abrirModalGerarFinanceiroManual()" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-file-invoice-dollar"></i> Gerar Faturas Manuais
+                        </button>
+                    </div>
                     
                     <div>
                         <label class="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">1. Selecione o Curso / Turma</label>
@@ -949,6 +1009,72 @@
                 `;
             });
             container.innerHTML = htmlAcumulado;
+        }
+
+        // Funções para Faturas Manuais
+        function abrirModalGerarFinanceiroManual() {
+            const selectAluno = document.getElementById('modal-manual-aluno-select');
+            selectAluno.innerHTML = `<option value="" disabled selected>Selecione um aluno...</option>` +
+                students.map(s => `<option value="${s.id}">${s.fullname || s.name || 'Sem Nome'} (${s.cpf || 'S/CPF'})</option>`).join('');
+
+            document.getElementById('modal-manual-descricao').value = '';
+            document.getElementById('modal-manual-vencimento').value = new Date().toISOString().split('T')[0];
+            document.getElementById('modal-manual-valor').value = '';
+            document.getElementById('modal-manual-desconto').value = '';
+            document.getElementById('modal-gerar-financeiro-manual').style.display = 'flex';
+        }
+
+        function fecharModalGerarFinanceiroManual() {
+            document.getElementById('modal-gerar-financeiro-manual').style.display = 'none';
+        }
+
+        async function salvarFinanceiroManualApp() {
+            const alunoId = document.getElementById('modal-manual-aluno-select').value;
+            const descricao = document.getElementById('modal-manual-descricao').value.trim();
+            const vencimentoInput = document.getElementById('modal-manual-vencimento').value;
+            const valor = document.getElementById('modal-manual-valor').value.trim();
+            const desconto = document.getElementById('modal-manual-desconto').value.trim();
+
+            if (!alunoId || !descricao || !vencimentoInput || !valor) {
+                return alert("Preencha todos os campos obrigatórios (Aluno, Descrição, Vencimento e Valor).");
+            }
+
+            const aluno = studentsMap[alunoId];
+            if (!aluno) return alert("Aluno não encontrado.");
+
+            let partes = vencimentoInput.split('-');
+            let vencimentoFormatado = `${partes[2]}/${partes[1]}/${partes[0]}`;
+            const novoId = "log_" + Date.now() + "_" + Math.random().toString(36).substring(2, 7);
+
+            const dadosNovaFatura = {
+                studentId: alunoId,
+                alunoId: alunoId,
+                nomeAluno: aluno.fullname || aluno.name || 'Aluno',
+                description: descricao,
+                descricao: descricao,
+                amount: valor,
+                valor: valor,
+                discountAmount: desconto || "",
+                date: vencimentoFormatado,
+                vencimento: vencimentoFormatado,
+                status: "PENDENTE",
+                criadoEm: new Date().toISOString(),
+                criadoPor: "App Financeiro"
+            };
+
+            try {
+                await db.collection("financeLogs").doc(novoId).set(dadosNovaFatura);
+                alert("Fatura manual gerada com sucesso! Ela já está integrada com o sistema matriz e com o app do aluno.");
+                fecharModalGerarFinanceiroManual();
+                
+                // Atualiza o select se o aluno gerado for o mesmo atualmente selecionado na aba faturas
+                const selectFinAluno = document.getElementById('select-fin-aluno');
+                if (selectFinAluno && selectFinAluno.value === alunoId) {
+                    renderizarFaturasDoAlunoSelecionado();
+                }
+            } catch (e) {
+                alert("Erro ao gerar fatura manual: " + e.message);
+            }
         }
 
         async function excluirFaturaRegistro(faturaId) {
