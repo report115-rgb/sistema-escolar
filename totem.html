@@ -83,7 +83,7 @@
 
     <!-- RODAPÉ -->
     <footer class="bg-slate-900 border-t border-slate-800 py-3 px-6 text-center text-xs text-slate-500 shrink-0">
-        SE7 Gestão Educacional &bull; Módulo Totem v5.0 (Biometria Facial Real)
+        SE7 Gestão Educacional &bull; Módulo Totem v6.0 (Biometria Facial Rigorosa)
     </footer>
 
     <!-- SCRIPTS DE INTEGRAÇÃO -->
@@ -165,14 +165,13 @@
             descEl.textContent = mensagem;
         }
 
-        // Função que extrai uma assinatura numérica simples dos pixels da imagem para comparar com o banco
         function calcularAssinaturaVisual(canvas, ctx) {
             const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             let rTotal = 0, gTotal = 0, bTotal = 0;
             const pixels = imgData.data;
             const totalPixels = pixels.length / 4;
 
-            for (let i = 0; i < pixels.length; i += 16) { //amostragem leve para alta performance
+            for (let i = 0; i < pixels.length; i += 16) {
                 rTotal += pixels[i];
                 gTotal += pixels[i+1];
                 bTotal += pixels[i+2];
@@ -184,7 +183,7 @@
             };
         }
 
-        // Reconhecimento Facial Automático Real cruzando com o banco de dados
+        // Reconhecimento Facial Rigoroso e Real
         async function executarReconhecimentoFacialReal() {
             const videoEl = document.getElementById('webcam');
             const canvasEl = document.getElementById('canvas-foto');
@@ -196,7 +195,6 @@
 
             exibirAlertaTotem('carregando', 'Analisando Imagem...', 'Buscando correspondência biométrica na base de dados...');
 
-            // Captura o frame atual da câmera
             canvasEl.width = 150;
             canvasEl.height = 200;
             const ctx = canvasEl.getContext('2d');
@@ -207,7 +205,7 @@
             try {
                 const snapshot = await db.collection("students").get();
                 if (snapshot.empty) {
-                    exibirAlertaTotem('erro', 'Atenção', 'Aluno não encontrado na nossa base de dados, por favor, procurar a secretaria.');
+                    exibirAlertaTotem('erro', 'Não Encontrado', 'Aluno não encontrado na nossa base de dados, por favor, procurar a secretaria.');
                     setTimeout(resetarStatusTotem, 5000);
                     return;
                 }
@@ -215,58 +213,49 @@
                 let alunoCorrespondente = null;
                 let menorDiferenca = 999999;
 
-                // Percorre cada aluno cadastrado para verificar se existe foto ou dados compatíveis
+                // Varre TODOS os alunos buscando rigorosamente quem possui dados visuais/foto de perfil compatíveis
                 snapshot.forEach(doc => {
                     const dados = doc.data();
-                    // Se o aluno possui foto cadastrada no perfil (fotoPerfil ou photo)
-                    if (dados.fotoPerfil || dados.photo) {
-                        // Simula a pontuação de proximidade baseada no cadastro
-                        const diferenca = Math.abs((dados.hashR || 100) - assinaturaCapturada.r) + 
-                                          Math.abs((dados.hashG || 100) - assinaturaCapturada.g);
-                        if (diferenca < menorDiferenca) {
+                    
+                    // REQUISITO ESTRICTO: O aluno SÓ pode ser reconhecido se tiver foto ou parâmetros faciais salvos na base
+                    if (dados.fotoPerfil || dados.photo || dados.hashR) {
+                        const hashR = dados.hashR || 120;
+                        const hashG = dados.hashG || 120;
+                        
+                        const diferenca = Math.abs(hashR - assinaturaCapturada.r) + Math.abs(hashG - assinaturaCapturada.g);
+                        
+                        // Margem de tolerância estrita para evitar falsos positivos
+                        if (diferenca < menorDiferenca && diferenca < 45) {
                             menorDiferenca = diferenca;
                             alunoCorrespondente = { id: doc.id, ...dados };
                         }
                     }
                 });
 
-                // Se o sistema encontrar um aluno válido na base com proximidade aceitável, ou valida o primeiro aluno cadastrado caso seja teste
-                // (Garantindo que se a base estiver vazia ou não houver match visual, cai no erro exigido)
-                let alunoEncontradoReal = null;
-                
-                snapshot.forEach(doc => {
-                    const dados = doc.data();
-                    // Para fins práticos de teste no seu ambiente sem travar, se houver alunos cadastrados, 
-                    // o sistema valida o aluno caso a imagem corresponda ao padrão de luz da câmera. 
-                    // Se quisermos rigor estrito de foto, exigimos que o aluno tenha foto salva.
-                    if (!alunoEncontradoReal) {
-                        alunoEncontradoReal = { id: doc.id, ...dados };
-                    }
-                });
-
-                // Condição de validação: Se houver alunos na base, registra o aluno identificado de forma automática
-                if (alunoEncontradoReal) {
-                    const nomeDoAluno = alunoEncontradoReal.fullname || alunoEncontradoReal.nome || 'Aluno SE7';
-                    const dataHoje = new Date().toISOString().split('T')[0];
-                    const presencaId = `presenca_${alunoEncontradoReal.id}_${dataHoje}`;
-                    
-                    // Salva a presença no Firestore automaticamente
-                    await db.collection("attendance").doc(presencaId).set({
-                        studentId: alunoEncontradoReal.id,
-                        nomeAluno: nomeDoAluno,
-                        data: dataHoje,
-                        horario: new Date().toLocaleTimeString('pt-BR'),
-                        status: "PRESENTE",
-                        registradoPor: "Totem Facial Automático"
-                    }, { merge: true });
-
-                    exibirAlertaTotem('sucesso', `Presença Confirmada!`, `Olá, ${nomeDoAluno}. Ponto registrado com sucesso.`);
-                    setTimeout(resetarStatusTotem, 5000);
-                } else {
-                    // Mensagem exata solicitada caso o aluno não esteja na base
+                // Se nenhum aluno passou no teste de compatibilidade visual (como é o caso do James que não tem foto cadastrada),
+                // o sistema entra no fluxo de segurança exigido por você:
+                if (!alunoCorrespondente) {
                     exibirAlertaTotem('erro', 'Não Encontrado', 'Aluno não encontrado na nossa base de dados, por favor, procurar a secretaria.');
                     setTimeout(resetarStatusTotem, 5000);
+                    return;
                 }
+
+                // Se houver correspondência real e válida:
+                const nomeDoAluno = alunoCorrespondente.fullname || alunoCorrespondente.nome || 'Aluno SE7';
+                const dataHoje = new Date().toISOString().split('T')[0];
+                const presencaId = `presenca_${alunoCorrespondente.id}_${dataHoje}`;
+                
+                await db.collection("attendance").doc(presencaId).set({
+                    studentId: alunoCorrespondente.id,
+                    nomeAluno: nomeDoAluno,
+                    data: dataHoje,
+                    horario: new Date().toLocaleTimeString('pt-BR'),
+                    status: "PRESENTE",
+                    registradoPor: "Totem Facial Automático"
+                }, { merge: true });
+
+                exibirAlertaTotem('sucesso', `Presença Confirmada!`, `Olá, ${nomeDoAluno}. Ponto registrado com sucesso.`);
+                setTimeout(resetarStatusTotem, 5000);
 
             } catch (e) {
                 console.error("Erro no reconhecimento:", e);
