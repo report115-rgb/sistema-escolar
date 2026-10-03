@@ -3715,19 +3715,19 @@ function carregarDatasCalendarioParaFrequencia() {
 }
 
 	async function addOrUpdateStudent() {
-            const editId = document.getElementById('edit-student-id').value;
-            const fullname = document.getElementById('nomeAluno').value.trim();
-            const email = document.getElementById('emailAluno').value.trim();
-            const cpf = document.getElementById('cpfAluno').value.trim();
-            const courseId = document.getElementById('input-student-course').value;
-            const classId = document.getElementById('input-student-class').value;
+    const editId = document.getElementById('edit-student-id').value;
+    const fullname = document.getElementById('nomeAluno').value.trim();
+    const email = document.getElementById('emailAluno').value.trim();
+    const cpf = document.getElementById('cpfAluno').value.trim();
+    const courseId = document.getElementById('input-student-course').value;
+    const classId = document.getElementById('input-student-class').value;
 
-            if (!fullname || !email || !cpf || !courseId || !classId) return alert("Preencha todos os campos!");
-            if (!validarCPF(cpf)) return alert("CPF inválido!");
+    if (!fullname || !email || !cpf || !courseId || !classId) return alert("Preencha todos os campos!");
+    if (!validarCPF(cpf)) return alert("CPF inválido!");
 
-            const cursoObj = courses.find(c => c.id === courseId);
+    const cursoObj = courses.find(c => c.id === courseId);
 
-            const studentData = {
+    const studentData = {
         fullname, dob: document.getElementById('dataNascimento').value,
         sexo: document.getElementById('sexoAluno').value, whatsapp: document.getElementById('whatsappAluno').value.trim(),
         email, rg: document.getElementById('rgAluno').value.trim(), cpf,
@@ -3735,25 +3735,32 @@ function carregarDatasCalendarioParaFrequencia() {
         numero: document.getElementById('numeroAluno').value.trim(), bairro: document.getElementById('bairroAluno').value.trim(),
         cidade: document.getElementById('cidadeAluno').value.trim(), estado: document.getElementById('estadoAluno').value.trim(),
         courseId, classId,
-        fotoAluno: fotoRostoBase64Temp || "" // <--- ADICIONE ESTA LINHA AQUI PARA SALVAR A FOTO NA NUVEM
+        fotoAluno: fotoRostoBase64Temp || "" // <--- Mantém a foto correta aqui
     };
 
-            if (editId) {
-                await db.collection("students").doc(editId).update(studentData);
-                closeNewStudentModal();
-                alert("Dados do aluno atualizados com sucesso!");
-            } else {
-                const code = `MAT-${new Date().getFullYear()}-${Date.now().toString().slice(-5)}`;
-                studentData.code = code;
-                studentData.status = "Ativo";
-                studentData.senhaAluno = code;
-                studentData.documentos = {};
-                studentData.fotoAluno = "";
+    if (editId) {
+        await db.collection("students").doc(editId).update(studentData);
+        closeNewStudentModal();
+        fotoRostoBase64Temp = ""; // Limpa a variável temporária
+        alert("Dados do aluno atualizados com sucesso!");
+    } else {
+        const code = `MAT-${new Date().getFullYear()}-${Date.now().toString().slice(-5)}`;
+        studentData.code = code;
+        studentData.status = "Ativo";
+        studentData.senhaAluno = code;
+        studentData.documentos = {};
+        // REMOVIDO: studentData.fotoAluno = ""; (Para não apagar o que veio de fotoRostoBase64Temp)
 
-                const docRef = await db.collection("students").add(studentData);
-                const novoAlunoId = docRef.id;
-                closeNewStudentModal();
-		fotoRostoBase64Temp = "";
+        const docRef = await db.collection("students").add(studentData);
+        const novoAlunoId = docRef.id;
+        closeNewStudentModal();
+        fotoRostoBase64Temp = ""; // Limpa a variável temporária
+        alert("Aluno cadastrado com sucesso!");
+    }
+    
+    // Atualiza a listagem de alunos na tela se houver
+    if (typeof carregarListaAlunos === 'function') carregarListaAlunos();
+}
 
                 // --- GATILHO AUTOMÁTICO DE GERAÇÃO FINANCEIRA ---
                 try {
