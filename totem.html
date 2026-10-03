@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SE7 - Totem de Frequência e Ponto</title>
+    <title>SE7 - Totem de Frequência e Ponto com Reconhecimento Facial (IA)</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
@@ -11,6 +11,8 @@
     <!-- Firebase SDK Compat -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    <!-- Face-API.js para Reconhecimento Facial por IA -->
+    <script defer src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
 </head>
 <body class="bg-slate-950 text-white font-sans antialiased h-screen flex flex-col justify-between overflow-hidden select-none">
 
@@ -22,7 +24,7 @@
             </div>
             <div>
                 <h1 class="font-bold text-base text-white">SE7 Gestão Educacional</h1>
-                <p class="text-xs text-blue-400">Totem Unificado &bull; Alunos e Funcionários</p>
+                <p class="text-xs text-blue-400">Totem Unificado &bull; Reconhecimento Facial IA</p>
             </div>
         </div>
         <div class="text-right">
@@ -40,8 +42,8 @@
                 <video id="webcam" autoplay playsinline muted class="absolute inset-0 w-full h-full object-cover transform -scale-x-100"></video>
                 
                 <div class="absolute inset-x-16 inset-y-8 border-2 border-dashed border-blue-400/70 rounded-3xl pointer-events-none flex flex-col items-center justify-end pb-4 bg-blue-950/10">
-                    <span class="text-[11px] text-blue-200 bg-slate-900/90 px-3 py-1 rounded-full uppercase tracking-wider font-semibold shadow border border-blue-500/30">
-                        <i class="fa-solid fa-face-smile mr-1"></i> Posicione o Rosto
+                    <span id="totem-ia-status-badge" class="text-[11px] text-blue-200 bg-slate-900/90 px-3 py-1 rounded-full uppercase tracking-wider font-semibold shadow border border-blue-500/30">
+                        <i class="fa-solid fa-face-smile mr-1"></i> Inicializando IA...
                     </span>
                 </div>
             </div>
@@ -54,19 +56,19 @@
         <div class="bg-slate-900/80 border border-slate-800 p-8 rounded-3xl shadow-xl flex flex-col justify-center space-y-6 text-center lg:text-left">
             <div>
                 <span class="px-3 py-1 bg-emerald-500/10 text-emerald-400 rounded-full text-xs font-bold border border-emerald-500/20">
-                    <i class="fa-solid fa-circle-dot mr-1 animate-pulse"></i> Sistema Conectado à Matriz
+                    <i class="fa-solid fa-circle-dot mr-1 animate-pulse"></i> Biometria Real Ativa
                 </span>
-                <h2 class="text-2xl lg:text-3xl font-extrabold text-white mt-3">Registro por Reconhecimento</h2>
-                <p class="text-slate-400 text-sm mt-1">Insira seu CPF ou Matrícula para validar instantaneamente a presença (Aluno) ou o Ponto (Funcionário).</p>
+                <h2 class="text-2xl lg:text-3xl font-extrabold text-white mt-3">Reconhecimento Facial em Tempo Real</h2>
+                <p class="text-slate-400 text-sm mt-1">Posicione-se em frente à câmera para leitura automática ou utilize a identificação rápida por CPF/Matrícula abaixo.</p>
             </div>
 
-            <!-- CAMPO DE IDENTIFICAÇÃO RÁPIDA -->
+            <!-- CAMPO DE IDENTIFICAÇÃO RÁPIDA (FALLBACK) -->
             <div class="bg-slate-950/80 border border-slate-800 p-5 rounded-2xl space-y-3">
-                <label class="block text-xs font-semibold uppercase text-slate-400 text-left">Identificação Rápida (CPF ou Matrícula)</label>
+                <label class="block text-xs font-semibold uppercase text-slate-400 text-left">Identificação Manual (CPF ou Matrícula)</label>
                 <div class="flex gap-2">
                     <input type="text" id="input-identificacao-totem" placeholder="Digite CPF ou Matrícula..." class="flex-1 px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-sm text-white focus:ring-2 focus:ring-blue-600 focus:outline-none">
-                    <button onclick="processarRegistroTotem()" class="px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm shadow transition">
-                        Registrar
+                    <button onclick="processarRegistroTotemManual()" class="px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm shadow transition">
+                        Validar
                     </button>
                 </div>
             </div>
@@ -77,8 +79,8 @@
                     <i class="fa-solid fa-user-clock"></i>
                 </div>
                 <div class="text-left">
-                    <h3 id="status-titulo" class="font-bold text-white text-base">Aguardando Registro...</h3>
-                    <p id="status-desc" class="text-xs text-slate-400">O sistema está pronto para computar frequências e pontos.</p>
+                    <h3 id="status-titulo" class="font-bold text-white text-base">Aguardando Rosto...</h3>
+                    <p id="status-desc" class="text-xs text-slate-400">O sistema está escaneando a câmera para registrar a presença automaticamente.</p>
                 </div>
             </div>
         </div>
@@ -87,10 +89,10 @@
 
     <!-- RODAPÉ -->
     <footer class="bg-slate-900 border-t border-slate-800 py-3 px-6 text-center text-xs text-slate-500 shrink-0">
-        SE7 Gestão Educacional &bull; Módulo Totem Unificado v1.1
+        SE7 Gestão Educacional &bull; Módulo Totem com Inteligência Artificial v1.2
     </footer>
 
-    <!-- SCRIPT DE INTEGRAÇÃO COM FIREBASE -->
+    <!-- SCRIPTS DE INTEGRAÇÃO E IA -->
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyBeJ-fqzwiQt0PZEKQ6e8zAPSuh7WRuaHo",
@@ -119,9 +121,11 @@
         async function iniciarCameraTotem() {
             try {
                 const videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
-                document.getElementById('webcam').srcObject = videoStream;
+                const videoEl = document.getElementById('webcam');
+                videoEl.srcObject = videoStream;
             } catch (error) {
                 console.error("Erro ao acessar a câmera:", error);
+                alert("Erro ao acessar a câmera. Verifique as permissões do navegador.");
             }
         }
         iniciarCameraTotem();
@@ -134,8 +138,127 @@
             }
         }
 
-        // FUNÇÃO PRINCIPAL DE PROCESSAMENTO DO REGISTRO (ALUNO OU FUNCIONÁRIO)
-        async function processarRegistroTotem() {
+        // ==========================================
+        // CARREGAMENTO DOS MODELOS DE IA (FACE-API.JS)
+        // ==========================================
+        let modelosCarregados = false;
+
+        async function carregarModelosFaceAPI() {
+            const statusTitulo = document.getElementById('status-titulo');
+            const statusDesc = document.getElementById('status-desc');
+            const badgeIA = document.getElementById('totem-ia-status-badge');
+            
+            try {
+                statusTitulo.textContent = "Carregando Modelos de IA...";
+                statusDesc.textContent = "Baixando redes neurais de reconhecimento facial...";
+
+                const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
+                await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+                await faceapi.nets.faceLandmarkTinyNet.loadFromUri(MODEL_URL);
+                await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+
+                modelosCarregados = true;
+                statusTitulo.textContent = "Pronto para Reconhecimento";
+                statusDesc.textContent = "Posicione o rosto em frente à câmera para computar a presença.";
+                badgeIA.innerHTML = `<i class="fa-solid fa-check text-emerald-400 mr-1"></i> IA Ativa e Pronta`;
+                
+                iniciarLoopReconhecimentoFacial();
+            } catch (e) {
+                console.error("Erro ao carregar modelos de IA:", e);
+                statusTitulo.textContent = "Modo Manual Ativo";
+                statusDesc.textContent = "Utilize o campo abaixo com CPF ou Matrícula.";
+                badgeIA.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-amber-400 mr-1"></i> IA Indisponível`;
+            }
+        }
+
+        let tempoUltimoReconhecimento = 0;
+
+        function iniciarLoopReconhecimentoFacial() {
+            const videoEl = document.getElementById('webcam');
+            
+            setInterval(async () => {
+                if (!modelosCarregados || !videoEl || videoEl.paused || videoEl.ended) return;
+
+                const agora = Date.now();
+                // Evita leituras consecutivas para a mesma pessoa em menos de 8 segundos
+                if (agora - tempoUltimoReconhecimento < 8000) return;
+
+                try {
+                    const deteccao = await faceapi.detectSingleFace(videoEl, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks(true).withFaceDescriptor();
+
+                    if (deteccao) {
+                        analisarEVerificarAlunoBiometria(deteccao.descriptor);
+                    }
+                } catch (err) {
+                    console.error("Erro na detecção facial:", err);
+                }
+            }, 2000);
+        }
+
+        async function analisarEVerificarAlunoBiometria(descriptorAtual) {
+            try {
+                const snapshot = await db.collection("students").get();
+                if (snapshot.empty) return;
+
+                let melhorMatch = { aluno: null, distancia: 0.55 }; // Limiar de precisão da biometria
+
+                for (const doc of snapshot.docs) {
+                    const aluno = doc.data();
+                    const fotoBase64 = aluno.fotoAluno || aluno.fotoRostoBase64;
+
+                    if (fotoBase64) {
+                        try {
+                            const imgEl = await faceapi.fetchImage(fotoBase64);
+                            const deteccaoAluno = await faceapi.detectSingleFace(imgEl, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks(true).withFaceDescriptor();
+
+                            if (deteccaoAluno) {
+                                const distancia = faceapi.euclideanDistance(descriptorAtual, deteccaoAluno.descriptor);
+                                if (distancia < melhorMatch.distancia) {
+                                    melhorMatch = { aluno: { id: doc.id, ...aluno }, distancia: distancia };
+                                }
+                            }
+                        } catch (errFoto) {
+                            // Ignora imagens corrompidas ou inválidas e continua a busca
+                        }
+                    }
+                }
+
+                if (melhorMatch.aluno) {
+                    const alunoEncontrado = melhorMatch.aluno;
+                    tempoUltimoReconhecimento = Date.now();
+
+                    const dataHoje = new Date().toISOString().split('T')[0];
+                    const presencaId = `presenca_${alunoEncontrado.id}_${dataHoje}`;
+                    
+                    await db.collection("attendance").doc(presencaId).set({
+                        studentId: alunoEncontrado.id,
+                        nomeAluno: alunoEncontrado.fullname || 'Aluno',
+                        data: dataHoje,
+                        horario: new Date().toLocaleTimeString('pt-BR'),
+                        status: "PRESENTE",
+                        registradoPor: "Totem Facial IA"
+                    }, { merge: true });
+
+                    const cardEl = document.getElementById('card-status-totem');
+                    const iconeEl = document.getElementById('totem-icone-status');
+                    const tituloEl = document.getElementById('status-titulo');
+                    const descEl = document.getElementById('status-desc');
+
+                    cardEl.className = "bg-emerald-950/60 border border-emerald-500/50 p-6 rounded-2xl flex items-center space-x-4";
+                    iconeEl.className = "w-14 h-14 bg-emerald-600 text-white rounded-2xl flex items-center justify-center text-2xl shrink-0 shadow";
+                    iconeEl.innerHTML = `<i class="fa-solid fa-face-smile"></i>`;
+                    tituloEl.textContent = `Presença Confirmada: ${alunoEncontrado.fullname}`;
+                    descEl.textContent = `Reconhecido por IA às ${new Date().toLocaleTimeString('pt-BR')}. Sincronizado com a Matriz.`;
+                }
+            } catch (e) {
+                console.error("Erro na verificação biométrica:", e);
+            }
+        }
+
+        // ==========================================
+        // REGISTRO MANUAL (CPF OU MATRÍCULA)
+        // ==========================================
+        async function processarRegistroTotemManual() {
             const termo = document.getElementById('input-identificacao-totem').value.trim();
             if (!termo) return alert("Digite o CPF ou a Matrícula.");
 
@@ -145,12 +268,11 @@
             const cardEl = document.getElementById('card-status-totem');
 
             try {
-                // 1. Verificar se é Aluno
                 const alunoSnap = await db.collection("students").get();
                 let alunoEncontrado = null;
                 alunoSnap.forEach(doc => {
                     const d = doc.data();
-                    if ((d.cpf && d.cpf.includes(termo)) || (d.code && d.code.includes(termo)) || (d.matricula && d.matricula.includes(termo))) {
+                    if ((d.cpf && d.cpf.includes(termo)) || (d.code && d.code.includes(termo))) {
                         alunoEncontrado = { id: doc.id, ...d };
                     }
                 });
@@ -161,65 +283,36 @@
                     
                     await db.collection("attendance").doc(presencaId).set({
                         studentId: alunoEncontrado.id,
-                        nomeAluno: alunoEncontrado.fullname || alunoEncontrado.name || 'Aluno',
+                        nomeAluno: alunoEncontrado.fullname || 'Aluno',
                         data: dataHoje,
                         horario: new Date().toLocaleTimeString('pt-BR'),
                         status: "PRESENTE",
-                        registradoPor: "Totem Facial"
+                        registradoPor: "Totem Manual"
                     }, { merge: true });
 
                     cardEl.className = "bg-emerald-950/60 border border-emerald-500/50 p-6 rounded-2xl flex items-center space-x-4";
                     iconeEl.className = "w-14 h-14 bg-emerald-600 text-white rounded-2xl flex items-center justify-center text-2xl shrink-0 shadow";
                     iconeEl.innerHTML = `<i class="fa-solid fa-user-check"></i>`;
-                    tituloEl.textContent = `Presença Confirmada: ${alunoEncontrado.fullname || alunoEncontrado.name}`;
-                    descEl.textContent = `Aluno registrado com sucesso às ${new Date().toLocaleTimeString('pt-BR')}. Sincronizado com o App do Aluno.`;
+                    tituloEl.textContent = `Presença Registrada: ${alunoEncontrado.fullname}`;
+                    descEl.textContent = `Validação manual realizada às ${new Date().toLocaleTimeString('pt-BR')}.`;
                     document.getElementById('input-identificacao-totem').value = '';
                     return;
                 }
 
-                // 2. Verificar se é Funcionário
-                const funcSnap = await db.collection("systemUsers").get();
-                let funcEncontrado = null;
-                funcSnap.forEach(doc => {
-                    const d = doc.data();
-                    if ((d.email && d.email.includes(termo)) || (d.nome && d.nome.toLowerCase().includes(termo.toLowerCase()) || (d.cpf && d.cpf.includes(termo)))) {
-                        funcEncontrado = { id: doc.id, ...d };
-                    }
-                });
-
-                if (funcEncontrado) {
-                    const dataHoje = new Date().toISOString().split('T')[0];
-                    const pontoId = `ponto_${funcEncontrado.id}_${Date.now()}`;
-
-                    await db.collection("employeeLogs").doc(pontoId).set({
-                        userId: funcEncontrado.id,
-                        nomeFuncionario: funcEncontrado.nome || funcEncontrado.name || 'Funcionário',
-                        data: dataHoje,
-                        horario: new Date().toLocaleTimeString('pt-BR'),
-                        tipo: "ENTRADA",
-                        registradoPor: "Totem Facial"
-                    });
-
-                    cardEl.className = "bg-blue-950/60 border border-blue-500/50 p-6 rounded-2xl flex items-center space-x-4";
-                    iconeEl.className = "w-14 h-14 bg-blue-600 text-white rounded-2xl flex items-center justify-center text-2xl shrink-0 shadow";
-                    iconeEl.innerHTML = `<i class="fa-solid fa-business-time"></i>`;
-                    tituloEl.textContent = `Ponto Registrado: ${funcEncontrado.nome || funcEncontrado.name}`;
-                    descEl.textContent = `Entrada registrada com sucesso às ${new Date().toLocaleTimeString('pt-BR')}. Relatório de horas atualizado.`;
-                    document.getElementById('input-identificacao-totem').value = '';
-                    return;
-                }
-
-                // Se não encontrar nem aluno nem funcionário
                 cardEl.className = "bg-red-950/60 border border-red-500/50 p-6 rounded-2xl flex items-center space-x-4";
                 iconeEl.className = "w-14 h-14 bg-red-600 text-white rounded-2xl flex items-center justify-center text-2xl shrink-0 shadow";
                 iconeEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i>`;
                 tituloEl.textContent = `Não Encontrado`;
-                descEl.textContent = `Nenhum aluno ou funcionário localizado com os dados informados.`;
-
+                descEl.textContent = `Nenhum aluno localizado com o dado informado.`;
             } catch (e) {
                 alert("Erro ao registrar: " + e.message);
             }
         }
+
+        // Inicia a IA ao carregar a página
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(carregarModelosFaceAPI, 1500);
+        });
     </script>
 </body>
 </html>
