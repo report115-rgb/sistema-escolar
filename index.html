@@ -5977,34 +5977,7 @@ function toggleModoEdicaoFinanceiro(financeLogId) {
     }
 }
 
-// Salva a nova data de vencimento e o novo valor diretamente na nuvem
 async function salvarEdicaoVencimentoValor(financeLogId) {
-    const novoVencimento = document.getElementById(`edit-venc-${financeLogId}`).value;
-    const novoValor = parseFloat(document.getElementById(`edit-val-${financeLogId}`).value) || 0;
-
-    if (!novoVencimento) {
-        return alert("Informe uma data de vencimento válida.");
-    }
-
-    try {
-        await db.collection("financeLogs").doc(financeLogId).update({
-            date: novoVencimento,
-            amount: novoValor
-        });
-
-        registrarLogAuditoria(`Atualizou o vencimento para ${novoVencimento} e valor para R$ ${novoValor} no registro financeiro ID ${financeLogId}`, "Financeiro");
-        alert("Vencimento e valor atualizados com sucesso!");
-
-        // CORREÇÃO: Fecha a edição e atualiza a listagem do aluno instantaneamente na tela
-        const selFin = document.getElementById('fin-student-select');
-        if (selFin && selFin.value) {
-            renderizarCobrancasAlunoSelecionadoFinanceiro(selFin.value);
-        }
-    } catch (error) {
-        console.error("Erro ao atualizar fatura:", error);
-        alert("Erro ao atualizar na nuvem: " + error.message);
-    }
-}async function salvarEdicaoVencimentoValor(financeLogId) {
     const novoVencimento = document.getElementById(`edit-venc-${financeLogId}`).value;
     const novoValor = parseFloat(document.getElementById(`edit-val-${financeLogId}`).value) || 0;
 
