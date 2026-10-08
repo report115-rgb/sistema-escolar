@@ -2878,12 +2878,12 @@ function renderTeachers() {
 function editarColaborador(id) {
     const t = teachers.find(item => item.id === id);
     if (!t) return;
-    document.getElementById('edit-teacher-id').value = t.id;
     document.getElementById('input-teacher-name').value = t.fullname || '';
     document.getElementById('input-teacher-cargo').value = t.cargo || 'Professor';
     document.getElementById('input-teacher-formation').value = t.formation || '';
     document.getElementById('input-teacher-council').value = t.council || '';
     document.getElementById('input-teacher-pin').value = t.pin || '';
+    document.getElementById('input-teacher-horaaula').value = t.valorHoraAula || '';
 
     // Restaura os horários salvos
     if (t.horarios) {
