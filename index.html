@@ -6130,6 +6130,25 @@ function integrarPontoComFinanceiro(ponto) {
     localStorage.setItem('se7_financeiro_pagar', JSON.stringify(financeiroPagar));
 }
 
+function carregarProfessoresNoPonto() {
+    const select = document.getElementById('ponto-professor-select');
+    if (!select) return;
+
+    // Mantém a primeira opção padrão e limpa o resto
+    select.innerHTML = '<option value="">Selecione o colaborador...</option>';
+
+    // Supondo que você salve a lista de colaboradores no localStorage com a chave 'se7_colaboradores' (ou 'teachers')
+    // Ajuste o nome da chave caso seja diferente no seu sistema
+    let listaColaboradores = JSON.parse(localStorage.getItem('se7_colaboradores') || '[]');
+
+    listaColaboradores.forEach(c => {
+        const option = document.createElement('option');
+        option.value = c.id; // ID do colaborador
+        option.textContent = c.name || c.nome; // Nome do colaborador
+        select.appendChild(option);
+    });
+}
+
 function renderizarTabelaPonto() {
     const tbody = document.getElementById('tabela-ponto-professores');
     if (!tbody) return;
