@@ -6080,12 +6080,12 @@ function salvarPontoProfessor() {
     // Supondo que você armazene isso no objeto do professor ou busque do input correspondente
     let valorHoraAula = 25.00; // Valor padrão caso não configurado
     
-    // Exemplo buscando do cadastro de colaboradores armazenado no sistema:
-    if (typeof colaboradoresDB !== 'undefined') {
-        const profObj = colaboradoresDB.find(c => c.id == professorId);
-        if (profObj && profObj.valorHora) {
-            valorHoraAula = parseFloat(profObj.valorHora);
-        }
+    // Buscar valor da hora-aula cadastrado no localStorage do sistema
+let listaColaboradores = JSON.parse(localStorage.getItem('se7_colaboradores') || '[]');
+const profObj = listaColaboradores.find(c => c.id == professorId);
+if (profObj && profObj.hourlyRate) {
+    valorHoraAula = parseFloat(profObj.hourlyRate);
+}
     }
 
     const valorTotalReceber = totalHoras * valorHoraAula;
@@ -6129,6 +6129,25 @@ function integrarPontoComFinanceiro(ponto) {
         status: 'Pendente (Aguardando Liberação Contábil)'
     });
     localStorage.setItem('se7_financeiro_pagar', JSON.stringify(financeiroPagar));
+}
+
+function carregarProfessoresNoPonto() {
+    const select = document.getElementById('ponto-professor-select');
+    if (!select) return;
+
+    // Mantém a primeira opção padrão e limpa o resto
+    select.innerHTML = '<option value="">Selecione o colaborador...</option>';
+
+    // Supondo que você salve a lista de colaboradores no localStorage com a chave 'se7_colaboradores' (ou 'teachers')
+    // Ajuste o nome da chave caso seja diferente no seu sistema
+    let listaColaboradores = JSON.parse(localStorage.getItem('se7_colaboradores') || '[]');
+
+    listaColaboradores.forEach(c => {
+        const option = document.createElement('option');
+        option.value = c.id; // ID do colaborador
+        option.textContent = c.name || c.nome; // Nome do colaborador
+        select.appendChild(option);
+    });
 }
 
 function renderizarTabelaPonto() {
