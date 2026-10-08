@@ -1111,22 +1111,66 @@
 
     <input type="hidden" id="edit-teacher-id" value="">
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
-            <label class="block text-xs font-semibold mb-1">Nome Completo</label>
-            <input type="text" id="input-teacher-name" placeholder="Ex: Carlos Silva" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 dark:text-white">
+            <label class="block text-xs font-semibold mb-1 text-gray-700 dark:text-gray-300">Nome Completo</label>
+            <input type="text" id="teacher-name" placeholder="Nome do colaborador" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-xs dark:bg-slate-800 dark:text-white">
         </div>
         <div>
-            <label class="block text-xs font-semibold mb-1">Cargo / Função</label>
-            <select id="input-teacher-cargo" onchange="toggleConfiguracaoFinanceira()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 dark:text-white">
+            <label class="block text-xs font-semibold mb-1 text-gray-700 dark:text-gray-300">CPF</label>
+            <input type="text" id="teacher-cpf" placeholder="000.000.000-00" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-xs dark:bg-slate-800 dark:text-white">
+        </div>
+        <div>
+            <label class="block text-xs font-semibold mb-1 text-gray-700 dark:text-gray-300">Função / Cargo</label>
+            <select id="teacher-role" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-xs dark:bg-slate-800 dark:text-white">
                 <option value="Professor">Professor(a)</option>
-                <option value="Secretaria">Secretaria / Atendimento</option>
-                <option value="Limpeza">Funcionário(a) de Limpeza</option>
-                <option value="Coordenação">Coordenação Pedagógica</option>
-                <option value="Financeiro">Financeiro / Administrativo</option>
+                <option value="Secretaria">Secretaria</option>
+                <option value="Financeiro">Financeiro</option>
+                <option value="Administrador">Administrador</option>
             </select>
         </div>
     </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
+        <div>
+            <label class="block text-xs font-semibold mb-1 text-gray-700 dark:text-gray-300">E-mail / Contato</label>
+            <input type="email" id="teacher-email" placeholder="email@escola.com" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-xs dark:bg-slate-800 dark:text-white">
+        </div>
+        <div>
+            <label class="block text-xs font-semibold mb-1 text-emerald-700 dark:text-emerald-400 font-bold">Valor da Hora-Aula (R$)</label>
+            <input type="number" id="teacher-hourly-rate" placeholder="50.00" step="0.01" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-xs dark:bg-slate-800 dark:text-white font-semibold">
+        </div>
+        <div class="flex items-end gap-2">
+            <button type="button" onclick="salvarColaboradorProfessor()" class="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-xs shadow transition">
+                <i class="fa-solid fa-save mr-1"></i> Salvar Colaborador
+            </button>
+            <button type="button" onclick="cancelarEdicaoColaborador()" class="py-2 px-3 bg-gray-500 hover:bg-gray-600 text-white font-semibold rounded-lg text-xs shadow transition" id="btn-cancel-teacher" style="display:none;">
+                Cancelar
+            </button>
+        </div>
+    </div>
+
+    <!-- Tabela de Listagem de Colaboradores com Ações Alinhadas -->
+    <div class="mt-6">
+        <h4 class="font-bold text-sm text-gray-800 dark:text-white mb-2">Colaboradores Cadastrados</h4>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead>
+                    <tr class="border-b border-gray-200 dark:border-slate-700 text-gray-500">
+                        <th class="p-3">Nome</th>
+                        <th class="p-3">CPF</th>
+                        <th class="p-3">Função</th>
+                        <th class="p-3">Hora-Aula (R$)</th>
+                        <th class="p-3 text-right">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="tabela-colaboradores-geral" class="divide-y divide-gray-200 dark:divide-slate-700">
+                    <!-- Preenchido dinamicamente pelo script -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
