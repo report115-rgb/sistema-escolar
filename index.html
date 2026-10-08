@@ -1102,7 +1102,7 @@
                     <div id="admin-calendar-view" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
                 </div>
 
-                <!-- SUBABA COLABORADORES (ANTIGA PROFESSORES) -->
+               <!-- SUBABA COLABORADORES (ANTIGA PROFESSORES) -->
 <div id="subtab-teachers" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
     <div class="flex justify-between items-center border-b border-gray-200 dark:border-slate-700 pb-2">
         <h3 class="font-bold text-sm text-blue-600 dark:text-blue-400"><i class="fa-solid fa-id-card-clip mr-1.5"></i> Cadastro Geral de Colaboradores (Ponto & Facial)</h3>
@@ -1143,48 +1143,65 @@
         </div>
     </div>
 
-<!-- ADICIONE ESTES CAMPOS DENTRO DO FORMULÁRIO DE CADASTRO DE COLABORADORES -->
-<div class="bg-blue-50 dark:bg-slate-800/60 p-4 rounded-xl border border-blue-200 dark:border-slate-700 space-y-3">
-    <h4 class="font-bold text-xs text-blue-700 dark:text-blue-300 uppercase"><i class="fa-solid fa-clock mr-1"></i> Configuração de Horário (Folha de Ponto / Totem)</h4>
-    
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-        <!-- Turno da Manhã -->
-        <div class="bg-white dark:bg-slate-900 p-3 rounded-lg border border-blue-100 dark:border-slate-700 space-y-2">
-            <span class="font-bold text-gray-700 dark:text-gray-300">Expediente da Manhã</span>
-            <div class="grid grid-cols-2 gap-2">
-                <div>
-                    <label class="block text-[10px] text-gray-500 mb-0.5">Entrada Manhã</label>
-                    <input type="time" id="input-teacher-entrada-1" value="08:00" class="w-full px-2 py-1.5 rounded border dark:bg-slate-800 dark:text-white text-xs">
-                </div>
-                <div>
-                    <label class="block text-[10px] text-gray-500 mb-0.5">Saída Manhã</label>
-                    <input type="time" id="input-teacher-saida-1" value="12:00" class="w-full px-2 py-1.5 rounded border dark:bg-slate-800 dark:text-white text-xs">
+    <!-- Bloco de Horários (Expediente) -->
+    <div class="bg-blue-50 dark:bg-slate-800/60 p-4 rounded-xl border border-blue-200 dark:border-slate-700 space-y-3">
+        <h4 class="font-bold text-xs text-blue-700 dark:text-blue-300 uppercase"><i class="fa-solid fa-clock mr-1"></i> Configuração de Horário (Folha de Ponto / Totem)</h4>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+            <!-- Turno da Manhã -->
+            <div class="bg-white dark:bg-slate-900 p-3 rounded-lg border border-blue-100 dark:border-slate-700 space-y-2">
+                <span class="font-bold text-gray-700 dark:text-gray-300">Expediente da Manhã</span>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-[10px] text-gray-500 mb-0.5">Entrada Manhã</label>
+                        <input type="time" id="input-teacher-entrada-1" value="08:00" class="w-full px-2 py-1.5 rounded border dark:bg-slate-800 dark:text-white text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-gray-500 mb-0.5">Saída Manhã</label>
+                        <input type="time" id="input-teacher-saida-1" value="12:00" class="w-full px-2 py-1.5 rounded border dark:bg-slate-800 dark:text-white text-xs">
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Turno da Tarde / Noite -->
-        <div class="bg-white dark:bg-slate-900 p-3 rounded-lg border border-blue-100 dark:border-slate-700 space-y-2">
-            <span class="font-bold text-gray-700 dark:text-gray-300">Expediente da Tarde / Noite</span>
-            <div class="grid grid-cols-2 gap-2">
-                <div>
-                    <label class="block text-[10px] text-gray-500 mb-0.5">Entrada Tarde</label>
-                    <input type="time" id="input-teacher-entrada-2" value="14:00" class="w-full px-2 py-1.5 rounded border dark:bg-slate-800 dark:text-white text-xs">
-                </div>
-                <div>
-                    <label class="block text-[10px] text-gray-500 mb-0.5">Saída Tarde</label>
-                    <input type="time" id="input-teacher-saida-2" value="18:00" class="w-full px-2 py-1.5 rounded border dark:bg-slate-800 dark:text-white text-xs">
+            <!-- Turno da Tarde / Noite -->
+            <div class="bg-white dark:bg-slate-900 p-3 rounded-lg border border-blue-100 dark:border-slate-700 space-y-2">
+                <span class="font-bold text-gray-700 dark:text-gray-300">Expediente da Tarde / Noite</span>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-[10px] text-gray-500 mb-0.5">Entrada Tarde</label>
+                        <input type="time" id="input-teacher-entrada-2" value="14:00" class="w-full px-2 py-1.5 rounded border dark:bg-slate-800 dark:text-white text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-gray-500 mb-0.5">Saída Tarde</label>
+                        <input type="time" id="input-teacher-saida-2" value="18:00" class="w-full px-2 py-1.5 rounded border dark:bg-slate-800 dark:text-white text-xs">
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
+    <!-- Bloco de Configuração Financeira (Agora DENTRO da subaba) -->
+    <div class="bg-emerald-50 dark:bg-slate-800/60 p-4 rounded-xl border border-emerald-200 dark:border-slate-700 space-y-3">
+        <h4 class="font-bold text-xs text-emerald-700 dark:text-emerald-300 uppercase"><i class="fa-solid fa-file-invoice-dollar mr-1"></i> Configuração Financeira do Professor (Hora-Aula)</h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+            <div>
+                <label class="block font-semibold text-gray-700 dark:text-gray-300 mb-1">Carga Horária Semanal / Mensal</label>
+                <input type="text" id="input-teacher-workload" placeholder="Ex: 40h mensais" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 dark:bg-slate-900 dark:text-white">
+            </div>
+            <div>
+                <label class="block font-semibold text-gray-700 dark:text-gray-300 mb-1">Valor por Hora-Aula (R$)</label>
+                <input type="number" id="input-teacher-hourly-rate" step="0.01" placeholder="25.00 ou 30.00" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 dark:bg-slate-900 dark:text-white font-bold text-emerald-600">
+            </div>
+        </div>
+    </div>
+
+    <!-- Botões de Ação -->
     <div class="flex gap-2 pt-2">
         <button type="button" onclick="saveTeacher()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow transition">Salvar Colaborador</button>
         <button type="button" id="btn-cancel-edit-teacher" onclick="cancelarEdicaoColaborador()" class="px-4 py-2.5 bg-gray-500 text-white text-xs font-semibold rounded-lg shadow" style="display: none;">Cancelar</button>
     </div>
 
+    <!-- Tabela de Colaboradores Cadastrados -->
     <div class="mt-4">
         <h4 class="font-bold text-xs text-gray-700 dark:text-gray-300 mb-2">Colaboradores Cadastrados na Instituição</h4>
         <div class="overflow-x-auto">
@@ -1199,21 +1216,6 @@
                 </thead>
                 <tbody id="teachers-list" class="divide-y divide-gray-200 dark:divide-slate-700"></tbody>
             </table>
-        </div>
-    </div>
-</div>
-
-<!-- Campos de Remuneração por Hora-Aula -->
-<div class="bg-emerald-50 dark:bg-slate-800/60 p-4 rounded-xl border border-emerald-200 dark:border-slate-700 space-y-3 mt-3">
-    <h4 class="font-bold text-xs text-emerald-700 dark:text-emerald-300 uppercase"><i class="fa-solid fa-file-invoice-dollar mr-1"></i> Configuração Financeira do Professor (Hora-Aula)</h4>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-        <div>
-            <label class="block font-semibold text-gray-700 dark:text-gray-300 mb-1">Carga Horária Semanal / Mensal</label>
-            <input type="text" id="input-teacher-workload" placeholder="Ex: 40h mensais" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 dark:bg-slate-900 dark:text-white">
-        </div>
-        <div>
-            <label class="block font-semibold text-gray-700 dark:text-gray-300 mb-1">Valor por Hora-Aula (R$)</label>
-            <input type="number" id="input-teacher-hourly-rate" step="0.01" placeholder="25.00 ou 30.00" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 dark:bg-slate-900 dark:text-white font-bold text-emerald-600">
         </div>
     </div>
 </div>
