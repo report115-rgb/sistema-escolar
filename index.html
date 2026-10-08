@@ -2840,12 +2840,13 @@ function renderTeachers() {
             list.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-gray-400">Nenhum colaborador cadastrado.</td></tr>`;
             return;
         }
-        teachers.forEach(t => {
+       teachers.forEach(t => {
             let corBadge = 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300';
             if (t.cargo === 'Secretaria') corBadge = 'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300';
             if (t.cargo === 'Limpeza') corBadge = 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300';
             if (t.cargo === 'Coordenação') corBadge = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300';
-
+	    const valorFormatado = t.valorHoraAula ? `R$ ${parseFloat(t.valorHoraAula).toFixed(2)}` : 'Não definida';
+           
             list.innerHTML += `
                 <tr class="border-b border-gray-100 dark:border-slate-700">
                     <td class="p-2.5">
