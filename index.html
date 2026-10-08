@@ -6156,6 +6156,162 @@ function carregarProfessoresNoPonto() {
     });
 }
 
+// 1. Controla se o bloco financeiro aparece com base no cargo selecionado
+function toggleConfiguracaoFinanceira() {
+    const cargo = document.getElementById('input-teacher-cargo').value;
+    const bloco = document.getElementById('bloco-financeiro-professor');
+    if (bloco) {
+        if (cargo === 'Professor') {
+            bloco.style.display = 'block';
+        } else {
+            bloco.style.display = 'none';
+        }
+    }
+}
+
+// 2. Renderiza a tabela de colaboradores exibindo o valor da hora-aula
+function renderizarTabelaColaboradores() {
+    const tbody = document.getElementById('teachers-list');
+    if (!tbody) return;
+
+    let lista = JSON.parse(localStorage.getItem('se7_colaboradores') || localStorage.getItem('teachers') || '[]');
+    tbody.innerHTML = '';
+
+    if (lista.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-gray-400">Nenhum colaborador cadastrado.</td></tr>`;
+        return;
+    }
+
+    lista.forEach(c => {
+        // Formata o valor da hora-aula caso exista
+        let valorExibicao = '-';
+        if (c.cargo === 'Professor' && c.hourlyRate) {
+            valorExibicao = `R$ ${parseFloat(c.hourlyRate).toFixed(2)}`;
+        }
+
+        tbody.innerHTML += `
+            <tr class="hover:bg-gray-50 dark:hover:bg-slate-900">
+                <td class="p-2.5">
+                    <div class="font-bold text-gray-800 dark:text-gray-200">${c.name || c.nome}</div>
+                    <div class="text-[10px] text-gray-400 font-mono">ID: ${c.pin || c.id}</div>
+                </td>
+                <td class="p-2.5"><span class="px-2 py-0.5 bg-blue-100 text-blue-800 rounded font-semibold">${c.cargo}</span></td>
+                <td class="p-2.5">
+                    <div>${c.formation || c.formacao || '-'}</div>
+                    <div class="text-[10px] text-gray-400">${c.council || c.conselho || ''}</div>
+                </td>
+                <td class="p-2.5 font-bold text-emerald-600">${valorExibicao}</td>
+                <td class="p-2.5 text-right space-x-2">
+                    <button onclick="editarColaborador('${c.id}')" class="text-blue-500 hover:text-blue-700" title="Editar"><i class="fa-solid fa-pen-to-square"></i></button>
+                    <button onclick="excluirColaborador('${c.id}')" class="text-red-500 hover:text-red-700" title="Excluir"><i class="fa-solid fa-trash"></i></button>
+                </td>
+            </tr>
+        `;
+    });
+}
+
+// 3. Função para garantir que o salvamento/edição grave a hora-aula corretamente
+// (Certifique-se de que a sua função saveTeacher atualize ou adicione considerando os inputs abaixo)
+function saveTeacher() {
+    const editId = document.getElementById('edit-teacher-id').value;
+    const name = document.getElementById('input-teacher-name').value;
+    const cargo = document.getElementById('input-teacher-cargo').value;
+    const formation = document.getElementById('input-teacher-formation').value;
+    const council = document.getElementById('input-teacher-council').value;
+    const pin = document.getElementById('input-teacher-pin').value || 'PIN-' + Math.floor(1000 + Math.random() * 9000);
+    
+    // Horários
+    const entrada1 = document.getElementById('input-teacher-entrada-1').value;
+    const saida1 = document.getElementById('input-teacher-saida-1').value;
+    const entrada2 = document.getElementById('input-teacher-entrada-2').value;
+    const saida2 = document.getElementById('input-teacher-saida-2').value;
+
+    // Dados financeiros (Hora-Aula)
+    const workload = document.getElementById('input-teacher-workload').value;
+    const hourlyRate = document.getElementById('input-teacher-hourly-rate').value;
+
+    if (!name) {
+        alert('Por favor, informe o nome completo do colaborador.');
+        return;
+    }
+
+    let lista = JSON.parse(localStorage.getItem('se7_colaboradores') || localStorage.getItem('teachers') || '[]');
+
+    if (editId) {
+        // Editando registro existente (como a Jaqueline Minas)
+        let index = lista.findIndex(c => c.id == editId);
+        if (index !== -1) {
+            lista[index] = {
+                ...lista[index],
+                name, cargo, formation, council, pin,
+                entrada1, saida1, entrada2, saida2,
+                workload, hourlyRate
+            };
+        }
+    } else {
+        // Criando novo registro
+        const novoColaborador = {
+            id: Date.now().toString(),
+            name, cargo, formation, council, pin,
+            entrada1, saida1, entrada2, saida2,
+            workload, hourlyRate
+        };
+        lista.push(novoColaborador);
+    }
+
+    // Salva nas duas chaves principais para evitar qualquer incompatibilidade com o resto do sistema
+    localStorage.setItem('se7_colaboradores', JSON.stringify(lista));
+    localStorage.setItem('teachers', JSON.stringify(lista));
+
+    // Limpa formulário e reseta ID de edição
+    document.getElementById('edit-teacher-id').value = '';
+    document.getElementById('input-teacher-name').value = '';
+    document.getElementById('input-teacher-formation').value = '';
+    document.getElementById('input-teacher-council').value = '';
+    document.getElementById('input-teacher-pin').value = '';
+    document.getElementById('input-teacher-hourly-rate').value = '';
+    document.getElementById('input-teacher-workload').value = '';
+    
+    const btnCancel = document.getElementById('btn-cancel-edit-teacher');
+    if (btnCancel) btnCancel.style.display = 'none';
+
+    alert('Colaborador salvo com sucesso!');
+    renderizarTabelaColaboradores();
+}
+
+// 4. Função para preencher os campos ao clicar no botão de Editar
+function editarColaborador(id) {
+    let lista = JSON.parse(localStorage.getItem('se7_colaboradores') || localStorage.getItem('teachers') || '[]');
+    const c = lista.find(item => item.id == id);
+    if (!c) return;
+
+    document.getElementById('edit-teacher-id').value = c.id;
+    document.getElementById('input-teacher-name').value = c.name || c.nome || '';
+    document.getElementById('input-teacher-cargo').value = c.cargo || 'Professor';
+    document.getElementById('input-teacher-formation').value = c.formation || c.formacao || '';
+    document.getElementById('input-teacher-council').value = c.council || c.conselho || '';
+    document.getElementById('input-teacher-pin').value = c.pin || c.id || '';
+    
+    // Preenche horários e financeiro se existirem
+    if (document.getElementById('input-teacher-entrada-1')) document.getElementById('input-teacher-entrada-1').value = c.entrada1 || '08:00';
+    if (document.getElementById('input-teacher-saida-1')) document.getElementById('input-teacher-saida-1').value = c.saida1 || '12:00';
+    if (document.getElementById('input-teacher-entrada-2')) document.getElementById('input-teacher-entrada-2').value = c.entrada2 || '14:00';
+    if (document.getElementById('input-teacher-saida-2')) document.getElementById('input-teacher-saida-2').value = c.saida2 || '18:00';
+    
+    if (document.getElementById('input-teacher-workload')) document.getElementById('input-teacher-workload').value = c.workload || '';
+    if (document.getElementById('input-teacher-hourly-rate')) document.getElementById('input-teacher-hourly-rate').value = c.hourlyRate || '';
+
+    // Atualiza a visibilidade do bloco financeiro conforme o cargo
+    toggleConfiguracaoFinanceira();
+
+    // Mostra botão cancelar edição
+    const btnCancel = document.getElementById('btn-cancel-edit-teacher');
+    if (btnCancel) btnCancel.style.display = 'inline-block';
+
+    // Rola a página para o topo do formulário de cadastro
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 function renderizarTabelaPonto() {
     const tbody = document.getElementById('tabela-ponto-professores');
     if (!tbody) return;
