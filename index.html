@@ -6078,15 +6078,22 @@ function salvarPontoProfessor() {
 
     // Buscar valor da hora-aula cadastrado para o professor (ex: R$ 25 ou R$ 30)
     // Supondo que você armazene isso no objeto do professor ou busque do input correspondente
-    let valorHoraAula = 25.00; // Valor padrão caso não configurado
-    
-    // Buscar valor da hora-aula cadastrado no localStorage do sistema
-if (typeof colaboradoresDB !== 'undefined') {
-    const profObj = colaboradoresDB.find(c => c.id == professorId);
-    if (profObj && profObj.valorHora) {
-        valorHoraAula = parseFloat(profObj.valorHora);
+    // Buscar valor da hora-aula cadastrado de forma segura (testando as chaves mais comuns)
+    let valorHoraAula = 25.00; // Valor padrão inicial
+    try {
+        let listaColaboradores = JSON.parse(localStorage.getItem('se7_colaboradores') || localStorage.getItem('teachers') || '[]');
+        const profObj = listaColaboradores.find(c => c.id == professorId || c.id === Number(professorId));
+        if (profObj) {
+            // Tenta ler o campo hourlyRate ou valorHora, dependendo de como foi salvo
+            const taxa = profObj.hourlyRate || profObj.valorHora;
+            if (taxa) {
+                valorHoraAula = parseFloat(taxa);
+            }
+        }
+    } catch (e) {
+        console.error("Erro ao buscar valor da hora-aula:", e);
     }
-}
+
     const valorTotalReceber = totalHoras * valorHoraAula;
 
     // Criar objeto de registro
