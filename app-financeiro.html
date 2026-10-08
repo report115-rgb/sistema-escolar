@@ -2448,99 +2448,147 @@
                 grupos[id].registros.push(r);
             });
 
-            const nomeMes = mes ? new Date(`${mes}-01T12:00:00`).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }) : 'Todos os períodos';
+            const nomeMes = mes
+                ? new Date(`${mes}-01T12:00:00`).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+                : 'Todos os períodos';
 
-            let blocos = Object.values(grupos).map(g => {
+            const instituicao = institutionData || {};
+            const razaoSocial = instituicao.razaoSocial || instituicao.name || 'SE7 Gestão Educacional';
+            const cnpjInst = instituicao.cnpj || 'Não informado';
+            const enderecoInst = instituicao.address || 'Não informado';
+            const logoUrl = instituicao.logo || '';
+
+            const totalHorasGeral = registros.reduce((s, r) => s + r.horas, 0);
+            const totalReceberGeral = registros.reduce((s, r) => s + r.total, 0);
+            const diasGeral = new Set(registros.map(r => r.data).filter(Boolean)).size;
+
+            let blocos = Object.values(grupos).map((g, index) => {
                 const p = g.professor || {};
                 const nome = g.registros[0]?.professorNome || p.fullname || 'Colaborador';
                 const horas = g.registros.reduce((s, r) => s + r.horas, 0);
                 const total = g.registros.reduce((s, r) => s + r.total, 0);
                 const rates = [...new Set(g.registros.map(r => r.valorHora).filter(v => v > 0))];
                 const taxaTexto = rates.length === 1 ? freqFormatarMoeda(rates[0]) : (rates.length ? 'Valores variados' : 'Não configurado');
+                const dias = new Set(g.registros.map(r => r.data).filter(Boolean)).size;
 
                 const linhas = g.registros.map(r => `
                     <tr>
-                        <td>${freqEscaparHtml(r.data ? r.data.split('-').reverse().join('/') : '---')}</td>
-                        <td>${freqEscaparHtml(r.turno || '---')}</td>
-                        <td>${freqEscaparHtml(r.entrada || '---')}</td>
-                        <td>${freqEscaparHtml(r.saida || '---')}</td>
-                        <td>${freqFormatarHoras(r.horas)}</td>
-                        <td>${freqFormatarMoeda(r.valorHora)}</td>
-                        <td>${freqFormatarMoeda(r.total)}</td>
+                        <td style="padding: 7px 8px; border-bottom: 1px solid #e2e8f0;">${freqEscaparHtml(r.data ? r.data.split('-').reverse().join('/') : '---')}</td>
+                        <td style="padding: 7px 8px; border-bottom: 1px solid #e2e8f0; text-align: center;">${freqEscaparHtml(r.turno || '---')}</td>
+                        <td style="padding: 7px 8px; border-bottom: 1px solid #e2e8f0; text-align: center;">${freqEscaparHtml(r.entrada || '---')}</td>
+                        <td style="padding: 7px 8px; border-bottom: 1px solid #e2e8f0; text-align: center;">${freqEscaparHtml(r.saida || '---')}</td>
+                        <td style="padding: 7px 8px; border-bottom: 1px solid #e2e8f0; text-align: right;">${freqFormatarHoras(r.horas)}</td>
+                        <td style="padding: 7px 8px; border-bottom: 1px solid #e2e8f0; text-align: right; white-space: nowrap;">${freqFormatarMoeda(r.valorHora)}</td>
+                        <td style="padding: 7px 8px; border-bottom: 1px solid #e2e8f0; text-align: right; font-weight: bold; white-space: nowrap;">${freqFormatarMoeda(r.total)}</td>
                     </tr>`).join('');
 
                 return `
-                    <section class="professor">
-                        <h2>${freqEscaparHtml(nome)}</h2>
-                        <div class="dados">
-                            <div><b>Cargo:</b> ${freqEscaparHtml(p.cargo || g.registros[0]?.cargo || 'Professor')}</div>
-                            <div><b>Formação:</b> ${freqEscaparHtml(p.formation || 'Não informado')}</div>
-                            <div><b>Conselho:</b> ${freqEscaparHtml(p.council || 'Não informado')}</div>
-                            <div><b>Valor da hora:</b> ${taxaTexto}</div>
-                            <div><b>Lançamentos:</b> ${g.registros.length}</div>
-                            <div><b>Carga horária total:</b> ${freqFormatarHoras(horas)}</div>
-                            <div><b>Total a receber:</b> ${freqFormatarMoeda(total)}</div>
+                    <div style="page-break-inside: avoid; margin-bottom: 28px;">
+                        <h2 style="font-size: 14px; color: #1e3a8a; text-transform: uppercase; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 6px; margin-top: 25px; margin-bottom: 12px; font-weight: bold;">${index + 3}. ${freqEscaparHtml(nome)}</h2>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 12px; background: #f1f5f9; padding: 16px; border-radius: 10px; margin-bottom: 12px;">
+                            <div>
+                                <strong>Cargo:</strong><br>${freqEscaparHtml(p.cargo || g.registros[0]?.cargo || 'Professor')}<br><br>
+                                <strong>Formação:</strong><br>${freqEscaparHtml(p.formation || 'Não informado')}<br><br>
+                                <strong>Conselho:</strong><br>${freqEscaparHtml(p.council || 'Não informado')}
+                            </div>
+                            <div>
+                                <strong>Valor da Hora:</strong><br>${taxaTexto}<br><br>
+                                <strong>Dias Trabalhados:</strong><br>${dias}<br><br>
+                                <strong>Lançamentos:</strong><br>${g.registros.length}
+                            </div>
                         </div>
-                        <table>
-                            <thead><tr><th>Data</th><th>Turno</th><th>Entrada</th><th>Saída</th><th>Carga</th><th>Valor/h</th><th>Total</th></tr></thead>
+
+                        <table style="width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 5px; margin-bottom: 12px;">
+                            <thead>
+                                <tr style="background: #1e3a8a; color: #fff;">
+                                    <th style="padding: 9px; text-align: left;">Data</th>
+                                    <th style="padding: 9px; text-align: center;">Turno</th>
+                                    <th style="padding: 9px; text-align: center;">Entrada</th>
+                                    <th style="padding: 9px; text-align: center;">Saída</th>
+                                    <th style="padding: 9px; text-align: right;">Carga</th>
+                                    <th style="padding: 9px; text-align: right;">Valor/Hora</th>
+                                    <th style="padding: 9px; text-align: right;">Total</th>
+                                </tr>
+                            </thead>
                             <tbody>${linhas}</tbody>
+                            <tfoot>
+                                <tr style="background: #f1f5f9; font-weight: bold;">
+                                    <td colspan="4" style="padding: 10px 8px; text-align: right; border-top: 2px solid #cbd5e1;">TOTAL DO COLABORADOR:</td>
+                                    <td style="padding: 10px 8px; text-align: right; border-top: 2px solid #cbd5e1;">${freqFormatarHoras(horas)}</td>
+                                    <td style="padding: 10px 8px; text-align: right; border-top: 2px solid #cbd5e1;">${taxaTexto}</td>
+                                    <td style="padding: 10px 8px; text-align: right; border-top: 2px solid #cbd5e1; color: #047857;">${freqFormatarMoeda(total)}</td>
+                                </tr>
+                            </tfoot>
                         </table>
-                    </section>`;
+                    </div>`;
             }).join('');
 
             if (!blocos) {
-                blocos = `<div class="empty">Nenhum registro encontrado para gerar o relatório.</div>`;
+                blocos = `<div style="padding: 30px; text-align: center; color: #64748b; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 10px;">Nenhum registro encontrado para gerar o relatório.</div>`;
             }
 
-            const instituicao = institutionData || {};
-            const htmlRelatorio = `<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
-<title>Relatório de Frequência de Colaboradores</title>
-<style>
-    @page { size: A4; margin: 14mm; }
-    * { box-sizing: border-box; }
-    body { font-family: Arial, Helvetica, sans-serif; color: #172033; margin: 0; font-size: 10px; }
-    header { border-bottom: 2px solid #1d4ed8; padding-bottom: 10px; margin-bottom: 14px; }
-    h1 { font-size: 18px; margin: 0 0 4px; color: #1e3a8a; }
-    h2 { font-size: 13px; margin: 0 0 8px; color: #1e3a8a; }
-    p { margin: 3px 0; color: #64748b; }
-    .meta { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 14px; margin-top: 8px; }
-    .dados { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; background: #f8fafc; padding: 8px; border: 1px solid #e2e8f0; margin-bottom: 8px; }
-    .professor { page-break-inside: avoid; margin-bottom: 18px; }
-    table { width: 100%; border-collapse: collapse; }
-    th { background: #1e40af; color: white; text-align: left; padding: 6px; font-size: 8px; }
-    td { border-bottom: 1px solid #e2e8f0; padding: 5px; font-size: 8px; }
-    .empty { padding: 30px; text-align: center; color: #64748b; border: 1px dashed #cbd5e1; }
-    .rodape { margin-top: 20px; padding-top: 8px; border-top: 1px solid #cbd5e1; font-size: 8px; color: #64748b; }
-    @media print { button { display: none; } }
-</style>
-</head>
-<body>
-<header>
-    <h1>${freqEscaparHtml(instituicao.name || 'SE7 Gestão Educacional')}</h1>
-    <p>${freqEscaparHtml(instituicao.razaoSocial || '')} ${instituicao.cnpj ? '• CNPJ: ' + freqEscaparHtml(instituicao.cnpj) : ''}</p>
-    <div class="meta">
-        <div><b>Relatório:</b> Registro de Frequência de Colaboradores</div>
-        <div><b>Competência:</b> ${freqEscaparHtml(nomeMes)}</div>
-        <div><b>Colaborador:</b> ${freqEscaparHtml(professorSelecionado?.fullname || 'Todos')}</div>
-        <div><b>Emissão:</b> ${new Date().toLocaleString('pt-BR')}</div>
-    </div>
-</header>
-${blocos}
-<div class="rodape">Relatório gerado pelo SE7 Financeiro a partir dos registros sincronizados do Ponto Manual da Matriz.</div>
-<script>window.onload = function(){ setTimeout(function(){ window.print(); }, 300); }<\/script>
-</body>
-</html>`;
+            const titulo = 'Relatório de Frequência de Colaboradores';
+            const subtitulo = 'Visualização pronta para impressão ou conferência';
 
-            const janela = window.open('', '_blank');
-            if (!janela) return alert('O navegador bloqueou a janela do relatório. Permita pop-ups para este sistema.');
-            janela.document.open();
-            janela.document.write(htmlRelatorio);
-            janela.document.close();
+            const htmlRelatorio = `
+                <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #1e293b; padding: 10px;">
+                    <div style="background: #1e3a8a; color: #ffffff; padding: 25px 30px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px;">
+                        <div style="display: flex; align-items: center; gap: 20px;">
+                            <div style="width: 75px; height: 75px; background: transparent; color: #ffffff; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 22px; flex-shrink: 0; overflow: hidden;">
+                                ${logoUrl ? `<img src="${freqEscaparHtml(logoUrl)}" alt="Logo" style="max-width:100%; max-height:100%; object-fit:contain;">` : 'SE7'}
+                            </div>
+                            <div>
+                                <h1 style="font-size: 16px; margin: 0 0 6px 0; font-weight: bold; color: #ffffff;">${freqEscaparHtml(razaoSocial)}</h1>
+                                <p style="font-size: 12px; color: #cbd5e1; margin: 0; line-height: 1.4;"><strong>CNPJ:</strong> ${freqEscaparHtml(cnpjInst)}<br><strong>Endereço:</strong> ${freqEscaparHtml(enderecoInst)}</p>
+                            </div>
+                        </div>
+                        <div style="text-align: right; border-left: 1px solid rgba(255, 255, 255, 0.2); padding-left: 20px;">
+                            <span style="font-size: 11px; text-transform: uppercase; color: #93c5fd; font-weight: bold; display: block;">Emitido por</span>
+                            <strong style="font-size: 13px; color: #ffffff;">Setor Financeiro</strong>
+                        </div>
+                    </div>
+
+                    <h2 style="text-align: center; font-size: 17px; color: #1e3a8a; margin-bottom: 20px; text-transform: uppercase; font-weight: bold;">REGISTRO DE FREQUÊNCIA DE COLABORADORES</h2>
+
+                    <h2 style="font-size: 14px; color: #1e3a8a; text-transform: uppercase; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 6px; margin-top: 25px; margin-bottom: 12px; font-weight: bold;">1. Identificação do Relatório</h2>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 12px; background: #f1f5f9; padding: 16px; border-radius: 10px;">
+                        <div>
+                            <strong>Competência:</strong><br>${freqEscaparHtml(nomeMes)}<br><br>
+                            <strong>Colaborador:</strong><br>${freqEscaparHtml(professorSelecionado?.fullname || 'Todos os colaboradores')}
+                        </div>
+                        <div>
+                            <strong>Dias Registrados:</strong><br>${diasGeral}<br><br>
+                            <strong>Lançamentos:</strong><br>${registros.length}
+                        </div>
+                    </div>
+
+                    <h2 style="font-size: 14px; color: #1e3a8a; text-transform: uppercase; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 6px; margin-top: 25px; margin-bottom: 12px; font-weight: bold;">2. Resumo Financeiro da Frequência</h2>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; font-size: 12px;">
+                        <div style="background: #eff6ff; border: 1px solid #bfdbfe; padding: 14px; border-radius: 10px;"><strong style="color: #1e3a8a;">Carga Horária Total</strong><br><span style="font-size: 16px; font-weight: bold;">${freqFormatarHoras(totalHorasGeral)}</span></div>
+                        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 14px; border-radius: 10px;"><strong style="color: #047857;">Total a Receber</strong><br><span style="font-size: 16px; font-weight: bold;">${freqFormatarMoeda(totalReceberGeral)}</span></div>
+                        <div style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 14px; border-radius: 10px;"><strong style="color: #475569;">Colaboradores</strong><br><span style="font-size: 16px; font-weight: bold;">${Object.keys(grupos).length}</span></div>
+                    </div>
+
+                    <h2 style="font-size: 14px; color: #1e3a8a; text-transform: uppercase; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 6px; margin-top: 25px; margin-bottom: 12px; font-weight: bold;">3. Demonstrativo Individual de Frequência</h2>
+                    ${blocos}
+
+                    <div style="margin-top: 45px; display: flex; justify-content: space-between; text-align: center;">
+                        <div style="width: 45%; border-top: 1.5px solid #1e293b; padding-top: 6px; font-size: 11px;">${freqEscaparHtml(razaoSocial)}<br>Setor Financeiro</div>
+                        <div style="width: 45%; border-top: 1.5px solid #1e293b; padding-top: 6px; font-size: 11px;">Responsável pela Conferência<br>Assinatura</div>
+                    </div>
+                </div>
+            `;
+
+            const tituloEl = document.querySelector('#modal-visualizador-termo h3');
+            const subtituloEl = document.querySelector('#modal-visualizador-termo h3 + p');
+            const iconEl = document.querySelector('#modal-visualizador-termo .fa-file-contract');
+            if (tituloEl) tituloEl.textContent = titulo;
+            if (subtituloEl) subtituloEl.textContent = subtitulo;
+            if (iconEl) iconEl.className = 'fa-solid fa-clipboard-check';
+
+            document.getElementById('conteudo-termo-Dinamico').innerHTML = htmlRelatorio;
+            document.getElementById('modal-visualizador-termo').style.display = 'flex';
         }
-
     </script>
 </body>
 </html>
