@@ -2782,12 +2782,11 @@ async function removerUsuarioSistemaFirebase(id) {
         }
 
         async function saveTeacher() {
-    const editId = document.getElementById('edit-teacher-id').value;
     const fullname = document.getElementById('input-teacher-name').value.trim();
     const cargo = document.getElementById('input-teacher-cargo').value;
     const formation = document.getElementById('input-teacher-formation').value.trim();
     const council = document.getElementById('input-teacher-council').value.trim();
-    const pinInput = document.getElementById('input-teacher-pin');
+    const valorHoraAula = parseFloat(document.getElementById('input-teacher-horaaula').value) || 0;
 
     // Captura os horários da jornada de trabalho
     const entrada1 = document.getElementById('input-teacher-entrada-1').value || "08:00";
@@ -2804,12 +2803,13 @@ async function removerUsuarioSistemaFirebase(id) {
         pinFinal = `COLAB-${String(proximoNumero).padStart(3, '0')}`;
     }
 
-    const teacherData = { 
+   const teacherData = { 
         fullname, 
         cargo, 
         formation, 
         council, 
         pin: pinFinal,
+        valorHoraAula: valorHoraAula, // <--- ADICIONE ESTA PROPRIEDADE AQUI
         horarios: { entrada1, saida1, entrada2, saida2 } 
     };
 
