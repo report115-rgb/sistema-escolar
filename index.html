@@ -6003,9 +6003,18 @@ function escutarRegistrosPontoManual() {
         }
 
         tbody.innerHTML = '';
-        snapshot.forEach(doc => {
-            const r = Object.fromEntries(Object.entries(doc.data()).map(([k, v]) => [k, escaparTextoPontoManual(v)]));
-            const idRegistro = escaparTextoPontoManual(doc.id);
+        // Ordena pela data da aula e pela entrada, independentemente da data de cadastro.
+        const registrosOrdenados = [...registrosPontoManual.entries()].sort(([idA, a], [idB, b]) => {
+            const dataA = a.data || '9999-12-31';
+            const dataB = b.data || '9999-12-31';
+            return dataA.localeCompare(dataB)
+                || (a.entrada || '99:99').localeCompare(b.entrada || '99:99')
+                || (a.professorNome || '').localeCompare(b.professorNome || '', 'pt-BR')
+                || idA.localeCompare(idB);
+        });
+        registrosOrdenados.forEach(([id, registro]) => {
+            const r = Object.fromEntries(Object.entries(registro).map(([k, v]) => [k, escaparTextoPontoManual(v)]));
+            const idRegistro = escaparTextoPontoManual(id);
             const dataFormatada = r.data ? r.data.split('-').reverse().join('/') : '';
             
             tbody.innerHTML += `
