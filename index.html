@@ -65,66 +65,142 @@
                 display: none !important;
             }
         }
+/* Acesso institucional: composição escura com identidade carregada do Firebase. */
+#login-modal.se7-login {
+    position:fixed; inset:0; z-index:3000; display:flex; align-items:center; justify-content:center;
+    padding:52px 5vw; overflow:auto; isolation:isolate; color:#f5f8ff; font-family:Arial,Helvetica,sans-serif;
+    background:radial-gradient(ellipse at 7% 38%,#07265c 0%,#041735 38%,#020d20 80%);
+}
+#login-modal .login-art {position:absolute;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none;overflow:hidden;}
+#login-modal .login-wire {fill:none;stroke:#247eff;stroke-width:1.1;vector-effect:non-scaling-stroke;}
+#login-modal .login-glow {fill:none;stroke:#54b7ff;stroke-width:1.7;stroke-linecap:round;vector-effect:non-scaling-stroke;filter:drop-shadow(0 0 7px #008cff) drop-shadow(0 0 15px #0073ff);animation:login-glow-pulse 5s ease-in-out infinite;}
+#login-modal .login-trace {stroke:#b3e7ff;stroke-width:2;stroke-dasharray:65 1080;animation:login-trace-flow 13s linear infinite;}
+#login-modal .login-glow-second {animation-delay:-2.5s;}
+@keyframes login-glow-pulse {0%,100%{opacity:.5}50%{opacity:1}}
+@keyframes login-trace-flow {from{stroke-dashoffset:1145}to{stroke-dashoffset:0}}
+#login-modal .login-shell {width:100%;max-width:1460px;display:grid;grid-template-columns:1.12fr 1fr;gap:76px;align-items:center;}
+#login-modal .login-brand {text-align:center; min-width:0; padding:35px 0;}
+#login-modal .login-logo-slot {height:205px;display:flex;align-items:center;justify-content:center;margin:0 auto 26px;}
+#login-modal #login-logo-img {width:300px;max-width:78%;max-height:205px;object-fit:contain;background:transparent;border:0;box-shadow:none;filter:none;}
+#login-modal #login-logo-fallback {font-size:24px;color:#b6cae8;letter-spacing:.08em;}
+#login-modal .login-brand-heading {font-size:clamp(34px,3.8vw,60px);line-height:1.14;font-weight:700;letter-spacing:-1.5px;white-space:nowrap;margin:0;}
+#login-modal .login-brand-heading span {color:#2995ff;}
+#login-modal .login-brand-subtitle {font-size:26px;letter-spacing:7px;color:#b6c9e9;margin:16px 0 0;line-height:1.4;}
+#login-modal .login-card {box-sizing:border-box;width:100%;padding:65px 64px 54px;border:1px solid #2a5c9f;border-radius:14px;background:linear-gradient(135deg,rgba(21,40,66,.86),rgba(8,21,37,.92));box-shadow:0 20px 70px #00000020,inset 0 1px 0 #ffffff08;}
+#login-modal #login-box-title {font-size:clamp(26px,2.5vw,43px);line-height:1.2;font-weight:700;letter-spacing:-.8px;margin:0 0 10px;white-space:nowrap;color:#f6f8ff;}
+#login-modal #login-subtitle-text {font-size:19px;line-height:1.5;color:#9db2d2;margin:0 0 42px;}
+#login-modal .login-field {margin-bottom:30px;}
+#login-modal .login-field label {display:block;font-size:17px;font-weight:600;margin-bottom:12px;color:#f5f8ff;}
+#login-modal .login-input-wrap {position:relative;}
+#login-modal .login-input-icon {position:absolute;left:20px;top:50%;transform:translateY(-50%);width:22px;height:22px;color:#91a8cb;pointer-events:none;}
+#login-modal .login-input {box-sizing:border-box;width:100%;height:64px;padding:14px 54px 14px 58px;border:1px solid #4c678e;border-radius:11px;background:#08162680;color:#f6f8ff;font:inherit;font-size:18px;outline:none;transition:border-color .2s,box-shadow .2s;}
+#login-modal .login-input::placeholder {color:#9aafcd;opacity:1;}
+#login-modal .login-input:focus {border-color:#3198ff;box-shadow:0 0 0 3px #208cff25;}
+#login-modal .login-password-toggle {position:absolute;right:12px;top:50%;transform:translateY(-50%);width:38px;height:40px;border:0;border-radius:8px;background:transparent;color:#97b1d6;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+#login-modal .login-password-toggle svg {width:23px;height:23px;}
+#login-modal .login-submit {width:100%;height:65px;border:1px solid #1986ff;border-radius:10px;background:linear-gradient(100deg,#0875ff,#0560f8);color:white;font-size:19px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:24px;margin-top:35px;box-shadow:0 8px 26px #0064ff14;transition:background .2s,box-shadow .2s;}
+#login-modal .login-submit:hover {background:#1681ff;box-shadow:0 8px 26px #0064ff35;}
+#login-modal .login-submit svg {width:26px;height:26px;}
+#login-modal .login-links {display:flex;align-items:center;justify-content:space-between;gap:20px;margin-top:35px;font-size:16px;font-weight:600;}
+#login-modal .login-links a {color:#319fff;text-decoration:none;line-height:1.5;}
+#login-modal .login-links a:hover {color:#a0d5ff;text-decoration:underline;}
+#login-modal .login-links-divider {width:1px;height:20px;background:#53647f;flex:none;}
+#login-modal button:focus-visible,#login-modal a:focus-visible {outline:2px solid #78c6ff;outline-offset:4px;}
+#login-modal .login-institution-meta {display:none;}
+@media (max-width:1190px) {
+ #login-modal .login-shell {gap:44px;}
+ #login-modal .login-card {padding:45px 32px;}
+ #login-modal .login-brand-heading {font-size:38px;}
+ #login-modal .login-brand-subtitle {font-size:20px;letter-spacing:5px;}
+ #login-modal #login-subtitle-text {font-size:16px;}
+ #login-modal .login-links {font-size:14px;gap:12px;}
+}
+@media (max-width:800px) {
+ #login-modal.se7-login {padding:32px 22px;align-items:flex-start;}
+ #login-modal .login-shell {grid-template-columns:1fr;gap:24px;max-width:520px;}
+ #login-modal .login-brand {padding:0;}
+ #login-modal .login-logo-slot {height:100px;margin-bottom:16px;}
+ #login-modal #login-logo-img {max-height:100px;width:220px;}
+ #login-modal .login-brand-heading {font-size:32px;letter-spacing:-.7px;}
+ #login-modal .login-brand-subtitle {font-size:17px;letter-spacing:4px;margin-top:10px;}
+ #login-modal .login-card {padding:32px 26px;}
+ #login-modal #login-box-title {font-size:27px;white-space:normal;}
+ #login-modal #login-subtitle-text {margin-bottom:28px;}
+ #login-modal .login-field {margin-bottom:22px;}
+ #login-modal .login-input {height:56px;font-size:16px;}
+ #login-modal .login-submit {height:58px;font-size:17px;margin-top:28px;}
+ #login-modal .login-links {font-size:13px;margin-top:26px;}
+}
+@media (max-width:360px) {
+ #login-modal.se7-login {padding:24px 14px;}
+ #login-modal .login-card {padding:28px 18px;}
+ #login-modal .login-brand-heading {font-size:27px;}
+ #login-modal .login-links {gap:8px;font-size:12px;}
+}
+@media (prefers-reduced-motion:reduce) {#login-modal .login-glow {animation:none;opacity:.8;} #login-modal .login-trace {display:none;}}
+
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-slate-900 text-gray-800 dark:text-gray-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-300 pb-16">    
 
 <!-- TELA DE LOGIN / ACESSO INSTITUCIONAL -->
-    <div id="login-modal" class="fixed inset-0 z-[3000] flex items-center justify-center bg-gradient-to-br from-blue-900 via-indigo-900 to-slate-900 p-4">
-        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-4xl w-full grid grid-cols-1 md:grid-cols-2 overflow-hidden border border-white/20">
-            <div class="p-8 md:p-10 flex flex-col justify-center">
-                <div class="text-center mb-6">
-                    <div class="inline-flex items-center justify-center w-14 h-14 bg-blue-600 text-white rounded-xl text-2xl font-bold mb-3 shadow-lg shadow-blue-500/30">
-                        <i class="fa-solid fa-graduation-cap"></i>
+<div id="login-modal" class="se7-login" role="dialog" aria-modal="true" aria-labelledby="login-box-title">
+    <svg class="login-art" viewBox="0 0 1672 892" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <defs>
+            <radialGradient id="login-blue-aura"><stop stop-color="#1175ff" stop-opacity=".36"/><stop offset="1" stop-color="#1175ff" stop-opacity="0"/></radialGradient>
+        </defs>
+        <ellipse cx="125" cy="340" rx="330" ry="460" fill="url(#login-blue-aura)"/>
+        <path class="login-wire" d="M120 0 C320 225 276 418 124 510 L0 616 M490 0 L0 616 M0 424 L585 892 M0 690 Q178 554 292 630 L392 630 L584 803 Q596 815 584 829 L516 892"/>
+        <path class="login-glow" d="M120 0 C320 225 276 418 124 510 L0 616"/>
+        <path class="login-glow login-glow-second" d="M0 424 L325 686"/>
+        <path class="login-glow login-trace" d="M0 424 L585 892"/>
+        <path class="login-glow login-trace login-glow-second" d="M120 0 C320 225 276 418 124 510 L0 616"/>
+    </svg>
+    <div class="login-shell">
+        <section class="login-brand" aria-label="Identidade institucional">
+            <div class="login-logo-slot">
+                <img id="login-logo-img" alt="Logomarca da instituição" style="display:none;" onload="document.getElementById('login-logo-fallback').style.display='none'" onerror="this.style.display='none';document.getElementById('login-logo-fallback').style.display='block'">
+                <span id="login-logo-fallback">Sistema Matriz</span>
+            </div>
+            <h1 class="login-brand-heading">Tudo <span>conectado.</span></h1>
+            <p class="login-brand-subtitle">Sistema Matriz</p>
+            <div class="login-institution-meta"><h3 id="login-info-title">Sistema de Ensino Técnico e Transporte</h3><p id="login-info-desc"></p><span id="login-info-version">SE7 Cloud</span></div>
+        </section>
+        <section class="login-card">
+            <h2 id="login-box-title">Acesso Institucional</h2>
+            <p id="login-subtitle-text">Entre com suas credenciais para continuar</p>
+            <div id="form-login-admin" onkeydown="if(event.key==='Enter' &amp;&amp; event.target.tagName==='INPUT'){event.preventDefault();fazerLogin();}">
+                <div class="login-field">
+                    <label for="login-user">E-mail ou Usuário</label>
+                    <div class="login-input-wrap">
+                        <svg class="login-input-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="7" r="4"/><path d="M3 21v-3a9 9 0 0 1 18 0v3z"/></svg>
+                        <input type="text" id="login-user" autocomplete="username" placeholder="Seu e-mail ou usuário" class="login-input">
                     </div>
-                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white" id="login-box-title">Acesso Institucional</h2>
-                    <p id="login-subtitle-text" class="text-xs text-gray-500 dark:text-gray-400 mt-1">Entre com suas credenciais para continuar</p>
                 </div>
-
-                <div id="form-login-admin" class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase mb-1">E-mail ou Usuário</label>
-                        <input type="text" id="login-user" placeholder="secretaria@admin.com" class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-blue-600 focus:outline-none text-sm dark:bg-slate-900 dark:text-white">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase mb-1">Senha</label>
-                        <input type="password" id="login-pass" placeholder="••••••••" class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-blue-600 focus:outline-none text-sm dark:bg-slate-900 dark:text-white">
-                    </div>
-                    <button type="button" onclick="fazerLogin()" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md transition duration-200">
-                        Entrar no Sistema
-                    </button>
-                    <div class="flex justify-between items-center text-xs mt-2 px-1">
-                        <a href="#" onclick="abrirModalEsqueciSenhaAdmin()" class="text-blue-600 dark:text-blue-400 hover:underline">Esqueci minha senha</a>
-                        <a href="#" onclick="abrirModalPrimeiroAcesso()" class="text-emerald-600 dark:text-emerald-400 hover:underline font-semibold"><i class="fa-solid fa-user-plus mr-1"></i> Primeiro Acesso</a>
+                <div class="login-field">
+                    <label for="login-pass">Senha</label>
+                    <div class="login-input-wrap">
+                        <svg class="login-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="10" width="16" height="12" rx="2" fill="currentColor"/><path d="M7 10V7a5 5 0 0 1 10 0v3"/><path d="M12 14v4" stroke="#0b1b31"/></svg>
+                        <input type="password" id="login-pass" autocomplete="current-password" placeholder="••••••••" class="login-input">
+                        <button type="button" class="login-password-toggle" aria-label="Mostrar senha" aria-pressed="false" onclick="alternarSenhaAcesso(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button>
                     </div>
                 </div>
-
-                <div id="form-login-aluno" class="space-y-4" style="display: none;">
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase mb-1">CPF do Aluno</label>
-                        <input type="text" id="login-aluno-cpf" placeholder="000.000.000-00" class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-emerald-600 focus:outline-none text-sm dark:bg-slate-900 dark:text-white">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase mb-1">Código de Matrícula ou Senha</label>
-                        <input type="password" id="login-aluno-pass" placeholder="MAT-2026-XXXXX" class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-emerald-600 focus:outline-none text-sm dark:bg-slate-900 dark:text-white">
-                    </div>
-                    <button type="button" onclick="fazerLoginAluno()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg shadow-md transition duration-200">
-                        Entrar no Portal do Aluno
-                    </button>
-                    <div class="text-center mt-2">
-                        <a href="#" onclick="abrirModalEsqueciSenhaAluno()" class="text-xs text-emerald-600 dark:text-emerald-400 hover:underline">Esqueci minha senha</a>
-                    </div>
+                <button type="button" onclick="fazerLogin()" class="login-submit">Entrar no Sistema<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 12h17M13 5l7 7-7 7"/></svg></button>
+                <div class="login-links">
+                    <a href="#" onclick="abrirModalEsqueciSenhaAdmin();return false;">Esqueci minha senha</a>
+                    <span class="login-links-divider" aria-hidden="true"></span>
+                    <a href="#" onclick="abrirModalPrimeiroAcesso();return false;">Primeiro Acesso</a>
                 </div>
             </div>
-
-            <div class="bg-gradient-to-br from-blue-900 to-indigo-900 p-8 md:p-10 text-white flex flex-col justify-center items-center text-center">
-                <img id="login-logo-img" alt="Logo" class="max-h-24 max-w-[220px] object-contain mb-4 bg-transparent border-0 shadow-none outline-none block" style="display: none; background: transparent !important;">
-                <h3 id="login-info-title" class="text-xl font-bold mb-2">Sistema de Ensino Técnico e Transporte – SE7</h3>
-                <p id="login-info-desc" class="text-xs text-blue-100 opacity-90 leading-relaxed mb-4">Plataforma integrada com automação Google Drive e Portal Acadêmico.</p>
-                <div class="text-[10px] uppercase tracking-wider text-blue-300 font-semibold" id="login-info-version">SE7 Cloud v1.0.7</div>
+            <div id="form-login-aluno" style="display:none;">
+                <div class="login-field"><label for="login-aluno-cpf">CPF do Aluno</label><input type="text" id="login-aluno-cpf" class="login-input" placeholder="000.000.000-00"></div>
+                <div class="login-field"><label for="login-aluno-pass">Código de Matrícula ou Senha</label><input type="password" id="login-aluno-pass" class="login-input" autocomplete="current-password" placeholder="MAT-2026-XXXXX"></div>
+                <button type="button" onclick="fazerLoginAluno()" class="login-submit">Entrar no Portal do Aluno</button>
+                <div class="login-links"><a href="#" onclick="abrirModalEsqueciSenhaAluno();return false;">Esqueci minha senha</a></div>
             </div>
-        </div>
+        </section>
     </div>
+</div>
 
 <!-- ========================================== -->
 <!-- BALÃOZINHO / ÍCONE FLUTUANTE DE CALENDÁRIO -->
@@ -1741,6 +1817,14 @@ async function limparLogsAuditoria() {
         alert("Erro ao limpar logs: " + e.message);
     }
 }
+
+        function alternarSenhaAcesso(botao) {
+            const campo = document.getElementById('login-pass');
+            const visivel = campo.type === 'password';
+            campo.type = visivel ? 'text' : 'password';
+            botao.setAttribute('aria-pressed', String(visivel));
+            botao.setAttribute('aria-label', visivel ? 'Ocultar senha' : 'Mostrar senha');
+        }
 
         async function fazerLogin() {
     const userInput = document.getElementById('login-user').value.trim().toLowerCase();
@@ -5075,7 +5159,9 @@ async function emitirDocumentoSelecionado() {
     if(fallback) fallback.style.display = src ? 'none' : 'flex';
     if(loginLogoImg) {
         if(src) { loginLogoImg.src = src; loginLogoImg.style.display = 'block'; }
-        else { loginLogoImg.style.display = 'none'; }
+        else { loginLogoImg.removeAttribute('src'); loginLogoImg.style.display = 'none'; }
+        const loginFallback = document.getElementById('login-logo-fallback');
+        if (loginFallback) loginFallback.style.display = src ? 'none' : 'block';
     }
     
     // ADICIONE ESTE BLOCO ABAIXO PARA TROCAR O GLOBO PELA SUA LOGO
