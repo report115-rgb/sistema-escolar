@@ -621,9 +621,12 @@
             </div>
         </div>
 
-        <button type="button" onclick="salvarPontoManualProfessor()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-xs shadow transition">
+        <button type="button" id="btn-salvar-ponto-manual" onclick="salvarPontoManualProfessor()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-xs shadow transition">
             <i class="fa-solid fa-floppy-disk mr-1"></i> Registrar e Fixar Horário
         </button>
+
+        <button id="btn-cancelar-edicao-ponto" type="button" onclick="cancelarEdicaoPontoManual()" style="display: none;" class="px-4 py-2.5 bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-white rounded-lg text-xs font-semibold">Cancelar edição</button>
+        <p id="aviso-edicao-ponto" style="display: none;" class="text-xs text-blue-600 dark:text-blue-400">Editando um registro existente. Confira os campos e clique em Salvar alterações.</p>
 
         <!-- Tabela de Registros Fixos -->
         <div class="mt-6 space-y-3">
@@ -5875,42 +5878,114 @@ function carregarProfessoresPontoManual() {
     if (valorAtual) select.value = valorAtual;
 }
 
-// 2. Salva o registro manual do ponto na nuvem (Firestore)
+let pontoManualEmEdicao = null;
+let pontoManualSalvando = false;
+const registrosPontoManual = new Map();
+const exclusoesPontoManual = new Set();
+
+function escaparTextoPontoManual(valor) {
+    return String(valor ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[c]));
+}
+
+function editarPontoManualProfessor(id) {
+    if (pontoManualSalvando || exclusoesPontoManual.has(id)) return;
+    const registro = registrosPontoManual.get(id);
+    if (!registro) return alert("Registro não encontrado. Atualize a página e tente novamente.");
+    carregarProfessoresPontoManual();
+    const select = document.getElementById('manual-ponto-professor');
+    if (![...select.options].some(o => o.value === registro.professorId)) {
+        select.add(new Option(registro.professorNome || 'Professor do registro', registro.professorId));
+    }
+    select.value = registro.professorId;
+    for (const campo of ['data', 'turno', 'entrada', 'saida']) {
+        document.getElementById('manual-ponto-' + campo).value = registro[campo] || '';
+    }
+    pontoManualEmEdicao = id;
+    document.getElementById('btn-salvar-ponto-manual').textContent = 'Salvar alterações';
+    document.getElementById('btn-cancelar-edicao-ponto').style.display = 'inline-block';
+    document.getElementById('aviso-edicao-ponto').style.display = 'block';
+    select.scrollIntoView({behavior: 'smooth', block: 'center'});
+    select.focus();
+}
+
+function cancelarEdicaoPontoManual() {
+    if (pontoManualSalvando) return;
+    pontoManualEmEdicao = null;
+    document.getElementById('btn-salvar-ponto-manual').textContent = 'Registrar e Fixar Horário';
+    document.getElementById('btn-cancelar-edicao-ponto').style.display = 'none';
+    document.getElementById('aviso-edicao-ponto').style.display = 'none';
+    document.getElementById('manual-ponto-entrada').value = '';
+    document.getElementById('manual-ponto-saida').value = '';
+}
+
+async function excluirPontoManualProfessor(id) {
+    if (pontoManualSalvando || exclusoesPontoManual.has(id)) return;
+    const registro = registrosPontoManual.get(id);
+    if (!registro) return alert("Registro não encontrado.");
+    const data = (registro.data || '').split('-').reverse().join('/');
+    if (!confirm(`Excluir o ponto de ${registro.professorNome} em ${data} (${registro.turno}, ${registro.entrada} às ${registro.saida})?\nEste lançamento também deixará de compor os cálculos do Financeiro.`)) return;
+    exclusoesPontoManual.add(id);
+    try {
+        await db.collection("teacherManualLogs").doc(id).delete();
+        if (pontoManualEmEdicao === id) cancelarEdicaoPontoManual();
+        await registrarLogAuditoria(`Excluiu o ponto manual de ${registro.professorNome} em ${registro.data} (ID ${id})`, "Ponto Manual");
+        alert("Registro de ponto excluído com sucesso!");
+    } catch (e) {
+        alert("Erro ao excluir ponto: " + e.message);
+    } finally {
+        exclusoesPontoManual.delete(id);
+    }
+}
+
+// Salva um novo ponto ou atualiza o mesmo documento durante a edição.
 async function salvarPontoManualProfessor() {
+    if (pontoManualSalvando) return;
     const professorId = document.getElementById('manual-ponto-professor').value;
     const data = document.getElementById('manual-ponto-data').value;
     const turno = document.getElementById('manual-ponto-turno').value;
     const entrada = document.getElementById('manual-ponto-entrada').value;
     const saida = document.getElementById('manual-ponto-saida').value;
-
     if (!professorId || !data || !turno || !entrada || !saida) {
         return alert("Por favor, preencha todos os campos (Professor, Data, Turno, Entrada e Saída).");
     }
-
+    if (entrada === saida) return alert("Entrada e saída não podem ser iguais.");
+    const idEdicao = pontoManualEmEdicao;
+    const anterior = idEdicao ? registrosPontoManual.get(idEdicao) : null;
+    if (idEdicao && !anterior) return alert("Este registro foi removido. Cancele a edição e atualize a lista.");
     const professorObj = teachers.find(t => t.id === professorId);
-    if (!professorObj) return alert("Professor não encontrado.");
-
+    if (!professorObj && (!anterior || anterior.professorId !== professorId)) return alert("Professor não encontrado.");
     const registroData = {
-        professorId: professorObj.id,
-        professorNome: professorObj.fullname,
-        cargo: professorObj.cargo || 'Professor',
-        data: data,
-        turno: turno,
-        entrada: entrada,
-        saida: saida,
-        registradoPor: "Secretaria",
-        createdAt: new Date().toISOString()
+        professorId,
+        professorNome: professorObj ? professorObj.fullname : anterior.professorNome,
+        cargo: professorObj ? (professorObj.cargo || 'Professor') : (anterior.cargo || 'Professor'),
+        data, turno, entrada, saida
     };
-
+    let sessao = null;
+    try { sessao = JSON.parse(sessionStorage.getItem('usuario_logado')); } catch (_) {}
+    const usuario = sessao ? (sessao.nome || sessao.perfil || 'Secretaria') : 'Secretaria';
+    pontoManualSalvando = true;
+    const campos = ['manual-ponto-professor', 'manual-ponto-data', 'manual-ponto-turno', 'manual-ponto-entrada', 'manual-ponto-saida', 'btn-salvar-ponto-manual', 'btn-cancelar-edicao-ponto'];
+    campos.forEach(id => document.getElementById(id).disabled = true);
+    let sucesso = false;
     try {
-        await db.collection("teacherManualLogs").add(registroData);
-        alert("Horário registrado e fixado com sucesso!");
-        
-        // Limpa apenas os horários para facilitar novos lançamentos
-        document.getElementById('manual-ponto-entrada').value = '';
-        document.getElementById('manual-ponto-saida').value = '';
+        if (idEdicao) {
+            await db.collection("teacherManualLogs").doc(idEdicao).update({
+                ...registroData, updatedAt: new Date().toISOString(), atualizadoPor: usuario
+            });
+            await registrarLogAuditoria(`Editou o ponto manual ID ${idEdicao}: ${JSON.stringify(anterior)} → ${JSON.stringify(registroData)}`, "Ponto Manual");
+        } else {
+            await db.collection("teacherManualLogs").add({
+                ...registroData, registradoPor: usuario, createdAt: new Date().toISOString()
+            });
+        }
+        sucesso = true;
+        alert(idEdicao ? "Ponto atualizado com sucesso!" : "Horário registrado e fixado com sucesso!");
     } catch (e) {
-        alert("Erro ao registrar ponto na nuvem: " + e.message);
+        alert("Erro ao salvar ponto na nuvem: " + e.message);
+    } finally {
+        pontoManualSalvando = false;
+        campos.forEach(id => document.getElementById(id).disabled = false);
+        if (sucesso) cancelarEdicaoPontoManual();
     }
 }
 
@@ -5920,6 +5995,8 @@ function escutarRegistrosPontoManual() {
     if (!tbody) return;
 
     db.collection("teacherManualLogs").orderBy("createdAt", "desc").onSnapshot((snapshot) => {
+        registrosPontoManual.clear();
+        snapshot.forEach(doc => registrosPontoManual.set(doc.id, doc.data()));
         if (snapshot.empty) {
             tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400">Nenhum horário manual registrado ainda.</td></tr>`;
             return;
@@ -5927,7 +6004,8 @@ function escutarRegistrosPontoManual() {
 
         tbody.innerHTML = '';
         snapshot.forEach(doc => {
-            const r = doc.data();
+            const r = Object.fromEntries(Object.entries(doc.data()).map(([k, v]) => [k, escaparTextoPontoManual(v)]));
+            const idRegistro = escaparTextoPontoManual(doc.id);
             const dataFormatada = r.data ? r.data.split('-').reverse().join('/') : '';
             
             tbody.innerHTML += `
@@ -5944,8 +6022,12 @@ function escutarRegistrosPontoManual() {
                     </td>
                     <td class="p-3 text-right">
                         <span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 rounded-full text-[10px] font-bold">
-                            <i class="fa-solid fa-lock mr-1"></i> Fixo / Salvo
+                            <i class="fa-solid fa-check mr-1"></i> Salvo
                         </span>
+                        <div class="flex justify-end flex-wrap gap-2 mt-2">
+                            <button type="button" data-registro-id="${idRegistro}" onclick="editarPontoManualProfessor(this.dataset.registroId)" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold"><i class="fa-solid fa-pen mr-1"></i> Editar</button>
+                            <button type="button" data-registro-id="${idRegistro}" onclick="excluirPontoManualProfessor(this.dataset.registroId)" class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-semibold"><i class="fa-solid fa-trash mr-1"></i> Excluir</button>
+                        </div>
                     </td>
                 </tr>
             `;
