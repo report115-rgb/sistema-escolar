@@ -2,7 +2,7 @@
 <html lang="pt-BR" class="light">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>SE7 Mobile - Setor Financeiro</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -73,43 +73,108 @@
                 overflow: visible !important;
             }
         }
+/* Acesso institucional compacto para WebView. */
+#login-modal.finance-login {
+ position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;overflow-x:hidden;overflow-y:auto;
+ -webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;isolation:isolate;
+ box-sizing:border-box;padding:24px 20px;color:#f5f8ff;font-family:Arial,Helvetica,sans-serif;
+ background:radial-gradient(ellipse at 0% 28%,#09285c 0%,#041731 45%,#020d20 100%);
+ padding-top:max(24px,env(safe-area-inset-top));padding-bottom:max(24px,env(safe-area-inset-bottom));
+ padding-left:max(20px,env(safe-area-inset-left));padding-right:max(20px,env(safe-area-inset-right));
+}
+#login-modal .finance-login-art {position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:-1;}
+#login-modal .finance-login-wire {fill:none;stroke:#277dff;stroke-width:1;}
+#login-modal .finance-login-glow {fill:none;stroke:#60baff;stroke-width:1.3;filter:drop-shadow(0 0 6px #007eff) drop-shadow(0 0 12px #007eff);animation:finance-login-pulse 6s ease-in-out infinite;}
+@keyframes finance-login-pulse {0%,100%{opacity:.12}45%,55%{opacity:.85}}
+#login-modal .finance-login-shell {position:relative;width:100%;max-width:400px;margin:auto;flex-shrink:0;}
+#login-modal .finance-login-brand {text-align:center;padding:12px 0 25px;}
+#login-modal .finance-login-logo-box {display:flex;align-items:center;justify-content:center;height:100px;margin-bottom:16px;}
+#login-modal #finance-login-logo {width:205px;max-width:70%;max-height:100px;object-fit:contain;border:0;background:transparent;filter:none;box-shadow:none;}
+#login-modal #finance-login-logo-fallback {font-size:20px;color:#b4c9e6;letter-spacing:.04em;}
+#login-modal .finance-login-headline {font-size:29px;line-height:1.2;font-weight:700;letter-spacing:-.7px;margin:0;}
+#login-modal .finance-login-headline span {color:#329fff;}
+#login-modal .finance-login-sector {font-size:13px;color:#b4c9e6;letter-spacing:3px;margin:10px 0 0;text-transform:uppercase;}
+#login-modal .finance-login-card {padding:27px 23px;border:1px solid #315b91;border-radius:16px;background:linear-gradient(135deg,#132840ed,#081525f5);box-shadow:0 18px 45px #00000020;}
+#login-modal #finance-login-title {font-size:23px;line-height:1.2;color:#f6f8ff;font-weight:700;letter-spacing:-.4px;margin:0;}
+#login-modal .finance-login-description {font-size:13px;color:#a9bbd7;line-height:1.55;margin:9px 0 24px;}
+#login-modal .finance-login-field {margin-bottom:20px;}
+#login-modal .finance-login-field label {display:block;color:#f2f6ff;font-size:13px;font-weight:600;margin-bottom:9px;}
+#login-modal .finance-login-input-box {position:relative;}
+#login-modal .finance-login-icon {position:absolute;left:14px;top:50%;transform:translateY(-50%);height:20px;width:20px;color:#91a8cb;pointer-events:none;}
+#login-modal .finance-login-input {box-sizing:border-box;width:100%;min-width:0;height:52px;padding:12px 48px 12px 45px;background:#07152590;border:1px solid #506a8e;border-radius:10px;color:#f8faff;font:inherit;font-size:16px;outline:0;transition:border-color .2s,box-shadow .2s;}
+#login-modal .finance-login-input::placeholder {color:#9cafcd;opacity:1;}
+#login-modal .finance-login-input:focus {border-color:#42a3ff;box-shadow:0 0 0 3px #168bff20;}
+#login-modal .finance-login-eye {position:absolute;right:6px;top:4px;width:44px;height:44px;display:flex;align-items:center;justify-content:center;color:#98b2d5;background:transparent;border:0;border-radius:8px;}
+#login-modal .finance-login-eye svg {width:22px;height:22px;}
+#login-modal #btn-entrar {width:100%;min-height:52px;display:flex;align-items:center;justify-content:center;border:1px solid #2588ff;border-radius:10px;background:linear-gradient(100deg,#0875ff,#0560f8);color:#fff;font-size:15px;font-weight:700;margin-top:25px;cursor:pointer;}
+#login-modal #btn-entrar:disabled {opacity:.65;}
+#login-modal #btn-entrar:active {background:#0056d5;}
+#login-modal button:focus-visible {outline:2px solid #9ed9ff;outline-offset:3px;}
+#login-modal .finance-login-footer {text-align:center;color:#829dbf;font-size:11px;line-height:1.6;margin:22px 0 2px;}
+@media (max-height:650px) {
+ #login-modal .finance-login-brand {padding-top:0;padding-bottom:18px;}
+ #login-modal .finance-login-logo-box {height:70px;margin-bottom:12px;}
+ #login-modal #finance-login-logo {max-height:70px;width:160px;}
+ #login-modal .finance-login-card {padding:23px;}
+ #login-modal .finance-login-headline {font-size:26px;}
+ #login-modal .finance-login-footer {margin-top:16px;}
+}
+@media (max-width:340px) {
+ #login-modal.finance-login {padding-left:14px;padding-right:14px;}
+ #login-modal .finance-login-card {padding:24px 18px;}
+ #login-modal #finance-login-title {font-size:21px;}
+ #login-modal .finance-login-headline {font-size:26px;}
+}
+@media (prefers-reduced-motion:reduce) {#login-modal .finance-login-glow {animation:none;opacity:.5;}}
+
     </style>
 </head>
 <body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans antialiased h-screen overflow-hidden flex flex-col transition-colors duration-200">
 
     <!-- TELA DE LOGIN DO APP FINANCEIRO -->
-    <div id="login-modal" class="app-screen fixed inset-0 z-50 bg-gradient-to-br from-blue-900 via-indigo-900 to-slate-900 flex flex-col justify-between p-6 text-white overflow-y-auto">
-        <div class="mt-8 flex items-center justify-between">
-            <div class="w-10"></div>
-            <span class="text-xs font-semibold text-blue-200">SE7 &bull; Acesso Restrito</span>
-            <div class="w-10"></div>
-        </div>
-
-        <div class="text-center flex flex-col items-center my-auto">
-            <div class="inline-flex items-center justify-center w-20 h-20 bg-blue-600 text-white rounded-3xl text-4xl font-bold mb-4 shadow-xl shadow-blue-500/30">
-                <i class="fa-solid fa-wallet"></i>
-            </div>
-            <h1 class="text-2xl font-bold">SE7 Financeiro</h1>
-            <p class="text-xs text-blue-200 mt-1 mb-4">Conectado à Matriz (Firebase)</p>
-
-            <div class="bg-white text-slate-800 p-6 rounded-3xl shadow-2xl space-y-4 w-full max-w-sm text-left">
-                <div>
-                    <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">E-mail ou Usuário</label>
-                    <input type="text" id="login-user" placeholder="Digite seu e-mail" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-600 focus:outline-none">
+    <div id="login-modal" class="app-screen finance-login" role="dialog" aria-modal="true" aria-labelledby="finance-login-title">
+        <svg class="finance-login-art" viewBox="0 0 420 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+            <g class="finance-login-wire">
+                <line x1="300" y1="0" x2="0" y2="310"/><line x1="0" y1="300" x2="420" y2="760"/>
+                <circle cx="-115" cy="190" r="245"/><circle cx="350" cy="940" r="245"/>
+            </g>
+            <circle class="finance-login-glow" cx="-115" cy="190" r="245"/>
+            <circle class="finance-login-glow" style="animation-delay:-3s" cx="350" cy="940" r="245"/>
+            <line class="finance-login-glow" style="animation-delay:-1.5s" x1="300" y1="0" x2="0" y2="310"/>
+            <line class="finance-login-glow" style="animation-delay:-4.5s" x1="0" y1="300" x2="420" y2="760"/>
+        </svg>
+        <div class="finance-login-shell">
+            <div class="finance-login-brand">
+                <div class="finance-login-logo-box">
+                    <img id="finance-login-logo" alt="Logomarca da instituição" style="display:none;" onload="document.getElementById('finance-login-logo-fallback').style.display='none'" onerror="this.style.display='none';document.getElementById('finance-login-logo-fallback').style.display='block'">
+                    <span id="finance-login-logo-fallback">Setor Financeiro</span>
                 </div>
-                <div>
-                    <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Senha</label>
-                    <input type="password" id="login-pass" placeholder="••••••••" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-600 focus:outline-none">
-                </div>
-                <button type="button" id="btn-entrar" onclick="fazerLogin()" class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 transition active:scale-95 text-sm">
-                    Entrar no App
-                </button>
+                <h1 class="finance-login-headline">Tudo <span>conectado.</span></h1>
+                <p class="finance-login-sector">Setor Financeiro</p>
             </div>
-        </div>
-
-        <div class="text-center text-[10px] text-blue-300 pb-2">
-            <div>Sistema SE7 de Gestão Acadêmica</div>
-            <div>v1.6.2 &bull; Setor Financeiro</div>
+            <div class="finance-login-card">
+                <h2 id="finance-login-title">Acesso Institucional</h2>
+                <p class="finance-login-description">Entre com suas credenciais para continuar</p>
+                <form id="finance-login-form" onsubmit="event.preventDefault();fazerLogin();">
+                    <div class="finance-login-field">
+                        <label for="login-user">E-mail ou Usuário</label>
+                        <div class="finance-login-input-box">
+                            <svg class="finance-login-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="7" r="4"/><path d="M3 21v-3a9 9 0 0 1 18 0v3z"/></svg>
+                            <input id="login-user" type="text" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="next" placeholder="Seu e-mail ou usuário" class="finance-login-input">
+                        </div>
+                    </div>
+                    <div class="finance-login-field">
+                        <label for="login-pass">Senha</label>
+                        <div class="finance-login-input-box">
+                            <svg class="finance-login-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="10" width="16" height="12" rx="2" fill="currentColor"/><path d="M7 10V7a5 5 0 0 1 10 0v3"/><path d="M12 14v4" stroke="#0b1b31"/></svg>
+                            <input id="login-pass" type="password" autocomplete="current-password" enterkeyhint="go" placeholder="••••••••" class="finance-login-input">
+                            <button type="button" class="finance-login-eye" aria-label="Mostrar senha" aria-pressed="false" onclick="alternarSenhaFinanceiro(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                        </div>
+                    </div>
+                    <button id="btn-entrar" type="submit">Entrar no App</button>
+                </form>
+            </div>
+            <div class="finance-login-footer"><span id="finance-login-institution-name">Sistema SE7 de Gestão Acadêmica</span><br>Setor Financeiro</div>
         </div>
     </div>
 
@@ -758,6 +823,18 @@
         let novosAlunosLidos = JSON.parse(localStorage.getItem('novos_alunos_lidos') || '[]');
 
         window.addEventListener('DOMContentLoaded', () => {
+            iniciarIdentidadeFinanceiro();
+            ajustarAlturaLoginWebView();
+            window.addEventListener('resize', ajustarAlturaLoginWebView);
+            if (window.visualViewport) {
+                window.visualViewport.addEventListener('resize', ajustarAlturaLoginWebView);
+                window.visualViewport.addEventListener('scroll', ajustarAlturaLoginWebView);
+            }
+            document.getElementById('login-modal').addEventListener('focusin', event => {
+                if (event.target.tagName === 'INPUT') setTimeout(() => {
+                    event.target.scrollIntoView({block:'nearest',behavior:'auto'});
+                }, 250);
+            });
             const sessao = JSON.parse(sessionStorage.getItem('app_financeiro_user'));
             if (sessao) {
                 document.getElementById('login-modal').style.display = 'none';
@@ -772,7 +849,58 @@
             location.reload();
         }
 
+        function alternarSenhaFinanceiro(botao) {
+            const campo = document.getElementById('login-pass');
+            const mostrar = campo.type === 'password';
+            campo.type = mostrar ? 'text' : 'password';
+            botao.setAttribute('aria-pressed', String(mostrar));
+            botao.setAttribute('aria-label', mostrar ? 'Ocultar senha' : 'Mostrar senha');
+        }
+
+        function aplicarIdentidadeFinanceiro(dados) {
+            institutionData = {
+                name: dados.name || dados.nome || institutionData.name,
+                razaoSocial: dados.razao || dados.razão || dados.razaoSocial || dados.name || institutionData.razaoSocial,
+                cnpj: dados.cnpj || institutionData.cnpj,
+                address: dados.endereço || dados.address || dados.endereco || dados.end || institutionData.address,
+                logo: dados.logo || dados.logoUrl || dados.logomarca || ''
+            };
+            const logo = document.getElementById('finance-login-logo');
+            const fallback = document.getElementById('finance-login-logo-fallback');
+            if (logo) {
+                if (institutionData.logo) {
+                    logo.src = institutionData.logo;
+                    logo.style.display = 'block';
+                } else {
+                    logo.removeAttribute('src');
+                    logo.style.display = 'none';
+                }
+            }
+            if (fallback) fallback.style.display = institutionData.logo ? 'none' : 'block';
+            const nome = document.getElementById('finance-login-institution-name');
+            if (nome) nome.textContent = institutionData.name;
+        }
+
+        function iniciarIdentidadeFinanceiro() {
+            // A marca aparece antes do login e acompanha mudanças na Matriz.
+            db.collection('config').doc('institution').onSnapshot(doc => {
+                aplicarIdentidadeFinanceiro(doc.exists ? doc.data() : {});
+            }, erro => console.warn('Não foi possível carregar a identidade institucional:', erro));
+        }
+
+        function ajustarAlturaLoginWebView() {
+            const login = document.getElementById('login-modal');
+            if (!login) return;
+            const viewport = window.visualViewport;
+            if (viewport) {
+                login.style.height = viewport.height + 'px';
+                login.style.top = viewport.offsetTop + 'px';
+                login.style.bottom = 'auto';
+            }
+        }
+
         async function fazerLogin() {
+            if (document.getElementById('btn-entrar').disabled) return;
             const userInput = document.getElementById('login-user').value.trim().toLowerCase();
             const passInput = document.getElementById('login-pass').value.trim();
             const btnEntrar = document.getElementById('btn-entrar');
@@ -928,13 +1056,7 @@
                 const docSnap = await docRef.get();
                 if (docSnap.exists) {
                     const dados = docSnap.data();
-                    institutionData = {
-                        name: dados.name || dados.nome || institutionData.name,
-                        razaoSocial: dados.razao || dados.razão || dados.razaoSocial || dados.name || institutionData.razaoSocial,
-                        cnpj: dados.cnpj || institutionData.cnpj,
-                        address: dados.endereço || dados.address || dados.endereco || institutionData.address,
-                        logo: dados.logo || dados.logoUrl || dados.logomarca || institutionData.logo
-                    };
+                    aplicarIdentidadeFinanceiro(dados);
                 }
             } catch (e) { console.warn("Erro ao carregar dados institucionais:", e); }
         }
