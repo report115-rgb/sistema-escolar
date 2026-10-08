@@ -2630,33 +2630,75 @@ async function removerUsuarioSistemaFirebase(id) {
         }
 
         function openNewStudentModal() {
+            redefinirFotoCadastroAluno();
             document.getElementById('edit-student-id').value = "";
             document.getElementById('modal-student-title').textContent = "Nova Matrícula";
             document.getElementById('formFichaMatricula').reset();
             document.getElementById('new-student-modal').style.display = 'flex';
         }
-        function closeNewStudentModal() { document.getElementById('new-student-modal').style.display = 'none'; }
+        function closeNewStudentModal() {
+            document.getElementById('new-student-modal').style.display = 'none';
+            redefinirFotoCadastroAluno();
+        }
 
         let currentLogoDataUrl = "", courses = [], classes = [], students = [], teachers = [], financeLogs = [], academicCalendars = [];
         let globalInstitutionData = {};
         let alunoLogadoCache = null;
-	let fotoRostoBase64Temp = ""; // <--- Cole aqui
+        let fotoRostoBase64Temp = '';
+        let leituraFotoAluno = null;
+        let versaoFotoCadastro = 0;
+        let salvandoCadastroAluno = false;
 
-	function processarFotoRostoAluno(event) {
-    	const file = event.target.files[0];
-    	if (!file) return;
-    	if (!file.type.startsWith("image/")) return alert("O arquivo deve ser uma imagem válida.");
-
-    	const reader = new FileReader();
-    	reader.onload = function(evt) {
-        fotoRostoBase64Temp = evt.target.result;
-        const preview = document.getElementById('preview-foto-cadastro');
-        if (preview) {
-            preview.innerHTML = `<img src="${fotoRostoBase64Temp}" class="w-full h-full object-cover">`;
+        function mostrarFotoCadastroAluno(foto) {
+            const preview = document.getElementById('preview-foto-cadastro');
+            if (!preview) return;
+            preview.innerHTML = '';
+            if (foto) {
+                const imagem = document.createElement('img');
+                imagem.src = foto;
+                imagem.alt = 'Foto de rosto do aluno';
+                imagem.className = 'w-full h-full object-cover';
+                preview.appendChild(imagem);
+            } else {
+                preview.innerHTML = '<span class="text-[10px] text-gray-400 text-center p-1">Sem Foto</span>';
+            }
         }
-    };
-    reader.readAsDataURL(file);
-}
+
+        function redefinirFotoCadastroAluno(foto = '') {
+            versaoFotoCadastro++;
+            leituraFotoAluno = null;
+            fotoRostoBase64Temp = foto;
+            const input = document.getElementById('input-foto-rosto-aluno');
+            if (input) input.value = '';
+            mostrarFotoCadastroAluno(foto);
+        }
+
+        function processarFotoRostoAluno(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            if (salvandoCadastroAluno) return;
+            if (!file.type.startsWith('image/')) return alert('O arquivo deve ser uma imagem válida.');
+            const versao = ++versaoFotoCadastro;
+            const reader = new FileReader();
+            leituraFotoAluno = new Promise(resolve => {
+                reader.onload = evt => {
+                    if (versao !== versaoFotoCadastro) return resolve(false);
+                    const foto = evt.target.result;
+                    if (typeof foto !== 'string' || !foto.startsWith('data:image/')) {
+                        alert('Não foi possível carregar a foto. Selecione outra imagem.');
+                        return resolve(false);
+                    }
+                    fotoRostoBase64Temp = foto;
+                    mostrarFotoCadastroAluno(foto);
+                    resolve(true);
+                };
+                reader.onerror = reader.onabort = () => {
+                    if (versao === versaoFotoCadastro) alert('Não foi possível ler a foto. Selecione a imagem novamente.');
+                    resolve(false);
+                };
+                try { reader.readAsDataURL(file); } catch (_) { resolve(false); }
+            });
+        }
 
         function carregarDadosDaNuvem() {
             db.collection("config").doc("institution").onSnapshot((doc) => {
@@ -3758,7 +3800,26 @@ function carregarDatasCalendarioParaFrequencia() {
     }
 }
 
-	async function addOrUpdateStudent() {
+        async function addOrUpdateStudent() {
+    if (salvandoCadastroAluno) return;
+    const versao = versaoFotoCadastro;
+    const botaoSalvar = document.getElementById('btn-salvar-matricula');
+    salvandoCadastroAluno = true;
+    if (botaoSalvar) botaoSalvar.disabled = true;
+    try {
+        if (leituraFotoAluno && !await leituraFotoAluno) return;
+        if (versao !== versaoFotoCadastro) return;
+        await salvarCadastroAlunoComFoto();
+    } catch (erro) {
+        console.error('Erro ao salvar aluno:', erro);
+        alert('Não foi possível salvar os dados do aluno: ' + erro.message);
+    } finally {
+        salvandoCadastroAluno = false;
+        if (botaoSalvar) botaoSalvar.disabled = false;
+    }
+}
+
+        async function salvarCadastroAlunoComFoto() {
     const editId = document.getElementById('edit-student-id').value;
     const fullname = document.getElementById('nomeAluno').value.trim();
     const email = document.getElementById('emailAluno').value.trim();
@@ -3798,8 +3859,11 @@ function carregarDatasCalendarioParaFrequencia() {
         }
 
         await db.collection("students").doc(editId).update(studentData);
+        const alunoLocal = students.find(a => a.id === editId);
+        if (alunoLocal) Object.assign(alunoLocal, studentData);
         closeNewStudentModal();
         alert("Dados do aluno atualizados com sucesso!");
+        return;
     } else {
         const code = `MAT-${new Date().getFullYear()}-${Date.now().toString().slice(-5)}`;
         studentData.code = code;
@@ -3848,7 +3912,7 @@ function carregarDatasCalendarioParaFrequencia() {
                 }
             }
         } catch (erroGatilho) {
-            console.error("Erro no gatilho financeiro:", erroGinylho);
+            console.error("Erro no gatilho financeiro:", erroGatilho);
         }
     }
     
@@ -3885,16 +3949,8 @@ function carregarDatasCalendarioParaFrequencia() {
     
     document.getElementById('input-student-class').value = aluno.classId || '';
 
-    // --- CARREGA A FOTO DO ALUNO PARA A EDIÇÃO ---
-    // Atribui a foto existente na base para a variável temporária de controle
-    fotoRostoBase64Temp = aluno.fotoAluno || '';
-
-    // Se você tiver uma tag <img> na tela para mostrar o preview da foto do rosto, atualize-a aqui:
-    const imgPreview = document.getElementById('foto-rosto-preview'); // Substitua pelo ID real da imagem na sua interface, se houver
-    if (imgPreview) {
-        imgPreview.src = aluno.fotoAluno ? aluno.fotoAluno : ''; // ou uma imagem padrão de placeholder se estiver vazia
-    }
-    // ---------------------------------------------
+    // Recupera a foto persistida no documento do aluno e atualiza a prévia real.
+    redefinirFotoCadastroAluno(aluno.fotoAluno || '');
 
     document.getElementById('new-student-modal').style.display = 'flex';
 }
