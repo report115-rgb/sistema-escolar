@@ -107,6 +107,38 @@
 .student-login #welcome-logo-img {width:145px;max-width:70%;max-height:66px;object-fit:contain;}
 .student-login #welcome-icon-box {color:#b4c9e6;font-size:20px;}
 
+.student-badge-modal {position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;padding:18px;background:#000a;overflow:auto;box-sizing:border-box;}
+.student-badge-dialog {width:100%;max-width:350px;max-height:calc(100vh - 36px);overflow:auto;padding:18px;border-radius:23px;background:#f8fafc;color:#0b2140;box-sizing:border-box;}
+.student-badge-toolbar {display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:8px;}
+.student-badge-toolbar h2 {font-size:17px;font-weight:700;}
+.student-badge-toolbar button {height:36px;width:36px;font-size:28px;color:#64748b;flex-shrink:0;}
+.student-badge {position:relative;border-radius:20px;overflow:hidden;background:#fff;box-shadow:0 8px 22px #0b214015;}
+.student-badge-header {height:140px;background:linear-gradient(135deg,#072452,#03172f);display:flex;align-items:flex-start;justify-content:center;padding:23px 22px 0;position:relative;overflow:hidden;}
+.student-badge-header:before {content:'';position:absolute;right:-25px;top:-38px;width:60px;height:200px;background:#ff7900;transform:rotate(33deg);}
+.student-badge-header:after {content:'';position:absolute;right:-40px;top:45px;width:45px;height:180px;background:#38aaff;transform:rotate(33deg);}
+#badge-institution-logo {position:relative;z-index:1;width:150px;max-width:75%;height:68px;object-fit:contain;filter:none;}
+#badge-institution-fallback {font-size:13px;color:white;position:relative;z-index:1;}
+.student-badge-photo {position:relative;z-index:2;display:block;margin:-42px auto 0;width:98px;height:120px;border:4px solid white;border-radius:16px;overflow:hidden;background:#e2e8f0;box-shadow:0 4px 12px #0b214015;}
+#card-avatar-box {width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#64748b;font-size:30px;}
+#card-avatar-box img {width:100%;height:100%;object-fit:cover;}
+.student-badge-body {padding:14px 17px 16px;}
+#card-nome-txt {font-size:22px;line-height:1.2;font-weight:700;text-align:center;overflow-wrap:anywhere;word-break:normal;max-height:80px;margin:0;}
+.student-badge-course {text-align:center;font-size:13px;line-height:1.4;color:#475569;overflow-wrap:anywhere;margin:9px 0 18px;}
+.student-badge-course strong {font-size:11px;color:#64748b;}
+.student-badge-details {display:grid;grid-template-columns:1fr 1.2fr;gap:12px;font-size:11px;padding-bottom:14px;border-bottom:1px solid #e2e8f0;}
+.student-badge-details>div+div {border-left:1px solid #e2e8f0;padding-left:12px;}
+.student-badge-details span,.student-badge-validity>span {display:block;color:#64748b;font-size:10px;}
+.student-badge-details strong {display:block;margin-top:4px;color:#0b2140;font-size:12px;overflow-wrap:anywhere;}
+.student-badge-bottom {display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;}
+.student-badge-validity strong {display:block;font-size:14px;margin-top:4px;}
+.student-badge-validity small {display:block;font-size:9px;color:#64748b;margin-top:12px;}
+.student-badge-qr {background:#fff;padding:8px;border:1px solid #e2e8f0;border-radius:10px;flex-shrink:0;min-width:112px;min-height:112px;display:flex;align-items:center;justify-content:center;}
+#qrcode-container {width:96px;height:96px;display:flex;align-items:center;justify-content:center;}
+#qrcode-container img,#qrcode-container canvas {width:96px!important;height:96px!important;}
+.student-badge-status {font-size:9px;color:#64748b;text-align:center;margin:10px 0 0;line-height:1.4;}
+.student-badge-close {width:100%;min-height:44px;border-radius:11px;background:#0875ff;color:white;font-size:13px;font-weight:700;margin-top:14px;}
+@supports(height:100dvh) {.student-badge-dialog {max-height:calc(100dvh - 36px);}}
+
     </style>
 </head>
 <body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans antialiased h-screen overflow-hidden flex flex-col transition-colors duration-200">
@@ -390,54 +422,24 @@
     </div>
 
     <!-- MODAL DA CARTEIRINHA ID ESTILIZADA -->
-    <div id="modal-carteirinha" class="fixed inset-0 z-[70] bg-black/70 flex items-center justify-center p-4" style="display: none;">
-        <div class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center space-y-4 relative">
-            <button onclick="fecharModalCarteirinha()" class="absolute top-4 right-4 text-slate-400 hover:text-red-500 text-xl font-bold">&times;</button>
-            
-            <!-- CARTÃO ESTUDANTIL ID -->
-            <div class="bg-gradient-to-br from-blue-900 via-indigo-900 to-slate-900 text-white p-5 rounded-2xl shadow-xl space-y-3 relative overflow-hidden border border-white/10 text-left">
-                <div class="flex items-center justify-between border-b border-white/20 pb-2">
-                    <div class="flex items-center space-x-2">
-                        <div class="w-8 h-8 bg-white/25 rounded-lg flex items-center justify-center text-sm font-bold shadow">
-                            <i class="fa-solid fa-graduation-cap"></i>
-                        </div>
-                        <div>
-                            <h4 class="font-bold text-xs uppercase tracking-wider">Carteirinha Estudantil</h4>
-                            <p class="text-[9px] text-blue-200">SE7 &bull; Identidade Acadêmica</p>
-                        </div>
-                    </div>
-                    <span class="text-[9px] bg-emerald-500 text-white px-2 py-0.5 rounded-full font-bold">Oficial</span>
+    <div id="modal-carteirinha" class="student-badge-modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="badge-title">
+        <div class="student-badge-dialog">
+            <div class="student-badge-toolbar"><h2 id="badge-title">Carteirinha do Aluno</h2><button type="button" onclick="fecharModalCarteirinha()" aria-label="Fechar carteirinha">×</button></div>
+            <div class="student-badge">
+                <div class="student-badge-header">
+                    <img id="badge-institution-logo" alt="Logomarca da instituição" style="display:none;">
+                    <span id="badge-institution-fallback">Identidade Acadêmica</span>
                 </div>
-
-                <div class="flex items-center gap-3 pt-1">
-                    <div class="w-16 h-20 bg-white/10 rounded-xl overflow-hidden border border-white/20 shrink-0 flex items-center justify-center relative cursor-pointer" onclick="dispararTrocaFoto()" title="Alterar foto na carteirinha">
-                        <div id="card-avatar-box" class="w-full h-full flex items-center justify-center">
-                            <i class="fa-solid fa-user text-blue-200 text-xl"></i>
-                        </div>
-                    </div>
-                    <div class="space-y-1 truncate flex-1">
-                        <h3 class="font-bold text-xs truncate" id="card-nome-txt">---</h3>
-                        <p class="text-[10px] text-blue-200 truncate" id="card-curso-txt">---</p>
-                        <p class="text-[10px] text-blue-300 truncate"><strong class="text-white">Turma:</strong> <span id="card-turma-txt">---</span></p>
-                        <p class="text-[10px] text-blue-300 font-mono" id="card-matricula-txt">MAT: ---</p>
-                    </div>
-                </div>
-
-                <div class="pt-2 border-t border-white/20 flex items-center justify-between">
-                    <div>
-                        <p class="text-[9px] text-blue-200 uppercase tracking-wider">Validade</p>
-                        <p class="text-[11px] font-bold font-mono">Dez / 2026</p>
-                        <p class="text-[8px] text-amber-300 italic mt-0.5">Documento intransferível</p>
-                    </div>
-                    <div class="bg-white p-1.5 rounded-xl shadow-inner shrink-0">
-                        <div id="qrcode-container" class="w-16 h-16 flex items-center justify-center"></div>
-                    </div>
+                <button type="button" class="student-badge-photo" onclick="dispararTrocaFoto()" aria-label="Alterar foto do aluno"><div id="card-avatar-box"><i class="fa-solid fa-user" aria-hidden="true"></i></div></button>
+                <div class="student-badge-body">
+                    <h3 id="card-nome-txt">---</h3>
+                    <p class="student-badge-course"><strong>Curso:</strong><br><span id="card-curso-txt">---</span></p>
+                    <div class="student-badge-details"><div><span>Turma</span><strong id="card-turma-txt">---</strong></div><div><span>Matrícula</span><strong id="card-matricula-txt">---</strong></div></div>
+                    <div class="student-badge-bottom"><div class="student-badge-validity"><span>Validade</span><strong>Dez / 2026</strong><small>Documento intransferível</small></div><div class="student-badge-qr"><div id="qrcode-container"></div></div></div>
+                    <p id="badge-qr-status" class="student-badge-status" role="status">Carregando identificação…</p>
                 </div>
             </div>
-
-            <button onclick="fecharModalCarteirinha()" class="w-full py-2.5 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold rounded-xl text-xs transition">
-                Fechar Carteirinha
-            </button>
+            <button type="button" class="student-badge-close" onclick="fecharModalCarteirinha()">Fechar carteirinha</button>
         </div>
     </div>
 
@@ -712,6 +714,7 @@
         let eventosCalendarioCache = [];
 
         window.addEventListener('DOMContentLoaded', async () => {
+            window.addEventListener('resize',ajustarNomeCarteirinha);
             ajustarAlturaAcessoAluno();
             window.addEventListener('resize',ajustarAlturaAcessoAluno);
             if (window.visualViewport) {
@@ -829,6 +832,7 @@
         let cancelarIdentidadeAluno = null;
         function aplicarIdentidadeAluno(dados) {
             dadosInstituicaoGlobal = dados || {};
+            atualizarLogoCarteirinha();
             if (dadosInstituicaoGlobal.gdriveUrl && dadosInstituicaoGlobal.gdriveUrl.startsWith('http')) {
                 gdriveUrlGlobal = dadosInstituicaoGlobal.gdriveUrl.trim();
             }
@@ -1142,36 +1146,98 @@
         function abrirModalEsqueciSenha() { document.getElementById('modal-esqueci-senha').style.display = 'flex'; }
         function fecharModalEsqueciSenha() { document.getElementById('modal-esqueci-senha').style.display = 'none'; }
         
-        function abrirModalCarteirinha() {
-            if(!alunoLogado) return;
-            document.getElementById('card-nome-txt').textContent = alunoLogado.fullname || '---';
-            document.getElementById('card-matricula-txt').textContent = `MAT: ${alunoLogado.code || '---'}`;
-            document.getElementById('card-curso-txt').textContent = document.getElementById('header-aluno-curso').textContent || 'Curso Técnico';
-            
-            const turmaNomeTxt = document.getElementById('info-turma').textContent || 'A definir';
-            document.getElementById('card-turma-txt').textContent = turmaNomeTxt;
-
-            const cardAvatarBox = document.getElementById('card-avatar-box');
-            if (alunoLogado.fotoAluno) {
-                cardAvatarBox.innerHTML = `<img src="${alunoLogado.fotoAluno}" class="w-full h-full object-cover">`;
-            } else {
-                cardAvatarBox.innerHTML = `<i class="fa-solid fa-user text-blue-200 text-xl"></i>`;
-            }
-
-            const qrBox = document.getElementById('qrcode-container');
-            qrBox.innerHTML = '';
-            new QRCode(qrBox, {
-                text: `SE7-ALUNO-${alunoLogado.code}-${alunoLogado.cpf}`,
-                width: 64,
-                height: 64,
-                colorDark: "#000000",
-                colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.H
-            });
-            document.getElementById('modal-carteirinha').style.display = 'flex';
+        let versaoAberturaCarteirinha = 0;
+        function atualizarLogoCarteirinha() {
+            const src = dadosInstituicaoGlobal.logo || dadosInstituicaoGlobal.logomarca || dadosInstituicaoGlobal.urlLogo || dadosInstituicaoGlobal.logoUrl || dadosInstituicaoGlobal.image || dadosInstituicaoGlobal.fileUrl || '';
+            const img = document.getElementById('badge-institution-logo');
+            const fallback = document.getElementById('badge-institution-fallback');
+            if (!img) return;
+            img.onerror = () => {img.style.display='none';fallback.style.display='block';};
+            if (src) {img.src=src;img.style.display='block';fallback.style.display='none';}
+            else {img.removeAttribute('src');img.style.display='none';fallback.style.display='block';}
         }
-
-        function fecharModalCarteirinha() { document.getElementById('modal-carteirinha').style.display = 'none'; }
+        function ajustarNomeCarteirinha() {
+            const el = document.getElementById('card-nome-txt');
+            if (!el || document.getElementById('modal-carteirinha').style.display === 'none') return;
+            el.style.maxHeight = '80px';
+            el.style.fontSize = '22px';
+            let tamanho = 22;
+            while (tamanho > 12 && (el.scrollHeight > 80 || el.scrollWidth > el.clientWidth)) {
+                el.style.fontSize = (--tamanho) + 'px';
+            }
+            // Não corta o nome, mesmo em casos excepcionalmente longos.
+            if (el.scrollHeight > 80) el.style.maxHeight = 'none';
+        }
+        function criarTokenPresencaAluno() {
+            if (!window.crypto?.getRandomValues) throw new Error('Este dispositivo não permite gerar a identificação. Atualize a WebView.');
+            const bytes = new Uint8Array(24);
+            window.crypto.getRandomValues(bytes);
+            return Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');
+        }
+        async function obterIdentificacaoPresencaAluno(id) {
+            const ref = db.collection('students').doc(id);
+            let candidato;
+            return db.runTransaction(async tx => {
+                const snap = await tx.get(ref);
+                if (!snap.exists) throw new Error('Cadastro do aluno não encontrado.');
+                const dados = snap.data();
+                if (dados.qrAttendanceToken) return dados.qrAttendanceToken;
+                candidato ||= criarTokenPresencaAluno();
+                tx.update(ref,{qrAttendanceToken:candidato,qrAttendanceVersion:1,qrAttendanceCreatedAt:new Date().toISOString()});
+                return candidato;
+            });
+        }
+        async function abrirModalCarteirinha() {
+            if (!alunoLogado?.id) return;
+            const id = alunoLogado.id;
+            const versao = ++versaoAberturaCarteirinha;
+            const modal = document.getElementById('modal-carteirinha');
+            const qr = document.getElementById('qrcode-container');
+            const status = document.getElementById('badge-qr-status');
+            modal.style.display='flex';qr.innerHTML='';status.textContent='Consultando cadastro…';
+            atualizarLogoCarteirinha();
+            document.getElementById('card-nome-txt').textContent='Carregando…';
+            document.getElementById('card-curso-txt').textContent='---';
+            document.getElementById('card-turma-txt').textContent='---';
+            document.getElementById('card-matricula-txt').textContent='---';
+            document.getElementById('card-avatar-box').innerHTML='';
+            try {
+                const doc = await db.collection('students').doc(id).get({source:'server'});
+                if (!doc.exists) throw new Error('Cadastro não encontrado.');
+                if (versao !== versaoAberturaCarteirinha || alunoLogado?.id !== id) return;
+                const aluno = {id:doc.id,...doc.data()};
+                alunoLogado=aluno;
+                sessionStorage.setItem('aluno_app_logado',JSON.stringify(aluno));
+                document.getElementById('card-nome-txt').textContent=aluno.fullname || 'Aluno';
+                document.getElementById('card-matricula-txt').textContent=aluno.code || 'Não informada';
+                const [cursoDoc,turmaDoc] = await Promise.all([
+                    aluno.courseId ? db.collection('courses').doc(aluno.courseId).get({source:'server'}) : null,
+                    aluno.classId ? db.collection('classes').doc(aluno.classId).get({source:'server'}) : null
+                ]);
+                if (versao !== versaoAberturaCarteirinha || alunoLogado?.id !== id) return;
+                document.getElementById('card-curso-txt').textContent=cursoDoc?.exists ? cursoDoc.data().name || 'Não informado' : 'Não informado';
+                document.getElementById('card-turma-txt').textContent=turmaDoc?.exists ? turmaDoc.data().name || 'A definir' : 'A definir';
+                const fotoBox=document.getElementById('card-avatar-box');
+                if (aluno.fotoAluno) {const img=document.createElement('img');img.src=aluno.fotoAluno;img.alt='Foto do aluno';fotoBox.appendChild(img);}
+                else fotoBox.innerHTML='<i class="fa-solid fa-user" aria-hidden="true"></i>';
+                requestAnimationFrame(ajustarNomeCarteirinha);
+                status.textContent='Preparando QR Code…';
+                const token=await obterIdentificacaoPresencaAluno(id);
+                if (versao !== versaoAberturaCarteirinha || alunoLogado?.id !== id) return;
+                alunoLogado.qrAttendanceToken=token;
+                sessionStorage.setItem('aluno_app_logado',JSON.stringify(alunoLogado));
+                new QRCode(qr,{text:`SE7:ATTENDANCE:1:${token}`,width:96,height:96,colorDark:'#000000',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H});
+                status.textContent='Identificação do aluno';
+            } catch (erro) {
+                if (versao !== versaoAberturaCarteirinha) return;
+                qr.innerHTML='';status.textContent='Não foi possível carregar a identificação. Verifique a conexão e abra novamente.';
+                console.error('Erro ao carregar carteirinha:',erro);
+            }
+        }
+        function fecharModalCarteirinha() {
+            versaoAberturaCarteirinha++;
+            document.getElementById('modal-carteirinha').style.display='none';
+        }
 
         async function executarRedefinicaoSenha() {
             const cpfInput = document.getElementById('forgot-cpf').value.trim().replace(/[^\d]/g, '');
