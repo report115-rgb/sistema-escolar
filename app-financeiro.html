@@ -545,6 +545,105 @@
                 </div>
             </div>
 
+
+            <!-- ABA 6: REGISTRO DE FREQUÊNCIA DE COLABORADORES -->
+            <div id="tab-frequencia-colaboradores" class="space-y-3 tab-pane" style="display: none;">
+                <div class="bg-white dark:bg-slate-900 p-4 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 space-y-3">
+                    <div class="flex justify-between items-start gap-2 flex-wrap border-b border-slate-100 dark:border-slate-800 pb-3">
+                        <div>
+                            <h2 class="font-bold text-sm text-blue-600 dark:text-blue-400 flex items-center gap-2">
+                                <i class="fa-solid fa-user-clock"></i> Registro de Frequência de Colaboradores
+                            </h2>
+                            <p class="text-[10px] text-slate-400 mt-1">
+                                Integração automática com o Ponto Manual da Matriz. Os lançamentos chegam em tempo real e o valor é calculado pela carga horária registrada.
+                            </p>
+                        </div>
+                        <button type="button" onclick="gerarRelatorioFrequenciaColaboradores()" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow flex items-center gap-1.5">
+                            <i class="fa-solid fa-file-lines"></i> Relatório
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Competência</label>
+                            <input type="month" id="freq-colab-mes" onchange="renderizarFrequenciaColaboradores()" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs dark:bg-slate-800 dark:text-white">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Colaborador</label>
+                            <select id="freq-colab-professor" onchange="renderizarFrequenciaColaboradores()" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs dark:bg-slate-800 dark:text-white">
+                                <option value="">Todos os colaboradores</option>
+                            </select>
+                        </div>
+                        <div class="flex items-end">
+                            <div class="w-full p-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/50">
+                                <div class="flex justify-between text-[10px]">
+                                    <span class="text-slate-500">Registros no período</span>
+                                    <strong id="freq-colab-qtd" class="text-blue-700 dark:text-blue-300">0</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-2">
+                    <div class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800">
+                        <span class="text-[9px] uppercase font-bold text-slate-400">Dias trabalhados</span>
+                        <strong id="freq-resumo-dias" class="block text-lg text-slate-900 dark:text-white">0</strong>
+                    </div>
+                    <div class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800">
+                        <span class="text-[9px] uppercase font-bold text-slate-400">Horas</span>
+                        <strong id="freq-resumo-horas" class="block text-lg text-blue-600 dark:text-blue-400">0,00 h</strong>
+                    </div>
+                    <div class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800">
+                        <span class="text-[9px] uppercase font-bold text-slate-400">Valor hora</span>
+                        <strong id="freq-resumo-valor-hora" class="block text-lg text-emerald-600 dark:text-emerald-400">R$ 0,00</strong>
+                    </div>
+                    <div class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800">
+                        <span class="text-[9px] uppercase font-bold text-slate-400">Total a pagar</span>
+                        <strong id="freq-resumo-total" class="block text-lg text-emerald-600 dark:text-emerald-400">R$ 0,00</strong>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-slate-900 p-4 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800">
+                    <div class="flex justify-between items-center gap-2 mb-3">
+                        <div>
+                            <h3 class="font-bold text-xs text-slate-900 dark:text-white">Lançamentos integrados</h3>
+                            <p class="text-[10px] text-slate-400">Entrada, saída, carga horária, valor/hora e total por lançamento.</p>
+                        </div>
+                        <span id="freq-colab-status" class="text-[9px] font-bold px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+                            Sincronização ativa
+                        </span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-[10px] min-w-[760px]">
+                            <thead>
+                                <tr class="border-b border-slate-200 dark:border-slate-700 text-slate-400 uppercase">
+                                    <th class="p-2">Data</th>
+                                    <th class="p-2">Colaborador</th>
+                                    <th class="p-2">Turno</th>
+                                    <th class="p-2">Entrada</th>
+                                    <th class="p-2">Saída</th>
+                                    <th class="p-2">Carga</th>
+                                    <th class="p-2">Valor/h</th>
+                                    <th class="p-2 text-right">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody id="freq-colab-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-slate-900 p-4 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800">
+                    <div class="border-b border-slate-100 dark:border-slate-800 pb-2 mb-3">
+                        <h3 class="font-bold text-xs text-slate-900 dark:text-white flex items-center gap-2">
+                            <i class="fa-solid fa-money-check-dollar text-emerald-600"></i> Configuração do valor da carga horária
+                        </h3>
+                        <p class="text-[10px] text-slate-400 mt-1">Defina o valor da hora de cada colaborador. Esse valor fica salvo no Firebase e é aplicado automaticamente aos próximos lançamentos.</p>
+                    </div>
+                    <div id="freq-colab-rates" class="space-y-2"></div>
+                </div>
+            </div>
+
             <!-- TELA DE DETALHES DO ALUNO -->
             <div id="tab-detalhes-aluno" class="flex flex-col h-full tab-pane" style="display: none;">
                 <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 mb-3 shrink-0 flex justify-between items-center">
@@ -587,6 +686,10 @@
                 <i class="fa-solid fa-certificate text-sm mb-0.5"></i>
                 <span>Quitação</span>
             </button>
+            <button onclick="mudarAbaApp('frequencia-colaboradores')" id="nav-btn-freq" class="flex flex-col items-center text-slate-400 dark:text-slate-500 text-[9px] font-bold transition">
+                <i class="fa-solid fa-user-clock text-sm mb-0.5"></i>
+                <span>Frequência</span>
+            </button>
         </nav>
     </div>
 
@@ -618,6 +721,9 @@
         let coursesMap = {};
         let classesMap = {};
         let financeLogs = [];
+        let teachers = [];
+        let teacherManualLogs = [];
+        let teacherPaymentRates = {};
         let institutionData = {
             name: "SISTEMA DE ENSINO TÉCNICO E DE TRANSPORTE – SE7",
             razaoSocial: "JS & SS SERVIÇOS EDUCACIONAIS E CIA LTDA",
@@ -719,6 +825,15 @@
             location.reload();
         }
 
+        // Competência inicial da aba de frequência.
+        (function inicializarCompetenciaFrequencia() {
+            const el = document.getElementById('freq-colab-mes');
+            if (el) {
+                const agora = new Date();
+                el.value = `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, '0')}`;
+            }
+        })();
+
         async function carregarDadosNuvem() {
             await carregarCursosTurmasMatriz();
             await carregarDadosInstituicao();
@@ -751,6 +866,40 @@
                     abrirDetalhesAluno(alunoSelecionadoId, abaOrigemRetorno);
                 }
             }, error => { console.error("Erro ao carregar faturas:", error); });
+
+            // Colaboradores da Matriz
+            db.collection("teachers").onSnapshot(snapshot => {
+                teachers = [];
+                snapshot.forEach(doc => teachers.push({ id: doc.id, ...doc.data() }));
+                teachers.sort((a, b) => (a.fullname || '').localeCompare(b.fullname || '', 'pt-BR'));
+                atualizarSeletorFrequenciaColaboradores();
+                renderizarTabelaValoresHora();
+                renderizarFrequenciaColaboradores();
+            }, error => { console.error("Erro ao carregar colaboradores:", error); });
+
+            // Valores/hora configurados no Financeiro
+            db.collection("teacherPaymentRates").onSnapshot(snapshot => {
+                teacherPaymentRates = {};
+                snapshot.forEach(doc => {
+                    teacherPaymentRates[doc.id] = { id: doc.id, ...doc.data() };
+                });
+                renderizarTabelaValoresHora();
+                renderizarFrequenciaColaboradores();
+            }, error => { console.error("Erro ao carregar valores/hora:", error); });
+
+            // Integração em tempo real com o Ponto Manual da Matriz
+            db.collection("teacherManualLogs").orderBy("createdAt", "desc").onSnapshot(snapshot => {
+                teacherManualLogs = [];
+                snapshot.forEach(doc => teacherManualLogs.push({ id: doc.id, ...doc.data() }));
+                renderizarFrequenciaColaboradores();
+            }, error => {
+                console.error("Erro ao sincronizar ponto manual:", error);
+                const status = document.getElementById('freq-colab-status');
+                if (status) {
+                    status.textContent = "Erro de sincronização";
+                    status.className = "text-[9px] font-bold px-2 py-1 rounded-full bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300";
+                }
+            });
         }
 
         async function carregarDadosInstituicao() {
@@ -2046,11 +2195,13 @@
         function voltarParaOrigemDetalhes() { mudarAbaApp(abaOrigemRetorno); }
 
         function mudarAbaApp(aba) {
-            ['tab-alunos', 'tab-novos-alunos', 'tab-financeiro', 'tab-negociacoes', 'tab-quitacao', 'tab-detalhes-aluno'].forEach(id => {
-                document.getElementById(id).style.display = 'none';
+            ['tab-alunos', 'tab-novos-alunos', 'tab-financeiro', 'tab-negociacoes', 'tab-quitacao', 'tab-frequencia-colaboradores', 'tab-detalhes-aluno'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = 'none';
             });
-            ['nav-btn-alunos', 'nav-btn-novos', 'nav-btn-fin', 'nav-btn-neg', 'nav-btn-quit'].forEach(id => {
-                document.getElementById(id).className = "flex flex-col items-center text-slate-400 dark:text-slate-500 text-[9px] font-bold transition";
+            ['nav-btn-alunos', 'nav-btn-novos', 'nav-btn-fin', 'nav-btn-neg', 'nav-btn-quit', 'nav-btn-freq'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.className = "flex flex-col items-center text-slate-400 dark:text-slate-500 text-[9px] font-bold transition";
             });
 
             if (aba === 'alunos') {
@@ -2070,10 +2221,326 @@
                 document.getElementById('tab-quitacao').style.display = 'block';
                 document.getElementById('nav-btn-quit').className = "flex flex-col items-center text-indigo-600 dark:text-indigo-400 text-[9px] font-bold transition";
                 renderizarAlunosQuitesGeral();
+            } else if (aba === 'frequencia-colaboradores') {
+                document.getElementById('tab-frequencia-colaboradores').style.display = 'block';
+                document.getElementById('nav-btn-freq').className = "flex flex-col items-center text-blue-600 dark:text-blue-400 text-[9px] font-bold transition";
+                atualizarSeletorFrequenciaColaboradores();
+                renderizarTabelaValoresHora();
+                renderizarFrequenciaColaboradores();
             } else if (aba === 'detalhes') {
                 document.getElementById('tab-detalhes-aluno').style.display = 'flex';
             }
         }
+
+        // ============================================================
+        // REGISTRO DE FREQUÊNCIA DE COLABORADORES
+        // Integração: Matriz -> teacherManualLogs -> Financeiro
+        // ============================================================
+
+        function freqFormatarMoeda(valor) {
+            return Number(valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
+
+        function freqParseMoeda(valor) {
+            if (typeof valor === 'number') return valor;
+            const s = String(valor || '').replace(/[^\d,.-]/g, '').replace(/\./g, '').replace(',', '.');
+            return parseFloat(s) || 0;
+        }
+
+        function freqEscaparHtml(valor) {
+            return String(valor ?? '').replace(/[&<>"']/g, ch => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
+            }[ch]));
+        }
+
+        function freqMinutos(entrada, saida) {
+            if (!entrada || !saida) return 0;
+            const [he, me] = entrada.split(':').map(Number);
+            const [hs, ms] = saida.split(':').map(Number);
+            if (![he, me, hs, ms].every(Number.isFinite)) return 0;
+            let inicio = he * 60 + me;
+            let fim = hs * 60 + ms;
+            if (fim < inicio) fim += 24 * 60;
+            return Math.max(0, fim - inicio);
+        }
+
+        function freqHoras(entrada, saida) {
+            return freqMinutos(entrada, saida) / 60;
+        }
+
+        function freqFormatarHoras(horas) {
+            return Number(horas || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' h';
+        }
+
+        function freqValorHoraProfessor(professorId) {
+            const rate = teacherPaymentRates[professorId];
+            if (rate && Number.isFinite(Number(rate.valorHora))) return Number(rate.valorHora);
+
+            const professor = teachers.find(t => t.id === professorId);
+            const candidatos = [
+                professor?.valorHora,
+                professor?.valorHoraAula,
+                professor?.valor_hora,
+                professor?.horaValor
+            ];
+            for (const valor of candidatos) {
+                if (valor !== undefined && valor !== null && valor !== '' && freqParseMoeda(valor) > 0) {
+                    return freqParseMoeda(valor);
+                }
+            }
+            return 0;
+        }
+
+        function freqObterMesSelecionado() {
+            const el = document.getElementById('freq-colab-mes');
+            if (!el) return '';
+            if (!el.value) {
+                const agora = new Date();
+                el.value = `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, '0')}`;
+            }
+            return el.value;
+        }
+
+        function atualizarSeletorFrequenciaColaboradores() {
+            const select = document.getElementById('freq-colab-professor');
+            if (!select) return;
+            const valorAtual = select.value;
+            select.innerHTML = '<option value="">Todos os colaboradores</option>';
+            teachers.forEach(t => {
+                select.insertAdjacentHTML('beforeend',
+                    `<option value="${freqEscaparHtml(t.id)}">${freqEscaparHtml(t.fullname || 'Colaborador sem nome')} (${freqEscaparHtml(t.cargo || 'Professor')})</option>`
+                );
+            });
+            if (valorAtual && teachers.some(t => t.id === valorAtual)) select.value = valorAtual;
+        }
+
+        function renderizarTabelaValoresHora() {
+            const container = document.getElementById('freq-colab-rates');
+            if (!container) return;
+
+            if (!teachers.length) {
+                container.innerHTML = `<div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 text-center text-[10px] text-slate-400">Nenhum colaborador cadastrado na Matriz.</div>`;
+                return;
+            }
+
+            container.innerHTML = teachers.map(t => {
+                const valor = freqValorHoraProfessor(t.id);
+                return `
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-2 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
+                        <div class="flex-1 min-w-0">
+                            <strong class="block text-[11px] text-slate-900 dark:text-white truncate">${freqEscaparHtml(t.fullname || 'Colaborador')}</strong>
+                            <span class="text-[9px] text-slate-400">${freqEscaparHtml(t.cargo || 'Professor')}</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] text-slate-500">R$/hora</span>
+                            <input type="text" inputmode="decimal" id="freq-rate-${freqEscaparHtml(t.id)}" value="${valor.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}" class="w-28 px-2.5 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs dark:text-white text-right">
+                            <button type="button" onclick="salvarValorHoraColaborador('${freqEscaparHtml(t.id)}')" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-bold">
+                                Salvar
+                            </button>
+                        </div>
+                    </div>`;
+            }).join('');
+        }
+
+        async function salvarValorHoraColaborador(professorId) {
+            const input = document.getElementById(`freq-rate-${professorId}`);
+            const valorHora = freqParseMoeda(input ? input.value : 0);
+            const professor = teachers.find(t => t.id === professorId);
+            if (!professor) return alert('Colaborador não encontrado.');
+            if (valorHora <= 0) return alert('Informe um valor da hora maior que zero.');
+
+            try {
+                await db.collection('teacherPaymentRates').doc(professorId).set({
+                    professorId,
+                    professorNome: professor.fullname || 'Colaborador',
+                    valorHora,
+                    atualizadoEm: new Date().toISOString()
+                }, { merge: true });
+
+                alert(`Valor da hora de ${professor.fullname || 'colaborador'} salvo: ${freqFormatarMoeda(valorHora)}.`);
+            } catch (e) {
+                console.error(e);
+                alert('Erro ao salvar o valor da hora: ' + e.message);
+            }
+        }
+
+        function freqRegistrosFiltrados() {
+            const mes = freqObterMesSelecionado();
+            const professorId = document.getElementById('freq-colab-professor')?.value || '';
+
+            return teacherManualLogs
+                .filter(r => !mes || String(r.data || '').startsWith(mes))
+                .filter(r => !professorId || r.professorId === professorId)
+                .sort((a, b) => String(b.data || '').localeCompare(String(a.data || '')));
+        }
+
+        function freqMontarCalculos(registros) {
+            return registros.map(r => {
+                const horas = freqHoras(r.entrada, r.saida);
+                const valorHora = freqValorHoraProfessor(r.professorId);
+                const total = horas * valorHora;
+                return { ...r, horas, valorHora, total };
+            });
+        }
+
+        function renderizarFrequenciaColaboradores() {
+            const tbody = document.getElementById('freq-colab-tbody');
+            if (!tbody) return;
+
+            freqObterMesSelecionado();
+            const registros = freqMontarCalculos(freqRegistrosFiltrados());
+
+            const qtd = document.getElementById('freq-colab-qtd');
+            const dias = document.getElementById('freq-resumo-dias');
+            const horas = document.getElementById('freq-resumo-horas');
+            const valorHora = document.getElementById('freq-resumo-valor-hora');
+            const total = document.getElementById('freq-resumo-total');
+
+            const diasUnicos = new Set(registros.map(r => `${r.professorId || r.professorNome}|${r.data}`)).size;
+            const totalHoras = registros.reduce((s, r) => s + r.horas, 0);
+            const totalGeral = registros.reduce((s, r) => s + r.total, 0);
+            const taxas = [...new Set(registros.map(r => r.valorHora).filter(v => v > 0))];
+
+            if (qtd) qtd.textContent = registros.length;
+            if (dias) dias.textContent = diasUnicos;
+            if (horas) horas.textContent = freqFormatarHoras(totalHoras);
+            if (valorHora) valorHora.textContent = taxas.length === 1 ? freqFormatarMoeda(taxas[0]) : (taxas.length > 1 ? 'Vários' : 'R$ 0,00');
+            if (total) total.textContent = freqFormatarMoeda(totalGeral);
+
+            if (!registros.length) {
+                tbody.innerHTML = `<tr><td colspan="8" class="p-5 text-center text-slate-400">Nenhum registro de ponto encontrado para a competência/filtro selecionado.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = registros.map(r => `
+                <tr class="border-b border-slate-100 dark:border-slate-800">
+                    <td class="p-2 font-semibold">${freqEscaparHtml(r.data ? r.data.split('-').reverse().join('/') : '---')}</td>
+                    <td class="p-2">
+                        <strong class="text-slate-900 dark:text-white">${freqEscaparHtml(r.professorNome || '---')}</strong>
+                        <span class="block text-[8px] text-slate-400">${freqEscaparHtml(r.cargo || 'Professor')}</span>
+                    </td>
+                    <td class="p-2"><span class="px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 font-bold">${freqEscaparHtml(r.turno || '---')}</span></td>
+                    <td class="p-2 font-mono">${freqEscaparHtml(r.entrada || '---')}</td>
+                    <td class="p-2 font-mono">${freqEscaparHtml(r.saida || '---')}</td>
+                    <td class="p-2 font-semibold">${freqFormatarHoras(r.horas)}</td>
+                    <td class="p-2">${freqFormatarMoeda(r.valorHora)}</td>
+                    <td class="p-2 text-right font-bold text-emerald-600 dark:text-emerald-400">${freqFormatarMoeda(r.total)}</td>
+                </tr>
+            `).join('');
+
+            const status = document.getElementById('freq-colab-status');
+            if (status) {
+                status.textContent = 'Sincronização ativa';
+                status.className = "text-[9px] font-bold px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300";
+            }
+        }
+
+        function gerarRelatorioFrequenciaColaboradores() {
+            const mes = freqObterMesSelecionado();
+            const registros = freqMontarCalculos(freqRegistrosFiltrados());
+            const professorId = document.getElementById('freq-colab-professor')?.value || '';
+            const professorSelecionado = teachers.find(t => t.id === professorId);
+
+            const grupos = {};
+            registros.forEach(r => {
+                const id = r.professorId || r.professorNome || 'sem-id';
+                if (!grupos[id]) grupos[id] = { professor: teachers.find(t => t.id === id) || {}, registros: [] };
+                grupos[id].registros.push(r);
+            });
+
+            const nomeMes = mes ? new Date(`${mes}-01T12:00:00`).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }) : 'Todos os períodos';
+
+            let blocos = Object.values(grupos).map(g => {
+                const p = g.professor || {};
+                const nome = g.registros[0]?.professorNome || p.fullname || 'Colaborador';
+                const horas = g.registros.reduce((s, r) => s + r.horas, 0);
+                const total = g.registros.reduce((s, r) => s + r.total, 0);
+                const rates = [...new Set(g.registros.map(r => r.valorHora).filter(v => v > 0))];
+                const taxaTexto = rates.length === 1 ? freqFormatarMoeda(rates[0]) : (rates.length ? 'Valores variados' : 'Não configurado');
+
+                const linhas = g.registros.map(r => `
+                    <tr>
+                        <td>${freqEscaparHtml(r.data ? r.data.split('-').reverse().join('/') : '---')}</td>
+                        <td>${freqEscaparHtml(r.turno || '---')}</td>
+                        <td>${freqEscaparHtml(r.entrada || '---')}</td>
+                        <td>${freqEscaparHtml(r.saida || '---')}</td>
+                        <td>${freqFormatarHoras(r.horas)}</td>
+                        <td>${freqFormatarMoeda(r.valorHora)}</td>
+                        <td>${freqFormatarMoeda(r.total)}</td>
+                    </tr>`).join('');
+
+                return `
+                    <section class="professor">
+                        <h2>${freqEscaparHtml(nome)}</h2>
+                        <div class="dados">
+                            <div><b>Cargo:</b> ${freqEscaparHtml(p.cargo || g.registros[0]?.cargo || 'Professor')}</div>
+                            <div><b>Formação:</b> ${freqEscaparHtml(p.formation || 'Não informado')}</div>
+                            <div><b>Conselho:</b> ${freqEscaparHtml(p.council || 'Não informado')}</div>
+                            <div><b>Valor da hora:</b> ${taxaTexto}</div>
+                            <div><b>Lançamentos:</b> ${g.registros.length}</div>
+                            <div><b>Carga horária total:</b> ${freqFormatarHoras(horas)}</div>
+                            <div><b>Total a receber:</b> ${freqFormatarMoeda(total)}</div>
+                        </div>
+                        <table>
+                            <thead><tr><th>Data</th><th>Turno</th><th>Entrada</th><th>Saída</th><th>Carga</th><th>Valor/h</th><th>Total</th></tr></thead>
+                            <tbody>${linhas}</tbody>
+                        </table>
+                    </section>`;
+            }).join('');
+
+            if (!blocos) {
+                blocos = `<div class="empty">Nenhum registro encontrado para gerar o relatório.</div>`;
+            }
+
+            const instituicao = institutionData || {};
+            const htmlRelatorio = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Relatório de Frequência de Colaboradores</title>
+<style>
+    @page { size: A4; margin: 14mm; }
+    * { box-sizing: border-box; }
+    body { font-family: Arial, Helvetica, sans-serif; color: #172033; margin: 0; font-size: 10px; }
+    header { border-bottom: 2px solid #1d4ed8; padding-bottom: 10px; margin-bottom: 14px; }
+    h1 { font-size: 18px; margin: 0 0 4px; color: #1e3a8a; }
+    h2 { font-size: 13px; margin: 0 0 8px; color: #1e3a8a; }
+    p { margin: 3px 0; color: #64748b; }
+    .meta { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 14px; margin-top: 8px; }
+    .dados { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; background: #f8fafc; padding: 8px; border: 1px solid #e2e8f0; margin-bottom: 8px; }
+    .professor { page-break-inside: avoid; margin-bottom: 18px; }
+    table { width: 100%; border-collapse: collapse; }
+    th { background: #1e40af; color: white; text-align: left; padding: 6px; font-size: 8px; }
+    td { border-bottom: 1px solid #e2e8f0; padding: 5px; font-size: 8px; }
+    .empty { padding: 30px; text-align: center; color: #64748b; border: 1px dashed #cbd5e1; }
+    .rodape { margin-top: 20px; padding-top: 8px; border-top: 1px solid #cbd5e1; font-size: 8px; color: #64748b; }
+    @media print { button { display: none; } }
+</style>
+</head>
+<body>
+<header>
+    <h1>${freqEscaparHtml(instituicao.name || 'SE7 Gestão Educacional')}</h1>
+    <p>${freqEscaparHtml(instituicao.razaoSocial || '')} ${instituicao.cnpj ? '• CNPJ: ' + freqEscaparHtml(instituicao.cnpj) : ''}</p>
+    <div class="meta">
+        <div><b>Relatório:</b> Registro de Frequência de Colaboradores</div>
+        <div><b>Competência:</b> ${freqEscaparHtml(nomeMes)}</div>
+        <div><b>Colaborador:</b> ${freqEscaparHtml(professorSelecionado?.fullname || 'Todos')}</div>
+        <div><b>Emissão:</b> ${new Date().toLocaleString('pt-BR')}</div>
+    </div>
+</header>
+${blocos}
+<div class="rodape">Relatório gerado pelo SE7 Financeiro a partir dos registros sincronizados do Ponto Manual da Matriz.</div>
+<script>window.onload = function(){ setTimeout(function(){ window.print(); }, 300); }<\/script>
+</body>
+</html>`;
+
+            const janela = window.open('', '_blank');
+            if (!janela) return alert('O navegador bloqueou a janela do relatório. Permita pop-ups para este sistema.');
+            janela.document.open();
+            janela.document.write(htmlRelatorio);
+            janela.document.close();
+        }
+
     </script>
 </body>
 </html>
