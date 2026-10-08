@@ -1117,11 +1117,18 @@
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-            <label class="block text-xs font-semibold mb-1">Formação / Especialidade</label>
-            <input type="text" id="input-teacher-formation" placeholder="Ex: Licenciatura em Letras / Pós" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 dark:text-white">
-        </div>
-        <div>
+    <div>
+        <label class="block text-xs font-semibold mb-1">Formação / Especialidade</label>
+        <input type="text" id="input-teacher-formation" placeholder="Ex: Licenciatura em Letras / Pós" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 dark:text-white">
+    </div>
+    <div>
+        <label class="block text-xs font-semibold mb-1 text-emerald-700 dark:text-emerald-400 font-bold">Valor da Hora-Aula (R$)</label>
+        <input type="number" id="input-teacher-horaaula" step="0.01" placeholder="Ex: 45.00" class="w-full px-3 py-2 rounded-lg border border-emerald-300 dark:border-slate-600 text-sm dark:bg-slate-900 dark:text-white font-bold">
+    </div>
+    <div>
+        <!-- Terceira coluna livre/espaço para manter o alinhamento da grade -->
+    </div>
+</div>
             <label class="block text-xs font-semibold mb-1">Conselho de Classe / Registro</label>
             <input type="text" id="input-teacher-council" placeholder="Ex: OAB/PA 00.000 ou RG" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 dark:text-white">
         </div>
@@ -2773,8 +2780,10 @@ async function removerUsuarioSistemaFirebase(id) {
     const formation = document.getElementById('input-teacher-formation').value.trim();
     const council = document.getElementById('input-teacher-council').value.trim();
     const pinInput = document.getElementById('input-teacher-pin');
+    
+    // Captura o valor da hora-aula digitado
+    const valorHoraAula = parseFloat(document.getElementById('input-teacher-horaaula').value) || 0;
 
-    // Captura os horários da jornada de trabalho
     const entrada1 = document.getElementById('input-teacher-entrada-1').value || "08:00";
     const saida1 = document.getElementById('input-teacher-saida-1').value || "12:00";
     const entrada2 = document.getElementById('input-teacher-entrada-2').value || "14:00";
@@ -2783,7 +2792,6 @@ async function removerUsuarioSistemaFirebase(id) {
     if (!fullname) return alert("Preencha o nome completo do colaborador!");
 
     let pinFinal = pinInput ? pinInput.value.trim() : '';
-
     if (!pinFinal) {
         const proximoNumero = teachers.length + 1;
         pinFinal = `COLAB-${String(proximoNumero).padStart(3, '0')}`;
@@ -2795,21 +2803,23 @@ async function removerUsuarioSistemaFirebase(id) {
         formation, 
         council, 
         pin: pinFinal,
+        valorHoraAula: valorHoraAula, // Salva o valor da hora-aula na nuvem
         horarios: { entrada1, saida1, entrada2, saida2 } 
     };
 
     try {
         if (editId) {
             await db.collection("teachers").doc(editId).update(teacherData);
-            alert("Colaborador e horários atualizados com sucesso!");
+            alert("Colaborador e valor da hora-aula atualizados com sucesso!");
             cancelarEdicaoColaborador();
         } else {
             await db.collection("teachers").add(teacherData);
-            alert(`Colaborador cadastrado com sucesso!\nID Totem: ${pinFinal}\nHorários configurados.`);
+            alert(`Colaborador cadastrado com sucesso!\nID Totem: ${pinFinal}\nHora-aula: R$ ${valorHoraAula.toFixed(2)}`);
             
             document.getElementById('input-teacher-name').value = '';
             document.getElementById('input-teacher-formation').value = '';
             document.getElementById('input-teacher-council').value = '';
+            document.getElementById('input-teacher-horaaula').value = '';
             atualizarPinAutomaticoColaborador();
         }
     } catch (e) {
@@ -2831,13 +2841,19 @@ function renderTeachers() {
             if (t.cargo === 'Limpeza') corBadge = 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300';
             if (t.cargo === 'Coordenação') corBadge = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300';
 
+            // Formata o valor para aparecer em Reais
+            const valorFormatado = t.valorHoraAula ? `R$ ${parseFloat(t.valorHoraAula).toFixed(2)}` : 'Não definida';
+
             list.innerHTML += `
                 <tr class="border-b border-gray-100 dark:border-slate-700">
                     <td class="p-2.5">
                         <strong class="text-gray-900 dark:text-white">${t.fullname}</strong><br>
                         <span class="text-[10px] text-gray-400 font-mono">ID Totem: ${t.pin || '---'}</span>
                     </td>
-                    <td class="p-2.5"><span class="px-2 py-0.5 ${corBadge} rounded text-[10px] font-bold">${t.cargo || 'Professor'}</span></td>
+                    <td class="p-2.5">
+                        <span class="px-2 py-0.5 ${corBadge} rounded text-[10px] font-bold">${t.cargo || 'Professor'}</span><br>
+                        <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">Hora-aula: ${valorFormatado}</span>
+                    </td>
                     <td class="p-2.5">${t.formation || '---'} <br><span class="text-[10px] text-gray-400">${t.council || ''}</span></td>
                     <td class="p-2.5 text-right space-x-1">
                         <button onclick="editarColaborador('${t.id}')" class="px-2 py-1 bg-blue-600 text-white rounded text-[11px] font-semibold"><i class="fa-solid fa-pen"></i></button>
@@ -2846,7 +2862,6 @@ function renderTeachers() {
                 </tr>
             `;
         });
-    }
 
     // Mantém os selects de professores atualizados onde forem necessários (ex: Frequência/Notas)
     ['attendance-teacher-select', 'grade-teacher-select'].forEach(id => {
@@ -2869,8 +2884,10 @@ function editarColaborador(id) {
     document.getElementById('input-teacher-formation').value = t.formation || '';
     document.getElementById('input-teacher-council').value = t.council || '';
     document.getElementById('input-teacher-pin').value = t.pin || '';
+    
+    // Preenche o campo de hora-aula ao clicar em editar
+    document.getElementById('input-teacher-horaaula').value = t.valorHoraAula || '';
 
-    // Restaura os horários salvos
     if (t.horarios) {
         document.getElementById('input-teacher-entrada-1').value = t.horarios.entrada1 || '08:00';
         document.getElementById('input-teacher-saida-1').value = t.horarios.saida1 || '12:00';
