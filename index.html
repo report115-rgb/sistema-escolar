@@ -3479,30 +3479,56 @@ async function excluirColaborador(id) {
         }
 
         async function salvarEdicaoCalendario() {
-            const id = document.getElementById('edit-cal-id').value;
-            const subject = document.getElementById('edit-cal-subject').value.trim();
-            const description = document.getElementById('edit-cal-desc').value.trim();
-            const qtd = parseInt(document.getElementById('edit-cal-qtd').value) || 2;
+    const id = document.getElementById('edit-cal-id').value;
+    const subject = document.getElementById('edit-cal-subject').value.trim();
+    const description = document.getElementById('edit-cal-desc').value.trim();
+    const qtd = parseInt(document.getElementById('edit-cal-qtd').value) || 2;
 
-            if (!subject) return alert("Informe a disciplina.");
+    if (!id) {
+        alert("Erro: ID do evento não encontrado para edição.");
+        return;
+    }
 
-            let novasDatas = [];
-            for (let i = 1; i <= qtd; i++) {
-                const val = document.getElementById(`edit-cal-date-${i}`).value;
-                if (!val) return alert(`Preencha a Data ${i}.`);
-                novasDatas.push(val);
-            }
+    if (!subject) {
+        alert("Por favor, informe a disciplina.");
+        return;
+    }
 
-            await db.collection("academicCalendars").doc(id).update({
-                subject,
-                description,
-                dates: novasDatas
-            });
-
-            registrarLogAuditoria(`Atualizou o calendário acadêmico da disciplina ${subject}`, "Calendário Acadêmico");
-            alert("Calendário atualizado com sucesso!");
-            fecharModalEditarCalendario();
+    let novasDatas = [];
+    for (let i = 1; i <= qtd; i++) {
+        const inputData = document.getElementById(`edit-cal-date-${i}`);
+        if (!inputData || !inputData.value) {
+            alert(`Por favor, preencha a Data ${i}.`);
+            return;
         }
+        novasDatas.push(inputData.value);
+    }
+
+    try {
+        // Salva as alterações diretamente na nuvem (Firestore)
+        await db.collection("academicCalendars").doc(id).update({
+            subject: subject,
+            description: description,
+            dates: novasDatas
+        });
+
+        // Registra a ação na auditoria
+        if (typeof registrarLogAuditoria === 'function') {
+            registrarLogAuditoria(`Atualizou o calendário acadêmico da disciplina ${subject}`, "Calendário Acadêmico");
+        }
+
+        alert("Alterações salvas com sucesso!");
+        fecharModalEditarCalendario();
+        
+        // Atualiza a visualização se necessário
+        if (typeof renderizarTabelaGerenciarCalendarios === 'function') {
+            renderizarTabelaGerenciarCalendarios();
+        }
+    } catch (error) {
+        console.error("Erro ao salvar edição do calendário:", error);
+        alert("Erro ao salvar na nuvem: " + error.message);
+    }
+}
 
         async function excluirCalendario(id) {
             if (!confirm("Tem certeza que deseja excluir este calendário acadêmico e suas datas agendadas?")) return;
