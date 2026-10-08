@@ -2,7 +2,7 @@
 <html lang="pt-BR" class="light">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>SE7 - Portal do Aluno</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -50,6 +50,63 @@
             100% { background-color: #ef4444; opacity: 1; transform: scale(1); }
         }
         .animacao-piscar-alerta { animation: piscarAlerta 1.2s infinite ease-in-out; }
+/* Acesso institucional compacto para WebView. */
+.student-login.student-login {
+ position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;overflow-x:hidden;overflow-y:auto;
+ -webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;isolation:isolate;
+ box-sizing:border-box;padding:16px 20px;color:#f5f8ff;font-family:Arial,Helvetica,sans-serif;
+ background:radial-gradient(ellipse at 0% 28%,#09285c 0%,#041731 45%,#020d20 100%);
+ padding-top:max(16px,env(safe-area-inset-top));padding-bottom:max(16px,env(safe-area-inset-bottom));
+ padding-left:max(20px,env(safe-area-inset-left));padding-right:max(20px,env(safe-area-inset-right));
+}
+.student-login .student-login-art {position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:-1;}
+.student-login .student-login-wire {fill:none;stroke:#277dff;stroke-width:1;}
+.student-login .student-login-glow {fill:none;stroke:#60baff;stroke-width:1.3;filter:drop-shadow(0 0 6px #007eff) drop-shadow(0 0 12px #007eff);animation:student-login-pulse 6s ease-in-out infinite;}
+@keyframes student-login-pulse {0%,100%{opacity:.12}45%,55%{opacity:.85}}
+.student-login .student-login-shell {position:relative;width:100%;max-width:330px;margin:auto;flex-shrink:0;}
+.student-login .student-login-brand {text-align:center;padding:0 0 18px;}
+.student-login .student-login-logo-box {display:flex;align-items:center;justify-content:center;height:66px;margin-bottom:12px;}
+.student-login #student-login-logo {width:145px;max-width:70%;max-height:66px;object-fit:contain;border:0;background:transparent;filter:none;box-shadow:none;}
+.student-login #student-login-logo-fallback {font-size:20px;color:#b4c9e6;letter-spacing:.04em;}
+.student-login .student-login-headline {font-size:24px;line-height:1.2;font-weight:700;letter-spacing:-.7px;margin:0;}
+.student-login .student-login-headline span {color:#329fff;}
+.student-login .student-login-sector {font-size:11px;color:#b4c9e6;letter-spacing:2px;margin:7px 0 0;text-transform:uppercase;}
+.student-login .student-login-card {padding:21px 20px;border:1px solid #315b91;border-radius:16px;background:linear-gradient(135deg,#132840ed,#081525f5);box-shadow:0 18px 45px #00000020;}
+.student-login #student-login-title {font-size:20px;line-height:1.2;color:#f6f8ff;font-weight:700;letter-spacing:-.4px;margin:0;}
+.student-login .student-login-description {font-size:12px;color:#a9bbd7;line-height:1.45;margin:8px 0 18px;}
+.student-login .student-login-field {margin-bottom:15px;}
+.student-login .student-login-field label {display:block;color:#f2f6ff;font-size:13px;font-weight:600;margin-bottom:7px;}
+.student-login .student-login-input-box {position:relative;}
+.student-login .student-login-icon {position:absolute;left:14px;top:50%;transform:translateY(-50%);height:20px;width:20px;color:#91a8cb;pointer-events:none;}
+.student-login .student-login-input {box-sizing:border-box;width:100%;min-width:0;height:46px;padding:12px 48px 12px 45px;background:#07152590;border:1px solid #506a8e;border-radius:10px;color:#f8faff;font:inherit;font-size:16px;outline:0;transition:border-color .2s,box-shadow .2s;}
+.student-login .student-login-input::placeholder {color:#9cafcd;opacity:1;}
+.student-login .student-login-input:focus {border-color:#42a3ff;box-shadow:0 0 0 3px #168bff20;}
+.student-login .student-login-eye {position:absolute;right:6px;top:1px;width:44px;height:44px;display:flex;align-items:center;justify-content:center;color:#98b2d5;background:transparent;border:0;border-radius:8px;}
+.student-login .student-login-eye svg {width:22px;height:22px;}
+.student-login #btn-login-aluno {width:100%;min-height:46px;display:flex;align-items:center;justify-content:center;border:1px solid #2588ff;border-radius:10px;background:linear-gradient(100deg,#0875ff,#0560f8);color:#fff;font-size:15px;font-weight:700;margin-top:18px;cursor:pointer;}
+.student-login #btn-login-aluno:disabled {opacity:.65;}
+.student-login #btn-login-aluno:active {background:#0056d5;}
+.student-login button:focus-visible {outline:2px solid #9ed9ff;outline-offset:3px;}
+.student-login .student-login-footer {text-align:center;color:#829dbf;font-size:10px;line-height:1.5;margin:0;flex-shrink:0;padding-top:20px;}
+@media (max-height:540px) {
+ .student-login .student-login-logo-box {height:48px;margin-bottom:8px;}
+ .student-login #student-login-logo {max-height:48px;width:115px;}
+ .student-login .student-login-brand {padding-bottom:12px;}
+ .student-login .student-login-headline {font-size:21px;}
+ .student-login .student-login-card {padding:18px 20px;}
+ .student-login .student-login-description {margin-bottom:14px;}
+}
+@media (prefers-reduced-motion:reduce) {.student-login .student-login-glow {animation:none;opacity:.5;}}
+
+
+.student-login .student-login-back {width:44px;height:44px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border:1px solid #315b91;border-radius:10px;background:#142b43;color:#a9d5ff;margin-bottom:4px;}
+.student-login .student-login-forgot {display:block;min-height:44px;margin:7px auto -7px;padding:10px 0;background:transparent;color:#40a6ff;font-size:12px;}
+.student-login .student-login-choice {min-height:48px;width:100%;border:1px solid #2588ff;border-radius:10px;background:#0875ff;color:white;font-size:14px;font-weight:600;margin-top:12px;}
+.student-login .student-login-choice-secondary {background:#102b42;border-color:#4c729e;}
+.student-login .student-login-welcome-description {color:#a9bbd7;font-size:13px;line-height:1.5;margin:12px 0 18px;}
+.student-login #welcome-logo-img {width:145px;max-width:70%;max-height:66px;object-fit:contain;}
+.student-login #welcome-icon-box {color:#b4c9e6;font-size:20px;}
+
     </style>
 </head>
 <body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans antialiased h-screen overflow-hidden flex flex-col transition-colors duration-200">
@@ -60,71 +117,83 @@
     </div>
 
     <!-- TELA INICIAL DE ESCOLHA (BOAS-VINDAS) -->
-    <div id="welcome-screen" class="app-screen fixed inset-0 z-50 bg-gradient-to-br from-blue-900 via-indigo-900 to-slate-900 flex flex-col justify-between p-6 text-white screen-transition overflow-y-auto">
-        <div class="my-auto text-center flex flex-col items-center pt-4">
-            <div id="welcome-icon-box" class="inline-flex items-center justify-center w-20 h-20 bg-blue-600 text-white rounded-3xl text-4xl font-bold mb-4 shadow-xl shadow-blue-500/30" style="display: none;">
-                <i class="fa-solid fa-graduation-cap"></i>
+    <div id="welcome-screen" class="app-screen student-login screen-transition">
+        <svg class="student-login-art" viewBox="0 0 420 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+            <g class="student-login-wire">
+                <line x1="300" y1="0" x2="0" y2="310"/><line x1="0" y1="300" x2="420" y2="760"/>
+                <circle cx="-115" cy="190" r="245"/><circle cx="350" cy="940" r="245"/>
+            </g>
+            <circle class="student-login-glow" cx="-115" cy="190" r="245"/>
+            <circle class="student-login-glow" style="animation-delay:-3s" cx="350" cy="940" r="245"/>
+            <line class="student-login-glow" style="animation-delay:-1.5s" x1="300" y1="0" x2="0" y2="310"/>
+            <line class="student-login-glow" style="animation-delay:-4.5s" x1="0" y1="300" x2="420" y2="760"/>
+        </svg>
+        <div class="student-login-shell">
+            <div class="student-login-brand">
+                <div class="student-login-logo-box">
+                    <img id="welcome-logo-img" alt="Logomarca da instituição" style="display:none;" onerror="this.style.display='none';document.getElementById('welcome-icon-box').style.display='block'">
+                    <span id="welcome-icon-box">Portal do Aluno</span>
+                </div>
+                <h1 class="student-login-headline">Tudo <span>conectado.</span></h1>
+                <p class="student-login-sector">Portal do Aluno</p>
             </div>
-            <img id="welcome-logo-img" class="max-h-20 max-w-[220px] object-contain mb-2" alt="Logo da Instituição" src="" style="display: none;">
-        </div>
-
-        <div class="bg-white/15 backdrop-blur-md border border-white/20 text-white p-6 rounded-3xl shadow-2xl space-y-4 my-auto">
-            <div class="text-center mb-2">
-                <h3 class="font-bold text-base">Seja bem-vindo(a)!</h3>
-                <p class="text-xs text-blue-200">Escolha uma das opções abaixo para continuar:</p>
+            <div class="student-login-card">
+                <h2 style="font-size:20px;font-weight:700;">Seja bem-vindo(a)!</h2>
+                <p class="student-login-welcome-description">Escolha uma das opções abaixo para continuar:</p>
+                <button type="button" class="student-login-choice" onclick="mudarTelaComTransicao('welcome-screen','login-screen')">Já sou aluno (Fazer Login)</button>
+                <button type="button" class="student-login-choice student-login-choice-secondary" onclick="irParaTelaMatriculaSuave()">Quero me matricular</button>
             </div>
-            <button onclick="mudarTelaComTransicao('welcome-screen', 'login-screen')" class="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-2xl shadow-lg shadow-blue-600/40 transition active:scale-95 flex items-center justify-center space-x-2 text-sm">
-                <i class="fa-solid fa-right-to-bracket"></i>
-                <span>Já sou aluno (Fazer Login)</span>
-            </button>
-            <button onclick="irParaTelaMatriculaSuave()" class="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-2xl shadow-lg shadow-emerald-600/40 transition active:scale-95 flex items-center justify-center space-x-2 text-sm">
-                <i class="fa-solid fa-user-plus"></i>
-                <span>Quero me matricular</span>
-            </button>
         </div>
-
-        <div class="text-center text-[10px] text-blue-300 pb-2 space-y-0.5">
-            <div class="font-semibold text-blue-200">Sistema SE7 de Gestão Acadêmica</div>
-            <div>v1.2.5 &bull; Central de Atendimento ao Aluno (Otimizado)</div>
-        </div>
+        <div id="student-welcome-developer-footer" class="student-login-footer">Sistema SE7 de Gestão Acadêmica<br>v1.2.5 • Portal do Aluno</div>
     </div>
 
     <!-- TELA DE LOGIN DO ALUNO -->
-    <div id="login-screen" class="app-screen fixed inset-0 z-50 bg-gradient-to-br from-blue-900 via-indigo-900 to-slate-900 flex flex-col justify-between p-6 text-white overflow-y-auto" style="display: none;">
-        <div class="mt-8 flex items-center justify-between">
-            <button onclick="mudarTelaComTransicao('login-screen', 'welcome-screen')" class="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center text-sm transition text-white active:scale-95">
-                <i class="fa-solid fa-arrow-left"></i>
-            </button>
-            <span class="text-xs font-semibold text-blue-200">Acesso ao Portal</span>
-            <div class="w-10"></div>
-        </div>
-
-        <div class="text-center flex flex-col items-center my-auto">
-            <h1 class="text-2xl font-bold">Entrar na Conta</h1>
-            <p class="text-xs text-blue-200 mt-1 mb-4">Informe seus dados para acessar o painel</p>
-
-            <div class="bg-white text-slate-800 p-6 rounded-3xl shadow-2xl space-y-4 w-full max-w-sm text-left">
-                <div>
-                    <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">CPF do Aluno</label>
-                    <input type="text" id="login-cpf" placeholder="000.000.000-00" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-600 focus:outline-none">
+    <div id="login-screen" class="app-screen student-login" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="student-login-title">
+        <svg class="student-login-art" viewBox="0 0 420 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+            <g class="student-login-wire">
+                <line x1="300" y1="0" x2="0" y2="310"/><line x1="0" y1="300" x2="420" y2="760"/>
+                <circle cx="-115" cy="190" r="245"/><circle cx="350" cy="940" r="245"/>
+            </g>
+            <circle class="student-login-glow" cx="-115" cy="190" r="245"/>
+            <circle class="student-login-glow" style="animation-delay:-3s" cx="350" cy="940" r="245"/>
+            <line class="student-login-glow" style="animation-delay:-1.5s" x1="300" y1="0" x2="0" y2="310"/>
+            <line class="student-login-glow" style="animation-delay:-4.5s" x1="0" y1="300" x2="420" y2="760"/>
+        </svg>
+        <div class="student-login-shell">
+            <button type="button" class="student-login-back" aria-label="Voltar às opções iniciais" onclick="mudarTelaComTransicao('login-screen','welcome-screen')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 12H4m7-7-7 7 7 7"/></svg></button>
+            <div class="student-login-brand">
+                <div class="student-login-logo-box">
+                    <img id="student-login-logo" alt="Logomarca da instituição" style="display:none;" onload="document.getElementById('student-login-logo-fallback').style.display='none'" onerror="this.style.display='none';document.getElementById('student-login-logo-fallback').style.display='block'">
+                    <span id="student-login-logo-fallback">Portal do Aluno</span>
                 </div>
-                <div>
-                    <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Matrícula ou Senha</label>
-                    <input type="password" id="login-pass" placeholder="MAT-2026-XXXXX" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-600 focus:outline-none">
-                </div>
-                <button onclick="fazerLoginAluno()" class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 transition active:scale-95">
-                    Entrar no Aplicativo
-                </button>
-                <div class="text-center pt-1">
-                    <button onclick="abrirModalEsqueciSenha()" class="text-xs text-blue-600 hover:underline font-semibold">Esqueci minha senha</button>
-                </div>
+                <h1 class="student-login-headline">Tudo <span>conectado.</span></h1>
+                <p class="student-login-sector">Portal do Aluno</p>
+            </div>
+            <div class="student-login-card">
+                <h2 id="student-login-title">Acesso Institucional</h2>
+                <p class="student-login-description">Entre com suas credenciais para continuar</p>
+                <form id="student-login-form" onsubmit="event.preventDefault();fazerLoginAluno();">
+                    <div class="student-login-field">
+                        <label for="login-cpf">CPF do Aluno</label>
+                        <div class="student-login-input-box">
+                            <svg class="student-login-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="7" r="4"/><path d="M3 21v-3a9 9 0 0 1 18 0v3z"/></svg>
+                            <input id="login-cpf" type="text" autocomplete="username" inputmode="numeric" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="next" placeholder="000.000.000-00" class="student-login-input">
+                        </div>
+                    </div>
+                    <div class="student-login-field">
+                        <label for="login-pass">Matrícula ou Senha</label>
+                        <div class="student-login-input-box">
+                            <svg class="student-login-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="10" width="16" height="12" rx="2" fill="currentColor"/><path d="M7 10V7a5 5 0 0 1 10 0v3"/><path d="M12 14v4" stroke="#0b1b31"/></svg>
+                            <input id="login-pass" type="password" autocomplete="current-password" enterkeyhint="go" placeholder="Sua matrícula ou senha" class="student-login-input">
+                            <button type="button" class="student-login-eye" aria-label="Mostrar senha" aria-pressed="false" onclick="alternarSenhaAluno(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                        </div>
+                    </div>
+                    <button id="btn-login-aluno" type="submit">Entrar no Aplicativo</button>
+                    <button type="button" onclick="abrirModalEsqueciSenha()" class="student-login-forgot">Esqueci minha senha</button>
+                </form>
             </div>
         </div>
-
-        <div class="text-center text-[10px] text-blue-300 pb-2">
-            <div>Sistema SE7 de Gestão Acadêmica</div>
-            <div>v1.2.5 &bull; Central de Atendimento ao Aluno</div>
-        </div>
+        <div id="student-login-developer-footer" class="student-login-footer">Sistema SE7 de Gestão Acadêmica<br>v1.2.5 • Portal do Aluno</div>
     </div>
 
     <!-- TELA DE AUTO-MATRÍCULA -->
@@ -643,6 +712,15 @@
         let eventosCalendarioCache = [];
 
         window.addEventListener('DOMContentLoaded', async () => {
+            ajustarAlturaAcessoAluno();
+            window.addEventListener('resize',ajustarAlturaAcessoAluno);
+            if (window.visualViewport) {
+                window.visualViewport.addEventListener('resize',ajustarAlturaAcessoAluno);
+                window.visualViewport.addEventListener('scroll',ajustarAlturaAcessoAluno);
+            }
+            document.getElementById('login-screen').addEventListener('focusin', event => {
+                if (event.target.tagName === 'INPUT') setTimeout(() => event.target.scrollIntoView({block:'nearest',behavior:'auto'}),250);
+            });
             window.addEventListener('online', atualizarStatusConexao);
             window.addEventListener('offline', atualizarStatusConexao);
             atualizarStatusConexao();
@@ -748,32 +826,50 @@
             }
         }
 
-        async function carregarConfiguracaoInstituicao() {
-            try {
-                const instDoc = await db.collection("config").doc("institution").get();
-                const logoWelcome = document.getElementById('welcome-logo-img');
-                const iconWelcome = document.getElementById('welcome-icon-box');
-
-                if(instDoc.exists) {
-                    dadosInstituicaoGlobal = instDoc.data();
-                    if(dadosInstituicaoGlobal.gdriveUrl && dadosInstituicaoGlobal.gdriveUrl.startsWith("http")) {
-                        gdriveUrlGlobal = dadosInstituicaoGlobal.gdriveUrl.trim();
-                    }
-                    
-                    const logoUrl = dadosInstituicaoGlobal.logo || dadosInstituicaoGlobal.logomarca || dadosInstituicaoGlobal.urlLogo || dadosInstituicaoGlobal.logoUrl || dadosInstituicaoGlobal.image || dadosInstituicaoGlobal.fileUrl || '';
-
-                    if(logoUrl && logoUrl.trim() !== "") {
-                        logoWelcome.src = logoUrl.trim();
-                        logoWelcome.style.display = 'block'; 
-                        if(iconWelcome) iconWelcome.style.display = 'none'; 
-                        return;
-                    }
-                }
-                logoWelcome.style.display = 'none';
-                if(iconWelcome) iconWelcome.style.display = 'inline-flex'; 
-            } catch(e) {
-                console.error("Erro ao buscar logo:", e);
+        let cancelarIdentidadeAluno = null;
+        function aplicarIdentidadeAluno(dados) {
+            dadosInstituicaoGlobal = dados || {};
+            if (dadosInstituicaoGlobal.gdriveUrl && dadosInstituicaoGlobal.gdriveUrl.startsWith('http')) {
+                gdriveUrlGlobal = dadosInstituicaoGlobal.gdriveUrl.trim();
             }
+            const src = dadosInstituicaoGlobal.logo || dadosInstituicaoGlobal.logomarca || dadosInstituicaoGlobal.urlLogo || dadosInstituicaoGlobal.logoUrl || dadosInstituicaoGlobal.image || dadosInstituicaoGlobal.fileUrl || '';
+            ['welcome-logo-img','student-login-logo'].forEach(id => {
+                const imagem = document.getElementById(id);
+                if (!imagem) return;
+                if (src) { imagem.src = src; imagem.style.display = 'block'; }
+                else { imagem.removeAttribute('src'); imagem.style.display = 'none'; }
+            });
+            const fallback = document.getElementById('welcome-icon-box');
+            const loginFallback = document.getElementById('student-login-logo-fallback');
+            if (fallback) fallback.style.display = src ? 'none' : 'block';
+            if (loginFallback) loginFallback.style.display = src ? 'none' : 'block';
+        }
+        async function carregarConfiguracaoInstituicao() {
+            const ref = db.collection('config').doc('institution');
+            if (!cancelarIdentidadeAluno) {
+                cancelarIdentidadeAluno = ref.onSnapshot(doc => aplicarIdentidadeAluno(doc.exists ? doc.data() : {}),
+                    erro => console.error('Erro ao acompanhar identidade institucional:', erro));
+            }
+            try {
+                const doc = await ref.get();
+                aplicarIdentidadeAluno(doc.exists ? doc.data() : {});
+            } catch (erro) { console.error('Erro ao buscar logo:', erro); }
+        }
+        function alternarSenhaAluno(botao) {
+            const campo = document.getElementById('login-pass');
+            const mostrar = campo.type === 'password';
+            campo.type = mostrar ? 'text' : 'password';
+            botao.setAttribute('aria-pressed',String(mostrar));
+            botao.setAttribute('aria-label',mostrar ? 'Ocultar senha' : 'Mostrar senha');
+        }
+        function ajustarAlturaAcessoAluno() {
+            if (!window.visualViewport) return;
+            ['welcome-screen','login-screen'].forEach(id => {
+                const tela = document.getElementById(id);
+                tela.style.height = window.visualViewport.height + 'px';
+                tela.style.top = window.visualViewport.offsetTop + 'px';
+                tela.style.bottom = 'auto';
+            });
         }
 
         async function carregarCursosNoSelect() {
