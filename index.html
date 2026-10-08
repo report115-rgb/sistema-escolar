@@ -348,6 +348,8 @@
             <button class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-slate-600" onclick="openTab(event, 'tab-history')"><i class="fa-solid fa-file-pdf mr-1.5"></i> Emissão de Documentos</button>
             <button class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-slate-600" id="nav-btn-settings" onclick="openTab(event, 'tab-settings')"><i class="fa-solid fa-gear mr-1.5"></i> Sistema</button>
 	    <button class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-slate-600" onclick="openTab(event, 'tab-gestao-totem')"><i class="fa-solid fa-face-recognition mr-1.5"></i> Totem e Ponto</button>
+	   <button class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-slate-600" onclick="openTab(event, 'tab-ponto-professores')">
+    <i class="fa-solid fa-business-time mr-1.5"></i> Ponto de Professores</button>
            </nav>
     </div>
 
@@ -653,6 +655,79 @@
 <ul class="attendance-list divide-y divide-gray-200 dark:divide-slate-700 mb-4 space-y-2" id="student-grade-list"></ul>
             </div>
         </div>
+
+<!-- ABA DE CONTROLE DE PONTO (EXCLUSIVO PARA A SECRETARIA) -->
+<div id="tab-ponto-professores" class="tab-content space-y-4" style="display: none;">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-md p-6 border border-gray-200 dark:border-slate-700 space-y-4">
+        
+        <div class="border-b border-gray-100 dark:border-slate-700 pb-3 flex justify-between items-center">
+            <div>
+                <h2 class="text-xl font-bold text-gray-900 dark:text-white">Controle de Ponto e Carga Horária Docente</h2>
+                <p class="text-xs text-gray-500">Registro de entrada e saída de professores para integração com o financeiro.</p>
+            </div>
+            <span class="px-3 py-1 bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 rounded-full text-xs font-bold">Módulo Secretaria</span>
+        </div>
+
+        <!-- Formulário de Lançamento de Ponto -->
+        <div class="bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700 grid grid-cols-1 md:grid-cols-6 gap-3 items-end">
+            <div>
+                <label class="block text-xs font-semibold mb-1 text-gray-700 dark:text-gray-300">Data (Calendário)</label>
+                <input type="date" id="ponto-data" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-xs dark:bg-slate-800 dark:text-white">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold mb-1 text-gray-700 dark:text-gray-300">Professor(a)</label>
+                <select id="ponto-professor-select" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-xs dark:bg-slate-800 dark:text-white">
+                    <option value="">Selecione o professor...</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold mb-1 text-gray-700 dark:text-gray-300">Turno</label>
+                <select id="ponto-turno" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-xs dark:bg-slate-800 dark:text-white">
+                    <option value="Manhã">Manhã</option>
+                    <option value="Tarde">Tarde</option>
+                    <option value="Noite">Noite</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold mb-1 text-gray-700 dark:text-gray-300">Horário Entrada</label>
+                <input type="time" id="ponto-entrada" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-xs dark:bg-slate-800 dark:text-white">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold mb-1 text-gray-700 dark:text-gray-300">Horário Saída</label>
+                <input type="time" id="ponto-saida" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-xs dark:bg-slate-800 dark:text-white">
+            </div>
+            <div>
+                <button type="button" onclick="salvarPontoSecretaria()" class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-xs shadow transition">
+                    <i class="fa-solid fa-check mr-1"></i> Registrar Ponto
+                </button>
+            </div>
+        </div>
+
+        <!-- Tabela de Registros Realizados -->
+        <div class="mt-4">
+            <h4 class="font-bold text-sm text-gray-800 dark:text-white mb-2">Registros Efetuados e Integração Financeira</h4>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead>
+                        <tr class="border-b border-gray-200 dark:border-slate-700 text-gray-500">
+                            <th class="p-3">Data</th>
+                            <th class="p-3">Professor(a)</th>
+                            <th class="p-3">Turno</th>
+                            <th class="p-3">Entrada - Saída</th>
+                            <th class="p-3">Total Horas</th>
+                            <th class="p-3">Valor Calculado (R$)</th>
+                            <th class="p-3 text-right">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabela-ponto-secretaria" class="divide-y divide-gray-200 dark:divide-slate-700">
+                        <!-- Preenchido dinamicamente -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
 
         <!-- FINANCEIRO -->
         <div id="tab-student-finance" class="tab-content space-y-4" style="display: none;">
@@ -1124,6 +1199,21 @@
                 </thead>
                 <tbody id="teachers-list" class="divide-y divide-gray-200 dark:divide-slate-700"></tbody>
             </table>
+        </div>
+    </div>
+</div>
+
+<!-- Campos de Remuneração por Hora-Aula -->
+<div class="bg-emerald-50 dark:bg-slate-800/60 p-4 rounded-xl border border-emerald-200 dark:border-slate-700 space-y-3 mt-3">
+    <h4 class="font-bold text-xs text-emerald-700 dark:text-emerald-300 uppercase"><i class="fa-solid fa-file-invoice-dollar mr-1"></i> Configuração Financeira do Professor (Hora-Aula)</h4>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+        <div>
+            <label class="block font-semibold text-gray-700 dark:text-gray-300 mb-1">Carga Horária Semanal / Mensal</label>
+            <input type="text" id="input-teacher-workload" placeholder="Ex: 40h mensais" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 dark:bg-slate-900 dark:text-white">
+        </div>
+        <div>
+            <label class="block font-semibold text-gray-700 dark:text-gray-300 mb-1">Valor por Hora-Aula (R$)</label>
+            <input type="number" id="input-teacher-hourly-rate" step="0.01" placeholder="25.00 ou 30.00" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 dark:bg-slate-900 dark:text-white font-bold text-emerald-600">
         </div>
     </div>
 </div>
@@ -5956,6 +6046,116 @@ async function salvarEdicaoVencimentoValor(financeLogId) {
         console.error("Erro ao atualizar fatura:", error);
         alert("Erro ao atualizar na nuvem: " + error.message);
     }
+}
+
+// Função para registrar o ponto e calcular automaticamente o valor devido ao professor
+function salvarPontoProfessor() {
+    const data = document.getElementById('ponto-data').value;
+    const professorId = document.getElementById('ponto-professor-select').value;
+    const professorNome = document.getElementById('ponto-professor-select').options[document.getElementById('ponto-professor-select').selectedIndex].text;
+    const turno = document.getElementById('ponto-turno').value;
+    const entrada = document.getElementById('ponto-entrada').value;
+    const saida = document.getElementById('ponto-saida').value;
+
+    if (!data || !professorId || !entrada || !saida) {
+        alert('Por favor, preencha a data, o professor, a entrada e a saída.');
+        return;
+    }
+
+    // Cálculo das horas trabalhadas
+    const [hEntrada, mEntrada] = entrada.split(':').map(Number);
+    const [hSaida, mSaida] = saida.split(':').map(Number);
+    
+    let totalMinutos = (hSaida * 60 + mSaida) - (hEntrada * 60 + mEntrada);
+    if (totalMinutos <= 0) {
+        alert('O horário de saída deve ser posterior ao horário de entrada.');
+        return;
+    }
+    
+    const totalHoras = totalMinutos / 60;
+
+    // Buscar valor da hora-aula cadastrado para o professor (ex: R$ 25 ou R$ 30)
+    // Supondo que você armazene isso no objeto do professor ou busque do input correspondente
+    let valorHoraAula = 25.00; // Valor padrão caso não configurado
+    
+    // Exemplo buscando do cadastro de colaboradores armazenado no sistema:
+    if (typeof colaboradoresDB !== 'undefined') {
+        const profObj = colaboradoresDB.find(c => c.id == professorId);
+        if (profObj && profObj.valorHora) {
+            valorHoraAula = parseFloat(profObj.valorHora);
+        }
+    }
+
+    const valorTotalReceber = totalHoras * valorHoraAula;
+
+    // Criar objeto de registro
+    const registroPonto = {
+        id: Date.now(),
+        data,
+        professorId,
+        professorNome,
+        turno,
+        entrada,
+        saida,
+        totalHoras: totalHoras.toFixed(2),
+        valorTotalReceber: valorTotalReceber.toFixed(2)
+    };
+
+    // Salvar no localStorage ou Firebase (conforme o padrão do seu SE7)
+    let listaPontos = JSON.parse(localStorage.getItem('se7_ponto_professores') || '[]');
+    listaPontos.push(registroPonto);
+    localStorage.setItem('se7_ponto_professores', JSON.stringify(listaPontos));
+
+    // Integrar automaticamente com o Contas a Pagar / Financeiro
+    integrarPontoComFinanceiro(registroPonto);
+
+    alert(`Ponto registrado com sucesso! Total de horas: ${totalHoras.toFixed(2)}h | Valor a Pagar: R$ ${valorTotalReceber.toFixed(2)}`);
+    
+    // Recarregar tabela
+    renderizarTabelaPonto();
+}
+
+function integrarPontoComFinanceiro(ponto) {
+    // Integração automática com o financeiro da instituição (Contas a Pagar / Despesas com Professores)
+    let financeiroPagar = JSON.parse(localStorage.getItem('se7_financeiro_pagar') || '[]');
+    financeiroPagar.push({
+        id: 'PAG-' + ponto.id,
+        descricao: `Aula Ministrada - ${ponto.professorNome} (${ponto.turno} - ${ponto.data})`,
+        beneficiario: ponto.professorNome,
+        valor: ponto.valorTotalReceber,
+        vencimento: ponto.data,
+        status: 'Pendente (Aguardando Liberação Contábil)'
+    });
+    localStorage.setItem('se7_financeiro_pagar', JSON.stringify(financeiroPagar));
+}
+
+function renderizarTabelaPonto() {
+    const tbody = document.getElementById('tabela-ponto-professores');
+    if (!tbody) return;
+    
+    let listaPontos = JSON.parse(localStorage.getItem('se7_ponto_professores') || '[]');
+    tbody.innerHTML = '';
+
+    if (listaPontos.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-gray-400">Nenhum registro de ponto cadastrado.</td></tr>`;
+        return;
+    }
+
+    listaPontos.forEach((p) => {
+        tbody.innerHTML += `
+            <tr class="hover:bg-gray-50 dark:hover:bg-slate-900">
+                <td class="p-3">${p.data}</td>
+                <td class="p-3 font-semibold">${p.professorNome}</td>
+                <td class="p-3"><span class="px-2 py-0.5 bg-blue-100 text-blue-800 rounded text-[10px] font-bold">${p.turno}</span></td>
+                <td class="p-3">${p.entrada} às ${p.saida}</td>
+                <td class="p-3">${p.totalHoras} hrs</td>
+                <td class="p-3 font-bold text-emerald-600">R$ ${p.valorTotalReceber}</td>
+                <td class="p-3 text-right">
+                    <button onclick="excluirPonto(${p.id})" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>
+                </td>
+            </tr>
+        `;
+    });
 }
 	</script>
 </body>
