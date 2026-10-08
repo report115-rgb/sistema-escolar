@@ -604,6 +604,15 @@
                     </div>
                 </div>
 
+                <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
+                    <h3 class="font-bold text-xs dark:text-white">Pagamento da competência</h3>
+                    <p id="freq-pagamento-status" class="text-xs text-slate-600 dark:text-slate-300">Selecione um colaborador para consultar o pagamento.</p>
+                    <div class="flex flex-wrap gap-2">
+                        <button id="freq-btn-pagamento" type="button" onclick="abrirPagamentoColaborador()" disabled class="bg-emerald-600 text-white px-4 py-2 rounded-xl text-xs font-bold disabled:opacity-50">Registrar pagamento</button>
+                        <button id="freq-btn-estorno" type="button" onclick="estornarPagamentoColaborador()" style="display:none;" class="bg-red-600 text-white px-4 py-2 rounded-xl text-xs font-bold">Estornar registro</button>
+                    </div>
+                </div>
+
                 <div class="bg-white dark:bg-slate-900 p-4 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800">
                     <div class="flex justify-between items-center gap-2 mb-3">
                         <div>
@@ -886,6 +895,17 @@
                 renderizarTabelaValoresHora();
                 renderizarFrequenciaColaboradores();
             }, error => { console.error("Erro ao carregar valores/hora:", error); });
+
+            db.collection('teacherMonthlyPayments').onSnapshot(snapshot => {
+                pagamentosColaboradores = {};
+                snapshot.forEach(doc => pagamentosColaboradores[doc.id] = doc.data());
+                pagamentosColaboradoresErro = false;
+                renderizarPagamentoColaborador();
+            }, erro => {
+                console.error('Erro ao consultar pagamentos:', erro);
+                pagamentosColaboradoresErro = true;
+                renderizarPagamentoColaborador();
+            });
 
             // Integração em tempo real com o Ponto Manual da Matriz
             db.collection("teacherManualLogs").orderBy("createdAt", "desc").onSnapshot(snapshot => {
@@ -2237,6 +2257,172 @@
         // Integração: Matriz -> teacherManualLogs -> Financeiro
         // ============================================================
 
+        let pagamentosColaboradores = {};
+        let pagamentosColaboradoresErro = false;
+        let pagamentoFormulario = null;
+        let pagamentoSalvando = false;
+
+        function pagamentoChave(professorId, mes) {
+            return encodeURIComponent(professorId) + '__' + mes;
+        }
+        function pagamentoAtual(professorId, mes) {
+            return pagamentosColaboradores[pagamentoChave(professorId, mes)] || null;
+        }
+        function pagamentoDataTexto(data) {
+            return data ? data.split('-').reverse().join('/') : 'Não informada';
+        }
+        function pagamentoTexto(pagamento, totalCentavos) {
+            if (!pagamento) return 'Pagamento não registrado';
+            if (pagamento.status === 'estornado') return 'Registro estornado';
+            const diferenca = totalCentavos - pagamento.valorPagoCentavos;
+            let texto = `Pago — ${pagamento.metodo} — ${pagamentoDataTexto(pagamento.dataPagamento)} — ${freqFormatarMoeda(pagamento.valorPagoCentavos / 100)}`;
+            if (diferenca > 0) texto += ` | Diferença a pagar: ${freqFormatarMoeda(diferenca / 100)}`;
+            if (diferenca < 0) texto += ` | Pago acima do cálculo atual: ${freqFormatarMoeda(-diferenca / 100)}`;
+            return texto;
+        }
+        function renderizarPagamentoColaborador() {
+            const el = document.getElementById('freq-pagamento-status');
+            if (!el) return;
+            const professorId = document.getElementById('freq-colab-professor').value;
+            const mes = freqObterMesSelecionado();
+            const pagamento = professorId ? pagamentoAtual(professorId, mes) : null;
+            const registros = freqMontarCalculos(freqRegistrosFiltrados());
+            el.textContent = pagamentosColaboradoresErro ? 'Não foi possível consultar os pagamentos. Tente atualizar a página.' : !professorId ? 'Selecione um colaborador e a competência para registrar ou consultar o pagamento.' : pagamentoTexto(pagamento, registros.reduce((s, r) => s + r.totalCentavos, 0));
+            const ativo = pagamento?.status === 'pago';
+            const registrar = document.getElementById('freq-btn-pagamento');
+            registrar.textContent = ativo ? 'Corrigir pagamento' : 'Registrar pagamento';
+            registrar.disabled = !professorId || pagamentosColaboradoresErro;
+            document.getElementById('freq-btn-estorno').style.display = ativo ? 'inline-block' : 'none';
+        }
+        function abrirPagamentoColaborador() {
+            if (pagamentoSalvando) return;
+            const professorId = document.getElementById('freq-colab-professor').value;
+            const mes = freqObterMesSelecionado();
+            if (!professorId || !/^\d{4}-\d{2}$/.test(mes)) return alert('Selecione o colaborador e a competência.');
+            if (pagamentosColaboradoresErro) return alert('Não foi possível consultar os pagamentos. Atualize a página.');
+            const registros = freqMontarCalculos(freqRegistrosFiltrados());
+            const atual = pagamentoAtual(professorId, mes);
+            if (!registros.length && atual?.status !== 'pago') return alert('Não existem pontos nesta competência para registrar o pagamento.');
+            const professor = teachers.find(t => t.id === professorId);
+            const nome = professor?.fullname || registros[0]?.professorNome || atual?.professorNome || 'Colaborador';
+            pagamentoFormulario = {professorId, mes, nome, revisao: atual?.revisao || 0, corrigindo: atual?.status === 'pago'};
+            const hoje = new Date();
+            const dataHoje = `${hoje.getFullYear()}-${String(hoje.getMonth()+1).padStart(2,'0')}-${String(hoje.getDate()).padStart(2,'0')}`;
+            document.getElementById('pagamento-identificacao').textContent = `${nome} — Competência ${mes.split('-').reverse().join('/')}`;
+            document.getElementById('pagamento-calculado').textContent = freqFormatarMoeda(freqSomarValores(registros));
+            document.getElementById('pagamento-valor').value = ((atual?.status === 'pago' ? atual.valorPagoCentavos / 100 : freqSomarValores(registros))).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+            document.getElementById('pagamento-metodo').value = atual?.status === 'pago' ? atual.metodo : 'Pix';
+            document.getElementById('pagamento-data').value = atual?.status === 'pago' ? atual.dataPagamento : dataHoje;
+            document.getElementById('pagamento-observacao').value = atual?.status === 'pago' ? atual.observacao || '' : '';
+            document.getElementById('pagamento-motivo').value = '';
+            document.getElementById('pagamento-motivo-box').style.display = pagamentoFormulario.corrigindo ? 'block' : 'none';
+            document.getElementById('pagamento-titulo').textContent = pagamentoFormulario.corrigindo ? 'Corrigir registro de pagamento' : 'Registrar pagamento';
+            document.getElementById('modal-pagamento-colaborador').style.display = 'flex';
+        }
+        function fecharPagamentoColaborador() {
+            if (pagamentoSalvando) return;
+            document.getElementById('modal-pagamento-colaborador').style.display = 'none';
+            pagamentoFormulario = null;
+        }
+        function pagamentoUsuario() {
+            try {
+                const usuario = JSON.parse(sessionStorage.getItem('app_financeiro_user'));
+                if (usuario) return {nome: usuario.nome || '', email: usuario.email || '', perfil: usuario.perfil || ''};
+            } catch (_) {}
+            throw new Error('Sua sessão expirou. Entre novamente para registrar o pagamento.');
+        }
+        async function salvarPagamentoColaborador() {
+            if (pagamentoSalvando || !pagamentoFormulario) return;
+            const form = {...pagamentoFormulario};
+            const valor = freqCentavos(freqParseMoeda(document.getElementById('pagamento-valor').value));
+            const metodo = document.getElementById('pagamento-metodo').value;
+            const data = document.getElementById('pagamento-data').value;
+            const observacao = document.getElementById('pagamento-observacao').value.trim();
+            const motivo = document.getElementById('pagamento-motivo').value.trim();
+            if (!Number.isSafeInteger(valor) || valor <= 0) return alert('Informe um valor pago maior que zero.');
+            const dataValidada = new Date(data+'T12:00:00');
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(data) || !Number.isFinite(dataValidada.getTime()) || dataValidada.toISOString().slice(0,10) !== data) return alert('Informe uma data válida.');
+            if (!['Pix','Transferência bancária','Dinheiro','Outro'].includes(metodo)) return alert('Selecione um método válido.');
+            if (form.corrigindo && !motivo) return alert('Informe o motivo da correção.');
+            pagamentoSalvando = true;
+            document.getElementById('pagamento-btn-salvar').disabled = true;
+            try {
+                const usuario = pagamentoUsuario();
+                // Reconsulta pontos e valores/hora no servidor antes de registrar a apuração.
+                const [pontos, taxas, docentes] = await Promise.all([
+                    db.collection('teacherManualLogs').where('professorId','==',form.professorId).get({source:'server'}),
+                    db.collection('teacherPaymentRates').doc(form.professorId).get({source:'server'}),
+                    db.collection('teachers').doc(form.professorId).get({source:'server'})
+                ]);
+                const docente = docentes.exists ? docentes.data() : {};
+                const valorHora = taxas.exists ? freqParseMoeda(taxas.data().valorHora) : freqParseMoeda(docente.valorHora ?? docente.valorHoraAula ?? docente.valor_hora ?? docente.horaValor ?? 0);
+                const registros = [];
+                pontos.forEach(doc => {
+                    const r = doc.data();
+                    if (!String(r.data || '').startsWith(form.mes)) return;
+                    const minutos = freqMinutos(r.entrada,r.saida);
+                    registros.push({id:doc.id,data:r.data,turno:r.turno || '',entrada:r.entrada || '',saida:r.saida || '',minutos,valorHoraCentavos:freqCentavos(valorHora),totalCentavos:Math.round(minutos*freqCentavos(valorHora)/60)});
+                });
+                if (!registros.length && !form.corrigindo) throw new Error('Nenhum ponto encontrado nesta competência no Firebase.');
+                const chave = pagamentoChave(form.professorId,form.mes);
+                const ref = db.collection('teacherMonthlyPayments').doc(chave);
+                const historico = ref.collection('history').doc();
+                const agora = new Date().toISOString();
+                let salvo;
+                await db.runTransaction(async tx => {
+                    const snap = await tx.get(ref);
+                    const anterior = snap.exists ? snap.data() : null;
+                    if ((anterior?.revisao || 0) !== form.revisao) throw new Error('Este pagamento foi alterado por outro usuário. Feche o formulário, atualize e confira o registro.');
+                    if (anterior?.status === 'pago' && !form.corrigindo) throw new Error('Esta competência já tem um pagamento registrado. Use Corrigir pagamento.');
+                    if (form.corrigindo && anterior?.status !== 'pago') throw new Error('O pagamento não está mais ativo. Atualize e confira o registro.');
+                    salvo = {professorId:form.professorId,professorNome:docente.fullname || form.nome,competencia:form.mes,status:'pago',metodo,dataPagamento:data,valorPagoCentavos:valor,observacao,valorCalculadoCentavos:registros.reduce((s,r)=>s+r.totalCentavos,0),minutosCalculados:registros.reduce((s,r)=>s+r.minutos,0),registros,registradoPor:anterior?.registradoPor || usuario,createdAt:anterior?.createdAt || agora,atualizadoPor:usuario,updatedAt:agora,revisao:(anterior?.revisao || 0)+1};
+                    tx.set(ref,salvo);
+                    tx.set(historico,{acao:form.corrigindo?'correcao':'registro',motivo,anterior:anterior || null,novo:salvo,usuario,data:agora});
+                });
+                pagamentosColaboradores[chave] = salvo;
+                pagamentoSalvando = false;
+                fecharPagamentoColaborador();
+                renderizarPagamentoColaborador();
+                alert('Pagamento registrado com sucesso no Firebase.');
+            } catch (e) {
+                alert('Não foi possível salvar o pagamento: '+e.message);
+            } finally {
+                pagamentoSalvando = false;
+                document.getElementById('pagamento-btn-salvar').disabled = false;
+            }
+        }
+        async function estornarPagamentoColaborador() {
+            if (pagamentoSalvando) return;
+            const professorId = document.getElementById('freq-colab-professor').value;
+            const mes = freqObterMesSelecionado();
+            const anteriorLocal = pagamentoAtual(professorId,mes);
+            if (anteriorLocal?.status !== 'pago') return;
+            if (!confirm(`Estornar o registro de pagamento de ${anteriorLocal.professorNome}, competência ${mes}? Isto corrige o registro; não devolve o dinheiro transferido.`)) return;
+            const motivo = prompt('Informe o motivo do estorno:');
+            if (!motivo?.trim()) return;
+            pagamentoSalvando = true;
+            try {
+                const usuario = pagamentoUsuario();
+                const chave = pagamentoChave(professorId,mes);
+                const ref = db.collection('teacherMonthlyPayments').doc(chave);
+                const historico = ref.collection('history').doc();
+                const agora = new Date().toISOString();
+                let salvo;
+                await db.runTransaction(async tx => {
+                    const snap = await tx.get(ref);
+                    const anterior = snap.exists ? snap.data() : null;
+                    if (anterior?.status !== 'pago' || anterior.revisao !== anteriorLocal.revisao) throw new Error('O registro mudou. Atualize e confira antes de estornar.');
+                    salvo = {...anterior,status:'estornado',motivoEstorno:motivo.trim(),estornadoPor:usuario,estornadoEm:agora,updatedAt:agora,revisao:anterior.revisao+1};
+                    tx.set(ref,salvo);
+                    tx.set(historico,{acao:'estorno',motivo:motivo.trim(),anterior,novo:salvo,usuario,data:agora});
+                });
+                pagamentosColaboradores[chave]=salvo;
+                renderizarPagamentoColaborador();
+                alert('Registro estornado com sucesso. O histórico foi preservado.');
+            } catch(e) { alert('Não foi possível estornar: '+e.message); }
+            finally { pagamentoSalvando=false; }
+        }
+
         function freqFormatarMoeda(valor) {
             return Number(valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
         }
@@ -2411,6 +2597,7 @@
         }
 
         function renderizarFrequenciaColaboradores() {
+            renderizarPagamentoColaborador();
             const tbody = document.getElementById('freq-colab-tbody');
             if (!tbody) return;
 
@@ -2479,6 +2666,14 @@
                 grupos[id].registros.push(r);
             });
 
+            // Mantém o comprovante visível mesmo se os pontos forem removidos depois.
+            Object.values(pagamentosColaboradores).forEach(pagamento => {
+                if (pagamento.competencia !== mes || (professorId && pagamento.professorId !== professorId)) return;
+                if (!grupos[pagamento.professorId]) grupos[pagamento.professorId] = {
+                    professor: teachers.find(t => t.id === pagamento.professorId) || {fullname:pagamento.professorNome}, registros: []
+                };
+            });
+
             const nomeMes = mes
                 ? new Date(`${mes}-01T12:00:00`).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
                 : 'Todos os períodos';
@@ -2498,6 +2693,8 @@
                 const taxaTexto = rates.length === 1 ? freqFormatarMoeda(rates[0]) : (rates.length ? 'Valores variados' : 'Não configurado');
                 const dias = new Set(g.registros.map(r => r.data).filter(Boolean)).size;
 
+                const pagamento = pagamentoAtual(p.id || g.registros[0]?.professorId || Object.keys(grupos).find(id => grupos[id] === g), mes);
+                const textoPagamento = pagamentosColaboradoresErro ? 'Não foi possível consultar o pagamento.' : pagamentoTexto(pagamento, g.registros.reduce((s,r)=>s+r.totalCentavos,0));
                 // Exibe o valor de cada lançamento; a soma aparece no total final.
                 const linhas = g.registros.map(r => {
                     return `
@@ -2544,6 +2741,10 @@
                             <div style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 14px; border-radius: 10px;"><strong style="color: #475569;">Valor da Hora-Aula</strong><br><span style="font-size: 16px; font-weight: bold;">${taxaTexto}</span></div>
                         </div>
 
+                        <div style="padding:12px; margin-bottom:14px; border:1px solid #cbd5e1; border-radius:10px; font-size:12px;">
+                            <strong>Pagamento da competência:</strong><br>${freqEscaparHtml(textoPagamento)}
+                            ${pagamento?.status === 'pago' && pagamento.observacao ? `<br><strong>Observação:</strong> ${freqEscaparHtml(pagamento.observacao)}` : ''}
+                        </div>
                         <table style="width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 5px; margin-bottom: 12px;">
                             <thead>
                                 <tr style="background: #1e3a8a; color: #fff;">
@@ -2614,5 +2815,20 @@
         }
 
     </script>
+<div id="modal-pagamento-colaborador" style="display:none;" class="fixed inset-0 z-[3000] bg-black/60 p-4 items-center justify-center">
+ <div role="dialog" aria-modal="true" aria-labelledby="pagamento-titulo" class="bg-white dark:bg-slate-900 rounded-2xl p-5 w-full max-w-lg max-h-[90vh] overflow-y-auto space-y-4">
+  <h2 id="pagamento-titulo" class="font-bold text-lg dark:text-white">Registrar pagamento</h2>
+  <p id="pagamento-identificacao" class="text-sm dark:text-white"></p>
+  <p class="text-xs text-slate-500">Total calculado: <strong id="pagamento-calculado"></strong></p>
+  <div><label for="pagamento-valor" class="block text-xs font-bold dark:text-white">Valor pago (R$)</label><input id="pagamento-valor" inputmode="decimal" class="w-full border rounded-lg p-2 dark:bg-slate-800 dark:text-white"></div>
+  <div><label for="pagamento-metodo" class="block text-xs font-bold dark:text-white">Método de pagamento</label><select id="pagamento-metodo" class="w-full border rounded-lg p-2 dark:bg-slate-800 dark:text-white"><option>Pix</option><option>Transferência bancária</option><option>Dinheiro</option><option>Outro</option></select></div>
+  <div><label for="pagamento-data" class="block text-xs font-bold dark:text-white">Data do pagamento</label><input id="pagamento-data" type="date" class="w-full border rounded-lg p-2 dark:bg-slate-800 dark:text-white"></div>
+  <div><label for="pagamento-observacao" class="block text-xs font-bold dark:text-white">Observação (opcional)</label><textarea id="pagamento-observacao" maxlength="1000" class="w-full border rounded-lg p-2 dark:bg-slate-800 dark:text-white"></textarea></div>
+  <div id="pagamento-motivo-box" style="display:none;"><label for="pagamento-motivo" class="block text-xs font-bold dark:text-white">Motivo da correção</label><input id="pagamento-motivo" maxlength="500" class="w-full border rounded-lg p-2 dark:bg-slate-800 dark:text-white"></div>
+  <p class="text-xs text-slate-500">Registre aqui o pagamento já realizado pelo banco.</p>
+  <div class="flex justify-end gap-2"><button type="button" onclick="fecharPagamentoColaborador()" class="bg-slate-200 rounded-lg px-4 py-2 text-xs">Cancelar</button><button type="button" id="pagamento-btn-salvar" onclick="salvarPagamentoColaborador()" class="bg-emerald-600 text-white rounded-lg px-4 py-2 text-xs font-bold">Salvar pagamento</button></div>
+ </div>
+</div>
+
 </body>
 </html>
