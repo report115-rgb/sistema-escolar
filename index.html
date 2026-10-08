@@ -346,7 +346,6 @@
             <button class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-slate-600" onclick="openTab(event, 'tab-student-finance')"><i class="fa-solid fa-wallet mr-1.5"></i> Financeiro</button>
             <button class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-slate-600" onclick="openTab(event, 'tab-history')"><i class="fa-solid fa-file-pdf mr-1.5"></i> Emissão de Documentos</button>
             <button class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-slate-600" id="nav-btn-settings" onclick="openTab(event, 'tab-settings')"><i class="fa-solid fa-gear mr-1.5"></i> Sistema</button>
-	    <button class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-slate-600" onclick="openTab(event, 'tab-gestao-totem')"><i class="fa-solid fa-face-recognition mr-1.5"></i> Totem e Ponto</button>
 	    <button class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-slate-600" onclick="openTab(event, 'tab-controle-ponto-manual')"><i class="fa-solid fa-business-time mr-1.5"></i> Ponto Manual</button>
            </nav>
     </div>
@@ -783,6 +782,7 @@
                     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-templates')">Edição de Documentos</button>
                     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-institution')">Instituição</button>
 		    <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-audit')">Auditoria</button>
+    <button id="btn-subtab-gestao-totem" class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" style="display: none;" onclick="openSubTab(event, 'subtab-gestao-totem')"><i class="fa-solid fa-clock mr-1.5"></i> Totem e Ponto</button>
 </div>
 
                 <!-- ABA PRINCIPAL CURSOS (DIVIDIDA EM DUAS SUBABAS) -->
@@ -1264,31 +1264,8 @@
                     <button onclick="salvarBrandingNaNuvem()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow">Salvar Configurações</button>
                 </div>
             </div>
-        </div>
-
-<!-- AUDITORIA & LOGS -->
-        <div id="subtab-audit" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
-    <div class="flex justify-between items-center mb-4 pb-2 border-b border-gray-100 dark:border-slate-700">
-        <h3 class="font-bold text-base text-blue-600 dark:text-blue-400"><i class="fa-solid fa-clock-rotate-left mr-2"></i> Auditoria e Rastreabilidade</h3>
-        <button type="button" onclick="limparLogsAuditoria()" class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg shadow">Limpar Logs</button>
-    </div>
-    <div class="overflow-x-auto">
-        <table class="w-full text-left text-xs">
-            <thead>
-                <tr class="border-b border-gray-200 dark:border-slate-700 text-gray-500">
-                    <th class="p-3">Data / Hora</th>
-                    <th class="p-3">Usuário</th>
-                    <th class="p-3">Módulo</th>
-                    <th class="p-3">Ação</th>
-                </tr>
-            </thead>
-            <tbody id="tabela-logs-auditoria" class="divide-y divide-gray-200 dark:divide-slate-700"></tbody>
-        </table>
-    </div>
-</div>
-
-<!-- ABA DE GESTÃO DO TOTEM E BIOMETRIA NA MATRIZ -->
-<div id="tab-gestao-totem" class="tab-content space-y-4" style="display: none;">
+        <!-- ABA DE GESTÃO DO TOTEM E BIOMETRIA NA MATRIZ -->
+<div id="subtab-gestao-totem" class="subtab-content space-y-4" style="display: none;">
     <div class="bg-white dark:bg-slate-900 p-5 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 space-y-3">
         <div class="flex justify-between items-center">
             <div>
@@ -1334,9 +1311,42 @@
     </div>
 </div>
 
+</div>
+
+<!-- AUDITORIA & LOGS -->
+        <div id="subtab-audit" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
+    <div class="flex justify-between items-center mb-4 pb-2 border-b border-gray-100 dark:border-slate-700">
+        <h3 class="font-bold text-base text-blue-600 dark:text-blue-400"><i class="fa-solid fa-clock-rotate-left mr-2"></i> Auditoria e Rastreabilidade</h3>
+        <button type="button" onclick="limparLogsAuditoria()" class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg shadow">Limpar Logs</button>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+            <thead>
+                <tr class="border-b border-gray-200 dark:border-slate-700 text-gray-500">
+                    <th class="p-3">Data / Hora</th>
+                    <th class="p-3">Usuário</th>
+                    <th class="p-3">Módulo</th>
+                    <th class="p-3">Ação</th>
+                </tr>
+            </thead>
+            <tbody id="tabela-logs-auditoria" class="divide-y divide-gray-200 dark:divide-slate-700"></tbody>
+        </table>
+    </div>
+</div>
+
 <script>
+    function usuarioMasterAtivo() {
+        try {
+            const sessao = JSON.parse(sessionStorage.getItem('usuario_logado'));
+            return !!sessao && sessao.perfil === 'master';
+        } catch (_) {
+            return false;
+        }
+    }
+
     // Funções de controle da sub-aba do totem na matriz
     function mudarSubAbaTotem(tipo) {
+        if (!usuarioMasterAtivo()) return;
         const isFreq = tipo === 'frequencias';
         document.getElementById('sub-painel-frequencias').style.display = isFreq ? 'block' : 'none';
         document.getElementById('sub-painel-pontos').style.display = isFreq ? 'none' : 'block';
@@ -1354,15 +1364,18 @@
     }
 
     async function carregarLogsTotemMatriz() {
+        if (!usuarioMasterAtivo()) return;
         carregarFrequenciasTotemMatriz();
         carregarPontosTotemMatriz();
     }
 
     async function carregarFrequenciasTotemMatriz() {
+        if (!usuarioMasterAtivo()) return;
         const container = document.getElementById('lista-frequencias-totem-container');
         if (!container) return;
         try {
             const snapshot = await db.collection("attendance").orderBy("data", "desc").get();
+            if (!usuarioMasterAtivo()) return;
             if (snapshot.empty) {
                 container.innerHTML = `<div class="text-center py-6 text-xs text-slate-400">Nenhuma presença registrada pelo totem ainda.</div>`;
                 return;
@@ -1387,6 +1400,7 @@
     }
 
     async function carregarPontosTotemMatriz() {
+        if (!usuarioMasterAtivo()) return;
         const container = document.getElementById('lista-pontos-totem-container');
         if (!container) return;
         try {
@@ -2240,6 +2254,18 @@ async function rejeitarSolicitacaoFirebase(id) {
         }
 
         function aplicarPermissoesPorPerfil(perfil) {
+    const botaoTotem = document.getElementById('btn-subtab-gestao-totem');
+    const painelTotem = document.getElementById('subtab-gestao-totem');
+    if (botaoTotem) botaoTotem.style.display = usuarioMasterAtivo() ? 'inline-block' : 'none';
+    if (!usuarioMasterAtivo()) {
+        if (painelTotem) painelTotem.style.display = 'none';
+        const sistema = document.getElementById('tab-settings');
+        if (sistema) sistema.style.display = 'none';
+        ['lista-frequencias-totem-container', 'lista-pontos-totem-container'].forEach(id => {
+            const lista = document.getElementById(id);
+            if (lista) lista.innerHTML = '';
+        });
+    }
     const btnAccessControl = document.getElementById('btn-access-control');
     const btnSwitchUser = document.getElementById('btn-switch-user');
     const navBtnSettings = document.getElementById('nav-btn-settings');
@@ -2463,6 +2489,7 @@ async function removerUsuarioSistemaFirebase(id) {
 }
 
         function openTab(evt, tabId) {
+    if (tabId === 'tab-settings' && !usuarioMasterAtivo()) return;
     if (!document.getElementById(tabId)) return;
 
     // 1. Oculta TODAS as abas principais do sistema
@@ -2512,12 +2539,16 @@ async function removerUsuarioSistemaFirebase(id) {
     }
 
     // 5. Gatilhos de renderização específica para componentes que dependem do DOM visível
+    if(tabId === 'tab-controle-ponto-manual') carregarProfessoresPontoManual();
     if(tabId === 'tab-settings') setTimeout(renderizarCalendarioSemestralAdmin, 200);
     if(tabId === 'tab-portal-aluno') setTimeout(renderizarCalendarioSemestralPortalAluno, 200);
     if(tabId === 'tab-audit') setTimeout(renderizarLogsAuditoria, 200);
 }
 
         function openSubTab(evt, subtabId) {
+    const alvo = document.getElementById(subtabId);
+    if (!alvo) return;
+    if ((subtabId === 'subtab-gestao-totem' || alvo.closest('#tab-settings')) && !usuarioMasterAtivo()) return;
     // 1. Oculta TODAS as subabas do sistema inteiro para evitar vazamento entre telas
     const todasSubabas = document.querySelectorAll('.subtab-content');
     todasSubabas.forEach(el => {
@@ -2547,7 +2578,7 @@ async function removerUsuarioSistemaFirebase(id) {
     if(subtabId === 'subtab-calendar') setTimeout(renderizarCalendarioSemestralAdmin, 200);
     if(subtabId === 'subtab-portal-calendario') setTimeout(renderizarCalendarioSemestralPortalAluno, 200);
     if(subtabId === 'subtab-audit') setTimeout(renderizarLogsAuditoria, 200);
-    if(tabId === 'tab-controle-ponto-manual') carregarProfessoresPontoManual();
+    if(subtabId === 'subtab-gestao-totem') mudarSubAbaTotem('frequencias');
 }
 
         // FUNÇÃO PARA GERENCIAR AS SUB-SUBABAS DE CURSOS
