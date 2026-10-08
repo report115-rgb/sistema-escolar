@@ -125,11 +125,17 @@
             <radialGradient id="login-blue-aura"><stop stop-color="#1175ff" stop-opacity=".36"/><stop offset="1" stop-color="#1175ff" stop-opacity="0"/></radialGradient>
         </defs>
         <ellipse cx="125" cy="340" rx="330" ry="460" fill="url(#login-blue-aura)"/>
-        <path class="login-wire" d="M120 0 C320 225 276 418 124 510 L0 616 M490 0 L0 616 M0 424 L585 892 M0 690 Q178 554 292 630 L392 630 L584 803 Q596 815 584 829 L516 892"/>
-        <path class="login-glow" d="M120 0 C320 225 276 418 124 510 L0 616"/>
-        <path class="login-glow login-glow-second" d="M0 424 L325 686"/>
-        <path class="login-glow" style="animation-delay:-4s" d="M490 0 L0 616"/>
-        <path class="login-glow login-glow-second" d="M0 690 Q178 554 292 630 L380 630 Q392 630 402 640 L574 812 Q587 825 574 838 L516 892"/>
+        <!-- Duas retas e dois círculos com o mesmo raio, recortados pelas bordas da tela. -->
+        <g class="login-wire">
+            <line x1="490" y1="0" x2="0" y2="616"/>
+            <line x1="0" y1="424" x2="585" y2="892"/>
+            <circle cx="-100" cy="240" r="350"/>
+            <circle cx="240" cy="1050" r="350"/>
+        </g>
+        <circle class="login-glow" cx="-100" cy="240" r="350"/>
+        <circle class="login-glow login-glow-second" cx="240" cy="1050" r="350"/>
+        <line class="login-glow" style="animation-delay:-4s" x1="490" y1="0" x2="0" y2="616"/>
+        <line class="login-glow login-glow-second" x1="0" y1="424" x2="585" y2="892"/>
     </svg>
     <div class="login-shell">
         <section class="login-brand" aria-label="Identidade institucional">
