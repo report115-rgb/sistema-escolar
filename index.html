@@ -2738,20 +2738,31 @@ async function removerUsuarioSistemaFirebase(id) {
             });
 
             db.collection("students").onSnapshot((snapshot) => {
-                students = [];
-                snapshot.forEach(doc => students.push({ id: doc.id, ...doc.data() }));
-                
-                // ORDENAÇÃO GLOBAL ALFABÉTICA DA LISTA DE ALUNOS
-                students.sort((a, b) => {
-                    const nomeA = (a.fullname || '').trim().toLowerCase();
-                    const nomeB = (b.fullname || '').trim().toLowerCase();
-                    return nomeA.localeCompare(nomeB, 'pt-BR');
-                });
+    students = [];
+    snapshot.forEach(doc => {
+        const data = doc.data();
+        // Garante valores padrão caso algum campo venha corrompido ou ausente
+        students.push({ 
+            id: doc.id, 
+            fullname: data.fullname || '', 
+            code: data.code || '',
+            cpf: data.cpf || '',
+            status: data.status || 'Ativo',
+            ...data 
+        });
+    });
+    
+    // ORDENAÇÃO GLOBAL ALFABÉTICA BLINDADA CONTRA NULOS
+    students.sort((a, b) => {
+        const nomeA = (a.fullname || '').trim().toLowerCase();
+        const nomeB = (b.fullname || '').trim().toLowerCase();
+        return nomeA.localeCompare(nomeB, 'pt-BR');
+    });
 
     renderAllIntegratedViews();
     popularSelectAlunosPortalMaster();
     popularSelectAlunosValidacaoGestao();
-    renderFinanceStudentSelect(); // <--- ADICIONADO AQUI
+    renderFinanceStudentSelect();
     if (alunoLogadoCache) {
         const atualizado = students.find(s => s.id === alunoLogadoCache.id);
         if (atualizado) carregarDadosPortalAluno(atualizado);
