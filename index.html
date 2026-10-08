@@ -1102,7 +1102,7 @@
                     <div id="admin-calendar-view" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
                 </div>
 
-               <!-- SUBABA COLABORADORES (ANTIGA PROFESSORES) -->
+<!-- SUBABA COLABORADORES (ANTIGA PROFESSORES) -->
 <div id="subtab-teachers" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
     <div class="flex justify-between items-center border-b border-gray-200 dark:border-slate-700 pb-2">
         <h3 class="font-bold text-sm text-blue-600 dark:text-blue-400"><i class="fa-solid fa-id-card-clip mr-1.5"></i> Cadastro Geral de Colaboradores (Ponto & Facial)</h3>
@@ -1118,7 +1118,7 @@
         </div>
         <div>
             <label class="block text-xs font-semibold mb-1">Cargo / Função</label>
-            <select id="input-teacher-cargo" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 dark:text-white">
+            <select id="input-teacher-cargo" onchange="toggleConfiguracaoFinanceira()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 dark:text-white">
                 <option value="Professor">Professor(a)</option>
                 <option value="Secretaria">Secretaria / Atendimento</option>
                 <option value="Limpeza">Funcionário(a) de Limpeza</option>
@@ -1180,8 +1180,8 @@
         </div>
     </div>
 
-    <!-- Bloco de Configuração Financeira (Agora DENTRO da subaba) -->
-    <div class="bg-emerald-50 dark:bg-slate-800/60 p-4 rounded-xl border border-emerald-200 dark:border-slate-700 space-y-3">
+    <!-- Bloco de Configuração Financeira (Com ID para controlar visibilidade) -->
+    <div id="bloco-financeiro-professor" class="bg-emerald-50 dark:bg-slate-800/60 p-4 rounded-xl border border-emerald-200 dark:border-slate-700 space-y-3">
         <h4 class="font-bold text-xs text-emerald-700 dark:text-emerald-300 uppercase"><i class="fa-solid fa-file-invoice-dollar mr-1"></i> Configuração Financeira do Professor (Hora-Aula)</h4>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
             <div>
@@ -1211,6 +1211,7 @@
                         <th class="p-2.5">Nome / ID Totem</th>
                         <th class="p-2.5">Cargo / Função</th>
                         <th class="p-2.5">Formação / Registro</th>
+                        <th class="p-2.5">Valor Hora-Aula</th>
                         <th class="p-2.5 text-right">Ações</th>
                     </tr>
                 </thead>
@@ -1219,7 +1220,6 @@
         </div>
     </div>
 </div>
-
                 <!-- SUBABA EDIÇÃO DE DOCUMENTOS -->
 <div id="subtab-templates" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
     <div>
