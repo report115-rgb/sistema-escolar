@@ -2437,7 +2437,12 @@
 
         function gerarRelatorioFrequenciaColaboradores() {
             const mes = freqObterMesSelecionado();
-            const registros = freqMontarCalculos(freqRegistrosFiltrados());
+            const registros = freqMontarCalculos(freqRegistrosFiltrados()).sort((a, b) => {
+                return (a.data || '9999-12-31').localeCompare(b.data || '9999-12-31')
+                    || (a.entrada || '99:99').localeCompare(b.entrada || '99:99')
+                    || (a.saida || '99:99').localeCompare(b.saida || '99:99')
+                    || String(a.id || '').localeCompare(String(b.id || ''));
+            });
             const professorId = document.getElementById('freq-colab-professor')?.value || '';
 
             const grupos = {};
