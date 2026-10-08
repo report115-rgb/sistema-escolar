@@ -2439,7 +2439,6 @@
             const mes = freqObterMesSelecionado();
             const registros = freqMontarCalculos(freqRegistrosFiltrados());
             const professorId = document.getElementById('freq-colab-professor')?.value || '';
-            const professorSelecionado = teachers.find(t => t.id === professorId);
 
             const grupos = {};
             registros.forEach(r => {
@@ -2458,11 +2457,7 @@
             const enderecoInst = instituicao.address || 'Não informado';
             const logoUrl = instituicao.logo || '';
 
-            const totalHorasGeral = registros.reduce((s, r) => s + r.horas, 0);
-            const totalReceberGeral = registros.reduce((s, r) => s + r.total, 0);
-            const diasGeral = new Set(registros.map(r => r.data).filter(Boolean)).size;
-
-            let blocos = Object.values(grupos).map((g, index) => {
+            let blocos = Object.values(grupos).map((g) => {
                 const p = g.professor || {};
                 const nome = g.registros[0]?.professorNome || p.fullname || 'Colaborador';
                 const horas = g.registros.reduce((s, r) => s + r.horas, 0);
@@ -2471,31 +2466,53 @@
                 const taxaTexto = rates.length === 1 ? freqFormatarMoeda(rates[0]) : (rates.length ? 'Valores variados' : 'Não configurado');
                 const dias = new Set(g.registros.map(r => r.data).filter(Boolean)).size;
 
-                const linhas = g.registros.map(r => `
+                // Cada lançamento compõe a totalização progressiva do colaborador.
+                let acumulado = 0;
+                const linhas = g.registros.map(r => {
+                    acumulado += r.total;
+                    return `
                     <tr>
                         <td style="padding: 7px 8px; border-bottom: 1px solid #e2e8f0;">${freqEscaparHtml(r.data ? r.data.split('-').reverse().join('/') : '---')}</td>
                         <td style="padding: 7px 8px; border-bottom: 1px solid #e2e8f0; text-align: center;">${freqEscaparHtml(r.turno || '---')}</td>
                         <td style="padding: 7px 8px; border-bottom: 1px solid #e2e8f0; text-align: center;">${freqEscaparHtml(r.entrada || '---')}</td>
                         <td style="padding: 7px 8px; border-bottom: 1px solid #e2e8f0; text-align: center;">${freqEscaparHtml(r.saida || '---')}</td>
                         <td style="padding: 7px 8px; border-bottom: 1px solid #e2e8f0; text-align: right;">${freqFormatarHoras(r.horas)}</td>
-                        <td style="padding: 7px 8px; border-bottom: 1px solid #e2e8f0; text-align: right; white-space: nowrap;">${freqFormatarMoeda(r.valorHora)}</td>
-                        <td style="padding: 7px 8px; border-bottom: 1px solid #e2e8f0; text-align: right; font-weight: bold; white-space: nowrap;">${freqFormatarMoeda(r.total)}</td>
-                    </tr>`).join('');
+                        <td style="padding: 7px 8px; border-bottom: 1px solid #e2e8f0; text-align: right; white-space: nowrap;">${freqFormatarMoeda(r.total)}</td>
+                        <td style="padding: 7px 8px; border-bottom: 1px solid #e2e8f0; text-align: right; font-weight: bold; white-space: nowrap; color: #047857;">${freqFormatarMoeda(acumulado)}</td>
+                    </tr>`;
+                }).join('');
 
                 return `
-                    <div style="page-break-inside: avoid; margin-bottom: 28px;">
-                        <h2 style="font-size: 14px; color: #1e3a8a; text-transform: uppercase; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 6px; margin-top: 25px; margin-bottom: 12px; font-weight: bold;">${index + 3}. ${freqEscaparHtml(nome)}</h2>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 12px; background: #f1f5f9; padding: 16px; border-radius: 10px; margin-bottom: 12px;">
+                    <div style="page-break-inside: avoid; margin-bottom: 32px;">
+                        <h2 style="font-size: 14px; color: #1e3a8a; text-transform: uppercase; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 6px; margin-top: 25px; margin-bottom: 12px; font-weight: bold;">1. Identificação do Colaborador</h2>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 12px; background: #f1f5f9; padding: 16px; border-radius: 10px;">
                             <div>
+                                <strong>Nome Completo:</strong><br>${freqEscaparHtml(nome)}<br><br>
                                 <strong>Cargo:</strong><br>${freqEscaparHtml(p.cargo || g.registros[0]?.cargo || 'Professor')}<br><br>
                                 <strong>Formação:</strong><br>${freqEscaparHtml(p.formation || 'Não informado')}<br><br>
                                 <strong>Conselho:</strong><br>${freqEscaparHtml(p.council || 'Não informado')}
                             </div>
                             <div>
-                                <strong>Valor da Hora:</strong><br>${taxaTexto}<br><br>
-                                <strong>Dias Trabalhados:</strong><br>${dias}<br><br>
-                                <strong>Lançamentos:</strong><br>${g.registros.length}
+                                <strong>Valor da Hora-Aula:</strong><br>${taxaTexto}<br><br>
+                                <strong>Dias Trabalhados:</strong><br>${dias}
                             </div>
+                        </div>
+
+                        <h2 style="font-size: 14px; color: #1e3a8a; text-transform: uppercase; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 6px; margin-top: 25px; margin-bottom: 12px; font-weight: bold;">2. Identificação do Relatório</h2>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 12px; background: #f1f5f9; padding: 16px; border-radius: 10px;">
+                            <div>
+                                <strong>Competência:</strong><br>${freqEscaparHtml(nomeMes)}
+                            </div>
+                            <div>
+                                <strong>Dias Registrados:</strong><br>${dias}
+                            </div>
+                        </div>
+
+                        <h2 style="font-size: 14px; color: #1e3a8a; text-transform: uppercase; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 6px; margin-top: 25px; margin-bottom: 12px; font-weight: bold;">3. Resumo Financeiro</h2>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; font-size: 12px; margin-bottom: 14px;">
+                            <div style="background: #eff6ff; border: 1px solid #bfdbfe; padding: 14px; border-radius: 10px;"><strong style="color: #1e3a8a;">Carga Horária Total</strong><br><span style="font-size: 16px; font-weight: bold;">${freqFormatarHoras(horas)}</span></div>
+                            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 14px; border-radius: 10px;"><strong style="color: #047857;">Total a Receber</strong><br><span style="font-size: 16px; font-weight: bold;">${freqFormatarMoeda(total)}</span></div>
+                            <div style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 14px; border-radius: 10px;"><strong style="color: #475569;">Valor da Hora-Aula</strong><br><span style="font-size: 16px; font-weight: bold;">${taxaTexto}</span></div>
                         </div>
 
                         <table style="width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 5px; margin-bottom: 12px;">
@@ -2505,17 +2522,17 @@
                                     <th style="padding: 9px; text-align: center;">Turno</th>
                                     <th style="padding: 9px; text-align: center;">Entrada</th>
                                     <th style="padding: 9px; text-align: center;">Saída</th>
-                                    <th style="padding: 9px; text-align: right;">Carga</th>
-                                    <th style="padding: 9px; text-align: right;">Valor/Hora</th>
-                                    <th style="padding: 9px; text-align: right;">Total</th>
+                                    <th style="padding: 9px; text-align: right;">Carga do Dia</th>
+                                    <th style="padding: 9px; text-align: right;">Valor do Dia</th>
+                                    <th style="padding: 9px; text-align: right;">Acumulado</th>
                                 </tr>
                             </thead>
                             <tbody>${linhas}</tbody>
                             <tfoot>
                                 <tr style="background: #f1f5f9; font-weight: bold;">
-                                    <td colspan="4" style="padding: 10px 8px; text-align: right; border-top: 2px solid #cbd5e1;">TOTAL DO COLABORADOR:</td>
+                                    <td colspan="4" style="padding: 10px 8px; text-align: right; border-top: 2px solid #cbd5e1;">TOTAL FINAL:</td>
                                     <td style="padding: 10px 8px; text-align: right; border-top: 2px solid #cbd5e1;">${freqFormatarHoras(horas)}</td>
-                                    <td style="padding: 10px 8px; text-align: right; border-top: 2px solid #cbd5e1;">${taxaTexto}</td>
+                                    <td style="padding: 10px 8px; text-align: right; border-top: 2px solid #cbd5e1;">${freqFormatarMoeda(total)}</td>
                                     <td style="padding: 10px 8px; text-align: right; border-top: 2px solid #cbd5e1; color: #047857;">${freqFormatarMoeda(total)}</td>
                                 </tr>
                             </tfoot>
@@ -2527,7 +2544,7 @@
                 blocos = `<div style="padding: 30px; text-align: center; color: #64748b; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 10px;">Nenhum registro encontrado para gerar o relatório.</div>`;
             }
 
-            const titulo = 'Relatório de Frequência de Colaboradores';
+            const titulo = 'Registro de Frequência de Colaboradores';
             const subtitulo = 'Visualização pronta para impressão ou conferência';
 
             const htmlRelatorio = `
@@ -2549,27 +2566,6 @@
                     </div>
 
                     <h2 style="text-align: center; font-size: 17px; color: #1e3a8a; margin-bottom: 20px; text-transform: uppercase; font-weight: bold;">REGISTRO DE FREQUÊNCIA DE COLABORADORES</h2>
-
-                    <h2 style="font-size: 14px; color: #1e3a8a; text-transform: uppercase; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 6px; margin-top: 25px; margin-bottom: 12px; font-weight: bold;">1. Identificação do Relatório</h2>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 12px; background: #f1f5f9; padding: 16px; border-radius: 10px;">
-                        <div>
-                            <strong>Competência:</strong><br>${freqEscaparHtml(nomeMes)}<br><br>
-                            <strong>Colaborador:</strong><br>${freqEscaparHtml(professorSelecionado?.fullname || 'Todos os colaboradores')}
-                        </div>
-                        <div>
-                            <strong>Dias Registrados:</strong><br>${diasGeral}<br><br>
-                            <strong>Lançamentos:</strong><br>${registros.length}
-                        </div>
-                    </div>
-
-                    <h2 style="font-size: 14px; color: #1e3a8a; text-transform: uppercase; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 6px; margin-top: 25px; margin-bottom: 12px; font-weight: bold;">2. Resumo Financeiro da Frequência</h2>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; font-size: 12px;">
-                        <div style="background: #eff6ff; border: 1px solid #bfdbfe; padding: 14px; border-radius: 10px;"><strong style="color: #1e3a8a;">Carga Horária Total</strong><br><span style="font-size: 16px; font-weight: bold;">${freqFormatarHoras(totalHorasGeral)}</span></div>
-                        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 14px; border-radius: 10px;"><strong style="color: #047857;">Total a Receber</strong><br><span style="font-size: 16px; font-weight: bold;">${freqFormatarMoeda(totalReceberGeral)}</span></div>
-                        <div style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 14px; border-radius: 10px;"><strong style="color: #475569;">Colaboradores</strong><br><span style="font-size: 16px; font-weight: bold;">${Object.keys(grupos).length}</span></div>
-                    </div>
-
-                    <h2 style="font-size: 14px; color: #1e3a8a; text-transform: uppercase; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 6px; margin-top: 25px; margin-bottom: 12px; font-weight: bold;">3. Demonstrativo Individual de Frequência</h2>
                     ${blocos}
 
                     <div style="margin-top: 45px; display: flex; justify-content: space-between; text-align: center;">
@@ -2589,6 +2585,7 @@
             document.getElementById('conteudo-termo-Dinamico').innerHTML = htmlRelatorio;
             document.getElementById('modal-visualizador-termo').style.display = 'flex';
         }
+
     </script>
 </body>
 </html>
