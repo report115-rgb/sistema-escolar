@@ -6081,13 +6081,12 @@ function salvarPontoProfessor() {
     let valorHoraAula = 25.00; // Valor padrão caso não configurado
     
     // Buscar valor da hora-aula cadastrado no localStorage do sistema
-let listaColaboradores = JSON.parse(localStorage.getItem('se7_colaboradores') || '[]');
-const profObj = listaColaboradores.find(c => c.id == professorId);
-if (profObj && profObj.hourlyRate) {
-    valorHoraAula = parseFloat(profObj.hourlyRate);
-}
+if (typeof colaboradoresDB !== 'undefined') {
+    const profObj = colaboradoresDB.find(c => c.id == professorId);
+    if (profObj && profObj.valorHora) {
+        valorHoraAula = parseFloat(profObj.valorHora);
     }
-
+}
     const valorTotalReceber = totalHoras * valorHoraAula;
 
     // Criar objeto de registro
