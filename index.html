@@ -22,7 +22,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
     <!-- EmailJS SDK para Disparo de E-mails -->
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -1267,9 +1266,7 @@
             </div>
         </div>
 
-
-
-        <!-- AUDITORIA & LOGS -->
+<!-- AUDITORIA & LOGS -->
         <div id="subtab-audit" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
     <div class="flex justify-between items-center mb-4 pb-2 border-b border-gray-100 dark:border-slate-700">
         <h3 class="font-bold text-base text-blue-600 dark:text-blue-400"><i class="fa-solid fa-clock-rotate-left mr-2"></i> Auditoria e Rastreabilidade</h3>
@@ -1605,7 +1602,6 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        (function(){ emailjs.init("SUA_PUBLIC_KEY"); })();
 
         document.getElementById('cancel-date').valueAsDate = new Date();
 
@@ -1682,6 +1678,8 @@
     }
 }
 
+let cancelarEscutaAuditoria = null;
+
 function renderizarLogsAuditoria() {
     const tbody = document.getElementById('tabela-logs-auditoria');
     if (!tbody) return;
@@ -1689,7 +1687,8 @@ function renderizarLogsAuditoria() {
     tbody.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-gray-400">Carregando logs da nuvem...</td></tr>`;
 
     // Utiliza onSnapshot para atualizar em tempo real as ações de qualquer perfil (Master, Secretaria, etc.)
-    db.collection("systemLogs").orderBy("createdAt", "desc").limit(100).onSnapshot((snapshot) => {
+    if (cancelarEscutaAuditoria) cancelarEscutaAuditoria();
+    cancelarEscutaAuditoria = db.collection("systemLogs").orderBy("createdAt", "desc").limit(100).onSnapshot((snapshot) => {
         if (snapshot.empty) {
             tbody.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-gray-400">Nenhum log encontrado na nuvem.</td></tr>`;
             return;
@@ -1725,26 +1724,6 @@ async function limparLogsAuditoria() {
         alert("Erro ao limpar logs: " + e.message);
     }
 }
-
-        function mudarTipoLogin(tipo) {
-            const btnAdmin = document.getElementById('btn-tab-admin');
-            const btnAluno = document.getElementById('btn-tab-aluno');
-            const formAdmin = document.getElementById('form-login-admin');
-            const formAluno = document.getElementById('form-login-aluno');
-            const subTitle = document.getElementById('login-subtitle-text');
-
-            if (tipo === 'admin') {
-                btnAdmin.className = "flex-1 py-2 text-xs font-semibold rounded-md transition bg-blue-600 text-white shadow";
-                btnAluno.className = "flex-1 py-2 text-xs font-semibold rounded-md transition text-gray-600 dark:text-gray-300";
-                formAdmin.style.display = 'block'; formAluno.style.display = 'none';
-                subTitle.textContent = "Entre com suas credenciais para continuar";
-            } else {
-                btnAluno.className = "flex-1 py-2 text-xs font-semibold rounded-md transition bg-emerald-600 text-white shadow";
-                btnAdmin.className = "flex-1 py-2 text-xs font-semibold rounded-md transition text-gray-600 dark:text-gray-300";
-                formAluno.style.display = 'block'; formAdmin.style.display = 'none';
-                subTitle.textContent = "Acesse suas notas, presenças e faturas";
-            }
-        }
 
         async function fazerLogin() {
     const userInput = document.getElementById('login-user').value.trim().toLowerCase();
@@ -1976,6 +1955,9 @@ function renderizarCalendarioFlutuanteResultado() {
 }
 
         function fazerLoginAluno() {
+            if (!document.getElementById('tab-portal-aluno')) {
+                return alert("O Portal do Aluno não está disponível nesta versão da Matriz. Utilize o aplicativo do aluno.");
+            }
             const cpfInput = document.getElementById('login-aluno-cpf').value.trim().replace(/[^\d]/g, '');
             const passInput = document.getElementById('login-aluno-pass').value.trim();
             if (!cpfInput || !passInput) return alert("Informe o CPF e a senha/matrícula.");
@@ -2481,6 +2463,8 @@ async function removerUsuarioSistemaFirebase(id) {
 }
 
         function openTab(evt, tabId) {
+    if (!document.getElementById(tabId)) return;
+
     // 1. Oculta TODAS as abas principais do sistema
     const tabContents = document.getElementsByClassName("tab-content");
     for (let i = 0; i < tabContents.length; i++) {
@@ -4099,6 +4083,11 @@ function carregarDatasCalendarioParaFrequencia() {
             });
         }
 
+        function toggleBoxReprovacao(tipoId) {
+            const box = document.getElementById(`box_reprov_${tipoId}`);
+            if (box) box.style.display = box.style.display === 'none' ? 'block' : 'none';
+        }
+
         async function aprovarEEnviarParaGoogleDrive(alunoId, tipoId) {
             const aluno = students.find(s => s.id === alunoId);
             if(!aluno) return;
@@ -4593,6 +4582,7 @@ function renderFinanceStudentSelect() {
         }
 
         function carregarDadosPortalAluno(aluno) {
+            if (!document.getElementById('portal-aluno-nome')) return;
             alunoLogadoCache = aluno;
 
             document.getElementById('portal-aluno-nome').textContent = aluno.fullname;
@@ -5795,36 +5785,15 @@ function toggleModoEdicaoFinanceiro(financeLogId) {
 // Salva a nova data de vencimento e o novo valor diretamente na nuvem
 async function salvarEdicaoVencimentoValor(financeLogId) {
     const novoVencimento = document.getElementById(`edit-venc-${financeLogId}`).value;
-    const novoValor = parseFloat(document.getElementById(`edit-val-${financeLogId}`).value) || 0;
+    const valorInformado = document.getElementById(`edit-val-${financeLogId}`).value.trim();
+    const novoValor = Number(valorInformado);
 
     if (!novoVencimento) {
         return alert("Informe uma data de vencimento válida.");
     }
 
-    try {
-        await db.collection("financeLogs").doc(financeLogId).update({
-            date: novoVencimento,
-            amount: novoValor
-        });
-
-        registrarLogAuditoria(`Atualizou o vencimento para ${novoVencimento} e valor para R$ ${novoValor} no registro financeiro ID ${financeLogId}`, "Financeiro");
-        alert("Vencimento e valor atualizados com sucesso!");
-
-        // CORREÇÃO: Fecha a edição e atualiza a listagem do aluno instantaneamente na tela
-        const selFin = document.getElementById('fin-student-select');
-        if (selFin && selFin.value) {
-            renderizarCobrancasAlunoSelecionadoFinanceiro(selFin.value);
-        }
-    } catch (error) {
-        console.error("Erro ao atualizar fatura:", error);
-        alert("Erro ao atualizar na nuvem: " + error.message);
-    }
-}async function salvarEdicaoVencimentoValor(financeLogId) {
-    const novoVencimento = document.getElementById(`edit-venc-${financeLogId}`).value;
-    const novoValor = parseFloat(document.getElementById(`edit-val-${financeLogId}`).value) || 0;
-
-    if (!novoVencimento) {
-        return alert("Informe uma data de vencimento válida.");
+    if (!valorInformado || !Number.isFinite(novoValor) || novoValor < 0) {
+        return alert("Informe um valor válido, maior ou igual a zero.");
     }
 
     try {
