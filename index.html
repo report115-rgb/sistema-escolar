@@ -348,8 +348,6 @@
             <button class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-slate-600" onclick="openTab(event, 'tab-history')"><i class="fa-solid fa-file-pdf mr-1.5"></i> Emissão de Documentos</button>
             <button class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-slate-600" id="nav-btn-settings" onclick="openTab(event, 'tab-settings')"><i class="fa-solid fa-gear mr-1.5"></i> Sistema</button>
 	    <button class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-slate-600" onclick="openTab(event, 'tab-gestao-totem')"><i class="fa-solid fa-face-recognition mr-1.5"></i> Totem e Ponto</button>
-	   <button class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-slate-600" onclick="openTab(event, 'tab-ponto-professores')">
-    <i class="fa-solid fa-business-time mr-1.5"></i> Ponto de Professores</button>
            </nav>
     </div>
 
@@ -655,79 +653,6 @@
 <ul class="attendance-list divide-y divide-gray-200 dark:divide-slate-700 mb-4 space-y-2" id="student-grade-list"></ul>
             </div>
         </div>
-
-<!-- ABA DE CONTROLE DE PONTO (EXCLUSIVO PARA A SECRETARIA) -->
-<div id="tab-ponto-professores" class="tab-content space-y-4" style="display: none;">
-    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-md p-6 border border-gray-200 dark:border-slate-700 space-y-4">
-        
-        <div class="border-b border-gray-100 dark:border-slate-700 pb-3 flex justify-between items-center">
-            <div>
-                <h2 class="text-xl font-bold text-gray-900 dark:text-white">Controle de Ponto e Carga Horária Docente</h2>
-                <p class="text-xs text-gray-500">Registro de entrada e saída de professores para integração com o financeiro.</p>
-            </div>
-            <span class="px-3 py-1 bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 rounded-full text-xs font-bold">Módulo Secretaria</span>
-        </div>
-
-        <!-- Formulário de Lançamento de Ponto -->
-        <div class="bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700 grid grid-cols-1 md:grid-cols-6 gap-3 items-end">
-            <div>
-                <label class="block text-xs font-semibold mb-1 text-gray-700 dark:text-gray-300">Data (Calendário)</label>
-                <input type="date" id="ponto-data" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-xs dark:bg-slate-800 dark:text-white">
-            </div>
-            <div>
-                <label class="block text-xs font-semibold mb-1 text-gray-700 dark:text-gray-300">Professor(a)</label>
-                <select id="ponto-professor-select" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-xs dark:bg-slate-800 dark:text-white">
-                    <option value="">Selecione o professor...</option>
-                </select>
-            </div>
-            <div>
-                <label class="block text-xs font-semibold mb-1 text-gray-700 dark:text-gray-300">Turno</label>
-                <select id="ponto-turno" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-xs dark:bg-slate-800 dark:text-white">
-                    <option value="Manhã">Manhã</option>
-                    <option value="Tarde">Tarde</option>
-                    <option value="Noite">Noite</option>
-                </select>
-            </div>
-            <div>
-                <label class="block text-xs font-semibold mb-1 text-gray-700 dark:text-gray-300">Horário Entrada</label>
-                <input type="time" id="ponto-entrada" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-xs dark:bg-slate-800 dark:text-white">
-            </div>
-            <div>
-                <label class="block text-xs font-semibold mb-1 text-gray-700 dark:text-gray-300">Horário Saída</label>
-                <input type="time" id="ponto-saida" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-xs dark:bg-slate-800 dark:text-white">
-            </div>
-            <div>
-                <button type="button" onclick="salvarPontoSecretaria()" class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-xs shadow transition">
-                    <i class="fa-solid fa-check mr-1"></i> Registrar Ponto
-                </button>
-            </div>
-        </div>
-
-        <!-- Tabela de Registros Realizados -->
-        <div class="mt-4">
-            <h4 class="font-bold text-sm text-gray-800 dark:text-white mb-2">Registros Efetuados e Integração Financeira</h4>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-xs">
-                    <thead>
-                        <tr class="border-b border-gray-200 dark:border-slate-700 text-gray-500">
-                            <th class="p-3">Data</th>
-                            <th class="p-3">Professor(a)</th>
-                            <th class="p-3">Turno</th>
-                            <th class="p-3">Entrada - Saída</th>
-                            <th class="p-3">Total Horas</th>
-                            <th class="p-3">Valor Calculado (R$)</th>
-                            <th class="p-3 text-right">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tabela-ponto-secretaria" class="divide-y divide-gray-200 dark:divide-slate-700">
-                        <!-- Preenchido dinamicamente -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-    </div>
-</div>
 
         <!-- FINANCEIRO -->
         <div id="tab-student-finance" class="tab-content space-y-4" style="display: none;">
@@ -1102,7 +1027,7 @@
                     <div id="admin-calendar-view" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
                 </div>
 
-<!-- SUBABA COLABORADORES (ANTIGA PROFESSORES) -->
+                <!-- SUBABA COLABORADORES (ANTIGA PROFESSORES) -->
 <div id="subtab-teachers" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
     <div class="flex justify-between items-center border-b border-gray-200 dark:border-slate-700 pb-2">
         <h3 class="font-bold text-sm text-blue-600 dark:text-blue-400"><i class="fa-solid fa-id-card-clip mr-1.5"></i> Cadastro Geral de Colaboradores (Ponto & Facial)</h3>
@@ -1111,66 +1036,22 @@
 
     <input type="hidden" id="edit-teacher-id" value="">
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-            <label class="block text-xs font-semibold mb-1 text-gray-700 dark:text-gray-300">Nome Completo</label>
-            <input type="text" id="teacher-name" placeholder="Nome do colaborador" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-xs dark:bg-slate-800 dark:text-white">
+            <label class="block text-xs font-semibold mb-1">Nome Completo</label>
+            <input type="text" id="input-teacher-name" placeholder="Ex: Carlos Silva" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 dark:text-white">
         </div>
         <div>
-            <label class="block text-xs font-semibold mb-1 text-gray-700 dark:text-gray-300">CPF</label>
-            <input type="text" id="teacher-cpf" placeholder="000.000.000-00" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-xs dark:bg-slate-800 dark:text-white">
-        </div>
-        <div>
-            <label class="block text-xs font-semibold mb-1 text-gray-700 dark:text-gray-300">Função / Cargo</label>
-            <select id="teacher-role" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-xs dark:bg-slate-800 dark:text-white">
+            <label class="block text-xs font-semibold mb-1">Cargo / Função</label>
+            <select id="input-teacher-cargo" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 dark:text-white">
                 <option value="Professor">Professor(a)</option>
-                <option value="Secretaria">Secretaria</option>
-                <option value="Financeiro">Financeiro</option>
-                <option value="Administrador">Administrador</option>
+                <option value="Secretaria">Secretaria / Atendimento</option>
+                <option value="Limpeza">Funcionário(a) de Limpeza</option>
+                <option value="Coordenação">Coordenação Pedagógica</option>
+                <option value="Financeiro">Financeiro / Administrativo</option>
             </select>
         </div>
     </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
-        <div>
-            <label class="block text-xs font-semibold mb-1 text-gray-700 dark:text-gray-300">E-mail / Contato</label>
-            <input type="email" id="teacher-email" placeholder="email@escola.com" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-xs dark:bg-slate-800 dark:text-white">
-        </div>
-        <div>
-            <label class="block text-xs font-semibold mb-1 text-emerald-700 dark:text-emerald-400 font-bold">Valor da Hora-Aula (R$)</label>
-            <input type="number" id="teacher-hourly-rate" placeholder="50.00" step="0.01" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-xs dark:bg-slate-800 dark:text-white font-semibold">
-        </div>
-        <div class="flex items-end gap-2">
-            <button type="button" onclick="salvarColaboradorProfessor()" class="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-xs shadow transition">
-                <i class="fa-solid fa-save mr-1"></i> Salvar Colaborador
-            </button>
-            <button type="button" onclick="cancelarEdicaoColaborador()" class="py-2 px-3 bg-gray-500 hover:bg-gray-600 text-white font-semibold rounded-lg text-xs shadow transition" id="btn-cancel-teacher" style="display:none;">
-                Cancelar
-            </button>
-        </div>
-    </div>
-
-    <!-- Tabela de Listagem de Colaboradores com Ações Alinhadas -->
-    <div class="mt-6">
-        <h4 class="font-bold text-sm text-gray-800 dark:text-white mb-2">Colaboradores Cadastrados</h4>
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs">
-                <thead>
-                    <tr class="border-b border-gray-200 dark:border-slate-700 text-gray-500">
-                        <th class="p-3">Nome</th>
-                        <th class="p-3">CPF</th>
-                        <th class="p-3">Função</th>
-                        <th class="p-3">Hora-Aula (R$)</th>
-                        <th class="p-3 text-right">Ações</th>
-                    </tr>
-                </thead>
-                <tbody id="tabela-colaboradores-geral" class="divide-y divide-gray-200 dark:divide-slate-700">
-                    <!-- Preenchido dinamicamente pelo script -->
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
@@ -1187,65 +1068,48 @@
         </div>
     </div>
 
-    <!-- Bloco de Horários (Expediente) -->
-    <div class="bg-blue-50 dark:bg-slate-800/60 p-4 rounded-xl border border-blue-200 dark:border-slate-700 space-y-3">
-        <h4 class="font-bold text-xs text-blue-700 dark:text-blue-300 uppercase"><i class="fa-solid fa-clock mr-1"></i> Configuração de Horário (Folha de Ponto / Totem)</h4>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-            <!-- Turno da Manhã -->
-            <div class="bg-white dark:bg-slate-900 p-3 rounded-lg border border-blue-100 dark:border-slate-700 space-y-2">
-                <span class="font-bold text-gray-700 dark:text-gray-300">Expediente da Manhã</span>
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block text-[10px] text-gray-500 mb-0.5">Entrada Manhã</label>
-                        <input type="time" id="input-teacher-entrada-1" value="08:00" class="w-full px-2 py-1.5 rounded border dark:bg-slate-800 dark:text-white text-xs">
-                    </div>
-                    <div>
-                        <label class="block text-[10px] text-gray-500 mb-0.5">Saída Manhã</label>
-                        <input type="time" id="input-teacher-saida-1" value="12:00" class="w-full px-2 py-1.5 rounded border dark:bg-slate-800 dark:text-white text-xs">
-                    </div>
+<!-- ADICIONE ESTES CAMPOS DENTRO DO FORMULÁRIO DE CADASTRO DE COLABORADORES -->
+<div class="bg-blue-50 dark:bg-slate-800/60 p-4 rounded-xl border border-blue-200 dark:border-slate-700 space-y-3">
+    <h4 class="font-bold text-xs text-blue-700 dark:text-blue-300 uppercase"><i class="fa-solid fa-clock mr-1"></i> Configuração de Horário (Folha de Ponto / Totem)</h4>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+        <!-- Turno da Manhã -->
+        <div class="bg-white dark:bg-slate-900 p-3 rounded-lg border border-blue-100 dark:border-slate-700 space-y-2">
+            <span class="font-bold text-gray-700 dark:text-gray-300">Expediente da Manhã</span>
+            <div class="grid grid-cols-2 gap-2">
+                <div>
+                    <label class="block text-[10px] text-gray-500 mb-0.5">Entrada Manhã</label>
+                    <input type="time" id="input-teacher-entrada-1" value="08:00" class="w-full px-2 py-1.5 rounded border dark:bg-slate-800 dark:text-white text-xs">
+                </div>
+                <div>
+                    <label class="block text-[10px] text-gray-500 mb-0.5">Saída Manhã</label>
+                    <input type="time" id="input-teacher-saida-1" value="12:00" class="w-full px-2 py-1.5 rounded border dark:bg-slate-800 dark:text-white text-xs">
                 </div>
             </div>
+        </div>
 
-            <!-- Turno da Tarde / Noite -->
-            <div class="bg-white dark:bg-slate-900 p-3 rounded-lg border border-blue-100 dark:border-slate-700 space-y-2">
-                <span class="font-bold text-gray-700 dark:text-gray-300">Expediente da Tarde / Noite</span>
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block text-[10px] text-gray-500 mb-0.5">Entrada Tarde</label>
-                        <input type="time" id="input-teacher-entrada-2" value="14:00" class="w-full px-2 py-1.5 rounded border dark:bg-slate-800 dark:text-white text-xs">
-                    </div>
-                    <div>
-                        <label class="block text-[10px] text-gray-500 mb-0.5">Saída Tarde</label>
-                        <input type="time" id="input-teacher-saida-2" value="18:00" class="w-full px-2 py-1.5 rounded border dark:bg-slate-800 dark:text-white text-xs">
-                    </div>
+        <!-- Turno da Tarde / Noite -->
+        <div class="bg-white dark:bg-slate-900 p-3 rounded-lg border border-blue-100 dark:border-slate-700 space-y-2">
+            <span class="font-bold text-gray-700 dark:text-gray-300">Expediente da Tarde / Noite</span>
+            <div class="grid grid-cols-2 gap-2">
+                <div>
+                    <label class="block text-[10px] text-gray-500 mb-0.5">Entrada Tarde</label>
+                    <input type="time" id="input-teacher-entrada-2" value="14:00" class="w-full px-2 py-1.5 rounded border dark:bg-slate-800 dark:text-white text-xs">
+                </div>
+                <div>
+                    <label class="block text-[10px] text-gray-500 mb-0.5">Saída Tarde</label>
+                    <input type="time" id="input-teacher-saida-2" value="18:00" class="w-full px-2 py-1.5 rounded border dark:bg-slate-800 dark:text-white text-xs">
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Bloco de Configuração Financeira (Com ID para controlar visibilidade) -->
-    <div id="bloco-financeiro-professor" class="bg-emerald-50 dark:bg-slate-800/60 p-4 rounded-xl border border-emerald-200 dark:border-slate-700 space-y-3">
-        <h4 class="font-bold text-xs text-emerald-700 dark:text-emerald-300 uppercase"><i class="fa-solid fa-file-invoice-dollar mr-1"></i> Configuração Financeira do Professor (Hora-Aula)</h4>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-            <div>
-                <label class="block font-semibold text-gray-700 dark:text-gray-300 mb-1">Carga Horária Semanal / Mensal</label>
-                <input type="text" id="input-teacher-workload" placeholder="Ex: 40h mensais" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 dark:bg-slate-900 dark:text-white">
-            </div>
-            <div>
-                <label class="block font-semibold text-gray-700 dark:text-gray-300 mb-1">Valor por Hora-Aula (R$)</label>
-                <input type="number" id="input-teacher-hourly-rate" step="0.01" placeholder="25.00 ou 30.00" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 dark:bg-slate-900 dark:text-white font-bold text-emerald-600">
-            </div>
-        </div>
-    </div>
-
-    <!-- Botões de Ação -->
     <div class="flex gap-2 pt-2">
         <button type="button" onclick="saveTeacher()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow transition">Salvar Colaborador</button>
         <button type="button" id="btn-cancel-edit-teacher" onclick="cancelarEdicaoColaborador()" class="px-4 py-2.5 bg-gray-500 text-white text-xs font-semibold rounded-lg shadow" style="display: none;">Cancelar</button>
     </div>
 
-    <!-- Tabela de Colaboradores Cadastrados -->
     <div class="mt-4">
         <h4 class="font-bold text-xs text-gray-700 dark:text-gray-300 mb-2">Colaboradores Cadastrados na Instituição</h4>
         <div class="overflow-x-auto">
@@ -1255,7 +1119,6 @@
                         <th class="p-2.5">Nome / ID Totem</th>
                         <th class="p-2.5">Cargo / Função</th>
                         <th class="p-2.5">Formação / Registro</th>
-                        <th class="p-2.5">Valor Hora-Aula</th>
                         <th class="p-2.5 text-right">Ações</th>
                     </tr>
                 </thead>
@@ -1264,6 +1127,7 @@
         </div>
     </div>
 </div>
+
                 <!-- SUBABA EDIÇÃO DE DOCUMENTOS -->
 <div id="subtab-templates" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
     <div>
@@ -6092,297 +5956,6 @@ async function salvarEdicaoVencimentoValor(financeLogId) {
         console.error("Erro ao atualizar fatura:", error);
         alert("Erro ao atualizar na nuvem: " + error.message);
     }
-}
-
-// Função para registrar o ponto e calcular automaticamente o valor devido ao professor
-function salvarPontoProfessor() {
-    const data = document.getElementById('ponto-data').value;
-    const professorId = document.getElementById('ponto-professor-select').value;
-    const professorNome = document.getElementById('ponto-professor-select').options[document.getElementById('ponto-professor-select').selectedIndex].text;
-    const turno = document.getElementById('ponto-turno').value;
-    const entrada = document.getElementById('ponto-entrada').value;
-    const saida = document.getElementById('ponto-saida').value;
-
-    if (!data || !professorId || !entrada || !saida) {
-        alert('Por favor, preencha a data, o professor, a entrada e a saída.');
-        return;
-    }
-
-    // Cálculo das horas trabalhadas
-    const [hEntrada, mEntrada] = entrada.split(':').map(Number);
-    const [hSaida, mSaida] = saida.split(':').map(Number);
-    
-    let totalMinutos = (hSaida * 60 + mSaida) - (hEntrada * 60 + mEntrada);
-    if (totalMinutos <= 0) {
-        alert('O horário de saída deve ser posterior ao horário de entrada.');
-        return;
-    }
-    
-    const totalHoras = totalMinutos / 60;
-
-    // Buscar valor da hora-aula cadastrado para o professor (ex: R$ 25 ou R$ 30)
-    // Supondo que você armazene isso no objeto do professor ou busque do input correspondente
-    // Buscar valor da hora-aula cadastrado de forma segura (testando as chaves mais comuns)
-    let valorHoraAula = 25.00; // Valor padrão inicial
-    try {
-        let listaColaboradores = JSON.parse(localStorage.getItem('se7_colaboradores') || localStorage.getItem('teachers') || '[]');
-        const profObj = listaColaboradores.find(c => c.id == professorId || c.id === Number(professorId));
-        if (profObj) {
-            // Tenta ler o campo hourlyRate ou valorHora, dependendo de como foi salvo
-            const taxa = profObj.hourlyRate || profObj.valorHora;
-            if (taxa) {
-                valorHoraAula = parseFloat(taxa);
-            }
-        }
-    } catch (e) {
-        console.error("Erro ao buscar valor da hora-aula:", e);
-    }
-
-    const valorTotalReceber = totalHoras * valorHoraAula;
-
-    // Criar objeto de registro
-    const registroPonto = {
-        id: Date.now(),
-        data,
-        professorId,
-        professorNome,
-        turno,
-        entrada,
-        saida,
-        totalHoras: totalHoras.toFixed(2),
-        valorTotalReceber: valorTotalReceber.toFixed(2)
-    };
-
-    // Salvar no localStorage ou Firebase (conforme o padrão do seu SE7)
-    let listaPontos = JSON.parse(localStorage.getItem('se7_ponto_professores') || '[]');
-    listaPontos.push(registroPonto);
-    localStorage.setItem('se7_ponto_professores', JSON.stringify(listaPontos));
-
-    // Integrar automaticamente com o Contas a Pagar / Financeiro
-    integrarPontoComFinanceiro(registroPonto);
-
-    alert(`Ponto registrado com sucesso! Total de horas: ${totalHoras.toFixed(2)}h | Valor a Pagar: R$ ${valorTotalReceber.toFixed(2)}`);
-    
-    // Recarregar tabela
-    renderizarTabelaPonto();
-}
-
-function integrarPontoComFinanceiro(ponto) {
-    // Integração automática com o financeiro da instituição (Contas a Pagar / Despesas com Professores)
-    let financeiroPagar = JSON.parse(localStorage.getItem('se7_financeiro_pagar') || '[]');
-    financeiroPagar.push({
-        id: 'PAG-' + ponto.id,
-        descricao: `Aula Ministrada - ${ponto.professorNome} (${ponto.turno} - ${ponto.data})`,
-        beneficiario: ponto.professorNome,
-        valor: ponto.valorTotalReceber,
-        vencimento: ponto.data,
-        status: 'Pendente (Aguardando Liberação Contábil)'
-    });
-    localStorage.setItem('se7_financeiro_pagar', JSON.stringify(financeiroPagar));
-}
-
-function carregarProfessoresNoPonto() {
-    const select = document.getElementById('ponto-professor-select');
-    if (!select) return;
-
-    // Mantém a primeira opção padrão e limpa o resto
-    select.innerHTML = '<option value="">Selecione o colaborador...</option>';
-
-    // Supondo que você salve a lista de colaboradores no localStorage com a chave 'se7_colaboradores' (ou 'teachers')
-    // Ajuste o nome da chave caso seja diferente no seu sistema
-    let listaColaboradores = JSON.parse(localStorage.getItem('se7_colaboradores') || '[]');
-
-    listaColaboradores.forEach(c => {
-        const option = document.createElement('option');
-        option.value = c.id; // ID do colaborador
-        option.textContent = c.name || c.nome; // Nome do colaborador
-        select.appendChild(option);
-    });
-}
-
-// 1. Controla se o bloco financeiro aparece com base no cargo selecionado
-function toggleConfiguracaoFinanceira() {
-    const cargo = document.getElementById('input-teacher-cargo').value;
-    const bloco = document.getElementById('bloco-financeiro-professor');
-    if (bloco) {
-        if (cargo === 'Professor') {
-            bloco.style.display = 'block';
-        } else {
-            bloco.style.display = 'none';
-        }
-    }
-}
-
-// 2. Renderiza a tabela de colaboradores exibindo o valor da hora-aula
-function renderizarTabelaColaboradores() {
-    const tbody = document.getElementById('teachers-list');
-    if (!tbody) return;
-
-    let lista = JSON.parse(localStorage.getItem('se7_colaboradores') || localStorage.getItem('teachers') || '[]');
-    tbody.innerHTML = '';
-
-    if (lista.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-gray-400">Nenhum colaborador cadastrado.</td></tr>`;
-        return;
-    }
-
-    lista.forEach(c => {
-        // Formata o valor da hora-aula caso exista
-        let valorExibicao = '-';
-        if (c.cargo === 'Professor' && c.hourlyRate) {
-            valorExibicao = `R$ ${parseFloat(c.hourlyRate).toFixed(2)}`;
-        }
-
-        tbody.innerHTML += `
-            <tr class="hover:bg-gray-50 dark:hover:bg-slate-900">
-                <td class="p-2.5">
-                    <div class="font-bold text-gray-800 dark:text-gray-200">${c.name || c.nome}</div>
-                    <div class="text-[10px] text-gray-400 font-mono">ID: ${c.pin || c.id}</div>
-                </td>
-                <td class="p-2.5"><span class="px-2 py-0.5 bg-blue-100 text-blue-800 rounded font-semibold">${c.cargo}</span></td>
-                <td class="p-2.5">
-                    <div>${c.formation || c.formacao || '-'}</div>
-                    <div class="text-[10px] text-gray-400">${c.council || c.conselho || ''}</div>
-                </td>
-                <td class="p-2.5 font-bold text-emerald-600">${valorExibicao}</td>
-                <td class="p-2.5 text-right space-x-2">
-                    <button onclick="editarColaborador('${c.id}')" class="text-blue-500 hover:text-blue-700" title="Editar"><i class="fa-solid fa-pen-to-square"></i></button>
-                    <button onclick="excluirColaborador('${c.id}')" class="text-red-500 hover:text-red-700" title="Excluir"><i class="fa-solid fa-trash"></i></button>
-                </td>
-            </tr>
-        `;
-    });
-}
-
-// 3. Função para garantir que o salvamento/edição grave a hora-aula corretamente
-// (Certifique-se de que a sua função saveTeacher atualize ou adicione considerando os inputs abaixo)
-function saveTeacher() {
-    const editId = document.getElementById('edit-teacher-id').value;
-    const name = document.getElementById('input-teacher-name').value;
-    const cargo = document.getElementById('input-teacher-cargo').value;
-    const formation = document.getElementById('input-teacher-formation').value;
-    const council = document.getElementById('input-teacher-council').value;
-    const pin = document.getElementById('input-teacher-pin').value || 'PIN-' + Math.floor(1000 + Math.random() * 9000);
-    
-    // Horários
-    const entrada1 = document.getElementById('input-teacher-entrada-1').value;
-    const saida1 = document.getElementById('input-teacher-saida-1').value;
-    const entrada2 = document.getElementById('input-teacher-entrada-2').value;
-    const saida2 = document.getElementById('input-teacher-saida-2').value;
-
-    // Dados financeiros (Hora-Aula)
-    const workload = document.getElementById('input-teacher-workload').value;
-    const hourlyRate = document.getElementById('input-teacher-hourly-rate').value;
-
-    if (!name) {
-        alert('Por favor, informe o nome completo do colaborador.');
-        return;
-    }
-
-    let lista = JSON.parse(localStorage.getItem('se7_colaboradores') || localStorage.getItem('teachers') || '[]');
-
-    if (editId) {
-        // Editando registro existente (como a Jaqueline Minas)
-        let index = lista.findIndex(c => c.id == editId);
-        if (index !== -1) {
-            lista[index] = {
-                ...lista[index],
-                name, cargo, formation, council, pin,
-                entrada1, saida1, entrada2, saida2,
-                workload, hourlyRate
-            };
-        }
-    } else {
-        // Criando novo registro
-        const novoColaborador = {
-            id: Date.now().toString(),
-            name, cargo, formation, council, pin,
-            entrada1, saida1, entrada2, saida2,
-            workload, hourlyRate
-        };
-        lista.push(novoColaborador);
-    }
-
-    // Salva nas duas chaves principais para evitar qualquer incompatibilidade com o resto do sistema
-    localStorage.setItem('se7_colaboradores', JSON.stringify(lista));
-    localStorage.setItem('teachers', JSON.stringify(lista));
-
-    // Limpa formulário e reseta ID de edição
-    document.getElementById('edit-teacher-id').value = '';
-    document.getElementById('input-teacher-name').value = '';
-    document.getElementById('input-teacher-formation').value = '';
-    document.getElementById('input-teacher-council').value = '';
-    document.getElementById('input-teacher-pin').value = '';
-    document.getElementById('input-teacher-hourly-rate').value = '';
-    document.getElementById('input-teacher-workload').value = '';
-    
-    const btnCancel = document.getElementById('btn-cancel-edit-teacher');
-    if (btnCancel) btnCancel.style.display = 'none';
-
-    alert('Colaborador salvo com sucesso!');
-    renderizarTabelaColaboradores();
-}
-
-// 4. Função para preencher os campos ao clicar no botão de Editar
-function editarColaborador(id) {
-    let lista = JSON.parse(localStorage.getItem('se7_colaboradores') || localStorage.getItem('teachers') || '[]');
-    const c = lista.find(item => item.id == id);
-    if (!c) return;
-
-    document.getElementById('edit-teacher-id').value = c.id;
-    document.getElementById('input-teacher-name').value = c.name || c.nome || '';
-    document.getElementById('input-teacher-cargo').value = c.cargo || 'Professor';
-    document.getElementById('input-teacher-formation').value = c.formation || c.formacao || '';
-    document.getElementById('input-teacher-council').value = c.council || c.conselho || '';
-    document.getElementById('input-teacher-pin').value = c.pin || c.id || '';
-    
-    // Preenche horários e financeiro se existirem
-    if (document.getElementById('input-teacher-entrada-1')) document.getElementById('input-teacher-entrada-1').value = c.entrada1 || '08:00';
-    if (document.getElementById('input-teacher-saida-1')) document.getElementById('input-teacher-saida-1').value = c.saida1 || '12:00';
-    if (document.getElementById('input-teacher-entrada-2')) document.getElementById('input-teacher-entrada-2').value = c.entrada2 || '14:00';
-    if (document.getElementById('input-teacher-saida-2')) document.getElementById('input-teacher-saida-2').value = c.saida2 || '18:00';
-    
-    if (document.getElementById('input-teacher-workload')) document.getElementById('input-teacher-workload').value = c.workload || '';
-    if (document.getElementById('input-teacher-hourly-rate')) document.getElementById('input-teacher-hourly-rate').value = c.hourlyRate || '';
-
-    // Atualiza a visibilidade do bloco financeiro conforme o cargo
-    toggleConfiguracaoFinanceira();
-
-    // Mostra botão cancelar edição
-    const btnCancel = document.getElementById('btn-cancel-edit-teacher');
-    if (btnCancel) btnCancel.style.display = 'inline-block';
-
-    // Rola a página para o topo do formulário de cadastro
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function renderizarTabelaPonto() {
-    const tbody = document.getElementById('tabela-ponto-professores');
-    if (!tbody) return;
-    
-    let listaPontos = JSON.parse(localStorage.getItem('se7_ponto_professores') || '[]');
-    tbody.innerHTML = '';
-
-    if (listaPontos.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-gray-400">Nenhum registro de ponto cadastrado.</td></tr>`;
-        return;
-    }
-
-    listaPontos.forEach((p) => {
-        tbody.innerHTML += `
-            <tr class="hover:bg-gray-50 dark:hover:bg-slate-900">
-                <td class="p-3">${p.data}</td>
-                <td class="p-3 font-semibold">${p.professorNome}</td>
-                <td class="p-3"><span class="px-2 py-0.5 bg-blue-100 text-blue-800 rounded text-[10px] font-bold">${p.turno}</span></td>
-                <td class="p-3">${p.entrada} às ${p.saida}</td>
-                <td class="p-3">${p.totalHoras} hrs</td>
-                <td class="p-3 font-bold text-emerald-600">R$ ${p.valorTotalReceber}</td>
-                <td class="p-3 text-right">
-                    <button onclick="excluirPonto(${p.id})" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>
-                </td>
-            </tr>
-        `;
-    });
 }
 	</script>
 </body>
