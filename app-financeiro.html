@@ -2466,10 +2466,8 @@
                 const taxaTexto = rates.length === 1 ? freqFormatarMoeda(rates[0]) : (rates.length ? 'Valores variados' : 'Não configurado');
                 const dias = new Set(g.registros.map(r => r.data).filter(Boolean)).size;
 
-                // Cada lançamento compõe a totalização progressiva do colaborador.
-                let acumulado = 0;
+                // Exibe o valor de cada lançamento; a soma aparece no total final.
                 const linhas = g.registros.map(r => {
-                    acumulado += r.total;
                     return `
                     <tr>
                         <td style="padding: 7px 8px; border-bottom: 1px solid #e2e8f0;">${freqEscaparHtml(r.data ? r.data.split('-').reverse().join('/') : '---')}</td>
@@ -2478,7 +2476,6 @@
                         <td style="padding: 7px 8px; border-bottom: 1px solid #e2e8f0; text-align: center;">${freqEscaparHtml(r.saida || '---')}</td>
                         <td style="padding: 7px 8px; border-bottom: 1px solid #e2e8f0; text-align: right;">${freqFormatarHoras(r.horas)}</td>
                         <td style="padding: 7px 8px; border-bottom: 1px solid #e2e8f0; text-align: right; white-space: nowrap;">${freqFormatarMoeda(r.total)}</td>
-                        <td style="padding: 7px 8px; border-bottom: 1px solid #e2e8f0; text-align: right; font-weight: bold; white-space: nowrap; color: #047857;">${freqFormatarMoeda(acumulado)}</td>
                     </tr>`;
                 }).join('');
 
@@ -2524,7 +2521,6 @@
                                     <th style="padding: 9px; text-align: center;">Saída</th>
                                     <th style="padding: 9px; text-align: right;">Carga do Dia</th>
                                     <th style="padding: 9px; text-align: right;">Valor do Dia</th>
-                                    <th style="padding: 9px; text-align: right;">Acumulado</th>
                                 </tr>
                             </thead>
                             <tbody>${linhas}</tbody>
@@ -2533,7 +2529,6 @@
                                     <td colspan="4" style="padding: 10px 8px; text-align: right; border-top: 2px solid #cbd5e1;">TOTAL FINAL:</td>
                                     <td style="padding: 10px 8px; text-align: right; border-top: 2px solid #cbd5e1;">${freqFormatarHoras(horas)}</td>
                                     <td style="padding: 10px 8px; text-align: right; border-top: 2px solid #cbd5e1;">${freqFormatarMoeda(total)}</td>
-                                    <td style="padding: 10px 8px; text-align: right; border-top: 2px solid #cbd5e1; color: #047857;">${freqFormatarMoeda(total)}</td>
                                 </tr>
                             </tfoot>
                         </table>
