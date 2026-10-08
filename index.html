@@ -1116,21 +1116,6 @@
         </div>
     </div>
 
-<!-- ADICIONE ESTE BLOCO LOGO ABAIXO DOS CAMPOS DE NOME E CARGO: -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-        <div>
-            <label class="block text-xs font-semibold mb-1">Formação / Especialidade</label>
-            <input type="text" id="input-teacher-formation" placeholder="Ex: Licenciatura em Letras / Pós" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 dark:text-white">
-        </div>
-        <div>
-            <label class="block text-xs font-semibold mb-1 text-emerald-700 dark:text-emerald-400 font-bold">Valor da Hora-Aula (R$)</label>
-            <input type="number" id="input-teacher-horaaula" step="0.01" placeholder="Ex: 45.00" class="w-full px-3 py-2 rounded-lg border border-emerald-300 dark:border-slate-600 text-sm dark:bg-slate-900 dark:text-white font-bold">
-        </div>
-        <div>
-            <!-- Espaço reservado para manter o alinhamento da grade -->
-        </div>
-    </div>
-
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
             <label class="block text-xs font-semibold mb-1">Formação / Especialidade</label>
@@ -2782,11 +2767,12 @@ async function removerUsuarioSistemaFirebase(id) {
         }
 
         async function saveTeacher() {
+    const editId = document.getElementById('edit-teacher-id').value;
     const fullname = document.getElementById('input-teacher-name').value.trim();
     const cargo = document.getElementById('input-teacher-cargo').value;
     const formation = document.getElementById('input-teacher-formation').value.trim();
     const council = document.getElementById('input-teacher-council').value.trim();
-    const valorHoraAula = parseFloat(document.getElementById('input-teacher-horaaula').value) || 0;
+    const pinInput = document.getElementById('input-teacher-pin');
 
     // Captura os horários da jornada de trabalho
     const entrada1 = document.getElementById('input-teacher-entrada-1').value || "08:00";
@@ -2803,13 +2789,12 @@ async function removerUsuarioSistemaFirebase(id) {
         pinFinal = `COLAB-${String(proximoNumero).padStart(3, '0')}`;
     }
 
-   const teacherData = { 
+    const teacherData = { 
         fullname, 
         cargo, 
         formation, 
         council, 
         pin: pinFinal,
-        valorHoraAula: valorHoraAula, // <--- ADICIONE ESTA PROPRIEDADE AQUI
         horarios: { entrada1, saida1, entrada2, saida2 } 
     };
 
@@ -2840,13 +2825,12 @@ function renderTeachers() {
             list.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-gray-400">Nenhum colaborador cadastrado.</td></tr>`;
             return;
         }
-       teachers.forEach(t => {
+        teachers.forEach(t => {
             let corBadge = 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300';
             if (t.cargo === 'Secretaria') corBadge = 'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300';
             if (t.cargo === 'Limpeza') corBadge = 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300';
             if (t.cargo === 'Coordenação') corBadge = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300';
-	    const valorFormatado = t.valorHoraAula ? `R$ ${parseFloat(t.valorHoraAula).toFixed(2)}` : 'Não definida';
-           
+
             list.innerHTML += `
                 <tr class="border-b border-gray-100 dark:border-slate-700">
                     <td class="p-2.5">
@@ -2879,12 +2863,12 @@ function renderTeachers() {
 function editarColaborador(id) {
     const t = teachers.find(item => item.id === id);
     if (!t) return;
+    document.getElementById('edit-teacher-id').value = t.id;
     document.getElementById('input-teacher-name').value = t.fullname || '';
     document.getElementById('input-teacher-cargo').value = t.cargo || 'Professor';
     document.getElementById('input-teacher-formation').value = t.formation || '';
     document.getElementById('input-teacher-council').value = t.council || '';
     document.getElementById('input-teacher-pin').value = t.pin || '';
-    document.getElementById('input-teacher-horaaula').value = t.valorHoraAula || '';
 
     // Restaura os horários salvos
     if (t.horarios) {
@@ -3479,56 +3463,30 @@ async function excluirColaborador(id) {
         }
 
         async function salvarEdicaoCalendario() {
-    const id = document.getElementById('edit-cal-id').value;
-    const subject = document.getElementById('edit-cal-subject').value.trim();
-    const description = document.getElementById('edit-cal-desc').value.trim();
-    const qtd = parseInt(document.getElementById('edit-cal-qtd').value) || 2;
+            const id = document.getElementById('edit-cal-id').value;
+            const subject = document.getElementById('edit-cal-subject').value.trim();
+            const description = document.getElementById('edit-cal-desc').value.trim();
+            const qtd = parseInt(document.getElementById('edit-cal-qtd').value) || 2;
 
-    if (!id) {
-        alert("Erro: ID do evento não encontrado para edição.");
-        return;
-    }
+            if (!subject) return alert("Informe a disciplina.");
 
-    if (!subject) {
-        alert("Por favor, informe a disciplina.");
-        return;
-    }
+            let novasDatas = [];
+            for (let i = 1; i <= qtd; i++) {
+                const val = document.getElementById(`edit-cal-date-${i}`).value;
+                if (!val) return alert(`Preencha a Data ${i}.`);
+                novasDatas.push(val);
+            }
 
-    let novasDatas = [];
-    for (let i = 1; i <= qtd; i++) {
-        const inputData = document.getElementById(`edit-cal-date-${i}`);
-        if (!inputData || !inputData.value) {
-            alert(`Por favor, preencha a Data ${i}.`);
-            return;
-        }
-        novasDatas.push(inputData.value);
-    }
+            await db.collection("academicCalendars").doc(id).update({
+                subject,
+                description,
+                dates: novasDatas
+            });
 
-    try {
-        // Salva as alterações diretamente na nuvem (Firestore)
-        await db.collection("academicCalendars").doc(id).update({
-            subject: subject,
-            description: description,
-            dates: novasDatas
-        });
-
-        // Registra a ação na auditoria
-        if (typeof registrarLogAuditoria === 'function') {
             registrarLogAuditoria(`Atualizou o calendário acadêmico da disciplina ${subject}`, "Calendário Acadêmico");
+            alert("Calendário atualizado com sucesso!");
+            fecharModalEditarCalendario();
         }
-
-        alert("Alterações salvas com sucesso!");
-        fecharModalEditarCalendario();
-        
-        // Atualiza a visualização se necessário
-        if (typeof renderizarTabelaGerenciarCalendarios === 'function') {
-            renderizarTabelaGerenciarCalendarios();
-        }
-    } catch (error) {
-        console.error("Erro ao salvar edição do calendário:", error);
-        alert("Erro ao salvar na nuvem: " + error.message);
-    }
-}
 
         async function excluirCalendario(id) {
             if (!confirm("Tem certeza que deseja excluir este calendário acadêmico e suas datas agendadas?")) return;
