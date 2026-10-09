@@ -74,7 +74,18 @@ export async function dispatch({auth,db},req,b){
  if(action==='session'){
   if(u.role==='aluno')return {profile:{id:u.studentId,...publicStudent(u.student)},role:u.role};
   if(u.role==='master')await claims(auth,u.uid,{role:'master'});
-  return {profile:{uid:u.uid,email:u.email,nome:u.profile?.nome||u.name||u.email||'Master',perfil:u.role},role:u.role};
+  const account=await auth.getUser(u.uid);
+  const storedName=account.displayName||u.profile?.nome||'';
+  const nome=storedName&&!storedName.includes('@')?storedName:({master:'Master',secretaria:'Secretaria',professor:'Professor',financeiro:'Financeiro',totem:'Totem'}[u.role]||'Usuário');
+  return {profile:{uid:u.uid,email:account.email||u.email,nome,perfil:u.role},role:u.role};
+ }
+ if(action==='profile-name'){
+  if(!['master','secretaria','professor','financeiro','totem'].includes(u.role))fail(403,'Ação não permitida.');
+  const name=typeof b.name==='string'?b.name.trim().replace(/\s+/g,' '):'';
+  if(name.length<2||name.length>100||/[<>@\x00-\x1f]/.test(name))fail(400,'Informe um nome entre 2 e 100 caracteres.');
+  await auth.updateUser(u.uid,{displayName:name});
+  if(u.profile)await db.collection('se7Staff').doc(u.uid).update({nome:name});
+  return {profile:{uid:u.uid,email:u.email,nome:name,perfil:u.role},role:u.role};
  }
  if(u.role==='aluno'){
   const ref=db.collection('students').doc(u.studentId);

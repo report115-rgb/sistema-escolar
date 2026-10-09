@@ -374,7 +374,7 @@
 
             <div class="flex items-center space-x-4">
                 <div class="hidden lg:flex flex-col text-right text-xs">
-                    <span class="text-blue-200 uppercase text-[10px]" id="header-user-display">Usuário Conectado</span>
+                    <div class="flex items-center justify-end gap-2"><span class="text-blue-200 text-xs font-medium" id="header-user-display">Usuário Conectado</span><button type="button" onclick="editarNomeUsuarioLogado()" class="text-blue-200 hover:text-white" title="Editar meu nome" aria-label="Editar meu nome"><i class="fa-solid fa-pen text-[10px]"></i></button></div>
                     <span class="font-semibold text-white" id="header-live-clock">Carregando relógio...</span>
                 </div>
                 <div class="flex items-center space-x-2">
@@ -2041,6 +2041,18 @@ async function alternarBloqueioPortal(id){if(!usuarioMasterAtivo())return;const 
             const sessao = JSON.parse(sessionStorage.getItem('usuario_logado'));
             const displayEl = document.getElementById('header-user-display');
             if (displayEl && sessao) displayEl.textContent = `${sessao.nome} (${sessao.perfil})`;
+        }
+
+        async function editarNomeUsuarioLogado() {
+            const atual = JSON.parse(sessionStorage.getItem('usuario_logado') || '{}');
+            const nome = prompt('Como seu nome deve aparecer no cabeçalho?', atual.nome || '');
+            if (nome === null) return;
+            try {
+                const resultado = await SE7.api('profile-name', {name: nome});
+                await firebase.auth().currentUser.getIdToken(true);
+                sessionStorage.setItem('usuario_logado', JSON.stringify(resultado.profile));
+                atualizarDisplayUsuarioLogado();
+            } catch (e) { alert(e.message); }
         }
 
         function abrirModalEsqueciSenhaAdmin() { document.getElementById('modal-esqueci-senha-admin').style.display = 'flex'; }
