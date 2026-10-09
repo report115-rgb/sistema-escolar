@@ -430,8 +430,10 @@
                 <div class="flex space-x-2 mb-6 border-b border-gray-200 dark:border-slate-700 pb-3">
                     <button class="subtab-button active px-4 py-2 rounded-xl text-xs font-semibold bg-blue-600 text-white shadow" onclick="openSubTab(event, 'subtab-alunos-lista')"><i class="fa-solid fa-list mr-1"></i> Lista de Alunos</button>
                     <button class="subtab-button px-4 py-2 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-validar-docs')"><i class="fa-solid fa-folder-open mr-1"></i> Validar Documentação</button>
+<button id="btn-acessos-portal" class="subtab-button px-4 py-2 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" style="display:none;" onclick="openSubTab(event,'subtab-acessos-portal')">Acessos ao Portal</button>
                 </div>
 
+<div id="subtab-acessos-portal" class="subtab-content space-y-4" style="display:none;"><h2 class="text-xl font-bold">Acessos ao Portal do Aluno</h2><p class="text-sm">Entradas, atividades e abas mais acessadas desde a atualização do aplicativo. Senhas pessoais não são exibidas. Administração restrita ao master.</p><div class="flex gap-2"><input id="portal-acessos-busca" placeholder="Buscar nome ou matrícula" oninput="renderizarPainelAcessosPortal()" class="flex-1 border rounded-lg p-2 dark:bg-slate-900"><button onclick="carregarPainelAcessosPortal()" class="bg-blue-600 text-white rounded-lg px-4">Atualizar</button></div><div id="portal-senha-temporaria" class="p-4 bg-amber-100 text-amber-950 rounded-lg" style="display:none;"></div><button onclick="document.getElementById('portal-senha-temporaria').textContent='';document.getElementById('portal-senha-temporaria').style.display='none';" class="text-xs">Ocultar senha temporária</button><div id="portal-acessos-lista" class="space-y-3"></div><div id="portal-acessos-historico" class="p-4 rounded-xl bg-gray-50 dark:bg-slate-900 space-y-1"></div></div>
                 <div id="subtab-alunos-lista" class="subtab-content active space-y-4">
     <div class="flex justify-between items-center mb-4 pb-2 border-b border-gray-100 dark:border-slate-700 flex-wrap gap-2">
         <h2 class="text-xl font-bold text-gray-900 dark:text-white">Alunos Matriculados</h2>
@@ -2036,17 +2038,99 @@ function renderizarCalendarioFlutuanteResultado() {
     }
 }
 
-        function fazerLoginAluno() {
+async function criarCredencialPortal(senha) {
+    if (!window.crypto?.subtle) throw new Error('Use HTTPS e uma WebView atualizada para gerenciar senhas.');
+    const salt = window.crypto.getRandomValues(new Uint8Array(16));
+    const key = await window.crypto.subtle.importKey('raw',new TextEncoder().encode(senha),'PBKDF2',false,['deriveBits']);
+    const bits = await window.crypto.subtle.deriveBits({name:'PBKDF2',salt,iterations:210000,hash:'SHA-256'},key,256);
+    return {algorithm:'PBKDF2-SHA256',iterations:210000,salt:Array.from(salt,b=>b.toString(16).padStart(2,'0')).join(''),hash:Array.from(new Uint8Array(bits),b=>b.toString(16).padStart(2,'0')).join('')};
+}
+async function verificarCredencialPortal(senha,credencial) {
+    if (!credencial || credencial.algorithm!=='PBKDF2-SHA256' || credencial.iterations!==210000 || !/^[a-f0-9]{32}$/.test(credencial.salt) || !/^[a-f0-9]{64}$/.test(credencial.hash)) return false;
+    const salt=Uint8Array.from(credencial.salt.match(/../g),x=>parseInt(x,16));
+    const key=await window.crypto.subtle.importKey('raw',new TextEncoder().encode(senha),'PBKDF2',false,['deriveBits']);
+    const bits=await window.crypto.subtle.deriveBits({name:'PBKDF2',salt,iterations:210000,hash:'SHA-256'},key,256);
+    const hash=Array.from(new Uint8Array(bits),b=>b.toString(16).padStart(2,'0')).join('');
+    let diff=0;for(let i=0;i<hash.length;i++) diff|=hash.charCodeAt(i)^credencial.hash.charCodeAt(i);return diff===0;
+}
+
+let portalAlunosPainel=[],portalHistoricoVersao=0;
+function podeGerenciarPortal() {return usuarioMasterAtivo();}
+function portalTexto(valor) {return String(valor??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function portalData(valor) {const d=valor?.toDate?valor.toDate():valor?new Date(valor):null;return d&&!isNaN(d)?d.toLocaleString('pt-BR',{timeZone:'America/Fortaleza'}):'Sem registro';}
+const nomesAbasPortal={home:'Início',financeiro:'Financeiro',notas:'Notas',frequencia:'Frequência',documentos:'Documentos',calendario:'Calendário',carteirinha:'Carteirinha'};
+async function carregarPainelAcessosPortal() {
+    if(!podeGerenciarPortal()) return alert('Painel restrito ao master.');
+    const box=document.getElementById('portal-acessos-lista');box.textContent='Consultando Firebase…';
+    try {const snap=await db.collection('students').get({source:'server'});portalAlunosPainel=snap.docs.map(d=>({id:d.id,...d.data()}));renderizarPainelAcessosPortal();}
+    catch(e){box.textContent='Não foi possível carregar os acessos: '+e.message;}
+}
+function renderizarPainelAcessosPortal() {
+    if(!podeGerenciarPortal()) return;
+    const busca=document.getElementById('portal-acessos-busca').value.toLowerCase();
+    const box=document.getElementById('portal-acessos-lista');box.innerHTML='';
+    const lista=portalAlunosPainel.filter(a=>`${a.fullname} ${a.code}`.toLowerCase().includes(busca)).sort((a,b)=>(a.fullname||'').localeCompare(b.fullname||'','pt-BR'));
+    for(const a of lista){
+        const row=document.createElement('div');row.className='border rounded-xl p-4 space-y-2 dark:border-slate-700';
+        const ranking=Object.entries(a.portalTabCounts||{}).filter(([k])=>nomesAbasPortal[k]).sort((x,y)=>y[1]-x[1]);
+        row.innerHTML=`<div class="font-bold">${portalTexto(a.fullname)} <span class="text-xs font-normal">${portalTexto(a.code)}</span></div><div class="text-xs">${a.portalBlocked?'Bloqueado':'Liberado'} • Senha: ${a.portalMustChangePassword?'troca obrigatória':a.portalCredential?'definida':'acesso inicial/legado'}<br>Última entrada: ${portalTexto(portalData(a.portalLastLoginAt))}<br>Última atividade: ${portalTexto(portalData(a.portalLastAccessAt))}<br>Entradas registradas: ${Number(a.portalLoginCount)||0}<br>Abas mais acessadas: ${ranking.length?ranking.map(([k,n])=>`${nomesAbasPortal[k]} (${Number(n)||0})`).join(' • '):'Sem registros'}</div>`;
+        const actions=document.createElement('div');actions.className='flex flex-wrap gap-2';
+        for(const [label,fn] of [['Histórico',()=>verHistoricoPortal(a.id)],['Redefinir acesso',()=>redefinirAcessoPortal(a.id)],[a.portalBlocked?'Liberar acesso':'Bloquear acesso',()=>alternarBloqueioPortal(a.id)]]){const b=document.createElement('button');b.textContent=label;b.className='px-3 py-2 rounded-lg bg-blue-100 text-blue-900 text-xs';b.onclick=fn;actions.appendChild(b);}
+        row.appendChild(actions);box.appendChild(row);
+    }
+    if(!lista.length) box.textContent='Nenhum aluno encontrado.';
+}
+async function verHistoricoPortal(id) {
+    if(!podeGerenciarPortal()) return;
+    const versao=++portalHistoricoVersao;const box=document.getElementById('portal-acessos-historico');box.textContent='Carregando histórico…';
+    try {
+        const ref=db.collection('students').doc(id);
+        const [events,audit]=await Promise.all([ref.collection('portalAccessEvents').orderBy('at','desc').limit(100).get({source:'server'}),ref.collection('portalAdminEvents').orderBy('at','desc').limit(30).get({source:'server'})]);
+        if(versao!==portalHistoricoVersao)return;
+        const aluno=portalAlunosPainel.find(a=>a.id===id);
+        const labels={login:'Entrada com senha',resume:'Retomada/atualização do aplicativo',tab:'Acesso à aba',password_changed:'Senha definida'};
+        box.innerHTML=`<h3 class="font-bold">Histórico — ${portalTexto(aluno?.fullname)}</h3><p class="text-xs mb-2">Até 100 atividades recentes. Contagens de abas incluem todo o período registrado.</p>`;
+        if(!events.size)box.innerHTML+='<p>Sem acessos registrados.</p>';
+        events.forEach(d=>{const e=d.data();const p=document.createElement('p');p.className='text-xs py-1';p.textContent=`${portalData(e.at)} • ${labels[e.type]||e.type}${e.tab?' — '+(nomesAbasPortal[e.tab]||e.tab):''}`;box.appendChild(p);});
+        const title=document.createElement('h4');title.textContent='Ações administrativas';title.className='font-bold mt-4';box.appendChild(title);
+        audit.forEach(d=>{const e=d.data();const p=document.createElement('p');p.className='text-xs py-1';p.textContent=`${portalData(e.at)} • ${e.action} • ${e.actorName||'Master'}`;box.appendChild(p);});
+        box.scrollIntoView({behavior:'smooth',block:'start'});
+    }catch(e){if(versao===portalHistoricoVersao)box.textContent='Erro ao consultar histórico: '+e.message;}
+}
+async function redefinirAcessoPortal(id) {
+    if(!podeGerenciarPortal())return;
+    if(!confirm('Gerar uma senha temporária válida por 24 horas? O aluno terá que trocá-la ao entrar.'))return;
+    try{
+        const bytes=window.crypto.getRandomValues(new Uint8Array(9));const senha=Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');
+        const cred=await criarCredencialPortal(senha);const ref=db.collection('students').doc(id);const actor=JSON.parse(sessionStorage.getItem('usuario_logado'));
+        const batch=db.batch();batch.update(ref,{portalCredential:cred,senhaAluno:firebase.firestore.FieldValue.delete(),portalMustChangePassword:true,portalTemporaryExpiresAt:new Date(Date.now()+86400000).toISOString(),portalSessionVersion:firebase.firestore.FieldValue.increment(1)});
+        batch.set(ref.collection('portalAdminEvents').doc(),{action:'Redefinição de acesso',actorName:actor.nome||'Master',actorEmail:actor.email||'',at:firebase.firestore.FieldValue.serverTimestamp()});await batch.commit();
+        const box=document.getElementById('portal-senha-temporaria');box.textContent='Senha temporária (anote agora e entregue ao aluno): '+senha;box.style.display='block';
+        await carregarPainelAcessosPortal();
+    }catch(e){alert('Não foi possível redefinir: '+e.message);}
+}
+async function alternarBloqueioPortal(id) {
+    if(!podeGerenciarPortal())return;
+    const ref=db.collection('students').doc(id);const actor=JSON.parse(sessionStorage.getItem('usuario_logado'));
+    try{await db.runTransaction(async tx=>{const snap=await tx.get(ref);if(!snap.exists)throw new Error('Aluno não encontrado.');const blocked=!snap.data().portalBlocked;tx.update(ref,{portalBlocked:blocked,portalSessionVersion:firebase.firestore.FieldValue.increment(1)});tx.set(ref.collection('portalAdminEvents').doc(),{action:blocked?'Acesso bloqueado':'Acesso liberado',actorName:actor.nome||'Master',actorEmail:actor.email||'',at:firebase.firestore.FieldValue.serverTimestamp()});});await carregarPainelAcessosPortal();}catch(e){alert(e.message);}
+}
+
+        async function fazerLoginAluno() {
             if (!document.getElementById('tab-portal-aluno')) {
                 return alert("O Portal do Aluno não está disponível nesta versão da Matriz. Utilize o aplicativo do aluno.");
             }
             const cpfInput = document.getElementById('login-aluno-cpf').value.trim().replace(/[^\d]/g, '');
             const passInput = document.getElementById('login-aluno-pass').value.trim();
             if (!cpfInput || !passInput) return alert("Informe o CPF e a senha/matrícula.");
-            const alunoEncontrado = students.find(s => {
-                const sCpf = s.cpf ? s.cpf.replace(/[^\d]/g, '') : '';
-                return sCpf === cpfInput && (s.code === passInput || s.cpf === passInput || s.senhaAluno === passInput || passInput === "123456");
-            });
+            let alunoEncontrado=null;
+            try {
+                const snap=await db.collection('students').get({source:'server'});
+                for(const doc of snap.docs){const a=doc.data();if((a.cpf||'').replace(/[^\d]/g,'')!==cpfInput)continue;
+                    if(a.portalBlocked)return alert('Acesso bloqueado. Contate a instituição.');
+                    if(a.portalMustChangePassword)return alert('Acesse o aplicativo do aluno para definir sua nova senha.');
+                    if(a.portalCredential?await verificarCredencialPortal(passInput,a.portalCredential):passInput===String(a.senhaAluno||a.code||'').trim()){alunoEncontrado={id:doc.id,...a};break;}
+                }
+            }catch(e){return alert('Não foi possível validar o acesso: '+e.message);}
             if (!alunoEncontrado) return alert("Aluno não encontrado ou dados inválidos.");
             const userData = { email: alunoEncontrado.email, perfil: "aluno", nome: alunoEncontrado.fullname, alunoId: alunoEncontrado.id, code: alunoEncontrado.code };
             sessionStorage.setItem('usuario_logado', JSON.stringify(userData));
@@ -2257,18 +2341,7 @@ async function rejeitarSolicitacaoFirebase(id) {
         }
 
         function executarRedefinicaoSenhaAluno() {
-            const cpfInput = document.getElementById('forgot-aluno-cpf').value.trim().replace(/[^\d]/g, '');
-            const newPassInput = document.getElementById('forgot-aluno-new-pass').value.trim();
-            if (!cpfInput || !newPassInput) return alert("Preencha todos os campos.");
-            
-            const alunoIndex = students.findIndex(s => s.cpf && s.cpf.replace(/[^\d]/g, '') === cpfInput);
-            if (alunoIndex === -1) return alert("CPF do aluno não encontrado no sistema!");
-            
-            students[alunoIndex].senhaAluno = newPassInput;
-            db.collection("students").doc(students[alunoIndex].id).update({ senhaAluno: newPassInput }).then(() => {
-                alert("Nova senha do aluno criada com sucesso!");
-                fecharModalEsqueciSenhaAluno();
-            }).catch(err => alert("Erro: " + err.message));
+            alert('Solicite uma senha temporária à instituição. A redefinição está disponível ao master em Gestão de Alunos → Acessos ao Portal.');
         }
 
         function fazerLogout() { sessionStorage.removeItem('usuario_logado'); location.reload(); }
@@ -2375,6 +2448,7 @@ async function rejeitarSolicitacaoFirebase(id) {
     }
 
     // 2. Controle dos botões de topo baseados no perfil Master
+    document.getElementById('btn-acessos-portal').style.display=(perfil==='master')?'inline-block':'none';
     if (btnAccessControl) btnAccessControl.style.display = (perfil === 'master') ? 'inline-flex' : 'none';
     if (btnSwitchUser) btnSwitchUser.style.display = (perfil === 'master') ? 'inline-flex' : 'none';
     if (navBtnSettings) navBtnSettings.style.display = (perfil === 'master') ? 'inline-block' : 'none';
@@ -2616,6 +2690,7 @@ async function removerUsuarioSistemaFirebase(id) {
         function openSubTab(evt, subtabId) {
     const alvo = document.getElementById(subtabId);
     if (!alvo) return;
+    if(subtabId==='subtab-acessos-portal' && !podeGerenciarPortal()) return;
     if ((subtabId === 'subtab-gestao-totem' || alvo.closest('#tab-settings')) && !usuarioMasterAtivo()) return;
     // 1. Oculta TODAS as subabas do sistema inteiro para evitar vazamento entre telas
     const todasSubabas = document.querySelectorAll('.subtab-content');
@@ -2642,6 +2717,7 @@ async function removerUsuarioSistemaFirebase(id) {
         evt.currentTarget.classList.add('bg-blue-600', 'text-white', 'shadow');
     }
 
+    if(subtabId==='subtab-acessos-portal') carregarPainelAcessosPortal();
     // Execuções específicas de renderização ao abrir certas subabas
     if(subtabId === 'subtab-calendar') setTimeout(renderizarCalendarioSemestralAdmin, 200);
     if(subtabId === 'subtab-portal-calendario') setTimeout(renderizarCalendarioSemestralPortalAluno, 200);
