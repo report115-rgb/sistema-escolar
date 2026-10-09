@@ -116,9 +116,52 @@
 }
 @media (prefers-reduced-motion:reduce) {#login-modal .login-glow {animation:none;opacity:.8;}}
 
+
+/* Boas-vindas após autenticação: linhas regulares e brilho que pulsa. */
+#se7-welcome {position:fixed;inset:0;z-index:4000;display:grid;place-items:center;overflow:hidden;isolation:isolate;background:radial-gradient(ellipse at 0% 38%,#063775 0%,#071b39 36%,#07152b 72%);color:#f5f8ff;font-family:Arial,Helvetica,sans-serif;opacity:0;transition:opacity .45s ease;}
+#se7-welcome[hidden] {display:none!important;}
+#se7-welcome.is-visible {opacity:1;}
+#se7-welcome.is-leaving {opacity:0;pointer-events:none;}
+#se7-welcome .welcome-art {position:absolute;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none;}
+#se7-welcome .welcome-wire {fill:none;stroke:#2996ff;stroke-width:1;vector-effect:non-scaling-stroke;}
+#se7-welcome .welcome-glow {fill:none;stroke:#54caff;stroke-width:1.4;vector-effect:non-scaling-stroke;filter:drop-shadow(0 0 7px #168bff) drop-shadow(0 0 17px #168bff);animation:welcome-pulse 2.4s ease-in-out infinite;}
+#se7-welcome .welcome-content {width:min(820px,85vw);text-align:center;transform:translateY(12px);opacity:0;transition:opacity .55s ease,transform .55s ease;}
+#se7-welcome.is-visible .welcome-content {transform:translateY(0);opacity:1;}
+#se7-welcome .welcome-kicker {position:absolute;top:15%;left:0;right:0;text-align:center;color:#adc6e9;font-size:14px;letter-spacing:5px;}
+#se7-welcome .welcome-check {width:86px;height:86px;margin:0 auto 30px;fill:none;stroke:#52caff;stroke-width:1.5;filter:drop-shadow(0 0 7px #088dff);}
+#se7-welcome .welcome-greeting {font-size:clamp(18px,1.65vw,25px);color:#a6d3ff;margin:0 0 14px;}
+#se7-welcome .welcome-name {font-size:clamp(26px,3.1vw,46px);font-weight:600;line-height:1.2;letter-spacing:-.7px;margin:0;overflow-wrap:anywhere;}
+#se7-welcome .welcome-role {font-size:17px;letter-spacing:3px;color:#adc6e9;margin:15px 0 30px;}
+#se7-welcome .welcome-tagline {font-size:13px;letter-spacing:1.5px;color:#a9c3e6;margin:0;}
+#se7-welcome .welcome-progress {width:200px;height:2px;background:#103d76;border-radius:4px;margin:30px auto 0;overflow:hidden;}
+#se7-welcome .welcome-progress::after {content:'';display:block;width:100%;height:100%;background:linear-gradient(90deg,#51d1ff,#2487ff);transform-origin:left;animation:welcome-progress 2s ease-out both;box-shadow:0 0 9px #47c5ff;}
+#se7-welcome .welcome-footer {position:absolute;bottom:6.5%;left:0;right:0;text-align:center;color:#9fbbe1;font-size:11px;letter-spacing:2px;}
+@keyframes welcome-pulse {0%,100%{opacity:.28}50%{opacity:1}}
+@keyframes welcome-progress {from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@media(max-height:600px){#se7-welcome .welcome-kicker{top:7%}#se7-welcome .welcome-check{width:64px;height:64px;margin-bottom:18px}#se7-welcome .welcome-role{margin-bottom:20px}#se7-welcome .welcome-footer{bottom:4%}}
+@media(prefers-reduced-motion:reduce){#se7-welcome,#se7-welcome .welcome-content{transition:none;transform:none}#se7-welcome .welcome-glow,#se7-welcome .welcome-progress::after{animation:none;opacity:.8}}
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-slate-900 text-gray-800 dark:text-gray-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-300 pb-16">    
+
+
+<!-- Exibida somente após confirmar o login, sem logomarca. -->
+<div id="se7-welcome" hidden role="status" aria-live="polite" aria-atomic="true">
+    <svg class="welcome-art" viewBox="0 0 1672 940" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <g class="welcome-wire"><line x1="0" y1="260" x2="510" y2="940"/><line x1="1460" y1="0" x2="1672" y2="220"/><circle cx="-85" cy="760" r="365"/><circle cx="1640" cy="-65" r="365"/></g>
+        <g class="welcome-glow"><line x1="0" y1="260" x2="510" y2="940"/><line x1="1460" y1="0" x2="1672" y2="220"/><circle cx="-85" cy="760" r="365"/><circle cx="1640" cy="-65" r="365"/></g>
+    </svg>
+    <div class="welcome-kicker">Sistema Matriz</div>
+    <div class="welcome-content">
+        <svg class="welcome-check" viewBox="0 0 90 90" aria-hidden="true"><circle cx="45" cy="45" r="41"/><path d="m28 45 12 12 23-24" stroke="#b5e8ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <p class="welcome-greeting">Bem-vindo novamente,</p>
+        <h2 class="welcome-name" id="welcome-user-name"></h2>
+        <p class="welcome-role" id="welcome-user-role"></p>
+        <p class="welcome-tagline">Tudo conectado ao sistema Matriz</p>
+        <div class="welcome-progress" aria-hidden="true"></div>
+    </div>
+    <div class="welcome-footer">Sistema SE7 de Gestão Acadêmica</div>
+</div>
 
 <!-- TELA DE LOGIN / ACESSO INSTITUCIONAL -->
 <div id="login-modal" class="se7-login" role="dialog" aria-modal="true" aria-labelledby="login-box-title">
@@ -1799,7 +1842,69 @@ async function limparLogsAuditoria() {
             botao.setAttribute('aria-label', visivel ? 'Ocultar senha' : 'Mostrar senha');
         }
 
-        async function fazerLogin(){const email=document.getElementById('login-user').value.trim(),senha=document.getElementById('login-pass').value;if(!email||!senha)return alert('Informe e-mail e senha.');try{const u=await SE7.staffLogin(email,senha);if(!['master','secretaria','professor','financeiro'].includes(u.perfil)){await firebase.auth().signOut();throw new Error('Conta sem acesso ao Matriz.');}sessionStorage.setItem('usuario_logado',JSON.stringify(u));document.getElementById('login-modal').style.display='none';aplicarPermissoesPorPerfil(u.perfil);atualizarDisplayUsuarioLogado();iniciarDadosAutenticadosMatriz();registrarLogAuditoria('Efetuou login no sistema','Autenticação');resetarTemporizadorInatividade();}catch(e){alert(e.message);}}
+        let loginMatrizEmAndamento = false;
+        function mostrarBoasVindasMatriz(usuario) {
+            const tela = document.getElementById('se7-welcome');
+            if (!tela) return Promise.resolve();
+            const perfis = {master:'Master',secretaria:'Secretaria',professor:'Professor',financeiro:'Financeiro'};
+            document.getElementById('welcome-user-name').textContent = usuario.nome || 'Usuário';
+            document.getElementById('welcome-user-role').textContent = perfis[usuario.perfil] || 'Usuário';
+            const estados = [...document.body.children].filter(el => el !== tela).map(el => [el, el.inert]);
+            const overflow = document.body.style.overflow;
+            estados.forEach(([el]) => {el.inert = true;});
+            document.body.style.overflow = 'hidden';
+            tela.hidden = false;
+            // Uma medição inicia a entrada suave antes de revelar a interface por baixo.
+            void tela.offsetWidth;
+            tela.classList.add('is-visible');
+            const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    tela.classList.add('is-leaving');
+                    setTimeout(() => {
+                        tela.hidden = true;
+                        tela.classList.remove('is-visible', 'is-leaving');
+                        estados.forEach(([el, inert]) => {el.inert = inert;});
+                        document.body.style.overflow = overflow;
+                        const nome = document.getElementById('header-user-display');
+                        if (nome) {nome.setAttribute('tabindex','-1');nome.focus({preventScroll:true});}
+                        resolve();
+                    }, reduzido ? 0 : 450);
+                }, reduzido ? 800 : 2000);
+            });
+        }
+        async function fazerLogin() {
+            if (loginMatrizEmAndamento) return;
+            const email = document.getElementById('login-user').value.trim();
+            const senha = document.getElementById('login-pass').value;
+            if (!email || !senha) return alert('Informe e-mail e senha.');
+            const botao = document.querySelector('#form-login-admin .login-submit');
+            const textoOriginal = botao?.innerHTML;
+            loginMatrizEmAndamento = true;
+            if (botao) {botao.disabled = true;botao.textContent = 'Verificando acesso…';}
+            try {
+                const u = await SE7.staffLogin(email, senha);
+                if (!['master','secretaria','professor','financeiro'].includes(u.perfil)) {
+                    await firebase.auth().signOut();
+                    throw new Error('Conta sem acesso ao Matriz.');
+                }
+                sessionStorage.setItem('usuario_logado', JSON.stringify(u));
+                const boasVindas = mostrarBoasVindasMatriz(u);
+                document.getElementById('login-modal').style.display = 'none';
+                document.getElementById('login-pass').value = '';
+                aplicarPermissoesPorPerfil(u.perfil);
+                atualizarDisplayUsuarioLogado();
+                iniciarDadosAutenticadosMatriz();
+                registrarLogAuditoria('Efetuou login no sistema', 'Autenticação');
+                await boasVindas;
+                resetarTemporizadorInatividade();
+            } catch (e) {alert(e.message);}
+            finally {
+                loginMatrizEmAndamento = false;
+                if (botao) {botao.disabled = false;botao.innerHTML = textoOriginal;}
+            }
+        }
+
 
 // ==========================================
 // FUNÇÕES DO CALENDÁRIO ACADÊMICO FLUTUANTE
