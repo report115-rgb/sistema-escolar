@@ -405,22 +405,13 @@
                     <i class="fa-solid fa-key"></i>
                 </div>
                 <h3 class="font-bold text-base">Recuperação de Senha</h3>
-                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Informe seu CPF e defina uma nova senha de acesso.</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Solicite uma senha temporária à instituição. Você escolherá uma nova senha ao entrar.</p>
             </div>
-            <div>
-                <label class="block text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">CPF do Aluno</label>
-                <input type="text" id="forgot-cpf" placeholder="000.000.000-00" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm focus:ring-2 focus:ring-emerald-600 focus:outline-none">
-            </div>
-            <div>
-                <label class="block text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Nova Senha / Matrícula</label>
-                <input type="password" id="forgot-new-pass" placeholder="Mínimo 6 caracteres" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm focus:ring-2 focus:ring-emerald-600 focus:outline-none">
-            </div>
-            <button onclick="executarRedefinicaoSenha()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg transition active:scale-95 text-sm">
-                Atualizar Senha
-            </button>
+            <button onclick="fecharModalEsqueciSenha()" class="w-full py-3 bg-emerald-600 text-white font-bold rounded-xl">Entendi</button>
         </div>
     </div>
 
+<div id="modal-troca-portal" class="fixed inset-0 z-[5000] bg-black/70 flex items-center justify-center p-4" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="troca-portal-titulo"><form class="bg-white dark:bg-slate-900 rounded-2xl p-5 w-full max-w-sm space-y-3" onsubmit="event.preventDefault();salvarNovaSenhaPortal();"><h3 id="troca-portal-titulo" class="font-bold">Defina sua nova senha</h3><p class="text-xs">Troque a senha temporária para continuar no Portal do Aluno.</p><label class="block text-xs">Nova senha<input id="portal-nova-senha" type="password" autocomplete="new-password" minlength="8" required class="block w-full border rounded-lg p-3 dark:bg-slate-800"></label><label class="block text-xs">Confirme a senha<input id="portal-confirma-senha" type="password" autocomplete="new-password" minlength="8" required class="block w-full border rounded-lg p-3 dark:bg-slate-800"></label><button id="portal-salvar-senha" class="w-full bg-blue-700 text-white rounded-lg p-3">Salvar nova senha</button><button type="button" onclick="fazerLogout()" class="w-full text-sm">Sair</button></form></div>
     <!-- MODAL DA CARTEIRINHA ID ESTILIZADA -->
     <div id="modal-carteirinha" class="student-badge-modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="badge-title">
         <div class="student-badge-dialog">
@@ -748,6 +739,7 @@
                 const mainApp = document.getElementById('main-app');
                 mainApp.style.display = 'flex';
                 await carregarDadosPainel();
+                if(alunoLogado) {acompanharControlePortal();await registrarEventoPortal('resume');}
             }
         });
 
@@ -996,7 +988,7 @@
                     courseId: courseId,
                     classId: "",
                     status: "Ativo",
-                    senhaAluno: senha,
+                    portalCredential: await criarCredencialPortal(senha),
                     documentos: {},
                     attendance: {},
                     createdAt: new Date().toISOString()
@@ -1019,11 +1011,12 @@
             document.getElementById('matricula-screen').style.display = 'none';
             
             alunoLogado = alunoRecemMatriculadoTemp;
-            sessionStorage.setItem('aluno_app_logado', JSON.stringify(alunoLogado));
+            guardarSessaoPortal(alunoLogado);
             
             const mainApp = document.getElementById('main-app');
             mainApp.style.display = 'flex';
             mainApp.classList.add('screen-transition');
+            await registrarEventoPortal('login');acompanharControlePortal();
             await carregarDadosPainel();
         }
 
@@ -1101,30 +1094,103 @@
             }
         }
 
+async function criarCredencialPortal(senha) {
+    if (!window.crypto?.subtle) throw new Error('Use HTTPS e uma WebView atualizada para gerenciar senhas.');
+    const salt = window.crypto.getRandomValues(new Uint8Array(16));
+    const key = await window.crypto.subtle.importKey('raw',new TextEncoder().encode(senha),'PBKDF2',false,['deriveBits']);
+    const bits = await window.crypto.subtle.deriveBits({name:'PBKDF2',salt,iterations:210000,hash:'SHA-256'},key,256);
+    return {algorithm:'PBKDF2-SHA256',iterations:210000,salt:Array.from(salt,b=>b.toString(16).padStart(2,'0')).join(''),hash:Array.from(new Uint8Array(bits),b=>b.toString(16).padStart(2,'0')).join('')};
+}
+async function verificarCredencialPortal(senha,credencial) {
+    if (!credencial || credencial.algorithm!=='PBKDF2-SHA256' || credencial.iterations!==210000 || !/^[a-f0-9]{32}$/.test(credencial.salt) || !/^[a-f0-9]{64}$/.test(credencial.hash)) return false;
+    const salt=Uint8Array.from(credencial.salt.match(/../g),x=>parseInt(x,16));
+    const key=await window.crypto.subtle.importKey('raw',new TextEncoder().encode(senha),'PBKDF2',false,['deriveBits']);
+    const bits=await window.crypto.subtle.deriveBits({name:'PBKDF2',salt,iterations:210000,hash:'SHA-256'},key,256);
+    const hash=Array.from(new Uint8Array(bits),b=>b.toString(16).padStart(2,'0')).join('');
+    let diff=0;for(let i=0;i<hash.length;i++) diff|=hash.charCodeAt(i)^credencial.hash.charCodeAt(i);return diff===0;
+}
+
+let cancelarControlePortal=null;
+function acompanharControlePortal() {
+    if(cancelarControlePortal)cancelarControlePortal();
+    if(!alunoLogado?.id)return;
+    cancelarControlePortal=db.collection('students').doc(alunoLogado.id).onSnapshot(doc=>{
+        if(!alunoLogado || doc.metadata.hasPendingWrites || doc.metadata.fromCache)return;
+        const dados=doc.exists?doc.data():null;
+        if(!dados || dados.portalBlocked || (dados.portalSessionVersion||0)!==(alunoLogado.portalSessionVersion||0)) {
+            if(cancelarControlePortal)cancelarControlePortal();
+            sessionStorage.removeItem('aluno_app_logado');alunoLogado=null;
+            alert('Seu acesso foi alterado. Entre novamente ou contate a instituição.');location.reload();
+        }
+    },e=>console.error('Não foi possível acompanhar o controle de acesso:',e));
+}
+let abaPortalAtual = null;
+function guardarSessaoPortal(aluno) {
+    const {senhaAluno,portalCredential,...publico}=aluno;
+    sessionStorage.setItem('aluno_app_logado',JSON.stringify(publico));
+}
+async function registrarEventoPortal(tipo,aba=null) {
+    if (!alunoLogado?.id) return;
+    const ref=db.collection('students').doc(alunoLogado.id);
+    const batch=db.batch();
+    const at=firebase.firestore.FieldValue.serverTimestamp();
+    batch.set(ref.collection('portalAccessEvents').doc(),{type:tipo,tab:aba,at,source:'app-aluno'});
+    const patch={portalLastAccessAt:at};
+    if(tipo==='login') {patch.portalLastLoginAt=at;patch.portalLoginCount=firebase.firestore.FieldValue.increment(1);}
+    if(tipo==='tab' && aba) patch[`portalTabCounts.${aba}`]=firebase.firestore.FieldValue.increment(1);
+    batch.update(ref,patch);
+    try {await batch.commit();} catch(e) {console.error('Não foi possível registrar acesso ao portal:',e);}
+}
+function abrirTrocaObrigatoriaPortal() {
+    document.getElementById('modal-troca-portal').style.display='flex';
+}
+async function salvarNovaSenhaPortal() {
+    const senha=document.getElementById('portal-nova-senha').value;
+    const confirma=document.getElementById('portal-confirma-senha').value;
+    if(senha.length<8 || senha!==confirma) return alert('Informe uma senha de pelo menos 8 caracteres e confirme corretamente.');
+    const btn=document.getElementById('portal-salvar-senha');btn.disabled=true;
+    try {
+        const ref=db.collection('students').doc(alunoLogado.id);
+        const doc=await ref.get({source:'server'});const atual=doc.data();
+        if(!doc.exists || !atual.portalMustChangePassword || Date.parse(atual.portalTemporaryExpiresAt||'')<Date.now() || atual.portalBlocked || (atual.portalSessionVersion||0)!==(alunoLogado.portalSessionVersion||0)) throw new Error('O acesso foi alterado. Entre novamente com a senha atual.');
+        if(await verificarCredencialPortal(senha,atual.portalCredential)) throw new Error('Escolha uma senha diferente da temporária.');
+        const cred=await criarCredencialPortal(senha);
+        if(cancelarControlePortal){cancelarControlePortal();cancelarControlePortal=null;}
+        await db.runTransaction(async tx=>{const snap=await tx.get(ref);const d=snap.data();if(!snap.exists || !d.portalMustChangePassword || d.portalBlocked || (d.portalSessionVersion||0)!==(alunoLogado.portalSessionVersion||0))throw new Error('Acesso alterado. Entre novamente.');tx.update(ref,{portalCredential:cred,senhaAluno:firebase.firestore.FieldValue.delete(),portalMustChangePassword:false,portalTemporaryExpiresAt:firebase.firestore.FieldValue.delete(),portalPasswordChangedAt:firebase.firestore.FieldValue.serverTimestamp(),portalSessionVersion:firebase.firestore.FieldValue.increment(1)});});
+        alunoLogado.portalSessionVersion=(alunoLogado.portalSessionVersion||0)+1;
+        alunoLogado.portalMustChangePassword=false;guardarSessaoPortal(alunoLogado);acompanharControlePortal();
+        document.getElementById('portal-nova-senha').value='';document.getElementById('portal-confirma-senha').value='';
+        document.getElementById('modal-troca-portal').style.display='none';
+        await registrarEventoPortal('password_changed');await carregarDadosPainel();
+    } catch(e) {alert(e.message);} finally {btn.disabled=false;if(alunoLogado && !cancelarControlePortal)acompanharControlePortal();}
+}
+
         async function fazerLoginAluno() {
             const cpfInput = document.getElementById('login-cpf').value.trim().replace(/[^\d]/g, '');
             const passInput = document.getElementById('login-pass').value.trim();
             if(!cpfInput || !passInput) return alert("Preencha o CPF e a matrícula/senha.");
 
             try {
-                const snapshot = await db.collection("students").get();
+                const snapshot = await db.collection("students").get({source:'server'});
                 let alunoEncontrado = null;
-                
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    const dCpf = data.cpf ? data.cpf.replace(/[^\d]/g, '') : '';
-                    const matriculaBanco = data.code ? String(data.code).trim() : '';
-                    const senhaBanco = data.senhaAluno ? String(data.senhaAluno).trim() : '';
-
-                    if(dCpf === cpfInput && (passInput === matriculaBanco || passInput === senhaBanco || passInput === "123456")) {
-                        alunoEncontrado = { id: doc.id, ...data };
+                for (const doc of snapshot.docs) {
+                    const data=doc.data();
+                    if((data.cpf||'').replace(/[^\d]/g,'')!==cpfInput)continue;
+                    if(data.portalBlocked) return alert('Acesso bloqueado. Entre em contato com a instituição.');
+                    if(data.portalMustChangePassword && (!data.portalTemporaryExpiresAt || Date.parse(data.portalTemporaryExpiresAt)<Date.now())) return alert('A senha temporária expirou. Solicite uma nova à instituição.');
+                    const valido=data.portalCredential ? await verificarCredencialPortal(passInput,data.portalCredential) : passInput===String(data.senhaAluno||data.code||'').trim();
+                    if(valido){
+                        if(!data.portalCredential){const cred=await criarCredencialPortal(passInput);await doc.ref.update({portalCredential:cred,senhaAluno:firebase.firestore.FieldValue.delete()});data.portalCredential=cred;}
+                        alunoEncontrado={id:doc.id,...data};break;
                     }
-                });
+                }
 
                 if(!alunoEncontrado) return alert("Aluno não encontrado ou matrícula/senha incorretos.");
 
                 alunoLogado = alunoEncontrado;
-                sessionStorage.setItem('aluno_app_logado', JSON.stringify(alunoLogado));
+                guardarSessaoPortal(alunoLogado);
+                await registrarEventoPortal('login');
+                acompanharControlePortal();
                 
                 const loginScreen = document.getElementById('login-screen');
                 loginScreen.classList.add('screen-exit');
@@ -1186,7 +1252,8 @@
             });
         }
         async function abrirModalCarteirinha() {
-            if (!alunoLogado?.id) return;
+            if (!alunoLogado?.id || alunoLogado.portalMustChangePassword) return;
+            void registrarEventoPortal('tab','carteirinha');
             const id = alunoLogado.id;
             const versao = ++versaoAberturaCarteirinha;
             const modal = document.getElementById('modal-carteirinha');
@@ -1205,7 +1272,7 @@
                 if (versao !== versaoAberturaCarteirinha || alunoLogado?.id !== id) return;
                 const aluno = {id:doc.id,...doc.data()};
                 alunoLogado=aluno;
-                sessionStorage.setItem('aluno_app_logado',JSON.stringify(aluno));
+                guardarSessaoPortal(aluno);
                 document.getElementById('card-nome-txt').textContent=aluno.fullname || 'Aluno';
                 document.getElementById('card-matricula-txt').textContent=aluno.code || 'Não informada';
                 const [cursoDoc,turmaDoc] = await Promise.all([
@@ -1223,7 +1290,7 @@
                 const token=await obterIdentificacaoPresencaAluno(id);
                 if (versao !== versaoAberturaCarteirinha || alunoLogado?.id !== id) return;
                 alunoLogado.qrAttendanceToken=token;
-                sessionStorage.setItem('aluno_app_logado',JSON.stringify(alunoLogado));
+                guardarSessaoPortal(alunoLogado);
                 new QRCode(qr,{text:`SE7:ATTENDANCE:1:${token}`,width:96,height:96,colorDark:'#000000',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H});
                 status.textContent='Identificação do aluno';
             } catch (erro) {
@@ -1238,23 +1305,7 @@
         }
 
         async function executarRedefinicaoSenha() {
-            const cpfInput = document.getElementById('forgot-cpf').value.trim().replace(/[^\d]/g, '');
-            const newPassInput = document.getElementById('forgot-new-pass').value.trim();
-            if(!cpfInput || !newPassInput) return alert("Preencha todos os campos.");
-
-            try {
-                const snapshot = await db.collection("students").get();
-                let docIdEncontrado = null;
-                snapshot.forEach(doc => {
-                    if(doc.data().cpf && doc.data().cpf.replace(/[^\d]/g, '') === cpfInput) docIdEncontrado = doc.id;
-                });
-
-                if(!docIdEncontrado) return alert("CPF não encontrado!");
-
-                await db.collection("students").doc(docIdEncontrado).update({ senhaAluno: newPassInput });
-                alert("Senha atualizada com sucesso!");
-                fecharModalEsqueciSenha();
-            } catch(e) { alert("Erro: " + e.message); }
+            alert('Solicite à instituição uma senha temporária. Por segurança, o CPF sozinho não permite redefinir a senha.');
         }
 
         function atualizarTelaAluno() {
@@ -1287,7 +1338,7 @@
                     alunoLogado.documentos[tipoId] = { status: "Pendente", fileName: file.name, driveUrl: resultado.fileUrl || "" };
 
                     await db.collection("students").doc(alunoLogado.id).update({ documentos: alunoLogado.documentos });
-                    sessionStorage.setItem('aluno_app_logado', JSON.stringify(alunoLogado));
+                    guardarSessaoPortal(alunoLogado);
                     
                     renderizarDocumentosObrigatorios();
                     await verificarTodasPendencias();
@@ -1297,7 +1348,7 @@
                     if(!alunoLogado.documentos) alunoLogado.documentos = {};
                     alunoLogado.documentos[tipoId] = { status: "Pendente", fileName: file.name, driveUrl: "" };
                     await db.collection("students").doc(alunoLogado.id).update({ documentos: alunoLogado.documentos });
-                    sessionStorage.setItem('aluno_app_logado', JSON.stringify(alunoLogado));
+                    guardarSessaoPortal(alunoLogado);
 
                     renderizarDocumentosObrigatorios();
                     await verificarTodasPendencias();
@@ -1378,7 +1429,8 @@
 
         async function mudarAba(aba) {
             const targetTab = document.getElementById(`tab-${aba}`);
-            if (!targetTab) return;
+            if (!targetTab || alunoLogado?.portalMustChangePassword) return;
+            if(abaPortalAtual!==aba){abaPortalAtual=aba;void registrarEventoPortal('tab',aba);}
 
             ['home', 'financeiro', 'notas', 'frequencia', 'documentos', 'calendario'].forEach(a => {
                 const elTab = document.getElementById(`tab-${a}`);
@@ -1419,11 +1471,17 @@
             try {
                 // 1. Atualiza dados do aluno pontualmente
                 const studentDoc = await db.collection("students").doc(alunoLogado.id).get({source:'server'});
+                if (!studentDoc.exists || studentDoc.data().portalBlocked || (studentDoc.data().portalSessionVersion||0)!==(alunoLogado.portalSessionVersion||0)) {
+                    sessionStorage.removeItem('aluno_app_logado');alunoLogado=null;
+                    alert('Seu acesso foi alterado. Entre novamente ou contate a instituição.');location.reload();return;
+                }
                 if (studentDoc.exists) {
                     alunoLogado = { id: studentDoc.id, ...studentDoc.data() };
-                    sessionStorage.setItem('aluno_app_logado', JSON.stringify(alunoLogado));
+                    guardarSessaoPortal(alunoLogado);
                 }
 
+                if(alunoLogado.portalMustChangePassword) {abrirTrocaObrigatoriaPortal();return;}
+                if(abaPortalAtual===null){abaPortalAtual='home';void registrarEventoPortal('tab','home');}
                 document.getElementById('header-aluno-nome').textContent = alunoLogado.fullname || '---';
                 document.getElementById('info-mat').textContent = alunoLogado.code || '---';
                 document.getElementById('info-cpf').textContent = alunoLogado.cpf || '---';
