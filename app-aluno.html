@@ -590,9 +590,9 @@
                     <p class="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5"><strong class="text-slate-500 dark:text-slate-400">CPF:</strong> <span id="info-cpf" class="font-semibold">---</span></p>
                     <p class="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5"><strong class="text-slate-500 dark:text-slate-400">RG:</strong> <span id="info-rg" class="font-semibold">---</span></p>
                     <p class="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5"><strong class="text-slate-500 dark:text-slate-400">Nascimento:</strong> <span id="info-nasc" class="font-semibold">---</span></p>
-                    <p class="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5"><strong class="text-slate-500 dark:text-slate-400">E-mail:</strong> <span id="info-email" class="font-semibold">---</span></p>
+                    <p class="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5"><strong class="text-slate-500 dark:text-slate-400">E-mail:</strong> <span id="info-email" class="font-semibold text-right min-w-0 break-all">---</span></p>
                     <p class="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5"><strong class="text-slate-500 dark:text-slate-400">WhatsApp:</strong> <span id="info-tel" class="font-semibold">---</span></p>
-                    <p class="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5"><strong class="text-slate-500 dark:text-slate-400">Endereço:</strong> <span id="info-endereco" class="font-semibold text-right max-w-[200px] truncate">---</span></p>
+                    <p class="flex justify-between gap-3 items-start border-b border-slate-100 dark:border-slate-800 pb-1.5"><strong class="text-slate-500 dark:text-slate-400 shrink-0">Endereço:</strong> <span id="info-endereco" class="font-semibold text-right min-w-0 max-w-[200px] break-words">---</span></p>
                     <p class="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5"><strong class="text-slate-500 dark:text-slate-400">Curso:</strong> <span id="info-curso-completo" class="font-semibold text-right max-w-[200px] truncate">---</span></p>
                     <p class="flex justify-between pt-0.5"><strong class="text-slate-500 dark:text-slate-400">Turma:</strong> <span id="info-turma" class="font-semibold">---</span></p>
                 </div>
@@ -1506,6 +1506,43 @@ async function salvarNovaSenhaPortal(){const senha=document.getElementById('port
         }
 
         // --- CARREGAMENTO DO PAINEL OTIMIZADO COM .get() ---
+        function formatarCPFCadastral(valor) {
+            const original = String(valor ?? '').trim(), numeros = original.replace(/\D/g,'');
+            return numeros.length === 11 ? numeros.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/,'$1.$2.$3-$4') : original || '---';
+        }
+        function formatarWhatsAppCadastral(valor) {
+            const original = String(valor ?? '').trim();let numeros = original.replace(/\D/g,'');
+            if ((numeros.length === 12 || numeros.length === 13) && numeros.startsWith('55')) numeros = numeros.slice(2);
+            if (numeros.length === 11) return numeros.replace(/^(\d{2})(\d{5})(\d{4})$/,'($1) $2-$3');
+            if (numeros.length === 10) return numeros.replace(/^(\d{2})(\d{4})(\d{4})$/,'($1) $2-$3');
+            return original || '---';
+        }
+        function formatarNascimentoCadastral(valor) {
+            const original = String(valor ?? '').trim();
+            const iso = original.match(/^(\d{4})-(\d{2})-(\d{2})(?:T|$)/);
+            return iso ? `${iso[3]}/${iso[2]}/${iso[1]}` : original || '---';
+        }
+        function formatarEnderecoCadastral(aluno) {
+            const texto = valor => String(valor ?? '').trim();
+            const escolher = (...valores) => valores.map(texto).find(Boolean) || '';
+            const normalizar = valor => texto(valor).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+            let rua = escolher(aluno.rua, aluno.endereco, aluno.street, aluno.address);
+            const numero = escolher(aluno.numero, aluno.number);
+            const bairro = escolher(aluno.bairro, aluno.neighborhood);
+            const cidade = escolher(aluno.cidade, aluno.city);
+            const uf = escolher(aluno.estado, aluno.state);
+            const complemento = escolher(aluno.complemento, aluno.complement);
+            if (numero && !normalizar(rua).split(/[^a-z0-9/]+/).includes(normalizar(numero))) rua = rua ? `${rua}, nº ${numero}` : `nº ${numero}`;
+            const partes = rua ? [rua] : [];
+            const incluir = valor => {if (valor && !normalizar(partes.join(' ')).includes(normalizar(valor))) partes.push(valor);};
+            incluir(bairro);incluir(complemento);
+            if (cidade && !normalizar(partes.join(' ')).includes(normalizar(cidade))) incluir([cidade,uf].filter(Boolean).join('/'));
+            else incluir(uf);
+            const cep = texto(aluno.cep).replace(/\D/g,'');
+            if (cep.length === 8 && !partes.join('').replace(/\D/g,'').includes(cep)) incluir('CEP '+cep.slice(0,5)+'-'+cep.slice(5));
+            return partes.join(' - ') || '---';
+        }
+
         async function carregarDadosPainel() {
             if(!alunoLogado) return;
             if(alunoLogado.portalMustChangePassword){abrirTrocaObrigatoriaPortal();return;}
@@ -1525,33 +1562,13 @@ async function salvarNovaSenhaPortal(){const senha=document.getElementById('port
                 if(abaPortalAtual===null){abaPortalAtual='home';void registrarEventoPortal('tab','home');}
                 document.getElementById('header-aluno-nome').textContent = alunoLogado.fullname || '---';
                 document.getElementById('info-mat').textContent = alunoLogado.code || '---';
-                document.getElementById('info-cpf').textContent = alunoLogado.cpf || '---';
+                document.getElementById('info-cpf').textContent = formatarCPFCadastral(alunoLogado.cpf);
                 document.getElementById('info-rg').textContent = alunoLogado.rg || '---';
 
-                const rawNasc = alunoLogado.birthDate || alunoLogado.dob || '';
-                let nascFormatado = '---';
-                if (rawNasc) {
-                    if (rawNasc.includes('-')) {
-                        nascFormatado = rawNasc.split('-').reverse().join('/');
-                    } else {
-                        nascFormatado = rawNasc;
-                    }
-                }
-                document.getElementById('info-nasc').textContent = nascFormatado;
-
+                document.getElementById('info-nasc').textContent = formatarNascimentoCadastral(alunoLogado.birthDate || alunoLogado.dob);
                 document.getElementById('info-email').textContent = alunoLogado.email || '---';
-                document.getElementById('info-tel').textContent = alunoLogado.whatsapp || '---';
-
-                let enderecoFinal = alunoLogado.address || alunoLogado.endereco || '';
-                if (!enderecoFinal && (alunoLogado.rua || alunoLogado.street)) {
-                    const rua = alunoLogado.rua || alunoLogado.street || '';
-                    const num = alunoLogado.numero || alunoLogado.number || 'S/N';
-                    const bairro = alunoLogado.bairro || alunoLogado.neighborhood || '';
-                    const cid = alunoLogado.cidade || alunoLogado.city || '';
-                    const uf = alunoLogado.estado || alunoLogado.state || '';
-                    enderecoFinal = `${rua}, nº ${num} - ${bairro}, ${cid}/${uf}`;
-                }
-                document.getElementById('info-endereco').textContent = enderecoFinal || '---';
+                document.getElementById('info-tel').textContent = formatarWhatsAppCadastral(alunoLogado.whatsapp);
+                document.getElementById('info-endereco').textContent = formatarEnderecoCadastral(alunoLogado);
 
                 if(alunoLogado.fotoAluno) {
                     document.getElementById('header-avatar-box').innerHTML = `<img src="${alunoLogado.fotoAluno}" class="w-full h-full object-cover">`;
