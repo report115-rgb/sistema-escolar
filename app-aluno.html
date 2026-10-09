@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR" class="light">
+<html lang="pt-BR" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -208,8 +208,10 @@
 #se7-welcome .welcome-footer {bottom:calc(18px + env(safe-area-inset-bottom,0px));padding:0 20px;box-sizing:border-box;font-size:10px;letter-spacing:.6px;line-height:1.6;}
 @media(max-height:560px){#se7-welcome .welcome-kicker{top:calc(5% + env(safe-area-inset-top,0px))}#se7-welcome .welcome-check{width:46px;height:46px;margin-bottom:12px}#se7-welcome .welcome-name{font-size:22px}#se7-welcome .welcome-role{margin:8px 0 14px}#se7-welcome .welcome-progress{margin-top:14px}}
     </style>
+<link rel="stylesheet" href="/assets/se7-suite.css">
+<script>try{if(localStorage.getItem('se7_aluno_theme')==='light')document.documentElement.classList.remove('dark');}catch(e){}</script>
 </head>
-<body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans antialiased h-screen overflow-hidden flex flex-col transition-colors duration-200">
+<body class="se7-suite bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans antialiased h-screen overflow-hidden flex flex-col transition-colors duration-200">
 <div id="se7-welcome" hidden role="status" aria-live="polite" aria-atomic="true">
     <svg class="welcome-art" viewBox="0 0 420 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
         <g class="welcome-wire"><line x1="0" y1="285" x2="280" y2="900"/><line x1="280" y1="0" x2="420" y2="180"/><circle cx="-190" cy="750" r="290"/><circle cx="510" cy="-80" r="290"/></g>
@@ -464,7 +466,7 @@
     </div>
 
     <!-- MODAL DE SUCESSO DA MATRÍCULA -->
-    <div id="modal-sucesso-matricula" class="fixed inset-0 z-[80] bg-black/70 flex items-center justify-center p-4" style="display: none;">
+    <div id="modal-sucesso-matricula" class="se7-themed-surface fixed inset-0 z-[80] bg-black/70 flex items-center justify-center p-4" style="display: none;">
         <div class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center space-y-4">
             <div class="w-16 h-16 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 rounded-2xl flex items-center justify-center mx-auto text-3xl">
                 <i class="fa-solid fa-check"></i>
@@ -484,7 +486,7 @@
     </div>
 
     <!-- MODAL DE ESQUECI MINHA SENHA -->
-    <div id="modal-esqueci-senha" class="fixed inset-0 z-[60] bg-black/60 flex items-center justify-center p-4" style="display: none;">
+    <div id="modal-esqueci-senha" class="se7-themed-surface fixed inset-0 z-[60] bg-black/60 flex items-center justify-center p-4" style="display: none;">
         <div class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4 relative">
             <button onclick="fecharModalEsqueciSenha()" class="absolute top-4 right-4 text-slate-400 hover:text-red-500 text-xl font-bold">&times;</button>
             <div class="text-center">
@@ -498,7 +500,7 @@
         </div>
     </div>
 
-<div id="modal-troca-portal" class="fixed inset-0 z-[5000] bg-black/70 flex items-center justify-center p-4" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="troca-portal-titulo"><form class="bg-white dark:bg-slate-900 rounded-2xl p-5 w-full max-w-sm space-y-3" onsubmit="event.preventDefault();salvarNovaSenhaPortal();"><h3 id="troca-portal-titulo" class="font-bold">Defina sua nova senha</h3><p class="text-xs">Troque a senha temporária para continuar no Portal do Aluno.</p><label class="block text-xs">Nova senha<input id="portal-nova-senha" type="password" autocomplete="new-password" minlength="8" required class="block w-full border rounded-lg p-3 dark:bg-slate-800"></label><label class="block text-xs">Confirme a senha<input id="portal-confirma-senha" type="password" autocomplete="new-password" minlength="8" required class="block w-full border rounded-lg p-3 dark:bg-slate-800"></label><button id="portal-salvar-senha" class="w-full bg-blue-700 text-white rounded-lg p-3">Salvar nova senha</button><button type="button" onclick="fazerLogout()" class="w-full text-sm">Sair</button></form></div>
+<div id="modal-troca-portal" class="se7-themed-surface fixed inset-0 z-[5000] bg-black/70 flex items-center justify-center p-4" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="troca-portal-titulo"><form class="bg-white dark:bg-slate-900 rounded-2xl p-5 w-full max-w-sm space-y-3" onsubmit="event.preventDefault();salvarNovaSenhaPortal();"><h3 id="troca-portal-titulo" class="font-bold">Defina sua nova senha</h3><p class="text-xs">Troque a senha temporária para continuar no Portal do Aluno.</p><label class="block text-xs">Nova senha<input id="portal-nova-senha" type="password" autocomplete="new-password" minlength="8" required class="block w-full border rounded-lg p-3 dark:bg-slate-800"></label><label class="block text-xs">Confirme a senha<input id="portal-confirma-senha" type="password" autocomplete="new-password" minlength="8" required class="block w-full border rounded-lg p-3 dark:bg-slate-800"></label><button id="portal-salvar-senha" class="w-full bg-blue-700 text-white rounded-lg p-3">Salvar nova senha</button><button type="button" onclick="fazerLogout()" class="w-full text-sm">Sair</button></form></div>
     <!-- MODAL DA CARTEIRINHA ID ESTILIZADA -->
     <div id="modal-carteirinha" class="student-badge-modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="badge-title">
         <div class="student-badge-dialog">
@@ -805,7 +807,7 @@
             window.addEventListener('offline', atualizarStatusConexao);
             atualizarStatusConexao();
 
-            const savedTheme = localStorage.getItem('se7_aluno_theme') || 'light';
+            const savedTheme = localStorage.getItem('se7_aluno_theme') || 'dark';
             const tIcon = document.getElementById('theme-icon');
             if(savedTheme === 'dark') {
                 document.documentElement.classList.add('dark');

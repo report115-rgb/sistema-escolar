@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR" class="light">
+<html lang="pt-BR" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -160,8 +160,9 @@
 #se7-welcome .welcome-footer {bottom:calc(18px + env(safe-area-inset-bottom,0px));padding:0 20px;box-sizing:border-box;font-size:10px;letter-spacing:.6px;line-height:1.6;}
 @media(max-height:560px){#se7-welcome .welcome-kicker{top:calc(5% + env(safe-area-inset-top,0px))}#se7-welcome .welcome-check{width:46px;height:46px;margin-bottom:12px}#se7-welcome .welcome-name{font-size:22px}#se7-welcome .welcome-role{margin:8px 0 14px}#se7-welcome .welcome-progress{margin-top:14px}}
     </style>
+<link rel="stylesheet" href="/assets/se7-suite.css">
 </head>
-<body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans antialiased h-screen overflow-hidden flex flex-col transition-colors duration-200">
+<body class="se7-suite bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans antialiased h-screen overflow-hidden flex flex-col transition-colors duration-200">
 <div id="se7-welcome" hidden role="status" aria-live="polite" aria-atomic="true">
     <svg class="welcome-art" viewBox="0 0 420 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
         <g class="welcome-wire"><line x1="0" y1="285" x2="280" y2="900"/><line x1="280" y1="0" x2="420" y2="180"/><circle cx="-190" cy="750" r="290"/><circle cx="510" cy="-80" r="290"/></g>
@@ -229,7 +230,7 @@
     </div>
 
     <!-- MODAL DE EDIÇÃO DA COBRANÇA -->
-    <div id="modal-editar-cobranca" class="fixed inset-0 z-[4000] flex items-center justify-center bg-black/70 p-4" style="display: none;">
+    <div id="modal-editar-cobranca" class="se7-themed-surface fixed inset-0 z-[4000] flex items-center justify-center bg-black/70 p-4" style="display: none;">
         <div class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-3xl shadow-2xl max-w-sm w-full p-6 space-y-4 border border-slate-200 dark:border-slate-800">
             <div class="flex justify-between items-center border-b pb-3 border-slate-200 dark:border-slate-800">
                 <h3 class="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
@@ -271,7 +272,7 @@
     </div>
 
     <!-- MODAL DE GERAR FATURA MANUAL -->
-    <div id="modal-gerar-financeiro-manual" class="fixed inset-0 z-[5000] flex items-center justify-center bg-black/70 p-4" style="display: none;">
+    <div id="modal-gerar-financeiro-manual" class="se7-themed-surface fixed inset-0 z-[5000] flex items-center justify-center bg-black/70 p-4" style="display: none;">
         <div class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-3xl shadow-2xl max-w-sm w-full p-6 space-y-4 border border-slate-200 dark:border-slate-800">
             <div class="flex justify-between items-center border-b pb-3 border-slate-200 dark:border-slate-800">
                 <h3 class="font-bold text-sm text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
@@ -323,7 +324,7 @@
     </div>
 
     <!-- MODAL 1: PROPOSTA DE ACORDO -->
-    <div id="modal-realizar-acordo" class="fixed inset-0 z-[5000] flex items-center justify-center bg-black/75 p-4" style="display: none;">
+    <div id="modal-realizar-acordo" class="se7-themed-surface fixed inset-0 z-[5000] flex items-center justify-center bg-black/75 p-4" style="display: none;">
         <div class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-3xl shadow-2xl max-w-lg w-full p-6 space-y-4 border border-slate-200 dark:border-slate-800 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b pb-3 border-slate-200 dark:border-slate-800">
                 <h3 class="font-bold text-sm text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
@@ -437,7 +438,7 @@
     </div>
 
     <!-- MODAL 2: APROVAR / FECHAR ACORDO -->
-    <div id="modal-fechar-acordo" class="fixed inset-0 z-[5000] flex items-center justify-center bg-black/75 p-4" style="display: none;">
+    <div id="modal-fechar-acordo" class="se7-themed-surface fixed inset-0 z-[5000] flex items-center justify-center bg-black/75 p-4" style="display: none;">
         <div class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-3xl shadow-2xl max-w-lg w-full p-6 space-y-4 border border-slate-200 dark:border-slate-800 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b pb-3 border-slate-200 dark:border-slate-800">
                 <h3 class="font-bold text-sm text-blue-600 dark:text-blue-400 flex items-center gap-2">
@@ -2971,7 +2972,7 @@
         }
 
     </script>
-<div id="modal-pagamento-colaborador" style="display:none;" class="fixed inset-0 z-[3000] bg-black/60 p-4 items-center justify-center">
+<div id="modal-pagamento-colaborador" style="display:none;" class="se7-themed-surface fixed inset-0 z-[3000] bg-black/60 p-4 items-center justify-center">
  <div role="dialog" aria-modal="true" aria-labelledby="pagamento-titulo" class="bg-white dark:bg-slate-900 rounded-2xl p-5 w-full max-w-lg max-h-[90vh] overflow-y-auto space-y-4">
   <h2 id="pagamento-titulo" class="font-bold text-lg dark:text-white">Registrar pagamento</h2>
   <p id="pagamento-identificacao" class="text-sm dark:text-white"></p>

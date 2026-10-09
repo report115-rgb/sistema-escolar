@@ -1,0 +1,28 @@
+/* Identidade SE7 compartilhada. Relatórios impressos conservam seu fundo branco. */
+@media screen {
+body.se7-suite {--se7-suite-bg:#06172d;--se7-suite-panel:#0b213a;--se7-suite-field:#081b30;--se7-suite-line:#25455f;--se7-suite-text:#e8f1fa;--se7-suite-muted:#afc3d9;}
+html.dark body.se7-suite,body.se7-totem {background:var(--se7-suite-bg);color:var(--se7-suite-text);color-scheme:dark;}
+html.dark .se7-suite #main-app {background:var(--se7-suite-bg);color:var(--se7-suite-text);}
+html.dark .se7-suite #main-app>header,html.dark .se7-suite #main-app>nav,.se7-totem>header {background:#091d34;border-color:var(--se7-suite-line);box-shadow:0 4px 20px #0003;}
+html.dark .se7-suite :is(#main-app,.se7-themed-surface) :is(.bg-white,.bg-slate-900,.bg-slate-800),.se7-totem .bg-slate-900 {background:var(--se7-suite-panel);border-color:var(--se7-suite-line);}
+html.dark .se7-suite :is(#main-app,.se7-themed-surface) :is(.bg-slate-50,.bg-slate-100,.bg-gray-50,.bg-gray-100) {background:#102942;}
+html.dark .se7-suite :is(#main-app,.se7-themed-surface) :is(.text-slate-900,.text-slate-800,.text-slate-700,.text-gray-900,.text-gray-800,.text-gray-700) {color:var(--se7-suite-text);}
+html.dark .se7-suite :is(#main-app,.se7-themed-surface) :is(.text-slate-600,.text-slate-500,.text-slate-400,.text-gray-600,.text-gray-500,.text-gray-400) {color:var(--se7-suite-muted);}
+html.dark .se7-suite :is(#main-app,.se7-themed-surface) :is(input,select,textarea),.se7-totem :is(input,select) {background:var(--se7-suite-field);color:var(--se7-suite-text);border-color:#34536e;border-radius:10px;color-scheme:dark;}
+.se7-suite :is(input,select,textarea):focus-visible {outline:2px solid #39b9ff;outline-offset:2px;}
+html.dark .se7-suite :is(#main-app,.se7-themed-surface) :is(.border-slate-200,.border-gray-200,.border-slate-300,.border-gray-300) {border-color:var(--se7-suite-line);}
+html.dark .se7-suite #main-app .tab-pane>div.bg-white {border-radius:18px;box-shadow:0 8px 24px #0002;}
+html.dark .se7-suite #main-app table thead {background:#102942;color:var(--se7-suite-muted);}
+html.dark .se7-suite #main-app table tbody tr {border-color:var(--se7-suite-line);}
+html.dark .se7-suite #main-app table tbody tr:hover {background:#12304b;}
+.se7-suite .se7-themed-surface {backdrop-filter:blur(5px);}
+.se7-suite :is(#modal-esqueci-senha-admin,#modal-primeiro-acesso,#modal-esqueci-senha-aluno)>.se7-modal-panel {background:linear-gradient(135deg,#152842,#081525) !important;color:#e8f1fa;border:1px solid #2a5c9f;border-radius:18px;box-shadow:0 24px 80px #0006;}
+.se7-suite :is(#modal-esqueci-senha-admin,#modal-primeiro-acesso,#modal-esqueci-senha-aluno) :is(h3,label) {color:#e8f1fa;}
+.se7-suite :is(#modal-esqueci-senha-admin,#modal-primeiro-acesso,#modal-esqueci-senha-aluno) p {color:#afc3d9;}
+.se7-suite :is(#modal-esqueci-senha-admin,#modal-primeiro-acesso,#modal-esqueci-senha-aluno) :is(input,select) {background:#081b30;color:#e8f1fa;border-color:#34536e;color-scheme:dark;}
+.se7-suite :is(#modal-esqueci-senha-admin,#modal-primeiro-acesso,#modal-esqueci-senha-aluno) button.w-full {background:linear-gradient(100deg,#0875ff,#0560f8);border:1px solid #1986ff;color:white;}
+.se7-suite :is(#modal-primeiro-acesso,#modal-esqueci-senha-admin) h3 i {color:#39b9ff;}
+.se7-totem #totem-login {background:#06172df2;backdrop-filter:blur(8px);}
+.se7-totem #totem-login>form {background:linear-gradient(135deg,#152842,#081525);border:1px solid #2a5c9f;box-shadow:0 24px 80px #0006;border-radius:18px;}
+.se7-totem #totem-login-button {background:linear-gradient(100deg,#0875ff,#0560f8);border:1px solid #1986ff;border-radius:10px;}
+}

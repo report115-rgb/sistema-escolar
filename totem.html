@@ -14,8 +14,9 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 <script src="/assets/se7-auth.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<link rel="stylesheet" href="/assets/se7-suite.css">
 </head>
-<body class="bg-slate-950 text-white font-sans antialiased h-screen flex flex-col justify-between overflow-hidden select-none">
+<body class="se7-suite se7-totem bg-slate-950 text-white font-sans antialiased h-screen flex flex-col justify-between overflow-hidden select-none">
 
 <div id="totem-login" class="fixed inset-0 z-50 bg-slate-950/95 flex items-center justify-center p-6"><form onsubmit="event.preventDefault();entrarTotem()" class="bg-slate-900 rounded-2xl p-6 w-full max-w-sm space-y-4"><h2 class="font-bold text-xl">Acesso ao Totem</h2><p class="text-sm">Use a conta do dispositivo criada pelo master.</p><label class="block">E-mail<input id="totem-email" type="email" required autocomplete="username" class="w-full p-3 rounded bg-slate-800"></label><label class="block">Senha<input id="totem-password" type="password" required autocomplete="current-password" class="w-full p-3 rounded bg-slate-800"></label><button id="totem-login-button" class="bg-blue-700 rounded p-3 w-full">Entrar e ativar câmera</button><p id="totem-login-error" class="text-red-300 text-sm" role="status"></p></form></div>
     <!-- CABEÇALHO DO TOTEM -->
