@@ -131,7 +131,15 @@ export async function dispatch({auth,db},req,b){
   if(action==='documents'){
    if(u.student.documentos?.[b.type]?.status==='Aprovado')fail(400,'Documento já aprovado. Solicite ajuda à instituição.');
    if(!docTypes.includes(b.type)||typeof b.fileName!=='string'||b.fileName.length>180||typeof b.url!=='string'||b.url.length>1000||b.url&&!/^https:\/\//.test(b.url))fail(400,'Documento inválido.');
-   await ref.update({[`documentos.${b.type}`]:{status:'Pendente',fileName:b.fileName,driveUrl:b.url}});return {ok:true};
+   const submissionId=randomBytes(16).toString('hex');
+   await db.runTransaction(async tx=>{
+    const current=await tx.get(ref);if(!current.exists)fail(404,'Aluno não encontrado.');
+    const previous=current.data().documentos?.[b.type];
+    if(previous?.status==='Aprovado')fail(400,'Documento já aprovado. Solicite ajuda à instituição.');
+    const reviewHistory=Array.isArray(previous?.reviewHistory)?[...previous.reviewHistory]:[];
+    if(!reviewHistory.length&&previous?.status==='Reprovado'&&previous.motivoReprovacao)reviewHistory.push({status:'Reprovado',motivo:previous.motivoReprovacao,reviewedAt:previous.reviewedAt||null,reviewedBy:previous.reviewedBy||{name:'Secretaria'},submissionId:previous.submissionId||'',legacy:true});
+    tx.update(ref,{[`documentos.${b.type}`]:{status:'Pendente',fileName:b.fileName,driveUrl:b.url,submissionId,submittedAt:new Date().toISOString(),motivoReprovacao:'',reviewHistory}});
+   });return {ok:true,submissionId};
   }
   if(action==='student-config'){const d=(await db.collection('config').doc('institution').get()).data()||{};return {...await publicInfo(db),gdriveUrl:typeof d.gdriveUrl==='string'?d.gdriveUrl:''};}
   fail(403,'Operação não permitida.');

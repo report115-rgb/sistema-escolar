@@ -70,6 +70,10 @@
                 display: none !important;
             }
         }
+#login-modal .matriz-login-footer {position:absolute;bottom:22px;left:24px;right:24px;text-align:center;font-size:11px;line-height:1.65;color:#9fb5d4;}
+#login-modal .matriz-login-footer strong{font-weight:600;color:#c6d6eb;}
+#login-modal.se7-login{padding-bottom:80px;}
+@media(max-height:600px){#login-modal .matriz-login-footer{position:static;grid-column:1/-1;margin-top:20px;}#login-modal.se7-login{flex-wrap:wrap;padding-bottom:24px;}}
 /* Acesso institucional: composição escura com identidade carregada do Firebase. */
 #login-modal.se7-login {
     position:fixed; inset:0; z-index:3000; display:flex; align-items:center; justify-content:center;
@@ -239,6 +243,7 @@
             </div>
         </section>
     </div>
+    <div class="matriz-login-footer"><strong>Sistema SE7 de Gestão Acadêmica</strong><br><span data-se7-version="matriz">v1.3.0</span> • Sistema Matriz</div>
 </div>
 
 <!-- ========================================== -->
@@ -499,7 +504,7 @@
             <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-md p-6 border border-gray-200 dark:border-slate-700">
                 <div class="flex space-x-2 mb-6 border-b border-gray-200 dark:border-slate-700 pb-3">
                     <button class="subtab-button active px-4 py-2 rounded-xl text-xs font-semibold bg-blue-600 text-white shadow" onclick="openSubTab(event, 'subtab-alunos-lista')"><i class="fa-solid fa-list mr-1"></i> Lista de Alunos</button>
-                    <button class="subtab-button px-4 py-2 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-validar-docs')"><i class="fa-solid fa-folder-open mr-1"></i> Validar Documentação</button>
+                    <button class="subtab-button px-4 py-2 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" id="btn-validar-documentacao" style="position:relative;padding-right:24px;" onclick="openSubTab(event, 'subtab-validar-docs')"><i class="fa-solid fa-folder-open mr-1"></i> Validar Documentação<span id="badge-documentos-pendentes" class="se7-docs-badge" hidden aria-label="Novos documentos para avaliar">!</span></button>
 <button id="btn-acessos-portal" class="subtab-button px-4 py-2 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" style="display:none;" onclick="openSubTab(event,'subtab-acessos-portal')">Acessos ao Portal</button>
                 </div>
 
@@ -544,8 +549,9 @@
                             <option value="">Selecione o aluno...</option>
                         </select>
                     </div>
+                    <div class="mb-4"><h3 class="font-semibold text-sm mb-2">Documentos pendentes ou não aprovados</h3><p id="resumo-fila-documentos" class="text-xs text-gray-500 mb-3" aria-live="polite"></p><div id="fila-validacao-documentos" class="space-y-3"></div></div>
                     <div id="container-validacao-docs" class="space-y-4">
-                        <p class="text-xs text-gray-500">Selecione um aluno acima para visualizar, aprovar ou reprovar os documentos postados. (Ao aprovar, o documento será enviado automaticamente para a pasta do aluno no Google Drive).</p>
+                        <p class="text-xs text-gray-500">Clique em Verificar documentação na lista acima. Você também pode consultar um aluno pelo seletor.</p>
                     </div>
                 </div>
             </div>
@@ -1576,7 +1582,7 @@
     <!-- RODAPÉ -->
     <footer id="se7-footer" class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border-t border-gray-200 dark:border-slate-700 py-2.5 px-6 text-center text-xs text-gray-500 dark:text-gray-400 flex flex-col sm:flex-row justify-between items-center gap-2 shadow-lg">
         <span>Sistema SE7 de Gestão Acadêmica • Matriz</span>
-        <span>Desenvolvido por <strong>JS & SS Serviços Educacionais e Cia Ltda</strong> &bull; Versão 1.1.2 Cloud Drive</span>
+        <span>Desenvolvido por <strong>JS & SS Serviços Educacionais e Cia Ltda</strong> &bull; <span data-se7-version="matriz">v1.3.0</span> • Sistema Matriz</span>
     </footer>
 
     <!-- MODAL DE NOVA MATRÍCULA / EDIÇÃO DE ALUNO -->
@@ -4113,11 +4119,12 @@ function carregarDatasCalendarioParaFrequencia() {
     // 1. Popular seletor de validação de documentos da gestão
     const selValidacao = document.getElementById('select-aluno-validacao');
     if(selValidacao) {
-        selValidacao.innerHTML = '<option value="">Selecione o aluno...</option>';
-        students.forEach(s => {
-            selValidacao.insertAdjacentHTML('beforeend', `<option value="${s.id}">${s.fullname} (${s.code || 'Sem Matrícula'})</option>`);
-        });
+        const atual = selValidacao.value;
+        selValidacao.replaceChildren(new Option('Consultar aluno…', ''));
+        students.forEach(s => selValidacao.add(new Option(s.fullname + ' (' + (s.code || 'Sem Matrícula') + ')', s.id)));
+        if (students.some(s => s.id === atual)) selValidacao.value = atual;
     }
+    if (typeof atualizarFilaDocumentos === 'function') atualizarFilaDocumentos();
 
     // 2. Popular seletor da aba Financeiro
     const selFinanceiro = document.getElementById('fin-student-select');
@@ -4137,136 +4144,6 @@ function carregarDatasCalendarioParaFrequencia() {
         });
     }
 }
-
-        function renderizarDocumentosAlunoGestao(alunoId) {
-            const container = document.getElementById('container-validacao-docs');
-            if(!container) return;
-            if(!alunoId) {
-                container.innerHTML = `<p class="text-xs text-gray-500">Selecione um aluno acima para visualizar, aprovar ou reprovar os documentos postados.</p>`;
-                return;
-            }
-            const aluno = students.find(s => s.id === alunoId);
-            if(!aluno) return;
-
-            const docs = aluno.documentos || {};
-            container.innerHTML = `<h3 class="font-bold text-sm text-gray-800 dark:text-white mb-2">Documentação de ${aluno.fullname}</h3>`;
-
-            tiposDocumentosObrigatorios.forEach(tipo => {
-                const docInfo = docs[tipo.id];
-                const status = docInfo ? docInfo.status : 'Pendente';
-                const motivo = docInfo ? docInfo.motivoReprovacao : '';
-                const fileUrl = docInfo ? docInfo.fileUrl : '';
-                const driveUrl = docInfo ? docInfo.driveUrl : '';
-                const fileName = docInfo && docInfo.fileName ? docInfo.fileName : 'Documento em PDF';
-
-                let statusBadge = `<span class="px-2 py-0.5 bg-gray-200 text-gray-800 rounded text-[10px] font-bold">Pendente</span>`;
-                if(status === 'Aprovado') statusBadge = `<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded text-[10px] font-bold">Aprovado</span>`;
-                if(status === 'Reprovado') statusBadge = `<span class="px-2 py-0.5 bg-red-100 text-red-800 rounded text-[10px] font-bold">Reprovado</span>`;
-
-                let linkArquivoHtml = '<span class="text-gray-400">Não enviado pelo aluno</span>';
-                if (driveUrl) {
-                    linkArquivoHtml = `<a href="${driveUrl}" target="_blank" class="text-blue-600 dark:text-blue-400 underline font-semibold flex items-center gap-1"><i class="fa-brands fa-google-drive"></i> Arquivo Enviado: ${fileName} (Abrir no Drive)</a>`;
-                } else if (fileUrl) {
-                    linkArquivoHtml = `<a href="${fileUrl}" target="_blank" class="text-blue-600 dark:text-blue-400 underline font-semibold">Visualizar PDF (${fileName})</a>`;
-                }
-
-                // CONTROLE DOS BOTÕES CONFORME O STATUS
-                let botoesAcaoHtml = '';
-                
-                if (status === 'Aprovado') {
-                    // Se já foi aprovado, bloqueia as ações permanentemente
-                    botoesAcaoHtml = `
-                        <div class="text-xs text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
-                            <i class="fa-solid fa-circle-check"></i> Documento validado e aprovado com sucesso.
-                        </div>
-                    `;
-                } else if (!driveUrl && !fileUrl) {
-                    // Se o aluno ainda não enviou nada
-                    botoesAcaoHtml = `
-                        <span class="text-xs text-gray-400 italic">Aguardando o envio do documento pelo aluno.</span>
-                    `;
-                } else {
-                    // Se foi enviado (Pendente) ou Reprovado (permite reavaliar após nova ação)
-                    botoesAcaoHtml = `
-                        <div class="flex flex-wrap gap-2 pt-2 items-center">
-                            <button onclick="aprovarEEnviarParaGoogleDrive('${aluno.id}', '${tipo.id}')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-semibold"><i class="fa-solid fa-check mr-1"></i> Aprovar Documento</button>
-                            <button onclick="toggleBoxReprovacao('${tipo.id}')" class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-semibold"><i class="fa-solid fa-xmark mr-1"></i> Reprovar</button>
-                        </div>
-                        <div id="box_reprov_${tipo.id}" class="space-y-1 pt-2" style="display: ${status === 'Reprovado' ? 'block' : 'none'};">
-                            <input type="text" id="motivo_${tipo.id}" value="${motivo}" placeholder="Informe o motivo da reprovação..." class="w-full px-3 py-1.5 rounded border text-xs dark:bg-slate-800 dark:text-white">
-                            <button onclick="salvarReprovacaoDocumento('${aluno.id}', '${tipo.id}')" class="px-3 py-1 bg-gray-700 hover:bg-gray-800 text-white rounded text-[10px] font-semibold">Salvar Reprovação e Motivo</button>
-                        </div>
-                    `;
-                }
-
-                container.innerHTML += `
-                    <div class="bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700 space-y-2">
-                        <div class="flex justify-between items-center">
-                            <span class="font-bold text-xs text-blue-600 dark:text-blue-400">${tipo.label}</span>
-                            <div>${statusBadge}</div>
-                        </div>
-                        <div class="text-xs py-1">
-                            ${linkArquivoHtml}
-                        </div>
-                        ${botoesAcaoHtml}
-                    </div>
-                `;
-            });
-        }
-
-        function toggleBoxReprovacao(tipoId) {
-            const box = document.getElementById(`box_reprov_${tipoId}`);
-            if (box) box.style.display = box.style.display === 'none' ? 'block' : 'none';
-        }
-
-        async function aprovarEEnviarParaGoogleDrive(alunoId, tipoId) {
-            const aluno = students.find(s => s.id === alunoId);
-            if(!aluno) return;
-            
-            // Verifica se o documento existe nos registros do aluno (enviado ao Drive ou pendente)
-            if(!aluno.documentos || !aluno.documentos[tipoId]) {
-                return alert("Este aluno ainda não realizou a postagem deste documento.");
-            }
-
-            const docInfo = aluno.documentos[tipoId];
-            let linkDriveSalvo = docInfo.driveUrl || "https://drive.google.com";
-
-            // Atualiza o status para Aprovado diretamente na nuvem
-            if(!aluno.documentos) aluno.documentos = {};
-            if(!aluno.documentos[tipoId]) aluno.documentos[tipoId] = {};
-            
-            aluno.documentos[tipoId].status = "Aprovado";
-            aluno.documentos[tipoId].motivoReprovacao = "";
-            aluno.documentos[tipoId].driveUrl = linkDriveSalvo;
-
-            try {
-                await db.collection("students").doc(alunoId).update({ documentos: aluno.documentos });
-                registrarLogAuditoria(`Aprovou o documento de ${aluno.fullname}`, "Validação de Documentos");
-                alert("Documento aprovado com sucesso para este aluno!");
-                renderizarDocumentosAlunoGestao(alunoId);
-            } catch (error) {
-                console.error("Erro ao aprovar documento:", error);
-                alert("Erro ao atualizar status na nuvem: " + error.message);
-            }
-        }
-
-        async function atualizarStatusDocumento(alunoId, tipoId, novoStatus, motivo) {
-            const aluno = students.find(s => s.id === alunoId);
-            if(!aluno) return;
-            if(!aluno.documentos) aluno.documentos = {};
-            if(!aluno.documentos[tipoId]) aluno.documentos[tipoId] = {};
-            aluno.documentos[tipoId].status = novoStatus;
-            aluno.documentos[tipoId].motivoReprovacao = motivo || '';
-            await db.collection("students").doc(alunoId).update({ documentos: aluno.documentos });
-            alert(`Documento atualizado para: ${novoStatus}`);
-            renderizarDocumentosAlunoGestao(alunoId);
-        }
-
-        async function salvarReprovacaoDocumento(alunoId, tipoId) {
-            const motivo = document.getElementById(`motivo_${tipoId}`).value.trim();
-            if(!motivo) return alert("Informe o motivo da reprovação.");
-            await atualizarStatusDocumento(alunoId, tipoId, 'Reprovado', motivo);
-        }
 
        // Exemplo de adaptação para a função renderAttendanceList e o salvamento/edição
 // ✅ FUNÇÃO CORRIGIDA E ATUALIZADA PARA LER O BLOQUEIO DA NUVEM (FIREBASE)
@@ -5461,6 +5338,7 @@ async function alternarProvaIndividualAluno(studentId, novoStatus) {
             if(!aluno) return;
 
             const docs = aluno.documentos || {};
+            tiposDocumentosObrigatorios.forEach(tipo => documentosAnalisadosNaTela.set(alunoId + '/' + tipo.id, assinaturaEnvioDocumento(docs[tipo.id])));
             container.innerHTML = `<h3 class="font-bold text-sm text-gray-800 dark:text-white mb-2">Documentação EJA de ${aluno.fullname}</h3>`;
 
             tiposDocumentosObrigatorios.forEach(tipo => {
@@ -5516,33 +5394,13 @@ async function alternarProvaIndividualAluno(studentId, novoStatus) {
         }
 
         async function aprovarDocumentoEJA(alunoId, tipoId) {
-            const aluno = students.find(s => s.id === alunoId);
-            if(!aluno || !aluno.documentos || !aluno.documentos[tipoId]) return;
-
-            aluno.documentos[tipoId].status = "Aprovado";
-            aluno.documentos[tipoId].motivoReprovacao = "";
-
-            try {
-                await db.collection("students").doc(alunoId).update({ documentos: aluno.documentos });
-                alert("Documento EJA aprovado com sucesso!");
-                renderizarDocumentosEJagestao(alunoId);
-            } catch (error) {
-                alert("Erro ao aprovar: " + error.message);
-            }
+            await atualizarStatusDocumento(alunoId, tipoId, 'Aprovado');
+            renderizarDocumentosEJagestao(alunoId);
         }
-
         async function salvarReprovacaoDocumentoEJA(alunoId, tipoId) {
             const motivo = document.getElementById(`motivo_eja_${tipoId}`).value.trim();
-            if(!motivo) return alert("Informe o motivo.");
-            
-            const aluno = students.find(s => s.id === alunoId);
-            if(!aluno || !aluno.documentos || !aluno.documentos[tipoId]) return;
-
-            aluno.documentos[tipoId].status = "Reprovado";
-            aluno.documentos[tipoId].motivoReprovacao = motivo;
-
-            await db.collection("students").doc(alunoId).update({ documentos: aluno.documentos });
-            alert("Documento reprovado registrado com sucesso!");
+            if (!motivo) return alert('Informe o motivo.');
+            await atualizarStatusDocumento(alunoId, tipoId, 'Reprovado', motivo);
             renderizarDocumentosEJagestao(alunoId);
         }
 
@@ -6102,5 +5960,7 @@ function escutarRegistrosPontoManual() {
 
 <div id="modal-historico-matricula" class="fixed inset-0 z-[4000] flex items-center justify-center bg-black/70 p-4" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="historico-matricula-titulo"><div class="se7-modal-panel rounded-2xl border w-full max-w-lg p-6 max-h-[80vh] overflow-y-auto"><div class="flex justify-between gap-3 mb-4"><h3 id="historico-matricula-titulo" class="font-bold">Histórico da matrícula</h3><button type="button" aria-label="Fechar histórico" onclick="document.getElementById('modal-historico-matricula').style.display='none'">Fechar</button></div><div id="historico-matricula-conteudo" class="space-y-3 text-sm"></div></div></div>
 <script src="/assets/se7-enrollment.js"></script>
+<script src="/assets/se7-version.js"></script>
+<script src="/assets/se7-documents.js"></script>
 </body>
 </html>
