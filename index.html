@@ -466,6 +466,10 @@
                     </button>
                 </div>
             </div>
+            <div id="aviso-perfil-matriz" hidden style="width:100%;flex-basis:100%;padding:10px 16px;background:#102f4a;border-top:1px solid #2a5c9f;color:#e8f1fa;font-size:12px;">
+                <span id="nome-perfil-matriz"></span>
+                <button type="button" onclick="voltarAoMasterMatriz()" style="margin-left:12px;padding:7px 12px;background:#0875ff;color:white;border-radius:8px;font-weight:600;">Voltar ao master</button>
+            </div>
         </header>
 
         <!-- NAVEGAÇÃO PRINCIPAL (ABAS) -->
@@ -1474,7 +1478,10 @@
 </div>
 
 <script>
-    function usuarioMasterAtivo(){return !!firebase.auth().currentUser && firebase.auth().currentUser.uid==='UUBINdHfJZONVMcC0QogyAsUgvA3';}
+    let perfilVisualizadoMatriz = null;
+    let sessaoRealMatriz = null;
+    function masterAutenticadoMatriz(){return !!firebase.auth().currentUser && firebase.auth().currentUser.uid==='UUBINdHfJZONVMcC0QogyAsUgvA3';}
+    function usuarioMasterAtivo(){return masterAutenticadoMatriz() && !perfilVisualizadoMatriz;}
 
     // Funções de controle da sub-aba do totem na matriz
     function mudarSubAbaTotem(tipo) {
@@ -1803,7 +1810,7 @@
         }
 
         async function registrarLogAuditoria(acao, modulo) {
-    const usuarioSessao = JSON.parse(sessionStorage.getItem('usuario_logado')) || { nome: "Sistema", perfil: "geral" };
+    const usuarioSessao = sessaoRealMatriz || JSON.parse(sessionStorage.getItem('usuario_logado')) || { nome: "Sistema", perfil: "geral" };
     
     const novoLog = {
         dataHora: new Date().toLocaleString('pt-BR'),
@@ -2185,6 +2192,7 @@ async function alternarBloqueioPortal(id){if(!usuarioMasterAtivo())return;const 
         }
 
         async function editarNomeUsuarioLogado() {
+            if (perfilVisualizadoMatriz) return alert("Volte ao master para editar seu nome.");
             const atual = JSON.parse(sessionStorage.getItem('usuario_logado') || '{}');
             const nome = prompt('Como seu nome deve aparecer no cabeçalho?', atual.nome || '');
             if (nome === null) return;
@@ -2292,6 +2300,7 @@ async function rejeitarSolicitacaoFirebase(id) {
             sim.disabled = nao.disabled = true;
             sim.textContent = 'Saindo…';
             try {
+                sessionStorage.removeItem('se7_matriz_perfil_visualizado');
                 await SE7.logout();
                 document.getElementById('confirmar-saida-matriz').close();
             } catch (erro) {
@@ -2303,52 +2312,69 @@ async function rejeitarSolicitacaoFirebase(id) {
             }
         }
 
-       async function abrirModalAlternarUsuario() {
-            const sessaoAtual = JSON.parse(sessionStorage.getItem('usuario_logado'));
-            if (!sessaoAtual || sessaoAtual.perfil !== 'master') return alert("Acesso restrito a Master.");
-            
-            const listEl = document.getElementById('switch-users-list');
-            listEl.innerHTML = '<li class="p-2 text-xs text-center text-gray-400">Carregando usuários da nuvem...</li>';
+        async function abrirModalAlternarUsuario() {
+            if (!masterAutenticadoMatriz()) return alert('Acesso restrito ao master.');
+            const list = document.getElementById('switch-users-list');
+            list.textContent = 'Carregando usuários…';
             document.getElementById('switch-user-modal').style.display = 'flex';
-
             try {
-                const snapshot = await db.collection("systemUsers").get();
-                let usuariosNuvem = [];
-                snapshot.forEach(doc => usuariosNuvem.push({ id: doc.id, ...doc.data() }));
-
-                listEl.innerHTML = '';
-
-                // Adiciona os usuários padrão primeiro
-                usuariosPadrao.forEach(u => {
-                    listEl.innerHTML += `
-                        <li class="p-2 flex justify-between items-center text-xs border-b border-gray-100 dark:border-slate-700">
-                            <span><strong>${u.nome}</strong> (${u.perfil}) <span class="text-[10px] text-gray-400">(Padrão)</span></span>
-                            <button onclick="alternarParaUsuarioDados('${u.email}', '${u.nome}', '${u.perfil}')" class="px-2 py-1 bg-blue-600 text-white rounded">Alternar</button>
-                        </li>`;
-                });
-
-                // Adiciona os usuários da nuvem
-                usuariosNuvem.forEach(u => {
-                    listEl.innerHTML += `
-                        <li class="p-2 flex justify-between items-center text-xs border-b border-gray-100 dark:border-slate-700">
-                            <span><strong>${u.nome}</strong> (${u.perfil})</span>
-                            <button onclick="alternarParaUsuarioDados('${u.email}', '${u.nome}', '${u.perfil}')" class="px-2 py-1 bg-blue-600 text-white rounded">Alternar</button>
-                        </li>`;
-                });
-            } catch (e) {
-                listEl.innerHTML = `<li class="p-2 text-xs text-center text-red-400">Erro ao carregar usuários.</li>`;
-            }
+                const resultado = await SE7.api('staff-list');
+                list.replaceChildren();
+                const usuarios = resultado.users.filter(u => !u.disabled && ['secretaria','professor','financeiro','master'].includes(u.perfil));
+                const masterId = firebase.auth().currentUser.uid;
+                if (sessaoRealMatriz && !usuarios.some(u => u.id === masterId)) usuarios.unshift({...sessaoRealMatriz, id:masterId});
+                for (const usuario of usuarios) {
+                    const li = document.createElement('li');
+                    li.className = 'p-3 flex gap-3 justify-between items-center text-xs';
+                    const nome = document.createElement('span');
+                    nome.textContent = (usuario.nome || usuario.email) + ' — ' + usuario.perfil;
+                    const botao = document.createElement('button');
+                    botao.type = 'button'; botao.textContent = 'Visualizar';
+                    botao.className = 'px-3 py-2 bg-blue-600 text-white rounded-lg';
+                    botao.onclick = () => alternarParaUsuarioDados(usuario.id);
+                    li.append(nome, botao); list.append(li);
+                }
+                if (!usuarios.length) list.textContent = 'Nenhum colaborador disponível para visualização.';
+            } catch (erro) { list.textContent = 'Não foi possível carregar os usuários. Tente novamente.'; }
         }
-
-        function fecharModalAlternarUsuario() { 
-            document.getElementById('switch-user-modal').style.display = 'none'; 
+        function fecharModalAlternarUsuario(){document.getElementById('switch-user-modal').style.display='none';}
+        async function alternarParaUsuarioDados(id) {
+            if (!masterAutenticadoMatriz()) return;
+            try {
+                if (id === firebase.auth().currentUser.uid) { voltarAoMasterMatriz(); return; }
+                const resultado = await SE7.api('staff-list');
+                const usuario = resultado.users.find(u => u.id === id && !u.disabled && ['master','secretaria','professor','financeiro'].includes(u.perfil));
+                if (!usuario) throw new Error('Usuário indisponível para visualização.');
+                if (id === firebase.auth().currentUser.uid) { voltarAoMasterMatriz(); return; }
+                sessionStorage.setItem('se7_matriz_perfil_visualizado', id);
+                await registrarLogAuditoria('Visualizou o perfil de ' + (usuario.nome || usuario.email) + ' (' + usuario.perfil + ')', 'Autenticação');
+                location.reload();
+            } catch (erro) { alert(erro.message || 'Não foi possível alternar o perfil.'); }
         }
-
-        function alternarParaUsuarioDados(email, nome, perfil) {
-            const userFound = { email, nome, perfil };
-            sessionStorage.setItem('usuario_logado', JSON.stringify(userFound));
-            registrarLogAuditoria(`Alternou para o usuário ${nome} (${perfil})`, "Autenticação");
+        function voltarAoMasterMatriz() {
+            sessionStorage.removeItem('se7_matriz_perfil_visualizado');
             location.reload();
+        }
+        async function restaurarVisualizacaoMatriz(sessao) {
+            sessaoRealMatriz = sessao;
+            perfilVisualizadoMatriz = null;
+            const id = sessionStorage.getItem('se7_matriz_perfil_visualizado');
+            if (!sessao || sessao.perfil !== 'master' || !masterAutenticadoMatriz()) {
+                sessionStorage.removeItem('se7_matriz_perfil_visualizado'); return sessao;
+            }
+            if (!id) return sessao;
+            try {
+                const resultado = await SE7.api('staff-list');
+                const usuario = resultado.users.find(u => u.id === id && !u.disabled && ['master','secretaria','professor','financeiro'].includes(u.perfil));
+                if (!usuario || id === firebase.auth().currentUser.uid) throw new Error('Perfil indisponível');
+                perfilVisualizadoMatriz = {nome:usuario.nome || usuario.email, email:usuario.email, perfil:usuario.perfil, id:usuario.id};
+                const aviso = document.getElementById('aviso-perfil-matriz');
+                aviso.hidden = false;
+                document.getElementById('nome-perfil-matriz').textContent = 'Visualizando: ' + perfilVisualizadoMatriz.nome + ' — ' + perfilVisualizadoMatriz.perfil + '. Sua sessão continua como master.';
+                return perfilVisualizadoMatriz;
+            } catch (erro) {
+                sessionStorage.removeItem('se7_matriz_perfil_visualizado'); return sessao;
+            }
         }
 
         function aplicarPermissoesPorPerfil(perfil) {
@@ -2440,7 +2466,7 @@ async function rejeitarSolicitacaoFirebase(id) {
 	    const inputDataPonto = document.getElementById('manual-ponto-data');
             if (inputDataPonto) inputDataPonto.valueAsDate = new Date();
 
-            const sessao=await SE7.restore('matriz');if(sessao)sessionStorage.setItem('usuario_logado',JSON.stringify(sessao));else sessionStorage.removeItem('usuario_logado');
+            let sessao=await SE7.restore('matriz');sessao=await restaurarVisualizacaoMatriz(sessao);if(sessao)sessionStorage.setItem('usuario_logado',JSON.stringify(sessao));else sessionStorage.removeItem('usuario_logado');
             const loginModal = document.getElementById('login-modal');
             if (sessao && loginModal) {
                 loginModal.style.display = 'none';iniciarDadosAutenticadosMatriz();
