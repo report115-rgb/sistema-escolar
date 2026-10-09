@@ -2,13 +2,11 @@
 body.se7-matriz{--se7-sidebar-width:216px;--se7-bg:#f1f5fb;--se7-panel:#fff;--se7-panel-soft:#edf3fb;--se7-input:#fff;--se7-text:#172e4c;--se7-muted:#58718f;--se7-border:#cfdeee;--se7-table-head:#e7eff9;--se7-hover:#edf5ff;min-width:980px;background:var(--se7-bg);color:var(--se7-text);font-family:Arial,Helvetica,sans-serif;padding-bottom:48px;}
 html.dark body.se7-matriz{background:var(--se7-bg);color:var(--se7-text);--se7-bg:#06172d;--se7-panel:#0b213a;--se7-panel-soft:#081c33;--se7-input:#071b31;--se7-text:#edf5ff;--se7-muted:#a4bcd9;--se7-border:#193f64;--se7-table-head:#0b2744;--se7-hover:#102d4a;}
 .se7-matriz #se7-sidebar{position:fixed;inset:0 auto 0 0;width:var(--se7-sidebar-width);z-index:60;display:flex;flex-direction:column;background:linear-gradient(160deg,#05172d,#031326);border-right:1px solid #153b5f;color:#c0d5ef;overflow:hidden;transition:width .2s ease;}
-.se7-matriz .se7-sidebar-brand{display:flex;align-items:center;gap:10px;min-height:102px;padding:21px 16px 18px;flex:none;}
-.se7-matriz #header-logo-img{width:50px;max-height:54px;flex:none;object-fit:contain;}
+.se7-matriz .se7-sidebar-brand{display:flex;align-items:center;justify-content:center;min-height:112px;padding:14px;flex:none;}
+.se7-matriz #header-logo-img{width:100%;height:78px;max-height:78px;flex:none;object-fit:contain;}
 .se7-matriz #header-logo-fallback{width:42px;height:42px;flex:none;background:#123660;border:1px solid #1c568b;border-radius:10px;font-size:15px;}
-.se7-matriz .se7-brand-copy{min-width:0;}
-.se7-matriz #header-inst-name{font-size:12px;font-weight:600;line-height:1.4;color:#eaf3ff;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.se7-matriz .se7-brand-copy{display:none;}
 .se7-matriz #header-inst-razao{display:none;}
-.se7-matriz .se7-brand-matriz{margin:3px 0 0;color:#38bcff;font-size:23px;line-height:1.1;font-weight:700;}
 .se7-matriz #main-tabs-nav{display:flex;flex:1;min-height:0;flex-direction:column;justify-content:flex-start;align-items:stretch;gap:6px;padding:8px 10px;background:transparent;border:0;overflow-y:auto;overflow-x:hidden;}
 .se7-matriz #main-tabs-nav .tab-button{position:relative;margin:0;display:flex;align-items:center;gap:11px;width:100%;min-height:44px;padding:11px 12px;border:1px solid transparent;border-radius:8px;background:transparent;color:#c0d5ef;text-align:left;font-size:12px;font-weight:500;line-height:1.25;white-space:normal;box-shadow:none;transition:background .16s,color .16s;}
 .se7-matriz #main-tabs-nav .tab-button i{font-size:17px;width:23px;margin:0;text-align:center;flex:none;}
@@ -87,3 +85,6 @@ html.dark .se7-matriz ::-webkit-scrollbar-thumb{background:#275275;}
 
 html.dark .se7-matriz :is(#se7-workspace,.se7-modal-panel) :is(input,select,textarea){color-scheme:dark;}
 html:not(.dark) .se7-matriz #se7-workspace td button.bg-red-600{color:#ac2341;border-color:#d69cab;}
+
+.se7-matriz.se7-sidebar-collapsed #header-logo-img{width:44px;height:44px;max-height:44px;}
+@media(max-height:700px){.se7-matriz:not(.se7-sidebar-collapsed) #header-logo-img{height:60px;max-height:60px;}}

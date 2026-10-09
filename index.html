@@ -406,14 +406,13 @@
 
     <aside id="se7-sidebar" aria-label="Navegação principal">
             <div class="se7-sidebar-brand">
-                <img id="header-logo-img" class="max-h-10 object-contain rounded bg-transparent border-0" alt="Logo" style="display: none;">
+                <img id="header-logo-img" class="object-contain bg-transparent border-0" alt="Logomarca da instituição" style="display: none;">
                 <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-lg shadow shrink-0" id="header-logo-fallback">
                     SE7
                 </div>
-                <div class="se7-brand-copy">
-                    <h1 class="font-bold text-base md:text-lg leading-tight" id="header-inst-name">SE7 Gestão Educacional</h1>
-                    <p class="se7-brand-matriz">Matriz</p>
-                    <p class="text-xs text-blue-200 font-medium" id="header-inst-razao">JS & SS Serviços Educacionais e Cia Ltda</p>
+                <div class="se7-brand-copy" hidden aria-hidden="true">
+                    <span id="header-inst-name"></span>
+                    <span id="header-inst-razao"></span>
                 </div>
             </div>
         <nav class="tabs-nav bg-gray-200 dark:bg-slate-700 px-4 py-2 flex md:justify-center space-x-2 overflow-x-auto border-b border-gray-300 dark:border-slate-600" id="main-tabs-nav" aria-label="Módulos do Matriz">
