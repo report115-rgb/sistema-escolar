@@ -1,3 +1,4 @@
+import {waConfig,setConsent,enrollmentNotifications,examNotification,listMessages,sendJob,checkConnection,centralTest} from '../server/whatsapp.mjs';
 import {services,FieldValue as F} from '../server/admin.mjs';
 import {randomBytes} from 'node:crypto';
 import {roles,tabs,docTypes,digest,cpfKey,studentUid,alias,validId,password,hashPassword,verifyPassword,publicStudent,validCPF} from '../server/security.mjs';
@@ -67,10 +68,24 @@ export async function dispatch({auth,db},req,b){
   const ref=db.collection('students').doc();const uid=studentUid(ref.id),idx=db.collection('se7CpfIndex').doc(cpfKey(s.cpf));
   await db.runTransaction(async tx=>{const d=await tx.get(idx);if(d.exists)fail(409,'Já existe um cadastro com este CPF. Solicite ajuda à instituição.');tx.set(idx,{studentId:ref.id,pending:true});});
   try{await auth.createUser({uid,email:alias(ref.id),password:b.password,displayName:s.fullname});await claims(auth,uid,{role:'aluno',studentId:ref.id,portalVersion:0});
-   const code=`MAT-${new Date().getFullYear()}-${ref.id.slice(-8).toUpperCase()}`;await ref.set({...s,code,dob:s.birthDate,classId:'',status:'Ativo',documentos:{},attendance:{},se7AuthUid:uid,portalSessionVersion:0,createdAt:new Date().toISOString()});await idx.set({studentId:ref.id});return {customToken:await auth.createCustomToken(uid,{role:'aluno',studentId:ref.id,portalVersion:0}),student:{id:ref.id,...s,code}};
+   const code=`MAT-${new Date().getFullYear()}-${ref.id.slice(-8).toUpperCase()}`;await ref.set({...s,code,dob:s.birthDate,classId:'',status:'Ativo',documentos:{},attendance:{},se7AuthUid:uid,portalSessionVersion:0,createdAt:new Date().toISOString()});await idx.set({studentId:ref.id});const customToken=await auth.createCustomToken(uid,{role:'aluno',studentId:ref.id,portalVersion:0});try{await setConsent(db,ref.id,data.whatsappOptIn===true,{uid,role:'aluno'});await enrollmentNotifications(db,ref.id,{uid,role:'aluno'});}catch{console.warn('SE7 WhatsApp: matrícula salva; notificação não concluída.');}return {customToken,student:{id:ref.id,...s,code}};
   }catch(e){await auth.deleteUser(uid).catch(()=>{});await ref.delete().catch(()=>{});await idx.delete();throw e;}
  }
  const u=await identity(auth,db,req);
+ if(action==='whatsapp-consent'){
+  if(!['master','secretaria','aluno'].includes(u.role))fail(403,'Acesso restrito.');
+  const id=u.role==='aluno'?u.studentId:validId(b.id);if(u.role==='aluno'&&b.id&&b.id!==id)fail(403,'Aluno inválido.');
+  return setConsent(db,id,b.optIn,u);
+ }
+ if(action==='whatsapp-enrollment'||action==='whatsapp-exam'){
+  if(!['master','secretaria'].includes(u.role))fail(403,'Acesso restrito.');await limits(db,req,'whatsapp:'+u.uid);
+  return action==='whatsapp-enrollment'?enrollmentNotifications(db,validId(b.id),u):examNotification(db,validId(b.id),u);
+ }
+ if(['whatsapp-config','whatsapp-list','whatsapp-check','whatsapp-test','whatsapp-retry'].includes(action)){
+  master(u);if(action==='whatsapp-config')return waConfig();if(action==='whatsapp-list')return listMessages(db);
+  if(action==='whatsapp-check')return checkConnection();await limits(db,req,'whatsapp:'+u.uid);
+  if(action==='whatsapp-test')return centralTest(db,u);return sendJob(db,validId(b.id));
+ }
  if(action==='session'){
   if(u.role==='aluno')return {profile:{id:u.studentId,...publicStudent(u.student)},role:u.role};
   if(u.role==='master')await claims(auth,u.uid,{role:'master'});

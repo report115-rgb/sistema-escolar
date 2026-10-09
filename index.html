@@ -23,6 +23,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 <script src="/assets/se7-auth.js"></script>
+<script src="/assets/se7-whatsapp.js"></script>
     <!-- EmailJS SDK para Disparo de E-mails -->
     <script>
         tailwind.config = {
@@ -134,7 +135,7 @@
 #se7-welcome .welcome-role {font-size:17px;letter-spacing:3px;color:#adc6e9;margin:15px 0 30px;}
 #se7-welcome .welcome-tagline {font-size:13px;letter-spacing:1.5px;color:#a9c3e6;margin:0;}
 #se7-welcome .welcome-progress {width:200px;height:2px;background:#103d76;border-radius:4px;margin:30px auto 0;overflow:hidden;}
-#se7-welcome .welcome-progress::after {content:'';display:block;width:100%;height:100%;background:linear-gradient(90deg,#51d1ff,#2487ff);transform-origin:left;animation:welcome-progress 2s ease-out both;box-shadow:0 0 9px #47c5ff;}
+#se7-welcome .welcome-progress::after {content:'';display:block;width:100%;height:100%;background:linear-gradient(90deg,#51d1ff,#2487ff);transform-origin:left;animation:welcome-progress 5s ease-out both;box-shadow:0 0 9px #47c5ff;}
 #se7-welcome .welcome-footer {position:absolute;bottom:6.5%;left:0;right:0;text-align:center;color:#9fbbe1;font-size:11px;letter-spacing:2px;}
 @keyframes welcome-pulse {0%,100%{opacity:.28}50%{opacity:1}}
 @keyframes welcome-progress {from{transform:scaleX(0)}to{transform:scaleX(1)}}
@@ -889,7 +890,8 @@
                     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-templates')">Edição de Documentos</button>
                     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-institution')">Instituição</button>
 		    <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-audit')">Auditoria</button>
-    <button id="btn-subtab-gestao-totem" class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" style="display: none;" onclick="openSubTab(event, 'subtab-gestao-totem')"><i class="fa-solid fa-clock mr-1.5"></i> Totem e Ponto</button>
+    <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event,'subtab-whatsapp');carregarPainelWhatsApp()"><i class="fa-brands fa-whatsapp mr-1"></i> WhatsApp</button>
+<button id="btn-subtab-gestao-totem" class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" style="display: none;" onclick="openSubTab(event, 'subtab-gestao-totem')"><i class="fa-solid fa-clock mr-1.5"></i> Totem e Ponto</button>
 </div>
 
                 <!-- ABA PRINCIPAL CURSOS (DIVIDIDA EM DUAS SUBABAS) -->
@@ -1321,6 +1323,16 @@
     </div>
 </div>
 
+<div id="subtab-whatsapp" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display:none;">
+ <h3 class="font-bold text-lg">WhatsApp institucional</h3>
+ <p class="text-sm">Avisos de matrícula para a central e para o aluno, e agendamento de prova EJA. Os alunos precisam autorizar os avisos no cadastro ou no próprio aplicativo.</p>
+ <p id="wa-config-status" class="text-sm">Clique em Atualizar histórico para consultar.</p>
+ <div class="flex flex-wrap gap-2"><button type="button" onclick="carregarPainelWhatsApp()" class="px-3 py-2 bg-blue-600 text-white rounded-lg text-xs">Atualizar histórico</button><button type="button" onclick="verificarConexaoWhatsApp()" class="px-3 py-2 bg-slate-600 text-white rounded-lg text-xs">Verificar conexão</button><button type="button" onclick="testarWhatsAppCentral()" class="px-3 py-2 bg-emerald-600 text-white rounded-lg text-xs">Enviar teste à central</button></div>
+ <p class="text-xs text-slate-500">“Aceita pela Meta” ainda não significa “Entregue”. O resultado é atualizado pelas confirmações do WhatsApp. Se o resultado estiver sem confirmação, confira no telefone antes de repetir.</p>
+ <div class="overflow-x-auto"><table class="w-full text-left"><thead><tr class="text-xs"><th class="p-2">Data</th><th class="p-2">Aviso</th><th class="p-2">Nome</th><th class="p-2">Destino</th><th class="p-2">Situação</th><th class="p-2">Detalhe</th><th class="p-2">Ação</th></tr></thead><tbody id="wa-messages"></tbody></table></div>
+ <p class="text-xs">Últimas 50 mensagens. As chaves são configuradas exclusivamente na Vercel, conforme o guia entregue.</p>
+</div>
+
                 <!-- SUBABA INSTITUIÇÃO -->
                 <div id="subtab-institution" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1566,6 +1578,7 @@
                     <div>
                         <label class="block text-xs font-semibold mb-1">WhatsApp</label>
                         <input type="text" id="whatsappAluno" placeholder="(91) 9XXXX-XXXX" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900" required>
+<label class="flex items-start gap-2 text-xs mt-2"><input type="checkbox" id="whatsapp-opt-in-aluno" class="mt-1"><span>O aluno autorizou receber avisos de matrícula e provas desta instituição pelo WhatsApp.</span></label>
                     </div>
                     <div>
                         <label class="block text-xs font-semibold mb-1">E-mail</label>
@@ -1870,7 +1883,7 @@ async function limparLogsAuditoria() {
                         if (nome) {nome.setAttribute('tabindex','-1');nome.focus({preventScroll:true});}
                         resolve();
                     }, reduzido ? 0 : 450);
-                }, reduzido ? 800 : 2000);
+                }, 5000);
             });
         }
         async function fazerLogin() {
@@ -2170,33 +2183,6 @@ async function alternarBloqueioPortal(id){if(!usuarioMasterAtivo())return;const 
         function enviarSolicitudePrimeiroAcesso(){alert('Solicite ao master a criação de sua conta no Controle de Acesso.');}
 
 // --- FUNÇÃO DE WHATSAPP PARA O PRIMEIRO ACESSO ---
-async function notificarWhatsAppPrimeiroAcesso(novoColaborador) {
-    try {
-        const urlApiWhatsApp = document.getElementById('input-gdrive-url').value.trim() || globalInstitutionData.gdriveUrl; 
-        if (!urlApiWhatsApp) return;
-
-        const mensagem = `🔑 *SOLICITAÇÃO DE PRIMEIRO ACESSO*\n\n` +
-                         `👤 *Nome:* ${novoColaborador.nome}\n` +
-                         `📧 *E-mail:* ${novoColaborador.email}\n` +
-                         `🛡️ *Perfil Desejado:* ${novoColaborador.perfil.toUpperCase()}\n` +
-                         `📅 *Data:* ${novoColaborador.data}\n\n` +
-                         `Uma nova solicitação aguarda aprovação no painel de Controle de Acesso do sistema SE7.`;
-
-        await fetch(urlApiWhatsApp, {
-            method: "POST",
-            headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify({
-                tipoAviso: "primeiro_acesso",
-                telefoneCentral: "5591984969127", // Número da central que já está configurado no sistema
-                message: mensagem,
-                colaborador: novoColaborador
-            })
-        });
-    } catch (erro) {
-        console.error("Erro ao enviar notificação WhatsApp de primeiro acesso:", erro);
-    }
-}
-
         async function renderizarSolicitacoesPendentes() {
     const container = document.getElementById('lista-solicitacoes-pendentes');
     const badge = document.getElementById('badge-pendentes-cont');
@@ -3748,34 +3734,10 @@ function carregarDatasCalendarioParaFrequencia() {
             renderGradeList();
         }
 
-        async function notificarCentralWhatsAppMatriz(novoAluno, nomeCurso) {
-    try {
-        const urlApiWhatsApp = document.getElementById('input-gdrive-url').value.trim() || globalInstitutionData.gdriveUrl; 
-        if (!urlApiWhatsApp) return;
-
-        const mensagem = `🎓 *NOVA MATRÍCULA (SISTEMA MATRIZ)*\n\n` +
-                         `👤 *Nome:* ${novoAluno.fullname}\n` +
-                         `🆔 *Matrícula:* ${novoAluno.code}\n` +
-                         `📄 *CPF:* ${novoAluno.cpf}\n` +
-                         `📱 *WhatsApp:* ${novoAluno.whatsapp}\n` +
-                         `📚 *Curso:* ${nomeCurso}\n` +
-                         `📍 *Cidade/UF:* ${novoAluno.city || 'Belém'}/${novoAluno.state || 'PA'}\n\n` +
-                         `Matrícula cadastrada via painel administrativo.`;
-
-        await fetch(urlApiWhatsApp, {
-            method: "POST",
-            headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify({
-                tipoAviso: "nova_matricula",
-                telefoneCentral: "5591984969127", // <--- COLOQUE O NÚMERO DA SUA CENTRAL AQUI (55 + DDD + Número)
-                message: mensagem,
-                aluno: novoAluno
-            })
-        });
-    } catch (erro) {
-        console.error("Erro ao enviar notificação WhatsApp na matriz:", erro);
-    }
-}
+        async function notificarCentralWhatsAppMatriz(id) {
+            try {await SE7.api('whatsapp-enrollment',{id});}
+            catch(e){console.warn('Matrícula salva; aviso de WhatsApp não concluído:',e.message);}
+        }
 
         async function addOrUpdateStudent() {
     if (salvandoCadastroAluno) return;
@@ -3806,6 +3768,11 @@ function carregarDatasCalendarioParaFrequencia() {
 
     if (!fullname || !email || !cpf || !courseId || !classId) return alert("Preencha todos os campos!");
     if (!validarCPF(cpf)) return alert("CPF inválido!");
+    if(document.getElementById('whatsapp-opt-in-aluno').checked){
+        let telefone=document.getElementById('whatsappAluno').value.replace(/\D/g,'');
+        if(telefone.length===10||telefone.length===11)telefone='55'+telefone;
+        if(!/^55[1-9]\d\d{8,9}$/.test(telefone))return alert('Informe um WhatsApp válido, com DDD, para autorizar os avisos.');
+    }
 
     const cursoObj = courses.find(c => c.id === courseId);
 
@@ -3837,6 +3804,7 @@ function carregarDatasCalendarioParaFrequencia() {
 
         await db.collection("students").doc(editId).update(studentData);
         await SE7.api('prepare-student',{id:editId});
+        await SE7.api('whatsapp-consent',{id:editId,optIn:document.getElementById('whatsapp-opt-in-aluno').checked});
         const alunoLocal = students.find(a => a.id === editId);
         if (alunoLocal) Object.assign(alunoLocal, studentData);
         closeNewStudentModal();
@@ -3854,6 +3822,7 @@ function carregarDatasCalendarioParaFrequencia() {
 
         const docRef = await db.collection("students").add(studentData);
         await SE7.api('prepare-student',{id:docRef.id});
+        await SE7.api('whatsapp-consent',{id:docRef.id,optIn:document.getElementById('whatsapp-opt-in-aluno').checked});
         const novoAlunoId = docRef.id;
         closeNewStudentModal();
         
@@ -3864,7 +3833,7 @@ function carregarDatasCalendarioParaFrequencia() {
 
         // --- GATILHO AUTOMÁTICO DE GERAÇÃO FINANCEIRA ---
         try {
-            notificarCentralWhatsAppMatriz(studentData, cursoObj ? cursoObj.name : "Curso Geral");
+            void notificarCentralWhatsAppMatriz(novoAlunoId);
             
             if (cursoObj && cursoObj.valorParcela && cursoObj.qtdParcelas) {
                 const qtdP = cursoObj.qtdParcelas;
@@ -3913,6 +3882,7 @@ function carregarDatasCalendarioParaFrequencia() {
     document.getElementById('dataNascimento').value = aluno.dob || '';
     document.getElementById('sexoAluno').value = aluno.sexo || '';
     document.getElementById('whatsappAluno').value = aluno.whatsapp || '';
+    document.getElementById('whatsapp-opt-in-aluno').checked = aluno.whatsappOptIn === true;
     document.getElementById('emailAluno').value = aluno.email || '';
     document.getElementById('rgAluno').value = aluno.rg || '';
     document.getElementById('cpfAluno').value = aluno.cpf || '';
@@ -5201,6 +5171,7 @@ async function salvarAgendamentoProvaAluno(studentId) {
         return alert("Preencha a data e hora de início e término.");
     }
 
+    if (dtFimInput <= dtInicioInput) return alert("O término precisa ser posterior ao início.");
     try {
         const aluno = students.find(s => s.id === studentId);
         if (!aluno) return alert("Aluno não encontrado.");
@@ -5226,31 +5197,10 @@ async function salvarAgendamentoProvaAluno(studentId) {
         const inicioFormatado = formatarDataBr(dtInicioInput);
         const fimFormatado = formatarDataBr(dtFimInput);
 
-        // Dispara o WhatsApp automático se o aluno tiver número cadastrado
-        const urlApiWhatsApp = document.getElementById('input-gdrive-url').value.trim() || (globalInstitutionData ? globalInstitutionData.gdriveUrl : '');
-        
-        if (urlApiWhatsApp && aluno.whatsapp) {
-            const mensagem = `🎓 *AGENDAMENTO DE PROVA ONLINE - EJA*\n\n` +
-                             `Olá, *${aluno.fullname}*!\n\n` +
-                             `Sua prova online foi agendada com sucesso.\n\n` +
-                             `📅 *Início:* ${inicioFormatado}\n` +
-                             `⏰ *Término:* ${fimFormatado}\n\n` +
-                             `Fique atento(a) aos horários e acesse o Portal do Aluno para realizá-la. Boa prova!`;
-
-            // Envia para o Web App do WhatsApp em segundo plano
-            fetch(urlApiWhatsApp, {
-                method: "POST",
-                headers: { "Content-Type": "text/plain;charset=utf-8" },
-                body: JSON.stringify({
-                    tipoAviso: "agendamento_prova_eja",
-                    telefoneAluno: aluno.whatsapp.replace(/[^\d]/g, ''),
-                    message: mensagem,
-                    alunoId: aluno.id
-                })
-            }).catch(err => console.error("Erro ao disparar WhatsApp de agendamento:", err));
-        }
-
-        alert("Agendamento salvo com sucesso e notificação enviada via WhatsApp para a aluna!");
+        let resultadoWhatsApp;
+        try {resultadoWhatsApp=await SE7.api('whatsapp-exam',{id:studentId});}
+        catch(e){alert('Agendamento salvo. O aviso de WhatsApp não foi concluído: '+e.message);return;}
+        alert('Agendamento salvo. WhatsApp: '+resumoWhatsApp(resultadoWhatsApp));
     } catch (e) {
         alert("Erro ao salvar agendamento: " + e.message);
     }
