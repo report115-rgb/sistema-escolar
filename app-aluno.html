@@ -210,6 +210,7 @@
     </style>
 <link rel="stylesheet" href="/assets/se7-suite.css">
 <script>try{if(localStorage.getItem('se7_aluno_theme')==='light')document.documentElement.classList.remove('dark');}catch(e){}</script>
+<link rel="stylesheet" href="/assets/se7-asaas.css">
 </head>
 <body class="se7-suite bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans antialiased h-screen overflow-hidden flex flex-col transition-colors duration-200">
 <div id="se7-welcome" hidden role="status" aria-live="polite" aria-atomic="true">
@@ -226,7 +227,7 @@
         <p class="welcome-tagline">Tudo conectado ao sistema Matriz</p>
         <div class="welcome-progress" aria-hidden="true"></div>
     </div>
-    <div class="welcome-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.2.7</span> • Portal do Aluno</div>
+    <div class="welcome-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.3.0</span> • Portal do Aluno</div>
 </div>
 
 
@@ -264,7 +265,7 @@
                 <button type="button" class="student-login-choice student-login-choice-secondary" onclick="irParaTelaMatriculaSuave()">Quero me matricular</button>
             </div>
         </div>
-        <div id="student-welcome-developer-footer" class="student-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.2.7</span> • Portal do Aluno</div>
+        <div id="student-welcome-developer-footer" class="student-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.3.0</span> • Portal do Aluno</div>
     </div>
 
     <!-- TELA DE LOGIN DO ALUNO -->
@@ -313,7 +314,7 @@
                 </form>
             </div>
         </div>
-        <div id="student-login-developer-footer" class="student-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.2.7</span> • Portal do Aluno</div>
+        <div id="student-login-developer-footer" class="student-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.3.0</span> • Portal do Aluno</div>
     </div>
 
     <!-- TELA DE AUTO-MATRÍCULA -->
@@ -2257,5 +2258,6 @@ async function salvarNovaSenhaPortal(){const senha=document.getElementById('port
         async function fazerLogout(){await SE7.logout();}
     </script>
 <script src="/assets/se7-version.js"></script>
+<script src="/assets/se7-asaas.js"></script>
 </body>
 </html>

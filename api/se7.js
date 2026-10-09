@@ -1,6 +1,7 @@
 import {waConfig,setConsent,enrollmentNotifications,examNotification,listMessages,sendJob,checkConnection,centralTest} from '../server/whatsapp.mjs';
 import {services,FieldValue as F} from '../server/admin.mjs';
 import {randomBytes} from 'node:crypto';
+import * as asaas from '../server/asaas.mjs';
 import {roles,tabs,docTypes,digest,cpfKey,studentUid,alias,validId,password,hashPassword,verifyPassword,publicStudent,validCPF} from '../server/security.mjs';
 const PROJECT='sistema-escolar-nuvem';
 const APIKEY='AIzaSyBeJ-fqzwiQt0PZEKQ6e8zAPSuh7WRuaHo';
@@ -72,6 +73,22 @@ export async function dispatch({auth,db},req,b){
   }catch(e){await auth.deleteUser(uid).catch(()=>{});await ref.delete().catch(()=>{});await idx.delete();throw e;}
  }
  const u=await identity(auth,db,req);
+ if(typeof action==='string'&&action.startsWith('asaas-')){
+  const finance=['master','financeiro'].includes(u.role);
+  if(!finance&&u.role!=='aluno')fail(403,'Acesso restrito ao financeiro.');
+  if(u.role==='aluno'&&u.student.portalMustChangePassword)fail(403,'Troque sua senha antes de consultar pagamentos.');
+  if(action==='asaas-invoices')return asaas.invoices(db,u.role==='aluno'?u.studentId:validId(b.studentId));
+  if(action==='asaas-payment')return asaas.paymentDetails(db,validId(b.invoiceId),u);
+  if(!finance)fail(403,'Aluno não pode emitir ou alterar cobranças.');
+  if(action==='asaas-config')return asaas.config();
+  await limits(db,req,'asaas:'+u.uid);
+  if(action==='asaas-check'){await asaas.api('/customers?limit=1');return {ok:true,environment:'production'};}
+  if(action==='asaas-link-customer')return asaas.linkCustomer(db,validId(b.studentId),b.customerId||'',u);
+  if(action==='asaas-emit')return asaas.emit(db,validId(b.invoiceId),b.billingType,u);
+  if(action==='asaas-import')return asaas.importPayment(db,validId(b.invoiceId),b.paymentId,u);
+  if(action==='asaas-reconcile')return asaas.recover(db,validId(b.invoiceId));
+  fail(400,'Operação Asaas desconhecida.');
+ }
  if(action==='whatsapp-consent'){
   if(!['master','secretaria','aluno'].includes(u.role))fail(403,'Acesso restrito.');
   const id=u.role==='aluno'?u.studentId:validId(b.id);if(u.role==='aluno'&&b.id&&b.id!==id)fail(403,'Aluno inválido.');

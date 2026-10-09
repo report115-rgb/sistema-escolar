@@ -16,7 +16,7 @@ service cloud.firestore {
     && get(/databases/$(database)/documents/students/$(studentId())).data.get('se7AuthLock',null) == null
     && get(/databases/$(database)/documents/students/$(studentId())).data.get('portalSessionVersion',0) == request.auth.token.get('portalVersion',0);
   }
-  function schoolCollection(c){return c in ['students','courses','classes','academicCalendars','config','teachers','financeLogs','teacherManualLogs','teacherPaymentRates','teacherMonthlyPayments','attendance','attendanceRecords','attendanceLocks','employeeLogs','systemLogs','pendingUsers','systemUsers'];}
+  function schoolCollection(c){return c in ['students','courses','classes','academicCalendars','config','teachers','teacherManualLogs','teacherPaymentRates','teacherMonthlyPayments','attendance','attendanceRecords','attendanceLocks','employeeLogs','systemLogs','pendingUsers','systemUsers'];}
   // Master can manage existing school data, but credentials, identities and permission assignments are server-only.
   match /{c}/{doc}/{rest=**} {allow read,write: if master() && schoolCollection(c);}
   match /students/{id} {
@@ -29,7 +29,13 @@ service cloud.firestore {
   match /courses/{id} {allow read: if staff() || (studentActive() && id == get(/databases/$(database)/documents/students/$(studentId())).data.courseId);allow write: if academic();}
   match /classes/{id} {allow read: if staff() || (studentActive() && id == get(/databases/$(database)/documents/students/$(studentId())).data.classId);allow write: if academic();}
   match /academicCalendars/{id} {allow read: if staff() || (studentActive() && resource.data.classId == get(/databases/$(database)/documents/students/$(studentId())).data.classId);allow write: if academic();}
-  match /financeLogs/{id} {allow read: if staff() || (studentActive() && resource.data.studentId == studentId());allow write: if finance();}
+  match /financeLogs/{id} {
+   allow read: if staff() || (studentActive() && resource.data.studentId == studentId());
+   // Once reserved/linked, only the server can reconcile the financial record.
+   allow create: if finance() && !exists(/databases/$(database)/documents/se7AsaasInvoices/$(id)) && !request.resource.data.keys().hasAny(['asaasPaymentId','asaasStatus','asaasReview','asaasUpdatedAt','asaasNetValue','asaasCreditDate']);
+   allow update: if finance() && !exists(/databases/$(database)/documents/se7AsaasInvoices/$(id)) && !resource.data.keys().hasAny(['asaasPaymentId']) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['asaasPaymentId','asaasStatus','asaasReview','asaasUpdatedAt','asaasNetValue','asaasCreditDate']);
+   allow delete: if finance() && !exists(/databases/$(database)/documents/se7AsaasInvoices/$(id)) && !resource.data.keys().hasAny(['asaasPaymentId']);
+  }
   match /config/{id} {allow read: if staff() || (studentActive() && id == 'ejaSettings');}
   match /teachers/{id} {allow read: if staff();allow write: if academic();}
   match /teacherManualLogs/{id} {allow read: if staff();allow write: if academic();}

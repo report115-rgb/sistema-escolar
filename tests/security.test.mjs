@@ -6,7 +6,7 @@ import {initializeApp} from 'firebase-admin/app';
 import {getAuth} from 'firebase-admin/auth';
 import {getFirestore} from 'firebase-admin/firestore';
 import {initializeTestEnvironment,assertSucceeds,assertFails} from '@firebase/rules-unit-testing';
-import {doc,getDoc,setDoc,updateDoc,collection,getDocs,query,where} from 'firebase/firestore';
+import {doc,getDoc,setDoc,updateDoc,deleteDoc,collection,getDocs,query,where} from 'firebase/firestore';
 import {dispatch} from '../api/se7.js';
 import {hashPassword,verifyPassword,studentUid,cpfKey} from '../server/security.mjs';
 const project='demo-se7',MASTER='UUBINdHfJZONVMcC0QogyAsUgvA3';
@@ -109,4 +109,21 @@ test('QR já emitido respeita bloqueio e versão de sessão do aluno',async()=>{
  await assert.rejects(call(kiosk,{action:'attendance',qr:qr.qr}),/sem acesso ativo/);
  await db.collection('students').doc('s1').update({portalBlocked:false,portalSessionVersion:999});
  await assert.rejects(call(kiosk,{action:'attendance',qr:qr.qr}),/sem acesso ativo/);
+});
+
+test('Asaas: clientes não adulteram cobranças vinculadas nem forjam confirmação',async()=>{
+ const m=env.authenticatedContext(MASTER).firestore();
+ await db.collection('financeLogs').doc('asaas-rule').set({studentId:'s1',amount:450,date:'2030-09-05',status:'PENDENTE'});
+ await assertSucceeds(updateDoc(doc(m,'financeLogs/asaas-rule'),{amount:460}));
+ await db.collection('se7AsaasInvoices').doc('asaas-rule').set({studentId:'s1',state:'reserved'});
+ await assertFails(updateDoc(doc(m,'financeLogs/asaas-rule'),{status:'PAGO'}));
+ await assertFails(deleteDoc(doc(m,'financeLogs/asaas-rule')));
+ await assertFails(setDoc(doc(m,'se7AsaasInvoices/forged'),{state:'linked'}));
+ await assertFails(setDoc(doc(m,'financeLogs/asaas-forged'),{studentId:'s1',amount:450,asaasStatus:'RECEIVED'}));
+ const uid='asaas-finance-rules';await db.collection('se7Staff').doc(uid).set({perfil:'financeiro',disabled:false});
+ const fin=env.authenticatedContext(uid).firestore();
+ await assertFails(updateDoc(doc(fin,'financeLogs/asaas-rule'),{amount:1}));
+ await assertSucceeds(setDoc(doc(fin,'financeLogs/asaas-local'),{studentId:'s1',amount:450,status:'PENDENTE'}));
+ await assert.rejects(call(masterToken,{action:'asaas-link-customer',studentId:'s1',customerId:'bad/path'}));
+ await assert.rejects(call(studentToken,{action:'asaas-emit',invoiceId:'asaas-local',billingType:'PIX'}));
 });
