@@ -2262,7 +2262,39 @@ async function rejeitarSolicitacaoFirebase(id) {
             alert('Solicite uma senha temporária à instituição. A redefinição está disponível ao master em Gestão de Alunos → Acessos ao Portal.');
         }
 
-        async function fazerLogout(){await SE7.logout();}
+        let saidaMatrizEmAndamento = false;
+        let focoAnteriorSaidaMatriz = null;
+        function fazerLogout() {
+            const modal = document.getElementById('confirmar-saida-matriz');
+            if (modal.open || saidaMatrizEmAndamento) return;
+            focoAnteriorSaidaMatriz = document.activeElement;
+            document.getElementById('erro-saida-matriz').textContent = '';
+            modal.showModal();
+            document.getElementById('nao-sair-matriz').focus();
+        }
+        function cancelarSaidaMatriz() {
+            if (saidaMatrizEmAndamento) return;
+            document.getElementById('confirmar-saida-matriz').close();
+            if (focoAnteriorSaidaMatriz) focoAnteriorSaidaMatriz.focus();
+        }
+        async function confirmarSaidaMatriz() {
+            if (saidaMatrizEmAndamento) return;
+            saidaMatrizEmAndamento = true;
+            const sim = document.getElementById('sim-sair-matriz');
+            const nao = document.getElementById('nao-sair-matriz');
+            sim.disabled = nao.disabled = true;
+            sim.textContent = 'Saindo…';
+            try {
+                await SE7.logout();
+                document.getElementById('confirmar-saida-matriz').close();
+            } catch (erro) {
+                document.getElementById('erro-saida-matriz').textContent = 'Não foi possível sair. Tente novamente.';
+            } finally {
+                saidaMatrizEmAndamento = false;
+                sim.disabled = nao.disabled = false;
+                sim.textContent = 'Sim, sair';
+            }
+        }
 
        async function abrirModalAlternarUsuario() {
             const sessaoAtual = JSON.parse(sessionStorage.getItem('usuario_logado'));
@@ -6055,5 +6087,23 @@ function escutarRegistrosPontoManual() {
 }
 	</script>
 <script src="/assets/se7-matriz.js"></script>
+
+    <style>
+        #confirmar-saida-matriz { width: min(420px, calc(100vw - 40px)); margin: auto; padding: 28px; border: 1px solid #25455f; border-radius: 18px; background: #0b213a; color: #e8f1fa; box-shadow: 0 24px 80px #0008; }
+        #confirmar-saida-matriz::backdrop { background: #020b18b8; backdrop-filter: blur(4px); }
+        #confirmar-saida-matriz button { padding: 10px 20px; border-radius: 10px; font-weight: 600; }
+        #confirmar-saida-matriz button:focus-visible { outline: 2px solid #5ee7ff; outline-offset: 3px; }
+        #confirmar-saida-matriz button:disabled { opacity: .6; cursor: wait; }
+    </style>
+    <dialog id="confirmar-saida-matriz" aria-labelledby="titulo-saida-matriz" aria-describedby="descricao-saida-matriz" oncancel="event.preventDefault(); cancelarSaidaMatriz();">
+        <h2 id="titulo-saida-matriz" style="font-size:20px;font-weight:700;margin-bottom:10px;">Deseja sair do sistema?</h2>
+        <p id="descricao-saida-matriz" style="color:#afc3d9;font-size:14px;">Você tem certeza de que deseja encerrar sua sessão?</p>
+        <p id="erro-saida-matriz" role="alert" style="color:#fca5a5;font-size:13px;margin-top:12px;"></p>
+        <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:24px;">
+            <button type="button" id="nao-sair-matriz" onclick="cancelarSaidaMatriz()" style="background:#19334d;border:1px solid #34536e;">Não</button>
+            <button type="button" id="sim-sair-matriz" onclick="confirmarSaidaMatriz()" style="background:#dc2626;color:white;">Sim, sair</button>
+        </div>
+    </dialog>
+
 </body>
 </html>
