@@ -2,7 +2,7 @@ rules_version = '2';
 service cloud.firestore {
  match /databases/{database}/documents {
   function signed(){return request.auth != null;}
-  function master(){return signed() && request.auth.uid == 'JrL8OtZKmRYeSG3olAe8LuxvRNY2';}
+  function master(){return signed() && request.auth.uid == 'UUBINdHfJZONVMcC0QogyAsUgvA3';}
   function staffRole(role){return signed() && exists(/databases/$(database)/documents/se7Staff/$(request.auth.uid)) && get(/databases/$(database)/documents/se7Staff/$(request.auth.uid)).data.disabled == false && get(/databases/$(database)/documents/se7Staff/$(request.auth.uid)).data.perfil == role;}
   function staff(){return master() || staffRole('secretaria') || staffRole('professor') || staffRole('financeiro');}
   function academic(){return master() || staffRole('secretaria');}
