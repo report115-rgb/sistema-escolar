@@ -478,7 +478,7 @@
 
     <!-- CONTEÚDO PRINCIPAL -->
     <main id="se7-workspace" class="w-full p-4 flex-1">
-        <div class="se7-page-heading"><div><h2 id="se7-page-title">Gestão de Alunos</h2><p id="se7-page-description">Organize cadastros e acompanhe a documentação acadêmica.</p></div><button type="button" id="se7-new-enrollment" class="se7-primary-button" onclick="openNewStudentModal()" style="display:none;"><i class="fa-solid fa-plus" aria-hidden="true"></i> Nova matrícula</button></div>
+        <div class="se7-page-heading"><div><h2 id="se7-page-title">Gestão de Alunos</h2><p id="se7-page-description">Organize cadastros e acompanhe a documentação acadêmica.</p></div><button type="button" id="se7-new-enrollment" class="se7-primary-button" onclick="abrirNovaMatriculaUnificada()" style="display:none;"><i class="fa-solid fa-plus" aria-hidden="true"></i> Nova matrícula</button></div>
         
         <!-- GESTÃO DE ALUNOS -->
         <!-- ALERTA E SEÇÃO DE ALUNOS SEM TURMA -->
@@ -654,7 +654,7 @@
                 <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4 pb-2 border-b border-gray-100 dark:border-slate-700">Gerenciamento de Matrículas</h2>
                 <div class="flex space-x-2 mb-6 border-b border-gray-200 dark:border-slate-700 pb-3 flex-wrap gap-2">
                     <button class="subtab-button active px-4 py-2 rounded-xl text-xs font-semibold bg-blue-600 text-white shadow" onclick="openSubTab(event, 'subtab-nova-matricula')"><i class="fa-solid fa-user-plus mr-1"></i> Nova Matrícula</button>
-                    <button class="subtab-button px-4 py-2 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-cancelamentos')"><i class="fa-solid fa-user-slash mr-1"></i> Solicitação de Cancelamento</button>
+                    <button class="subtab-button px-4 py-2 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-cancelamentos')"><i class="fa-solid fa-user-slash mr-1"></i> Cancelamento / Transferência / Trancamento</button>
                     <button class="subtab-button px-4 py-2 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-reativacao')"><i class="fa-solid fa-user-check mr-1"></i> Reativação de Matrícula</button>
                 </div>
                 
@@ -671,31 +671,34 @@
 
                 <div id="subtab-cancelamentos" class="subtab-content space-y-4" style="display: none;">
                     <div class="bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700">
-                        <h4 class="font-bold text-sm text-blue-600 dark:text-blue-400 mb-3">Registrar Solicitação de Cancelamento</h4>
+                        <h4 class="font-bold text-sm text-blue-600 dark:text-blue-400 mb-3">Cancelamento / Transferência / Trancamento</h4>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
                             <div>
                                 <label class="block text-xs font-semibold mb-1">Selecione o Aluno Ativo</label>
                                 <select id="cancel-student-select" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800"></select>
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold mb-1">Data do Cancelamento</label>
+                                <label class="block text-xs font-semibold mb-1">Data da Solicitação / Operação</label>
                                 <input type="date" id="cancel-date" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800">
                             </div>
                         </div>
+                        <div class="mb-3"><label class="block text-xs font-semibold mb-1" for="enrollment-operation-type">Tipo de solicitação</label><select id="enrollment-operation-type" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800"><option value="cancelamento">Cancelamento</option><option value="transferencia">Transferência</option><option value="trancamento">Trancamento</option></select></div>
                         <div class="mb-3">
-                            <label class="block text-xs font-semibold mb-1">Motivo do Cancelamento</label>
+                            <label class="block text-xs font-semibold mb-1">Motivo / Observação</label>
                             <input type="text" id="cancel-reason" placeholder="Ex: Mudança de cidade" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800">
                         </div>
-                        <button type="button" onclick="processStudentCancellation()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg shadow">Efetivar Cancelamento</button>
+                        <p class="text-xs text-gray-500 mb-3">Registrar mantém o aluno ativo enquanto a solicitação está pendente. Efetivar altera o status da matrícula.</p>
+                        <div class="flex flex-wrap gap-3"><button type="button" onclick="registrarSolicitacaoMatricula()" class="px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded-lg">Registrar solicitação</button><button type="button" onclick="processStudentCancellation()" class="px-4 py-2 bg-red-600 text-white text-xs font-semibold rounded-lg">Efetivar operação</button></div>
+                        <div class="mt-5"><h5 class="font-semibold text-sm mb-2">Solicitações pendentes</h5><div id="enrollment-pending-list" class="space-y-2"></div></div>
                     </div>
                 </div>
 
                 <div id="subtab-reativacao" class="subtab-content space-y-4" style="display: none;">
                     <div class="bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700">
-                        <h4 class="font-bold text-sm text-emerald-600 dark:text-emerald-400 mb-3">Reativar Matrícula de Aluno Inativo/Cancelado</h4>
+                        <h4 class="font-bold text-sm text-emerald-600 dark:text-emerald-400 mb-3">Reativar Matrícula Cancelada, Transferida, Trancada ou Inativa</h4>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
                             <div>
-                                <label class="block text-xs font-semibold mb-1">Selecione o Aluno (Inativo / Cancelado)</label>
+                                <label class="block text-xs font-semibold mb-1">Selecione o aluno para reativar</label>
                                 <select id="reactivate-student-select" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800"></select>
                             </div>
                             <div>
@@ -4047,7 +4050,7 @@ function carregarDatasCalendarioParaFrequencia() {
     const isFinanceiro = sessaoAtual.perfil === 'financeiro';
     
     const ativos = students
-        .filter(s => s.status !== "Cancelado")
+        .filter(s => !!s.id)
         .sort((a, b) => a.fullname.localeCompare(b.fullname));
 
     // LÓGICA DE FILTRAGEM PELA LUPA (NOME, CPF OU MATRÍCULA)
@@ -4093,9 +4096,10 @@ function carregarDatasCalendarioParaFrequencia() {
                 <td class="p-3">${s.cpf || '---'}</td>
                 <td class="p-3">${s.whatsapp || ''} <br><span class="text-[10px] text-gray-400">${s.email || ''}</span></td>
                 <td class="p-3">${curso ? curso.name : '---'} <br><span class="text-[10px] text-gray-400">Turma: ${turma ? turma.name : '---'}</span></td>
-                <td class="p-3"><span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 rounded text-[10px] font-bold">${s.status || 'Ativo'}</span></td>
+                <td class="p-3"><span class="px-2 py-0.5 ${classeStatusMatricula(s.status)} rounded text-[10px] font-bold">${rotuloStatusMatricula(s.status)}</span>${s.enrollmentRequest ? '<div class="text-[10px] text-amber-500 mt-1">Solicitação pendente</div>' : ''}</td>
                 <td class="p-3 text-right space-x-1">
                     <button onclick="editarAluno('${s.id}')" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs shadow"><i class="fa-solid fa-pen-to-square mr-1"></i> Editar</button>
+                    <button type="button" onclick="verHistoricoMatricula('${s.id}')" class="px-2.5 py-1 bg-blue-600 text-white rounded text-xs">Histórico</button>
                     ${botaoDeletar}
                 </td>
             </tr>
@@ -4262,51 +4266,6 @@ function carregarDatasCalendarioParaFrequencia() {
             const motivo = document.getElementById(`motivo_${tipoId}`).value.trim();
             if(!motivo) return alert("Informe o motivo da reprovação.");
             await atualizarStatusDocumento(alunoId, tipoId, 'Reprovado', motivo);
-        }
-
-        function renderCancellationSelect() {
-            const select = document.getElementById('cancel-student-select');
-            if(!select) return;
-            select.innerHTML = '';
-            students.filter(s => s.status === "Ativo").forEach(s => select.insertAdjacentHTML('beforeend', `<option value="${s.id}">${s.fullname}</option>`));
-        }
-
-        async function processStudentCancellation() {
-            const studentId = document.getElementById('cancel-student-select').value;
-            if (!studentId) return;
-            await db.collection("students").doc(studentId).update({ status: "Cancelado" });
-            alert("Matrícula cancelada com sucesso!");
-        }
-
-        function renderReactivationSelects() {
-            const selectAluno = document.getElementById('reactivate-student-select');
-            const selectTurma = document.getElementById('reactivate-class-select');
-            if(selectAluno) {
-                selectAluno.innerHTML = '';
-                students.filter(s => s.status === "Cancelado" || s.status === "Inativo").forEach(s => {
-                    selectAluno.insertAdjacentHTML('beforeend', `<option value="${s.id}">${s.fullname} (${s.code})</option>`);
-                });
-            }
-            if(selectTurma) {
-                selectTurma.innerHTML = '';
-                classes.forEach(c => selectTurma.insertAdjacentHTML('beforeend', `<option value="${c.id}">${c.name}</option>`));
-            }
-        }
-
-        async function processStudentReactivation() {
-            const studentId = document.getElementById('reactivate-student-select').value;
-            const newClassId = document.getElementById('reactivate-class-select').value;
-            if(!studentId || !newClassId) return alert("Selecione o aluno e a nova turma.");
-            const alunoObj = students.find(s => s.id === studentId);
-            const turmaObj = classes.find(c => c.id === newClassId);
-
-            await db.collection("students").doc(studentId).update({
-                status: "Ativo",
-                classId: newClassId,
-                courseId: turmaObj ? turmaObj.courseId : alunoObj.courseId
-            });
-            registrarLogAuditoria(`Reativou a matrícula do aluno ${alunoObj ? alunoObj.fullname : studentId}`, "Matrícula");
-            alert("Matrícula reativada com sucesso!");
         }
 
        // Exemplo de adaptação para a função renderAttendanceList e o salvamento/edição
@@ -5671,7 +5630,7 @@ async function alternarProvaIndividualAluno(studentId, novoStatus) {
             snapshot.forEach(doc => {
                 const aluno = doc.data();
                 // Considera sem turma se o campo classId estiver vazio, nulo ou não existir
-                if (!aluno.classId || aluno.classId.trim() === "") {
+                if ((!aluno.classId || aluno.classId.trim() === "") && !["Cancelado", "Transferido", "Trancado", "Inativo"].includes(aluno.status)) {
                     semTurma.push({ id: doc.id, ...aluno });
                 }
             });
@@ -5731,9 +5690,12 @@ async function alternarProvaIndividualAluno(studentId, novoStatus) {
         }
 
         try {
-            await db.collection("students").doc(alunoId).update({
-                classId: turmaId,
-                status: "Ativo"
+            const refAluno = db.collection("students").doc(alunoId);
+            await db.runTransaction(async tx => {
+                const snapshotAluno = await tx.get(refAluno);
+                if (!snapshotAluno.exists) throw new Error("Aluno não encontrado.");
+                if (["Cancelado", "Transferido", "Trancado", "Inativo"].includes(snapshotAluno.data().status)) throw new Error("Use Reativação de Matrícula para este aluno.");
+                tx.update(refAluno, {classId: turmaId, status: "Ativo"});
             });
             alert("Turma atribuída com sucesso! O aluno agora está integrado a todas as abas.");
             carregarAlunosSemTurma(); // Atualiza a lista na hora
@@ -6138,5 +6100,7 @@ function escutarRegistrosPontoManual() {
         </div>
     </dialog>
 
+<div id="modal-historico-matricula" class="fixed inset-0 z-[4000] flex items-center justify-center bg-black/70 p-4" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="historico-matricula-titulo"><div class="se7-modal-panel rounded-2xl border w-full max-w-lg p-6 max-h-[80vh] overflow-y-auto"><div class="flex justify-between gap-3 mb-4"><h3 id="historico-matricula-titulo" class="font-bold">Histórico da matrícula</h3><button type="button" aria-label="Fechar histórico" onclick="document.getElementById('modal-historico-matricula').style.display='none'">Fechar</button></div><div id="historico-matricula-conteudo" class="space-y-3 text-sm"></div></div></div>
+<script src="/assets/se7-enrollment.js"></script>
 </body>
 </html>
