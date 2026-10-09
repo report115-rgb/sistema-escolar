@@ -21,6 +21,8 @@
     <!-- Firebase App (Compat) e Firestore -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="/assets/se7-auth.js"></script>
     <!-- EmailJS SDK para Disparo de E-mails -->
     <script>
         tailwind.config = {
@@ -1397,14 +1399,7 @@
 </div>
 
 <script>
-    function usuarioMasterAtivo() {
-        try {
-            const sessao = JSON.parse(sessionStorage.getItem('usuario_logado'));
-            return !!sessao && sessao.perfil === 'master';
-        } catch (_) {
-            return false;
-        }
-    }
+    function usuarioMasterAtivo(){return !!firebase.auth().currentUser && firebase.auth().currentUser.uid==='JrL8OtZKmRYeSG3olAe8LuxvRNY2';}
 
     // Funções de controle da sub-aba do totem na matriz
     function mudarSubAbaTotem(tipo) {
@@ -1613,7 +1608,7 @@
     <div id="access-control-modal" class="fixed inset-0 z-[2000] flex items-center justify-center bg-black/50 p-4" style="display: none;">
         <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-xl w-full p-6 border border-gray-200 dark:border-slate-700 relative shadow-2xl max-h-[90vh] overflow-y-auto">
             <button type="button" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 text-xl font-bold" onclick="fecharModalControleAcesso()">&times;</button>
-            <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Controle de Acesso</h2>
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Controle de Acesso</h2><a href="/administracao-auth.html" target="_blank" class="text-blue-600 text-sm">Preparar migração e vincular contas existentes</a>
             
             <div class="mb-6 p-4 bg-amber-50 dark:bg-slate-900/60 rounded-xl border border-amber-200 dark:border-slate-700">
                 <h4 class="font-bold text-xs text-amber-700 dark:text-amber-400 mb-3 uppercase"><i class="fa-solid fa-clock mr-1"></i> Solicitações de Primeiro Acesso Pendentes</h4>
@@ -1642,7 +1637,7 @@
                     <div>
                         <label class="block text-xs font-semibold mb-1">Perfil</label>
                         <select id="new-user-perfil" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                            <option value="master">Master</option>
+                            <option value="totem">Totem (dispositivo)</option>
                             <option value="secretaria">Secretaria</option>
                             <option value="professor">Professor</option>
 			    <option value="financeiro">Financeiro</option>
@@ -1681,12 +1676,7 @@
 
         document.getElementById('cancel-date').valueAsDate = new Date();
 
-        const usuariosPadrao = [
-            { email: "master@admin.com", pass: "123456", perfil: "master", nome: "Administrador Master" },
-            { email: "secretaria@admin.com", pass: "123456", perfil: "secretaria", nome: "Funcionária Secretaria" },
-            { email: "professor@admin.com", pass: "123456", perfil: "professor", nome: "Professor Exemplo" },
-	    { email: "financeiro@admin.com", pass: "123456", perfil: "financeiro", nome: "Funcionário Financeiro" }
-        ];
+        const usuariosPadrao=[];
 
         const tiposDocumentosObrigatorios = [
             { id: "rg_cnh", label: "RG ou CNH" },
@@ -1711,7 +1701,7 @@
                     sessionStorage.removeItem('usuario_logado');
                     registrarLogAuditoria("Sistema bloqueado por inatividade superior a 10 minutos", "Inatividade");
                     alert("Sua sessão foi encerrada por inatividade (10 minutos sem interação). Faça login novamente.");
-                    location.reload();
+                    SE7.logout();
                 }, tempoInatividadeMinutos * 60 * 1000);
             }
         }
@@ -1809,49 +1799,7 @@ async function limparLogsAuditoria() {
             botao.setAttribute('aria-label', visivel ? 'Ocultar senha' : 'Mostrar senha');
         }
 
-        async function fazerLogin() {
-    const userInput = document.getElementById('login-user').value.trim().toLowerCase();
-    const passInput = document.getElementById('login-pass').value.trim();
-
-    if (!userInput || !passInput) return alert("Preencha o e-mail e a senha.");
-
-    let userFound = null;
-
-    // 1. Verifica se é um dos usuários padrão do sistema
-    const usuarioPadraoEncontrado = usuariosPadrao.find(u => u.email.toLowerCase() === userInput && u.pass === passInput);
-    if (usuarioPadraoEncontrado) {
-        userFound = usuarioPadraoEncontrado;
-    } else {
-        // 2. Se não for padrão, busca na nuvem (Firestore na coleção "systemUsers")
-        try {
-            const snapshot = await db.collection("systemUsers").where("email", "==", userInput).get();
-            if (!snapshot.empty) {
-                const dadosNuves = snapshot.docs[0].data();
-                if (dadosNuves.pass === passInput) {
-                    userFound = {
-                        nome: dadosNuves.nome,
-                        email: dadosNuves.email,
-                        pass: dadosNuves.pass,
-                        perfil: dadosNuves.perfil
-                    };
-                }
-            }
-        } catch (e) {
-            console.error("Erro ao validar login no Firebase:", e);
-        }
-    }
-
-    if (!userFound) {
-        return alert("E-mail ou senha inválidos! Verifique se seu acesso já foi aprovado pela direção.");
-    }
-
-    sessionStorage.setItem('usuario_logado', JSON.stringify(userFound));
-    document.getElementById('login-modal').style.display = 'none';
-    aplicarPermissoesPorPerfil(userFound.perfil);
-    atualizarDisplayUsuarioLogado();
-    registrarLogAuditoria("Efetuou login no sistema", "Autenticação");
-    resetarTemporizadorInatividade();
-}
+        async function fazerLogin(){const email=document.getElementById('login-user').value.trim(),senha=document.getElementById('login-pass').value;if(!email||!senha)return alert('Informe e-mail e senha.');try{const u=await SE7.staffLogin(email,senha);if(!['master','secretaria','professor','financeiro'].includes(u.perfil)){await firebase.auth().signOut();throw new Error('Conta sem acesso ao Matriz.');}sessionStorage.setItem('usuario_logado',JSON.stringify(u));document.getElementById('login-modal').style.display='none';aplicarPermissoesPorPerfil(u.perfil);atualizarDisplayUsuarioLogado();iniciarDadosAutenticadosMatriz();registrarLogAuditoria('Efetuou login no sistema','Autenticação');resetarTemporizadorInatividade();}catch(e){alert(e.message);}}
 
 // ==========================================
 // FUNÇÕES DO CALENDÁRIO ACADÊMICO FLUTUANTE
@@ -2038,21 +1986,8 @@ function renderizarCalendarioFlutuanteResultado() {
     }
 }
 
-async function criarCredencialPortal(senha) {
-    if (!window.crypto?.subtle) throw new Error('Use HTTPS e uma WebView atualizada para gerenciar senhas.');
-    const salt = window.crypto.getRandomValues(new Uint8Array(16));
-    const key = await window.crypto.subtle.importKey('raw',new TextEncoder().encode(senha),'PBKDF2',false,['deriveBits']);
-    const bits = await window.crypto.subtle.deriveBits({name:'PBKDF2',salt,iterations:210000,hash:'SHA-256'},key,256);
-    return {algorithm:'PBKDF2-SHA256',iterations:210000,salt:Array.from(salt,b=>b.toString(16).padStart(2,'0')).join(''),hash:Array.from(new Uint8Array(bits),b=>b.toString(16).padStart(2,'0')).join('')};
-}
-async function verificarCredencialPortal(senha,credencial) {
-    if (!credencial || credencial.algorithm!=='PBKDF2-SHA256' || credencial.iterations!==210000 || !/^[a-f0-9]{32}$/.test(credencial.salt) || !/^[a-f0-9]{64}$/.test(credencial.hash)) return false;
-    const salt=Uint8Array.from(credencial.salt.match(/../g),x=>parseInt(x,16));
-    const key=await window.crypto.subtle.importKey('raw',new TextEncoder().encode(senha),'PBKDF2',false,['deriveBits']);
-    const bits=await window.crypto.subtle.deriveBits({name:'PBKDF2',salt,iterations:210000,hash:'SHA-256'},key,256);
-    const hash=Array.from(new Uint8Array(bits),b=>b.toString(16).padStart(2,'0')).join('');
-    let diff=0;for(let i=0;i<hash.length;i++) diff|=hash.charCodeAt(i)^credencial.hash.charCodeAt(i);return diff===0;
-}
+
+
 
 let portalAlunosPainel=[],portalHistoricoVersao=0;
 function podeGerenciarPortal() {return usuarioMasterAtivo();}
@@ -2073,7 +2008,7 @@ function renderizarPainelAcessosPortal() {
     for(const a of lista){
         const row=document.createElement('div');row.className='border rounded-xl p-4 space-y-2 dark:border-slate-700';
         const ranking=Object.entries(a.portalTabCounts||{}).filter(([k])=>nomesAbasPortal[k]).sort((x,y)=>y[1]-x[1]);
-        row.innerHTML=`<div class="font-bold">${portalTexto(a.fullname)} <span class="text-xs font-normal">${portalTexto(a.code)}</span></div><div class="text-xs">${a.portalBlocked?'Bloqueado':'Liberado'} • Senha: ${a.portalMustChangePassword?'troca obrigatória':a.portalCredential?'definida':'acesso inicial/legado'}<br>Última entrada: ${portalTexto(portalData(a.portalLastLoginAt))}<br>Última atividade: ${portalTexto(portalData(a.portalLastAccessAt))}<br>Entradas registradas: ${Number(a.portalLoginCount)||0}<br>Abas mais acessadas: ${ranking.length?ranking.map(([k,n])=>`${nomesAbasPortal[k]} (${Number(n)||0})`).join(' • '):'Sem registros'}</div>`;
+        row.innerHTML=`<div class="font-bold">${portalTexto(a.fullname)} <span class="text-xs font-normal">${portalTexto(a.code)}</span></div><div class="text-xs">${a.portalBlocked?'Bloqueado':'Liberado'} • Senha: ${a.portalMustChangePassword?'troca obrigatória':a.se7AuthUid?'Authentication preparado':'cadastro a preparar'}<br>Última entrada: ${portalTexto(portalData(a.portalLastLoginAt))}<br>Última atividade: ${portalTexto(portalData(a.portalLastAccessAt))}<br>Entradas registradas: ${Number(a.portalLoginCount)||0}<br>Abas mais acessadas: ${ranking.length?ranking.map(([k,n])=>`${nomesAbasPortal[k]} (${Number(n)||0})`).join(' • '):'Sem registros'}</div>`;
         const actions=document.createElement('div');actions.className='flex flex-wrap gap-2';
         for(const [label,fn] of [['Histórico',()=>verHistoricoPortal(a.id)],['Redefinir acesso',()=>redefinirAcessoPortal(a.id)],[a.portalBlocked?'Liberar acesso':'Bloquear acesso',()=>alternarBloqueioPortal(a.id)]]){const b=document.createElement('button');b.textContent=label;b.className='px-3 py-2 rounded-lg bg-blue-100 text-blue-900 text-xs';b.onclick=fn;actions.appendChild(b);}
         row.appendChild(actions);box.appendChild(row);
@@ -2097,51 +2032,10 @@ async function verHistoricoPortal(id) {
         box.scrollIntoView({behavior:'smooth',block:'start'});
     }catch(e){if(versao===portalHistoricoVersao)box.textContent='Erro ao consultar histórico: '+e.message;}
 }
-async function redefinirAcessoPortal(id) {
-    if(!podeGerenciarPortal())return;
-    if(!confirm('Gerar uma senha temporária válida por 24 horas? O aluno terá que trocá-la ao entrar.'))return;
-    try{
-        const bytes=window.crypto.getRandomValues(new Uint8Array(9));const senha=Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');
-        const cred=await criarCredencialPortal(senha);const ref=db.collection('students').doc(id);const actor=JSON.parse(sessionStorage.getItem('usuario_logado'));
-        const batch=db.batch();batch.update(ref,{portalCredential:cred,senhaAluno:firebase.firestore.FieldValue.delete(),portalMustChangePassword:true,portalTemporaryExpiresAt:new Date(Date.now()+86400000).toISOString(),portalSessionVersion:firebase.firestore.FieldValue.increment(1)});
-        batch.set(ref.collection('portalAdminEvents').doc(),{action:'Redefinição de acesso',actorName:actor.nome||'Master',actorEmail:actor.email||'',at:firebase.firestore.FieldValue.serverTimestamp()});await batch.commit();
-        const box=document.getElementById('portal-senha-temporaria');box.textContent='Senha temporária (anote agora e entregue ao aluno): '+senha;box.style.display='block';
-        await carregarPainelAcessosPortal();
-    }catch(e){alert('Não foi possível redefinir: '+e.message);}
-}
-async function alternarBloqueioPortal(id) {
-    if(!podeGerenciarPortal())return;
-    const ref=db.collection('students').doc(id);const actor=JSON.parse(sessionStorage.getItem('usuario_logado'));
-    try{await db.runTransaction(async tx=>{const snap=await tx.get(ref);if(!snap.exists)throw new Error('Aluno não encontrado.');const blocked=!snap.data().portalBlocked;tx.update(ref,{portalBlocked:blocked,portalSessionVersion:firebase.firestore.FieldValue.increment(1)});tx.set(ref.collection('portalAdminEvents').doc(),{action:blocked?'Acesso bloqueado':'Acesso liberado',actorName:actor.nome||'Master',actorEmail:actor.email||'',at:firebase.firestore.FieldValue.serverTimestamp()});});await carregarPainelAcessosPortal();}catch(e){alert(e.message);}
-}
+async function redefinirAcessoPortal(id){if(!usuarioMasterAtivo())return;if(!confirm('Gerar senha temporária válida por 24 horas?'))return;try{const d=await SE7.api('reset-student',{id});const box=document.getElementById('portal-senha-temporaria');box.textContent='Senha temporária: '+d.temporary+' — entregue ao aluno e oculte após anotar.';box.style.display='block';await carregarPainelAcessosPortal();}catch(e){alert(e.message);}}
+async function alternarBloqueioPortal(id){if(!usuarioMasterAtivo())return;const a=portalAlunosPainel.find(a=>a.id===id);if(!a)return;try{await SE7.api('block-student',{id,blocked:!a.portalBlocked});await carregarPainelAcessosPortal();}catch(e){alert(e.message);}}
 
-        async function fazerLoginAluno() {
-            if (!document.getElementById('tab-portal-aluno')) {
-                return alert("O Portal do Aluno não está disponível nesta versão da Matriz. Utilize o aplicativo do aluno.");
-            }
-            const cpfInput = document.getElementById('login-aluno-cpf').value.trim().replace(/[^\d]/g, '');
-            const passInput = document.getElementById('login-aluno-pass').value.trim();
-            if (!cpfInput || !passInput) return alert("Informe o CPF e a senha/matrícula.");
-            let alunoEncontrado=null;
-            try {
-                const snap=await db.collection('students').get({source:'server'});
-                for(const doc of snap.docs){const a=doc.data();if((a.cpf||'').replace(/[^\d]/g,'')!==cpfInput)continue;
-                    if(a.portalBlocked)return alert('Acesso bloqueado. Contate a instituição.');
-                    if(a.portalMustChangePassword)return alert('Acesse o aplicativo do aluno para definir sua nova senha.');
-                    if(a.portalCredential?await verificarCredencialPortal(passInput,a.portalCredential):passInput===String(a.senhaAluno||a.code||'').trim()){alunoEncontrado={id:doc.id,...a};break;}
-                }
-            }catch(e){return alert('Não foi possível validar o acesso: '+e.message);}
-            if (!alunoEncontrado) return alert("Aluno não encontrado ou dados inválidos.");
-            const userData = { email: alunoEncontrado.email, perfil: "aluno", nome: alunoEncontrado.fullname, alunoId: alunoEncontrado.id, code: alunoEncontrado.code };
-            sessionStorage.setItem('usuario_logado', JSON.stringify(userData));
-            document.getElementById('login-modal').style.display = 'none';
-            aplicarPermissoesPorPerfil("aluno");
-            atualizarDisplayUsuarioLogado();
-            registrarLogAuditoria(`Aluno ${alunoEncontrado.fullname} acessou o Portal`, "Portal do Aluno");
-            openTab({ currentTarget: document.getElementById('nav-btn-portal-aluno') }, 'tab-portal-aluno');
-            carregarDadosPortalAluno(alunoEncontrado);
-            resetarTemporizadorInatividade();
-        }
+        function fazerLoginAluno(){location.href='/app-aluno.html';}
 
         function atualizarDisplayUsuarioLogado() {
             const sessao = JSON.parse(sessionStorage.getItem('usuario_logado'));
@@ -2156,48 +2050,7 @@ async function alternarBloqueioPortal(id) {
         function abrirModalEsqueciSenhaAluno() { document.getElementById('modal-esqueci-senha-aluno').style.display = 'flex'; }
         function fecharModalEsqueciSenhaAluno() { document.getElementById('modal-esqueci-senha-aluno').style.display = 'none'; }
 
-        async function enviarSolicitudePrimeiroAcesso() {
-    const nome = document.getElementById('pa-nome').value.trim();
-    const email = document.getElementById('pa-email').value.trim().toLowerCase();
-    const pass = document.getElementById('pa-pass').value.trim();
-    const perfil = document.getElementById('pa-perfil').value;
-
-    if (!nome || !email || !pass) return alert("Preencha todos os campos da solicitação.");
-    
-    try {
-        // Verifica se já existe um usuário ou solicitação com esse e-mail no Firebase
-        const snapshotCheck = await db.collection("systemUsers").where("email", "==", email).get();
-        if (!snapshotCheck.empty) {
-            return alert("Este e-mail já está cadastrado ou aprovado no sistema.");
-        }
-
-        const snapshotPending = await db.collection("pendingUsers").where("email", "==", email).get();
-        if (!snapshotPending.empty) {
-            return alert("Já existe uma solicitação pendente para este e-mail.");
-        }
-
-        // Salva a solicitação pendente no Firestore
-        const novoColaborador = { 
-            nome, 
-            email, 
-            pass, 
-            perfil, 
-            data: new Date().toLocaleString('pt-BR'),
-            createdAt: new Date().toISOString()
-        };
-
-        const docRef = await db.collection("pendingUsers").add(novoColaborador);
-        novoColaborador.id = docRef.id;
-
-        // Dispara o WhatsApp automático para a central
-        notificarWhatsAppPrimeiroAcesso(novoColaborador);
-
-        alert("Solicitação enviada com sucesso para a nuvem! Aguarde a liberação do Master.");
-        fecharModalPrimeiroAcesso();
-    } catch (e) {
-        alert("Erro ao enviar solicitação para o Firebase: " + e.message);
-    }
-}
+        function enviarSolicitudePrimeiroAcesso(){alert('Solicite ao master a criação de sua conta no Controle de Acesso.');}
 
 // --- FUNÇÃO DE WHATSAPP PARA O PRIMEIRO ACESSO ---
 async function notificarWhatsAppPrimeiroAcesso(novoColaborador) {
@@ -2271,34 +2124,7 @@ async function notificarWhatsAppPrimeiroAcesso(novoColaborador) {
     }
 }
 
-async function aprovarSolicitacaoFirebase(id) {
-    try {
-        const docRef = db.collection("pendingUsers").doc(id);
-        const doc = await docRef.get();
-        if (!doc.exists) return alert("Solicitação não encontrada.");
-
-        const user = doc.data();
-
-        // Salva na coleção definitiva de usuários ativos na nuvem
-        await db.collection("systemUsers").add({
-            nome: user.nome,
-            email: user.email,
-            pass: user.pass,
-            perfil: user.perfil,
-            approvedAt: new Date().toISOString()
-        });
-
-        // Remove da coleção de pendentes
-        await docRef.delete();
-
-        registrarLogAuditoria(`Aprovou o primeiro acesso do colaborador ${user.nome} (${user.email})`, "Autenticação");
-        alert(`Acesso aprovado para ${user.nome}! Ela já pode fazer login de qualquer computador.`);
-        renderizarSolicitacoesPendentes();
-        renderizarUsuariosSistemaFirebase();
-    } catch (e) {
-        alert("Erro ao aprovar solicitação: " + e.message);
-    }
-}
+function aprovarSolicitacaoFirebase(){alert('Crie a conta em Controle de Acesso ou na página de administração da migração.');}
 
 async function rejeitarSolicitacaoFirebase(id) {
     if (!confirm("Deseja rejeitar e excluir esta solicitação?")) return;
@@ -2311,40 +2137,13 @@ async function rejeitarSolicitacaoFirebase(id) {
     }
 }
 
-        async function executarRedefinicaoSenha() {
-            const emailInput = document.getElementById('forgot-user-email').value.trim().toLowerCase();
-            const newPassInput = document.getElementById('forgot-new-pass').value.trim();
-            if (!emailInput || !newPassInput) return alert("Preencha todos os campos.");
-
-            // Verifica se tenta alterar um usuário padrão
-            const padrao = usuariosPadrao.find(u => u.email.toLowerCase() === emailInput);
-            if (padrao) {
-                return alert("Não é permitido redefinir a senha de contas padrão do sistema por aqui.");
-            }
-
-            try {
-                const snapshot = await db.collection("systemUsers").where("email", "==", emailInput).get();
-                if (snapshot.empty) {
-                    return alert("E-mail não encontrado na base de dados da nuvem!");
-                }
-
-                // Atualiza a senha no documento do Firestore
-                const docId = snapshot.docs[0].id;
-                await db.collection("systemUsers").doc(docId).update({ pass: newPassInput });
-
-                registrarLogAuditoria(`Redefiniu a senha do colaborador (${emailInput})`, "Autenticação");
-                alert("Senha alterada com sucesso na nuvem!");
-                fecharModalEsqueciSenhaAdmin();
-            } catch (e) {
-                alert("Erro ao redefinir senha no Firebase: " + e.message);
-            }
-        }
+        async function executarRedefinicaoSenha(){try{await SE7.recover(document.getElementById('forgot-user-email').value.trim());alert('Se a conta existir, você receberá instruções no e-mail.');fecharModalEsqueciSenhaAdmin();}catch(e){alert('Não foi possível enviar a recuperação. Confira o e-mail.');}}
 
         function executarRedefinicaoSenhaAluno() {
             alert('Solicite uma senha temporária à instituição. A redefinição está disponível ao master em Gestão de Alunos → Acessos ao Portal.');
         }
 
-        function fazerLogout() { sessionStorage.removeItem('usuario_logado'); location.reload(); }
+        async function fazerLogout(){await SE7.logout();}
 
        async function abrirModalAlternarUsuario() {
             const sessaoAtual = JSON.parse(sessionStorage.getItem('usuario_logado'));
@@ -2477,16 +2276,16 @@ async function rejeitarSolicitacaoFirebase(id) {
     }
 } // <--- Única chave de fechamento da função no lugar correto
 
-        window.addEventListener('DOMContentLoaded', () => {
+        window.addEventListener('DOMContentLoaded', async () => {
             iniciarRelogioAoVivo();
-            carregarDadosDaNuvem();
+            const marca=await SE7.info().catch(()=>({}));if(marca.logo)updateLogoPreview(marca.logo);if(marca.name)document.getElementById('login-info-title').textContent=marca.name;
 	    const inputDataPonto = document.getElementById('manual-ponto-data');
             if (inputDataPonto) inputDataPonto.valueAsDate = new Date();
-            escutarRegistrosPontoManual();
-            const sessao = JSON.parse(sessionStorage.getItem('usuario_logado'));
+
+            const sessao=await SE7.restore('matriz');if(sessao)sessionStorage.setItem('usuario_logado',JSON.stringify(sessao));else sessionStorage.removeItem('usuario_logado');
             const loginModal = document.getElementById('login-modal');
             if (sessao && loginModal) {
-                loginModal.style.display = 'none';
+                loginModal.style.display = 'none';iniciarDadosAutenticadosMatriz();
                 aplicarPermissoesPorPerfil(sessao.perfil);
                 atualizarDisplayUsuarioLogado();
                 resetarTemporizadorInatividade();
@@ -2494,8 +2293,7 @@ async function rejeitarSolicitacaoFirebase(id) {
             } else if (loginModal) {
                 loginModal.style.display = 'flex';
             }
-            renderizarLogsAuditoria();
-            renderizarSolicitacoesPendentes();
+
             renderizarCamposDatasCalendario();
             calcularTotalCurso();
         });
@@ -2542,93 +2340,13 @@ function fecharModalControleAcesso() {
 }
         
         // 1. Cadastrar novo usuário manualmente direto na nuvem
-async function cadastrarNovoUsuarioSistema() {
-    const nome = document.getElementById('new-user-name').value.trim();
-    const email = document.getElementById('new-user-email').value.trim().toLowerCase();
-    const pass = document.getElementById('new-user-pass').value.trim();
-    const perfil = document.getElementById('new-user-perfil').value;
-
-    if (!nome || !email || !pass) return alert("Preencha todos os campos!");
-
-    try {
-        // Verifica se já existe na nuvem
-        const snapshot = await db.collection("systemUsers").where("email", "==", email).get();
-        if (!snapshot.empty) {
-            return alert("Já existe um usuário cadastrado com este e-mail na nuvem!");
-        }
-
-        // Salva no Firestore
-        await db.collection("systemUsers").add({
-            nome,
-            email,
-            pass,
-            perfil,
-            createdAt: new Date().toISOString()
-        });
-
-        document.getElementById('new-user-name').value = '';
-        document.getElementById('new-user-email').value = '';
-        document.getElementById('new-user-pass').value = '';
-
-        alert("Usuário cadastrado com sucesso na nuvem!");
-        renderizarUsuariosSistemaFirebase();
-    } catch (e) {
-        alert("Erro ao cadastrar usuário no Firebase: " + e.message);
-    }
-}
+async function cadastrarNovoUsuarioSistema(){try{await SE7.api('staff-create',{name:document.getElementById('new-user-name').value.trim(),email:document.getElementById('new-user-email').value.trim(),password:document.getElementById('new-user-pass').value,role:document.getElementById('new-user-perfil').value});document.getElementById('new-user-pass').value='';alert('Conta criada no Authentication.');await renderizarUsuariosSistemaFirebase();}catch(e){alert(e.message);}}
 
 // 2. Renderizar a lista de usuários ativos direto do Firebase (incluindo os usuários padrão)
-async function renderizarUsuariosSistemaFirebase() {
-    const list = document.getElementById('system-users-list');
-    if (!list) return;
-    list.innerHTML = '<li class="py-2 text-xs text-gray-400 text-center">Carregando usuários da nuvem...</li>';
-
-    try {
-        // Busca os usuários cadastrados na nuvem
-        const snapshot = await db.collection("systemUsers").get();
-        let usuariosNuves = [];
-        snapshot.forEach(doc => usuariosNuves.push({ id: doc.id, ...doc.data() }));
-
-        list.innerHTML = '';
-
-        // Exibe primeiro os usuários padrão do sistema (Master, Secretaria, Professor)
-        usuariosPadrao.forEach((u) => {
-            list.innerHTML += `
-                <li class="py-2 flex justify-between items-center text-xs border-b border-gray-100 dark:border-slate-700">
-                    <span><strong>${u.nome}</strong> (${u.email}) - <span class="text-blue-600 font-bold">${u.perfil.toUpperCase()}</span> <span class="text-[10px] text-gray-400">(Padrão)</span></span>
-                </li>`;
-        });
-
-        // Exibe os usuários cadastrados via nuvem/aprovação
-        if (usuariosNuves.length === 0 && usuariosPadrao.length === 0) {
-            list.innerHTML = `<li class="py-2 text-xs text-gray-400 text-center">Nenhum usuário cadastrado.</li>`;
-            return;
-        }
-
-        usuariosNuves.forEach((u) => {
-            list.innerHTML += `
-                <li class="py-2 flex justify-between items-center text-xs border-b border-gray-100 dark:border-slate-700">
-                    <span><strong>${u.nome}</strong> (${u.email}) - <span class="text-emerald-600 font-bold">${u.perfil.toUpperCase()}</span></span>
-                    <button onclick="removerUsuarioSistemaFirebase('${u.id}')" class="px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded font-semibold text-[10px]">Remover</button>
-                </li>`;
-        });
-    } catch (e) {
-        console.error("Erro ao carregar usuários do Firebase:", e);
-        list.innerHTML = `<li class="py-2 text-xs text-red-500 text-center">Erro ao carregar usuários da nuvem.</li>`;
-    }
-}
+async function renderizarUsuariosSistemaFirebase(){const list=document.getElementById('system-users-list');if(!list||!usuarioMasterAtivo())return;list.textContent='Carregando contas…';try{const d=await SE7.api('staff-list');list.innerHTML='';for(const u of d.users){const li=document.createElement('li');li.className='py-2 flex gap-2 justify-between text-xs';const span=document.createElement('span');span.textContent=u.nome+' ('+u.email+') — '+u.perfil+(u.disabled?' — desativado':'');li.appendChild(span);if(!u.disabled){const btn=document.createElement('button');btn.textContent='Desativar';btn.onclick=()=>removerUsuarioSistemaFirebase(u.id);li.appendChild(btn);}list.appendChild(li);}if(!d.users.length)list.textContent='Nenhum funcionário vinculado. O master usa a conta configurada na Vercel.';}catch(e){list.textContent=e.message;}}
 
 // 3. Remover usuário da nuvem
-async function removerUsuarioSistemaFirebase(id) {
-    if (!confirm("Deseja realmente remover o acesso deste usuário do sistema?")) return;
-    try {
-        await db.collection("systemUsers").doc(id).delete();
-        alert("Usuário removido com sucesso da nuvem!");
-        renderizarUsuariosSistemaFirebase();
-    } catch (e) {
-        alert("Erro ao remover usuário: " + e.message);
-    }
-}
+async function removerUsuarioSistemaFirebase(id){if(!confirm('Desativar esse funcionário?'))return;try{await SE7.api('staff-disable',{uid:id});await renderizarUsuariosSistemaFirebase();}catch(e){alert(e.message);}}
 
         function openTab(evt, tabId) {
     if (tabId === 'tab-settings' && !usuarioMasterAtivo()) return;
@@ -2841,6 +2559,7 @@ async function removerUsuarioSistemaFirebase(id) {
             });
         }
 
+let dadosMatrizIniciados=false;function iniciarDadosAutenticadosMatriz(){if(dadosMatrizIniciados)return;dadosMatrizIniciados=true;carregarDadosDaNuvem();escutarRegistrosPontoManual();if(usuarioMasterAtivo()){renderizarLogsAuditoria();renderizarSolicitacoesPendentes();}carregarAlunosSemTurma();}
         function carregarDadosDaNuvem() {
             db.collection("config").doc("institution").onSnapshot((doc) => {
                 if (doc.exists) {
@@ -4000,6 +3719,7 @@ function carregarDatasCalendarioParaFrequencia() {
         }
 
         await db.collection("students").doc(editId).update(studentData);
+        await SE7.api('prepare-student',{id:editId});
         const alunoLocal = students.find(a => a.id === editId);
         if (alunoLocal) Object.assign(alunoLocal, studentData);
         closeNewStudentModal();
@@ -4016,6 +3736,7 @@ function carregarDatasCalendarioParaFrequencia() {
         studentData.fotoAluno = (typeof fotoRostoBase64Temp !== 'undefined' && fotoRostoBase64Temp) ? fotoRostoBase64Temp : "";
 
         const docRef = await db.collection("students").add(studentData);
+        await SE7.api('prepare-student',{id:docRef.id});
         const novoAlunoId = docRef.id;
         closeNewStudentModal();
         
@@ -5868,7 +5589,7 @@ async function alternarProvaIndividualAluno(studentId, novoStatus) {
 
     // Chama a verificação assim que a página carrega
     window.addEventListener('DOMContentLoaded', () => {
-        carregarAlunosSemTurma();
+        // Dados carregados após a autenticação.
     });
 
 // Função 1: Valida se a data e a forma de pagamento foram preenchidas para acender o botão

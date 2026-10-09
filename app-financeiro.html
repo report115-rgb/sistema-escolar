@@ -16,6 +16,8 @@
     <!-- Firebase App (Compat) e Firestore -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="/assets/se7-auth.js"></script>
     <style>
         body { -webkit-tap-highlight-color: transparent; overscroll-behavior-y: none; }
         ::-webkit-scrollbar { width: 4px; height: 4px; }
@@ -777,12 +779,7 @@
         }
         const db = firebase.firestore();
 
-        const usuariosPadrao = [
-            { email: "master@admin.com", pass: "123456", perfil: "master", nome: "Administrador Master" },
-            { email: "secretaria@admin.com", pass: "123456", perfil: "secretaria", nome: "Funcionária Secretaria" },
-            { email: "professor@admin.com", pass: "123456", perfil: "professor", nome: "Professor Exemplo" },
-            { email: "financeiro@admin.com", pass: "123456", perfil: "financeiro", nome: "Funcionário Financeiro" }
-        ];
+        const usuariosPadrao=[];
 
         let students = [];
         let studentsMap = {};
@@ -816,7 +813,7 @@
 
         let novosAlunosLidos = JSON.parse(localStorage.getItem('novos_alunos_lidos') || '[]');
 
-        window.addEventListener('DOMContentLoaded', () => {
+        window.addEventListener('DOMContentLoaded', async () => {
             iniciarIdentidadeFinanceiro();
             ajustarAlturaLoginWebView();
             window.addEventListener('resize', ajustarAlturaLoginWebView);
@@ -829,7 +826,7 @@
                     event.target.scrollIntoView({block:'nearest',behavior:'auto'});
                 }, 250);
             });
-            const sessao = JSON.parse(sessionStorage.getItem('app_financeiro_user'));
+            const sessao=await SE7.restore('financeiro');if(sessao)sessionStorage.setItem('app_financeiro_user',JSON.stringify(sessao));else sessionStorage.removeItem('app_financeiro_user');
             if (sessao) {
                 document.getElementById('login-modal').style.display = 'none';
                 document.getElementById('header-user-display').textContent = sessao.nome;
@@ -873,12 +870,7 @@
             if (fallback) fallback.style.display = institutionData.logo ? 'none' : 'block';
         }
 
-        function iniciarIdentidadeFinanceiro() {
-            // A marca aparece antes do login e acompanha mudanças na Matriz.
-            db.collection('config').doc('institution').onSnapshot(doc => {
-                aplicarIdentidadeFinanceiro(doc.exists ? doc.data() : {});
-            }, erro => console.warn('Não foi possível carregar a identidade institucional:', erro));
-        }
+        function iniciarIdentidadeFinanceiro(){const refresh=async()=>{try{aplicarIdentidadeFinanceiro(await SE7.info());}catch(e){console.warn(e.message);}};void refresh();setInterval(refresh,60000);}
 
         function ajustarAlturaLoginWebView() {
             const login = document.getElementById('login-modal');
@@ -891,68 +883,9 @@
             }
         }
 
-        async function fazerLogin() {
-            if (document.getElementById('btn-entrar').disabled) return;
-            const userInput = document.getElementById('login-user').value.trim().toLowerCase();
-            const passInput = document.getElementById('login-pass').value.trim();
-            const btnEntrar = document.getElementById('btn-entrar');
+        async function fazerLogin(){const btn=document.getElementById('btn-entrar');if(btn.disabled)return;const email=document.getElementById('login-user').value.trim(),senha=document.getElementById('login-pass').value;if(!email||!senha)return alert('Informe e-mail e senha.');btn.disabled=true;try{const u=await SE7.staffLogin(email,senha);if(!['master','financeiro'].includes(u.perfil)){await firebase.auth().signOut();throw new Error('Conta sem acesso ao Financeiro.');}sessionStorage.setItem('app_financeiro_user',JSON.stringify(u));document.getElementById('login-modal').style.display='none';document.getElementById('main-app').style.display='flex';document.getElementById('header-user-display').textContent=u.nome;carregarDadosNuvem();}catch(e){alert(e.message);}finally{btn.disabled=false;}}
 
-            if (!userInput || !passInput) return alert("Preencha o e-mail e a senha.");
-
-            btnEntrar.textContent = "Verificando...";
-            btnEntrar.disabled = true;
-
-            let userFound = null;
-
-            const padraoEncontrado = usuariosPadrao.find(u => u.email.toLowerCase() === userInput && u.pass === passInput);
-            if (padraoEncontrado) {
-                userFound = padraoEncontrado;
-            } else {
-                try {
-                    const snapshot = await db.collection("systemUsers").get();
-                    let usuarioEncontradoNuvem = null;
-
-                    snapshot.forEach(doc => {
-                        const dados = doc.data();
-                        const emailBanco = (dados.email || "").trim().toLowerCase();
-                        if (emailBanco === userInput) usuarioEncontradoNuvem = dados;
-                    });
-
-                    if (usuarioEncontradoNuvem) {
-                        const senhaCadastrada = String(usuarioEncontradoNuvem.pass || usuarioEncontradoNuvem.senha || usuarioEncontradoNuvem.password || "").trim();
-                        if (senhaCadastrada === passInput) {
-                            userFound = {
-                                nome: usuarioEncontradoNuvem.nome || usuarioEncontradoNuvem.name || "Funcionário",
-                                email: usuarioEncontradoNuvem.email,
-                                perfil: usuarioEncontradoNuvem.perfil || "financeiro"
-                            };
-                        }
-                    }
-                } catch (e) { console.error("Erro ao validar login no Firebase:", e); }
-            }
-
-            btnEntrar.textContent = "Entrar no App";
-            btnEntrar.disabled = false;
-
-            if (!userFound) return alert("E-mail ou senha inválidos! Verifique suas credenciais no sistema matriz.");
-
-            sessionStorage.setItem('app_financeiro_user', JSON.stringify(userFound));
-            const loginScreen = document.getElementById('login-modal');
-            loginScreen.classList.add('screen-exit');
-            setTimeout(() => {
-                loginScreen.style.display = 'none';
-                const mainApp = document.getElementById('main-app');
-                mainApp.style.display = 'flex';
-                mainApp.classList.add('screen-transition');
-                document.getElementById('header-user-display').textContent = userFound.nome;
-                carregarDadosNuvem();
-            }, 180);
-        }
-
-        function fazerLogout() {
-            sessionStorage.removeItem('app_financeiro_user');
-            location.reload();
-        }
+        async function fazerLogout(){await SE7.logout();}
 
         // Competência inicial da aba de frequência.
         (function inicializarCompetenciaFrequencia() {

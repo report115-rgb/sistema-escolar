@@ -18,6 +18,8 @@
     <!-- Firebase SDK (Compat) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="/assets/se7-auth.js"></script>
     <!-- Canvas Confetti -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
@@ -365,7 +367,7 @@
                     </div>
                     <div>
                         <label class="block text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Crie sua Senha de Acesso *</label>
-                        <input type="password" id="mat-senha" placeholder="Mínimo 6 caracteres" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm focus:ring-2 focus:ring-emerald-600 focus:outline-none">
+                        <input type="password" id="mat-senha" placeholder="Mínimo 8 caracteres" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm focus:ring-2 focus:ring-emerald-600 focus:outline-none">
                     </div>
                 </div>
 
@@ -727,10 +729,10 @@
                 if (tIcon) tIcon.className = "fa-solid fa-moon";
             }
 
-            await carregarConfiguracaoInstituicao();
+            await carregarConfiguracaoInstituicao();setInterval(carregarConfiguracaoInstituicao,60000);
             popularSelectsDataNascimento();
 
-            const sessao = sessionStorage.getItem('aluno_app_logado');
+            const authProfile=await SE7.restore('aluno');const sessao=authProfile?JSON.stringify(authProfile):null;if(!authProfile)sessionStorage.removeItem('aluno_app_logado');
             if(sessao) {
                 alunoLogado = JSON.parse(sessao);
                 document.getElementById('welcome-screen').style.display = 'none';
@@ -739,7 +741,7 @@
                 const mainApp = document.getElementById('main-app');
                 mainApp.style.display = 'flex';
                 await carregarDadosPainel();
-                if(alunoLogado) {acompanharControlePortal();await registrarEventoPortal('resume');}
+                if(alunoLogado) {acompanharControlePortal();await carregarConfiguracaoAlunoAutenticado();await registrarEventoPortal('resume');}
             }
         });
 
@@ -819,7 +821,8 @@
             }
         }
 
-        let cancelarIdentidadeAluno = null;
+        async function carregarConfiguracaoAlunoAutenticado(){if(alunoLogado?.portalMustChangePassword)return;const d=await SE7.api('student-config');aplicarIdentidadeAluno({...d.institution,gdriveUrl:d.gdriveUrl});}
+let cancelarIdentidadeAluno = null;
         function aplicarIdentidadeAluno(dados) {
             dadosInstituicaoGlobal = dados || {};
             atualizarLogoCarteirinha();
@@ -838,17 +841,7 @@
             if (fallback) fallback.style.display = src ? 'none' : 'block';
             if (loginFallback) loginFallback.style.display = src ? 'none' : 'block';
         }
-        async function carregarConfiguracaoInstituicao() {
-            const ref = db.collection('config').doc('institution');
-            if (!cancelarIdentidadeAluno) {
-                cancelarIdentidadeAluno = ref.onSnapshot(doc => aplicarIdentidadeAluno(doc.exists ? doc.data() : {}),
-                    erro => console.error('Erro ao acompanhar identidade institucional:', erro));
-            }
-            try {
-                const doc = await ref.get();
-                aplicarIdentidadeAluno(doc.exists ? doc.data() : {});
-            } catch (erro) { console.error('Erro ao buscar logo:', erro); }
-        }
+        async function carregarConfiguracaoInstituicao(){try{aplicarIdentidadeAluno(await SE7.info());}catch(e){console.warn(e.message);}}
         function alternarSenhaAluno(botao) {
             const campo = document.getElementById('login-pass');
             const mostrar = campo.type === 'password';
@@ -866,20 +859,7 @@
             });
         }
 
-        async function carregarCursosNoSelect() {
-            const selectEl = document.getElementById('mat-curso-select');
-            selectEl.innerHTML = '<option value="">Carregando cursos...</option>';
-            try {
-                const snap = await db.collection("courses").get();
-                selectEl.innerHTML = '<option value="">Selecione o seu curso desejado</option>';
-                snap.forEach(doc => {
-                    const c = doc.data();
-                    selectEl.innerHTML += `<option value="${doc.id}">${c.name || 'Curso sem nome'}</option>`;
-                });
-            } catch(e) {
-                selectEl.innerHTML = '<option value="">Erro ao carregar cursos.</option>';
-            }
-        }
+        async function carregarCursosNoSelect(){const el=document.getElementById('mat-curso-select');try{const d=await SE7.api('catalog',{},false);el.innerHTML='<option value="">Selecione um curso</option>';for(const c of d.courses){const o=document.createElement('option');o.value=c.id;o.textContent=c.name;el.appendChild(o);}}catch(e){el.innerHTML='<option value="">Não foi possível carregar</option>';}}
 
         let ultimoCepPreenchido = '';
         let versaoConsultaCep = 0;
@@ -946,23 +926,11 @@
             if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return alert("Informe um e-mail válido ou deixe o campo em branco.");
             if (!cep || !rua || !numero || !bairro || !cidade) return alert("Por favor, preencha o endereço completo (CEP, número, etc.).");
             if (!courseId) return alert("ATENÇÃO: Você deve obrigatoriamente escolher um Curso para realizar a matrícula.");
-            if (!senha || senha.length < 6) return alert("Por favor, crie uma senha de acesso com no mínimo 6 caracteres.");
+            if (!senha || senha.length < 8) return alert("Por favor, crie uma senha de acesso com no mínimo 8 caracteres.");
 
             const nascimento = `${anoNasc}-${mesNasc}-${diaNasc}`;
 
             try {
-                const existingSnap = await db.collection("students").get();
-                let cpfJaExiste = false;
-                existingSnap.forEach(doc => {
-                    const data = doc.data();
-                    const dCpf = data.cpf ? data.cpf.replace(/[^\d]/g, '') : '';
-                    if(dCpf === cpf) cpfJaExiste = true;
-                });
-
-                if(cpfJaExiste) {
-                    return alert("Já existe um aluno cadastrado com este CPF! Utilize a opção 'Já sou aluno' para fazer login.");
-                }
-
                 const randomNum = Math.floor(10000 + Math.random() * 90000);
                 const novaMatriculaCodigo = `MAT-2026-${randomNum}`;
                 const enderecoCompleto = `${rua}, nº ${numero}, ${bairro} - ${cidade}/${estado} (CEP: ${cep})`;
@@ -988,16 +956,15 @@
                     courseId: courseId,
                     classId: "",
                     status: "Ativo",
-                    portalCredential: await criarCredencialPortal(senha),
+                    
                     documentos: {},
                     attendance: {},
                     createdAt: new Date().toISOString()
                 };
 
-                const docRef = await db.collection("students").add(novoAlunoData);
-                alunoRecemMatriculadoTemp = { id: docRef.id, ...novoAlunoData };
+                const criado=await SE7.api('signup',{student:novoAlunoData,password:senha},false);await firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION);await firebase.auth().signInWithCustomToken(criado.customToken);alunoRecemMatriculadoTemp=(await SE7.api('session')).profile;novoAlunoData.code=criado.student.code;
 
-                document.getElementById('sucesso-mat-codigo').textContent = novaMatriculaCodigo;
+                document.getElementById('sucesso-mat-codigo').textContent = novoAlunoData.code;
                 document.getElementById('sucesso-mat-cpf').textContent = cpfRaw;
                 document.getElementById('modal-sucesso-matricula').style.display = 'flex';
 
@@ -1016,7 +983,7 @@
             const mainApp = document.getElementById('main-app');
             mainApp.style.display = 'flex';
             mainApp.classList.add('screen-transition');
-            await registrarEventoPortal('login');acompanharControlePortal();
+            await carregarConfiguracaoAlunoAutenticado();await registrarEventoPortal('login');acompanharControlePortal();
             await carregarDadosPainel();
         }
 
@@ -1094,118 +1061,23 @@
             }
         }
 
-async function criarCredencialPortal(senha) {
-    if (!window.crypto?.subtle) throw new Error('Use HTTPS e uma WebView atualizada para gerenciar senhas.');
-    const salt = window.crypto.getRandomValues(new Uint8Array(16));
-    const key = await window.crypto.subtle.importKey('raw',new TextEncoder().encode(senha),'PBKDF2',false,['deriveBits']);
-    const bits = await window.crypto.subtle.deriveBits({name:'PBKDF2',salt,iterations:210000,hash:'SHA-256'},key,256);
-    return {algorithm:'PBKDF2-SHA256',iterations:210000,salt:Array.from(salt,b=>b.toString(16).padStart(2,'0')).join(''),hash:Array.from(new Uint8Array(bits),b=>b.toString(16).padStart(2,'0')).join('')};
-}
-async function verificarCredencialPortal(senha,credencial) {
-    if (!credencial || credencial.algorithm!=='PBKDF2-SHA256' || credencial.iterations!==210000 || !/^[a-f0-9]{32}$/.test(credencial.salt) || !/^[a-f0-9]{64}$/.test(credencial.hash)) return false;
-    const salt=Uint8Array.from(credencial.salt.match(/../g),x=>parseInt(x,16));
-    const key=await window.crypto.subtle.importKey('raw',new TextEncoder().encode(senha),'PBKDF2',false,['deriveBits']);
-    const bits=await window.crypto.subtle.deriveBits({name:'PBKDF2',salt,iterations:210000,hash:'SHA-256'},key,256);
-    const hash=Array.from(new Uint8Array(bits),b=>b.toString(16).padStart(2,'0')).join('');
-    let diff=0;for(let i=0;i<hash.length;i++) diff|=hash.charCodeAt(i)^credencial.hash.charCodeAt(i);return diff===0;
-}
+
+
 
 let cancelarControlePortal=null;
-function acompanharControlePortal() {
-    if(cancelarControlePortal)cancelarControlePortal();
-    if(!alunoLogado?.id)return;
-    cancelarControlePortal=db.collection('students').doc(alunoLogado.id).onSnapshot(doc=>{
-        if(!alunoLogado || doc.metadata.hasPendingWrites || doc.metadata.fromCache)return;
-        const dados=doc.exists?doc.data():null;
-        if(!dados || dados.portalBlocked || (dados.portalSessionVersion||0)!==(alunoLogado.portalSessionVersion||0)) {
-            if(cancelarControlePortal)cancelarControlePortal();
-            sessionStorage.removeItem('aluno_app_logado');alunoLogado=null;
-            alert('Seu acesso foi alterado. Entre novamente ou contate a instituição.');location.reload();
-        }
-    },e=>console.error('Não foi possível acompanhar o controle de acesso:',e));
-}
+function acompanharControlePortal(){if(cancelarControlePortal)cancelarControlePortal();if(!alunoLogado?.id||alunoLogado.portalMustChangePassword)return;cancelarControlePortal=db.collection('students').doc(alunoLogado.id).onSnapshot(doc=>{if(!alunoLogado||doc.metadata.hasPendingWrites||doc.metadata.fromCache)return;const d=doc.exists?doc.data():null;if(!d||d.portalBlocked||(d.portalSessionVersion||0)!==(alunoLogado.portalSessionVersion||0)){alert('Seu acesso foi alterado. Entre novamente.');SE7.logout();}},e=>{if(e.code==='permission-denied'){alert('Sessão sem acesso. Entre novamente.');SE7.logout();}else console.warn(e.message);});}
 let abaPortalAtual = null;
 function guardarSessaoPortal(aluno) {
     const {senhaAluno,portalCredential,...publico}=aluno;
     sessionStorage.setItem('aluno_app_logado',JSON.stringify(publico));
 }
-async function registrarEventoPortal(tipo,aba=null) {
-    if (!alunoLogado?.id) return;
-    const ref=db.collection('students').doc(alunoLogado.id);
-    const batch=db.batch();
-    const at=firebase.firestore.FieldValue.serverTimestamp();
-    batch.set(ref.collection('portalAccessEvents').doc(),{type:tipo,tab:aba,at,source:'app-aluno'});
-    const patch={portalLastAccessAt:at};
-    if(tipo==='login') {patch.portalLastLoginAt=at;patch.portalLoginCount=firebase.firestore.FieldValue.increment(1);}
-    if(tipo==='tab' && aba) patch[`portalTabCounts.${aba}`]=firebase.firestore.FieldValue.increment(1);
-    batch.update(ref,patch);
-    try {await batch.commit();} catch(e) {console.error('Não foi possível registrar acesso ao portal:',e);}
-}
+async function registrarEventoPortal(tipo,aba=null){if(!alunoLogado?.id||alunoLogado.portalMustChangePassword)return;try{await SE7.api('event',{type:tipo,tab:aba});}catch(e){console.warn('Atividade não registrada:',e.message);}}
 function abrirTrocaObrigatoriaPortal() {
     document.getElementById('modal-troca-portal').style.display='flex';
 }
-async function salvarNovaSenhaPortal() {
-    const senha=document.getElementById('portal-nova-senha').value;
-    const confirma=document.getElementById('portal-confirma-senha').value;
-    if(senha.length<8 || senha!==confirma) return alert('Informe uma senha de pelo menos 8 caracteres e confirme corretamente.');
-    const btn=document.getElementById('portal-salvar-senha');btn.disabled=true;
-    try {
-        const ref=db.collection('students').doc(alunoLogado.id);
-        const doc=await ref.get({source:'server'});const atual=doc.data();
-        if(!doc.exists || !atual.portalMustChangePassword || Date.parse(atual.portalTemporaryExpiresAt||'')<Date.now() || atual.portalBlocked || (atual.portalSessionVersion||0)!==(alunoLogado.portalSessionVersion||0)) throw new Error('O acesso foi alterado. Entre novamente com a senha atual.');
-        if(await verificarCredencialPortal(senha,atual.portalCredential)) throw new Error('Escolha uma senha diferente da temporária.');
-        const cred=await criarCredencialPortal(senha);
-        if(cancelarControlePortal){cancelarControlePortal();cancelarControlePortal=null;}
-        await db.runTransaction(async tx=>{const snap=await tx.get(ref);const d=snap.data();if(!snap.exists || !d.portalMustChangePassword || d.portalBlocked || (d.portalSessionVersion||0)!==(alunoLogado.portalSessionVersion||0))throw new Error('Acesso alterado. Entre novamente.');tx.update(ref,{portalCredential:cred,senhaAluno:firebase.firestore.FieldValue.delete(),portalMustChangePassword:false,portalTemporaryExpiresAt:firebase.firestore.FieldValue.delete(),portalPasswordChangedAt:firebase.firestore.FieldValue.serverTimestamp(),portalSessionVersion:firebase.firestore.FieldValue.increment(1)});});
-        alunoLogado.portalSessionVersion=(alunoLogado.portalSessionVersion||0)+1;
-        alunoLogado.portalMustChangePassword=false;guardarSessaoPortal(alunoLogado);acompanharControlePortal();
-        document.getElementById('portal-nova-senha').value='';document.getElementById('portal-confirma-senha').value='';
-        document.getElementById('modal-troca-portal').style.display='none';
-        await registrarEventoPortal('password_changed');await carregarDadosPainel();
-    } catch(e) {alert(e.message);} finally {btn.disabled=false;if(alunoLogado && !cancelarControlePortal)acompanharControlePortal();}
-}
+async function salvarNovaSenhaPortal(){const senha=document.getElementById('portal-nova-senha').value;if(senha.length<8||senha!==document.getElementById('portal-confirma-senha').value)return alert('Use pelo menos 8 caracteres e confirme.');const btn=document.getElementById('portal-salvar-senha');btn.disabled=true;try{if(cancelarControlePortal){cancelarControlePortal();cancelarControlePortal=null;}const r=await SE7.api('change-password',{password:senha});await firebase.auth().signInWithCustomToken(r.customToken);alunoLogado=(await SE7.api('session')).profile;guardarSessaoPortal(alunoLogado);document.getElementById('portal-nova-senha').value='';document.getElementById('portal-confirma-senha').value='';document.getElementById('modal-troca-portal').style.display='none';acompanharControlePortal();await registrarEventoPortal('login');await carregarConfiguracaoAlunoAutenticado();await carregarDadosPainel();}catch(e){alert(e.message);}finally{btn.disabled=false;}}
 
-        async function fazerLoginAluno() {
-            const cpfInput = document.getElementById('login-cpf').value.trim().replace(/[^\d]/g, '');
-            const passInput = document.getElementById('login-pass').value.trim();
-            if(!cpfInput || !passInput) return alert("Preencha o CPF e a matrícula/senha.");
-
-            try {
-                const snapshot = await db.collection("students").get({source:'server'});
-                let alunoEncontrado = null;
-                for (const doc of snapshot.docs) {
-                    const data=doc.data();
-                    if((data.cpf||'').replace(/[^\d]/g,'')!==cpfInput)continue;
-                    if(data.portalBlocked) return alert('Acesso bloqueado. Entre em contato com a instituição.');
-                    if(data.portalMustChangePassword && (!data.portalTemporaryExpiresAt || Date.parse(data.portalTemporaryExpiresAt)<Date.now())) return alert('A senha temporária expirou. Solicite uma nova à instituição.');
-                    const valido=data.portalCredential ? await verificarCredencialPortal(passInput,data.portalCredential) : passInput===String(data.senhaAluno||data.code||'').trim();
-                    if(valido){
-                        if(!data.portalCredential){const cred=await criarCredencialPortal(passInput);await doc.ref.update({portalCredential:cred,senhaAluno:firebase.firestore.FieldValue.delete()});data.portalCredential=cred;}
-                        alunoEncontrado={id:doc.id,...data};break;
-                    }
-                }
-
-                if(!alunoEncontrado) return alert("Aluno não encontrado ou matrícula/senha incorretos.");
-
-                alunoLogado = alunoEncontrado;
-                guardarSessaoPortal(alunoLogado);
-                await registrarEventoPortal('login');
-                acompanharControlePortal();
-                
-                const loginScreen = document.getElementById('login-screen');
-                loginScreen.classList.add('screen-exit');
-                setTimeout(() => {
-                    loginScreen.style.display = 'none';
-                    const mainApp = document.getElementById('main-app');
-                    mainApp.style.display = 'flex';
-                    mainApp.classList.add('screen-transition');
-                    carregarDadosPainel();
-                }, 180);
-
-            } catch(e) {
-                alert("Erro ao conectar: " + e.message);
-            }
-        }
+        async function fazerLoginAluno(){const cpf=document.getElementById('login-cpf').value.replace(/\D/g,'');const pass=document.getElementById('login-pass').value;const btn=document.querySelector('#student-login-form button[type="submit"]');if(btn?.disabled)return;if(!cpf||!pass)return alert('Informe CPF e senha.');if(btn)btn.disabled=true;try{alunoLogado=await SE7.studentLogin(cpf,pass);guardarSessaoPortal(alunoLogado);document.getElementById('login-screen').style.display='none';document.getElementById('welcome-screen').style.display='none';document.getElementById('main-app').style.display='flex';await carregarConfiguracaoAlunoAutenticado();await registrarEventoPortal('login');acompanharControlePortal();await carregarDadosPainel();}catch(e){alert(e.message);}finally{if(btn)btn.disabled=false;}}
 
         function abrirModalEsqueciSenha() { document.getElementById('modal-esqueci-senha').style.display = 'flex'; }
         function fecharModalEsqueciSenha() { document.getElementById('modal-esqueci-senha').style.display = 'none'; }
@@ -1232,25 +1104,8 @@ async function salvarNovaSenhaPortal() {
             // Não corta o nome, mesmo em casos excepcionalmente longos.
             if (el.scrollHeight > 80) el.style.maxHeight = 'none';
         }
-        function criarTokenPresencaAluno() {
-            if (!window.crypto?.getRandomValues) throw new Error('Este dispositivo não permite gerar a identificação. Atualize a WebView.');
-            const bytes = new Uint8Array(24);
-            window.crypto.getRandomValues(bytes);
-            return Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');
-        }
-        async function obterIdentificacaoPresencaAluno(id) {
-            const ref = db.collection('students').doc(id);
-            let candidato;
-            return db.runTransaction(async tx => {
-                const snap = await tx.get(ref);
-                if (!snap.exists) throw new Error('Cadastro do aluno não encontrado.');
-                const dados = snap.data();
-                if (dados.qrAttendanceToken) return dados.qrAttendanceToken;
-                candidato ||= criarTokenPresencaAluno();
-                tx.update(ref,{qrAttendanceToken:candidato,qrAttendanceVersion:1,qrAttendanceCreatedAt:new Date().toISOString()});
-                return candidato;
-            });
-        }
+        
+        async function obterIdentificacaoPresencaAluno(id){if(id!==alunoLogado?.id)throw new Error('Aluno inválido.');return (await SE7.api('qr')).token;}
         async function abrirModalCarteirinha() {
             if (!alunoLogado?.id || alunoLogado.portalMustChangePassword) return;
             void registrarEventoPortal('tab','carteirinha');
@@ -1337,7 +1192,7 @@ async function salvarNovaSenhaPortal() {
                     if(!alunoLogado.documentos) alunoLogado.documentos = {};
                     alunoLogado.documentos[tipoId] = { status: "Pendente", fileName: file.name, driveUrl: resultado.fileUrl || "" };
 
-                    await db.collection("students").doc(alunoLogado.id).update({ documentos: alunoLogado.documentos });
+                    await SE7.api('documents',{type:tipoId,fileName:file.name,url:alunoLogado.documentos[tipoId].driveUrl||''});
                     guardarSessaoPortal(alunoLogado);
                     
                     renderizarDocumentosObrigatorios();
@@ -1347,7 +1202,7 @@ async function salvarNovaSenhaPortal() {
                 } catch(err) {
                     if(!alunoLogado.documentos) alunoLogado.documentos = {};
                     alunoLogado.documentos[tipoId] = { status: "Pendente", fileName: file.name, driveUrl: "" };
-                    await db.collection("students").doc(alunoLogado.id).update({ documentos: alunoLogado.documentos });
+                    await SE7.api('documents',{type:tipoId,fileName:file.name,url:alunoLogado.documentos[tipoId].driveUrl||''});
                     guardarSessaoPortal(alunoLogado);
 
                     renderizarDocumentosObrigatorios();
@@ -1467,13 +1322,13 @@ async function salvarNovaSenhaPortal() {
         // --- CARREGAMENTO DO PAINEL OTIMIZADO COM .get() ---
         async function carregarDadosPainel() {
             if(!alunoLogado) return;
+            if(alunoLogado.portalMustChangePassword){abrirTrocaObrigatoriaPortal();return;}
 
             try {
                 // 1. Atualiza dados do aluno pontualmente
                 const studentDoc = await db.collection("students").doc(alunoLogado.id).get({source:'server'});
                 if (!studentDoc.exists || studentDoc.data().portalBlocked || (studentDoc.data().portalSessionVersion||0)!==(alunoLogado.portalSessionVersion||0)) {
-                    sessionStorage.removeItem('aluno_app_logado');alunoLogado=null;
-                    alert('Seu acesso foi alterado. Entre novamente ou contate a instituição.');location.reload();return;
+                    alunoLogado=null;alert('Seu acesso foi alterado. Entre novamente.');await SE7.logout();return;
                 }
                 if (studentDoc.exists) {
                     alunoLogado = { id: studentDoc.id, ...studentDoc.data() };
@@ -2184,10 +2039,7 @@ async function salvarNovaSenhaPortal() {
             fecharProvaOnlineEJA();
         }
 
-        function fazerLogout() {
-            sessionStorage.removeItem('aluno_app_logado');
-            location.reload();
-        }
+        async function fazerLogout(){await SE7.logout();}
     </script>
 </body>
 </html>

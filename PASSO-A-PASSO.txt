@@ -1,0 +1,91 @@
+SE7 — Migração para Firebase Authentication
+Projeto: sistema-escolar-nuvem
+Site: https://sistema-escolar-ten-mu.vercel.app
+
+ESTADO DESTA ENTREGA
+O pacote contém os quatro aplicativos, um serviço administrativo em api/se7.js, uma página para preparar os cadastros e as regras do Firestore. Nada foi publicado por esta entrega. Os testes usam emuladores locais; não acessaram seu banco real.
+Sua conta master é identificada pelo UID JrL8OtZKmRYeSG3olAe8LuxvRNY2. Use no Matriz o e-mail e a senha que você criou no Firebase Authentication. As contas padrão de demonstração foram removidas.
+
+ANTES DE COMEÇAR
+1. Escolha um período sem uso dos aplicativos e avise os funcionários. A troca de login exige cadastrar/vincular as contas deles.
+2. Guarde o ZIP original recebido do GitHub como cópia do código anterior.
+3. Não exclua coleções, documentos ou alunos. A migração altera apenas os campos de acesso; preserve também uma cópia dos dados antes de migrar. O download do GitHub não é uma cópia do banco.
+4. Confirme que na Vercel as variáveis SE7_MASTER_UID e FIREBASE_SERVICE_ACCOUNT_JSON estão em Production. O conteúdo da segunda deve ser o JSON inteiro da conta de serviço do projeto sistema-escolar-nuvem.
+5. Não coloque o JSON privado em nenhum arquivo do GitHub. O repositório é público.
+
+A. COLOCAR OS ARQUIVOS NO GITHUB
+1. Baixe este pacote e extraia o ZIP no seu computador.
+2. Abra a pasta sistema-escolar-main. Dentro dela aparecem index.html, app-aluno.html, app-financeiro.html, totem.html, administracao-auth.html, package.json, package-lock.json, vercel.json, firestore.rules, firebase.json, PASSO-A-PASSO.txt e as pastas api, server, assets e tests.
+3. Abra https://github.com/report115-rgb/sistema-escolar no navegador.
+4. Na aba Code, clique em Add file → Upload files.
+5. Arraste OS ITENS DE DENTRO da pasta sistema-escolar-main. Não arraste a pasta externa inteira: os arquivos devem estar na raiz do repositório, ao lado de index.html. Inclua as pastas api, server e assets completas.
+6. Em Commit changes, escreva "Migração SE7 para Firebase Authentication" e confirme. Isso atualiza os HTMLs e adiciona o servidor.
+7. A Vercel deve iniciar uma nova implantação. Abra Vercel → projeto sistema-escolar → Deployments e aguarde Ready.
+8. Se houver erro de configuração de build, confira Settings → Build and Deployment: Framework Preset = Other, Build Command = npm run build, Output Directory = public. O vercel.json já define esses valores; remova substituições conflitantes no painel, se houver.
+9. A execução usa Node.js 22.x, definido no package.json. Os arquivos do servidor não são copiados para public.
+
+B. VERIFICAR A CONFIGURAÇÃO E PREPARAR OS ALUNOS
+1. Abra https://sistema-escolar-ten-mu.vercel.app/administracao-auth.html
+2. Entre com o e-mail e a senha da sua conta master criada no Firebase Authentication. Não use master@admin.com nem a antiga senha de demonstração.
+3. Aguarde "Configuração verificada". Se houver erro, não altere as regras ainda. Confira os nomes e valores das variáveis na Vercel. Não envie a chave privada por mensagem.
+4. Clique em "Preparar todos os cadastros" e confirme.
+5. Aguarde o processo terminar. Ele trabalha em grupos de 30 alunos. Se interromper, pode executar novamente.
+6. Se aparecer CPF duplicado, ausente ou inválido, corrija o cadastro no Matriz e execute novamente. Todos os alunos precisam estar preparados antes das regras definitivas.
+7. O processo cria um índice privado de CPF, move as senhas antigas protegidas para uma coleção privada e remove senhas/derivações dos documentos dos alunos. NÃO altera notas, fotos, financeiro, matrícula ou frequência.
+8. A conta de cada aluno é criada no Authentication no primeiro login válido, preservando a senha existente quando possível. Não é uma importação de hashes para o Authentication: o servidor verifica a credencial antiga e cria a conta. Se o acesso antigo não puder ser validado, use Redefinir acesso no Matriz.
+
+C. PREPARAR FUNCIONÁRIOS E TOTEM
+1. Na página administracao-auth.html, clique em "Consultar cadastros antigos" para consultar nome/e-mail/perfil. Nenhuma senha antiga é exibida.
+2. Para cada funcionário, use "Criar conta": nome, e-mail real, senha inicial de pelo menos 8 caracteres e perfil correto.
+3. Entregue a senha inicial diretamente ao funcionário. Ele pode recuperar a senha pelo e-mail no Matriz.
+4. Se o e-mail já existir em Authentication → Usuários, copie o UID daquela conta e use "Vincular conta existente", selecionando o perfil.
+5. O Financeiro permite somente master e financeiro. O Matriz permite master, secretaria, professor e financeiro, respeitando suas abas e permissões. Somente o UID master configurado pode administrar contas e redefinir acessos de alunos.
+6. Crie uma conta separada com perfil Totem para o dispositivo. Não deixe a conta master conectada no equipamento de uso público.
+7. As contas de demonstração master@admin.com, secretaria@admin.com, professor@admin.com e financeiro@admin.com não são migradas automaticamente.
+
+D. TESTE DE FUNCIONAMENTO ANTES DAS REGRAS
+1. Use uma janela anônima para não substituir a sessão master enquanto testa.
+2. Abra o app do aluno e entre com o CPF e a senha que o aluno já usava.
+3. Confira nome, foto da Matriz, curso, notas, financeiro e documentos.
+4. Abra o crachá e confira o QR Code.
+5. No Matriz → Gestão de Alunos → Acessos ao Portal, confira as novas atividades e o ranking de abas.
+6. Teste o Financeiro com a nova conta do funcionário.
+7. Teste o Totem com a conta do dispositivo e um QR de aluno ativo com turma.
+8. Teste uma redefinição de aluno: anote a senha temporária, entre no app e escolha uma senha nova. O aluno deve ser impedido de navegar até concluir a troca. A senha temporária dura 24 horas.
+
+E. PUBLICAR AS REGRAS DO FIRESTORE — DEPOIS DA PREPARAÇÃO SEM ERROS
+1. Abra no seu computador o arquivo firestore.rules em um editor de texto.
+2. Selecione todo o texto e copie.
+3. No Firebase → Firestore Database → Regras, substitua o texto completo anterior pelo conteúdo desse arquivo.
+4. Clique em Publicar.
+5. Essa etapa remove a regra pública de teste com vencimento em 18/10/2026. Habilitar Authentication sozinho NÃO remove a exposição do banco; ela termina quando as regras corretas são publicadas.
+6. Repita os testes da etapa D depois de publicar. Testar antes da publicação não comprova a proteção do banco.
+7. Em uma janela sem login, o aplicativo deve exigir autenticação para consultar dados de alunos. O catálogo de cursos e a marca continuam disponíveis por um serviço que entrega somente os campos públicos.
+8. Se uma função autorizada receber "permission-denied", anote qual conta/perfil e qual ação produziu o erro. Não volte à regra pública nem substitua por "allow read, write: if true".
+
+COMO O ACESSO FICA ORGANIZADO
+• Aluno continua entrando por CPF e senha, com e-mail opcional. Internamente há um identificador de autenticação exclusivo; ele não expõe o CPF como e-mail. Recuperação de aluno sem e-mail continua pela instituição/master.
+• Aluno consulta apenas seu documento, curso/turma vinculados, calendário da turma e suas faturas. Não pode modificar foto, notas, presença, valores ou permissões.
+• Eventos, contadores de abas, QR e envio do status de documentos são validados pelo servidor. O servidor grava o documento enviado como Pendente; a validação continua no Matriz.
+• Master administra alunos e contas. Secretaria administra dados acadêmicos; Financeiro gerencia faturas e pagamentos. Professor tem acesso às consultas acadêmicas e aos campos de notas/frequência permitidos nas regras, sem administração de acesso. Outros fluxos específicos devem ser conferidos na implantação.
+• Bloqueios e redefinições mudam a versão da sessão e revogam sessões no Authentication. Dados já vistos/offline não podem ser apagados de um dispositivo por uma regra; novas consultas/operações são restringidas.
+• As coleções se7Credentials, se7CpfIndex, se7Staff e se7RateLimits são privadas. Nenhum navegador, nem mesmo o master, as altera diretamente. O serviço usa o Admin SDK depois de verificar o token do usuário.
+
+TOTEM
+O código original não fazia reconhecimento facial: comparava médias de cores. A migração desativa a confirmação por esse método e usa QR Code com login do dispositivo. A câmera só inicia depois do login. Não é uma entrega de reconhecimento facial real.
+O QR registra no canal attendance que o Totem original usava, sem duplicar o registro do mesmo aluno no mesmo dia (horário de Fortaleza). Ele exige aluno ativo com turma. Esse registro diário não substitui a frequência por disciplina/horário em attendanceRecords; essa integração específica permanece para o desenvolvimento do Totem.
+
+LIMITES E CUIDADOS DE INSTALAÇÃO
+• Não foram publicados código, regras ou contas no seu projeto nesta entrega.
+• As permissões devem ser validadas após a implantação real. Foram testadas com emuladores, não com sua chave privada.
+• Os usuários devem atualizar os aplicativos e fazer um novo login. A sessão antiga salva pelo login próprio não concede acesso.
+• A API permite origem https://sistema-escolar-ten-mu.vercel.app. Uma mudança de domínio exige atualizar a origem no servidor. As variáveis atualmente configuradas apenas em Production não habilitam testes de Preview automaticamente.
+• Existem limites de tentativas de login/matrícula e de atividades para reduzir abuso. Eventos que falham não bloqueiam a navegação. O ranking é histórico de eventos registrados, não uma medida de tempo online.
+• Os documentos enviados ao Google Drive continuam usando o serviço de upload já existente. A segurança desse serviço externo depende também do código/configuração do Apps Script, que não veio no ZIP.
+• Não restaure apenas os HTMLs antigos depois de publicar as regras: o login antigo não usa Firebase Authentication. Uma reversão precisa considerar autenticação, dados migrados e regras em conjunto.
+• Se houver operação de senha interrompida e mensagem permanente "Outra operação de acesso está em andamento", solicite suporte antes de alterar o campo se7AuthLock; ele existe para impedir alterações concorrentes de acesso.
+
+TESTES TÉCNICOS
+npm install
+npx firebase emulators:exec --project demo-se7 --only firestore,auth "npm test"
+Os testes não usam o projeto de produção. São necessários Node e Java no computador do técnico; você não precisa executar comandos para instalar os arquivos pelo GitHub.
