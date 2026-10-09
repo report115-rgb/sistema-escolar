@@ -101,7 +101,18 @@ export async function dispatch({auth,db},req,b){
    if(!['login','resume','tab'].includes(b.type)||b.type==='tab'&&!tabs.includes(b.tab))fail(400,'Evento inválido.');
    await limits(db,req,'event:'+u.uid);const batch=db.batch();batch.set(ref.collection('portalAccessEvents').doc(),{type:b.type,tab:b.type==='tab'?b.tab:null,at:at(),source:'app-aluno'});const patch={portalLastAccessAt:at()};if(b.type==='login'){patch.portalLastLoginAt=at();patch.portalLoginCount=F.increment(1);}if(b.type==='tab')patch[`portalTabCounts.${b.tab}`]=F.increment(1);batch.update(ref,patch);await batch.commit();return {ok:true};
   }
-  if(action==='qr'){return db.runTransaction(async tx=>{const snap=await tx.get(ref);const token=snap.data().qrAttendanceToken||randomBytes(24).toString('hex');tx.update(ref,{qrAttendanceToken:token,qrAttendanceVersion:1});return {token};});}
+  if(action==='qr'){
+   await limits(db,req,'qr:'+u.uid);
+   const token=randomBytes(24).toString('hex');
+   return db.runTransaction(async tx=>{
+    const doc=await tx.get(ref);const student=doc.data();
+    if(!student||student.portalBlocked||student.portalMustChangePassword||student.se7AuthLock||student.se7AuthUid!==u.uid||(student.portalSessionVersion||0)!==(u.portalVersion||0))fail(403,'Acesso alterado. Entre novamente.');
+    const serverTime=Date.now(),expiresAt=serverTime+30000;
+    tx.set(db.collection('se7AttendanceQr').doc(u.uid),{studentId:u.studentId,authUid:u.uid,portalVersion:student.portalSessionVersion||0,tokenHash:digest(token),issuedAt:new Date(serverTime),expiresAt:new Date(expiresAt),used:false});
+    if(Object.hasOwn(student,'qrAttendanceToken')||student.qrAttendanceVersion!==2)tx.update(ref,{qrAttendanceToken:F.delete(),qrAttendanceVersion:2});
+    return {token,qr:'SE7:ATTENDANCE:2:'+token,serverTime,expiresAt,ttlSeconds:30};
+   });
+  }
   if(action==='documents'){
    if(u.student.documentos?.[b.type]?.status==='Aprovado')fail(400,'Documento já aprovado. Solicite ajuda à instituição.');
    if(!docTypes.includes(b.type)||typeof b.fileName!=='string'||b.fileName.length>180||typeof b.url!=='string'||b.url.length>1000||b.url&&!/^https:\/\//.test(b.url))fail(400,'Documento inválido.');
@@ -113,10 +124,26 @@ export async function dispatch({auth,db},req,b){
  if(action==='prepare-student'){if(!['master','secretaria'].includes(u.role))fail(403,'Acesso restrito.');const d=await db.collection('students').doc(validId(b.id)).get();if(!d.exists)fail(404,'Aluno não encontrado.');await prepareStudent(db,d);return {ok:true};}
  if(action==='attendance'){
   if(!['totem','master'].includes(u.role))fail(403,'Acesso restrito ao Totem.');await limits(db,req,'attendance:'+u.uid);
-  if(typeof b.qr!=='string'||!/^SE7:ATTENDANCE:1:[a-f0-9]{48}$/.test(b.qr))fail(400,'QR Code inválido.');
-  const matches=await db.collection('students').where('qrAttendanceToken','==',b.qr.split(':')[3]).limit(2).get();if(matches.size!==1)fail(404,'Aluno não identificado.');const d=matches.docs[0],s=d.data();if(s.portalBlocked||!['Ativo','Ativa'].includes(s.status)||!s.classId)fail(403,'Aluno sem matrícula ativa ou turma. Procure a secretaria.');
-  const now=new Date(),date=now.toLocaleDateString('en-CA',{timeZone:'America/Fortaleza'});const ref=db.collection('attendance').doc(`presenca_${d.id}_${date}`);
-  const repeated=await db.runTransaction(async tx=>{const existing=await tx.get(ref);if(existing.exists)return true;tx.set(ref,{studentId:d.id,nomeAluno:s.fullname||'Aluno',data:date,horario:now.toLocaleTimeString('pt-BR',{timeZone:'America/Fortaleza'}),status:'PRESENTE',registradoPor:'Totem QR autenticado',actorUid:u.uid,createdAt:at()});return false;});return {name:s.fullname||'Aluno',repeated};
+  if(typeof b.qr!=='string'||!/^SE7:ATTENDANCE:2:[a-f0-9]{48}$/.test(b.qr))fail(400,'QR Code antigo ou inválido. Abra novamente a carteirinha no aplicativo atualizado.');
+  const tokenHash=digest(b.qr.split(':')[3]);
+  const matches=await db.collection('se7AttendanceQr').where('tokenHash','==',tokenHash).limit(2).get();
+  if(matches.size!==1)fail(404,'QR Code substituído ou inválido. Aguarde o novo código na carteirinha.');
+  const qrRef=matches.docs[0].ref;
+  return db.runTransaction(async tx=>{
+   const qrSnap=await tx.get(qrRef),q=qrSnap.data();const now=new Date();
+   if(!q||q.tokenHash!==tokenHash)fail(400,'QR Code substituído. Aguarde o novo código.');
+   if(!q.expiresAt||now.getTime()>=q.expiresAt.toMillis())fail(400,'QR Code expirado. Aguarde o novo código na carteirinha.');
+   if(q.used)fail(409,'QR Code já utilizado. Aguarde o novo código na carteirinha.');
+   const studentRef=db.collection('students').doc(validId(q.studentId));
+   const studentSnap=await tx.get(studentRef),student=studentSnap.data();
+   if(!student||student.se7AuthUid!==q.authUid||(student.portalSessionVersion||0)!==q.portalVersion||student.portalBlocked||student.portalMustChangePassword||student.se7AuthLock||!['Ativo','Ativa'].includes(student.status)||!student.classId)fail(403,'Aluno sem acesso ativo ou turma. Procure a secretaria.');
+   const date=now.toLocaleDateString('en-CA',{timeZone:'America/Fortaleza'});
+   const attendanceRef=db.collection('attendance').doc(`presenca_${studentRef.id}_${date}`);
+   const existing=await tx.get(attendanceRef);
+   tx.update(qrRef,{used:true,usedAt:at(),usedBy:u.uid});
+   if(!existing.exists)tx.set(attendanceRef,{studentId:studentRef.id,nomeAluno:student.fullname||'Aluno',data:date,horario:now.toLocaleTimeString('pt-BR',{timeZone:'America/Fortaleza'}),status:'PRESENTE',registradoPor:'Totem QR dinâmico autenticado',actorUid:u.uid,createdAt:at()});
+   return {name:student.fullname||'Aluno',repeated:existing.exists};
+  });
  }
  master(u);
  if(action==='health'){return {ok:true,project:PROJECT,uid:u.uid};}
