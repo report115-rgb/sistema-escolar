@@ -88,6 +88,15 @@
 #login-modal #login-logo-fallback {font-size:24px;color:#b6cae8;letter-spacing:.08em;}
 #login-modal .login-brand-heading {font-size:40px;line-height:1.14;font-weight:700;letter-spacing:-1.5px;white-space:nowrap;margin:0;}
 #login-modal .login-brand-heading span {color:#2995ff;}
+#login-modal .login-connected {animation:login-connected-glow 6s ease-in-out infinite;}
+#login-modal .login-loading-dots {display:inline-block;white-space:nowrap;letter-spacing:0;}
+#login-modal .login-loading-dots span {display:inline-block;animation:login-loading-dot 1.8s steps(1,end) infinite;}
+#login-modal .login-loading-dots span:first-child {animation:none;}
+#login-modal .login-loading-dots span:nth-child(2) {animation-name:login-loading-dot-two;}
+@keyframes login-connected-glow {0%,100%{color:#2995ff;text-shadow:0 0 6px #168fff,0 0 16px #087bff80;}45%,55%{color:#c8f1ff;text-shadow:0 0 5px #c8f1ff,0 0 14px #54b7ff,0 0 30px #168fff,0 0 48px #0073ff;}}
+@keyframes login-loading-dot-two {0%,100%{opacity:0;}33.333%{opacity:1;}}
+@keyframes login-loading-dot {0%,100%{opacity:0;}66.666%{opacity:1;}}
+@media(prefers-reduced-motion:reduce){#login-modal .login-connected{animation:none;text-shadow:0 0 12px #2995ff;}#login-modal .login-loading-dots span{animation:none;opacity:1;}}
 #login-modal .login-brand-subtitle {font-size:19px;letter-spacing:5px;color:#b6c9e9;margin:16px 0 0;line-height:1.4;}
 #login-modal .login-card {box-sizing:border-box;width:100%;padding:36px 38px 32px;border:1px solid #2a5c9f;border-radius:14px;background:linear-gradient(135deg,rgba(21,40,66,.86),rgba(8,21,37,.92));box-shadow:0 20px 70px #00000020,inset 0 1px 0 #ffffff08;}
 #login-modal #login-box-title {font-size:30px;line-height:1.2;font-weight:700;letter-spacing:-.8px;margin:0 0 10px;white-space:nowrap;color:#f6f8ff;}
@@ -191,7 +200,7 @@
                 <img id="login-logo-img" alt="Logomarca da instituição" style="display:none;" onload="document.getElementById('login-logo-fallback').style.display='none'" onerror="this.style.display='none';document.getElementById('login-logo-fallback').style.display='block'">
                 <span id="login-logo-fallback">Sistema Matriz</span>
             </div>
-            <h1 class="login-brand-heading">Tudo <span>conectado.</span></h1>
+            <h1 class="login-brand-heading" aria-label="Tudo conectado"><span style="color:inherit;">Tudo </span><span class="login-connected">conectado<span class="login-loading-dots" aria-hidden="true"><span>.</span><span>.</span><span>.</span></span></span></h1>
             <p class="login-brand-subtitle">Sistema Matriz</p>
             <div class="login-institution-meta"><h3 id="login-info-title">Sistema de Ensino Técnico e Transporte</h3><p id="login-info-desc"></p><span id="login-info-version">SE7 Cloud</span></div>
         </section>
