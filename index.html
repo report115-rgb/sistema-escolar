@@ -70,16 +70,17 @@
                 display: none !important;
             }
         }
-#login-modal .matriz-login-footer {position:absolute;bottom:22px;left:24px;right:24px;text-align:center;font-size:11px;line-height:1.65;color:#9fb5d4;}
+#login-modal .matriz-login-footer {position:fixed;bottom:0;left:0;right:0;margin:0;padding:12px 24px;text-align:center;font-size:11px;line-height:1.65;color:#9fb5d4;background:linear-gradient(transparent,#020d20 45%);}
 #login-modal .matriz-login-footer strong{font-weight:600;color:#c6d6eb;}
 #login-modal.se7-login{padding-bottom:80px;}
-@media(max-height:600px){#login-modal .matriz-login-footer{position:static;grid-column:1/-1;margin-top:20px;}#login-modal.se7-login{flex-wrap:wrap;padding-bottom:24px;}}
+@media(max-height:560px){body #login-modal.se7-login{align-items:flex-start;padding-top:20px;padding-bottom:80px;}}
 /* Acesso institucional: composição escura com identidade carregada do Firebase. */
 #login-modal.se7-login {
     position:fixed; inset:0; z-index:3000; display:flex; align-items:center; justify-content:center;
     padding:28px 32px; overflow:auto; isolation:isolate; color:#f5f8ff; font-family:Arial,Helvetica,sans-serif;
     background:radial-gradient(ellipse at 7% 38%,#07265c 0%,#041735 38%,#020d20 80%);
 }
+#login-modal.se7-login {padding-bottom:80px;}
 #login-modal .login-art {position:absolute;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none;overflow:hidden;}
 #login-modal .login-wire {fill:none;stroke:#247eff;stroke-width:1.1;vector-effect:non-scaling-stroke;}
 #login-modal .login-glow {fill:none;stroke:#54b7ff;stroke-width:1.7;stroke-linecap:round;vector-effect:non-scaling-stroke;filter:drop-shadow(0 0 8px #008cff) drop-shadow(0 0 22px #0073ff);animation:login-glow-pulse 6s ease-in-out infinite;}
@@ -243,7 +244,7 @@
             </div>
         </section>
     </div>
-    <div class="matriz-login-footer"><strong>Sistema SE7 de Gestão Acadêmica</strong><br><span data-se7-version="matriz">v1.3.0</span> • Sistema Matriz</div>
+    <div class="matriz-login-footer"><strong>Sistema SE7 de Gestão Acadêmica</strong><br><span data-se7-version="matriz">v1.3.1</span> • Sistema Matriz</div>
 </div>
 
 <!-- ========================================== -->
@@ -1582,7 +1583,7 @@
     <!-- RODAPÉ -->
     <footer id="se7-footer" class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border-t border-gray-200 dark:border-slate-700 py-2.5 px-6 text-center text-xs text-gray-500 dark:text-gray-400 flex flex-col sm:flex-row justify-between items-center gap-2 shadow-lg">
         <span>Sistema SE7 de Gestão Acadêmica • Matriz</span>
-        <span>Desenvolvido por <strong>JS & SS Serviços Educacionais e Cia Ltda</strong> &bull; <span data-se7-version="matriz">v1.3.0</span> • Sistema Matriz</span>
+        <span>Desenvolvido por <strong>JS & SS Serviços Educacionais e Cia Ltda</strong> &bull; <span data-se7-version="matriz">v1.3.1</span> • Sistema Matriz</span>
     </footer>
 
     <!-- MODAL DE NOVA MATRÍCULA / EDIÇÃO DE ALUNO -->
