@@ -84,6 +84,7 @@ export async function dispatch({auth,db},req,b){
   await limits(db,req,'asaas:'+u.uid);
   if(action==='asaas-check'){await asaas.api('/customers?limit=1');return {ok:true,environment:'production'};}
   if(action==='asaas-link-customer')return asaas.linkCustomer(db,validId(b.studentId),b.customerId||'',u);
+  if(action==='asaas-candidates')return asaas.candidates(db,validId(b.invoiceId));
   if(action==='asaas-emit')return asaas.emit(db,validId(b.invoiceId),b.billingType,u);
   if(action==='asaas-import')return asaas.importPayment(db,validId(b.invoiceId),b.paymentId,u);
   if(action==='asaas-reconcile')return asaas.recover(db,validId(b.invoiceId));
