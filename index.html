@@ -247,7 +247,7 @@
             </div>
         </section>
     </div>
-    <div class="matriz-login-footer"><strong>Sistema SE7 de Gestão Acadêmica</strong><br><span data-se7-version="matriz">v1.3.17</span> • Sistema Matriz</div>
+    <div class="matriz-login-footer"><strong>Sistema SE7 de Gestão Acadêmica</strong><br><span data-se7-version="matriz">v1.3.18</span> • Sistema Matriz</div>
 </div>
 
 <!-- ========================================== -->
@@ -1362,7 +1362,7 @@
 </div>
 
 <div id="subtab-email" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display:none;">
-<h3 class="font-bold text-lg">E-mails acadêmicos</h3><p class="text-sm">Avisos de presença, documentos recebidos e notas lançadas. Envio para o e-mail cadastrado do aluno, após salvar as informações.</p><p id="email-config-status" class="text-sm">Clique em Atualizar histórico.</p><div class="flex flex-wrap gap-2"><button type="button" onclick="SE7Email.history()" class="px-3 py-2 bg-blue-600 text-white rounded-lg text-xs">Atualizar histórico</button><button id="email-process-pending" type="button" onclick="SE7Email.pending()" class="px-3 py-2 bg-emerald-600 text-white rounded-lg text-xs">Continuar envios pendentes</button></div><p class="text-xs">Se fechar a página antes de terminar os envios, continue a fila por este botão. Consulte o Email History do EmailJS para avisos sem confirmação antes de qualquer novo envio. Os avisos não substituem a validação da secretaria. Histórico dos últimos 100 avisos; a fila processa até 50 pendentes por vez.</p><div id="email-history" class="space-y-3"></div></div>
+<h3 class="font-bold text-lg">E-mails acadêmicos</h3><p class="text-sm">Avisos de presença, correção de frequência, documentos recebidos, notas lançadas ou alteradas e matrícula efetivada. Envio para o e-mail cadastrado do aluno, após salvar as informações.</p><p id="email-config-status" class="text-sm">Clique em Atualizar histórico.</p><div class="flex flex-wrap gap-2"><button type="button" onclick="SE7Email.history()" class="px-3 py-2 bg-blue-600 text-white rounded-lg text-xs">Atualizar histórico</button><button id="email-process-pending" type="button" onclick="SE7Email.pending()" class="px-3 py-2 bg-emerald-600 text-white rounded-lg text-xs">Continuar envios pendentes</button></div><p class="text-xs">Se fechar a página antes de terminar os envios, continue a fila por este botão. Consulte o Email History do EmailJS para avisos sem confirmação antes de qualquer novo envio. Os avisos não substituem a validação da secretaria. Histórico dos últimos 100 avisos; a fila processa até 50 pendentes por vez.</p><div id="email-history" class="space-y-3"></div></div>
 <div id="subtab-whatsapp" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display:none;">
  <h3 class="font-bold text-lg">WhatsApp institucional</h3>
  <p class="text-sm">Avisos de matrícula para a central e para o aluno, e agendamento de prova EJA. Os alunos precisam autorizar os avisos no cadastro ou no próprio aplicativo.</p>
@@ -1589,7 +1589,7 @@
     <!-- RODAPÉ -->
     <footer id="se7-footer" class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border-t border-gray-200 dark:border-slate-700 py-2.5 px-6 text-center text-xs text-gray-500 dark:text-gray-400 flex flex-col sm:flex-row justify-between items-center gap-2 shadow-lg">
         <span>Sistema SE7 de Gestão Acadêmica • Matriz</span>
-        <span>Desenvolvido por <strong>JS & SS Serviços Educacionais e Cia Ltda</strong> &bull; <span data-se7-version="matriz">v1.3.17</span> • Sistema Matriz</span>
+        <span>Desenvolvido por <strong>JS & SS Serviços Educacionais e Cia Ltda</strong> &bull; <span data-se7-version="matriz">v1.3.18</span> • Sistema Matriz</span>
     </footer>
 
     <!-- MODAL DE NOVA MATRÍCULA / EDIÇÃO DE ALUNO -->
@@ -3907,7 +3907,10 @@ function carregarDatasCalendarioParaFrequencia() {
             studentData.fotoAluno = fotoRostoBase64Temp;
         }
 
+        const beforeEnrollment = await db.collection('students').doc(editId).get();
+        const hadClass = !!beforeEnrollment.data()?.classId;
         await db.collection("students").doc(editId).update(studentData);
+        if(!hadClass && studentData.classId) void SE7Email.notify('email-enrollment',{studentId:editId});
         await SE7.api('prepare-student',{id:editId});
         await SE7.api('whatsapp-consent',{id:editId,optIn:document.getElementById('whatsapp-opt-in-aluno').checked});
         const alunoLocal = students.find(a => a.id === editId);
@@ -3929,6 +3932,7 @@ function carregarDatasCalendarioParaFrequencia() {
         await SE7.api('prepare-student',{id:docRef.id});
         await SE7.api('whatsapp-consent',{id:docRef.id,optIn:document.getElementById('whatsapp-opt-in-aluno').checked});
         const novoAlunoId = docRef.id;
+        void SE7Email.notify('email-enrollment',{studentId:novoAlunoId});
         closeNewStudentModal();
         
         // Limpa a foto temporária
@@ -4243,10 +4247,7 @@ async function saveAttendance() {
     if (alunosTurma.length === 0) return alert("Nenhum aluno ativo nesta turma.");
 
     const registrosFrequencia = [];
-    const mapaAlunosRegistros = {};
     let totalFaltas = 0;
-    const batch = db.batch(); 
-
     alunosTurma.forEach(s => {
         const radios = document.getElementsByName(`att_${s.id}`);
         let statusPresenca = "Presente"; 
@@ -4259,7 +4260,6 @@ async function saveAttendance() {
 
         if (statusPresenca === 'Falta') totalFaltas++;
 
-        mapaAlunosRegistros[s.id] = statusPresenca;
 
         registrosFrequencia.push({
             studentId: s.id,
@@ -4267,41 +4267,11 @@ async function saveAttendance() {
             status: statusPresenca
         });
 
-        const alunoRef = db.collection("students").doc(s.id);
-        const attendanceMap = s.attendance || {};
-        attendanceMap[dataAula] = { status: statusPresenca, updatedAt: new Date().toISOString() };
-        
-        batch.update(alunoRef, { attendance: attendanceMap });
     });
-
-    // ==========================================
-    // SUBSTITUIÇÃO DO LOCALSTORAGE PARA O FIREBASE
-    // ==========================================
-    const lockRef = db.collection("attendanceLocks").doc(`${classId}_${dataAula}`);
-    batch.set(lockRef, {
-        classId: classId,
-        date: dataAula,
-        finalizada: true,
-        registros: mapaAlunosRegistros,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true });
-
-    const dadosChamada = {
-        emailSubject: document.getElementById('attendance-calendar-date-select').selectedOptions[0]?.dataset.subject || '',
-        classId,
-        date: dataAula,
-        teacherId: professorId || null,
-        frequencias: registrosFrequencia,
-        timestamp: new Date().toISOString()
-    };
-
     try {
-        const callRef = db.collection("attendanceRecords").doc();
-        batch.set(callRef, dadosChamada);
-
-        await batch.commit();
-        void SE7Email.notify('email-attendance',{recordId:callRef.id});
-
+        const saved = await SE7.api('email-save-attendance',{classId,date:dataAula,subject:document.getElementById('attendance-calendar-date-select').selectedOptions[0]?.dataset.subject||'',teacherId:professorId||null,rows:registrosFrequencia.map(r=>({studentId:r.studentId,status:r.status}))});
+        void SE7Email.consume(saved.emailJobs||[]);
+        if(saved.emailWarning) SE7Email.warning(saved.emailWarning);
         registrarLogAuditoria(`Chamada realizada para a turma ${classId} em ${dataAula} (${totalFaltas} falta(s) registrada(s))`, "Frequência");
         alert(`Chamada salva e sincronizada na nuvem com sucesso!`);
         
@@ -4391,8 +4361,7 @@ async function saveAttendance() {
             const aluno = students.find(s => s.id === studentId);
             if (!aluno) return;
 
-            if (!aluno.grades) aluno.grades = {};
-            aluno.grades[subjectId] = {
+            const gradeToSave = {
                 atividade: ativ,
                 avaliacao: aval,
                 final: final,
@@ -4400,8 +4369,11 @@ async function saveAttendance() {
             };
 
             try {
-                await db.collection("students").doc(studentId).update({ grades: aluno.grades });
-                void SE7Email.notify('email-grade',{studentId,subjectId});
+                const saved = await SE7.api('email-save-grade',{studentId,subjectId,grade:gradeToSave});
+                if(!aluno.grades) aluno.grades={};
+                aluno.grades[subjectId]=gradeToSave;
+                void SE7Email.consume(saved.emailJobs||[]);
+                if(saved.emailWarning) SE7Email.warning(saved.emailWarning);
                 registrarLogAuditoria(`Salvou a nota do aluno ${aluno.fullname} na disciplina ID ${subjectId}`, "Notas");
                 alert(`Nota salva com sucesso para ${aluno.fullname}!`);
                 renderGradeList(); // Atualiza a linha com o botão "Editar Nota"

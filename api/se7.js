@@ -76,6 +76,9 @@ export async function dispatch({auth,db},req,b){
  }
  const u=await identity(auth,db,req);
  if(action.startsWith('email-')){
+  if(action==='email-save-grade'){await limits(db,req,'asaas-bulk:email-save:'+u.uid);return mail.saveGradeWithEmail(db,b,u);}
+  if(action==='email-save-attendance'){await limits(db,req,'asaas-bulk:email-save:'+u.uid);return mail.saveAttendanceWithEmail(db,b,u);}
+  if(action==='email-enrollment')return mail.enrollmentEmail(db,b.studentId,u);
   if(action==='email-list')return mail.listEmails(db,u);
   if(action==='email-pending')return mail.pendingEmails(db,u);
   if(action==='email-config'){if(!['master','secretaria'].includes(u.role))fail(403,'Acesso restrito.');return mail.emailConfig();}

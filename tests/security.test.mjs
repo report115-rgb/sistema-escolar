@@ -160,3 +160,18 @@ test('e-mails: histórico e fila são privados e permissões são verificadas na
  await assert.rejects(call(financeToken,{action:'email-documents'}),/restrito/);
  const pending=await call(masterToken,{action:'email-pending'});assert(pending.jobs.includes('mail-test'));
 });
+
+test('salvamento acadêmico na API preserva outros dados e registra valores anteriores no servidor',async()=>{
+ const previous=process.env.SE7_EMAIL_ENABLED;process.env.SE7_EMAIL_ENABLED='false';
+ try{
+ await db.collection('courses').doc('course-email-save').set({name:'Curso de teste',subjects:[{id:123,name:'Anatomia'}]});
+ await db.collection('students').doc('student-email-save').set({fullname:'Aluno teste',status:'Ativo',email:'teste@example.test',courseId:'course-email-save',classId:'class-email-save',grades:{'123':{atividade:'2',avaliacao:'3',final:'5',salvo:true},outra:{final:'9'}},attendance:{'2026-10-10':{status:'Falta'}},fotoAluno:'foto-preservada'});
+ await db.collection('academicCalendars').doc('cal-email-save').set({classId:'class-email-save',dates:['2026-10-10'],subject:'Anatomia'});
+ const b={action:'email-save-grade',studentId:'student-email-save',subjectId:'123',grade:{atividade:'2',avaliacao:'4',final:'6'}};
+ const first=await call(masterToken,b);assert(first.changed);assert.deepEqual(first.emailJobs,[]);assert.equal((await call(masterToken,b)).changed,false);
+ const saved=await db.collection('students').doc(b.studentId).get();assert.equal(saved.data().grades['123'].final,'6');assert.equal(saved.data().grades.outra.final,'9');assert.equal(saved.data().fotoAluno,'foto-preservada');
+ const attendance=await call(masterToken,{action:'email-save-attendance',classId:'class-email-save',date:'2026-10-10',subject:'Anatomia',rows:[{studentId:b.studentId,status:'Presente'}]});
+ const record=(await db.collection('attendanceRecords').doc(attendance.recordId).get()).data();assert.equal(record.frequencias[0].previousStatus,'Falta');assert.equal(record.frequencias[0].status,'Presente');assert.equal((await db.collection('students').doc(b.studentId).get()).data().attendance['2026-10-10'].status,'Presente');
+ const financeToken=await signIn('finance-email@example.test','email-test-987');await assert.rejects(call(financeToken,b),/restrito/);
+ }finally{if(previous===undefined)delete process.env.SE7_EMAIL_ENABLED;else process.env.SE7_EMAIL_ENABLED=previous;}
+});
