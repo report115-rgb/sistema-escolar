@@ -180,7 +180,7 @@
         <p class="welcome-tagline">Tudo conectado ao sistema Matriz</p>
         <div class="welcome-progress" aria-hidden="true"></div>
     </div>
-    <div class="welcome-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="financeiro">v1.7.5</span> • Setor Financeiro</div>
+    <div class="welcome-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="financeiro">v1.7.6</span> • Setor Financeiro</div>
 </div>
 
 
@@ -229,7 +229,7 @@
                 </form>
             </div>
         </div>
-        <div id="finance-login-developer-footer" class="finance-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="financeiro">v1.7.5</span> • Setor Financeiro</div>
+        <div id="finance-login-developer-footer" class="finance-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="financeiro">v1.7.6</span> • Setor Financeiro</div>
     </div>
 
     <!-- MODAL DE EDIÇÃO DA COBRANÇA -->
@@ -1282,7 +1282,7 @@
                             </div>
                         </div>
 
-                        ${f.asaasPaymentId ? `<p class="text-xs text-blue-500">Cobrança vinculada ao Asaas. Consulte o painel Pagamentos Asaas abaixo. Alterações e estornos devem ser feitos no Asaas.</p>` : !jaPago ? `
+                        ${f.asaasPaymentId ? `<p class="text-xs text-blue-500"><span class="se7-payment-actions" data-invoice-id="${SE7Cadastro.escape(f.id)}" data-paid="${jaPago}"></span></p>` : !jaPago ? `
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-2 pt-2 border-t border-slate-100 dark:border-slate-800 items-center">
                                 <div>
                                     <label class="block text-[10px] font-semibold uppercase text-slate-400 mb-1">Forma de Pagamento</label>

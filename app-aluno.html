@@ -229,7 +229,7 @@
         <p class="welcome-tagline">Tudo conectado ao sistema Matriz</p>
         <div class="welcome-progress" aria-hidden="true"></div>
     </div>
-    <div class="welcome-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.3.5</span> • Portal do Aluno</div>
+    <div class="welcome-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.3.6</span> • Portal do Aluno</div>
 </div>
 
 
@@ -267,7 +267,7 @@
                 <button type="button" class="student-login-choice student-login-choice-secondary" onclick="irParaTelaMatriculaSuave()">Quero me matricular</button>
             </div>
         </div>
-        <div id="student-welcome-developer-footer" class="student-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.3.5</span> • Portal do Aluno</div>
+        <div id="student-welcome-developer-footer" class="student-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.3.6</span> • Portal do Aluno</div>
     </div>
 
     <!-- TELA DE LOGIN DO ALUNO -->
@@ -316,7 +316,7 @@
                 </form>
             </div>
         </div>
-        <div id="student-login-developer-footer" class="student-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.3.5</span> • Portal do Aluno</div>
+        <div id="student-login-developer-footer" class="student-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.3.6</span> • Portal do Aluno</div>
     </div>
 
     <!-- TELA DE AUTO-MATRÍCULA -->
@@ -1696,12 +1696,13 @@ async function salvarNovaSenhaPortal(){const senha=document.getElementById('port
                                         </div>
                                         <span class="text-[9px] px-2.5 py-1 rounded-full font-bold ${jaPago ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'}">${f.status || 'PENDENTE'}</span>
                                     </div>
+                                    ${f.asaasPaymentId ? `<div class="se7-payment-actions" data-invoice-id="${SE7Cadastro.escape(f.id)}" data-paid="${jaPago}"></div>` : ''}
                                     ${jaPago ? `
                                         <div class="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold pt-1 border-t border-slate-100 dark:border-slate-800">
                                             <i class="fa-solid fa-circle-check"></i> ${SE7Finance.paymentText(f) ? `${SE7Finance.paymentText(f)}<br>` : ''}Quitado${dataPg ? ` em <strong>${dataPg}</strong>` : ''} • ${formaPg}
                                         </div>
                                     ` : `
-                                        ${f.invoiceUrl && f.invoiceUrl !== '#' ? `
+                                        ${!f.asaasPaymentId && f.invoiceUrl && f.invoiceUrl !== '#' ? `
                                             <div class="pt-1 border-t border-slate-100 dark:border-slate-800 flex justify-end">
                                                 <a href="${f.invoiceUrl}" target="_blank" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-[10px] shadow">Baixar Boleto</a>
                                             </div>
