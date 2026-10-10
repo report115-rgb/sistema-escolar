@@ -74,6 +74,7 @@ export async function dispatch({auth,db},req,b){
   }catch(e){await auth.deleteUser(uid).catch(()=>{});await ref.delete().catch(()=>{});await idx.delete();throw e;}
  }
  const u=await identity(auth,db,req);
+ if(action==='enrollment-finance-list'||action==='enrollment-finance-cancel'){if(!['master','secretaria','financeiro'].includes(u.role))fail(403,'Acesso restrito.');await limits(db,req,'asaas-bulk:'+u.uid);return action==='enrollment-finance-list'?asaas.cancellationInvoices(db,validId(b.studentId)):asaas.cancelEnrollmentInvoice(db,validId(b.invoiceId),u);}
  if(typeof action==='string'&&action.startsWith('asaas-')){
   const finance=['master','financeiro'].includes(u.role);
   if(!finance&&u.role!=='aluno')fail(403,'Acesso restrito ao financeiro.');

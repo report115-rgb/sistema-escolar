@@ -129,3 +129,21 @@ test('Asaas: clientes não adulteram cobranças vinculadas nem forjam confirmaç
  await assert.rejects(call(studentToken,{action:'asaas-emit',invoiceId:'asaas-local',billingType:'PIX'}));
  await assert.rejects(call(studentToken,{action:'asaas-bulk-preview',studentId:'s1'}));
 });
+
+test('cancelamento financeiro exige funcionário autorizado e cutoff persistido',async()=>{
+ await auth.createUser({uid:'cancel-prof',email:'cancel-prof@example.test',password:'prof-cancel-123'});
+ await db.collection('se7Staff').doc('cancel-prof').set({perfil:'professor',disabled:false});
+ const prof=await signIn('cancel-prof@example.test','prof-cancel-123');
+ await assert.rejects(call(prof,{action:'enrollment-finance-list',studentId:'s2'}),/restrito/);
+ await db.collection('students').doc('s2').update({status:'Cancelado',enrollmentLastOperation:{type:'cancelamento',state:'efetivada',date:'2030-09-05'}});
+ await db.collection('financeLogs').doc('cancel-future').set({studentId:'s2',amount:450,date:'2030-10-05',status:'PENDENTE'});
+ await db.collection('financeLogs').doc('cancel-past').set({studentId:'s2',amount:450,date:'2030-09-01',status:'PENDENTE'});
+ await auth.createUser({uid:'cancel-secretaria',email:'cancel-sec@example.test',password:'sec-cancel-123'});
+ await db.collection('se7Staff').doc('cancel-secretaria').set({perfil:'secretaria',disabled:false});
+ const sec=await signIn('cancel-sec@example.test','sec-cancel-123');
+ const rows=await call(sec,{action:'enrollment-finance-list',studentId:'s2',cutoff:'2000-01-01'});
+ assert.equal(rows.cutoff,'2030-09-05');assert(rows.invoices.some(f=>f.id==='cancel-future'));assert(!rows.invoices.some(f=>f.id==='cancel-past'));
+ await call(sec,{action:'enrollment-finance-cancel',invoiceId:'cancel-future'});
+ assert.equal((await db.collection('financeLogs').doc('cancel-future').get()).data().status,'CANCELADO (MATRÍCULA)');
+ assert.equal((await db.collection('financeLogs').doc('cancel-past').get()).data().status,'PENDENTE');
+});

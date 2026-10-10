@@ -180,7 +180,7 @@
         <p class="welcome-tagline">Tudo conectado ao sistema Matriz</p>
         <div class="welcome-progress" aria-hidden="true"></div>
     </div>
-    <div class="welcome-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="financeiro">v1.7.6</span> • Setor Financeiro</div>
+    <div class="welcome-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="financeiro">v1.7.8</span> • Setor Financeiro</div>
 </div>
 
 
@@ -229,7 +229,7 @@
                 </form>
             </div>
         </div>
-        <div id="finance-login-developer-footer" class="finance-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="financeiro">v1.7.6</span> • Setor Financeiro</div>
+        <div id="finance-login-developer-footer" class="finance-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="financeiro">v1.7.8</span> • Setor Financeiro</div>
     </div>
 
     <!-- MODAL DE EDIÇÃO DA COBRANÇA -->
@@ -1028,6 +1028,8 @@
                 renderizarNegociacoesAtivasGeral();
                 renderizarAlunosQuitesGeral();
                 if (alunoNegociacaoId) selecionarAlunoNegociacao(alunoNegociacaoId);
+                renderizarFaturasDoAlunoSelecionado();
+                if(alunoSelecionadoId && document.getElementById('tab-detalhes-aluno').style.display==='flex')abrirDetalhesAluno(alunoSelecionadoId,abaOrigemRetorno);
             }, error => { console.error("Erro ao carregar alunos:", error); });
 
             db.collection("financeLogs").onSnapshot(snapshot => {
@@ -1188,7 +1190,7 @@
                 container.innerHTML += `
                     <div onclick="abrirDetalhesAluno('${s.id}', 'alunos')" class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 flex justify-between items-center active:scale-98 transition cursor-pointer">
                         <div>
-                            <strong class="text-xs font-bold text-slate-900 dark:text-white">${s.fullname || s.name || 'Sem Nome'}</strong>
+                            <strong class="text-xs font-bold text-slate-900 dark:text-white">${s.fullname || s.name || 'Sem Nome'}</strong><p class="text-[10px] font-bold ${s.status==='Cancelado'?'text-red-500':'text-blue-500'}">${SE7Cadastro.escape(s.status==='Cancelado'?'Matrícula cancelada':s.status||'Ativo')}</p>
                             <p class="text-[10px] text-slate-400">Curso: ${cursoExibir} &bull; Matrícula: ${s.code || s.matricula || 'S/N'}</p>
                         </div>
                         <div class="w-8 h-8 bg-blue-50 dark:bg-slate-800 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center text-xs">
@@ -1221,7 +1223,7 @@
             }
 
             selectAluno.innerHTML = `<option value="" disabled selected>Selecione um aluno...</option>` +
-                alunosDoCurso.map(a => `<option value="${a.id}">${a.fullname || a.name || 'Sem Nome'}</option>`).join('');
+                alunosDoCurso.map(a => `<option value="${a.id}">${a.fullname || a.name || 'Sem Nome'}${a.status==='Cancelado'?' — MATRÍCULA CANCELADA':''}</option>`).join('');
 
             container.innerHTML = `<div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">Selecione um curso e um aluno acima para visualizar as faturas.</div>`;
         }
@@ -1265,7 +1267,7 @@
                     <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 space-y-3 text-xs">
                         <div class="flex justify-between items-start">
                             <div>
-                                <strong class="text-blue-600 dark:text-blue-400 text-xs">${nomeAluno}</strong><br>
+                                <strong class="text-blue-600 dark:text-blue-400 text-xs">${nomeAluno}</strong><br>${alunoObj?.status==='Cancelado'?'<strong class="text-red-500">MATRÍCULA CANCELADA</strong><br>':''}
                                 <span class="text-slate-900 dark:text-white font-semibold">${f.description || f.descricao || 'Cobrança'}</span><br>
                                 <span class="text-slate-400 text-[10px]">Vencimento: ${dataVencimentoFormatada} &bull; Valor: <strong>R$ ${valorAtual}</strong></span>
                             </div>
@@ -1282,7 +1284,7 @@
                             </div>
                         </div>
 
-                        ${f.asaasPaymentId ? `<p class="text-xs text-blue-500"><span class="se7-payment-actions" data-invoice-id="${SE7Cadastro.escape(f.id)}" data-paid="${jaPago}"></span></p>` : !jaPago ? `
+                        ${/CANCELADO|ESTORNADO|CONTESTADO|EM ANÁLISE/i.test(f.status||'') ? `<p class="text-xs text-slate-500">Cobrança indisponível para novo pagamento. Histórico preservado.</p>` : f.asaasPaymentId ? `<p class="text-xs text-blue-500"><span class="se7-payment-actions" data-invoice-id="${SE7Cadastro.escape(f.id)}" data-paid="${jaPago}"></span></p>` : !jaPago ? `
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-2 pt-2 border-t border-slate-100 dark:border-slate-800 items-center">
                                 <div>
                                     <label class="block text-[10px] font-semibold uppercase text-slate-400 mb-1">Forma de Pagamento</label>
@@ -1408,7 +1410,7 @@
                     const status = (f.status || '').toUpperCase();
                     const desc = (f.description || f.descricao || '').toUpperCase();
                     if (status.includes("PROPOSTA") || status.includes("AGUARDANDO") || desc.includes("PROPOSTA")) return true;
-                    return status.includes("PAGO") || status.includes("NEGOCIADO");
+                    return status.includes("PAGO") || status.includes("NEGOCIADO") || status.includes("CANCELADO");
                 });
             });
 
@@ -1431,7 +1433,7 @@
                 html += `
                     <div class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 flex justify-between items-center transition">
                         <div>
-                            <strong class="text-xs font-bold text-slate-900 dark:text-white">${s.fullname || s.name || 'Sem Nome'}</strong>
+                            <strong class="text-xs font-bold text-slate-900 dark:text-white">${s.fullname || s.name || 'Sem Nome'}</strong><p class="text-[10px] font-bold ${s.status==='Cancelado'?'text-red-500':'text-blue-500'}">${SE7Cadastro.escape(s.status==='Cancelado'?'Matrícula cancelada':s.status||'Ativo')}</p>
                             <p class="text-[10px] text-slate-400">CPF: ${SE7Cadastro.escape(SE7Cadastro.cpf(s.cpf))} &bull; Curso: ${cursoExibir}</p>
                         </div>
                         <button type="button" onclick="gerarDeclaracaoQuitacao('${s.id}')" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-[10px] shadow transition flex items-center gap-1.5">
@@ -1627,7 +1629,7 @@
                 html += `
                     <div onclick="selecionarAlunoNegociacao('${s.id}')" class="bg-white dark:bg-slate-900 p-3 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 flex justify-between items-center active:scale-98 transition cursor-pointer">
                         <div>
-                            <strong class="text-xs font-bold text-slate-900 dark:text-white">${s.fullname || s.name || 'Sem Nome'}</strong>
+                            <strong class="text-xs font-bold text-slate-900 dark:text-white">${s.fullname || s.name || 'Sem Nome'}</strong><p class="text-[10px] font-bold ${s.status==='Cancelado'?'text-red-500':'text-blue-500'}">${SE7Cadastro.escape(s.status==='Cancelado'?'Matrícula cancelada':s.status||'Ativo')}</p>
                             <p class="text-[10px] text-slate-400">CPF: ${SE7Cadastro.escape(SE7Cadastro.cpf(s.cpf))} &bull; Curso: ${cursoExibir}</p>
                         </div>
                         <span class="px-2.5 py-1 bg-emerald-600 text-white text-[10px] font-bold rounded-lg shadow">Verificar Débitos</span>
@@ -1662,7 +1664,7 @@
                 const statusLower = (f.status || '').toLowerCase();
                 const descLower = (f.description || f.descricao || '').toLowerCase();
                 const eTermoOuProposta = statusLower.includes('proposta') || statusLower.includes('aguardando') || descLower.includes('termo') || descLower.includes('proposta') || descLower.includes('acordo consolidado');
-                if (!pertenceAluno || jaPago || eTermoOuProposta) return false;
+                if (!pertenceAluno || jaPago || /CANCELADO|ESTORNADO|CONTESTADO/i.test(f.status||'') || eTermoOuProposta) return false;
 
                 const vencimentoStr = f.date || f.vencimento || '';
                 let dataVenc = parseDataParaOrdem(vencimentoStr);
@@ -2247,7 +2249,7 @@
             const badgeAlerta = document.getElementById('badge-alerta-novos');
             if (!container) return;
 
-            const novosMatriculados = students.filter(s => !novosAlunosLidos.includes(s.id));
+            const novosMatriculados = students.filter(s => s.status!=='Cancelado' && !novosAlunosLidos.includes(s.id));
             if (badgeAlerta) badgeAlerta.style.display = novosMatriculados.length > 0 ? 'flex' : 'none';
 
             if (novosMatriculados.length === 0) {
@@ -2264,7 +2266,7 @@
                         <div>
                             <div class="flex items-center gap-2">
                                 <span class="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span>
-                                <strong class="text-xs font-bold text-slate-900 dark:text-white">${s.fullname || s.name || 'Sem Nome'}</strong>
+                                <strong class="text-xs font-bold text-slate-900 dark:text-white">${s.fullname || s.name || 'Sem Nome'}</strong><p class="text-[10px] font-bold ${s.status==='Cancelado'?'text-red-500':'text-blue-500'}">${SE7Cadastro.escape(s.status==='Cancelado'?'Matrícula cancelada':s.status||'Ativo')}</p>
                             </div>
                             <p class="text-[10px] text-slate-400 mt-0.5">Curso: ${cursoExibir} &bull; CPF: ${SE7Cadastro.escape(SE7Cadastro.cpf(s.cpf))}</p>
                         </div>
@@ -2313,6 +2315,7 @@
 
             cardDados.innerHTML = `
                 <div class="space-y-4">
+                    <div class="p-3 rounded-xl border text-xs font-bold ${aluno.status==='Cancelado'?'text-red-500 border-red-400':'text-blue-500 border-blue-400'}">Situação da matrícula: ${SE7Cadastro.escape(aluno.status==='Cancelado'?'MATRÍCULA CANCELADA':aluno.status||'Ativo')}${aluno.enrollmentLastOperation?.date ? ' • '+SE7Finance.dateBR(aluno.enrollmentLastOperation.date) : ''}</div>
                     <div>
                         <h3 class="text-xs font-bold uppercase tracking-wider text-blue-600 border-b pb-1 mb-2">1. Dados Pessoais</h3>
                         <div class="space-y-2">
@@ -2972,6 +2975,9 @@
 </div>
 
 <script src="/assets/se7-version.js"></script>
+<script src="/assets/vendor/pdf-lib.min.js"></script>
+<script src="/assets/se7-receipt.js"></script>
+<script src="/assets/se7-cancellation.js"></script>
 <script src="/assets/se7-asaas.js"></script>
 </body>
 </html>
