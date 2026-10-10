@@ -80,7 +80,7 @@ export async function dispatch({auth,db},req,b){
   if(!finance&&u.role!=='aluno')fail(403,'Acesso restrito ao financeiro.');
   if(u.role==='aluno'&&u.student.portalMustChangePassword)fail(403,'Troque sua senha antes de consultar pagamentos.');
   if(action==='asaas-invoices')return asaas.invoices(db,u.role==='aluno'?u.studentId:validId(b.studentId));
-  if(action==='asaas-payment')return asaas.paymentDetails(db,validId(b.invoiceId),u);
+  if(action==='asaas-payment')return asaas.paymentDetails(db,validId(b.invoiceId),u,b.mode);
   if(!finance)fail(403,'Aluno não pode emitir ou alterar cobranças.');
   if(action==='asaas-config')return asaas.config();
   if(action==='asaas-bulk-preview'||action==='asaas-bulk-commit'||action==='asaas-bulk-sync'){
