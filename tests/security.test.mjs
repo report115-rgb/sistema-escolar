@@ -147,3 +147,16 @@ test('cancelamento financeiro exige funcionário autorizado e cutoff persistido'
  assert.equal((await db.collection('financeLogs').doc('cancel-future').get()).data().status,'CANCELADO (MATRÍCULA)');
  assert.equal((await db.collection('financeLogs').doc('cancel-past').get()).data().status,'PENDENTE');
 });
+
+test('e-mails: histórico e fila são privados e permissões são verificadas na API',async()=>{
+ await db.collection('se7EmailJobs').doc('mail-test').set({studentId:'s1',studentName:'Aluno 1',email:'teste@example.test',type:'nota',status:'pendente',createdAt:'2026-10-10T12:00:00.000Z',attempts:0,params:{mensagem:'teste'}});
+ assert((await call(masterToken,{action:'email-list'})).jobs.some(j=>j.id==='mail-test'));
+ await assertFails(getDoc(doc(env.authenticatedContext(MASTER).firestore(),'se7EmailJobs','mail-test')));
+ await assertFails(setDoc(doc(env.authenticatedContext(studentUid('s1'),{studentId:'s1'}).firestore(),'se7EmailJobs','injetado'),{email:'outro@example.test'}));
+ await call(masterToken,{action:'staff-create',email:'finance-email@example.test',name:'Financeiro e-mail',password:'email-test-987',role:'financeiro'});
+ const financeToken=await signIn('finance-email@example.test','email-test-987');
+ await assert.rejects(call(financeToken,{action:'email-list'}),/restrito/);
+ await assert.rejects(call(financeToken,{action:'email-grade',studentId:'s1',subjectId:'123'}),/restrito/);
+ await assert.rejects(call(financeToken,{action:'email-documents'}),/restrito/);
+ const pending=await call(masterToken,{action:'email-pending'});assert(pending.jobs.includes('mail-test'));
+});

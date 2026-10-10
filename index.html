@@ -23,6 +23,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 <script src="/assets/se7-auth.js"></script>
+<script src="/assets/se7-email.js"></script>
 <script src="/assets/se7-whatsapp.js"></script>
     <!-- EmailJS SDK para Disparo de E-mails -->
     <script>
@@ -246,7 +247,7 @@
             </div>
         </section>
     </div>
-    <div class="matriz-login-footer"><strong>Sistema SE7 de Gestão Acadêmica</strong><br><span data-se7-version="matriz">v1.3.15</span> • Sistema Matriz</div>
+    <div class="matriz-login-footer"><strong>Sistema SE7 de Gestão Acadêmica</strong><br><span data-se7-version="matriz">v1.3.16</span> • Sistema Matriz</div>
 </div>
 
 <!-- ========================================== -->
@@ -927,6 +928,7 @@
                     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-institution')">Instituição</button>
 		    <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-audit')">Auditoria</button>
     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event,'subtab-whatsapp');carregarPainelWhatsApp()"><i class="fa-brands fa-whatsapp mr-1"></i> WhatsApp</button>
+<button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event,'subtab-email');SE7Email.history()"><i class="fa-solid fa-envelope mr-1"></i> E-mails acadêmicos</button>
 <button id="btn-subtab-gestao-totem" class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" style="display: none;" onclick="openSubTab(event, 'subtab-gestao-totem')"><i class="fa-solid fa-clock mr-1.5"></i> Totem e Ponto</button>
 </div>
 
@@ -1359,6 +1361,8 @@
     </div>
 </div>
 
+<div id="subtab-email" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display:none;">
+<h3 class="font-bold text-lg">E-mails acadêmicos</h3><p class="text-sm">Avisos de presença, documentos recebidos e notas lançadas. Envio para o e-mail cadastrado do aluno, após salvar as informações.</p><p id="email-config-status" class="text-sm">Clique em Atualizar histórico.</p><div class="flex flex-wrap gap-2"><button type="button" onclick="SE7Email.history()" class="px-3 py-2 bg-blue-600 text-white rounded-lg text-xs">Atualizar histórico</button><button id="email-process-pending" type="button" onclick="SE7Email.pending()" class="px-3 py-2 bg-emerald-600 text-white rounded-lg text-xs">Continuar envios pendentes</button></div><p class="text-xs">Se fechar a página antes de terminar os envios, continue a fila por este botão. Consulte o Email History do EmailJS para avisos sem confirmação antes de qualquer novo envio. Os avisos não substituem a validação da secretaria. Histórico dos últimos 100 avisos; a fila processa até 50 pendentes por vez.</p><div id="email-history" class="space-y-3"></div></div>
 <div id="subtab-whatsapp" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display:none;">
  <h3 class="font-bold text-lg">WhatsApp institucional</h3>
  <p class="text-sm">Avisos de matrícula para a central e para o aluno, e agendamento de prova EJA. Os alunos precisam autorizar os avisos no cadastro ou no próprio aplicativo.</p>
@@ -1585,7 +1589,7 @@
     <!-- RODAPÉ -->
     <footer id="se7-footer" class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border-t border-gray-200 dark:border-slate-700 py-2.5 px-6 text-center text-xs text-gray-500 dark:text-gray-400 flex flex-col sm:flex-row justify-between items-center gap-2 shadow-lg">
         <span>Sistema SE7 de Gestão Acadêmica • Matriz</span>
-        <span>Desenvolvido por <strong>JS & SS Serviços Educacionais e Cia Ltda</strong> &bull; <span data-se7-version="matriz">v1.3.15</span> • Sistema Matriz</span>
+        <span>Desenvolvido por <strong>JS & SS Serviços Educacionais e Cia Ltda</strong> &bull; <span data-se7-version="matriz">v1.3.16</span> • Sistema Matriz</span>
     </footer>
 
     <!-- MODAL DE NOVA MATRÍCULA / EDIÇÃO DE ALUNO -->
@@ -4283,6 +4287,7 @@ async function saveAttendance() {
     }, { merge: true });
 
     const dadosChamada = {
+        emailSubject: document.getElementById('attendance-calendar-date-select').selectedOptions[0]?.dataset.subject || '',
         classId,
         date: dataAula,
         teacherId: professorId || null,
@@ -4295,6 +4300,7 @@ async function saveAttendance() {
         batch.set(callRef, dadosChamada);
 
         await batch.commit();
+        void SE7Email.notify('email-attendance',{recordId:callRef.id});
 
         registrarLogAuditoria(`Chamada realizada para a turma ${classId} em ${dataAula} (${totalFaltas} falta(s) registrada(s))`, "Frequência");
         alert(`Chamada salva e sincronizada na nuvem com sucesso!`);
@@ -4395,6 +4401,7 @@ async function saveAttendance() {
 
             try {
                 await db.collection("students").doc(studentId).update({ grades: aluno.grades });
+                void SE7Email.notify('email-grade',{studentId,subjectId});
                 registrarLogAuditoria(`Salvou a nota do aluno ${aluno.fullname} na disciplina ID ${subjectId}`, "Notas");
                 alert(`Nota salva com sucesso para ${aluno.fullname}!`);
                 renderGradeList(); // Atualiza a linha com o botão "Editar Nota"

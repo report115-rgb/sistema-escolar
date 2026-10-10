@@ -1,3 +1,4 @@
+import * as mail from '../server/email.mjs';
 import {waConfig,setConsent,enrollmentNotifications,examNotification,listMessages,sendJob,checkConnection,centralTest} from '../server/whatsapp.mjs';
 import {services,FieldValue as F} from '../server/admin.mjs';
 import {randomBytes} from 'node:crypto';
@@ -11,7 +12,7 @@ const at=()=>F.serverTimestamp();
 async function authPassword(email,senha){const r=await fetch(`${process.env.NODE_ENV==='test'&&process.env.FIREBASE_AUTH_EMULATOR_HOST?'http://'+process.env.FIREBASE_AUTH_EMULATOR_HOST+'/identitytoolkit.googleapis.com/v1':'https://identitytoolkit.googleapis.com/v1'}/accounts:signInWithPassword?key=${APIKEY}`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({email,password:senha,returnSecureToken:true}),signal:AbortSignal.timeout(10000)});const d=await r.json();return r.ok?d:null;}
 async function limits(db,req,action,account=''){
  const ip=req.headers['x-vercel-forwarded-for']||req.headers['x-forwarded-for']||req.socket?.remoteAddress||'unknown';const bucket=Math.floor(Date.now()/900000);
- for(const [key,max] of [[`ip:${ip}`,action.startsWith('asaas-bulk:')?180:action==='signup'?8:40],...(account?[[`account:${account}`,12]]:[])]){
+ for(const [key,max] of [[`ip:${ip}`,action.startsWith('email-send:')?2000:action.startsWith('asaas-bulk:')?180:action==='signup'?8:40],...(account?[[`account:${account}`,12]]:[])]){
   const ref=db.collection('se7RateLimits').doc(digest(`${action}:${key}:${bucket}`));
   await db.runTransaction(async tx=>{const snap=await tx.get(ref);const count=snap.exists?snap.data().count:0;if(count>=max)fail(429,'Muitas tentativas. Aguarde 15 minutos.');tx.set(ref,{count:count+1,expiresAt:new Date((bucket+2)*900000)});});
  }
@@ -74,6 +75,16 @@ export async function dispatch({auth,db},req,b){
   }catch(e){await auth.deleteUser(uid).catch(()=>{});await ref.delete().catch(()=>{});await idx.delete();throw e;}
  }
  const u=await identity(auth,db,req);
+ if(action.startsWith('email-')){
+  if(action==='email-list')return mail.listEmails(db,u);
+  if(action==='email-pending')return mail.pendingEmails(db,u);
+  if(action==='email-config'){if(!['master','secretaria'].includes(u.role))fail(403,'Acesso restrito.');return mail.emailConfig();}
+  if(action==='email-send'){await limits(db,req,'email-send:'+u.uid);return mail.sendEmail(db,b.id,u);}
+  if(action==='email-attendance'){await limits(db,req,'asaas-bulk:email-events:'+u.uid);return mail.attendanceEmail(db,b.recordId,u);}
+  if(action==='email-grade'){await limits(db,req,'asaas-bulk:email-events:'+u.uid);return mail.gradeEmail(db,b.studentId,b.subjectId,u);}
+  if(action==='email-documents'){if(u.role!=='aluno')fail(403,'Acesso restrito ao aluno.');return mail.documentsEmail(db,u.studentId);}
+  fail(400,'Operação de e-mail desconhecida.');
+ }
  if(action==='enrollment-finance-list'||action==='enrollment-finance-cancel'){if(!['master','secretaria','financeiro'].includes(u.role))fail(403,'Acesso restrito.');await limits(db,req,'asaas-bulk:'+u.uid);return action==='enrollment-finance-list'?asaas.cancellationInvoices(db,validId(b.studentId)):asaas.cancelEnrollmentInvoice(db,validId(b.invoiceId),u);}
  if(typeof action==='string'&&action.startsWith('asaas-')){
   const finance=['master','financeiro'].includes(u.role);
@@ -164,7 +175,7 @@ export async function dispatch({auth,db},req,b){
     const reviewHistory=Array.isArray(previous?.reviewHistory)?[...previous.reviewHistory]:[];
     if(!reviewHistory.length&&previous?.status==='Reprovado'&&previous.motivoReprovacao)reviewHistory.push({status:'Reprovado',motivo:previous.motivoReprovacao,reviewedAt:previous.reviewedAt||null,reviewedBy:previous.reviewedBy||{name:'Secretaria'},submissionId:previous.submissionId||'',legacy:true});
     tx.update(ref,{[`documentos.${b.type}`]:{status:'Pendente',fileName:b.fileName,driveUrl:b.url,submissionId,submittedAt:new Date().toISOString(),motivoReprovacao:'',reviewHistory}});
-   });return {ok:true,submissionId};
+   });let emailJobs=[],emailWarning='';try{emailJobs=(await mail.documentsEmail(db,u.studentId)).jobs;}catch{emailWarning='Documento salvo. O aviso por e-mail precisa ser preparado novamente.';}return {ok:true,submissionId,emailJobs,emailWarning};
   }
   if(action==='student-config'){const d=(await db.collection('config').doc('institution').get()).data()||{};return {...await publicInfo(db),gdriveUrl:typeof d.gdriveUrl==='string'?d.gdriveUrl:''};}
   fail(403,'Operação não permitida.');
@@ -177,7 +188,7 @@ export async function dispatch({auth,db},req,b){
   const matches=await db.collection('se7AttendanceQr').where('tokenHash','==',tokenHash).limit(2).get();
   if(matches.size!==1)fail(404,'QR Code substituído ou inválido. Aguarde o novo código na carteirinha.');
   const qrRef=matches.docs[0].ref;
-  return db.runTransaction(async tx=>{
+  const attendanceResult=await db.runTransaction(async tx=>{
    const qrSnap=await tx.get(qrRef),q=qrSnap.data();const now=new Date();
    if(!q||q.tokenHash!==tokenHash)fail(400,'QR Code substituído. Aguarde o novo código.');
    if(!q.expiresAt||now.getTime()>=q.expiresAt.toMillis())fail(400,'QR Code expirado. Aguarde o novo código na carteirinha.');
@@ -190,8 +201,8 @@ export async function dispatch({auth,db},req,b){
    const existing=await tx.get(attendanceRef);
    tx.update(qrRef,{used:true,usedAt:at(),usedBy:u.uid});
    if(!existing.exists)tx.set(attendanceRef,{studentId:studentRef.id,nomeAluno:student.fullname||'Aluno',data:date,horario:now.toLocaleTimeString('pt-BR',{timeZone:'America/Fortaleza'}),status:'PRESENTE',registradoPor:'Totem QR dinâmico autenticado',actorUid:u.uid,createdAt:at()});
-   return {name:student.fullname||'Aluno',repeated:existing.exists};
-  });
+   return {name:student.fullname||'Aluno',repeated:existing.exists,emailStudentId:studentRef.id,emailDate:date,classId:student.classId};
+  });let emailJobs=[];try{const subject=await mail.calendarSubject(db,attendanceResult.classId,attendanceResult.emailDate);const job=await mail.queuePresence(db,attendanceResult.emailStudentId,attendanceResult.emailDate,subject,'totem',u.uid);if(job)emailJobs=[job];}catch{console.warn('Presença salva; aviso de e-mail não preparado.');}return {name:attendanceResult.name,repeated:attendanceResult.repeated,emailJobs};
  }
  master(u);
  if(action==='health'){return {ok:true,project:PROJECT,uid:u.uid};}

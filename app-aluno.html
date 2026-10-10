@@ -20,6 +20,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 <script src="/assets/se7-auth.js"></script>
+<script src="/assets/se7-email.js"></script>
     <!-- Canvas Confetti -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
@@ -229,7 +230,7 @@
         <p class="welcome-tagline">Tudo conectado ao sistema Matriz</p>
         <div class="welcome-progress" aria-hidden="true"></div>
     </div>
-    <div class="welcome-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.3.14</span> • Portal do Aluno</div>
+    <div class="welcome-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.3.15</span> • Portal do Aluno</div>
 </div>
 
 
@@ -267,7 +268,7 @@
                 <button type="button" class="student-login-choice student-login-choice-secondary" onclick="irParaTelaMatriculaSuave()">Quero me matricular</button>
             </div>
         </div>
-        <div id="student-welcome-developer-footer" class="student-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.3.14</span> • Portal do Aluno</div>
+        <div id="student-welcome-developer-footer" class="student-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.3.15</span> • Portal do Aluno</div>
     </div>
 
     <!-- TELA DE LOGIN DO ALUNO -->
@@ -316,7 +317,7 @@
                 </form>
             </div>
         </div>
-        <div id="student-login-developer-footer" class="student-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.3.14</span> • Portal do Aluno</div>
+        <div id="student-login-developer-footer" class="student-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.3.15</span> • Portal do Aluno</div>
     </div>
 
     <!-- TELA DE AUTO-MATRÍCULA -->
@@ -1386,7 +1387,8 @@ async function salvarNovaSenhaPortal(){const senha=document.getElementById('port
                     if(!alunoLogado.documentos) alunoLogado.documentos = {};
                     alunoLogado.documentos[tipoId] = { status: "Pendente", fileName: file.name, driveUrl: resultado.fileUrl || "" };
 
-                    await SE7.api('documents',{type:tipoId,fileName:file.name,url:alunoLogado.documentos[tipoId].driveUrl||''});
+                    const avisoEmail = await SE7.api('documents',{type:tipoId,fileName:file.name,url:alunoLogado.documentos[tipoId].driveUrl||''});
+                    void SE7Email.consume(avisoEmail.emailJobs||[]);
                     guardarSessaoPortal(alunoLogado);
                     
                     renderizarDocumentosObrigatorios();
@@ -1396,7 +1398,8 @@ async function salvarNovaSenhaPortal(){const senha=document.getElementById('port
                 } catch(err) {
                     if(!alunoLogado.documentos) alunoLogado.documentos = {};
                     alunoLogado.documentos[tipoId] = { status: "Pendente", fileName: file.name, driveUrl: "" };
-                    await SE7.api('documents',{type:tipoId,fileName:file.name,url:alunoLogado.documentos[tipoId].driveUrl||''});
+                    const avisoEmail = await SE7.api('documents',{type:tipoId,fileName:file.name,url:alunoLogado.documentos[tipoId].driveUrl||''});
+                    void SE7Email.consume(avisoEmail.emailJobs||[]);
                     guardarSessaoPortal(alunoLogado);
 
                     renderizarDocumentosObrigatorios();
