@@ -119,6 +119,7 @@ test('Asaas: clientes não adulteram cobranças vinculadas nem forjam confirmaç
  await assertFails(updateDoc(doc(m,'financeLogs/asaas-rule'),{status:'PAGO'}));
  await assertFails(deleteDoc(doc(m,'financeLogs/asaas-rule')));
  await assertFails(setDoc(doc(m,'se7AsaasInvoices/forged'),{state:'linked'}));
+ await assertFails(setDoc(doc(m,'se7AsaasBulkPlans/forged'),{actor:MASTER}));
  await assertFails(setDoc(doc(m,'financeLogs/asaas-forged'),{studentId:'s1',amount:450,asaasStatus:'RECEIVED'}));
  const uid='asaas-finance-rules';await db.collection('se7Staff').doc(uid).set({perfil:'financeiro',disabled:false});
  const fin=env.authenticatedContext(uid).firestore();
@@ -126,4 +127,5 @@ test('Asaas: clientes não adulteram cobranças vinculadas nem forjam confirmaç
  await assertSucceeds(setDoc(doc(fin,'financeLogs/asaas-local'),{studentId:'s1',amount:450,status:'PENDENTE'}));
  await assert.rejects(call(masterToken,{action:'asaas-link-customer',studentId:'s1',customerId:'bad/path'}));
  await assert.rejects(call(studentToken,{action:'asaas-emit',invoiceId:'asaas-local',billingType:'PIX'}));
+ await assert.rejects(call(studentToken,{action:'asaas-bulk-preview',studentId:'s1'}));
 });

@@ -2,6 +2,7 @@ import {waConfig,setConsent,enrollmentNotifications,examNotification,listMessage
 import {services,FieldValue as F} from '../server/admin.mjs';
 import {randomBytes} from 'node:crypto';
 import * as asaas from '../server/asaas.mjs';
+import * as asaasBulk from '../server/asaas-bulk.mjs';
 import {roles,tabs,docTypes,digest,cpfKey,studentUid,alias,validId,password,hashPassword,verifyPassword,publicStudent,validCPF} from '../server/security.mjs';
 const PROJECT='sistema-escolar-nuvem';
 const APIKEY='AIzaSyBeJ-fqzwiQt0PZEKQ6e8zAPSuh7WRuaHo';
@@ -10,7 +11,7 @@ const at=()=>F.serverTimestamp();
 async function authPassword(email,senha){const r=await fetch(`${process.env.NODE_ENV==='test'&&process.env.FIREBASE_AUTH_EMULATOR_HOST?'http://'+process.env.FIREBASE_AUTH_EMULATOR_HOST+'/identitytoolkit.googleapis.com/v1':'https://identitytoolkit.googleapis.com/v1'}/accounts:signInWithPassword?key=${APIKEY}`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({email,password:senha,returnSecureToken:true}),signal:AbortSignal.timeout(10000)});const d=await r.json();return r.ok?d:null;}
 async function limits(db,req,action,account=''){
  const ip=req.headers['x-vercel-forwarded-for']||req.headers['x-forwarded-for']||req.socket?.remoteAddress||'unknown';const bucket=Math.floor(Date.now()/900000);
- for(const [key,max] of [[`ip:${ip}`,action==='signup'?8:40],...(account?[[`account:${account}`,12]]:[])]){
+ for(const [key,max] of [[`ip:${ip}`,action.startsWith('asaas-bulk:')?180:action==='signup'?8:40],...(account?[[`account:${account}`,12]]:[])]){
   const ref=db.collection('se7RateLimits').doc(digest(`${action}:${key}:${bucket}`));
   await db.runTransaction(async tx=>{const snap=await tx.get(ref);const count=snap.exists?snap.data().count:0;if(count>=max)fail(429,'Muitas tentativas. Aguarde 15 minutos.');tx.set(ref,{count:count+1,expiresAt:new Date((bucket+2)*900000)});});
  }
@@ -81,6 +82,10 @@ export async function dispatch({auth,db},req,b){
   if(action==='asaas-payment')return asaas.paymentDetails(db,validId(b.invoiceId),u);
   if(!finance)fail(403,'Aluno não pode emitir ou alterar cobranças.');
   if(action==='asaas-config')return asaas.config();
+  if(action==='asaas-bulk-preview'||action==='asaas-bulk-commit'){
+   await limits(db,req,'asaas-bulk:'+u.uid);
+   return action==='asaas-bulk-preview'?asaasBulk.preview(db,validId(b.studentId),u):asaasBulk.commitOne(db,b.planId,validId(b.invoiceId),u);
+  }
   await limits(db,req,'asaas:'+u.uid);
   if(action==='asaas-check'){await asaas.api('/customers?limit=1');return {ok:true,environment:'production'};}
   if(action==='asaas-link-customer')return asaas.linkCustomer(db,validId(b.studentId),b.customerId||'',u);
