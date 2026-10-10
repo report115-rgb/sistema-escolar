@@ -1,7 +1,7 @@
 window.SE7={
  async api(action,data={},authenticated=true){
   const headers={'Content-Type':'application/json'};if(authenticated){await this.ready();const u=firebase.auth().currentUser;if(!u)throw new Error('Entre novamente.');headers.Authorization='Bearer '+await u.getIdToken();}
-  const r=await fetch('/api/se7',{method:'POST',headers,body:JSON.stringify({action,...data})});let body;try{body=await r.json();}catch{throw new Error('O serviço de autenticação não está disponível. Verifique a implantação na Vercel.');}if(!r.ok)throw new Error(body.error||'Não foi possível concluir.');return body;
+  const r=await fetch('/api/se7',{method:'POST',headers,body:JSON.stringify({action,...data})});let body;try{body=await r.json();}catch{const error=new Error('O serviço do sistema não respondeu corretamente. Verifique a implantação na Vercel.');error.httpStatus=r.status;error.action=action;throw error;}if(!r.ok){const error=new Error(body.error||'Não foi possível concluir.');error.httpStatus=r.status;error.action=action;throw error;}return body;
  },
  ready(){if(!this.readyPromise)this.readyPromise=new Promise(resolve=>{const cancel=firebase.auth().onAuthStateChanged(u=>{cancel();resolve(u);});});return this.readyPromise;},
  async staffLogin(email,password){await firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION);await firebase.auth().signInWithEmailAndPassword(email,password);try{const d=await this.api('session');if(!['master','secretaria','professor','financeiro','totem'].includes(d.role))throw new Error('Conta sem acesso administrativo.');await firebase.auth().currentUser.getIdToken(true);return d.profile;}catch(e){await firebase.auth().signOut();throw e;}},
