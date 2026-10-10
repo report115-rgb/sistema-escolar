@@ -160,6 +160,7 @@
     </style>
 <link rel="stylesheet" href="/assets/se7-suite.css">
 <script src="/assets/se7-finance-dates.js"></script>
+<script src="/assets/se7-cadastro.js"></script>
 </head>
 <body class="se7-suite se7-matriz bg-gray-100 dark:bg-slate-900 text-gray-800 dark:text-gray-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-300 pb-16">    
 
@@ -245,7 +246,7 @@
             </div>
         </section>
     </div>
-    <div class="matriz-login-footer"><strong>Sistema SE7 de Gestão Acadêmica</strong><br><span data-se7-version="matriz">v1.3.6</span> • Sistema Matriz</div>
+    <div class="matriz-login-footer"><strong>Sistema SE7 de Gestão Acadêmica</strong><br><span data-se7-version="matriz">v1.3.7</span> • Sistema Matriz</div>
 </div>
 
 <!-- ========================================== -->
@@ -1584,7 +1585,7 @@
     <!-- RODAPÉ -->
     <footer id="se7-footer" class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border-t border-gray-200 dark:border-slate-700 py-2.5 px-6 text-center text-xs text-gray-500 dark:text-gray-400 flex flex-col sm:flex-row justify-between items-center gap-2 shadow-lg">
         <span>Sistema SE7 de Gestão Acadêmica • Matriz</span>
-        <span>Desenvolvido por <strong>JS & SS Serviços Educacionais e Cia Ltda</strong> &bull; <span data-se7-version="matriz">v1.3.6</span> • Sistema Matriz</span>
+        <span>Desenvolvido por <strong>JS & SS Serviços Educacionais e Cia Ltda</strong> &bull; <span data-se7-version="matriz">v1.3.7</span> • Sistema Matriz</span>
     </footer>
 
     <!-- MODAL DE NOVA MATRÍCULA / EDIÇÃO DE ALUNO -->
@@ -4434,7 +4435,7 @@ function renderizarCobrancasAlunoSelecionadoFinanceiro(studentId) {
 
         let textoQuitacao = '';
         if (jaPago && f.dataPagamento) {
-            textoQuitacao = '<div class="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-slate-800 p-2 rounded border border-emerald-200 dark:border-slate-700"><i class="fa-solid fa-circle-check mr-1"></i> Quitado em ' + SE7Finance.dateBR(f.dataPagamento) + '</div>';
+            textoQuitacao = '<div class="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-slate-800 p-2 rounded border border-emerald-200 dark:border-slate-700"><i class="fa-solid fa-circle-check mr-1"></i> Quitado em ' + SE7Finance.dateBR(f.dataPagamento) + (SE7Finance.paymentText(f) ? '<br>'+SE7Finance.paymentText(f) : '') + '</div>';
         }
 
         container.innerHTML += '<div class="bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700 flex flex-col gap-2 text-xs"><div class="flex justify-between items-center"><div><strong class="text-gray-900 dark:text-white text-sm">' + f.description + '</strong><br><span class="text-gray-500">Vencimento: <strong>' + dataFormatada + '</strong> &bull; Valor: <strong>R$ ' + f.amount + '</strong></span></div><div><span class="px-2.5 py-1 ' + corBadge + ' rounded-lg text-[11px] font-bold shadow-xs">' + textoStatus + '</span></div></div>' + textoQuitacao + '</div>';

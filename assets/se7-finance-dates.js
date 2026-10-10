@@ -10,5 +10,7 @@
  }
  const dateBR=(value,fallback='---')=>{const iso=dateISO(value);return iso?iso.split('-').reverse().join('/'):fallback;};
  const compare=(a,b)=>{const x=dateISO(a.date||a.vencimento||a.dueDate)||'9999-99-99',y=dateISO(b.date||b.vencimento||b.dueDate)||'9999-99-99';return x.localeCompare(y)||collator.compare(a.description||a.descricao||'',b.description||b.descricao||'')||String(a.id||'').localeCompare(String(b.id||''));};
- window.SE7Finance=Object.freeze({dateISO,dateBR,compare,sort:rows=>rows.sort(compare)});
+ const money=c=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(c/100);
+ const paymentText=f=>{if(f.asaasReview)return 'Pagamento em conferência pelo financeiro';if(!Number.isSafeInteger(f.asaasPaidValueCents))return '';const parts=['Valor pago: '+money(f.asaasPaidValueCents)];if(f.asaasDiscountCents>0)parts.push('Desconto aplicado: '+money(f.asaasDiscountCents));if(f.asaasSurchargeCents>0)parts.push('Acréscimos: '+money(f.asaasSurchargeCents));return parts.join(' • ');};
+ window.SE7Finance=Object.freeze({dateISO,dateBR,compare,money,paymentText,sort:rows=>rows.sort(compare)});
 })();

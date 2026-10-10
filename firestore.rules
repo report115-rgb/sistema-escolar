@@ -32,8 +32,8 @@ service cloud.firestore {
   match /financeLogs/{id} {
    allow read: if staff() || (studentActive() && resource.data.studentId == studentId());
    // Once reserved/linked, only the server can reconcile the financial record.
-   allow create: if finance() && !exists(/databases/$(database)/documents/se7AsaasInvoices/$(id)) && !request.resource.data.keys().hasAny(['asaasPaymentId','asaasStatus','asaasReview','asaasUpdatedAt','asaasNetValue','asaasCreditDate']);
-   allow update: if finance() && !exists(/databases/$(database)/documents/se7AsaasInvoices/$(id)) && !resource.data.keys().hasAny(['asaasPaymentId']) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['asaasPaymentId','asaasStatus','asaasReview','asaasUpdatedAt','asaasNetValue','asaasCreditDate']);
+   allow create: if finance() && !exists(/databases/$(database)/documents/se7AsaasInvoices/$(id)) && !request.resource.data.keys().hasAny(['asaasPaymentId','asaasStatus','asaasReview','asaasUpdatedAt','asaasNetValue','asaasCreditDate','asaasPaidValueCents','asaasOriginalValueCents','asaasDiscountCents','asaasSurchargeCents']);
+   allow update: if finance() && !exists(/databases/$(database)/documents/se7AsaasInvoices/$(id)) && !resource.data.keys().hasAny(['asaasPaymentId']) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['asaasPaymentId','asaasStatus','asaasReview','asaasUpdatedAt','asaasNetValue','asaasCreditDate','asaasPaidValueCents','asaasOriginalValueCents','asaasDiscountCents','asaasSurchargeCents']);
    allow delete: if finance() && !exists(/databases/$(database)/documents/se7AsaasInvoices/$(id)) && !resource.data.keys().hasAny(['asaasPaymentId']);
   }
   match /config/{id} {allow read: if staff() || (studentActive() && id == 'ejaSettings');}

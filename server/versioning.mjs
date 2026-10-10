@@ -3,7 +3,7 @@ import {createHash} from 'node:crypto';
 import {resolve} from 'node:path';
 import {pathToFileURL} from 'node:url';
 const appFiles={matriz:['index.html','assets/se7-matriz.css','assets/se7-matriz.js','assets/se7-enrollment.js','assets/se7-documents.js','assets/se7-whatsapp.js'],aluno:['app-aluno.html'],financeiro:['app-financeiro.html'],totem:['totem.html','assets/se7-totem.js']};
-const shared=['assets/se7-auth.js','assets/se7-finance-dates.js','assets/se7-suite.css','assets/se7-version.js','api/se7.js','server/admin.mjs','server/security.mjs','server/whatsapp.mjs','server/asaas.mjs','server/asaas-bulk.mjs','api/asaas-webhook.js','assets/se7-asaas.js','assets/se7-asaas.css','firestore.rules'];
+const shared=['assets/se7-auth.js','assets/se7-finance-dates.js','assets/se7-cadastro.js','assets/se7-suite.css','assets/se7-version.js','api/se7.js','server/admin.mjs','server/security.mjs','server/whatsapp.mjs','server/asaas.mjs','server/asaas-bulk.mjs','api/asaas-webhook.js','assets/se7-asaas.js','assets/se7-asaas.css','firestore.rules'];
 export async function updateVersions(root=process.cwd(),kind='patch'){
  if(!['patch','minor','major'].includes(kind))throw Error('Tipo de versão inválido.');
  const file=resolve(root,'assets/se7-versions.json');const manifest=JSON.parse(await readFile(file,'utf8'));let changed=false;

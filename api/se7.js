@@ -82,8 +82,9 @@ export async function dispatch({auth,db},req,b){
   if(action==='asaas-payment')return asaas.paymentDetails(db,validId(b.invoiceId),u);
   if(!finance)fail(403,'Aluno não pode emitir ou alterar cobranças.');
   if(action==='asaas-config')return asaas.config();
-  if(action==='asaas-bulk-preview'||action==='asaas-bulk-commit'){
+  if(action==='asaas-bulk-preview'||action==='asaas-bulk-commit'||action==='asaas-bulk-sync'){
    await limits(db,req,'asaas-bulk:'+u.uid);
+   if(action==='asaas-bulk-sync')return asaas.reconcile(db,validId(b.invoiceId));
    return action==='asaas-bulk-preview'?asaasBulk.preview(db,validId(b.studentId),u):asaasBulk.commitOne(db,b.planId,validId(b.invoiceId),u);
   }
   await limits(db,req,'asaas:'+u.uid);

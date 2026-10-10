@@ -212,6 +212,7 @@
 <script>try{if(localStorage.getItem('se7_aluno_theme')==='light')document.documentElement.classList.remove('dark');}catch(e){}</script>
 <link rel="stylesheet" href="/assets/se7-asaas.css">
 <script src="/assets/se7-finance-dates.js"></script>
+<script src="/assets/se7-cadastro.js"></script>
 </head>
 <body class="se7-suite bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans antialiased h-screen overflow-hidden flex flex-col transition-colors duration-200">
 <div id="se7-welcome" hidden role="status" aria-live="polite" aria-atomic="true">
@@ -228,7 +229,7 @@
         <p class="welcome-tagline">Tudo conectado ao sistema Matriz</p>
         <div class="welcome-progress" aria-hidden="true"></div>
     </div>
-    <div class="welcome-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.3.4</span> • Portal do Aluno</div>
+    <div class="welcome-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.3.5</span> • Portal do Aluno</div>
 </div>
 
 
@@ -266,7 +267,7 @@
                 <button type="button" class="student-login-choice student-login-choice-secondary" onclick="irParaTelaMatriculaSuave()">Quero me matricular</button>
             </div>
         </div>
-        <div id="student-welcome-developer-footer" class="student-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.3.4</span> • Portal do Aluno</div>
+        <div id="student-welcome-developer-footer" class="student-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.3.5</span> • Portal do Aluno</div>
     </div>
 
     <!-- TELA DE LOGIN DO ALUNO -->
@@ -315,7 +316,7 @@
                 </form>
             </div>
         </div>
-        <div id="student-login-developer-footer" class="student-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.3.4</span> • Portal do Aluno</div>
+        <div id="student-login-developer-footer" class="student-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.3.5</span> • Portal do Aluno</div>
     </div>
 
     <!-- TELA DE AUTO-MATRÍCULA -->
@@ -1519,42 +1520,10 @@ async function salvarNovaSenhaPortal(){const senha=document.getElementById('port
             catch(e){input.checked=anterior;alert(e.message);}
             finally{input.disabled=false;}
         }
-        function formatarCPFCadastral(valor) {
-            const original = String(valor ?? '').trim(), numeros = original.replace(/\D/g,'');
-            return numeros.length === 11 ? numeros.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/,'$1.$2.$3-$4') : original || '---';
-        }
-        function formatarWhatsAppCadastral(valor) {
-            const original = String(valor ?? '').trim();let numeros = original.replace(/\D/g,'');
-            if ((numeros.length === 12 || numeros.length === 13) && numeros.startsWith('55')) numeros = numeros.slice(2);
-            if (numeros.length === 11) return numeros.replace(/^(\d{2})(\d{5})(\d{4})$/,'($1) $2-$3');
-            if (numeros.length === 10) return numeros.replace(/^(\d{2})(\d{4})(\d{4})$/,'($1) $2-$3');
-            return original || '---';
-        }
-        function formatarNascimentoCadastral(valor) {
-            const original = String(valor ?? '').trim();
-            const iso = original.match(/^(\d{4})-(\d{2})-(\d{2})(?:T|$)/);
-            return iso ? `${iso[3]}/${iso[2]}/${iso[1]}` : original || '---';
-        }
-        function formatarEnderecoCadastral(aluno) {
-            const texto = valor => String(valor ?? '').trim();
-            const escolher = (...valores) => valores.map(texto).find(Boolean) || '';
-            const normalizar = valor => texto(valor).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
-            let rua = escolher(aluno.rua, aluno.endereco, aluno.street, aluno.address);
-            const numero = escolher(aluno.numero, aluno.number);
-            const bairro = escolher(aluno.bairro, aluno.neighborhood);
-            const cidade = escolher(aluno.cidade, aluno.city);
-            const uf = escolher(aluno.estado, aluno.state);
-            const complemento = escolher(aluno.complemento, aluno.complement);
-            if (numero && !normalizar(rua).split(/[^a-z0-9/]+/).includes(normalizar(numero))) rua = rua ? `${rua}, nº ${numero}` : `nº ${numero}`;
-            const partes = rua ? [rua] : [];
-            const incluir = valor => {if (valor && !normalizar(partes.join(' ')).includes(normalizar(valor))) partes.push(valor);};
-            incluir(bairro);incluir(complemento);
-            if (cidade && !normalizar(partes.join(' ')).includes(normalizar(cidade))) incluir([cidade,uf].filter(Boolean).join('/'));
-            else incluir(uf);
-            const cep = texto(aluno.cep).replace(/\D/g,'');
-            if (cep.length === 8 && !partes.join('').replace(/\D/g,'').includes(cep)) incluir('CEP '+cep.slice(0,5)+'-'+cep.slice(5));
-            return partes.join(' - ') || '---';
-        }
+        const formatarCPFCadastral=valor=>SE7Cadastro.cpf(valor);
+        const formatarWhatsAppCadastral=valor=>SE7Cadastro.whatsapp(valor);
+        const formatarNascimentoCadastral=valor=>SE7Cadastro.nascimento(valor);
+        const formatarEnderecoCadastral=aluno=>SE7Cadastro.endereco(aluno);
 
         async function carregarDadosPainel() {
             if(!alunoLogado) return;
@@ -1728,8 +1697,8 @@ async function salvarNovaSenhaPortal(){const senha=document.getElementById('port
                                         <span class="text-[9px] px-2.5 py-1 rounded-full font-bold ${jaPago ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'}">${f.status || 'PENDENTE'}</span>
                                     </div>
                                     ${jaPago ? `
-                                        <div class="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1.5 pt-1 border-t border-slate-100 dark:border-slate-800">
-                                            <i class="fa-solid fa-circle-check"></i> Quitado${dataPg ? ` em <strong>${dataPg}</strong>` : ''} • ${formaPg}
+                                        <div class="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold pt-1 border-t border-slate-100 dark:border-slate-800">
+                                            <i class="fa-solid fa-circle-check"></i> ${SE7Finance.paymentText(f) ? `${SE7Finance.paymentText(f)}<br>` : ''}Quitado${dataPg ? ` em <strong>${dataPg}</strong>` : ''} • ${formaPg}
                                         </div>
                                     ` : `
                                         ${f.invoiceUrl && f.invoiceUrl !== '#' ? `

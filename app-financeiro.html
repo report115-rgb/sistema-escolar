@@ -163,6 +163,7 @@
 <link rel="stylesheet" href="/assets/se7-suite.css">
 <link rel="stylesheet" href="/assets/se7-asaas.css">
 <script src="/assets/se7-finance-dates.js"></script>
+<script src="/assets/se7-cadastro.js"></script>
 </head>
 <body class="se7-suite bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans antialiased h-screen overflow-hidden flex flex-col transition-colors duration-200">
 <div id="se7-welcome" hidden role="status" aria-live="polite" aria-atomic="true">
@@ -179,7 +180,7 @@
         <p class="welcome-tagline">Tudo conectado ao sistema Matriz</p>
         <div class="welcome-progress" aria-hidden="true"></div>
     </div>
-    <div class="welcome-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="financeiro">v1.7.4</span> • Setor Financeiro</div>
+    <div class="welcome-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="financeiro">v1.7.5</span> • Setor Financeiro</div>
 </div>
 
 
@@ -228,7 +229,7 @@
                 </form>
             </div>
         </div>
-        <div id="finance-login-developer-footer" class="finance-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="financeiro">v1.7.4</span> • Setor Financeiro</div>
+        <div id="finance-login-developer-footer" class="finance-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="financeiro">v1.7.5</span> • Setor Financeiro</div>
     </div>
 
     <!-- MODAL DE EDIÇÃO DA COBRANÇA -->
@@ -1307,7 +1308,7 @@
                         ` : `
                             <div class="pt-2 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
                                 <div class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
-                                    <i class="fa-solid fa-circle-check mr-1"></i> Quitado em ${dataPag} (${formaPag})
+                                    <i class="fa-solid fa-circle-check mr-1"></i> ${SE7Finance.paymentText(f) ? `${SE7Finance.paymentText(f)}<br>` : ''}Quitado em ${dataPag} (${formaPag})
                                 </div>
                                 <button type="button" onclick="estornarBaixaApp('${f.id}')" class="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg text-[10px] font-bold shadow transition">
                                     <i class="fa-solid fa-rotate-left mr-1"></i> Estornar Pagamento
@@ -1431,7 +1432,7 @@
                     <div class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 flex justify-between items-center transition">
                         <div>
                             <strong class="text-xs font-bold text-slate-900 dark:text-white">${s.fullname || s.name || 'Sem Nome'}</strong>
-                            <p class="text-[10px] text-slate-400">CPF: ${s.cpf || '---'} &bull; Curso: ${cursoExibir}</p>
+                            <p class="text-[10px] text-slate-400">CPF: ${SE7Cadastro.escape(SE7Cadastro.cpf(s.cpf))} &bull; Curso: ${cursoExibir}</p>
                         </div>
                         <button type="button" onclick="gerarDeclaracaoQuitacao('${s.id}')" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-[10px] shadow transition flex items-center gap-1.5">
                             <i class="fa-solid fa-certificate"></i> Gerar Declaração
@@ -1453,12 +1454,12 @@
 
             const nomeCompleto = aluno.fullname || aluno.name || '---';
             const codigoMatricula = aluno.code || aluno.matricula || 'S/N';
-            const cpf = aluno.cpf || '---';
+            const cpf = SE7Cadastro.escape(SE7Cadastro.cpf(aluno.cpf));
             const rg = aluno.rg || aluno.documento || '---';
             const sexo = aluno.gender || aluno.sexo || '---';
             let nascimento = aluno.birthDate || aluno.dob || '---';
             if (nascimento !== '---' && nascimento.includes('-')) nascimento = nascimento.split('-').reverse().join('/');
-            const whatsapp = aluno.whatsapp || aluno.phone || aluno.telefone || '---';
+            const whatsapp = SE7Cadastro.escape(SE7Cadastro.whatsapp(aluno.whatsapp || aluno.phone || aluno.telefone));
             const cep = aluno.cep || '---';
             const logradouro = aluno.street || aluno.rua || aluno.logradouro || '';
             const numero = aluno.number || aluno.numero || 'S/N';
@@ -1466,7 +1467,7 @@
             const cidade = aluno.city || aluno.cidade || '---';
             const estado = aluno.state || aluno.estado || '---';
 
-            let enderecoCompletoFormatado = logradouro ? `${logradouro}, nº ${numero} - ${bairro}, ${cidade}/${estado} (CEP: ${cep})` : (aluno.address || aluno.endereco || `Rua não informada, nº ${numero}`);
+            const enderecoCompletoFormatado = SE7Cadastro.escape(SE7Cadastro.endereco(aluno));
             const rawCurso = aluno.course || aluno.curso || aluno.turma || aluno.nomeCurso || aluno.courseName || aluno.courseId || '';
             const cursoExibir = coursesMap[rawCurso] || coursesMap[normalizarTexto(rawCurso)] || String(rawCurso || 'Não vinculado');
 
@@ -1627,7 +1628,7 @@
                     <div onclick="selecionarAlunoNegociacao('${s.id}')" class="bg-white dark:bg-slate-900 p-3 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 flex justify-between items-center active:scale-98 transition cursor-pointer">
                         <div>
                             <strong class="text-xs font-bold text-slate-900 dark:text-white">${s.fullname || s.name || 'Sem Nome'}</strong>
-                            <p class="text-[10px] text-slate-400">CPF: ${s.cpf || '---'} &bull; Curso: ${cursoExibir}</p>
+                            <p class="text-[10px] text-slate-400">CPF: ${SE7Cadastro.escape(SE7Cadastro.cpf(s.cpf))} &bull; Curso: ${cursoExibir}</p>
                         </div>
                         <span class="px-2.5 py-1 bg-emerald-600 text-white text-[10px] font-bold rounded-lg shadow">Verificar Débitos</span>
                     </div>
@@ -1965,19 +1966,19 @@
             const enderecoInst = institutionData.address || "Travessa Magalhães Barata, 692, Centro, Vigia – PA, CEP 68.780-000";
             const nomeCompleto = aluno.fullname || aluno.name || '---';
             const codigoMatricula = aluno.code || aluno.matricula || 'S/N';
-            const cpf = aluno.cpf || '---';
+            const cpf = SE7Cadastro.escape(SE7Cadastro.cpf(aluno.cpf));
             const rg = aluno.rg || aluno.documento || '---';
             const sexo = aluno.gender || aluno.sexo || '---';
             let nascimento = aluno.birthDate || aluno.dob || '---';
             if (nascimento !== '---' && nascimento.includes('-')) nascimento = nascimento.split('-').reverse().join('/');
-            const whatsapp = aluno.whatsapp || aluno.phone || aluno.telefone || '---';
+            const whatsapp = SE7Cadastro.escape(SE7Cadastro.whatsapp(aluno.whatsapp || aluno.phone || aluno.telefone));
             const cep = aluno.cep || '---';
             const logradouro = aluno.street || aluno.rua || aluno.logradouro || '';
             const numero = aluno.number || aluno.numero || 'S/N';
             const bairro = aluno.neighborhood || aluno.bairro || '---';
             const cidade = aluno.city || aluno.cidade || '---';
             const estado = aluno.state || aluno.estado || '---';
-            let enderecoCompletoFormatado = logradouro ? `${logradouro}, nº ${numero} - ${bairro}, ${cidade}/${estado} (CEP: ${cep})` : (aluno.address || aluno.endereco || `Rua não informada, nº ${numero}`);
+            const enderecoCompletoFormatado = SE7Cadastro.escape(SE7Cadastro.endereco(aluno));
             const rawCurso = aluno.course || aluno.curso || aluno.turma || aluno.nomeCurso || aluno.courseName || aluno.courseId || '';
             const cursoExibir = coursesMap[rawCurso] || coursesMap[normalizarTexto(rawCurso)] || String(rawCurso || 'Não vinculado');
 
@@ -2265,7 +2266,7 @@
                                 <span class="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span>
                                 <strong class="text-xs font-bold text-slate-900 dark:text-white">${s.fullname || s.name || 'Sem Nome'}</strong>
                             </div>
-                            <p class="text-[10px] text-slate-400 mt-0.5">Curso: ${cursoExibir} &bull; CPF: ${s.cpf || '---'}</p>
+                            <p class="text-[10px] text-slate-400 mt-0.5">Curso: ${cursoExibir} &bull; CPF: ${SE7Cadastro.escape(SE7Cadastro.cpf(s.cpf))}</p>
                         </div>
                         <span class="px-2 py-1 bg-blue-600 text-white text-[10px] font-bold rounded-lg shadow">Ver Dados</span>
                     </div>
@@ -2291,12 +2292,12 @@
             const cardDados = document.getElementById('card-dados-aluno');
             const nomeCompleto = aluno.fullname || aluno.name || '---';
             const codigoMatricula = aluno.code || aluno.matricula || 'S/N';
-            const cpf = aluno.cpf || '---';
+            const cpf = SE7Cadastro.escape(SE7Cadastro.cpf(aluno.cpf));
             const rg = aluno.rg || aluno.documento || '---';
             const sexo = aluno.gender || aluno.sexo || '---';
             let nascimento = aluno.birthDate || aluno.dob || '---';
             if (nascimento !== '---' && nascimento.includes('-')) nascimento = nascimento.split('-').reverse().join('/');
-            const whatsapp = aluno.whatsapp || aluno.phone || aluno.telefone || '---';
+            const whatsapp = SE7Cadastro.escape(SE7Cadastro.whatsapp(aluno.whatsapp || aluno.phone || aluno.telefone));
             const email = aluno.email || '---';
             const cep = aluno.cep || '---';
             const logradouro = aluno.street || aluno.rua || aluno.logradouro || '';
@@ -2304,7 +2305,7 @@
             const bairro = aluno.neighborhood || aluno.bairro || '---';
             const cidade = aluno.city || aluno.cidade || '---';
             const estado = aluno.state || aluno.estado || '---';
-            let enderecoCompletoFormatado = logradouro ? `${logradouro}, nº ${numero} - ${bairro}, ${cidade}/${estado} (CEP: ${cep})` : (aluno.address || aluno.endereco || `Rua não informada, nº ${numero}`);
+            const enderecoCompletoFormatado = SE7Cadastro.escape(SE7Cadastro.endereco(aluno));
             const rawCurso = aluno.course || aluno.curso || aluno.turma || aluno.nomeCurso || aluno.courseName || aluno.courseId || '';
             const cursoExibir = coursesMap[rawCurso] || coursesMap[normalizarTexto(rawCurso)] || String(rawCurso || 'Não vinculado');
             const rawTurma = aluno.classId || aluno.turmaId || aluno.turma || '';
