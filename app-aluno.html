@@ -211,6 +211,7 @@
 <link rel="stylesheet" href="/assets/se7-suite.css">
 <script>try{if(localStorage.getItem('se7_aluno_theme')==='light')document.documentElement.classList.remove('dark');}catch(e){}</script>
 <link rel="stylesheet" href="/assets/se7-asaas.css">
+<script src="/assets/se7-finance-dates.js"></script>
 </head>
 <body class="se7-suite bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans antialiased h-screen overflow-hidden flex flex-col transition-colors duration-200">
 <div id="se7-welcome" hidden role="status" aria-live="polite" aria-atomic="true">
@@ -227,7 +228,7 @@
         <p class="welcome-tagline">Tudo conectado ao sistema Matriz</p>
         <div class="welcome-progress" aria-hidden="true"></div>
     </div>
-    <div class="welcome-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.3.3</span> • Portal do Aluno</div>
+    <div class="welcome-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.3.4</span> • Portal do Aluno</div>
 </div>
 
 
@@ -265,7 +266,7 @@
                 <button type="button" class="student-login-choice student-login-choice-secondary" onclick="irParaTelaMatriculaSuave()">Quero me matricular</button>
             </div>
         </div>
-        <div id="student-welcome-developer-footer" class="student-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.3.3</span> • Portal do Aluno</div>
+        <div id="student-welcome-developer-footer" class="student-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.3.4</span> • Portal do Aluno</div>
     </div>
 
     <!-- TELA DE LOGIN DO ALUNO -->
@@ -314,7 +315,7 @@
                 </form>
             </div>
         </div>
-        <div id="student-login-developer-footer" class="student-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.3.3</span> • Portal do Aluno</div>
+        <div id="student-login-developer-footer" class="student-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.3.4</span> • Portal do Aluno</div>
     </div>
 
     <!-- TELA DE AUTO-MATRÍCULA -->
@@ -1707,33 +1708,15 @@ async function salvarNovaSenhaPortal(){const senha=document.getElementById('port
                             faturas.push({ id: doc.id, ...doc.data() });
                         });
 
-                        faturas.sort((a, b) => {
-                            let dataA = a.date || '';
-                            let dataB = b.date || '';
-                            if (dataA.includes('/')) {
-                                const p = dataA.split('/');
-                                dataA = `${p[2]}-${p[1]}-${p[0]}`;
-                            }
-                            if (dataB.includes('/')) {
-                                const p = dataB.split('/');
-                                dataB = `${p[2]}-${p[1]}-${p[0]}`;
-                            }
-                            return dataA.localeCompare(dataB);
-                        });
+                        SE7Finance.sort(faturas);
 
                         faturas.forEach(f => {
                             const statusUpper = (f.status || '').toUpperCase();
                             const jaPago = statusUpper.includes('PAGO');
                             const formaPg = f.formaPagamento || 'Manual';
-                            const dataPg = f.dataPagamento ? f.dataPagamento.split('-').reverse().join('/') : '';
+                            const dataPg = SE7Finance.dateBR(f.dataPagamento, '');
 
-                            let dataVencExibicao = f.date || '';
-                            if (dataVencExibicao.includes('-')) {
-                                const partesData = dataVencExibicao.split('-');
-                                if (partesData.length === 3) {
-                                    dataVencExibicao = `${partesData[2]}/${partesData[1]}/${partesData[0]}`;
-                                }
-                            }
+                            const dataVencExibicao = SE7Finance.dateBR(f.date || f.vencimento);
 
                             finList.innerHTML += `
                                 <div class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-2 text-xs">
@@ -1746,7 +1729,7 @@ async function salvarNovaSenhaPortal(){const senha=document.getElementById('port
                                     </div>
                                     ${jaPago ? `
                                         <div class="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1.5 pt-1 border-t border-slate-100 dark:border-slate-800">
-                                            <i class="fa-solid fa-circle-check"></i> Pago via <strong>${formaPg}</strong>${dataPg ? ` em ${dataPg}` : ''}
+                                            <i class="fa-solid fa-circle-check"></i> Quitado${dataPg ? ` em <strong>${dataPg}</strong>` : ''} • ${formaPg}
                                         </div>
                                     ` : `
                                         ${f.invoiceUrl && f.invoiceUrl !== '#' ? `

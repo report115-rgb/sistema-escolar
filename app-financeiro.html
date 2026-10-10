@@ -162,6 +162,7 @@
     </style>
 <link rel="stylesheet" href="/assets/se7-suite.css">
 <link rel="stylesheet" href="/assets/se7-asaas.css">
+<script src="/assets/se7-finance-dates.js"></script>
 </head>
 <body class="se7-suite bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans antialiased h-screen overflow-hidden flex flex-col transition-colors duration-200">
 <div id="se7-welcome" hidden role="status" aria-live="polite" aria-atomic="true">
@@ -178,7 +179,7 @@
         <p class="welcome-tagline">Tudo conectado ao sistema Matriz</p>
         <div class="welcome-progress" aria-hidden="true"></div>
     </div>
-    <div class="welcome-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="financeiro">v1.7.3</span> • Setor Financeiro</div>
+    <div class="welcome-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="financeiro">v1.7.4</span> • Setor Financeiro</div>
 </div>
 
 
@@ -227,7 +228,7 @@
                 </form>
             </div>
         </div>
-        <div id="finance-login-developer-footer" class="finance-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="financeiro">v1.7.3</span> • Setor Financeiro</div>
+        <div id="finance-login-developer-footer" class="finance-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="financeiro">v1.7.4</span> • Setor Financeiro</div>
     </div>
 
     <!-- MODAL DE EDIÇÃO DA COBRANÇA -->
@@ -1031,6 +1032,7 @@
             db.collection("financeLogs").onSnapshot(snapshot => {
                 financeLogs = [];
                 snapshot.forEach(doc => financeLogs.push({ id: doc.id, ...doc.data() }));
+                SE7Finance.sort(financeLogs);
                 renderizarFaturasDoAlunoSelecionado();
                 renderizarNegociacoesAtivasGeral();
                 renderizarAlunosQuitesGeral();
@@ -1223,30 +1225,8 @@
             container.innerHTML = `<div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">Selecione um curso e um aluno acima para visualizar as faturas.</div>`;
         }
 
-        function parseDataParaOrdem(dataStr) {
-            if (!dataStr) return new Date(0);
-            let s = String(dataStr).trim();
-            if (s.includes('/')) {
-                let p = s.split('/');
-                if (p.length === 3) return new Date(`${p[2]}-${p[1]}-${p[0]}`);
-            }
-            if (s.includes('-')) {
-                let p = s.split('-');
-                if (p.length === 3) return new Date(`${p[0]}-${p[1]}-${p[2]}`);
-            }
-            let d = new Date(s);
-            return isNaN(d) ? new Date(0) : d;
-        }
-
-        function formatarDataParaExibicao(dataStr) {
-            if (!dataStr) return '---';
-            let s = String(dataStr).trim();
-            if (s.includes('-')) {
-                let p = s.split('-');
-                if (p.length === 3) return `${p[2]}/${p[1]}/${p[0]}`;
-            }
-            return s;
-        }
+        function parseDataParaOrdem(value) {const iso=SE7Finance.dateISO(value);if(!iso)return new Date(NaN);const [y,m,d]=iso.split('-').map(Number);return new Date(y,m-1,d);}
+        function formatarDataParaExibicao(value) {return SE7Finance.dateBR(value);}
 
         function renderizarFaturasDoAlunoSelecionado() {
             const alunoId = document.getElementById('select-fin-aluno').value;
@@ -1262,7 +1242,7 @@
                 return !ePropostaOuAcordoAndamento;
             });
             
-            faturasDoAluno.sort((a, b) => parseDataParaOrdem(a.date || a.vencimento) - parseDataParaOrdem(b.date || b.vencimento));
+            SE7Finance.sort(faturasDoAluno);
             const alunoObj = studentsMap[alunoId];
             const nomeAluno = alunoObj ? (alunoObj.fullname || alunoObj.name || 'Aluno') : 'Aluno';
 
@@ -1327,7 +1307,7 @@
                         ` : `
                             <div class="pt-2 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
                                 <div class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
-                                    <i class="fa-solid fa-circle-check mr-1"></i> Pago em ${dataPag} (${formaPag})
+                                    <i class="fa-solid fa-circle-check mr-1"></i> Quitado em ${dataPag} (${formaPag})
                                 </div>
                                 <button type="button" onclick="estornarBaixaApp('${f.id}')" class="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg text-[10px] font-bold shadow transition">
                                     <i class="fa-solid fa-rotate-left mr-1"></i> Estornar Pagamento
@@ -1689,7 +1669,7 @@
                 return dataVenc < hoje;
             });
 
-            faturasAtrasadasGlobal.sort((a, b) => parseDataParaOrdem(a.date || a.vencimento) - parseDataParaOrdem(b.date || b.vencimento));
+            SE7Finance.sort(faturasAtrasadasGlobal);
 
             valorTotalOriginalGlobal = 0;
             multaTotalGlobal = 0;
@@ -1726,7 +1706,7 @@
                                 <span class="px-2 py-0.5 ${corStatus} rounded-full text-[10px] font-bold">${textoStatusExibir}</span>
                             </div>
                             <div class="text-[10px] text-slate-400">
-                                Valor Negociado Total: <strong>R$ ${p.amount || p.valor || '0.00'}</strong> &bull; Data: ${p.date || '---'}
+                                Valor Negociado Total: <strong>R$ ${p.amount || p.valor || '0.00'}</strong> &bull; Data: ${SE7Finance.dateBR(p.date || p.vencimento)}
                             </div>
                             ${eAguardando ? `
                                 <div class="flex gap-1.5 pt-2 border-t border-slate-100 dark:border-slate-800">

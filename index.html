@@ -159,6 +159,7 @@
 @media(prefers-reduced-motion:reduce){#se7-welcome,#se7-welcome .welcome-content{transition:none;transform:none}#se7-welcome .welcome-glow,#se7-welcome .welcome-progress::after{animation:none;opacity:.8}}
     </style>
 <link rel="stylesheet" href="/assets/se7-suite.css">
+<script src="/assets/se7-finance-dates.js"></script>
 </head>
 <body class="se7-suite se7-matriz bg-gray-100 dark:bg-slate-900 text-gray-800 dark:text-gray-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-300 pb-16">    
 
@@ -244,7 +245,7 @@
             </div>
         </section>
     </div>
-    <div class="matriz-login-footer"><strong>Sistema SE7 de Gestão Acadêmica</strong><br><span data-se7-version="matriz">v1.3.5</span> • Sistema Matriz</div>
+    <div class="matriz-login-footer"><strong>Sistema SE7 de Gestão Acadêmica</strong><br><span data-se7-version="matriz">v1.3.6</span> • Sistema Matriz</div>
 </div>
 
 <!-- ========================================== -->
@@ -1583,7 +1584,7 @@
     <!-- RODAPÉ -->
     <footer id="se7-footer" class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border-t border-gray-200 dark:border-slate-700 py-2.5 px-6 text-center text-xs text-gray-500 dark:text-gray-400 flex flex-col sm:flex-row justify-between items-center gap-2 shadow-lg">
         <span>Sistema SE7 de Gestão Acadêmica • Matriz</span>
-        <span>Desenvolvido por <strong>JS & SS Serviços Educacionais e Cia Ltda</strong> &bull; <span data-se7-version="matriz">v1.3.5</span> • Sistema Matriz</span>
+        <span>Desenvolvido por <strong>JS & SS Serviços Educacionais e Cia Ltda</strong> &bull; <span data-se7-version="matriz">v1.3.6</span> • Sistema Matriz</span>
     </footer>
 
     <!-- MODAL DE NOVA MATRÍCULA / EDIÇÃO DE ALUNO -->
@@ -2837,6 +2838,7 @@ let dadosMatrizIniciados=false;function iniciarDadosAutenticadosMatriz(){if(dado
             db.collection("financeLogs").onSnapshot((snapshot) => {
                 financeLogs = [];
                 snapshot.forEach(doc => financeLogs.push({ id: doc.id, ...doc.data() }));
+                SE7Finance.sort(financeLogs);
                 renderFinanceStudentSelect();
                 const selFin = document.getElementById('fin-student-select');
                 if (selFin && selFin.value) {
@@ -4419,7 +4421,7 @@ function renderizarCobrancasAlunoSelecionadoFinanceiro(studentId) {
         return;
     }
 
-    cobrancasAluno.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+    SE7Finance.sort(cobrancasAluno);
 
     container.innerHTML = '<div class="font-bold text-xs text-blue-600 dark:text-blue-400 mb-2">Histórico de Cobranças (Modo Consulta):</div>';
 
@@ -4428,15 +4430,11 @@ function renderizarCobrancasAlunoSelecionadoFinanceiro(studentId) {
         const corBadge = jaPago ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300';
         const textoStatus = f.status || 'PENDENTE';
 
-        let dataFormatada = f.date;
-        if (f.date && f.date.includes('-')) {
-            const partes = f.date.split('-');
-            dataFormatada = partes[2] + '/' + partes[1] + '/' + partes[0];
-        }
+        const dataFormatada = SE7Finance.dateBR(f.date || f.vencimento);
 
         let textoQuitacao = '';
         if (jaPago && f.dataPagamento) {
-            textoQuitacao = '<div class="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-slate-800 p-2 rounded border border-emerald-200 dark:border-slate-700"><i class="fa-solid fa-circle-check mr-1"></i> Quitado em ' + f.dataPagamento + '</div>';
+            textoQuitacao = '<div class="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-slate-800 p-2 rounded border border-emerald-200 dark:border-slate-700"><i class="fa-solid fa-circle-check mr-1"></i> Quitado em ' + SE7Finance.dateBR(f.dataPagamento) + '</div>';
         }
 
         container.innerHTML += '<div class="bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700 flex flex-col gap-2 text-xs"><div class="flex justify-between items-center"><div><strong class="text-gray-900 dark:text-white text-sm">' + f.description + '</strong><br><span class="text-gray-500">Vencimento: <strong>' + dataFormatada + '</strong> &bull; Valor: <strong>R$ ' + f.amount + '</strong></span></div><div><span class="px-2.5 py-1 ' + corBadge + ' rounded-lg text-[11px] font-bold shadow-xs">' + textoStatus + '</span></div></div>' + textoQuitacao + '</div>';
@@ -4605,7 +4603,7 @@ function renderFinanceStudentSelect() {
                 } else {
                     fLogs.forEach(f => {
                         const descInfo = f.discountAmount ? `<br><span class="text-emerald-600 font-semibold">Valor com Pontualidade (Até vencimento): R$ ${f.discountAmount}</span>` : '';
-                        finList.innerHTML += `<li class="py-3 text-xs flex justify-between items-center border-b border-gray-100 dark:border-slate-700"><div><strong>${f.description}</strong><br>Valor Normal: R$ ${f.amount} ${descInfo} <br><span class="text-gray-400">Vencimento: ${f.date}</span></div> <div class="text-right"><span class="px-2 py-1 bg-amber-100 text-amber-800 rounded font-bold">${f.status}</span> ${f.invoiceUrl ? `<br><a href="${f.invoiceUrl}" target="_blank" class="text-blue-600 underline text-[11px] mt-1 inline-block">Ver Boleto</a>` : ''}</div></li>`;
+                        finList.innerHTML += `<li class="py-3 text-xs flex justify-between items-center border-b border-gray-100 dark:border-slate-700"><div><strong>${f.description}</strong><br>Valor Normal: R$ ${f.amount} ${descInfo} <br><span class="text-gray-400">Vencimento: ${SE7Finance.dateBR(f.date || f.vencimento)}</span></div> <div class="text-right"><span class="px-2 py-1 bg-amber-100 text-amber-800 rounded font-bold">${f.status}</span> ${f.invoiceUrl ? `<br><a href="${f.invoiceUrl}" target="_blank" class="text-blue-600 underline text-[11px] mt-1 inline-block">Ver Boleto</a>` : ''}</div></li>`;
                     });
                 }
             }
