@@ -3,3 +3,5 @@
 #matriz-finance-batch-controls[hidden],.se7-work-panel [hidden],.se7-work-dialog [hidden],.se7-work-field[hidden]{display:none!important}
 @media(max-width:520px){.se7-work-grid{grid-template-columns:1fr}.se7-work-panel,.se7-work-dialog{padding:15px}.se7-work-actions .se7-work-button{flex:1}.se7-work-dialog{max-height:calc(100dvh - 24px)}.se7-work-table{font-size:11px}.se7-work-table td,.se7-work-table th{padding:8px 5px}}
 @media(prefers-reduced-motion:no-preference){.se7-notice-dialog[open]{animation:se7-notice-in .2s ease-out}@keyframes se7-notice-in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}}
+
+.se7-operation-notice{position:fixed;z-index:10000;bottom:calc(90px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);width:max-content;max-width:calc(100vw - 32px);box-sizing:border-box;padding:13px 18px;border:1px solid #3c8bba;border-radius:13px;background:#0b2943;color:#eaf6ff;box-shadow:0 8px 28px #0006;font:13px/1.5 Arial;overflow-wrap:anywhere;pointer-events:none}
