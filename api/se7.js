@@ -1,3 +1,4 @@
+import {preview as portalPreview} from '../server/portal-preview.mjs';
 import {reviewLocal} from '../server/enrollment-finance.mjs';
 import * as notices from '../server/notices.mjs';
 import * as financeBatch from '../server/finance-batch.mjs';
@@ -79,6 +80,7 @@ export async function dispatch({auth,db},req,b){
   }catch(e){await auth.deleteUser(uid).catch(()=>{});await ref.delete().catch(()=>{});await idx.delete();throw e;}
  }
  const u=await identity(auth,db,req);
+ if(action==='portal-preview')return portalPreview(db,b,u);
  if(action.startsWith('notices-')){
   if(action==='notices-catalog')return notices.catalog(db,u);
   if(action==='notices-get')return notices.getNotice(db,b.id,u);

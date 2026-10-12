@@ -23,6 +23,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 <script src="/assets/se7-auth.js"></script>
+<script src="/assets/se7-portal-preview.js"></script>
 <script src="/assets/se7-email.js"></script>
 <script src="/assets/se7-whatsapp.js"></script>
     <!-- EmailJS SDK para Disparo de E-mails -->
@@ -250,7 +251,7 @@
             </div>
         </section>
     </div>
-    <div class="matriz-login-footer"><strong>Sistema SE7 de Gestão Acadêmica</strong><br><span data-se7-version="matriz">v1.4.7</span> • Sistema Matriz</div>
+    <div class="matriz-login-footer"><strong>Sistema SE7 de Gestão Acadêmica</strong><br><span data-se7-version="matriz">v1.4.8</span> • Sistema Matriz</div>
 </div>
 
 <!-- ========================================== -->
@@ -519,6 +520,7 @@
 <div id="subtab-avisos-portal" class="subtab-content" style="display:none;"><section id="se7-notices-manager" class="se7-work-panel"></section></div>
 <div id="subtab-acessos-portal" class="subtab-content space-y-4" style="display:none;"><h2 class="text-xl font-bold">Acessos ao Portal do Aluno</h2><p class="text-sm">Entradas, atividades e abas mais acessadas desde a atualização do aplicativo. Senhas pessoais não são exibidas. Administração restrita ao master.</p><div class="flex gap-2"><input id="portal-acessos-busca" placeholder="Buscar nome ou matrícula" oninput="renderizarPainelAcessosPortal()" class="flex-1 border rounded-lg p-2 dark:bg-slate-900"><button onclick="carregarPainelAcessosPortal()" class="bg-blue-600 text-white rounded-lg px-4">Atualizar</button></div><div id="portal-senha-temporaria" class="p-4 bg-amber-100 text-amber-950 rounded-lg" style="display:none;"></div><button onclick="document.getElementById('portal-senha-temporaria').textContent='';document.getElementById('portal-senha-temporaria').style.display='none';" class="text-xs">Ocultar senha temporária</button><div id="portal-acessos-lista" class="space-y-3"></div><div id="portal-acessos-historico" class="p-4 rounded-xl bg-gray-50 dark:bg-slate-900 space-y-1"></div></div>
                 <div id="subtab-alunos-lista" class="subtab-content active space-y-4">
+<div id="se7-portal-preview-launcher" hidden></div>
     <div class="flex justify-between items-center mb-4 pb-2 border-b border-gray-100 dark:border-slate-700 flex-wrap gap-2">
         <h2 class="text-xl font-bold text-gray-900 dark:text-white">Alunos Matriculados</h2>
         
@@ -1595,7 +1597,7 @@
     <!-- RODAPÉ -->
     <footer id="se7-footer" class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border-t border-gray-200 dark:border-slate-700 py-2.5 px-6 text-center text-xs text-gray-500 dark:text-gray-400 flex flex-col sm:flex-row justify-between items-center gap-2 shadow-lg">
         <span>Sistema SE7 de Gestão Acadêmica • Matriz</span>
-        <span>Desenvolvido por <strong>JS & SS Serviços Educacionais e Cia Ltda</strong> &bull; <span data-se7-version="matriz">v1.4.7</span> • Sistema Matriz</span>
+        <span>Desenvolvido por <strong>JS & SS Serviços Educacionais e Cia Ltda</strong> &bull; <span data-se7-version="matriz">v1.4.8</span> • Sistema Matriz</span>
     </footer>
 
     <!-- MODAL DE NOVA MATRÍCULA / EDIÇÃO DE ALUNO -->
@@ -4124,6 +4126,7 @@ function carregarDatasCalendarioParaFrequencia() {
                 <td class="p-3">${curso ? curso.name : '---'} <br><span class="text-[10px] text-gray-400">Turma: ${turma ? turma.name : '---'}</span></td>
                 <td class="p-3"><span class="px-2 py-0.5 ${classeStatusMatricula(s.status)} rounded text-[10px] font-bold">${rotuloStatusMatricula(s.status)}</span>${s.enrollmentRequest ? '<div class="text-[10px] text-amber-500 mt-1">Solicitação pendente</div>' : ''}</td>
                 <td class="p-3 text-right space-x-1">
+                    ${masterAutenticadoMatriz() ? `<button type="button" onclick="SE7PortalPreview.open('${s.id}')" class="px-2.5 py-1 bg-indigo-600 text-white rounded text-xs">Visualizar portal</button>` : ''}
                     <button onclick="editarAluno('${s.id}')" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs shadow"><i class="fa-solid fa-pen-to-square mr-1"></i> Editar</button>
                     <button type="button" onclick="verHistoricoMatricula('${s.id}')" class="px-2.5 py-1 bg-blue-600 text-white rounded text-xs">Histórico</button>
                     ${botaoDeletar}

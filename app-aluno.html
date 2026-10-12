@@ -20,6 +20,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 <script src="/assets/se7-auth.js"></script>
+<script src="/assets/se7-portal-preview.js"></script>
 <script src="/assets/se7-email.js"></script>
     <!-- Canvas Confetti -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -232,7 +233,7 @@
         <p class="welcome-tagline">Tudo conectado ao sistema Matriz</p>
         <div class="welcome-progress" aria-hidden="true"></div>
     </div>
-    <div class="welcome-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.4.7</span> • Portal do Aluno</div>
+    <div class="welcome-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.4.8</span> • Portal do Aluno</div>
 </div>
 
 
@@ -270,7 +271,7 @@
                 <button type="button" class="student-login-choice student-login-choice-secondary" onclick="irParaTelaMatriculaSuave()">Quero me matricular</button>
             </div>
         </div>
-        <div id="student-welcome-developer-footer" class="student-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.4.7</span> • Portal do Aluno</div>
+        <div id="student-welcome-developer-footer" class="student-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.4.8</span> • Portal do Aluno</div>
     </div>
 
     <!-- TELA DE LOGIN DO ALUNO -->
@@ -319,7 +320,7 @@
                 </form>
             </div>
         </div>
-        <div id="student-login-developer-footer" class="student-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.4.7</span> • Portal do Aluno</div>
+        <div id="student-login-developer-footer" class="student-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.4.8</span> • Portal do Aluno</div>
     </div>
 
     <!-- TELA DE AUTO-MATRÍCULA -->
@@ -769,7 +770,7 @@
             appId: "1:343442411308:web:e4500b862fa29b6b326689"
         };
         firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+        const db = window.SE7Preview?.active ? SE7Preview.database() : firebase.firestore();
 
         function obterDocumentosObrigatoriosAluno() {
             let isEJA = window.cursoAtualEJA || false;
@@ -1160,17 +1161,18 @@ let cancelarIdentidadeAluno = null;
 
 
 let cancelarControlePortal=null;
-function acompanharControlePortal(){if(cancelarControlePortal)cancelarControlePortal();if(!alunoLogado?.id||alunoLogado.portalMustChangePassword)return;cancelarControlePortal=db.collection('students').doc(alunoLogado.id).onSnapshot(doc=>{if(!alunoLogado||doc.metadata.hasPendingWrites||doc.metadata.fromCache)return;const d=doc.exists?doc.data():null;if(!d||d.portalBlocked||(d.portalSessionVersion||0)!==(alunoLogado.portalSessionVersion||0)){alert('Seu acesso foi alterado. Entre novamente.');SE7.logout();}},e=>{if(e.code==='permission-denied'){alert('Sessão sem acesso. Entre novamente.');SE7.logout();}else console.warn(e.message);});}
+function acompanharControlePortal(){if(window.SE7Preview?.active)return;if(cancelarControlePortal)cancelarControlePortal();if(!alunoLogado?.id||alunoLogado.portalMustChangePassword)return;cancelarControlePortal=db.collection('students').doc(alunoLogado.id).onSnapshot(doc=>{if(!alunoLogado||doc.metadata.hasPendingWrites||doc.metadata.fromCache)return;const d=doc.exists?doc.data():null;if(!d||d.portalBlocked||(d.portalSessionVersion||0)!==(alunoLogado.portalSessionVersion||0)){alert('Seu acesso foi alterado. Entre novamente.');SE7.logout();}},e=>{if(e.code==='permission-denied'){alert('Sessão sem acesso. Entre novamente.');SE7.logout();}else console.warn(e.message);});}
 let abaPortalAtual = null;
 function guardarSessaoPortal(aluno) {
+    if(window.SE7Preview?.active)return;
     const {senhaAluno,portalCredential,...publico}=aluno;
     sessionStorage.setItem('aluno_app_logado',JSON.stringify(publico));
 }
-async function registrarEventoPortal(tipo,aba=null){if(!alunoLogado?.id||alunoLogado.portalMustChangePassword)return;try{await SE7.api('event',{type:tipo,tab:aba});}catch(e){console.warn('Atividade não registrada:',e.message);}}
+async function registrarEventoPortal(tipo,aba=null){if(window.SE7Preview?.active)return;if(!alunoLogado?.id||alunoLogado.portalMustChangePassword)return;try{await SE7.api('event',{type:tipo,tab:aba});}catch(e){console.warn('Atividade não registrada:',e.message);}}
 function abrirTrocaObrigatoriaPortal() {
     document.getElementById('modal-troca-portal').style.display='flex';
 }
-async function salvarNovaSenhaPortal(){const senha=document.getElementById('portal-nova-senha').value;if(senha.length<8||senha!==document.getElementById('portal-confirma-senha').value)return alert('Use pelo menos 8 caracteres e confirme.');const btn=document.getElementById('portal-salvar-senha');btn.disabled=true;try{if(cancelarControlePortal){cancelarControlePortal();cancelarControlePortal=null;}const r=await SE7.api('change-password',{password:senha});await firebase.auth().signInWithCustomToken(r.customToken);alunoLogado=(await SE7.api('session')).profile;guardarSessaoPortal(alunoLogado);document.getElementById('portal-nova-senha').value='';document.getElementById('portal-confirma-senha').value='';document.getElementById('modal-troca-portal').style.display='none';acompanharControlePortal();await registrarEventoPortal('login');await carregarConfiguracaoAlunoAutenticado();await carregarDadosPainel();}catch(e){alert(e.message);}finally{btn.disabled=false;}}
+async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo de visualização: alterações e envios desativados.');return;}const senha=document.getElementById('portal-nova-senha').value;if(senha.length<8||senha!==document.getElementById('portal-confirma-senha').value)return alert('Use pelo menos 8 caracteres e confirme.');const btn=document.getElementById('portal-salvar-senha');btn.disabled=true;try{if(cancelarControlePortal){cancelarControlePortal();cancelarControlePortal=null;}const r=await SE7.api('change-password',{password:senha});await firebase.auth().signInWithCustomToken(r.customToken);alunoLogado=(await SE7.api('session')).profile;guardarSessaoPortal(alunoLogado);document.getElementById('portal-nova-senha').value='';document.getElementById('portal-confirma-senha').value='';document.getElementById('modal-troca-portal').style.display='none';acompanharControlePortal();await registrarEventoPortal('login');await carregarConfiguracaoAlunoAutenticado();await carregarDadosPainel();}catch(e){alert(e.message);}finally{btn.disabled=false;}}
 
         function mostrarBoasVindasApp(usuario) {
             const tela = document.getElementById('se7-welcome');
@@ -1268,6 +1270,7 @@ async function salvarNovaSenhaPortal(){const senha=document.getElementById('port
             while (tamanho > 8 && el.scrollHeight > parseFloat(getComputedStyle(el).lineHeight)*2+1) {tamanho -= .5;el.style.fontSize = tamanho+'px';}
         }
         async function renovarQRCodeCarteirinha(id, versao) {
+            if(window.SE7Preview?.active){SE7Preview.demoQR();return;}
             if (qrCarteirinhaPendente || document.hidden || !carteirinhaAberta() || versao !== versaoAberturaCarteirinha || alunoLogado?.id !== id) return;
             const operacao = ++qrCarteirinhaOperacao;
             qrCarteirinhaPendente = true;
@@ -1291,6 +1294,7 @@ async function salvarNovaSenhaPortal(){const senha=document.getElementById('port
             } finally {if (operacao === qrCarteirinhaOperacao) qrCarteirinhaPendente = false;}
         }
         function iniciarQRCodeCarteirinha(id, versao) {
+            if(window.SE7Preview?.active){SE7Preview.demoQR();return;}
             pararQRCodeCarteirinha();
             qrCarteirinhaTimer = setInterval(() => {
                 if (!carteirinhaAberta() || versao !== versaoAberturaCarteirinha || alunoLogado?.id !== id) {pararQRCodeCarteirinha();return;}
@@ -1356,7 +1360,7 @@ async function salvarNovaSenhaPortal(){const senha=document.getElementById('port
             document.getElementById('modal-carteirinha').style.display='none';
         }
 
-        async function executarRedefinicaoSenha() {
+        async function executarRedefinicaoSenha() {if(window.SE7Preview?.active){alert('Modo de visualização: alterações e envios desativados.');return;}
             alert('Solicite à instituição uma senha temporária. Por segurança, o CPF sozinho não permite redefinir a senha.');
         }
 
@@ -1365,7 +1369,7 @@ async function salvarNovaSenhaPortal(){const senha=document.getElementById('port
             location.reload();
         }
 
-        async function enviarDocumentoPDFAluno(tipoId) {
+        async function enviarDocumentoPDFAluno(tipoId) {if(window.SE7Preview?.active){alert('Modo de visualização: alterações e envios desativados.');return;}
             const fileInput = document.getElementById(`file_doc_${tipoId}`);
             if(!fileInput || !fileInput.files[0]) return alert("Selecione um PDF.");
             const file = fileInput.files[0];
@@ -1507,19 +1511,19 @@ async function salvarNovaSenhaPortal(){const senha=document.getElementById('port
             }
 
             if (aba === 'notas' && alunoLogado) {
-                sessionStorage.setItem(`visto_notas_${alunoLogado.id}`, 'true');
+                if(!window.SE7Preview?.active)sessionStorage.setItem(`visto_notas_${alunoLogado.id}`, 'true');
                 const badgeNotas = document.getElementById('badge-alerta-notas');
                 if (badgeNotas) badgeNotas.style.display = 'none';
             }
             if (aba === 'financeiro' && alunoLogado) {
-                sessionStorage.setItem(`visto_financeiro_${alunoLogado.id}`, 'true');
+                if(!window.SE7Preview?.active)sessionStorage.setItem(`visto_financeiro_${alunoLogado.id}`, 'true');
                 const badgeFin = document.getElementById('badge-alerta-financeiro');
                 if (badgeFin) badgeFin.style.display = 'none';
             }
         }
 
         // --- CARREGAMENTO DO PAINEL OTIMIZADO COM .get() ---
-        async function alterarAutorizacaoWhatsAppAluno(input) {
+        async function alterarAutorizacaoWhatsAppAluno(input) {if(window.SE7Preview?.active){alert('Modo de visualização: alterações e envios desativados.');return;}
             const anterior = alunoLogado.whatsappOptIn === true;input.disabled = true;
             try {await SE7.api('whatsapp-consent',{optIn:input.checked});alunoLogado.whatsappOptIn=input.checked;guardarSessaoPortal(alunoLogado);}
             catch(e){input.checked=anterior;alert(e.message);}
@@ -1531,6 +1535,7 @@ async function salvarNovaSenhaPortal(){const senha=document.getElementById('port
         const formatarEnderecoCadastral=aluno=>SE7Cadastro.endereco(aluno);
 
         async function carregarDadosPainel() {
+            if(window.SE7Preview?.active)await SE7Preview.refresh();
             if(!alunoLogado) return;
             if(alunoLogado.portalMustChangePassword){abrirTrocaObrigatoriaPortal();return;}
 
@@ -2186,7 +2191,7 @@ async function salvarNovaSenhaPortal(){const senha=document.getElementById('port
             if (m) m.style.display = 'none';
         }
 
-        function enviarProvaEJAAluno(totalQuestoes) {
+        function enviarProvaEJAAluno(totalQuestoes) {if(window.SE7Preview?.active){alert('Modo de visualização: alterações e envios desativados.');return;}
             const cards = document.querySelectorAll('.questao-item');
             let acertos = 0;
             let respondidas = 0;

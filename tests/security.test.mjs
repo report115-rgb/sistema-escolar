@@ -190,3 +190,21 @@ test('avisos e lotes: API verifica perfil, público real e mantém dados privado
 test('conferência financeira local de saída usa apenas aluno da sessão e rejeita professor',async()=>{
  const uid='exit-finance-api',sid='exit-finance-api';await auth.createUser({uid});await auth.setCustomUserClaims(uid,{studentId:sid,portalVersion:0});await db.collection('students').doc(sid).set({fullname:'Saída API',status:'Transferido',se7AuthUid:uid,portalSessionVersion:0,enrollmentLastOperation:{type:'transferencia',state:'efetivada',date:'2026-08-10'}});await db.collection('financeLogs').doc('exit-finance-api-future').set({studentId:sid,date:'2026-09-10',status:'PENDENTE',amount:270});await db.collection('financeLogs').doc('exit-finance-other').set({studentId:'s2',date:'2026-09-10',status:'PENDENTE',amount:270});const token=await custom(await auth.createCustomToken(uid));const result=await call(token,{action:'enrollment-finance-local',studentId:'s2'});assert.equal(result.cancelled,1);assert.equal((await db.collection('financeLogs').doc('exit-finance-api-future').get()).data().enrollmentCancellationReason,'Aluno transferiu a matrícula.');assert.equal((await db.collection('financeLogs').doc('exit-finance-other').get()).data().status,'PENDENTE');const professor=await signIn('cancel-prof@example.test','prof-cancel-123');await assert.rejects(call(professor,{action:'enrollment-finance-local',studentId:sid}),/restrito/);
 });
+
+test('visualização master lê apenas o aluno escolhido e não altera documentos, cobrança, avisos ou acesso',async()=>{
+ await db.collection('students').doc('preview-student').set({fullname:'Aluno Preview',status:'Cancelado',courseId:'preview-course',classId:'preview-class',portalBlocked:true,portalMustChangePassword:true,senhaAluno:'não-expor',grades:{nota:8}});
+ await db.collection('courses').doc('preview-course').set({name:'Técnico em Enfermagem'});await db.collection('classes').doc('preview-class').set({name:'Turma Preview'});
+ await db.collection('financeLogs').doc('preview-invoice').set({studentId:'preview-student',date:'2026-08-25',status:'PAGO',amount:270});
+ await db.collection('se7AsaasInvoices').doc('preview-invoice').set({state:'linked',payment:{id:'pay_preview',status:'RECEIVED',paidValueCents:27000,dueDate:'2026-08-25'}});
+ const before=(await db.collection('students').doc('preview-student').get()).data();
+ const result=await call(masterToken,{action:'portal-preview',operation:'snapshot',studentId:'preview-student'});
+ assert.equal(result.student.fullname,'Aluno Preview');assert.equal(result.student.senhaAluno,undefined);assert.equal(result.student.portalBlocked,true);assert.equal(result.collections.students.length,1);assert.equal(result.collections.financeLogs.length,1);assert.equal(result.collections.financeLogs[0].id,'preview-invoice');assert.equal(result.collections.courses[0].name,'Técnico em Enfermagem');
+ const receipt=await call(masterToken,{action:'portal-preview',operation:'receipt',studentId:'preview-student',invoiceId:'preview-invoice'});assert.equal(receipt.payment.paidValueCents,27000);
+ await assert.rejects(call(masterToken,{action:'portal-preview',operation:'receipt',studentId:'s2',invoiceId:'preview-invoice'}),/outro aluno/);
+ for(const operation of ['documents','qr','notices-read','event','change-password'])await assert.rejects(call(masterToken,{action:'portal-preview',operation,studentId:'preview-student'}),/apenas consulta/);
+ assert.deepEqual((await db.collection('students').doc('preview-student').get()).data(),before);
+ assert.equal((await db.collection('students').doc('preview-student').collection('portalEvents').get()).size,0);
+ const secToken=await signIn('cancel-sec@example.test','sec-cancel-123');await assert.rejects(call(secToken,{action:'portal-preview',operation:'snapshot',studentId:'preview-student'}),/restrita ao master/);
+ await assert.rejects(call(studentToken,{action:'portal-preview',operation:'snapshot',studentId:'preview-student'}));
+ await assert.rejects(call(masterToken,{action:'portal-preview',operation:'snapshot',studentId:'missing-preview'}),/não encontrado/);
+});
