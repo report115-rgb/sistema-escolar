@@ -175,3 +175,14 @@ test('salvamento acadêmico na API preserva outros dados e registra valores ante
  const financeToken=await signIn('finance-email@example.test','email-test-987');await assert.rejects(call(financeToken,b),/restrito/);
  }finally{if(previous===undefined)delete process.env.SE7_EMAIL_ENABLED;else process.env.SE7_EMAIL_ENABLED=previous;}
 });
+
+test('avisos e lotes: API verifica perfil, público real e mantém dados privados no Firestore',async()=>{
+ const uid='student-notice-api',sid='student-notice-api';await auth.createUser({uid});await auth.setCustomUserClaims(uid,{studentId:sid,portalVersion:0});await db.collection('students').doc(sid).set({fullname:'Avisos API',status:'Ativo',se7AuthUid:uid,courseId:'course-notice-api',classId:'class-notice-api',portalSessionVersion:0});await db.collection('courses').doc('course-notice-api').set({name:'Técnico em Enfermagem'});const token=await custom(await auth.createCustomToken(uid));
+ const created=await call(masterToken,{action:'notices-save',notice:{title:'Aviso API',description:'Confira o portal',audience:'tecnico',start:'',end:'',repeat:'leitura',action:'documentos',active:true}});
+ assert((await call(token,{action:'notices-feed',courseId:'outro'})).notices.some(n=>n.id===created.id));
+ await assert.rejects(call(token,{action:'notices-save',notice:{}}),/restritos/);
+ await assert.rejects(call(token,{action:'finance-batch-preview',studentId:sid,mode:'delete'}),/restrito/);
+ const financeToken=await signIn('finance-email@example.test','email-test-987');await assert.rejects(call(financeToken,{action:'notices-catalog'}),/restritos/);
+ const member=env.authenticatedContext(uid,{studentId:sid,portalVersion:0}).firestore();await assertFails(getDoc(doc(member,'se7Notices',created.id)));await assertFails(setDoc(doc(member,'se7FinanceBatchPlans','forged'),{actor:uid}));await assertFails(setDoc(doc(member,'students',sid,'se7NoticeReads',created.id),{revision:'forged'}));
+ const m=env.authenticatedContext(MASTER).firestore();await assertFails(setDoc(doc(m,'se7FinanceBatchAudit','forged'),{actor:MASTER}));
+});

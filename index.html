@@ -162,6 +162,9 @@
 <link rel="stylesheet" href="/assets/se7-suite.css">
 <script src="/assets/se7-finance-dates.js"></script>
 <script src="/assets/se7-cadastro.js"></script>
+<link rel="stylesheet" href="/assets/se7-notices.css">
+<script defer src="/assets/se7-notices.js"></script>
+<script defer src="/assets/se7-finance-batch.js"></script>
 </head>
 <body class="se7-suite se7-matriz bg-gray-100 dark:bg-slate-900 text-gray-800 dark:text-gray-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-300 pb-16">    
 
@@ -247,7 +250,7 @@
             </div>
         </section>
     </div>
-    <div class="matriz-login-footer"><strong>Sistema SE7 de Gestão Acadêmica</strong><br><span data-se7-version="matriz">v1.3.18</span> • Sistema Matriz</div>
+    <div class="matriz-login-footer"><strong>Sistema SE7 de Gestão Acadêmica</strong><br><span data-se7-version="matriz">v1.4.0</span> • Sistema Matriz</div>
 </div>
 
 <!-- ========================================== -->
@@ -509,9 +512,11 @@
                 <div class="flex space-x-2 mb-6 border-b border-gray-200 dark:border-slate-700 pb-3">
                     <button class="subtab-button active px-4 py-2 rounded-xl text-xs font-semibold bg-blue-600 text-white shadow" onclick="openSubTab(event, 'subtab-alunos-lista')"><i class="fa-solid fa-list mr-1"></i> Lista de Alunos</button>
                     <button class="subtab-button px-4 py-2 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" id="btn-validar-documentacao" style="position:relative;padding-right:24px;" onclick="openSubTab(event, 'subtab-validar-docs')"><i class="fa-solid fa-folder-open mr-1"></i> Validar Documentação<span id="badge-documentos-pendentes" class="se7-docs-badge" hidden aria-label="Novos documentos para avaliar">!</span></button>
+<button id="btn-avisos-portal" class="subtab-button px-4 py-2 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event,'subtab-avisos-portal');SE7Notices.admin()">Avisos do Portal</button>
 <button id="btn-acessos-portal" class="subtab-button px-4 py-2 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" style="display:none;" onclick="openSubTab(event,'subtab-acessos-portal')">Acessos ao Portal</button>
                 </div>
 
+<div id="subtab-avisos-portal" class="subtab-content" style="display:none;"><section id="se7-notices-manager" class="se7-work-panel"></section></div>
 <div id="subtab-acessos-portal" class="subtab-content space-y-4" style="display:none;"><h2 class="text-xl font-bold">Acessos ao Portal do Aluno</h2><p class="text-sm">Entradas, atividades e abas mais acessadas desde a atualização do aplicativo. Senhas pessoais não são exibidas. Administração restrita ao master.</p><div class="flex gap-2"><input id="portal-acessos-busca" placeholder="Buscar nome ou matrícula" oninput="renderizarPainelAcessosPortal()" class="flex-1 border rounded-lg p-2 dark:bg-slate-900"><button onclick="carregarPainelAcessosPortal()" class="bg-blue-600 text-white rounded-lg px-4">Atualizar</button></div><div id="portal-senha-temporaria" class="p-4 bg-amber-100 text-amber-950 rounded-lg" style="display:none;"></div><button onclick="document.getElementById('portal-senha-temporaria').textContent='';document.getElementById('portal-senha-temporaria').style.display='none';" class="text-xs">Ocultar senha temporária</button><div id="portal-acessos-lista" class="space-y-3"></div><div id="portal-acessos-historico" class="p-4 rounded-xl bg-gray-50 dark:bg-slate-900 space-y-1"></div></div>
                 <div id="subtab-alunos-lista" class="subtab-content active space-y-4">
     <div class="flex justify-between items-center mb-4 pb-2 border-b border-gray-100 dark:border-slate-700 flex-wrap gap-2">
@@ -877,6 +882,7 @@
                     </select>
                 </div>
 
+                <details id="matriz-finance-batch-controls" class="se7-work-disclosure"><summary>Gerenciar faturas em lote</summary><div class="se7-work-actions"><button type="button" class="se7-work-button primary" onclick="SE7FinanceBatch.open('create')">Gerar faturas em lote</button><button type="button" class="se7-work-button" onclick="SE7FinanceBatch.open('dates')">Reorganizar vencimentos</button><button type="button" class="se7-work-button danger" onclick="SE7FinanceBatch.open('delete')">Excluir faturas em lote</button></div></details>
                 <div class="mt-4">
                     <h4 class="font-bold text-sm text-gray-700 dark:text-gray-300 mb-2">Cobranças Vinculadas ao Aluno Selecionado</h4>
                     <div id="container-cobrancas-aluno-financeiro" class="space-y-2">
@@ -1589,7 +1595,7 @@
     <!-- RODAPÉ -->
     <footer id="se7-footer" class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border-t border-gray-200 dark:border-slate-700 py-2.5 px-6 text-center text-xs text-gray-500 dark:text-gray-400 flex flex-col sm:flex-row justify-between items-center gap-2 shadow-lg">
         <span>Sistema SE7 de Gestão Acadêmica • Matriz</span>
-        <span>Desenvolvido por <strong>JS & SS Serviços Educacionais e Cia Ltda</strong> &bull; <span data-se7-version="matriz">v1.3.18</span> • Sistema Matriz</span>
+        <span>Desenvolvido por <strong>JS & SS Serviços Educacionais e Cia Ltda</strong> &bull; <span data-se7-version="matriz">v1.4.0</span> • Sistema Matriz</span>
     </footer>
 
     <!-- MODAL DE NOVA MATRÍCULA / EDIÇÃO DE ALUNO -->
@@ -2394,6 +2400,8 @@ async function rejeitarSolicitacaoFirebase(id) {
         }
 
         function aplicarPermissoesPorPerfil(perfil) {
+    document.getElementById('matriz-finance-batch-controls').hidden=!['master','financeiro'].includes(perfil);
+    document.getElementById('btn-avisos-portal').style.display=['master','secretaria'].includes(perfil)?'inline-block':'none';
     const botaoTotem = document.getElementById('btn-subtab-gestao-totem');
     const painelTotem = document.getElementById('subtab-gestao-totem');
     if (botaoTotem) botaoTotem.style.display = usuarioMasterAtivo() ? 'inline-block' : 'none';

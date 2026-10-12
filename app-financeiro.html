@@ -164,6 +164,8 @@
 <link rel="stylesheet" href="/assets/se7-asaas.css">
 <script src="/assets/se7-finance-dates.js"></script>
 <script src="/assets/se7-cadastro.js"></script>
+<link rel="stylesheet" href="/assets/se7-notices.css">
+<script defer src="/assets/se7-finance-batch.js"></script>
 </head>
 <body class="se7-suite bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans antialiased h-screen overflow-hidden flex flex-col transition-colors duration-200">
 <div id="se7-welcome" hidden role="status" aria-live="polite" aria-atomic="true">
@@ -180,7 +182,7 @@
         <p class="welcome-tagline">Tudo conectado ao sistema Matriz</p>
         <div class="welcome-progress" aria-hidden="true"></div>
     </div>
-    <div class="welcome-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="financeiro">v1.7.17</span> • Setor Financeiro</div>
+    <div class="welcome-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="financeiro">v1.8.0</span> • Setor Financeiro</div>
 </div>
 
 
@@ -229,7 +231,7 @@
                 </form>
             </div>
         </div>
-        <div id="finance-login-developer-footer" class="finance-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="financeiro">v1.7.17</span> • Setor Financeiro</div>
+        <div id="finance-login-developer-footer" class="finance-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="financeiro">v1.8.0</span> • Setor Financeiro</div>
     </div>
 
     <!-- MODAL DE EDIÇÃO DA COBRANÇA -->
@@ -600,9 +602,7 @@
                             </h2>
                             <p class="text-[10px] text-slate-400">Consulte e gerencie as faturas e cobranças dos alunos.</p>
                         </div>
-                        <button type="button" onclick="abrirModalGerarFinanceiroManual()" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow transition flex items-center gap-1.5">
-                            <i class="fa-solid fa-file-invoice-dollar"></i> Gerar Faturas Manuais
-                        </button>
+<details class="se7-work-disclosure"><summary>Gerenciar faturas em lote</summary><div class="se7-work-actions"><button type="button" onclick="SE7FinanceBatch.open('create')" class="se7-work-button primary">Gerar faturas em lote</button><button type="button" onclick="SE7FinanceBatch.open('dates')" class="se7-work-button">Reorganizar vencimentos</button><button type="button" onclick="SE7FinanceBatch.open('delete')" class="se7-work-button danger">Excluir faturas em lote</button></div></details>
                     </div>
                     
                     <div>
