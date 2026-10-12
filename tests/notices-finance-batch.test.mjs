@@ -69,3 +69,10 @@ test('saída do aluno: parcelas futuras locais ficam canceladas com motivo e ant
 });
 
 test('sem data de saída confirmada o sistema pede conferência e não inventa cancelamentos financeiros',async()=>{const {reviewLocal}=await import('../server/enrollment-finance.mjs');await db.collection('students').doc('exit-no-date').set({status:'Cancelado'});await db.collection('financeLogs').doc('exit-no-date-invoice').set({studentId:'exit-no-date',date:'2026-10-20',status:'PENDENTE'});const result=await reviewLocal(db,'exit-no-date',finance);assert(result.warning.includes('Data'));assert.equal((await db.collection('financeLogs').doc('exit-no-date-invoice').get()).data().status,'PENDENTE');});
+
+test('cartão financeiro mostra valor pago, desconto e acréscimos mesmo sem data de pagamento; não presume valores ausentes',()=>{
+ const sandbox={window:{},Intl,Date,Number,String};vm.runInNewContext(readFileSync('assets/se7-finance-dates.js','utf8'),sandbox);const f=sandbox.window.SE7Finance;
+ const discounted=f.settlementHTML({status:'PAGO',asaasPaymentId:'pay_1',amount:'270.00',asaasOriginalValueCents:27000,asaasPaidValueCents:24000,asaasDiscountCents:3000,asaasSurchargeCents:0});assert(discounted.includes('Valor pago'));assert(discounted.includes('Desconto aplicado'));assert(discounted.includes('Acréscimos'));assert(discounted.includes('240,00'));assert(discounted.includes('30,00'));assert(discounted.includes('0,00'));assert(discounted.includes('a menos'));
+ const surcharge=f.settlementHTML({status:'PAGO',asaasOriginalValueCents:27000,asaasPaidValueCents:28000,asaasDiscountCents:0,asaasSurchargeCents:1000});assert(surcharge.includes('a mais'));assert(surcharge.includes('10,00'));
+ assert(f.settlementHTML({status:'PAGO',asaasPaidValueCents:27000,asaasDiscountCents:null,asaasSurchargeCents:null}).includes('Não informado'));assert(f.settlementHTML({status:'PAGO',asaasReview:true,asaasPaidValueCents:27000}).includes('conferência'));assert.equal(f.settlementHTML({status:'PENDENTE',asaasPaidValueCents:27000}),'');assert(f.amountBR('1.234,56').includes('1.234,56'));assert.equal(f.amountBR('abc'),'---');
+});

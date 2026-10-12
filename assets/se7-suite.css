@@ -26,3 +26,5 @@ html.dark .se7-suite #main-app table tbody tr:hover {background:#12304b;}
 .se7-totem #totem-login>form {background:linear-gradient(135deg,#152842,#081525);border:1px solid #2a5c9f;box-shadow:0 24px 80px #0006;border-radius:18px;}
 .se7-totem #totem-login-button {background:linear-gradient(100deg,#0875ff,#0560f8);border:1px solid #1986ff;border-radius:10px;}
 }
+
+.se7-settlement{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:10px 0;padding:12px;border:1px solid #bccddd;border-radius:12px;background:#edf5fb;font-family:Arial,sans-serif;line-height:1.5}.se7-settlement>div{min-width:0}.se7-settlement dt{font-size:10px;color:#496078}.se7-settlement dd{margin:2px 0 0;font-size:12px;font-weight:700;color:#153e64;overflow-wrap:anywhere}.se7-settlement-warning{font-size:12px;color:#986414}.dark .se7-settlement{background:#0a263e;border-color:#294e6c}.dark .se7-settlement dt{color:#a9c4da}.dark .se7-settlement dd{color:#e3f4ff}.dark .se7-settlement-warning{color:#fcd48b}

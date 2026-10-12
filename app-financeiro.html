@@ -182,7 +182,7 @@
         <p class="welcome-tagline">Tudo conectado ao sistema Matriz</p>
         <div class="welcome-progress" aria-hidden="true"></div>
     </div>
-    <div class="welcome-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="financeiro">v1.8.5</span> • Setor Financeiro</div>
+    <div class="welcome-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="financeiro">v1.8.6</span> • Setor Financeiro</div>
 </div>
 
 
@@ -231,7 +231,7 @@
                 </form>
             </div>
         </div>
-        <div id="finance-login-developer-footer" class="finance-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="financeiro">v1.8.5</span> • Setor Financeiro</div>
+        <div id="finance-login-developer-footer" class="finance-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="financeiro">v1.8.6</span> • Setor Financeiro</div>
     </div>
 
     <!-- MODAL DE EDIÇÃO DA COBRANÇA -->
@@ -1271,7 +1271,7 @@
                             <div>
                                 <strong class="text-blue-600 dark:text-blue-400 text-xs">${nomeAluno}</strong><br>${alunoObj?.status==='Cancelado'?'<strong class="text-red-500">MATRÍCULA CANCELADA</strong><br>':''}
                                 <span class="text-slate-900 dark:text-white font-semibold">${f.description || f.descricao || 'Cobrança'}</span><br>
-                                <span class="text-slate-400 text-[10px]">Vencimento: ${dataVencimentoFormatada} &bull; Valor: <strong>R$ ${valorAtual}</strong></span>
+                                <span class="text-slate-400 text-[10px]">Vencimento: ${dataVencimentoFormatada} &bull; Valor: <strong>${SE7Finance.amountBR(valorAtual)}</strong></span>
                             </div>
                             <div class="flex items-center gap-1.5">
                                 <span class="px-2 py-0.5 ${corBadge} rounded-full text-[10px] font-bold">${SE7Finance.statusText(f)}</span>
@@ -1286,6 +1286,7 @@
                             </div>
                         </div>
 
+                        ${SE7Finance.settlementHTML(f)}
                         ${/CANCELADO|ESTORNADO|CONTESTADO|EM ANÁLISE/i.test(f.status||'') ? `<p class="text-xs text-slate-500">${SE7Cadastro.escape(SE7Finance.cancellationText(f)) || 'Cobrança indisponível para novo pagamento. Histórico preservado.'}</p>` : f.asaasPaymentId ? `<p class="text-xs text-blue-500"><span class="se7-payment-actions" data-invoice-id="${SE7Cadastro.escape(f.id)}" data-paid="${jaPago}"></span></p>` : !jaPago ? `
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-2 pt-2 border-t border-slate-100 dark:border-slate-800 items-center">
                                 <div>
@@ -1312,7 +1313,7 @@
                         ` : `
                             <div class="pt-2 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
                                 <div class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
-                                    <i class="fa-solid fa-circle-check mr-1"></i> ${SE7Finance.paymentText(f) ? `${SE7Finance.paymentText(f)}<br>` : ''}Quitado em ${dataPag} (${formaPag})
+                                    <i class="fa-solid fa-circle-check mr-1"></i> Quitado em ${dataPag} (${formaPag})
                                 </div>
                                 <button type="button" onclick="estornarBaixaApp('${f.id}')" class="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg text-[10px] font-bold shadow transition">
                                     <i class="fa-solid fa-rotate-left mr-1"></i> Estornar Pagamento
