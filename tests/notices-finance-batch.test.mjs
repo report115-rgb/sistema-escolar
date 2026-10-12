@@ -54,3 +54,18 @@ test('histórico financeiro: cancelados, transferidos e trancados geram e reorga
  const student=(await db.collection('students').doc(sid).get()).data();assert.equal(student.status,status);assert.deepEqual(student.enrollmentLastOperation,operation);assert.equal(student.grades.anatomia,9);const paid=(await db.collection('financeLogs').doc(created.rows[0].id).get()).data();assert.equal(paid.status,'PAGO');assert.equal(paid.amount,'240.00');assert.equal(paid.dataPagamento,'2026-07-19');assert.equal(paid.date,'2026-07-20');
  }
 });
+
+test('saída do aluno: parcelas futuras locais ficam canceladas com motivo e anteriores/pagas são preservadas',async()=>{
+ const {reviewLocal}=await import('../server/enrollment-finance.mjs');
+ for(const [i,status,type] of [[0,'Cancelado','cancelamento'],[1,'Transferido','transferencia']]){
+ const sid='batch-exit-'+i;await db.collection('students').doc(sid).set({fullname:'Saída '+i,status,enrollmentLastOperation:{type,state:'efetivada',date:'2026-08-20'}});
+ const p=await batch.preview(db,{studentId:sid,mode:'create',start:'2026-07-20',count:4,value:'270'},finance);await batch.commit(db,{planId:p.planId},finance);
+ const rows=await Promise.all(p.rows.map(r=>db.collection('financeLogs').doc(r.id).get()));assert.equal(rows[0].data().status,'PENDENTE');assert.equal(rows[1].data().status,'PENDENTE');for(const d of rows.slice(2)){assert.equal(d.data().status,'CANCELADO (MATRÍCULA)');assert(d.data().enrollmentCancellationReason.includes(i===0?'cancelou':'transferiu'));}
+ await db.collection('financeLogs').doc('exit-paid-'+i).set({studentId:sid,date:'2026-12-20',status:'PAGO',dataPagamento:'2026-08-15',amount:'270'});await db.collection('financeLogs').doc('exit-old-'+i).set({studentId:sid,date:'2026-10-20',status:'PENDENTE (Desc. Pontualidade disponível até o vencimento)',amount:'270'});await db.collection('financeLogs').doc('exit-linked-'+i).set({studentId:sid,date:'2026-11-20',status:'PENDENTE',amount:'270'});await db.collection('se7AsaasInvoices').doc('exit-linked-'+i).set({state:'reserved'});
+ const checked=await reviewLocal(db,sid,finance);assert.equal(checked.cancelled,1);assert.equal(checked.linked,1);assert.equal((await db.collection('financeLogs').doc('exit-paid-'+i).get()).data().status,'PAGO');assert.equal((await db.collection('financeLogs').doc('exit-linked-'+i).get()).data().status,'PENDENTE');assert.equal((await reviewLocal(db,sid,finance)).cancelled,0);
+ // Correcting an old local schedule can restore prior-to-exit pending dates, without changing IDs or paid records.
+ const adjusted=await batch.preview(db,{studentId:sid,mode:'dates',start:'2026-02-20'},finance);await batch.commit(db,{planId:adjusted.planId},finance);const future=(await db.collection('financeLogs').doc(p.rows[2].id).get()).data();assert.equal(future.status,'PENDENTE');assert.equal(future.enrollmentCancellationReason,'');assert.equal((await db.collection('students').doc(sid).get()).data().status,status);
+ }
+});
+
+test('sem data de saída confirmada o sistema pede conferência e não inventa cancelamentos financeiros',async()=>{const {reviewLocal}=await import('../server/enrollment-finance.mjs');await db.collection('students').doc('exit-no-date').set({status:'Cancelado'});await db.collection('financeLogs').doc('exit-no-date-invoice').set({studentId:'exit-no-date',date:'2026-10-20',status:'PENDENTE'});const result=await reviewLocal(db,'exit-no-date',finance);assert(result.warning.includes('Data'));assert.equal((await db.collection('financeLogs').doc('exit-no-date-invoice').get()).data().status,'PENDENTE');});

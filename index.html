@@ -250,7 +250,7 @@
             </div>
         </section>
     </div>
-    <div class="matriz-login-footer"><strong>Sistema SE7 de Gestão Acadêmica</strong><br><span data-se7-version="matriz">v1.4.3</span> • Sistema Matriz</div>
+    <div class="matriz-login-footer"><strong>Sistema SE7 de Gestão Acadêmica</strong><br><span data-se7-version="matriz">v1.4.4</span> • Sistema Matriz</div>
 </div>
 
 <!-- ========================================== -->
@@ -1595,7 +1595,7 @@
     <!-- RODAPÉ -->
     <footer id="se7-footer" class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border-t border-gray-200 dark:border-slate-700 py-2.5 px-6 text-center text-xs text-gray-500 dark:text-gray-400 flex flex-col sm:flex-row justify-between items-center gap-2 shadow-lg">
         <span>Sistema SE7 de Gestão Acadêmica • Matriz</span>
-        <span>Desenvolvido por <strong>JS & SS Serviços Educacionais e Cia Ltda</strong> &bull; <span data-se7-version="matriz">v1.4.3</span> • Sistema Matriz</span>
+        <span>Desenvolvido por <strong>JS & SS Serviços Educacionais e Cia Ltda</strong> &bull; <span data-se7-version="matriz">v1.4.4</span> • Sistema Matriz</span>
     </footer>
 
     <!-- MODAL DE NOVA MATRÍCULA / EDIÇÃO DE ALUNO -->
@@ -4402,6 +4402,7 @@ function renderizarCobrancasAlunoSelecionadoFinanceiro(studentId) {
         return;
     }
     const aluno = students.find(s => s.id === studentId);
+    if(['Cancelado','Transferido'].includes(aluno?.status))void SE7Cancellation.local(studentId);
     let cobrancasAluno = financeLogs.filter(f => f.studentId === studentId);
 
     if(cobrancasAluno.length === 0) {
@@ -4415,8 +4416,8 @@ function renderizarCobrancasAlunoSelecionadoFinanceiro(studentId) {
 
     cobrancasAluno.forEach((f) => {
         const jaPago = f.status && f.status.toUpperCase().includes('PAGO');
-        const corBadge = jaPago ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300';
-        const textoStatus = f.status || 'PENDENTE';
+        const corBadge = jaPago ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300' : /CANCELADO/i.test(f.status||'')?'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200':'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300';
+        const textoStatus = SE7Finance.statusText(f);
 
         const dataFormatada = SE7Finance.dateBR(f.date || f.vencimento);
 
@@ -4425,7 +4426,7 @@ function renderizarCobrancasAlunoSelecionadoFinanceiro(studentId) {
             textoQuitacao = '<div class="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-slate-800 p-2 rounded border border-emerald-200 dark:border-slate-700"><i class="fa-solid fa-circle-check mr-1"></i> Quitado em ' + SE7Finance.dateBR(f.dataPagamento) + (SE7Finance.paymentText(f) ? '<br>'+SE7Finance.paymentText(f) : '') + '</div>';
         }
 
-        container.innerHTML += '<div class="bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700 flex flex-col gap-2 text-xs"><div class="flex justify-between items-center"><div><strong class="text-gray-900 dark:text-white text-sm">' + f.description + '</strong><br><span class="text-gray-500">Vencimento: <strong>' + dataFormatada + '</strong> &bull; Valor: <strong>R$ ' + f.amount + '</strong></span></div><div><span class="px-2.5 py-1 ' + corBadge + ' rounded-lg text-[11px] font-bold shadow-xs">' + textoStatus + '</span></div></div>' + textoQuitacao + '</div>';
+        container.innerHTML += '<div class="bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700 flex flex-col gap-2 text-xs"><div class="flex justify-between items-center"><div><strong class="text-gray-900 dark:text-white text-sm">' + f.description + '</strong><br><span class="text-gray-500">Vencimento: <strong>' + dataFormatada + '</strong> &bull; Valor: <strong>R$ ' + f.amount + '</strong></span></div><div><span class="px-2.5 py-1 ' + corBadge + ' rounded-lg text-[11px] font-bold shadow-xs">' + textoStatus + '</span></div></div>' + textoQuitacao + (SE7Finance.cancellationText(f)?'<p class="text-xs text-red-400">'+SE7Cadastro.escape(SE7Finance.cancellationText(f))+'</p>':'') + '</div>';
     });
 }
         // --- FUNÇÃO TEMPORÁRIA PARA DAR BAIXA MANUAL ---

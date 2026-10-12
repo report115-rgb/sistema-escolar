@@ -1,3 +1,4 @@
+import {reviewLocal} from '../server/enrollment-finance.mjs';
 import * as notices from '../server/notices.mjs';
 import * as financeBatch from '../server/finance-batch.mjs';
 import * as mail from '../server/email.mjs';
@@ -101,6 +102,7 @@ export async function dispatch({auth,db},req,b){
   if(action==='email-documents'){if(u.role!=='aluno')fail(403,'Acesso restrito ao aluno.');return mail.documentsEmail(db,u.studentId);}
   fail(400,'Operação de e-mail desconhecida.');
  }
+ if(action==='enrollment-finance-local'){if(!['master','secretaria','financeiro','aluno'].includes(u.role))fail(403,'Acesso restrito.');return reviewLocal(db,u.role==='aluno'?u.studentId:validId(b.studentId),u);}
  if(action==='enrollment-finance-list'||action==='enrollment-finance-cancel'){if(!['master','secretaria','financeiro'].includes(u.role))fail(403,'Acesso restrito.');await limits(db,req,'asaas-bulk:'+u.uid);return action==='enrollment-finance-list'?asaas.cancellationInvoices(db,validId(b.studentId)):asaas.cancelEnrollmentInvoice(db,validId(b.invoiceId),u);}
  if(typeof action==='string'&&action.startsWith('asaas-')){
   const finance=['master','financeiro'].includes(u.role);
