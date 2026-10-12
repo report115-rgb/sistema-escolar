@@ -251,7 +251,7 @@
             </div>
         </section>
     </div>
-    <div class="matriz-login-footer"><strong>Sistema SE7 de Gestão Acadêmica</strong><br><span data-se7-version="matriz">v1.4.8</span> • Sistema Matriz</div>
+    <div class="matriz-login-footer"><strong>Sistema SE7 de Gestão Acadêmica</strong><br><span data-se7-version="matriz">v1.4.9</span> • Sistema Matriz</div>
 </div>
 
 <!-- ========================================== -->
@@ -513,7 +513,7 @@
                 <div class="flex space-x-2 mb-6 border-b border-gray-200 dark:border-slate-700 pb-3">
                     <button class="subtab-button active px-4 py-2 rounded-xl text-xs font-semibold bg-blue-600 text-white shadow" onclick="openSubTab(event, 'subtab-alunos-lista')"><i class="fa-solid fa-list mr-1"></i> Lista de Alunos</button>
                     <button class="subtab-button px-4 py-2 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" id="btn-validar-documentacao" style="position:relative;padding-right:24px;" onclick="openSubTab(event, 'subtab-validar-docs')"><i class="fa-solid fa-folder-open mr-1"></i> Validar Documentação<span id="badge-documentos-pendentes" class="se7-docs-badge" hidden aria-label="Novos documentos para avaliar">!</span></button>
-<button id="btn-avisos-portal" class="subtab-button px-4 py-2 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event,'subtab-avisos-portal');SE7Notices.admin()">Avisos do Portal</button>
+<button id="btn-avisos-portal" style="display:none;" class="subtab-button px-4 py-2 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event,'subtab-avisos-portal');SE7Notices.admin()">Avisos do Portal</button>
 <button id="btn-acessos-portal" class="subtab-button px-4 py-2 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" style="display:none;" onclick="openSubTab(event,'subtab-acessos-portal')">Acessos ao Portal</button>
                 </div>
 
@@ -1597,7 +1597,7 @@
     <!-- RODAPÉ -->
     <footer id="se7-footer" class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border-t border-gray-200 dark:border-slate-700 py-2.5 px-6 text-center text-xs text-gray-500 dark:text-gray-400 flex flex-col sm:flex-row justify-between items-center gap-2 shadow-lg">
         <span>Sistema SE7 de Gestão Acadêmica • Matriz</span>
-        <span>Desenvolvido por <strong>JS & SS Serviços Educacionais e Cia Ltda</strong> &bull; <span data-se7-version="matriz">v1.4.8</span> • Sistema Matriz</span>
+        <span>Desenvolvido por <strong>JS & SS Serviços Educacionais e Cia Ltda</strong> &bull; <span data-se7-version="matriz">v1.4.9</span> • Sistema Matriz</span>
     </footer>
 
     <!-- MODAL DE NOVA MATRÍCULA / EDIÇÃO DE ALUNO -->
@@ -2403,7 +2403,10 @@ async function rejeitarSolicitacaoFirebase(id) {
 
         function aplicarPermissoesPorPerfil(perfil) {
     document.getElementById('matriz-finance-batch-controls').hidden=!['master','financeiro'].includes(perfil);
-    document.getElementById('btn-avisos-portal').style.display=['master','secretaria'].includes(perfil)?'inline-block':'none';
+    const acessoMaster=perfil==='master'&&usuarioMasterAtivo()&&!sessionStorage.getItem('se7_matriz_perfil_visualizado');
+    document.getElementById('btn-avisos-portal').style.display=acessoMaster?'inline-block':'none';
+    window.SE7PortalPreview?.visibility(acessoMaster);
+    if(!acessoMaster){document.getElementById('subtab-avisos-portal').style.display='none';document.getElementById('se7-notices-manager').replaceChildren();}
     const botaoTotem = document.getElementById('btn-subtab-gestao-totem');
     const painelTotem = document.getElementById('subtab-gestao-totem');
     if (botaoTotem) botaoTotem.style.display = usuarioMasterAtivo() ? 'inline-block' : 'none';
@@ -4126,7 +4129,7 @@ function carregarDatasCalendarioParaFrequencia() {
                 <td class="p-3">${curso ? curso.name : '---'} <br><span class="text-[10px] text-gray-400">Turma: ${turma ? turma.name : '---'}</span></td>
                 <td class="p-3"><span class="px-2 py-0.5 ${classeStatusMatricula(s.status)} rounded text-[10px] font-bold">${rotuloStatusMatricula(s.status)}</span>${s.enrollmentRequest ? '<div class="text-[10px] text-amber-500 mt-1">Solicitação pendente</div>' : ''}</td>
                 <td class="p-3 text-right space-x-1">
-                    ${masterAutenticadoMatriz() ? `<button type="button" onclick="SE7PortalPreview.open('${s.id}')" class="px-2.5 py-1 bg-indigo-600 text-white rounded text-xs">Visualizar portal</button>` : ''}
+                    ${usuarioMasterAtivo()&&!sessionStorage.getItem('se7_matriz_perfil_visualizado') ? `<button type="button" onclick="SE7PortalPreview.open('${s.id}')" class="px-2.5 py-1 bg-indigo-600 text-white rounded text-xs">Visualizar portal</button>` : ''}
                     <button onclick="editarAluno('${s.id}')" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs shadow"><i class="fa-solid fa-pen-to-square mr-1"></i> Editar</button>
                     <button type="button" onclick="verHistoricoMatricula('${s.id}')" class="px-2.5 py-1 bg-blue-600 text-white rounded text-xs">Histórico</button>
                     ${botaoDeletar}

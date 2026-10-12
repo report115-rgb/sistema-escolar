@@ -1,7 +1,7 @@
 import {randomBytes} from 'node:crypto';
 import {validId} from './security.mjs';
 const fail=(status,message)=>{throw Object.assign(new Error(message),{status});};
-const staff=u=>{if(!['master','secretaria'].includes(u.role))fail(403,'Avisos restritos ao master e à secretaria.');};
+const staff=u=>{if(u.role!=='master')fail(403,'Avisos restritos ao master.');};
 const text=(v,max)=>{if(typeof v!=='string'||v.length>max)fail(400,'Texto do aviso inválido.');return v.trim();};
 const date=v=>{if(!v)return '';if(typeof v!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(v)||(!Number.isFinite(Date.parse(v+'T12:00Z'))||new Date(v+'T12:00Z').toISOString().slice(0,10)!==v))fail(400,'Data do aviso inválida.');return v;};
 export function courseAudience(c={}){const name=String(c.name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();return c.nivel==='Supletivo'||c.sigla==='EJA'||c.modality==='eja'||c.type==='eja'||/eja|supletivo|educacao de jovens/.test(name)?'eja':'tecnico';}

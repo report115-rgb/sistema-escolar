@@ -54,7 +54,7 @@
  if(mode==='Pix'){if(r.pix?.payload){if(r.pix.encodedImage){const img=document.createElement('img');img.src='data:image/png;base64,'+r.pix.encodedImage;img.alt='QR Code Pix da mensalidade';img.width=220;img.height=220;dialog.append(img);}const input=document.createElement('textarea');input.readOnly=true;input.value=r.pix.payload;input.setAttribute('aria-label','Pix Copia e Cola');dialog.append(input,button('Copiar código Pix',async()=>{try{await navigator.clipboard.writeText(input.value);alert('Código copiado.');}catch{input.focus();input.select();alert('Selecione e copie o código no campo.');}}));if(r.pix.expirationDate)dialog.append(text('p','Validade do Pix: '+SE7Finance.dateBR(r.pix.expirationDate)));}else dialog.append(text('p','Pix indisponível nesta cobrança. Consulte a fatura ou o financeiro.'));}
  }else dialog.append(text('p','Cobrança indisponível para pagamento ou recibo: '+p.status+'. Consulte o financeiro.'));
  dialog.append(button('Fechar',async()=>dialog.close()));dialog.addEventListener('close',()=>dialog.remove());document.body.append(dialog);dialog.showModal();}
- function mount(){const host=document.getElementById(finance?'tab-financeiro':'finance-list');if(!host||!window.SE7)return;panel=document.createElement('section');panel.id='se7-asaas-panel';panel.className='se7-asaas-panel';panel.append(text('h3',finance?'Pagamentos Asaas':'Pagar mensalidade'));message=text('p','');rows=document.createElement('div');reviewBox=document.createElement('section');reviewBox.hidden=true;
+ function mount(){if(!finance)return;const host=document.getElementById(finance?'tab-financeiro':'finance-list');if(!host||!window.SE7)return;panel=document.createElement('section');panel.id='se7-asaas-panel';panel.className='se7-asaas-panel';panel.append(text('h3',finance?'Pagamentos Asaas':'Pagar mensalidade'));message=text('p','');rows=document.createElement('div');reviewBox=document.createElement('section');reviewBox.hidden=true;
  const disclosure=(label)=>{const box=document.createElement('details');box.className='se7-asaas-controls';const summary=text('summary',label);box.append(summary);return box;};
  if(finance){
  const controls=disclosure('Opções de pagamentos');
@@ -63,7 +63,7 @@
  advanced.append(button('Verificar conexão',async()=>{const c=await SE7.api('asaas-config');if(!c.enabled||!c.configured)throw new Error('Configure as variáveis Asaas na Vercel e faça o redeploy.');await SE7.api('asaas-check');alert('Conexão com o Asaas de produção confirmada.');}),button('Informar ID do cliente',async()=>{const studentId=sid();if(!studentId)throw new Error('Selecione um aluno.');const customerId=prompt('Cole o ID do cliente existente no Asaas (cus_…). O CPF será conferido.');if(!customerId)return;await SE7.api('asaas-link-customer',{studentId,customerId:customerId.trim()});alert('Cliente vinculado.');await load();}));
  controls.append(advanced);panel.append(controls);
  document.getElementById('select-fin-aluno')?.addEventListener('change',()=>{controls.open=false;advanced.open=false;rows.replaceChildren();message.textContent='Abra as opções para consultar as mensalidades do aluno selecionado.';});
- }else panel.append(button('Consultar mensalidades',load));
+ }
  panel.append(message,reviewBox,rows);host.insertAdjacentElement(finance?'afterbegin':'afterend',panel);
  }
  new MutationObserver(decorate).observe(document.documentElement,{childList:true,subtree:true});decorate();
