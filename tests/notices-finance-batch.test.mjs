@@ -32,3 +32,14 @@ test('lote: ajuste opcional de valores mantém os IDs e recusa datas que coincid
  const first=(await db.collection('financeLogs').doc(generated.rows[1].id).get()).data();assert.equal(first.date,'2026-06-10');assert.equal(first.amount,'280.00');assert.equal(first.discountAmount,'250.00');assert.equal((await db.collection('financeLogs').doc(paid).get()).data().amount,'270.00');
  const expires=await batch.preview(db,{studentId:'batch-values',mode:'delete'},master);await db.collection('se7FinanceBatchPlans').doc(expires.planId).update({expiresAt:0});await assert.rejects(batch.commit(db,{planId:expires.planId},master),/expirada/);
 });
+
+test('parcelas antigas da matrícula: complemento de pontualidade permite reorganização e exclusão em lote',async()=>{
+ const sid='batch-legacy-enrollment';await db.collection('students').doc(sid).set({fullname:'Aluno antigo',status:'Ativo',fotoAluno:'foto-original',grades:{anatomia:8}});
+ const dates=batch.monthlyDates('2026-09-10',17);const legacyStatus='PENDENTE (Desc. Pontualidade disponível até o vencimento)';
+ for(let i=0;i<17;i++)await db.collection('financeLogs').doc('batch-legacy-'+i).set({studentId:sid,studentName:'Aluno antigo',studentCode:'MAT-ANTIGO',description:`Mensalidade ${i+1}/17 - Técnico em Enfermagem`,amount:'270,00',discountAmount:'240,00',date:dates[i],status:legacyStatus});
+ const plan=await batch.preview(db,{studentId:sid,mode:'dates',start:'2026-07-20'},finance);assert.equal(plan.rows.length,17);assert.equal(plan.skipped.length,0);assert.equal(plan.rows[0].date,'2026-07-20');assert.equal(plan.rows.at(-1).date,'2027-11-20');await batch.commit(db,{planId:plan.planId},finance);
+ const first=(await db.collection('financeLogs').doc('batch-legacy-0').get()).data();assert.equal(first.date,'2026-07-20');assert.equal(first.amount,'270,00');assert.equal(first.discountAmount,'240,00');assert.equal(first.status,legacyStatus);assert.equal(first.studentCode,'MAT-ANTIGO');
+ await db.collection('financeLogs').doc('batch-legacy-1').update({status:'PAGO (Pix)',dataPagamento:'2026-08-19'});await db.collection('se7AsaasInvoices').doc('batch-legacy-2').set({state:'reserved',studentId:sid});
+ const exclusion=await batch.preview(db,{studentId:sid,mode:'delete'},finance);assert.equal(exclusion.rows.length,15);assert.equal(exclusion.skipped.length,2);await batch.commit(db,{planId:exclusion.planId},finance);assert.equal((await db.collection('financeLogs').where('studentId','==',sid).get()).size,2);assert.equal((await db.collection('students').doc(sid).get()).data().grades.anatomia,8);
+ assert.equal(batch.protection({status:'Pendente'},false),'');assert.equal(batch.protection({status:'VENCIDO (Desc. indisponível)'},false),'');assert(batch.protection({status:'PENDENTE (ACORDO ACEITO)'},false));assert(batch.protection({status:'PENDENTE (CANCELADO)'},false));assert(batch.protection({status:legacyStatus,dataPagamento:'2026-10-01'},false));
+});
