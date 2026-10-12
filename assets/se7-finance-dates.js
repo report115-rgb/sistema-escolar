@@ -19,10 +19,12 @@
   if(!Number.isSafeInteger(f.asaasPaidValueCents)||f.asaasPaidValueCents<0)return f.asaasPaymentId?'<p class="se7-settlement-warning">Valor pago: aguardando consulta ao Asaas.</p>':'';
   const known=v=>Number.isSafeInteger(v)&&v>=0;
   const rows=[['Valor pago',money(f.asaasPaidValueCents)],['Desconto aplicado',known(f.asaasDiscountCents)?money(f.asaasDiscountCents):'Não informado'],['Acréscimos',known(f.asaasSurchargeCents)?money(f.asaasSurchargeCents):'Não informado']];
-  if(known(f.asaasOriginalValueCents)){const diff=f.asaasPaidValueCents-f.asaasOriginalValueCents;rows.push(['Comparação com o valor original',diff===0?'Mesmo valor':money(Math.abs(diff))+(diff>0?' a mais':' a menos')]);}
+  const original=f.asaasReplacement&&known(f.asaasReplacementOriginalAmountCents)?f.asaasReplacementOriginalAmountCents:f.asaasOriginalValueCents;
+  if(known(original)){const diff=f.asaasPaidValueCents-original;rows.push([f.asaasReplacement?'Comparação com a mensalidade original':'Comparação com o valor original',diff===0?'Mesmo valor':money(Math.abs(diff))+(diff>0?' a mais':' a menos')]);}
   return '<dl class="se7-settlement" aria-label="Valores confirmados do pagamento">'+rows.map(([label,value])=>'<div><dt>'+label+'</dt><dd>'+value+'</dd></div>').join('')+'</dl>';
  };
+ const replacementText=f=>f.asaasReplacement?'Boleto substituto: vencimento '+dateBR(f.asaasReplacementDueDate)+'. A referência da mensalidade original foi preservada.':'';
  const cancellationText=f=>/CANCELADO/i.test(f.status||'')?(f.enrollmentCancellationReason||({'cancelamento':'Aluno cancelou a matrícula.','transferencia':'Aluno transferiu a matrícula.'}[f.enrollmentCancellationType])||''):'';
  const statusText=f=>cancellationText(f)?'Mensalidade cancelada':f.status||'PENDENTE';
- window.SE7Finance=Object.freeze({cancellationText,statusText,dateISO,dateBR,compare,money,amountBR,paymentText,settlementHTML,sort:rows=>rows.sort(compare)});
+ window.SE7Finance=Object.freeze({replacementText,cancellationText,statusText,dateISO,dateBR,compare,money,amountBR,paymentText,settlementHTML,sort:rows=>rows.sort(compare)});
 })();

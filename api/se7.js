@@ -6,6 +6,7 @@ import {waConfig,setConsent,enrollmentNotifications,examNotification,listMessage
 import {services,FieldValue as F} from '../server/admin.mjs';
 import {randomBytes} from 'node:crypto';
 import * as asaas from '../server/asaas.mjs';
+import * as replacement from '../server/asaas-replacement.mjs';
 import * as asaasBulk from '../server/asaas-bulk.mjs';
 import {roles,tabs,docTypes,digest,cpfKey,studentUid,alias,validId,password,hashPassword,verifyPassword,publicStudent,validCPF} from '../server/security.mjs';
 const PROJECT='sistema-escolar-nuvem';
@@ -111,6 +112,7 @@ export async function dispatch({auth,db},req,b){
   if(action==='asaas-invoices')return asaas.invoices(db,u.role==='aluno'?u.studentId:validId(b.studentId));
   if(action==='asaas-payment')return asaas.paymentDetails(db,validId(b.invoiceId),u,b.mode);
   if(!finance)fail(403,'Aluno não pode emitir ou alterar cobranças.');
+  if(action.startsWith('asaas-replacement-')){await limits(db,req,'asaas-bulk:replacement:'+u.uid);if(action==='asaas-replacement-candidates')return replacement.candidates(db,validId(b.invoiceId),u);if(action==='asaas-replacement-preview')return replacement.preview(db,b,u);if(action==='asaas-replacement-commit')return replacement.commit(db,b,u);fail(400,'Operação de substituição desconhecida.');}
   if(action==='asaas-config')return asaas.config();
   if(action==='asaas-bulk-preview'||action==='asaas-bulk-commit'||action==='asaas-bulk-sync'){
    await limits(db,req,'asaas-bulk:'+u.uid);
