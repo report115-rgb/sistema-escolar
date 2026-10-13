@@ -216,3 +216,14 @@ test('professor dedicado não lê outros pontos, não escreve notas diretamente 
  await assertFails(getDoc(doc(teacher,'se7ExamVersions','qualquer-versao')));
  await assertFails(getDoc(doc(teacher,'se7ExamImages','qualquer-imagem')));
 });
+
+test('foto do professor somente master; secretaria edita outros dados sem alterar foto',async()=>{
+ await db.collection('se7Staff').doc('photo-sec').set({perfil:'secretaria',disabled:false});await db.collection('se7Staff').doc('photo-prof').set({perfil:'professor',disabled:false});
+ await db.collection('teachers').doc('photo-teacher').set({fullname:'Professor Teste',profilePhoto:'foto-atual'});
+ const m=env.authenticatedContext(MASTER).firestore(),s=env.authenticatedContext('photo-sec').firestore(),p=env.authenticatedContext('photo-prof').firestore();
+ await assertSucceeds(updateDoc(doc(m,'teachers/photo-teacher'),{profilePhoto:'nova-foto'}));
+ await assertSucceeds(updateDoc(doc(s,'teachers/photo-teacher'),{formation:'Formação atualizada'}));
+ await assertFails(updateDoc(doc(s,'teachers/photo-teacher'),{profilePhoto:'troca-indevida'}));
+ await assertFails(setDoc(doc(s,'teachers/photo-new'),{fullname:'Outro',profilePhoto:'foto'}));
+ await assertFails(updateDoc(doc(p,'teachers/photo-teacher'),{profilePhoto:'troca-propria'}));
+});

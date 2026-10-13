@@ -37,7 +37,7 @@ service cloud.firestore {
    allow delete: if finance() && !exists(/databases/$(database)/documents/se7AsaasInvoices/$(id)) && !resource.data.keys().hasAny(['asaasPaymentId']);
   }
   match /config/{id} {allow read: if staff() || (studentActive() && id == 'ejaSettings');}
-  match /teachers/{id} {allow read: if staff();allow create: if academic() && !request.resource.data.keys().hasAny(['authUid']);allow update: if academic() && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['authUid']);allow delete: if academic();}
+  match /teachers/{id} {allow read: if staff();allow create: if academic() && !request.resource.data.keys().hasAny(['authUid','profilePhoto']);allow update: if academic() && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['authUid','profilePhoto']);allow delete: if academic();}
   match /teacherManualLogs/{id} {allow read: if staff();allow write: if academic();}
   match /teacherPaymentRates/{id} {allow read,write: if finance();}
   match /teacherMonthlyPayments/{id}/{rest=**} {allow read,write: if finance();}

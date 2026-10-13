@@ -251,7 +251,7 @@
             </div>
         </section>
     </div>
-    <div class="matriz-login-footer"><strong>Sistema SE7 de Gestão Acadêmica</strong><br><span data-se7-version="matriz">v1.5.2</span> • Sistema Matriz</div>
+    <div class="matriz-login-footer"><strong>Sistema SE7 de Gestão Acadêmica</strong><br><span data-se7-version="matriz">v1.5.3</span> • Sistema Matriz</div>
 </div>
 
 <!-- ========================================== -->
@@ -1328,6 +1328,7 @@
 </div>
 
     <div class="flex gap-2 pt-2">
+        <div id="teacher-photo-master" class="mt-4 mb-4"><label class="block text-xs font-semibold">Foto 3×4 do colaborador (somente master)<input id="input-teacher-photo" type="file" accept="image/jpeg,image/png,image/webp" class="block mt-2 text-xs"></label><img id="teacher-photo-preview" alt="Foto cadastrada" style="display:none;width:90px;height:120px;object-fit:cover;margin-top:8px;border-radius:8px"><p class="text-xs text-gray-500 mt-2">A foto ficará disponível para visualização no ambiente do professor.</p></div>
         <button type="button" onclick="saveTeacher()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow transition">Salvar Colaborador</button>
         <button type="button" id="btn-cancel-edit-teacher" onclick="cancelarEdicaoColaborador()" class="px-4 py-2.5 bg-gray-500 text-white text-xs font-semibold rounded-lg shadow" style="display: none;">Cancelar</button>
     </div>
@@ -1603,7 +1604,7 @@
     <!-- RODAPÉ -->
     <footer id="se7-footer" class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border-t border-gray-200 dark:border-slate-700 py-2.5 px-6 text-center text-xs text-gray-500 dark:text-gray-400 flex flex-col sm:flex-row justify-between items-center gap-2 shadow-lg">
         <span>Sistema SE7 de Gestão Acadêmica • Matriz</span>
-        <span>Desenvolvido por <strong>JS & SS Serviços Educacionais e Cia Ltda</strong> &bull; <span data-se7-version="matriz">v1.5.2</span> • Sistema Matriz</span>
+        <span>Desenvolvido por <strong>JS & SS Serviços Educacionais e Cia Ltda</strong> &bull; <span data-se7-version="matriz">v1.5.3</span> • Sistema Matriz</span>
     </footer>
 
     <!-- MODAL DE NOVA MATRÍCULA / EDIÇÃO DE ALUNO -->
@@ -2872,6 +2873,10 @@ let dadosMatrizIniciados=false;function iniciarDadosAutenticadosMatriz(){const p
             });
         }
 
+        async function prepararFotoColaborador(file){
+            if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>10*1024*1024)throw Error('Escolha uma foto JPG, PNG ou WebP de até 10 MB.');
+            const url=URL.createObjectURL(file);try{const image=new Image();await new Promise((resolve,reject)=>{image.onload=resolve;image.onerror=()=>reject(Error('Não foi possível ler a foto.'));image.src=url;});const canvas=document.createElement('canvas');canvas.width=360;canvas.height=480;const ratio=Math.max(360/image.width,480/image.height),w=image.width*ratio,h=image.height*ratio;canvas.getContext('2d').drawImage(image,(360-w)/2,(480-h)/2,w,h);return canvas.toDataURL('image/jpeg',.85);}finally{URL.revokeObjectURL(url);}
+        }
         async function saveTeacher() {
     const editId = document.getElementById('edit-teacher-id').value;
     const fullname = document.getElementById('input-teacher-name').value.trim();
@@ -2906,6 +2911,8 @@ let dadosMatrizIniciados=false;function iniciarDadosAutenticadosMatriz(){const p
     };
 
     try {
+        const photoFile=document.getElementById('input-teacher-photo').files[0];
+        if(photoFile){if(!usuarioMasterAtivo())throw Error('Somente o master pode alterar a foto.');teacherData.profilePhoto=await prepararFotoColaborador(photoFile);}
         if (editId) {
             await db.collection("teachers").doc(editId).update(teacherData);
             alert("Colaborador e horários atualizados com sucesso!");
@@ -2914,6 +2921,7 @@ let dadosMatrizIniciados=false;function iniciarDadosAutenticadosMatriz(){const p
             await db.collection("teachers").add(teacherData);
             alert(`Colaborador cadastrado com sucesso!\nID Totem: ${pinFinal}\nHorários configurados.`);
             
+            document.getElementById('input-teacher-photo').value='';
             document.getElementById('input-teacher-name').value = '';
             document.getElementById('input-teacher-formation').value = '';
             document.getElementById('input-teacher-council').value = '';
@@ -2925,6 +2933,7 @@ let dadosMatrizIniciados=false;function iniciarDadosAutenticadosMatriz(){const p
 }
 
 function renderTeachers() {
+    document.getElementById('teacher-photo-master').style.display=usuarioMasterAtivo()?'block':'none';
     const courseSelect=document.getElementById('input-teacher-course');if(courseSelect){const selected=courseSelect.value;courseSelect.replaceChildren(new Option('Selecione o curso',''));courses.forEach(c=>courseSelect.append(new Option(c.name,c.id)));courseSelect.value=selected;}
     const list = document.getElementById('teachers-list');
     if(list) {
@@ -2978,6 +2987,7 @@ function editarColaborador(id) {
     document.getElementById('input-teacher-formation').value = t.formation || '';
     document.getElementById('input-teacher-council').value = t.council || '';
     document.getElementById('input-teacher-course').value=t.courseId||'';
+    document.getElementById('input-teacher-photo').value='';const photo=document.getElementById('teacher-photo-preview');photo.src=t.profilePhoto||'';photo.style.display=t.profilePhoto?'block':'none';
     document.getElementById('input-teacher-pin').value = t.pin || '';
 
     // Restaura os horários salvos
@@ -2998,6 +3008,7 @@ function cancelarEdicaoColaborador() {
     document.getElementById('input-teacher-council').value = '';
     document.getElementById('input-teacher-pin').value = '';
     document.getElementById('btn-cancel-edit-teacher').style.display = 'none';
+    document.getElementById('input-teacher-photo').value='';document.getElementById('teacher-photo-preview').style.display='none';
 }
 
 async function excluirColaborador(id) {
