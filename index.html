@@ -251,7 +251,7 @@
             </div>
         </section>
     </div>
-    <div class="matriz-login-footer"><strong>Sistema SE7 de Gestão Acadêmica</strong><br><span data-se7-version="matriz">v1.5.4</span> • Sistema Matriz</div>
+    <div class="matriz-login-footer"><strong>Sistema SE7 de Gestão Acadêmica</strong><br><span data-se7-version="matriz">v1.5.7</span> • Sistema Matriz</div>
 </div>
 
 <!-- ========================================== -->
@@ -1219,7 +1219,7 @@
                             <label class="text-xs font-semibold">Semestre<select id="manage-cal-semester" onchange="renderizarTabelaGerenciarCalendarios()" disabled class="block w-full mt-1 px-3 py-2 rounded-lg border dark:bg-slate-800"><option value="">Selecione o semestre...</option></select></label>
                         </div>
                         <p class="text-xs text-gray-500">Selecione curso, turma e semestre para consultar e editar as datas. Os feriados aparecem no calendário do aluno e não entram na frequência.</p>
-                        <div class="overflow-x-auto">
+                        <div id="manage-cal-results" class="overflow-x-auto" style="display:none">
                             <table class="w-full text-left text-xs">
                                 <thead>
                                     <tr class="border-b border-gray-200 dark:border-slate-700 text-gray-500">
@@ -1235,27 +1235,23 @@
                         </div>
                     </div>
 
-                    <div class="flex justify-between items-center mt-6 mb-2">
+                    <div id="manage-cal-graphic" style="display:none"><div class="flex justify-between items-center mt-6 mb-2">
                         <h4 class="font-bold text-sm text-gray-700 dark:text-gray-300">Visualização Gráfica do Calendário Semestral</h4>
-                        <select id="admin-filtro-semestre" onchange="renderizarCalendarioSemestralAdmin()" class="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-slate-600 text-xs font-semibold dark:bg-slate-800">
-                            <option value="2026/2" selected>2026/2 (2º Semestre: Jul-Dez)</option>
-                            <option value="2026/1">2026/1 (1º Semestre: Jan-Jun)</option>
-                            <option value="2025/1">2025/1 (1º Semestre: Jan-Jun)</option>
-                            <option value="2025/2">2025/2 (2º Semestre: Jul-Dez)</option>
-                            <option value="2027/1">2027/1 (1º Semestre: Jan-Jun)</option>
-                            <option value="2027/2">2027/2 (2º Semestre: Jul-Dez)</option>
-                        </select>
                     </div>
-                    <div id="admin-calendar-view" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+                    <div id="admin-calendar-view" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div></div>
                 </div>
 
                 <!-- SUBABA COLABORADORES (ANTIGA PROFESSORES) -->
 <div id="subtab-teachers" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
     <div class="flex justify-between items-center border-b border-gray-200 dark:border-slate-700 pb-2">
-        <h3 class="font-bold text-sm text-blue-600 dark:text-blue-400"><i class="fa-solid fa-id-card-clip mr-1.5"></i> Cadastro Geral de Colaboradores (Ponto & Facial)</h3>
-        <span class="text-xs text-gray-500">Gestão para Folha de Ponto e Totem</span>
+        <h3 class="font-bold text-sm text-blue-600 dark:text-blue-400"><i class="fa-solid fa-id-card-clip mr-1.5"></i> Colaboradores</h3>
+        <span class="text-xs text-gray-500">Cadastro e informações dos colaboradores</span>
     </div>
 
+    <button type="button" onclick="abrirNovoColaborador()" class="se7-primary-button"><i class="fa-solid fa-user-plus" aria-hidden="true"></i> Cadastrar novo colaborador</button>
+    <dialog id="collaborator-editor-modal" class="se7-exam-dialog se7-collaborator-dialog" aria-labelledby="collaborator-editor-title">
+        <div class="flex justify-between items-center"><h3 id="collaborator-editor-title">Cadastrar novo colaborador</h3><button type="button" onclick="cancelarEdicaoColaborador()" aria-label="Fechar cadastro">Fechar</button></div>
+        <div class="space-y-4">
     <input type="hidden" id="edit-teacher-id" value="">
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1265,7 +1261,7 @@
         </div>
         <div>
             <label class="block text-xs font-semibold mb-1">Cargo / Função</label>
-            <select id="input-teacher-cargo" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 dark:text-white">
+            <select id="input-teacher-cargo" onchange="atualizarHorarioColaborador()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 dark:text-white">
                 <option value="Professor">Professor(a)</option>
                 <option value="Secretaria">Secretaria / Atendimento</option>
                 <option value="Limpeza">Funcionário(a) de Limpeza</option>
@@ -1275,24 +1271,16 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-            <label class="block text-xs font-semibold mb-1">Formação / Especialidade</label>
-            <input type="text" id="input-teacher-formation" placeholder="Ex: Licenciatura em Letras / Pós" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 dark:text-white">
-        </div>
-        <div>
-            <label class="block text-xs font-semibold mb-1">Conselho de Classe / Registro</label>
-            <label class="block text-xs">Curso ministrado<select id="input-teacher-course" class="w-full px-3 py-2 rounded-lg dark:bg-slate-900"></select></label><input type="text" id="input-teacher-council" placeholder="Ex: OAB/PA 00.000 ou RG" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 dark:text-white">
-        </div>
-        <div>
-            <label class="block text-xs font-semibold mb-1">ID / Matrícula Automática (Totem)</label>
-            <input type="text" id="input-teacher-pin" readonly placeholder="Gerado automaticamente..." class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 dark:text-white font-mono">
-        </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div><label class="block text-xs font-semibold mb-1">Formação / Especialidade</label><input type="text" id="input-teacher-formation" class="w-full px-3 py-2 rounded-lg border dark:bg-slate-900 text-sm"></div>
+        <div><label class="block text-xs font-semibold mb-1">Conselho de Classe / Registro</label><input type="text" id="input-teacher-council" class="w-full px-3 py-2 rounded-lg border dark:bg-slate-900 text-sm"></div>
+        <div><label class="block text-xs font-semibold mb-1">ID / Matrícula Automática</label><input type="text" id="input-teacher-pin" readonly placeholder="Gerado automaticamente..." class="w-full px-3 py-2 rounded-lg border dark:bg-slate-900 text-sm font-mono"></div>
+        <div><label class="block text-xs font-semibold mb-1">Curso vinculado ao colaborador</label><select id="input-teacher-course" class="w-full px-3 py-2 rounded-lg border dark:bg-slate-900 text-sm"></select></div>
     </div>
 
 <!-- ADICIONE ESTES CAMPOS DENTRO DO FORMULÁRIO DE CADASTRO DE COLABORADORES -->
-<div class="bg-blue-50 dark:bg-slate-800/60 p-4 rounded-xl border border-blue-200 dark:border-slate-700 space-y-3">
-    <h4 class="font-bold text-xs text-blue-700 dark:text-blue-300 uppercase"><i class="fa-solid fa-clock mr-1"></i> Configuração de Horário (Folha de Ponto / Totem)</h4>
+<div id="teacher-hours-panel" style="display:none" class="bg-blue-50 dark:bg-slate-800/60 p-4 rounded-xl border border-blue-200 dark:border-slate-700 space-y-3">
+    <h4 class="font-bold text-xs text-blue-700 dark:text-blue-300 uppercase"><i class="fa-solid fa-clock mr-1"></i> Configuração de Horário e Folha de Ponto</h4>
     
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
         <!-- Turno da Manhã -->
@@ -1327,11 +1315,14 @@
     </div>
 </div>
 
-    <div class="flex gap-2 pt-2">
-        <div id="teacher-photo-master" class="mt-4 mb-4"><label class="block text-xs font-semibold">Foto 3×4 do colaborador (somente master)<input id="input-teacher-photo" type="file" accept="image/jpeg,image/png,image/webp" class="block mt-2 text-xs"></label><img id="teacher-photo-preview" alt="Foto cadastrada" style="display:none;width:90px;height:120px;object-fit:cover;margin-top:8px;border-radius:8px"><p class="text-xs text-gray-500 mt-2">A foto ficará disponível para visualização no ambiente do professor.</p></div>
-        <button type="button" onclick="saveTeacher()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow transition">Salvar Colaborador</button>
-        <button type="button" id="btn-cancel-edit-teacher" onclick="cancelarEdicaoColaborador()" class="px-4 py-2.5 bg-gray-500 text-white text-xs font-semibold rounded-lg shadow" style="display: none;">Cancelar</button>
+    <div id="teacher-photo-master" class="mt-4 mb-4"><label class="block text-xs font-semibold">Foto 3×4 do colaborador (somente master)<input id="input-teacher-photo" type="file" accept="image/jpeg,image/png,image/webp" class="block mt-2 text-xs"></label><img id="teacher-photo-preview" alt="Foto cadastrada" style="display:none;width:90px;height:120px;object-fit:cover;margin-top:8px;border-radius:8px"><p class="text-xs text-gray-500 mt-2">A foto ficará disponível para visualização no ambiente do professor.</p></div>
+    <div class="se7-collaborator-actions">
+        <button type="button" id="save-collaborator-button" onclick="saveTeacher()" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow transition">Salvar Colaborador</button>
+        <button type="button" id="btn-cancel-edit-teacher" onclick="cancelarEdicaoColaborador()" class="px-4 py-2.5 bg-gray-500 text-white text-xs font-semibold rounded-lg shadow" >Cancelar</button>
     </div>
+
+        </div>
+    </dialog>
 
     <div class="mt-4">
         <h4 class="font-bold text-xs text-gray-700 dark:text-gray-300 mb-2">Colaboradores Cadastrados na Instituição</h4>
@@ -1339,7 +1330,7 @@
             <table class="w-full text-left text-xs">
                 <thead>
                     <tr class="border-b border-gray-200 dark:border-slate-700 text-gray-500">
-                        <th class="p-2.5">Nome / ID Totem</th>
+                        <th class="p-2.5">Nome / Identificação</th>
                         <th class="p-2.5">Cargo / Função</th>
                         <th class="p-2.5">Formação / Registro</th>
                         <th class="p-2.5 text-right">Ações</th>
@@ -1604,7 +1595,7 @@
     <!-- RODAPÉ -->
     <footer id="se7-footer" class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border-t border-gray-200 dark:border-slate-700 py-2.5 px-6 text-center text-xs text-gray-500 dark:text-gray-400 flex flex-col sm:flex-row justify-between items-center gap-2 shadow-lg">
         <span>Sistema SE7 de Gestão Acadêmica • Matriz</span>
-        <span>Desenvolvido por <strong>JS & SS Serviços Educacionais e Cia Ltda</strong> &bull; <span data-se7-version="matriz">v1.5.4</span> • Sistema Matriz</span>
+        <span>Desenvolvido por <strong>JS & SS Serviços Educacionais e Cia Ltda</strong> &bull; <span data-se7-version="matriz">v1.5.7</span> • Sistema Matriz</span>
     </footer>
 
     <!-- MODAL DE NOVA MATRÍCULA / EDIÇÃO DE ALUNO -->
@@ -2149,7 +2140,7 @@ function renderizarCalendarioFlutuanteResultado() {
                     <span class="text-[10px] text-gray-400 font-semibold">Calendário Semestral</span>
                 </div>
                 <div class="overflow-y-auto flex-1 pr-1 space-y-1">
-                    ${htmlAulasDoMes || '<p class="text-[11px] text-gray-400 text-center py-12">Nenhuma aula agendada para este mês.</p>'}
+                    ${htmlAulasDoMes || '<p class="text-[11px] text-gray-400 text-center py-12">Nenhum evento agendado para este mês.</p>'}
                 </div>
             </div>
         `;
@@ -2873,6 +2864,9 @@ let dadosMatrizIniciados=false;function iniciarDadosAutenticadosMatriz(){const p
             });
         }
 
+        function atualizarPinAutomaticoColaborador(){const used=new Set(teachers.map(t=>t.pin));let n=teachers.length+1;while(used.has('COLAB-'+String(n).padStart(3,'0')))n++;document.getElementById('input-teacher-pin').value='COLAB-'+String(n).padStart(3,'0');}
+        function atualizarHorarioColaborador(){const cargo=document.getElementById('input-teacher-cargo').value;document.getElementById('teacher-hours-panel').style.display=['Secretaria','Secretário','Secretária','Atendimento'].includes(cargo)?'block':'none';}
+        function abrirNovoColaborador(){cancelarEdicaoColaborador();document.getElementById('input-teacher-cargo').value='Professor';document.getElementById('input-teacher-course').value='';for(const [id,v] of [['entrada-1','08:00'],['saida-1','12:00'],['entrada-2','14:00'],['saida-2','18:00']])document.getElementById('input-teacher-'+id).value=v;atualizarPinAutomaticoColaborador();atualizarHorarioColaborador();document.getElementById('teacher-photo-master').style.display=usuarioMasterAtivo()?'block':'none';document.getElementById('collaborator-editor-title').textContent='Cadastrar novo colaborador';document.getElementById('collaborator-editor-modal').showModal();}
         async function prepararFotoColaborador(file){
             if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>10*1024*1024)throw Error('Escolha uma foto JPG, PNG ou WebP de até 10 MB.');
             const url=URL.createObjectURL(file);try{const image=new Image();await new Promise((resolve,reject)=>{image.onload=resolve;image.onerror=()=>reject(Error('Não foi possível ler a foto.'));image.src=url;});const canvas=document.createElement('canvas');canvas.width=360;canvas.height=480;const ratio=Math.max(360/image.width,480/image.height),w=image.width*ratio,h=image.height*ratio;canvas.getContext('2d').drawImage(image,(360-w)/2,(480-h)/2,w,h);return canvas.toDataURL('image/jpeg',.85);}finally{URL.revokeObjectURL(url);}
@@ -2906,25 +2900,26 @@ let dadosMatrizIniciados=false;function iniciarDadosAutenticadosMatriz(){const p
         formation, 
         council, 
         courseId:document.getElementById('input-teacher-course').value,
-        pin: pinFinal,
-        horarios: { entrada1, saida1, entrada2, saida2 } 
+        pin: pinFinal 
     };
 
+    if(['Secretaria','Secretário','Secretária','Atendimento'].includes(cargo))teacherData.horarios={entrada1,saida1,entrada2,saida2};
     try {
         const photoFile=document.getElementById('input-teacher-photo').files[0];
         if(photoFile){if(!usuarioMasterAtivo())throw Error('Somente o master pode alterar a foto.');teacherData.profilePhoto=await prepararFotoColaborador(photoFile);}
         if (editId) {
             await db.collection("teachers").doc(editId).update(teacherData);
-            alert("Colaborador e horários atualizados com sucesso!");
+            alert("Colaborador atualizado com sucesso!");
             cancelarEdicaoColaborador();
         } else {
             await db.collection("teachers").add(teacherData);
-            alert(`Colaborador cadastrado com sucesso!\nID Totem: ${pinFinal}\nHorários configurados.`);
+            alert(`Colaborador cadastrado com sucesso!\nID / Matrícula: ${pinFinal}`);
             
             document.getElementById('input-teacher-photo').value='';
             document.getElementById('input-teacher-name').value = '';
             document.getElementById('input-teacher-formation').value = '';
             document.getElementById('input-teacher-council').value = '';
+            cancelarEdicaoColaborador();
             atualizarPinAutomaticoColaborador();
         }
     } catch (e) {
@@ -2952,7 +2947,7 @@ function renderTeachers() {
                 <tr class="border-b border-gray-100 dark:border-slate-700">
                     <td class="p-2.5">
                         <strong class="text-gray-900 dark:text-white">${t.fullname}</strong><br>
-                        <span class="text-[10px] text-gray-400 font-mono">ID Totem: ${t.pin || '---'}</span>
+                        <span class="text-[10px] text-gray-400 font-mono">ID / Matrícula: ${t.pin || '---'}</span>
                     </td>
                     <td class="p-2.5"><span class="px-2 py-0.5 ${corBadge} rounded text-[10px] font-bold">${t.cargo || 'Professor'}</span></td>
                     <td class="p-2.5">${t.formation || '---'} <br><span class="text-xs text-blue-400">Curso: ${courses.find(c=>c.id===t.courseId)?.name||'Não vinculado'}</span><br><span class="text-[10px] text-gray-400">${t.council || ''}</span></td>
@@ -2991,6 +2986,7 @@ function editarColaborador(id) {
     document.getElementById('input-teacher-pin').value = t.pin || '';
 
     // Restaura os horários salvos
+    for(const [id,v] of [['entrada-1','08:00'],['saida-1','12:00'],['entrada-2','14:00'],['saida-2','18:00']])document.getElementById('input-teacher-'+id).value=v;
     if (t.horarios) {
         document.getElementById('input-teacher-entrada-1').value = t.horarios.entrada1 || '08:00';
         document.getElementById('input-teacher-saida-1').value = t.horarios.saida1 || '12:00';
@@ -2998,7 +2994,8 @@ function editarColaborador(id) {
         document.getElementById('input-teacher-saida-2').value = t.horarios.saida2 || '18:00';
     }
 
-    document.getElementById('btn-cancel-edit-teacher').style.display = 'inline-block';
+    document.getElementById('teacher-photo-master').style.display=usuarioMasterAtivo()?'block':'none';
+    atualizarHorarioColaborador();document.getElementById('collaborator-editor-title').textContent='Editar colaborador';document.getElementById('collaborator-editor-modal').showModal();
 }
 
 function cancelarEdicaoColaborador() {
@@ -3007,7 +3004,7 @@ function cancelarEdicaoColaborador() {
     document.getElementById('input-teacher-formation').value = '';
     document.getElementById('input-teacher-council').value = '';
     document.getElementById('input-teacher-pin').value = '';
-    document.getElementById('btn-cancel-edit-teacher').style.display = 'none';
+    document.getElementById('collaborator-editor-modal').close();
     document.getElementById('input-teacher-photo').value='';document.getElementById('teacher-photo-preview').style.display='none';
 }
 
@@ -3237,7 +3234,7 @@ async function excluirColaborador(id) {
             if (editSubjectId) {
                 const index = course.subjects.findIndex(s => s.id == editSubjectId);
                 if (index !== -1) {
-                    course.subjects[index] = { id: Number(editSubjectId), name, hours, ementa };
+                    course.subjects[index] = { ...course.subjects[index], name, hours, ementa };
                 }
                 await db.collection("courses").doc(courseId).update({ subjects: course.subjects });
                 cancelarEdicaoDisciplina();
@@ -3252,46 +3249,34 @@ async function excluirColaborador(id) {
             }
         }
 
+        function cargaHorariaDisciplina(value){const raw=String(value??'').trim();return raw?/^\d+(?:[.,]\d+)?$/.test(raw)?raw+' horas':raw:'Não informada';}
+        function verEmentaDisciplina(courseId,subjectId){
+            const course=courses.find(c=>c.id===courseId),subject=course?.subjects?.find(s=>String(s.id)===String(subjectId));if(!subject)return;
+            const dialog=document.createElement('dialog');dialog.className='se7-exam-dialog';dialog.setAttribute('aria-label','Ementa da disciplina');
+            const title=document.createElement('h3');title.textContent=subject.name;
+            const info=document.createElement('p');info.textContent='Curso: '+course.name+' • Carga horária: '+cargaHorariaDisciplina(subject.hours);
+            const heading=document.createElement('h4');heading.textContent='Ementa';
+            const content=document.createElement('p');content.className='se7-subject-syllabus';content.textContent=subject.ementa||'Nenhuma ementa informada.';
+            const close=document.createElement('button');close.type='button';close.textContent='Fechar';close.onclick=()=>dialog.close();
+            dialog.append(title,info,heading,content,close);dialog.addEventListener('close',()=>dialog.remove());document.body.append(dialog);dialog.showModal();
+        }
         function renderSubjectsManagement() {
-            const list = document.getElementById('subjects-management-list');
-            const counter = document.getElementById('total-subjects-count');
-            let totalDisciplinas = 0;
-
-            if(list) {
-                list.innerHTML = '';
-                courses.forEach(c => {
-                    if(c.subjects) {
-                        c.subjects.forEach(s => {
-                            totalDisciplinas++;
-                            list.innerHTML += `
-                                <li class="py-3 text-xs flex justify-between items-center border-b border-gray-100 dark:border-slate-700">
-                                    <div>
-                                        <strong class="text-sm text-gray-900 dark:text-white">${s.name}</strong> <span class="text-gray-400 font-semibold">[${s.hours || 'N/I'}]</span><br>
-                                        <span class="text-gray-500">Curso: <strong>${c.name}</strong> &bull; Ementa: ${s.ementa || 'Nenhuma ementa informada'}</span>
-                                    </div>
-                                    <div class="flex gap-2 shrink-0">
-                                        <button onclick="editarDisciplina('${c.id}', ${s.id})" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded font-semibold shadow flex items-center gap-1"><i class="fa-solid fa-pen"></i> Editar</button>
-                                        <button onclick="removerDisciplina('${c.id}', ${s.id})" class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded font-semibold shadow flex items-center gap-1"><i class="fa-solid fa-trash"></i> Excluir</button>
-                                    </div>
-                                </li>`;
-                        });
-                    }
-                });
-                if(totalDisciplinas === 0) {
-                    list.innerHTML = `<li class="py-4 text-center text-xs text-gray-400">Nenhuma disciplina cadastrada.</li>`;
-                }
-            }
-            if(counter) counter.textContent = `Total: ${totalDisciplinas} disciplina(s)`;
+            const list=document.getElementById('subjects-management-list'),counter=document.getElementById('total-subjects-count');let total=0;if(list)list.replaceChildren();
+            courses.forEach(course=>(course.subjects||[]).forEach(subject=>{total++;if(!list)return;const row=document.createElement('li');row.className='se7-subject-row';
+                const info=document.createElement('div'),name=document.createElement('strong'),hours=document.createElement('p');name.textContent=subject.name;hours.textContent='Carga horária: '+cargaHorariaDisciplina(subject.hours);info.append(name,hours);
+                const actions=document.createElement('div');actions.className='se7-subject-actions';for(const [text,icon,fn]of [['Ver ementa','fa-eye',()=>verEmentaDisciplina(course.id,subject.id)],['Editar','fa-pen',()=>editarDisciplina(course.id,subject.id)],['Excluir','fa-trash',()=>removerDisciplina(course.id,subject.id)]]){const button=document.createElement('button');button.type='button';button.className='se7-exam-button'+(text==='Excluir'?' se7-subject-delete':'');const i=document.createElement('i');i.className='fa-solid '+icon;i.setAttribute('aria-hidden','true');button.append(i,document.createTextNode(' '+text));button.onclick=fn;actions.append(button);}row.append(info,actions);list.append(row);
+            }));if(list&&!total){const empty=document.createElement('li');empty.textContent='Nenhuma disciplina cadastrada.';list.append(empty);}if(counter)counter.textContent='Total: '+total+' disciplina(s)';
         }
 
         function editarDisciplina(courseId, subjectId) {
             const course = courses.find(c => c.id === courseId);
             if (!course || !course.subjects) return;
-            const sub = course.subjects.find(s => s.id === subjectId);
+            const sub = course.subjects.find(s => String(s.id) === String(subjectId));
             if (!sub) return;
 
             document.getElementById('edit-subject-id').value = sub.id;
             document.getElementById('input-subject-course-select').value = courseId;
+            document.getElementById('input-subject-course-select').disabled=true;
             document.getElementById('input-subject-name').value = sub.name || '';
             document.getElementById('input-subject-hours').value = sub.hours || '';
             document.getElementById('input-subject-ementa').value = sub.ementa || '';
@@ -3305,6 +3290,7 @@ async function excluirColaborador(id) {
 
         function cancelarEdicaoDisciplina() {
             document.getElementById('edit-subject-id').value = '';
+            document.getElementById('input-subject-course-select').disabled=false;
             document.getElementById('input-subject-name').value = '';
             document.getElementById('input-subject-hours').value = '';
             document.getElementById('input-subject-ementa').value = '';
@@ -3319,7 +3305,7 @@ async function excluirColaborador(id) {
             if (!confirm("Deseja realmente excluir esta disciplina?")) return;
             const course = courses.find(c => c.id == courseId);
             if (course && course.subjects) {
-                course.subjects = course.subjects.filter(s => s.id !== subjectId);
+                course.subjects = course.subjects.filter(s => String(s.id) !== String(subjectId));
                 await db.collection("courses").doc(courseId).update({ subjects: course.subjects });
                 alert("Disciplina excluída com sucesso!");
             }
@@ -3543,6 +3529,8 @@ async function excluirColaborador(id) {
             const tbody = document.getElementById('tabela-gerenciar-calendarios');
             if (!tbody) return;
             const courseId=document.getElementById('manage-cal-course').value, classId=document.getElementById('manage-cal-class').value, semester=document.getElementById('manage-cal-semester').value;
+            document.getElementById('manage-cal-results').style.display=courseId&&classId&&semester?'block':'none';
+            renderizarCalendarioSemestralAdmin();
             if(!courseId||!classId||!semester){tbody.innerHTML='<tr><td colspan="5" class="p-3 text-center text-gray-400">Selecione curso, turma e semestre para visualizar o calendário.</td></tr>';return;}
             const filtered=academicCalendars.filter(cal=>cal.courseId===courseId&&cal.classId===classId&&(cal.semestre||'2026/2')===semester).sort((a,b)=>(a.dates?.slice().sort()[0]||'').localeCompare(b.dates?.slice().sort()[0]||''));
             tbody.innerHTML=filtered.length?'':'<tr><td colspan="5" class="p-3 text-center text-gray-400">Nenhum calendário cadastrado para esta seleção.</td></tr>';
@@ -3640,12 +3628,14 @@ async function excluirColaborador(id) {
             alert("Calendário excluído com sucesso!");
         }
 
+        function ordenarDatasCalendario(events){return events.flatMap(ev=>(Array.isArray(ev.dates)?ev.dates:[]).map(dt=>({...ev,dates:[dt]}))).sort((a,b)=>String(a.dates[0]).localeCompare(String(b.dates[0]))||String(a.subject||'').localeCompare(String(b.subject||''),'pt-BR'));}
+
         function renderizarCalendarioSemestralAdmin() {
             const container = document.getElementById('admin-calendar-view');
-            const filtroSemestre = document.getElementById('admin-filtro-semestre');
             if (!container) return;
-
-            const semestreSelecionado = filtroSemestre ? filtroSemestre.value : "2026/2";
+            const courseId=document.getElementById('manage-cal-course').value, classId=document.getElementById('manage-cal-class').value, semestreSelecionado=document.getElementById('manage-cal-semester').value;
+            document.getElementById('manage-cal-graphic').style.display=courseId&&classId&&semestreSelecionado?'block':'none';
+            if(!courseId||!classId||!semestreSelecionado){container.innerHTML='';return;}
             let mesesDoSemestre = [];
 
             if (semestreSelecionado.endsWith('/2')) {
@@ -3669,7 +3659,7 @@ async function excluirColaborador(id) {
             }
 
             const anoStr = semestreSelecionado.split('/')[0];
-            const eventosFiltrados = academicCalendars.filter(ev => !ev.semestre || ev.semestre === semestreSelecionado);
+            const eventosFiltrados = ordenarDatasCalendario(academicCalendars.filter(ev => ev.courseId===courseId&&ev.classId===classId&&(ev.semestre||'2026/2')===semestreSelecionado));
 
             container.innerHTML = '';
             mesesDoSemestre.forEach(m => {
@@ -3702,7 +3692,7 @@ async function excluirColaborador(id) {
                             <span class="text-[10px] text-gray-400">Semestral</span>
                         </div>
                         <div class="overflow-y-auto flex-1 pr-1 space-y-1">
-                            ${htmlEventosDoMes || '<p class="text-xs text-gray-400 text-center py-8">Nenhuma aula agendada para este mês.</p>'}
+                            ${htmlEventosDoMes || '<p class="text-xs text-gray-400 text-center py-8">Nenhum evento agendado para este mês.</p>'}
                         </div>
                     </div>
                 `;
@@ -3738,7 +3728,7 @@ async function excluirColaborador(id) {
             }
 
             const anoStr = semestreSelecionado.split('/')[0];
-            const eventosTurma = academicCalendars.filter(ev => ev.classId === alunoLogadoCache.classId && (!ev.semestre || ev.semestre === semestreSelecionado));
+            const eventosTurma = ordenarDatasCalendario(academicCalendars.filter(ev => ev.classId === alunoLogadoCache.classId && (!ev.semestre || ev.semestre === semestreSelecionado)));
 
             let htmlGrid = '<div class="grid grid-cols-1 md:grid-cols-3 gap-4">';
             mesesDoSemestre.forEach(m => {
@@ -3753,7 +3743,7 @@ async function excluirColaborador(id) {
                                     <div class="bg-emerald-50 dark:bg-slate-900 border-l-4 border-emerald-600 p-2 rounded text-xs space-y-1 mb-2 shadow-sm">
                                         <div class="flex justify-between items-center font-bold text-emerald-800 dark:text-emerald-300">
                                             <span>${diaD}/${mesD}/${anoD}</span>
-                                            <span class="text-[10px] bg-emerald-600 text-white px-1.5 py-0.2 rounded">Aula</span>
+                                            <span class="text-[10px] bg-emerald-600 text-white px-1.5 py-0.2 rounded">${ev.eventType==='holiday'?'Feriado':ev.eventType==='simulation'?'Simulado':ev.eventType==='exam'?'Prova':'Aula'}</span>
                                         </div>
                                         <div class="font-semibold text-gray-900 dark:text-white">${ev.subject}</div>
                                         <div class="text-[11px] text-gray-500 dark:text-gray-400">${ev.description || ''}</div>
