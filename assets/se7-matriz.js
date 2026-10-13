@@ -1,5 +1,6 @@
 /* Ajustes visuais do Matriz. Não realiza gravações no Firebase. */
 const se7ModulosMatriz={
+ 'tab-portal-admin':['Portal do Aluno','Visualize os portais dos alunos, gerencie avisos e acompanhe os acessos.'],
  'tab-gestion-students':['Gestão de Alunos','Organize cadastros e acompanhe a documentação acadêmica.'],
  'tab-gestao-eja':['Gestão EJA','Gerencie apostilas, provas e documentação dos alunos EJA.'],
  'tab-students':['Matrícula','Cadastre alunos e acompanhe solicitações de matrícula.'],

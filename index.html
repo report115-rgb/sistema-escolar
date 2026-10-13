@@ -165,7 +165,7 @@
 <script src="/assets/se7-cadastro.js"></script>
 <link rel="stylesheet" href="/assets/se7-notices.css">
 <script defer src="/assets/se7-notices.js"></script>
-<script defer src="/assets/se7-finance-batch.js"></script>
+
 </head>
 <body class="se7-suite se7-matriz bg-gray-100 dark:bg-slate-900 text-gray-800 dark:text-gray-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-300 pb-16">    
 
@@ -251,7 +251,7 @@
             </div>
         </section>
     </div>
-    <div class="matriz-login-footer"><strong>Sistema SE7 de Gestão Acadêmica</strong><br><span data-se7-version="matriz">v1.5.9</span> • Sistema Matriz</div>
+    <div class="matriz-login-footer"><strong>Sistema SE7 de Gestão Acadêmica</strong><br><span data-se7-version="matriz">v1.5.11</span> • Sistema Matriz</div>
 </div>
 
 <!-- ========================================== -->
@@ -444,6 +444,7 @@
             <button class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-slate-600" onclick="openTab(event, 'tab-student-finance')"><i class="fa-solid fa-wallet mr-1.5"></i><span class="se7-nav-label">Financeiro</span></button>
             <button class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-slate-600" onclick="openTab(event, 'tab-history')"><i class="fa-solid fa-file-pdf mr-1.5"></i><span class="se7-nav-label">Emissão de Documentos</span></button>
             <button class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-slate-600" onclick="openTab(event, 'tab-controle-ponto-manual')"><i class="fa-solid fa-business-time mr-1.5"></i><span class="se7-nav-label">Ponto Manual</span></button>
+            <button id="nav-btn-portal-admin" style="display:none" class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap" onclick="openTab(event,'tab-portal-admin')"><i class="fa-solid fa-mobile-screen-button mr-1.5" aria-hidden="true"></i><span class="se7-nav-label">Portal do Aluno</span></button>
             <button class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-slate-600" id="nav-btn-settings" onclick="openTab(event, 'tab-settings')"><i class="fa-solid fa-gear mr-1.5"></i><span class="se7-nav-label">Sistema</span></button>
 	    
            </nav>
@@ -512,17 +513,13 @@
             <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-md p-6 border border-gray-200 dark:border-slate-700">
                 <div class="flex space-x-2 mb-6 border-b border-gray-200 dark:border-slate-700 pb-3">
                     <button class="subtab-button active px-4 py-2 rounded-xl text-xs font-semibold bg-blue-600 text-white shadow" onclick="openSubTab(event, 'subtab-alunos-lista')"><i class="fa-solid fa-list mr-1"></i> Lista de Alunos</button>
+                    <button class="subtab-button px-4 py-2 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event,'subtab-alunos-inativos')"><i class="fa-solid fa-user-slash mr-1" aria-hidden="true"></i> Matrículas canceladas / inativas</button>
                     <button class="subtab-button px-4 py-2 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" id="btn-validar-documentacao" style="position:relative;padding-right:24px;" onclick="openSubTab(event, 'subtab-validar-docs')"><i class="fa-solid fa-folder-open mr-1"></i> Validar Documentação<span id="badge-documentos-pendentes" class="se7-docs-badge" hidden aria-label="Novos documentos para avaliar">!</span></button>
-<button id="btn-avisos-portal" style="display:none;" class="subtab-button px-4 py-2 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event,'subtab-avisos-portal');SE7Notices.admin()">Avisos do Portal</button>
-<button id="btn-acessos-portal" class="subtab-button px-4 py-2 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" style="display:none;" onclick="openSubTab(event,'subtab-acessos-portal')">Acessos ao Portal</button>
                 </div>
 
-<div id="subtab-avisos-portal" class="subtab-content" style="display:none;"><section id="se7-notices-manager" class="se7-work-panel"></section></div>
-<div id="subtab-acessos-portal" class="subtab-content space-y-4" style="display:none;"><h2 class="text-xl font-bold">Acessos ao Portal do Aluno</h2><p class="text-sm">Entradas, atividades e abas mais acessadas desde a atualização do aplicativo. Senhas pessoais não são exibidas. Administração restrita ao master.</p><div class="flex gap-2"><input id="portal-acessos-busca" placeholder="Buscar nome ou matrícula" oninput="renderizarPainelAcessosPortal()" class="flex-1 border rounded-lg p-2 dark:bg-slate-900"><button onclick="carregarPainelAcessosPortal()" class="bg-blue-600 text-white rounded-lg px-4">Atualizar</button></div><div id="portal-senha-temporaria" class="p-4 bg-amber-100 text-amber-950 rounded-lg" style="display:none;"></div><button onclick="document.getElementById('portal-senha-temporaria').textContent='';document.getElementById('portal-senha-temporaria').style.display='none';" class="text-xs">Ocultar senha temporária</button><div id="portal-acessos-lista" class="space-y-3"></div><div id="portal-acessos-historico" class="p-4 rounded-xl bg-gray-50 dark:bg-slate-900 space-y-1"></div></div>
                 <div id="subtab-alunos-lista" class="subtab-content active space-y-4">
-<div id="se7-portal-preview-launcher" hidden></div>
     <div class="flex justify-between items-center mb-4 pb-2 border-b border-gray-100 dark:border-slate-700 flex-wrap gap-2">
-        <h2 class="text-xl font-bold text-gray-900 dark:text-white">Alunos Matriculados</h2>
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white">Alunos com Matrícula Ativa</h2>
         
         <!-- COLE ESTE BLOCO DA LUPA EXATAMENTE AQUI -->
         <div class="relative w-full md:w-72">
@@ -549,6 +546,39 @@
                                 </tr>
                             </thead>
                             <tbody id="tabela-gestao-alunos" class="divide-y divide-gray-200 dark:divide-slate-700"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="subtab-alunos-inativos" class="subtab-content space-y-4" style="display:none">
+    <div class="flex justify-between items-center mb-4 pb-2 border-b border-gray-100 dark:border-slate-700 flex-wrap gap-2">
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white">Matrículas canceladas / inativas</h2>
+        
+        <!-- COLE ESTE BLOCO DA LUPA EXATAMENTE AQUI -->
+        <div class="relative w-full md:w-72">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </span>
+            <input type="text" id="input-busca-aluno-inativos" oninput="renderGestionStudentsTable()" placeholder="Pesquisar por nome ou CPF..." class="w-full pl-9 pr-4 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-xs dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-blue-600 focus:outline-none">
+        </div>
+        <!-- FIM DO BLOCO DA LUPA -->
+
+        <span class="text-xs text-gray-500 font-semibold" id="total-alunos-inativos-count">Total: 0 alunos</span>
+    </div>
+    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead>
+                                <tr class="border-b border-gray-200 dark:border-slate-700 text-gray-500">
+                                    <th class="p-3">Matrícula</th>
+                                    <th class="p-3">Nome Completo</th>
+                                    <th class="p-3">CPF</th>
+                                    <th class="p-3">WhatsApp / E-mail</th>
+                                    <th class="p-3">Curso / Turma</th>
+                                    <th class="p-3">Status</th>
+                                    <th class="p-3 text-right">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabela-gestao-alunos-inativos" class="divide-y divide-gray-200 dark:divide-slate-700"></tbody>
                         </table>
                     </div>
                 </div>
@@ -867,6 +897,19 @@
             </div>
         </div>
 
+        <div id="tab-portal-admin" class="tab-content space-y-4" style="display:none"><section class="bg-white dark:bg-slate-800 rounded-2xl shadow-md p-6 border border-gray-200 dark:border-slate-700">
+            <div class="flex flex-wrap gap-2 border-b border-gray-200 dark:border-slate-700 pb-3 mb-4">
+                <button class="subtab-button active px-4 py-2 rounded-xl text-xs font-semibold bg-blue-600 text-white" onclick="openSubTab(event,'subtab-visualizar-portal')">Visualizar portal</button>
+<button id="btn-avisos-portal" style="display:none;" class="subtab-button px-4 py-2 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event,'subtab-avisos-portal');SE7Notices.admin()">Avisos do Portal</button>
+<button id="btn-acessos-portal" class="subtab-button px-4 py-2 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" style="display:none;" onclick="openSubTab(event,'subtab-acessos-portal')">Acessos ao Portal</button>
+            </div>
+            <div id="subtab-visualizar-portal" class="subtab-content space-y-4"><p class="text-sm">Pesquise e selecione um aluno para consultar o portal com os dados reais.</p>
+<div id="se7-portal-preview-launcher" hidden></div>
+            </div>
+<div id="subtab-avisos-portal" class="subtab-content" style="display:none;"><section id="se7-notices-manager" class="se7-work-panel"></section></div>
+<div id="subtab-acessos-portal" class="subtab-content space-y-4" style="display:none;"><h2 class="text-xl font-bold">Acessos ao Portal do Aluno</h2><p class="text-sm">Entradas, atividades e abas mais acessadas desde a atualização do aplicativo. Senhas pessoais não são exibidas. Administração restrita ao master.</p><div class="flex gap-2"><input id="portal-acessos-busca" placeholder="Buscar nome ou matrícula" oninput="renderizarPainelAcessosPortal()" class="flex-1 border rounded-lg p-2 dark:bg-slate-900"><button onclick="carregarPainelAcessosPortal()" class="bg-blue-600 text-white rounded-lg px-4">Atualizar</button></div><div id="portal-senha-temporaria" class="p-4 bg-amber-100 text-amber-950 rounded-lg" style="display:none;"></div><button onclick="document.getElementById('portal-senha-temporaria').textContent='';document.getElementById('portal-senha-temporaria').style.display='none';" class="text-xs">Ocultar senha temporária</button><div id="portal-acessos-lista" class="space-y-3"></div><div id="portal-acessos-historico" class="p-4 rounded-xl bg-gray-50 dark:bg-slate-900 space-y-1"></div></div>
+        </section></div>
+
         <!-- FINANCEIRO -->
         <div id="tab-student-finance" class="tab-content space-y-4" style="display: none;">
             <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-md p-6 border border-gray-200 dark:border-slate-700 space-y-4">
@@ -883,8 +926,6 @@
                         <option value="">Selecione o aluno...</option>
                     </select>
                 </div>
-
-                <details id="matriz-finance-batch-controls" class="se7-work-disclosure"><summary>Gerenciar faturas em lote</summary><div class="se7-work-actions"><button type="button" class="se7-work-button primary" onclick="SE7FinanceBatch.open('create')">Gerar faturas em lote</button><button type="button" class="se7-work-button" onclick="SE7FinanceBatch.open('dates')">Reorganizar vencimentos</button><button type="button" class="se7-work-button danger" onclick="SE7FinanceBatch.open('delete')">Excluir faturas em lote</button></div></details>
                 <div class="mt-4">
                     <h4 class="font-bold text-sm text-gray-700 dark:text-gray-300 mb-2">Cobranças Vinculadas ao Aluno Selecionado</h4>
                     <div id="container-cobrancas-aluno-financeiro" class="space-y-2">
@@ -1595,7 +1636,7 @@
     <!-- RODAPÉ -->
     <footer id="se7-footer" class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border-t border-gray-200 dark:border-slate-700 py-2.5 px-6 text-center text-xs text-gray-500 dark:text-gray-400 flex flex-col sm:flex-row justify-between items-center gap-2 shadow-lg">
         <span>Sistema SE7 de Gestão Acadêmica • Matriz</span>
-        <span>Desenvolvido por <strong>JS & SS Serviços Educacionais e Cia Ltda</strong> &bull; <span data-se7-version="matriz">v1.5.9</span> • Sistema Matriz</span>
+        <span>Desenvolvido por <strong>JS & SS Serviços Educacionais e Cia Ltda</strong> &bull; <span data-se7-version="matriz">v1.5.11</span> • Sistema Matriz</span>
     </footer>
 
     <!-- MODAL DE NOVA MATRÍCULA / EDIÇÃO DE ALUNO -->
@@ -2287,7 +2328,7 @@ async function rejeitarSolicitacaoFirebase(id) {
         async function executarRedefinicaoSenha(){try{await SE7.recover(document.getElementById('forgot-user-email').value.trim());alert('Se a conta existir, você receberá instruções no e-mail.');fecharModalEsqueciSenhaAdmin();}catch(e){alert('Não foi possível enviar a recuperação. Confira o e-mail.');}}
 
         function executarRedefinicaoSenhaAluno() {
-            alert('Solicite uma senha temporária à instituição. A redefinição está disponível ao master em Gestão de Alunos → Acessos ao Portal.');
+            alert('Solicite uma senha temporária à instituição. A redefinição está disponível ao master em Portal do Aluno → Acessos ao Portal.');
         }
 
         let saidaMatrizEmAndamento = false;
@@ -2392,9 +2433,11 @@ async function rejeitarSolicitacaoFirebase(id) {
 
         function aplicarPermissoesPorPerfil(perfil) {
     window.SE7Exams?.apply(perfil);
-    document.getElementById('matriz-finance-batch-controls').hidden=!['master','financeiro'].includes(perfil);
+
     const acessoMaster=perfil==='master'&&usuarioMasterAtivo()&&!sessionStorage.getItem('se7_matriz_perfil_visualizado');
     document.getElementById('btn-avisos-portal').style.display=acessoMaster?'inline-block':'none';
+    document.getElementById('nav-btn-portal-admin').style.display=acessoMaster?'flex':'none';
+    if(!acessoMaster){document.getElementById('tab-portal-admin').style.display='none';document.getElementById('portal-senha-temporaria').textContent='';document.getElementById('portal-senha-temporaria').style.display='none';}
     window.SE7PortalPreview?.visibility(acessoMaster);
     if(!acessoMaster){document.getElementById('subtab-avisos-portal').style.display='none';document.getElementById('se7-notices-manager').replaceChildren();}
     const botaoTotem = document.getElementById('btn-subtab-gestao-totem');
@@ -2450,7 +2493,7 @@ async function rejeitarSolicitacaoFirebase(id) {
     }
 
     // 2. Controle dos botões de topo baseados no perfil Master
-    document.getElementById('btn-acessos-portal').style.display=(perfil==='master')?'inline-block':'none';
+    document.getElementById('btn-acessos-portal').style.display=acessoMaster?'inline-block':'none';
     if (btnAccessControl) btnAccessControl.style.display = (perfil === 'master') ? 'inline-flex' : 'none';
     if (btnSwitchUser) btnSwitchUser.style.display = (perfil === 'master') ? 'inline-flex' : 'none';
     if (navBtnSettings) navBtnSettings.style.display = (perfil === 'master') ? 'flex' : 'none';
@@ -2552,7 +2595,7 @@ async function renderizarUsuariosSistemaFirebase(){const list=document.getElemen
 async function removerUsuarioSistemaFirebase(id){if(!confirm('Desativar esse funcionário?'))return;try{await SE7.api('staff-disable',{uid:id});await renderizarUsuariosSistemaFirebase();}catch(e){alert(e.message);}}
 
         function openTab(evt, tabId) {
-    if (tabId === 'tab-settings' && !usuarioMasterAtivo()) return;
+    if (['tab-settings','tab-portal-admin'].includes(tabId) && !usuarioMasterAtivo()) return;
     if (!document.getElementById(tabId)) return;
 
     // 1. Oculta TODAS as abas principais do sistema
@@ -2619,7 +2662,7 @@ async function removerUsuarioSistemaFirebase(id){if(!confirm('Desativar esse fun
     const alvo = document.getElementById(subtabId);
     if (!alvo) return;
     if(subtabId==='subtab-acessos-portal' && !podeGerenciarPortal()) return;
-    if ((subtabId === 'subtab-gestao-totem' || alvo.closest('#tab-settings')) && !usuarioMasterAtivo()) return;
+    if ((subtabId === 'subtab-gestao-totem' || alvo.closest('#tab-settings') || alvo.closest('#tab-portal-admin')) && !usuarioMasterAtivo()) return;
     // 1. Oculta TODAS as subabas do sistema inteiro para evitar vazamento entre telas
     const todasSubabas = document.querySelectorAll('.subtab-content');
     todasSubabas.forEach(el => {
@@ -4112,18 +4155,19 @@ function carregarDatasCalendarioParaFrequencia() {
             atualizarDisciplinasETurmasCalendario();
         }
 
-        function renderGestionStudentsTable() {
-    const tbody = document.getElementById('tabela-gestao-alunos');
-    const counter = document.getElementById('total-alunos-count');
-    const inputBusca = document.getElementById('input-busca-aluno-gestao');
+        function renderGestionStudentsTable(){renderGestionStudentsTableGroup(false);renderGestionStudentsTableGroup(true);}
+        function renderGestionStudentsTableGroup(inactive=false) {
+    const tbody = document.getElementById(inactive?'tabela-gestao-alunos-inativos':'tabela-gestao-alunos');
+    const counter = document.getElementById(inactive?'total-alunos-inativos-count':'total-alunos-count');
+    const inputBusca = document.getElementById(inactive?'input-busca-aluno-inativos':'input-busca-aluno-gestao');
     if(!tbody) return;
 
     const sessaoAtual = JSON.parse(sessionStorage.getItem('usuario_logado')) || {};
     const isFinanceiro = sessaoAtual.perfil === 'financeiro';
     
     const ativos = students
-        .filter(s => !!s.id)
-        .sort((a, b) => a.fullname.localeCompare(b.fullname));
+        .filter(s => !!s.id && (inactive?!/^ativ[oa]$/i.test(String(s.status||'Ativo').trim()):/^ativ[oa]$/i.test(String(s.status||'Ativo').trim())))
+        .sort((a, b) => String(a.fullname||'').localeCompare(String(b.fullname||''),'pt-BR'));
 
     // LÓGICA DE FILTRAGEM PELA LUPA (NOME, CPF OU MATRÍCULA)
     let alunosFiltrados = ativos;
@@ -4170,7 +4214,6 @@ function carregarDatasCalendarioParaFrequencia() {
                 <td class="p-3">${curso ? curso.name : '---'} <br><span class="text-[10px] text-gray-400">Turma: ${turma ? turma.name : '---'}</span></td>
                 <td class="p-3"><span class="px-2 py-0.5 ${classeStatusMatricula(s.status)} rounded text-[10px] font-bold">${rotuloStatusMatricula(s.status)}</span>${s.enrollmentRequest ? '<div class="text-[10px] text-amber-500 mt-1">Solicitação pendente</div>' : ''}</td>
                 <td class="p-3 text-right space-x-1">
-                    ${usuarioMasterAtivo()&&!sessionStorage.getItem('se7_matriz_perfil_visualizado') ? `<button type="button" onclick="SE7PortalPreview.open('${s.id}')" class="px-2.5 py-1 bg-indigo-600 text-white rounded text-xs">Visualizar portal</button>` : ''}
                     <button onclick="editarAluno('${s.id}')" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs shadow"><i class="fa-solid fa-pen-to-square mr-1"></i> Editar</button>
                     <button type="button" onclick="verHistoricoMatricula('${s.id}')" class="px-2.5 py-1 bg-blue-600 text-white rounded text-xs">Histórico</button>
                     ${botaoDeletar}
@@ -4449,7 +4492,7 @@ function renderizarCobrancasAlunoSelecionadoFinanceiro(studentId) {
         return;
     }
     const aluno = students.find(s => s.id === studentId);
-    void SE7Cancellation.local(studentId);
+
     let cobrancasAluno = financeLogs.filter(f => f.studentId === studentId);
 
     if(cobrancasAluno.length === 0) {
@@ -4478,6 +4521,7 @@ function renderizarCobrancasAlunoSelecionadoFinanceiro(studentId) {
 }
         // --- FUNÇÃO TEMPORÁRIA PARA DAR BAIXA MANUAL ---
         async function darBaixaManualFinanceiro(financeLogId) {
+    return alert('O financeiro do Matriz é somente para consulta. Faça a gestão de faturas pelo app financeiro.');
             if (!confirm("Deseja confirmar o recebimento e dar baixa manual nesta mensalidade?")) return;
 
             try {
@@ -4496,6 +4540,7 @@ function renderizarCobrancasAlunoSelecionadoFinanceiro(studentId) {
 
         // --- FUNÇÃO PARA ESTORNAR A BAIXA CASO NECESSÁRIO ---
       async function estornarBaixaManualFinanceiro(financeLogId) {
+    return alert('O financeiro do Matriz é somente para consulta. Faça a gestão de faturas pelo app financeiro.');
     if (!confirm("ATENÇÃO: Deseja realmente estornar a baixa desta mensalidade e retorná-la para o status PENDENTE?")) return;
 
     const statusPendente = "PENDENTE (Desc. Pontualidade disponível até o vencimento)";
@@ -5457,6 +5502,7 @@ async function alternarProvaIndividualAluno(studentId, novoStatus) {
     // FUNÇÃO PARA GERAR FINANCEIRO MANUAL PARA ALUNOS DO APP
     // ==========================================
     async function abrirModalGerarFinanceiroManual() {
+    return alert('O financeiro do Matriz é somente para consulta. Faça a gestão de faturas pelo app financeiro.');
         const alunoId = document.getElementById('fin-student-select').value;
         if (!alunoId) {
             return alert("Por favor, selecione um aluno primeiro no menu suspenso acima!");
@@ -5627,6 +5673,7 @@ function validarLiberacaoBaixa(financeLogId) {
 
 // Função 2: Salva os dados no banco e atualiza instantaneamente para o Aluno
 async function executarBaixaManualComDetalhes(financeLogId) {
+    return alert('O financeiro do Matriz é somente para consulta. Faça a gestão de faturas pelo app financeiro.');
     const dataPagamento = document.getElementById(`data-pagamento-${financeLogId}`).value;
     const formaPagamento = document.getElementById(`forma-pagamento-${financeLogId}`).value;
 
@@ -5740,6 +5787,7 @@ async function gerarHistoricoEscolarDinamico(alunoId) {
 
 // Abre ou fecha o bloco de edição de vencimento e valor da fatura
 function toggleModoEdicaoFinanceiro(financeLogId) {
+    return alert('O financeiro do Matriz é somente para consulta. Faça a gestão de faturas pelo app financeiro.');
     const box = document.getElementById(`edit-box-fin-${financeLogId}`);
     if (box) {
         box.style.display = box.style.display === 'none' ? 'grid' : 'none';
@@ -5748,6 +5796,7 @@ function toggleModoEdicaoFinanceiro(financeLogId) {
 
 // Salva a nova data de vencimento e o novo valor diretamente na nuvem
 async function salvarEdicaoVencimentoValor(financeLogId) {
+    return alert('O financeiro do Matriz é somente para consulta. Faça a gestão de faturas pelo app financeiro.');
     const novoVencimento = document.getElementById(`edit-venc-${financeLogId}`).value;
     const valorInformado = document.getElementById(`edit-val-${financeLogId}`).value.trim();
     const novoValor = Number(valorInformado);
