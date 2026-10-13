@@ -4,7 +4,7 @@ service cloud.firestore {
   function signed(){return request.auth != null;}
   function master(){return signed() && request.auth.uid == 'UUBINdHfJZONVMcC0QogyAsUgvA3';}
   function staffRole(role){return signed() && exists(/databases/$(database)/documents/se7Staff/$(request.auth.uid)) && get(/databases/$(database)/documents/se7Staff/$(request.auth.uid)).data.disabled == false && get(/databases/$(database)/documents/se7Staff/$(request.auth.uid)).data.perfil == role;}
-  function staff(){return master() || staffRole('secretaria') || staffRole('professor') || staffRole('financeiro');}
+  function staff(){return master() || staffRole('secretaria') || staffRole('financeiro');}
   function academic(){return master() || staffRole('secretaria');}
   function finance(){return master() || staffRole('financeiro');}
   function studentId(){return request.auth.token.get('studentId','');}
@@ -24,7 +24,7 @@ service cloud.firestore {
    allow list: if staff();
    allow create: if academic() && !request.resource.data.keys().hasAny(['se7AuthUid','portalCredential','portalBlocked','portalMustChangePassword','portalSessionVersion']);
    allow update: if academic() && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['se7AuthUid','portalCredential','portalBlocked','portalMustChangePassword','portalSessionVersion','portalTemporaryExpiresAt','se7AuthLock']);
-   allow update: if staffRole('professor') && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['grades','attendance','notas']);
+
   }
   match /courses/{id} {allow read: if staff() || (studentActive() && id == get(/databases/$(database)/documents/students/$(studentId())).data.courseId);allow write: if academic();}
   match /classes/{id} {allow read: if staff() || (studentActive() && id == get(/databases/$(database)/documents/students/$(studentId())).data.classId);allow write: if academic();}
@@ -37,15 +37,15 @@ service cloud.firestore {
    allow delete: if finance() && !exists(/databases/$(database)/documents/se7AsaasInvoices/$(id)) && !resource.data.keys().hasAny(['asaasPaymentId']);
   }
   match /config/{id} {allow read: if staff() || (studentActive() && id == 'ejaSettings');}
-  match /teachers/{id} {allow read: if staff();allow write: if academic();}
+  match /teachers/{id} {allow read: if staff();allow create: if academic() && !request.resource.data.keys().hasAny(['authUid']);allow update: if academic() && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['authUid']);allow delete: if academic();}
   match /teacherManualLogs/{id} {allow read: if staff();allow write: if academic();}
   match /teacherPaymentRates/{id} {allow read,write: if finance();}
   match /teacherMonthlyPayments/{id}/{rest=**} {allow read,write: if finance();}
   match /attendance/{id} {allow read: if staff();}
-  match /attendanceRecords/{id} {allow read: if staff();allow write: if academic() || staffRole('professor');}
-  match /attendanceLocks/{id} {allow read: if staff();allow write: if academic() || staffRole('professor');}
+  match /attendanceRecords/{id} {allow read: if staff();allow write: if academic();}
+  match /attendanceLocks/{id} {allow read: if staff();allow write: if academic();}
   match /employeeLogs/{id} {allow read: if master();}
-  match /systemLogs/{id} {allow create: if staff() && request.resource.data.keys().hasOnly(['dataHora','usuario','perfil','modulo','acao','createdAt']);}
+  match /systemLogs/{id} {allow create: if (staff() || staffRole('professor')) && request.resource.data.keys().hasOnly(['dataHora','usuario','perfil','modulo','acao','createdAt']);}
   // Everything else, including se7Staff, se7Credentials, se7CpfIndex and rate limits, is denied to browser clients.
  }
 }

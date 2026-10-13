@@ -251,7 +251,7 @@
             </div>
         </section>
     </div>
-    <div class="matriz-login-footer"><strong>Sistema SE7 de Gestão Acadêmica</strong><br><span data-se7-version="matriz">v1.4.10</span> • Sistema Matriz</div>
+    <div class="matriz-login-footer"><strong>Sistema SE7 de Gestão Acadêmica</strong><br><span data-se7-version="matriz">v1.5.1</span> • Sistema Matriz</div>
 </div>
 
 <!-- ========================================== -->
@@ -396,7 +396,7 @@
         <div class="se7-modal-panel bg-white dark:bg-slate-800 rounded-2xl max-w-lg w-full p-6 border border-gray-200 dark:border-slate-700 relative shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <button type="button" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 text-xl font-bold" onclick="fecharModalEditarCalendario()">&times;</button>
             <h3 class="text-lg font-bold text-gray-900 dark:text-white"><i class="fa-solid fa-calendar-pen text-blue-600 mr-2"></i> Editar Calendário Acadêmico</h3>
-            <input type="hidden" id="edit-cal-id" value="">
+            <label>Tipo de evento<select id="edit-cal-type" class="w-full px-3 py-2 dark:bg-slate-800"><option value="lesson">Aula</option><option value="holiday">Feriado / Sem aula</option><option value="exam">Prova única</option><option value="simulation">Simulado</option></select></label><input type="hidden" id="edit-cal-id" value="">
             <div>
                 <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase mb-1">Disciplina</label>
                 <input type="text" id="edit-cal-subject" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 dark:text-white">
@@ -406,12 +406,12 @@
                 <input type="text" id="edit-cal-desc" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 dark:text-white">
             </div>
             <div>
-                <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase mb-1">Quantidade de Datas (2 a 5)</label>
+                <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase mb-1">Quantidade de Datas (1 a 6)</label>
                 <select id="edit-cal-qtd" onchange="renderizarCamposEdicaoCalendario()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 dark:text-white">
-                    <option value="2">2 Dias</option>
+                    <option value="1">1 Dia</option><option value="2">2 Dias</option>
                     <option value="3">3 Dias</option>
                     <option value="4">4 Dias</option>
-                    <option value="5">5 Dias</option>
+                    <option value="5">5 Dias</option><option value="6">6 Dias</option>
                 </select>
             </div>
             <div>
@@ -1185,15 +1185,15 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-xs font-semibold mb-1">Disciplina da Turma</label>
-                                <select id="cal-subject-select" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800"></select>
+                                <label class="block text-xs font-semibold mb-1">Tipo de evento</label><select id="cal-event-type" onchange="atualizarTipoEventoCalendario()" class="w-full px-3 py-2 rounded-lg border dark:bg-slate-800"><option value="lesson">Aula</option><option value="holiday">Feriado / Sem aula</option><option value="exam">Prova única</option><option value="simulation">Simulado</option></select><select id="cal-subject-select" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800"></select>
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold mb-1">Quantidade de Datas de Aula (2 a 5)</label>
+                                <label class="block text-xs font-semibold mb-1">Quantidade de Datas (1 a 6)</label>
                                 <select id="cal-qtd-datas" onchange="renderizarCamposDatasCalendario()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800">
-                                    <option value="2" selected>2 Dias</option>
+                                    <option value="1">1 Dia</option><option value="2" selected>2 Dias</option>
                                     <option value="3">3 Dias</option>
                                     <option value="4">4 Dias</option>
-                                    <option value="5">5 Dias</option>
+                                    <option value="5">5 Dias</option><option value="6">6 Dias</option>
                                 </select>
                             </div>
                         </div>
@@ -1213,6 +1213,12 @@
 
                     <div class="mt-6 space-y-3">
                         <h4 class="font-bold text-sm text-gray-700 dark:text-gray-300">Calendários Cadastrados (Gerenciamento)</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <label class="text-xs font-semibold">Curso<select id="manage-cal-course" onchange="atualizarFiltrosGerenciarCalendarios('course')" class="block w-full mt-1 px-3 py-2 rounded-lg border dark:bg-slate-800"><option value="">Selecione o curso...</option></select></label>
+                            <label class="text-xs font-semibold">Turma<select id="manage-cal-class" onchange="atualizarFiltrosGerenciarCalendarios('class')" disabled class="block w-full mt-1 px-3 py-2 rounded-lg border dark:bg-slate-800"><option value="">Selecione a turma...</option></select></label>
+                            <label class="text-xs font-semibold">Semestre<select id="manage-cal-semester" onchange="renderizarTabelaGerenciarCalendarios()" disabled class="block w-full mt-1 px-3 py-2 rounded-lg border dark:bg-slate-800"><option value="">Selecione o semestre...</option></select></label>
+                        </div>
+                        <p class="text-xs text-gray-500">Selecione curso, turma e semestre para consultar e editar as datas. Os feriados aparecem no calendário do aluno e não entram na frequência.</p>
                         <div class="overflow-x-auto">
                             <table class="w-full text-left text-xs">
                                 <thead>
@@ -1276,7 +1282,7 @@
         </div>
         <div>
             <label class="block text-xs font-semibold mb-1">Conselho de Classe / Registro</label>
-            <input type="text" id="input-teacher-council" placeholder="Ex: OAB/PA 00.000 ou RG" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 dark:text-white">
+            <label class="block text-xs">Curso ministrado<select id="input-teacher-course" class="w-full px-3 py-2 rounded-lg dark:bg-slate-900"></select></label><input type="text" id="input-teacher-council" placeholder="Ex: OAB/PA 00.000 ou RG" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 dark:text-white">
         </div>
         <div>
             <label class="block text-xs font-semibold mb-1">ID / Matrícula Automática (Totem)</label>
@@ -1597,7 +1603,7 @@
     <!-- RODAPÉ -->
     <footer id="se7-footer" class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border-t border-gray-200 dark:border-slate-700 py-2.5 px-6 text-center text-xs text-gray-500 dark:text-gray-400 flex flex-col sm:flex-row justify-between items-center gap-2 shadow-lg">
         <span>Sistema SE7 de Gestão Acadêmica • Matriz</span>
-        <span>Desenvolvido por <strong>JS & SS Serviços Educacionais e Cia Ltda</strong> &bull; <span data-se7-version="matriz">v1.4.10</span> • Sistema Matriz</span>
+        <span>Desenvolvido por <strong>JS & SS Serviços Educacionais e Cia Ltda</strong> &bull; <span data-se7-version="matriz">v1.5.1</span> • Sistema Matriz</span>
     </footer>
 
     <!-- MODAL DE NOVA MATRÍCULA / EDIÇÃO DE ALUNO -->
@@ -2402,6 +2408,7 @@ async function rejeitarSolicitacaoFirebase(id) {
         }
 
         function aplicarPermissoesPorPerfil(perfil) {
+    window.SE7Exams?.apply(perfil);
     document.getElementById('matriz-finance-batch-controls').hidden=!['master','financeiro'].includes(perfil);
     const acessoMaster=perfil==='master'&&usuarioMasterAtivo()&&!sessionStorage.getItem('se7_matriz_perfil_visualizado');
     document.getElementById('btn-avisos-portal').style.display=acessoMaster?'inline-block':'none';
@@ -2483,8 +2490,8 @@ async function rejeitarSolicitacaoFirebase(id) {
         }
     } else {
         if (adminSelectorPortalBox) adminSelectorPortalBox.style.display = 'block';
-        popularSelectAlunosPortalMaster();
-        popularSelectAlunosValidacaoGestao();
+        if(perfil!=='professor'){popularSelectAlunosPortalMaster();
+        popularSelectAlunosValidacaoGestao();}
         renderizarSolicitacoesPendentes();
     }
 } // <--- Única chave de fechamento da função no lugar correto
@@ -2779,7 +2786,7 @@ async function removerUsuarioSistemaFirebase(id){if(!confirm('Desativar esse fun
             });
         }
 
-let dadosMatrizIniciados=false;function iniciarDadosAutenticadosMatriz(){if(dadosMatrizIniciados)return;dadosMatrizIniciados=true;carregarDadosDaNuvem();escutarRegistrosPontoManual();if(usuarioMasterAtivo()){renderizarLogsAuditoria();renderizarSolicitacoesPendentes();}carregarAlunosSemTurma();}
+let dadosMatrizIniciados=false;function iniciarDadosAutenticadosMatriz(){const perfil=JSON.parse(sessionStorage.getItem('usuario_logado')||'{}').perfil;if(perfil==='professor'){window.SE7Exams?.apply(perfil);return;}if(dadosMatrizIniciados)return;dadosMatrizIniciados=true;carregarDadosDaNuvem();escutarRegistrosPontoManual();if(usuarioMasterAtivo()){renderizarLogsAuditoria();renderizarSolicitacoesPendentes();}carregarAlunosSemTurma();}
         function carregarDadosDaNuvem() {
             db.collection("config").doc("institution").onSnapshot((doc) => {
                 if (doc.exists) {
@@ -2808,20 +2815,20 @@ let dadosMatrizIniciados=false;function iniciarDadosAutenticadosMatriz(){if(dado
             db.collection("courses").onSnapshot((snapshot) => {
                 courses = [];
                 snapshot.forEach(doc => courses.push({ id: doc.id, ...doc.data() }));
-                renderCourses(); renderSubjectsManagement(); renderDropdowns(); loadCourseTemplate(); atualizarDisciplinasETurmasCalendario();
+                renderTeachers(); renderCourses(); renderSubjectsManagement(); renderDropdowns(); loadCourseTemplate(); atualizarDisciplinasETurmasCalendario(); atualizarFiltrosGerenciarCalendarios();
             });
 
             db.collection("classes").onSnapshot((snapshot) => {
                 classes = [];
                 snapshot.forEach(doc => classes.push({ id: doc.id, ...doc.data() }));
-                renderClasses(); renderDropdowns(); atualizarDisciplinasETurmasCalendario();
+                renderClasses(); renderDropdowns(); atualizarDisciplinasETurmasCalendario(); atualizarFiltrosGerenciarCalendarios();
             });
 
             db.collection("academicCalendars").onSnapshot((snapshot) => {
                 academicCalendars = [];
                 snapshot.forEach(doc => academicCalendars.push({ id: doc.id, ...doc.data() }));
                 renderizarCalendarioSemestralAdmin();
-                renderizarTabelaGerenciarCalendarios();
+                atualizarFiltrosGerenciarCalendarios();
                 if (alunoLogadoCache) renderizarCalendarioSemestralPortalAluno();
             });
 
@@ -2893,6 +2900,7 @@ let dadosMatrizIniciados=false;function iniciarDadosAutenticadosMatriz(){if(dado
         cargo, 
         formation, 
         council, 
+        courseId:document.getElementById('input-teacher-course').value,
         pin: pinFinal,
         horarios: { entrada1, saida1, entrada2, saida2 } 
     };
@@ -2917,6 +2925,7 @@ let dadosMatrizIniciados=false;function iniciarDadosAutenticadosMatriz(){if(dado
 }
 
 function renderTeachers() {
+    const courseSelect=document.getElementById('input-teacher-course');if(courseSelect){const selected=courseSelect.value;courseSelect.replaceChildren(new Option('Selecione o curso',''));courses.forEach(c=>courseSelect.append(new Option(c.name,c.id)));courseSelect.value=selected;}
     const list = document.getElementById('teachers-list');
     if(list) {
         list.innerHTML = '';
@@ -2937,8 +2946,9 @@ function renderTeachers() {
                         <span class="text-[10px] text-gray-400 font-mono">ID Totem: ${t.pin || '---'}</span>
                     </td>
                     <td class="p-2.5"><span class="px-2 py-0.5 ${corBadge} rounded text-[10px] font-bold">${t.cargo || 'Professor'}</span></td>
-                    <td class="p-2.5">${t.formation || '---'} <br><span class="text-[10px] text-gray-400">${t.council || ''}</span></td>
+                    <td class="p-2.5">${t.formation || '---'} <br><span class="text-xs text-blue-400">Curso: ${courses.find(c=>c.id===t.courseId)?.name||'Não vinculado'}</span><br><span class="text-[10px] text-gray-400">${t.council || ''}</span></td>
                     <td class="p-2.5 text-right space-x-1">
+                        ${usuarioMasterAtivo()?`<button type="button" onclick="SE7Exams.bind('${t.id}')" class="px-2 py-1 bg-indigo-600 text-white rounded text-xs">Vincular acesso</button>`:''}
                         <button onclick="editarColaborador('${t.id}')" class="px-2 py-1 bg-blue-600 text-white rounded text-[11px] font-semibold"><i class="fa-solid fa-pen"></i></button>
                         <button onclick="excluirColaborador('${t.id}')" class="px-2 py-1 bg-red-600 text-white rounded text-[11px] font-semibold"><i class="fa-solid fa-trash"></i></button>
                     </td>
@@ -2967,6 +2977,7 @@ function editarColaborador(id) {
     document.getElementById('input-teacher-cargo').value = t.cargo || 'Professor';
     document.getElementById('input-teacher-formation').value = t.formation || '';
     document.getElementById('input-teacher-council').value = t.council || '';
+    document.getElementById('input-teacher-course').value=t.courseId||'';
     document.getElementById('input-teacher-pin').value = t.pin || '';
 
     // Restaura os horários salvos
@@ -3440,6 +3451,7 @@ async function excluirColaborador(id) {
             }
         }
 
+        function atualizarTipoEventoCalendario(){const t=document.getElementById('cal-event-type').value;document.getElementById('cal-subject-select').disabled=['holiday','simulation'].includes(t);if(t!=='lesson'){document.getElementById('cal-qtd-datas').value='1';renderizarCamposDatasCalendario();}if(t==='simulation')document.getElementById('cal-event-desc').value='Simulado Avaliativo Final de Semestre';}
         function renderizarCamposDatasCalendario() {
             const qtd = parseInt(document.getElementById('cal-qtd-datas').value) || 2;
             const container = document.getElementById('container-datas-dinamicas');
@@ -3462,9 +3474,10 @@ async function excluirColaborador(id) {
             const courseId = document.getElementById('cal-course-select').value;
             const classId = document.getElementById('cal-class-select').value;
             const semestre = document.getElementById('cal-semester-select').value;
-            const subject = document.getElementById('cal-subject-select').value;
+            const eventType=document.getElementById('cal-event-type').value;
+            const subject=eventType==='holiday'?'Feriado / Sem aula':eventType==='simulation'?'Simulado Avaliativo Final de Semestre':document.getElementById('cal-subject-select').value;
             const qtd = parseInt(document.getElementById('cal-qtd-datas').value) || 2;
-            const description = document.getElementById('cal-event-desc').value.trim();
+            const description = document.getElementById('cal-event-desc').value.trim() || (eventType==='simulation'?'Simulado Avaliativo Final de Semestre':'');
 
             if (!courseId || !classId || !subject || !description) {
                 return alert("Preencha todos os campos do calendário acadêmico.");
@@ -3477,6 +3490,7 @@ async function excluirColaborador(id) {
                 datasSelecionadas.push(val);
             }
 
+            if(eventType==='lesson'&&academicCalendars.some(ev=>ev.classId===classId&&ev.eventType==='holiday'&&ev.dates?.some(dt=>datasSelecionadas.includes(dt)))){if(!confirm('Existe feriado nesta data para a turma. Confira as datas antes de continuar. Salvar mesmo assim?'))return;}
             const cursoObj = courses.find(c => c.id === courseId);
             const turmaObj = classes.find(cl => cl.id === classId);
 
@@ -3488,6 +3502,7 @@ async function excluirColaborador(id) {
                 semestre,
                 subject,
                 dates: datasSelecionadas,
+                eventType,countsForAttendance:eventType==='lesson',
                 description,
                 createdAt: new Date().toISOString()
             };
@@ -3499,12 +3514,29 @@ async function excluirColaborador(id) {
             renderizarCamposDatasCalendario();
         }
 
+        function atualizarFiltrosGerenciarCalendarios(changed) {
+            const course=document.getElementById('manage-cal-course'), turma=document.getElementById('manage-cal-class'), semester=document.getElementById('manage-cal-semester');
+            if(!course||!turma||!semester)return;
+            function options(select, rows, placeholder, value){select.replaceChildren(new Option(placeholder,''));rows.forEach(row=>select.add(new Option(row.name,row.id)));select.value=rows.some(row=>row.id===value)?value:'';}
+            const oldCourse=course.value, oldClass=changed==='course'?'':turma.value, oldSemester=changed==='course'||changed==='class'?'':semester.value;
+            options(course,courses.slice().sort((a,b)=>(a.name||'').localeCompare(b.name||'','pt-BR')),'Selecione o curso...',oldCourse);
+            options(turma,classes.filter(cl=>course.value&&cl.courseId===course.value).sort((a,b)=>(a.name||'').localeCompare(b.name||'','pt-BR')),'Selecione a turma...',oldClass);
+            turma.disabled=!course.value;
+            const semesters=[...new Set(academicCalendars.filter(cal=>cal.courseId===course.value&&cal.classId===turma.value).map(cal=>cal.semestre||'2026/2'))].sort();
+            options(semester,semesters.map(id=>({id,name:id})),'Selecione o semestre...',oldSemester);
+            semester.disabled=!turma.value;
+            renderizarTabelaGerenciarCalendarios();
+        }
+
         function renderizarTabelaGerenciarCalendarios() {
             const tbody = document.getElementById('tabela-gerenciar-calendarios');
             if (!tbody) return;
-            tbody.innerHTML = academicCalendars.length === 0 ? `<tr><td colspan="5" class="p-3 text-center text-gray-400">Nenhum calendário cadastrado.</td></tr>` : '';
+            const courseId=document.getElementById('manage-cal-course').value, classId=document.getElementById('manage-cal-class').value, semester=document.getElementById('manage-cal-semester').value;
+            if(!courseId||!classId||!semester){tbody.innerHTML='<tr><td colspan="5" class="p-3 text-center text-gray-400">Selecione curso, turma e semestre para visualizar o calendário.</td></tr>';return;}
+            const filtered=academicCalendars.filter(cal=>cal.courseId===courseId&&cal.classId===classId&&(cal.semestre||'2026/2')===semester).sort((a,b)=>(a.dates?.slice().sort()[0]||'').localeCompare(b.dates?.slice().sort()[0]||''));
+            tbody.innerHTML=filtered.length?'':'<tr><td colspan="5" class="p-3 text-center text-gray-400">Nenhum calendário cadastrado para esta seleção.</td></tr>';
             
-            academicCalendars.forEach(cal => {
+            filtered.forEach(cal => {
                 const datasFormatadas = (cal.dates || []).map(d => d.split('-').reverse().join('/')).join(', ');
                 tbody.innerHTML += `
                     <tr class="border-b border-gray-100 dark:border-slate-700">
@@ -3528,7 +3560,8 @@ async function excluirColaborador(id) {
             document.getElementById('edit-cal-subject').value = cal.subject || '';
             document.getElementById('edit-cal-desc').value = cal.description || '';
             
-            const qtd = (cal.dates && cal.dates.length >= 2) ? cal.dates.length : 2;
+            const qtd = cal.dates?.length || 1;
+            document.getElementById('edit-cal-type').value=cal.eventType||'lesson';
             document.getElementById('edit-cal-qtd').value = qtd;
             renderizarCamposEdicaoCalendario();
 
@@ -3579,7 +3612,9 @@ async function excluirColaborador(id) {
             await db.collection("academicCalendars").doc(id).update({
                 subject,
                 description,
-                dates: novasDatas
+                dates: novasDatas,
+                eventType:document.getElementById('edit-cal-type').value,
+                countsForAttendance:document.getElementById('edit-cal-type').value==='lesson'
             });
 
             registrarLogAuditoria(`Atualizou o calendário acadêmico da disciplina ${subject}`, "Calendário Acadêmico");
@@ -5957,5 +5992,7 @@ function escutarRegistrosPontoManual() {
 <script src="/assets/se7-enrollment.js"></script>
 <script src="/assets/se7-version.js"></script>
 <script src="/assets/se7-documents.js"></script>
+<link rel="stylesheet" href="/assets/se7-exams.css">
+<script src="/assets/vendor/pdf-lib.min.js"></script><script src="/assets/vendor/fontkit.umd.min.js"></script><script src="/assets/vendor/jsQR.js"></script><script src="/assets/vendor/qrcode.js"></script><script src="/assets/se7-exam-omr.js"></script><script src="/assets/se7-exam-pdf.js"></script><script src="/assets/se7-exams.js"></script>
 </body>
 </html>

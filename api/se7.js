@@ -1,4 +1,5 @@
 import {preview as portalPreview} from '../server/portal-preview.mjs';
+import * as exams from '../server/exams.mjs';
 import {reviewLocal} from '../server/enrollment-finance.mjs';
 import * as notices from '../server/notices.mjs';
 import * as financeBatch from '../server/finance-batch.mjs';
@@ -80,6 +81,7 @@ export async function dispatch({auth,db},req,b){
   }catch(e){await auth.deleteUser(uid).catch(()=>{});await ref.delete().catch(()=>{});await idx.delete();throw e;}
  }
  const u=await identity(auth,db,req);
+ if(action.startsWith('exam-')){if(['exam-save','exam-scan-preview','exam-scan-commit','exam-bind','exam-print'].includes(action))await limits(db,req,'asaas-bulk:exams:'+u.uid);return exams.dispatch(db,auth,b,u);}
  if(action==='portal-preview')return portalPreview(db,b,u);
  if(action.startsWith('notices-')){
   if(action==='notices-catalog')return notices.catalog(db,u);
@@ -93,6 +95,7 @@ export async function dispatch({auth,db},req,b){
  }
  if(action==='finance-batch-preview'||action==='finance-batch-commit'){await limits(db,req,'asaas-bulk:finance-batch:'+u.uid);return action==='finance-batch-preview'?financeBatch.preview(db,b,u):financeBatch.commit(db,b,u);}
  if(action.startsWith('email-')){
+  if(u.role==='professor'&&['email-save-grade','email-save-attendance','email-grade','email-attendance','email-list','email-pending'].includes(action))fail(403,'Use o ambiente dedicado do professor.');
   if(action==='email-save-grade'){await limits(db,req,'asaas-bulk:email-save:'+u.uid);return mail.saveGradeWithEmail(db,b,u);}
   if(action==='email-save-attendance'){await limits(db,req,'asaas-bulk:email-save:'+u.uid);return mail.saveAttendanceWithEmail(db,b,u);}
   if(action==='email-enrollment')return mail.enrollmentEmail(db,b.studentId,u);
@@ -221,6 +224,7 @@ export async function dispatch({auth,db},req,b){
    const date=now.toLocaleDateString('en-CA',{timeZone:'America/Fortaleza'});
    const attendanceRef=db.collection('attendance').doc(`presenca_${studentRef.id}_${date}`);
    const existing=await tx.get(attendanceRef);
+   const dayEvents=await tx.get(db.collection('academicCalendars').where('classId','==',student.classId));if(dayEvents.docs.some(d=>d.data().eventType==='holiday'&&d.data().dates?.includes(date)))fail(409,'Data registrada como feriado para esta turma. Não será registrada presença de aula.');
    tx.update(qrRef,{used:true,usedAt:at(),usedBy:u.uid});
    if(!existing.exists)tx.set(attendanceRef,{studentId:studentRef.id,nomeAluno:student.fullname||'Aluno',data:date,horario:now.toLocaleTimeString('pt-BR',{timeZone:'America/Fortaleza'}),status:'PRESENTE',registradoPor:'Totem QR dinâmico autenticado',actorUid:u.uid,createdAt:at()});
    return {name:student.fullname||'Aluno',repeated:existing.exists,emailStudentId:studentRef.id,emailDate:date,classId:student.classId};
@@ -263,7 +267,7 @@ export default async function handler(req,res){
  res.setHeader('Cache-Control','no-store');res.setHeader('X-Content-Type-Options','nosniff');
  try {
   if(req.method!=='POST')fail(405,'Use POST.');const origin=req.headers.origin;if(origin!=='https://sistema-escolar-ten-mu.vercel.app')fail(403,'Origem não autorizada.');
-  if(!String(req.headers['content-type']||'').startsWith('application/json'))fail(415,'Envie JSON.');const b=typeof req.body==='string'?JSON.parse(req.body):req.body;if(!b||typeof b.action!=='string'||JSON.stringify(b).length>(b.action==='notices-save'?700000:12000))fail(400,'Requisição inválida.');
+  if(!String(req.headers['content-type']||'').startsWith('application/json'))fail(415,'Envie JSON.');const b=typeof req.body==='string'?JSON.parse(req.body):req.body;if(!b||typeof b.action!=='string'||JSON.stringify(b).length>(b.action==='notices-save'||b.action==='exam-scan-preview'?750000:b.action==='exam-save'?250000:12000))fail(400,'Requisição inválida.');
   if(!process.env.SE7_MASTER_UID)throw new Error('Master não configurado.');const result=await dispatch(services(),req,b);res.status(200).json(result);
  }catch(e){const status=e.status||500;if(status===500)console.error('SE7 API',e.code||'internal');res.status(status).json({error:status===500?'Não foi possível concluir. Verifique a configuração do servidor.':e.message});}
 }

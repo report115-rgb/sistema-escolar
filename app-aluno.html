@@ -233,7 +233,7 @@
         <p class="welcome-tagline">Tudo conectado ao sistema Matriz</p>
         <div class="welcome-progress" aria-hidden="true"></div>
     </div>
-    <div class="welcome-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.4.10</span> • Portal do Aluno</div>
+    <div class="welcome-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.5.0</span> • Portal do Aluno</div>
 </div>
 
 
@@ -271,7 +271,7 @@
                 <button type="button" class="student-login-choice student-login-choice-secondary" onclick="irParaTelaMatriculaSuave()">Quero me matricular</button>
             </div>
         </div>
-        <div id="student-welcome-developer-footer" class="student-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.4.10</span> • Portal do Aluno</div>
+        <div id="student-welcome-developer-footer" class="student-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.5.0</span> • Portal do Aluno</div>
     </div>
 
     <!-- TELA DE LOGIN DO ALUNO -->
@@ -320,7 +320,7 @@
                 </form>
             </div>
         </div>
-        <div id="student-login-developer-footer" class="student-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.4.10</span> • Portal do Aluno</div>
+        <div id="student-login-developer-footer" class="student-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.5.0</span> • Portal do Aluno</div>
     </div>
 
     <!-- TELA DE AUTO-MATRÍCULA -->
@@ -1729,7 +1729,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
                 }
 
                 await verificarTodasPendencias();
-                void SE7Notices.refresh(alunoLogado.id);
+                void SE7Notices.refresh(alunoLogado.id);void window.SE7ExamsStudent?.refresh();
             } catch(e) {
                 console.error("Erro ao carregar dados do painel do aluno:", e);
             }
@@ -1756,9 +1756,9 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
                 return;
             }
 
-            let eventosFiltrados = eventosCalendarioCache;
+            const holidayDates=new Set(eventosCalendarioCache.filter(ev=>ev.eventType==='holiday').flatMap(ev=>ev.dates||[]));let eventosFiltrados = eventosCalendarioCache.filter(ev=>ev.countsForAttendance!==false && !['holiday','exam','simulation'].includes(ev.eventType)).map(ev=>({...ev,dates:(ev.dates||[]).filter(dt=>!holidayDates.has(dt))}));
             if (filtroSemestre) {
-                eventosFiltrados = eventosCalendarioCache.filter(ev => ev.semestre === filtroSemestre);
+                eventosFiltrados = eventosFiltrados.filter(ev => ev.semestre === filtroSemestre);
             }
 
             const mesesNomes = {
@@ -2231,5 +2231,5 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
 <script src="/assets/se7-receipt.js"></script>
 <script src="/assets/se7-cancellation.js"></script>
 <script src="/assets/se7-asaas.js"></script>
-</body>
+<link rel="stylesheet" href="/assets/se7-exams.css"><script src="/assets/se7-exam-student.js"></script></body>
 </html>

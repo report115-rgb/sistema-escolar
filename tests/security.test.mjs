@@ -208,3 +208,11 @@ test('visualização master lê apenas o aluno escolhido e não altera documento
  await assert.rejects(call(studentToken,{action:'portal-preview',operation:'snapshot',studentId:'preview-student'}));
  await assert.rejects(call(masterToken,{action:'portal-preview',operation:'snapshot',studentId:'missing-preview'}),/não encontrado/);
 });
+
+test('professor dedicado não lê outros pontos, não escreve notas diretamente e não lê gabaritos privados',async()=>{
+ const teacher=env.authenticatedContext('cancel-prof',{role:'professor'}).firestore();
+ await assertFails(getDocs(collection(teacher,'teacherManualLogs')));
+ await assertFails(updateDoc(doc(teacher,'students','s2'),{grades:{fraude:5}}));
+ await assertFails(getDoc(doc(teacher,'se7ExamVersions','qualquer-versao')));
+ await assertFails(getDoc(doc(teacher,'se7ExamImages','qualquer-imagem')));
+});
