@@ -79,3 +79,11 @@ test('mudança de pagamento ou vínculo depois da prévia impede substituição 
 test('boleto anterior pago é preservado e não recebe outro pagamento no lugar',()=>fixture(async({db,remote})=>{
  await emit(db,'f1','BOLETO',replacementUser);remote.set('pay_2',substitute());const p=await replacement.preview(db,{invoiceId:'f1',paymentId:'pay_2'},replacementUser);remote.get('pay_1').status='RECEIVED';await assert.rejects(replacement.commit(db,{planId:p.planId,reason:'Substituir'},replacementUser),/não substitua/);assert.equal(db.data.get('financeLogs/f1').status,'PAGO');assert.equal(db.data.get('financeLogs/f1').asaasPaymentId,'pay_1');assert(!db.data.has('se7AsaasPayments/pay_2'));
 }));
+
+test('webhook aceita ID Asaas com & e mantém processamento idempotente',()=>fixture(async({db,remote,reads})=>{
+ await emit(db,'f1','BOLETO',{uid:'master'});remote.get('pay_1').deleted=true;
+ const payload={id:'evt_abc123&1563848919',event:'PAYMENT_DELETED',payment:{id:'pay_1'}};
+ await applyWebhook(db,payload);assert.equal(db.data.get('financeLogs/f1').status,'CANCELADO (ASAAS)');assert.equal(db.data.get('se7AsaasEvents/'+payload.id).processed,true);
+ const count=reads();assert.equal((await applyWebhook(db,payload)).duplicate,true);assert.equal(reads(),count);
+ for(const invalid of ['evt_a/b','evt_a.b','evt_a#b','evt_','evt_'+ 'a'.repeat(191)])await assert.rejects(applyWebhook(db,{...payload,id:invalid}),/Evento inválido/);
+}));
