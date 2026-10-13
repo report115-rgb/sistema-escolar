@@ -227,3 +227,9 @@ test('foto do professor somente master; secretaria edita outros dados sem altera
  await assertFails(setDoc(doc(s,'teachers/photo-new'),{fullname:'Outro',profilePhoto:'foto'}));
  await assertFails(updateDoc(doc(p,'teachers/photo-teacher'),{profilePhoto:'troca-propria'}));
 });
+
+test('auditoria central registra consulta e tentativa negada da secretaria sem copiar senha ou gabarito',async()=>{
+ const uid='audit-secretaria';await auth.createUser({uid,email:'audit-secretaria@example.test',password:'audit-secret-pass'});await db.collection('se7Staff').doc(uid).set({perfil:'secretaria',nome:'Secretária Auditoria',disabled:false});const token=await signIn('audit-secretaria@example.test','audit-secret-pass');
+ await call(token,{action:'exam-catalog'});await assert.rejects(call(token,{action:'exam-save',password:'NUNCA-REGISTRAR',questions:[{correct:3,text:'GABARITO-PRIVADO'}]}));
+ const records=(await db.collection('systemLogs').where('actorUid','==',uid).get()).docs.map(d=>d.data());assert(records.some(r=>r.usuario==='Secretária Auditoria'&&r.acao.includes('Concluído: Consultou')));assert(records.some(r=>r.acao.includes('Não concluído: Salvou avaliação')));assert(!JSON.stringify(records).includes('NUNCA-REGISTRAR'));assert(!JSON.stringify(records).includes('GABARITO-PRIVADO'));
+});

@@ -64,7 +64,7 @@ async function loginStudent(auth,db,req,b){
 async function lockStudent(db,id){const ref=db.collection('students').doc(id);const lock=randomBytes(12).toString('hex');await db.runTransaction(async tx=>{const d=await tx.get(ref);if(!d.exists)fail(404,'Aluno não encontrado.');if(d.data().se7AuthLock)fail(409,'Outra operação de acesso está em andamento.');tx.update(ref,{se7AuthLock:lock});});return {ref,lock};}
 async function unlock(ref,lock){await ref.firestore.runTransaction(async tx=>{const d=await tx.get(ref);if(d.exists&&d.data().se7AuthLock===lock)tx.update(ref,{se7AuthLock:F.delete()});});}
 async function publicInfo(db){const snap=await db.collection('config').doc('institution').get();const d=snap.data()||{};const fields=['name','razao','cnpj','email','tel','end','loginDesc','logo','logomarca','urlLogo','logoUrl','image','fileUrl'];return {institution:Object.fromEntries(fields.filter(k=>typeof d[k]==='string').map(k=>[k,d[k]]))};}
-export async function dispatch({auth,db},req,b){
+async function dispatchOperation({auth,db},req,b){
  const action=b.action;
  if(action==='public-info')return publicInfo(db);
  if(action==='catalog'){const snap=await db.collection('courses').get();return {courses:snap.docs.map(d=>({id:d.id,name:d.data().name||'Curso'}))};}
@@ -80,7 +80,7 @@ export async function dispatch({auth,db},req,b){
    const code=`MAT-${new Date().getFullYear()}-${ref.id.slice(-8).toUpperCase()}`;await ref.set({...s,code,dob:s.birthDate,classId:'',status:'Ativo',documentos:{},attendance:{},se7AuthUid:uid,portalSessionVersion:0,createdAt:new Date().toISOString()});await idx.set({studentId:ref.id});const customToken=await auth.createCustomToken(uid,{role:'aluno',studentId:ref.id,portalVersion:0});try{await setConsent(db,ref.id,data.whatsappOptIn===true,{uid,role:'aluno'});await enrollmentNotifications(db,ref.id,{uid,role:'aluno'});}catch{console.warn('SE7 WhatsApp: matrícula salva; notificação não concluída.');}return {customToken,student:{id:ref.id,...s,code}};
   }catch(e){await auth.deleteUser(uid).catch(()=>{});await ref.delete().catch(()=>{});await idx.delete();throw e;}
  }
- const u=await identity(auth,db,req);
+ const u=await identity(auth,db,req);req.se7AuditIdentity=u;
  if(action.startsWith('exam-')){if(['exam-save','exam-scan-preview','exam-scan-commit','exam-bind','exam-print'].includes(action))await limits(db,req,'asaas-bulk:exams:'+u.uid);return exams.dispatch(db,auth,b,u);}
  if(action==='portal-preview')return portalPreview(db,b,u);
  if(action.startsWith('notices-')){
@@ -263,6 +263,13 @@ export async function dispatch({auth,db},req,b){
  }
  fail(400,'Operação desconhecida.');
 }
+const auditActionNames={'exam-catalog':'Consultou avaliações e dados do professor','exam-get':'Abriu uma avaliação para edição','exam-save':'Salvou avaliação','exam-roster':'Consultou alunos para impressão','exam-print':'Gerou prova nominal e cartão-resposta','exam-scan-start':'Identificou cartão-resposta para correção','exam-scan-preview':'Analisou foto do cartão-resposta','exam-scan-commit':'Registrou correção e notas da avaliação','exam-results':'Consultou correções','exam-result':'Consultou cartão corrigido','exam-point':'Consultou frequência e pagamentos','exam-bind':'Vinculou acesso do professor','exam-verify':'Validou QR de documento'};
+export async function dispatch(services,req,b){
+ delete req.se7AuditIdentity;
+ const record=async(result,failed=false)=>{const u=req.se7AuditIdentity;if(!u||!['master','secretaria','professor','financeiro','totem'].includes(u.role))return;const action=String(b.action||'').slice(0,100),details=[];for(const key of ['id','teacherId','classId','studentId','examId','planId','paymentId'])if(typeof b[key]==='string'&&/^[A-Za-z0-9_-]{1,150}$/.test(b[key]))details.push(key+': '+b[key]);if(action==='exam-save')details.push(b.state==='final'?'Finalizada':'Rascunho');if(result?.duplicate)details.push('Operação já registrada; sem duplicação');const now=new Date();try{await services.db.collection('systemLogs').add({dataHora:now.toLocaleString('pt-BR',{timeZone:'America/Fortaleza'}),createdAt:now.toISOString(),usuario:u.profile?.nome||u.name||u.email||u.uid,perfil:u.role.toUpperCase(),modulo:action.startsWith('exam-')?'Gestão de Avaliações':action.startsWith('asaas-')?'Financeiro / Asaas':action.startsWith('email-')?'E-mails':action.startsWith('notices-')?'Avisos':action.startsWith('staff-')?'Acessos':'Sistema / '+action,acao:(failed?'Não concluído: ':'Concluído: ')+(auditActionNames[action]||action)+(details.length?' • '+details.join(' • '):''),actorUid:u.uid,origem:'servidor'});}catch{console.warn('SE7: não foi possível gravar o registro de auditoria.');}};
+ try{const result=await dispatchOperation(services,req,b);await record(result);return result;}catch(error){await record(null,true);throw error;}
+}
+
 export default async function handler(req,res){
  res.setHeader('Cache-Control','no-store');res.setHeader('X-Content-Type-Options','nosniff');
  try {

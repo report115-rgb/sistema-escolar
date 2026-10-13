@@ -251,7 +251,7 @@
             </div>
         </section>
     </div>
-    <div class="matriz-login-footer"><strong>Sistema SE7 de Gestão Acadêmica</strong><br><span data-se7-version="matriz">v1.5.7</span> • Sistema Matriz</div>
+    <div class="matriz-login-footer"><strong>Sistema SE7 de Gestão Acadêmica</strong><br><span data-se7-version="matriz">v1.5.9</span> • Sistema Matriz</div>
 </div>
 
 <!-- ========================================== -->
@@ -1595,7 +1595,7 @@
     <!-- RODAPÉ -->
     <footer id="se7-footer" class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border-t border-gray-200 dark:border-slate-700 py-2.5 px-6 text-center text-xs text-gray-500 dark:text-gray-400 flex flex-col sm:flex-row justify-between items-center gap-2 shadow-lg">
         <span>Sistema SE7 de Gestão Acadêmica • Matriz</span>
-        <span>Desenvolvido por <strong>JS & SS Serviços Educacionais e Cia Ltda</strong> &bull; <span data-se7-version="matriz">v1.5.7</span> • Sistema Matriz</span>
+        <span>Desenvolvido por <strong>JS & SS Serviços Educacionais e Cia Ltda</strong> &bull; <span data-se7-version="matriz">v1.5.9</span> • Sistema Matriz</span>
     </footer>
 
     <!-- MODAL DE NOVA MATRÍCULA / EDIÇÃO DE ALUNO -->
@@ -1835,7 +1835,7 @@
     const usuarioSessao = sessaoRealMatriz || JSON.parse(sessionStorage.getItem('usuario_logado')) || { nome: "Sistema", perfil: "geral" };
     
     const novoLog = {
-        dataHora: new Date().toLocaleString('pt-BR'),
+        dataHora: new Date().toLocaleString('pt-BR',{timeZone:'America/Fortaleza'}),
         usuario: usuarioSessao.nome,
         perfil: usuarioSessao.perfil ? usuarioSessao.perfil.toUpperCase() : 'GERAL',
         modulo: modulo,
@@ -1861,23 +1861,14 @@ function renderizarLogsAuditoria() {
 
     // Utiliza onSnapshot para atualizar em tempo real as ações de qualquer perfil (Master, Secretaria, etc.)
     if (cancelarEscutaAuditoria) cancelarEscutaAuditoria();
-    cancelarEscutaAuditoria = db.collection("systemLogs").orderBy("createdAt", "desc").limit(100).onSnapshot((snapshot) => {
+    cancelarEscutaAuditoria = db.collection("systemLogs").orderBy("createdAt", "desc").onSnapshot((snapshot) => {
         if (snapshot.empty) {
             tbody.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-gray-400">Nenhum log encontrado na nuvem.</td></tr>`;
             return;
         }
 
-        tbody.innerHTML = '';
-        snapshot.forEach(doc => {
-            const l = doc.data();
-            tbody.innerHTML += `
-                <tr class="border-b border-gray-100 dark:border-slate-700">
-                    <td class="p-3">${l.dataHora}</td>
-                    <td class="p-3 font-semibold">${l.usuario} (${l.perfil})</td>
-                    <td class="p-3"><span class="px-2 py-0.5 bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 rounded text-[10px] font-bold">${l.modulo}</span></td>
-                    <td class="p-3">${l.acao}</td>
-                </tr>`;
-        });
+        tbody.replaceChildren();
+        snapshot.forEach(doc=>{const l=doc.data(),tr=document.createElement('tr');tr.className='border-b border-gray-100 dark:border-slate-700';for(const value of [l.dataHora,(l.usuario||'Sistema')+' ('+(l.perfil||'')+')',l.modulo,l.acao]){const td=document.createElement('td');td.className='p-3';td.textContent=value||'';tr.append(td);}tbody.append(tr);});
     }, (error) => {
         console.error("Erro ao carregar logs da nuvem:", error);
         tbody.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-red-400">Erro ao carregar os logs.</td></tr>`;
@@ -2778,7 +2769,7 @@ async function removerUsuarioSistemaFirebase(id){if(!confirm('Desativar esse fun
             });
         }
 
-let dadosMatrizIniciados=false;function iniciarDadosAutenticadosMatriz(){const perfil=JSON.parse(sessionStorage.getItem('usuario_logado')||'{}').perfil;if(perfil==='professor'){window.SE7Exams?.apply(perfil);return;}if(dadosMatrizIniciados)return;dadosMatrizIniciados=true;carregarDadosDaNuvem();escutarRegistrosPontoManual();if(usuarioMasterAtivo()){renderizarLogsAuditoria();renderizarSolicitacoesPendentes();}carregarAlunosSemTurma();}
+let dadosMatrizIniciados=false;function iniciarDadosAutenticadosMatriz(){window.iniciarAuditoriaMovimentacoes?.();const perfil=JSON.parse(sessionStorage.getItem('usuario_logado')||'{}').perfil;if(perfil==='professor'){window.SE7Exams?.apply(perfil);return;}if(dadosMatrizIniciados)return;dadosMatrizIniciados=true;carregarDadosDaNuvem();escutarRegistrosPontoManual();if(usuarioMasterAtivo()){renderizarLogsAuditoria();renderizarSolicitacoesPendentes();}carregarAlunosSemTurma();}
         function carregarDadosDaNuvem() {
             db.collection("config").doc("institution").onSnapshot((doc) => {
                 if (doc.exists) {
@@ -3155,6 +3146,17 @@ async function excluirColaborador(id) {
             }
         }
 
+        let edicaoConfiguracaoAtiva=null;
+        function abrirModalEdicaoConfiguracao(id,title,cancel){
+            const form=document.getElementById(id);if(!form)return;
+            if(edicaoConfiguracaoAtiva)fecharModalEdicaoConfiguracao();
+            const parent=form.parentNode,next=form.nextSibling,display=form.style.display;
+            const dialog=document.createElement('dialog');dialog.className='se7-exam-dialog se7-config-edit-dialog';dialog.setAttribute('aria-label',title);
+            const header=document.createElement('div'),heading=document.createElement('h3'),close=document.createElement('button');header.className='flex justify-between items-center';heading.textContent=title;close.type='button';close.textContent='Fechar';close.onclick=cancel;header.append(heading,close);dialog.append(header,form);form.style.display='block';document.body.append(dialog);
+            edicaoConfiguracaoAtiva={dialog,form,parent,next,display,cancel};dialog.addEventListener('cancel',event=>{event.preventDefault();cancel();});dialog.showModal();
+        }
+        function fecharModalEdicaoConfiguracao(){if(!edicaoConfiguracaoAtiva)return;const {dialog,form,parent,next,display}=edicaoConfiguracaoAtiva;edicaoConfiguracaoAtiva=null;dialog.close();parent.insertBefore(form,next&&next.parentNode===parent?next:null);form.style.display=display;dialog.remove();}
+
         function editarCurso(id) {
             const c = courses.find(item => item.id === id);
             if (!c) return;
@@ -3176,10 +3178,11 @@ async function excluirColaborador(id) {
             document.getElementById('btn-cancel-edit-course').style.display = 'inline-block';
 
             const btnCadastrar = document.querySelector('#subtab-courses .subsubtab-button:nth-child(2)');
-            if(btnCadastrar) openSubSubTab({ currentTarget: btnCadastrar }, 'subsubtab-cadastrar-curso');
+            abrirModalEdicaoConfiguracao('subsubtab-cadastrar-curso','Editar curso',cancelarEdicaoCurso);
         }
 
         function cancelarEdicaoCurso() {
+            fecharModalEdicaoConfiguracao();
             document.getElementById('edit-course-id').value = '';
             document.getElementById('input-course-name').value = '';
             document.getElementById('input-course-sigla').value = '';
@@ -3285,10 +3288,11 @@ async function excluirColaborador(id) {
             document.getElementById('btn-cancel-edit-subject').style.display = 'inline-block';
 
             const btnCadastrar = document.querySelector('#subtab-subjects .subsubtab-subject-button:nth-child(2)');
-            if(btnCadastrar) openSubSubTabSubject({ currentTarget: btnCadastrar }, 'subsubtab-cadastrar-disciplina');
+            abrirModalEdicaoConfiguracao('subsubtab-cadastrar-disciplina','Editar disciplina',cancelarEdicaoDisciplina);
         }
 
         function cancelarEdicaoDisciplina() {
+            fecharModalEdicaoConfiguracao();
             document.getElementById('edit-subject-id').value = '';
             document.getElementById('input-subject-course-select').disabled=false;
             document.getElementById('input-subject-name').value = '';
@@ -3358,10 +3362,11 @@ async function excluirColaborador(id) {
             document.getElementById('btn-cancel-edit-class').style.display = 'inline-block';
 
             const btnCadastrar = document.querySelector('#subtab-classes .subsubtab-class-button:nth-child(2)');
-            if(btnCadastrar) openSubSubTabClass({ currentTarget: btnCadastrar }, 'subsubtab-cadastrar-turma');
+            abrirModalEdicaoConfiguracao('subsubtab-cadastrar-turma','Editar turma',cancelarEdicaoTurma);
         }
 
         function cancelarEdicaoTurma() {
+            fecharModalEdicaoConfiguracao();
             document.getElementById('edit-class-id').value = '';
             document.getElementById('btn-save-class').textContent = "Salvar Turma";
             document.getElementById('btn-cancel-edit-class').style.display = 'none';
