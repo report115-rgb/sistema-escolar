@@ -3,3 +3,5 @@
 #se7-teacher-nav{display:flex;flex-direction:column;gap:8px;padding:12px}.se7-teacher-nav-button{display:flex!important;align-items:center;gap:12px;text-align:left;border-radius:12px;padding:12px;color:#dbeafe;background:transparent;border:1px solid transparent;cursor:pointer}.se7-teacher-nav-button:hover,.se7-teacher-nav-button.active{background:#12365c;border-color:#2e6ca0}.se7-teacher-nav-button i{width:20px;text-align:center;color:#65b9ff}.se7-professor #se7-teacher-nav{display:flex}
 
 .se7-teacher-nav-button{font-size:12px;white-space:nowrap}.se7-teacher-profile{display:flex;gap:24px;align-items:start;margin-top:20px}.se7-teacher-profile img,.se7-teacher-photo-empty{width:120px;height:160px;object-fit:cover;border-radius:12px;border:1px solid #34516c}.se7-teacher-photo-empty{display:flex;align-items:center;text-align:center;padding:12px;color:#9fb8d0}.se7-teacher-profile .se7-exam-grid{flex:1;gap:22px}.se7-teacher-profile small{display:block;color:#9fb8d0;margin-bottom:4px}
+
+.se7-teacher-frequency-info{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 18px;margin:12px 0 18px}.se7-teacher-frequency-info p{font-size:13px;margin:3px 0}
