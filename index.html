@@ -3896,9 +3896,9 @@ function carregarDatasCalendarioParaFrequencia() {
 
         const beforeEnrollment = await db.collection('students').doc(editId).get();
         const hadClass = !!beforeEnrollment.data()?.classId;
-        const recalculateEntry=!!beforeEnrollment.data()?.enrollmentDate&&(beforeEnrollment.data().classId!==classId||beforeEnrollment.data().courseId!==courseId);
+        const enrollmentDate=document.getElementById('student-enrollment-date').value;const oldDate=beforeEnrollment.data()?.enrollmentDate||'';if(oldDate&&!enrollmentDate)return alert('Informe a data da matrícula; a data registrada não pode ser apagada.');if(enrollmentDate&&enrollmentDate>SE7AcademicPolicy.today())return alert('A data da matrícula não pode ser futura.');const dateChanged=enrollmentDate!==oldDate;const recalculateEntry=!!enrollmentDate&&(dateChanged||beforeEnrollment.data().classId!==classId||beforeEnrollment.data().courseId!==courseId);
         await db.collection("students").doc(editId).update(studentData);
-        if(recalculateEntry)await SE7.api('academic-entry-plan',{studentId:editId});
+        if(recalculateEntry){const entry=await SE7.api('academic-entry-plan',{studentId:editId,...(dateChanged?{enrollmentDate}:{})});Object.assign(studentData,{enrollmentDate,academicEntry:entry});}
         if(!hadClass && studentData.classId){void SE7Email.notify('email-enrollment',{studentId:editId});void SE7EnrollmentAuto.start(editId);}
         await SE7.api('prepare-student',{id:editId});
         await SE7.api('whatsapp-consent',{id:editId,optIn:document.getElementById('whatsapp-opt-in-aluno').checked});
