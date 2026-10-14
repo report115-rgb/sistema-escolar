@@ -958,7 +958,6 @@
             <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-md p-6 border border-gray-200 dark:border-slate-700">
                 <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4 pb-2 border-b border-gray-100 dark:border-slate-700">Configurações do Sistema</h2>
                 <div class="flex space-x-2 mb-6 border-b border-gray-200 dark:border-slate-700 pb-3 overflow-x-auto">
-                    <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold" onclick="openSubTab(event, 'subtab-backup')">Backup</button>
                     <button class="subtab-button active px-3 py-1.5 rounded-xl text-xs font-semibold bg-blue-600 text-white shadow" onclick="openSubTab(event, 'subtab-courses')">Cursos</button>
                     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-subjects')">Disciplinas</button>
                     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-classes')">Turmas</button>
@@ -973,17 +972,6 @@
 </div>
 
                 <!-- ABA PRINCIPAL CURSOS (DIVIDIDA EM DUAS SUBABAS) -->
-                <div id="subtab-backup" class="subtab-content space-y-4" style="display:none;padding:20px;border:1px solid #34536e;border-radius:16px;">
-<h3 class="font-bold">Backup protegido — somente master</h3>
-<p class="text-sm">Gere no computador, fora do horário de lançamentos. O arquivo contém dados pessoais: guarde-o em local privado. A senha protege a cópia e não é enviada ao servidor; sem ela não é possível abrir o arquivo.</p>
-<p class="text-sm">Inclui registros do Firebase e subcoleções. Contas de acesso são um inventário, sem senhas. Documentos do Drive, regras, índices e configurações externas precisam de cópias separadas. Nenhum botão desta área altera ou restaura o banco.</p>
-<label>Senha do backup (mínimo 12 caracteres)<input id="backup-password" type="password" autocomplete="new-password" class="w-full p-2 rounded border" maxlength="200"></label>
-<label>Confirme a senha para exportar<input id="backup-confirm" type="password" autocomplete="new-password" class="w-full p-2 rounded border" maxlength="200"></label>
-<button id="backup-export" type="button" class="px-4 py-2 rounded bg-blue-600 text-white">Exportar backup protegido</button>
-<hr><label>Arquivo para conferência<input id="backup-file" type="file" accept=".se7backup,application/json"></label>
-<button id="backup-verify" type="button" class="px-4 py-2 rounded bg-blue-600 text-white">Verificar arquivo</button>
-<p id="backup-status" role="status" aria-live="polite" class="text-sm">Para verificar, selecione o arquivo e informe sua senha no primeiro campo. A restauração será feita de forma assistida, após teste em banco separado.</p>
-</div>
                 <div id="subtab-courses" class="subtab-content active space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700">
                     
                     <!-- BOTÕES DAS SUBABAS DE CURSOS -->
@@ -2630,7 +2618,6 @@ async function removerUsuarioSistemaFirebase(id){if(!confirm('Desativar esse fun
 }
 
         function openSubTab(evt, subtabId) {
-            if(subtabId==='subtab-backup'&&(!usuarioMasterAtivo()||sessionStorage.getItem('se7_matriz_perfil_visualizado')))return;
     const alvo = document.getElementById(subtabId);
     if (!alvo) return;
     if(subtabId==='subtab-acessos-portal' && !podeGerenciarPortal()) return;
@@ -6024,6 +6011,5 @@ function escutarRegistrosPontoManual() {
 <script src="/assets/se7-documents.js"></script>
 <link rel="stylesheet" href="/assets/se7-exams.css">
 <script src="/assets/vendor/pdf-lib.min.js"></script><script src="/assets/vendor/fontkit.umd.min.js"></script><script src="/assets/vendor/jsQR.js"></script><script src="/assets/vendor/qrcode.js"></script><script src="/assets/se7-exam-omr.js"></script><script src="/assets/se7-exam-pdf.js"></script><script src="/assets/se7-exams.js"></script>
-<script src="/assets/se7-backup-crypto.js"></script><script src="/assets/se7-backup.js"></script>
 </body>
 </html>
