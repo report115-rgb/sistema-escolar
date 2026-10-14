@@ -1401,7 +1401,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
                     guardarSessaoPortal(alunoLogado);
                     
                     renderizarDocumentosObrigatorios();
-                    await verificarTodasPendencias();
+                    await verificarTodasPendencias();void SE7Notices.refresh(alunoLogado.id);
 
                     alert("Documento enviado com sucesso!");
                 } catch(err) {
@@ -1412,7 +1412,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
                     guardarSessaoPortal(alunoLogado);
 
                     renderizarDocumentosObrigatorios();
-                    await verificarTodasPendencias();
+                    await verificarTodasPendencias();void SE7Notices.refresh(alunoLogado.id);
 
                     alert("Documento enviado com sucesso!");
                 }

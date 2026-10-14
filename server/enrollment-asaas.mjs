@@ -1,3 +1,4 @@
+import {tuitionFor} from '../assets/se7-tuition.js';
 import {api,config,cents,dueDate,linkCustomer,emit,importPayment} from './asaas.mjs';
 import {randomUUID,createHash} from 'node:crypto';
 const fail=(status,message)=>{throw Object.assign(Error(message),{status});};
@@ -50,7 +51,7 @@ export async function step(db,id,u){
     payments.sort((a,b)=>dueDate(a.dueDate).localeCompare(dueDate(b.dueDate))||a.id.localeCompare(b.id));
     const reverses=await Promise.all(payments.map(p=>db.collection('se7AsaasPayments').doc(p.id).get()));for(const [index,p] of payments.entries()){if(p.customer!==job.customerId)fail(409,'Cliente divergente.');const reverse=reverses[index];if(reverse.exists)fail(409,'Cobrança já vinculada. Revise os vínculos existentes.');cents(p.originalValue??p.value);dueDate(p.dueDate);entries.push({invoiceId:'auto_'+createHash('sha256').update(id+':'+p.id).digest('hex').slice(0,32),paymentId:p.id,amount:p.originalValue??p.value,date:p.dueDate,description:p.description||'Mensalidade '+(entries.length+1)+'/'+payments.length,mode:'import'});}
    }else{
-    if(!local.docs.length){const c=await db.collection('courses').doc(s.courseId).get();if(!c.exists)fail(409,'Curso não encontrado.');for(const [i,row]of newInstallments(c.data()).entries())entries.push({...row,invoiceId:'enroll_'+id+'_'+(i+1),mode:'create'});}
+    if(!local.docs.length){const c=await db.collection('courses').doc(s.courseId).get();if(!c.exists)fail(409,'Curso não encontrado.');const turma=await db.collection('classes').doc(s.classId).get();if(!turma.exists||turma.data().courseId!==s.courseId)fail(409,'Confira a turma e o curso.');for(const [i,row]of newInstallments(tuitionFor(c.data(),turma.data())).entries())entries.push({...row,invoiceId:'enroll_'+id+'_'+(i+1),mode:'create'});}
     for(const d of local.docs){const f=d.data();cents(f.amount);dueDate(f.date);if(f.date<new Date().toLocaleDateString('en-CA',{timeZone:'America/Fortaleza'}))fail(409,'Primeiro vencimento passado. Ajuste as parcelas antes da emissão.');entries.push({invoiceId:d.id,mode:'create'});}
     if(local.docs.length)entries.sort((a,b)=>local.docs.find(d=>d.id===a.invoiceId).data().date.localeCompare(local.docs.find(d=>d.id===b.invoiceId).data().date));
    }
