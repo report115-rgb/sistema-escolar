@@ -5,3 +5,9 @@
 @media(prefers-reduced-motion:no-preference){.se7-notice-dialog[open]{animation:se7-notice-in .2s ease-out}@keyframes se7-notice-in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}}
 
 .se7-operation-notice{position:fixed;z-index:10000;bottom:calc(90px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);width:max-content;max-width:calc(100vw - 32px);box-sizing:border-box;padding:13px 18px;border:1px solid #3c8bba;border-radius:13px;background:#0b2943;color:#eaf6ff;box-shadow:0 8px 28px #0006;font:13px/1.5 Arial;overflow-wrap:anywhere;pointer-events:none}
+
+/* Avisos com imagem: a própria arte é a janela, sem cartão ao redor. */
+.se7-work-dialog.se7-notice-image-only{width:max-content;max-width:calc(100vw - 24px);max-height:calc(100dvh - 32px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));padding:0;border:0;border-radius:14px;background:transparent;box-shadow:none;overflow:hidden}
+.se7-notice-image-only .se7-work-image{display:block;width:auto;height:auto;max-width:min(430px,calc(100vw - 24px));max-height:calc(100dvh - 32px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));margin:0;border-radius:14px;object-fit:contain;cursor:default}
+.se7-notice-image-only .se7-work-close{position:absolute;top:8px;right:8px;z-index:1;float:none;margin:0;width:36px;height:36px;min-height:36px;padding:0;display:grid;place-items:center;border:1px solid #ffffff70;border-radius:50%;background:#031225dd;color:#fff;font:400 27px/1 Arial;box-shadow:0 2px 8px #0005;cursor:pointer}
+.se7-notice-image-only .se7-work-close:focus-visible{outline:2px solid #54ceff;outline-offset:-4px}
