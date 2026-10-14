@@ -4167,7 +4167,7 @@ function carregarDatasCalendarioParaFrequencia() {
         htmlLinhas += `
             <tr class="border-b border-gray-100 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-900/40">
                 <td class="p-3 font-bold text-blue-600 dark:text-blue-400">${SE7Safe.escape(s.code || '---')}</td>
-                <td class="p-3 font-semibold">${SE7Safe.escape(s.fullname)}</td>
+                <td class="p-3 font-semibold"><button type="button" class="se7-student-name" data-student-sheet="${SE7Safe.escape(s.id)}" title="Consultar ficha do aluno">${SE7Safe.escape(s.fullname)}</button></td>
                 <td class="p-3">${SE7Safe.escape(s.cpf || '---')}</td>
                 <td class="p-3">${SE7Safe.escape(s.whatsapp || '')} <br><span class="text-[10px] text-gray-400">${SE7Safe.escape(s.email || '')}</span></td>
                 <td class="p-3">${SE7Safe.escape(curso ? curso.name : '---')} <br><span class="text-[10px] text-gray-400">Turma: ${SE7Safe.escape(turma ? turma.name : '---')}</span></td>
@@ -6011,5 +6011,6 @@ function escutarRegistrosPontoManual() {
 <script src="/assets/se7-documents.js"></script>
 <link rel="stylesheet" href="/assets/se7-exams.css">
 <script src="/assets/vendor/pdf-lib.min.js"></script><script src="/assets/vendor/fontkit.umd.min.js"></script><script src="/assets/vendor/jsQR.js"></script><script src="/assets/vendor/qrcode.js"></script><script src="/assets/se7-exam-omr.js"></script><script src="/assets/se7-exam-pdf.js"></script><script src="/assets/se7-exams.js"></script>
+<link rel="stylesheet" href="/assets/se7-student-sheet.css"><script src="/assets/se7-student-sheet.js"></script>
 </body>
 </html>

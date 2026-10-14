@@ -2,8 +2,8 @@
   "schema": 1,
   "apps": {
     "matriz": {
-      "version": "1.6.2",
-      "revision": "ec47921e2442cb68d051e5fe7664ff7045b2f6d264705fcf69085ae0431b96b5"
+      "version": "1.6.3",
+      "revision": "4a1e4d1033d7b3c9d141dd66cab955a594b3ce6a2b1122757abfc9bafb266d02"
     },
     "aluno": {
       "version": "1.6.3",
