@@ -1,3 +1,5 @@
+import * as academicIngress from '../server/academic-ingress.mjs';
+import {today as enrollmentToday,planEntry} from '../assets/se7-ingress-policy.js';
 import * as enrollmentAsaas from '../server/enrollment-asaas.mjs';
 import {preview as portalPreview} from '../server/portal-preview.mjs';
 import * as exams from '../server/exams.mjs';
@@ -78,7 +80,7 @@ async function dispatchOperation({auth,db},req,b){
   const ref=db.collection('students').doc();const uid=studentUid(ref.id),idx=db.collection('se7CpfIndex').doc(cpfKey(s.cpf));
   await db.runTransaction(async tx=>{const d=await tx.get(idx);if(d.exists)fail(409,'Já existe um cadastro com este CPF. Solicite ajuda à instituição.');tx.set(idx,{studentId:ref.id,pending:true});});
   try{await auth.createUser({uid,email:alias(ref.id),password:b.password,displayName:s.fullname});await claims(auth,uid,{role:'aluno',studentId:ref.id,portalVersion:0});
-   const code=`MAT-${new Date().getFullYear()}-${ref.id.slice(-8).toUpperCase()}`;await ref.set({...s,code,dob:s.birthDate,classId:'',status:'Ativo',documentos:{},attendance:{},se7AuthUid:uid,portalSessionVersion:0,createdAt:new Date().toISOString()});await idx.set({studentId:ref.id});const customToken=await auth.createCustomToken(uid,{role:'aluno',studentId:ref.id,portalVersion:0});await enrollmentAsaas.markNew(db,ref.id);try{await setConsent(db,ref.id,data.whatsappOptIn===true,{uid,role:'aluno'});await enrollmentNotifications(db,ref.id,{uid,role:'aluno'});}catch{console.warn('SE7 WhatsApp: matrícula salva; notificação não concluída.');}return {customToken,student:{id:ref.id,...s,code}};
+   const code=`MAT-${new Date().getFullYear()}-${ref.id.slice(-8).toUpperCase()}`;await ref.set({...s,code,dob:s.birthDate,classId:'',status:'Ativo',documentos:{},attendance:{},enrollmentDate:enrollmentToday(),enrollmentRegisteredAt:new Date().toISOString(),academicEntry:{version:1,state:'awaiting_class',startDate:'',notTaken:[],planned:[]},se7AuthUid:uid,portalSessionVersion:0,createdAt:new Date().toISOString()});await idx.set({studentId:ref.id});const customToken=await auth.createCustomToken(uid,{role:'aluno',studentId:ref.id,portalVersion:0});await enrollmentAsaas.markNew(db,ref.id);try{await setConsent(db,ref.id,data.whatsappOptIn===true,{uid,role:'aluno'});await enrollmentNotifications(db,ref.id,{uid,role:'aluno'});}catch{console.warn('SE7 WhatsApp: matrícula salva; notificação não concluída.');}return {customToken,student:{id:ref.id,...s,code}};
   }catch(e){await auth.deleteUser(uid).catch(()=>{});await ref.delete().catch(()=>{});await idx.delete();throw e;}
  }
  const u=await identity(auth,db,req);req.se7AuditIdentity=u;await limits(db,req,'gateway:'+u.uid);
@@ -87,6 +89,7 @@ async function dispatchOperation({auth,db},req,b){
   if(typeof b.acao!=='string'||!b.acao.trim()||b.acao.length>2000||typeof b.modulo!=='string'||!b.modulo.trim()||b.modulo.length>120)fail(400,'Registro de auditoria inválido.');
   await limits(db,req,'audit:'+u.uid);const now=new Date();await db.collection('systemLogs').add({dataHora:now.toLocaleString('pt-BR',{timeZone:'America/Fortaleza'}),createdAt:now.toISOString(),usuario:u.profile?.nome||u.name||u.email||u.uid,perfil:u.role.toUpperCase(),modulo:b.modulo.trim(),acao:b.acao.trim(),actorUid:u.uid,origem:'atividade do navegador'});return {ok:true};
  }
+ if(action==='academic-entry-plan')return academicIngress.refresh(db,validId(b.studentId),u);
  if(action.startsWith('enrollment-asaas-')){if(!['master','secretaria','financeiro'].includes(u.role))fail(403,'Acesso restrito.');if(action==='enrollment-asaas-list')return enrollmentAsaas.list(db,u);const id=validId(b.studentId);if(action==='enrollment-asaas-start')return enrollmentAsaas.start(db,id,u);if(action==='enrollment-asaas-step')return enrollmentAsaas.step(db,id,u);if(action==='enrollment-asaas-status')return enrollmentAsaas.status(db,id);if(action==='enrollment-asaas-retry')return enrollmentAsaas.retry(db,id,u);fail(400,'Operação inválida.');}
  if(action.startsWith('exam-')){if(['exam-save','exam-scan-preview','exam-scan-commit','exam-bind','exam-print'].includes(action))await limits(db,req,'asaas-bulk:exams:'+u.uid);return exams.dispatch(db,auth,b,u);}
  if(action==='portal-preview')return portalPreview(db,b,u);
@@ -212,7 +215,7 @@ async function dispatchOperation({auth,db},req,b){
   if(action==='student-config'){const d=(await db.collection('config').doc('institution').get()).data()||{};return {...await publicInfo(db),gdriveUrl:typeof d.gdriveUrl==='string'?d.gdriveUrl:''};}
   fail(403,'Operação não permitida.');
  }
- if(action==='prepare-student'){if(!['master','secretaria'].includes(u.role))fail(403,'Acesso restrito.');const d=await db.collection('students').doc(validId(b.id)).get();if(!d.exists)fail(404,'Aluno não encontrado.');await prepareStudent(db,d);if(b.newEnrollment===true&&d.createTime?.toMillis()>Date.now()-600000)await enrollmentAsaas.markNew(db,d.id);return {ok:true};}
+ if(action==='prepare-student'){if(!['master','secretaria'].includes(u.role))fail(403,'Acesso restrito.');const d=await db.collection('students').doc(validId(b.id)).get();if(!d.exists)fail(404,'Aluno não encontrado.');await prepareStudent(db,d);if(b.newEnrollment===true&&d.createTime?.toMillis()>Date.now()-600000){await enrollmentAsaas.markNew(db,d.id);await academicIngress.stampNew(db,d.id);}return {ok:true};}
  if(action==='attendance'){
   if(!['totem','master'].includes(u.role))fail(403,'Acesso restrito ao Totem.');await limits(db,req,'attendance:'+u.uid);
   if(typeof b.qr!=='string'||!/^SE7:ATTENDANCE:2:[a-f0-9]{48}$/.test(b.qr))fail(400,'QR Code antigo ou inválido. Abra novamente a carteirinha no aplicativo atualizado.');
@@ -228,10 +231,10 @@ async function dispatchOperation({auth,db},req,b){
    const studentRef=db.collection('students').doc(validId(q.studentId));
    const studentSnap=await tx.get(studentRef),student=studentSnap.data();
    if(!student||student.se7AuthUid!==q.authUid||(student.portalSessionVersion||0)!==q.portalVersion||student.portalBlocked||student.portalMustChangePassword||student.se7AuthLock||!['Ativo','Ativa'].includes(student.status)||!student.classId)fail(403,'Aluno sem acesso ativo ou turma. Procure a secretaria.');
-   const date=now.toLocaleDateString('en-CA',{timeZone:'America/Fortaleza'});
+   const date=now.toLocaleDateString('en-CA',{timeZone:'America/Fortaleza'});if(student.enrollmentDate&&date<student.enrollmentDate||student.academicEntry?.startDate&&date<student.academicEntry.startDate)fail(409,'Presença anterior ao início acadêmico do aluno. Procure a secretaria.');
    const attendanceRef=db.collection('attendance').doc(`presenca_${studentRef.id}_${date}`);
    const existing=await tx.get(attendanceRef);
-   const dayEvents=await tx.get(db.collection('academicCalendars').where('classId','==',student.classId));if(dayEvents.docs.some(d=>d.data().eventType==='holiday'&&d.data().dates?.includes(date)))fail(409,'Data registrada como feriado para esta turma. Não será registrada presença de aula.');
+   const dayEvents=await tx.get(db.collection('academicCalendars').where('classId','==',student.classId));if(dayEvents.docs.some(d=>d.data().eventType==='holiday'&&d.data().dates?.includes(date)))fail(409,'Data registrada como feriado para esta turma. Não será registrada presença de aula.');if(student.enrollmentDate){const entry=planEntry({courseId:student.courseId,classId:student.classId,enrollmentDate:student.enrollmentDate,calendars:dayEvents.docs.map(d=>d.data())});if(!entry.startDate||date<entry.startDate)fail(409,'Aluno ainda não iniciou a primeira disciplina prevista. Procure a secretaria.');}
    tx.update(qrRef,{used:true,usedAt:at(),usedBy:u.uid});
    if(!existing.exists)tx.set(attendanceRef,{studentId:studentRef.id,nomeAluno:student.fullname||'Aluno',data:date,horario:now.toLocaleTimeString('pt-BR',{timeZone:'America/Fortaleza'}),status:'PRESENTE',registradoPor:'Totem QR dinâmico autenticado',actorUid:u.uid,createdAt:at()});
    return {name:student.fullname||'Aluno',repeated:existing.exists,emailStudentId:studentRef.id,emailDate:date,classId:student.classId};

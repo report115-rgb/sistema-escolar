@@ -1743,6 +1743,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
             freqList.innerHTML = '';
 
             const attendanceMap = alunoLogado.attendance || {};
+            const entryPlan=window.SE7AcademicPolicy?.planEntry({courseId:alunoLogado.courseId,classId:alunoLogado.classId,enrollmentDate:alunoLogado.enrollmentDate,calendars:eventosCalendarioCache||[]})||alunoLogado.academicEntry;
 
             if (!eventosCalendarioCache || eventosCalendarioCache.length === 0) {
                 freqList.innerHTML = `
@@ -1777,7 +1778,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
                         if (!datasPorMes[mes]) datasPorMes[mes] = [];
 
                         const registroAluno = attendanceMap[dataIso];
-                        let status = 'Pendente';
+                        let status = alunoLogado.enrollmentDate&&!registroAluno&&(!entryPlan?.startDate||dataIso<entryPlan.startDate)?'Anterior ao ingresso':'Pendente';
                         if (registroAluno) {
                             status = registroAluno.status || 'Presente';
                         }
@@ -1816,7 +1817,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
                     let textoStatus = 'Aguardando';
 
                     const stLower = item.status.toLowerCase();
-                    if (stLower === 'presente') {
+                    if(stLower==='anterior ao ingresso'){textoStatus='Anterior ao ingresso';iconeStatus='<i class="fa-solid fa-calendar-minus mr-1"></i>';} else if (stLower === 'presente') {
                         badgeClass = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800';
                         iconeStatus = '<i class="fa-solid fa-circle-check mr-1"></i>';
                         textoStatus = 'Presente';
@@ -2230,5 +2231,6 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
 <script src="/assets/se7-receipt.js"></script>
 <script src="/assets/se7-cancellation.js"></script>
 <script src="/assets/se7-asaas.js"></script>
-<link rel="stylesheet" href="/assets/se7-exams.css"><script src="/assets/se7-exam-student.js"></script></body>
+<link rel="stylesheet" href="/assets/se7-exams.css"><script src="/assets/se7-exam-student.js"></script><script type="module" src="/assets/se7-ingress-policy.js"></script>
+</body>
 </html>

@@ -1644,6 +1644,8 @@
                     </div>
                 </div>
 
+<div class="p-3 rounded-xl border border-blue-300 dark:border-slate-600"><label class="block text-xs font-semibold">Data da matrícula<input id="student-enrollment-date" type="date" readonly class="block mt-1 p-2 rounded border dark:bg-slate-900"></label><p id="student-ingress-preview" class="text-xs mt-2" role="status">Selecione o curso e a turma.</p></div>
+
 <!-- ADICIONE ESTE BLOCO DENTRO DA FICHA DE MATRÍCULA (modal) -->
 <h4 class="font-bold text-xs text-blue-600 dark:text-blue-400 uppercase pt-2">Biometria Facial (Foto de Rosto para o Totem)</h4>
 <div class="bg-blue-50 dark:bg-slate-900 p-4 rounded-xl border border-blue-200 dark:border-slate-700 space-y-3">
@@ -2633,6 +2635,7 @@ async function removerUsuarioSistemaFirebase(id){if(!confirm('Desativar esse fun
             document.getElementById('modal-student-title').textContent = "Nova Matrícula";
             document.getElementById('formFichaMatricula').reset();
             document.getElementById('new-student-modal').style.display = 'flex';
+            window.SE7Ingress?.preview();
         }
         function closeNewStudentModal() {
             document.getElementById('new-student-modal').style.display = 'none';
@@ -3892,7 +3895,9 @@ function carregarDatasCalendarioParaFrequencia() {
 
         const beforeEnrollment = await db.collection('students').doc(editId).get();
         const hadClass = !!beforeEnrollment.data()?.classId;
+        const recalculateEntry=!!beforeEnrollment.data()?.enrollmentDate&&(beforeEnrollment.data().classId!==classId||beforeEnrollment.data().courseId!==courseId);
         await db.collection("students").doc(editId).update(studentData);
+        if(recalculateEntry)await SE7.api('academic-entry-plan',{studentId:editId});
         if(!hadClass && studentData.classId){void SE7Email.notify('email-enrollment',{studentId:editId});void SE7EnrollmentAuto.start(editId);}
         await SE7.api('prepare-student',{id:editId});
         await SE7.api('whatsapp-consent',{id:editId,optIn:document.getElementById('whatsapp-opt-in-aluno').checked});
@@ -3995,6 +4000,7 @@ function carregarDatasCalendarioParaFrequencia() {
     redefinirFotoCadastroAluno(aluno.fotoAluno || '');
 
     document.getElementById('new-student-modal').style.display = 'flex';
+    window.SE7Ingress?.preview();
 }
 
         async function deletarInformacoesTotaisAluno(id) {
@@ -4159,7 +4165,7 @@ async function renderAttendanceList() {
 
     // Filtra os alunos ativos da turma
     let alunosTurma = students
-        .filter(s => s.classId === turmaId && s.status === "Ativo")
+        .filter(s => s.classId === turmaId && s.status === "Ativo" && (window.SE7Ingress?.canAttend(s,dataAula)??true))
         .sort((a, b) => a.fullname.localeCompare(b.fullname));
 
     if (alunosTurma.length === 0) {
@@ -4228,7 +4234,7 @@ async function saveAttendance() {
 
     if (!classId || !dataAula) return alert("Selecione a turma e a data da aula programada no calendário!");
 
-    const alunosTurma = students.filter(s => s.classId == classId && s.status === "Ativo");
+    const alunosTurma = students.filter(s => s.classId == classId && s.status === "Ativo" && (window.SE7Ingress?.canAttend(s,dataAula)??true));
     if (alunosTurma.length === 0) return alert("Nenhum aluno ativo nesta turma.");
 
     const registrosFrequencia = [];
@@ -5942,5 +5948,6 @@ function escutarRegistrosPontoManual() {
 <link rel="stylesheet" href="/assets/se7-student-sheet.css"><script src="/assets/se7-student-sheet.js"></script>
 <script src="/assets/se7-academic-entry.js"></script>
 <script src="/assets/se7-enrollment-auto.js"></script>
+<script type="module" src="/assets/se7-ingress-policy.js"></script><script src="/assets/se7-ingress.js"></script>
 </body>
 </html>
