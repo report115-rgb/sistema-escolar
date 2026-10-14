@@ -28,6 +28,6 @@
  }
  function open(id){if(!allowed())return;const s=students.find(x=>x.id===id);if(!s)return;sequence++;current={id};title.textContent=s.fullname||'Ficha do aluno';if(!dialog.open)dialog.showModal();void show('personal');}
  for(const [tab,label]of Object.entries(labels)){const b=el('button',label);b.type='button';b.dataset.tab=tab;b.onclick=()=>void show(tab);nav.append(b);}
- document.addEventListener('DOMContentLoaded',()=>{document.body.append(dialog);for(const button of document.querySelectorAll('#tab-gestion-students button[onclick*="openNewStudentModal"],#tab-gestion-students button[onclick*="abrirNovaMatriculaUnificada"]'))button.remove();document.addEventListener('click',event=>{const button=event.target.closest('[data-student-sheet]');if(button&&button.closest('#tab-gestion-students'))open(button.dataset.studentSheet);});});
+ document.addEventListener('DOMContentLoaded',()=>{document.body.append(dialog);document.addEventListener('click',event=>{const button=event.target.closest('[data-student-sheet]');if(button&&button.closest('#tab-gestion-students'))open(button.dataset.studentSheet);});});
  window.SE7StudentSheet={open};
 })();
