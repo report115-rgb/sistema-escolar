@@ -1202,7 +1202,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
                         document.body.style.overflow = overflow;
                         const nome = document.getElementById('header-aluno-nome');
                         if (nome) {nome.setAttribute('tabindex','-1');nome.focus({preventScroll:true});}
-                        resolve();
+                        document.dispatchEvent(new Event('se7:portal-ready'));resolve();
                     }, reduzido ? 0 : 450);
                 }, 5000);
             });
@@ -1732,7 +1732,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
                 }
 
                 await verificarTodasPendencias();
-                void SE7Notices.refresh(alunoLogado.id);void window.SE7ExamsStudent?.refresh();
+                void SE7Notices.refresh(alunoLogado.id);document.dispatchEvent(new Event('se7:portal-ready'));void window.SE7ExamsStudent?.refresh();
             } catch(e) {
                 console.error("Erro ao carregar dados do painel do aluno:", e);
             }
