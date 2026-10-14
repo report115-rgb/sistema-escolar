@@ -3836,7 +3836,9 @@ function carregarDatasCalendarioParaFrequencia() {
     const versao = versaoFotoCadastro;
     const botaoSalvar = document.getElementById('btn-salvar-matricula');
     salvandoCadastroAluno = true;
-    if (botaoSalvar) botaoSalvar.disabled = true;
+    const textoSalvar=botaoSalvar?.textContent||'Salvar Aluno';let pontos=0;
+    if(botaoSalvar){botaoSalvar.disabled=true;botaoSalvar.setAttribute('aria-busy','true');botaoSalvar.textContent='Aguarde.';}
+    const animacaoSalvar=setInterval(()=>{pontos=(pontos+1)%3;if(botaoSalvar)botaoSalvar.textContent='Aguarde'+'.'.repeat(pontos+1);},450);
     try {
         if (leituraFotoAluno && !await leituraFotoAluno) return;
         if (versao !== versaoFotoCadastro) return;
@@ -3846,7 +3848,8 @@ function carregarDatasCalendarioParaFrequencia() {
         alert('Não foi possível salvar os dados do aluno: ' + erro.message);
     } finally {
         salvandoCadastroAluno = false;
-        if (botaoSalvar) botaoSalvar.disabled = false;
+        clearInterval(animacaoSalvar);
+        if(botaoSalvar){botaoSalvar.disabled=false;botaoSalvar.removeAttribute('aria-busy');botaoSalvar.textContent=textoSalvar;}
     }
 }
 
