@@ -314,7 +314,7 @@
                             <button type="button" class="student-login-eye" aria-label="Mostrar senha" aria-pressed="false" onclick="alternarSenhaAluno(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button>
                         </div>
                     </div>
-                    <button id="btn-login-aluno" type="submit">Entrar no Aplicativo</button>
+                    <button id="btn-login-aluno" data-busy-managed type="submit">Entrar no Aplicativo</button>
                     <button type="button" onclick="abrirModalEsqueciSenha()" class="student-login-forgot">Esqueci minha senha</button>
                 </form>
             </div>
@@ -1164,7 +1164,8 @@ let cancelarIdentidadeAluno = null;
 
 
 let cancelarControlePortal=null;
-function acompanharControlePortal(){if(window.SE7Preview?.active)return;if(cancelarControlePortal)cancelarControlePortal();if(!alunoLogado?.id||alunoLogado.portalMustChangePassword)return;cancelarControlePortal=db.collection('students').doc(alunoLogado.id).onSnapshot(doc=>{if(!alunoLogado||doc.metadata.hasPendingWrites||doc.metadata.fromCache)return;const d=doc.exists?doc.data():null;if(!d||d.portalBlocked||(d.portalSessionVersion||0)!==(alunoLogado.portalSessionVersion||0)){alert('Seu acesso foi alterado. Entre novamente.');SE7.logout();}},e=>{if(e.code==='permission-denied'){alert('Sessão sem acesso. Entre novamente.');SE7.logout();}else console.warn(e.message);});}
+let saidaAlunoEmAndamento=false;
+function acompanharControlePortal(){if(window.SE7Preview?.active)return;if(cancelarControlePortal)cancelarControlePortal();if(!alunoLogado?.id||alunoLogado.portalMustChangePassword)return;cancelarControlePortal=db.collection('students').doc(alunoLogado.id).onSnapshot(doc=>{if(saidaAlunoEmAndamento||!alunoLogado||doc.metadata.hasPendingWrites||doc.metadata.fromCache)return;const d=doc.exists?doc.data():null;if(!d||d.portalBlocked||(d.portalSessionVersion||0)!==(alunoLogado.portalSessionVersion||0)){alert('Seu acesso foi alterado. Entre novamente.');SE7.logout();}},e=>{if(saidaAlunoEmAndamento||!firebase.auth().currentUser)return;if(e.code==='permission-denied'){alert('Sessão sem acesso. Entre novamente.');SE7.logout();}else console.warn(e.message);});}
 let abaPortalAtual = null;
 function guardarSessaoPortal(aluno) {
     if(window.SE7Preview?.active)return;
@@ -1213,7 +1214,10 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
             const btn = document.querySelector('#student-login-form button[type="submit"]');
             if (btn?.disabled) return;
             if (!cpf || !pass) return alert('Informe CPF e senha.');
-            if (btn) btn.disabled = true;
+            const textoLogin=btn?.textContent;let pontosLogin=0;
+            const pintarLogin=()=>{if(btn)btn.textContent='Acessando o sistema'+'.'.repeat(pontosLogin=pontosLogin%3+1);};
+            if(btn){btn.disabled=true;btn.setAttribute('aria-busy','true');pintarLogin();}
+            const animacaoLogin=setInterval(pintarLogin,450);
             let boasVindas;
             try {
                 alunoLogado = await SE7.studentLogin(cpf, pass);
@@ -1229,7 +1233,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
                 acompanharControlePortal();
                 await carregarDadosPainel();
             } catch (e) {if (boasVindas) await boasVindas;alert(e.message);}
-            finally {if (boasVindas) await boasVindas;if (btn) btn.disabled = false;}
+            finally {if (boasVindas) await boasVindas;clearInterval(animacaoLogin);if(btn){btn.disabled=false;btn.removeAttribute('aria-busy');btn.textContent=textoLogin;}}
         }
 
 
@@ -2227,7 +2231,33 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
             fecharProvaOnlineEJA();
         }
 
-        async function fazerLogout(){await SE7.logout();}
+        function fazerLogout(){
+            if(saidaAlunoEmAndamento)return;
+            let modal=document.getElementById('confirmar-saida-aluno');
+            if(modal?.open)return;
+            if(!modal){
+                modal=document.createElement('dialog');modal.id='confirmar-saida-aluno';modal.className='se7-work-dialog';
+                modal.setAttribute('aria-labelledby','titulo-saida-aluno');
+                const titulo=document.createElement('h3');titulo.id='titulo-saida-aluno';titulo.textContent='Deseja sair?';
+                const texto=document.createElement('p');texto.textContent='Você será desconectado do Portal do Aluno.';
+                const erro=document.createElement('p');erro.id='erro-saida-aluno';erro.setAttribute('role','alert');
+                const acoes=document.createElement('div');acoes.className='se7-work-actions';
+                const nao=document.createElement('button');nao.type='button';nao.className='se7-work-button';nao.textContent='Não, continuar';nao.id='nao-sair-aluno';
+                const sim=document.createElement('button');sim.type='button';sim.className='se7-work-button danger';sim.textContent='Sim, sair';sim.setAttribute('data-busy-managed','');
+                nao.onclick=()=>modal.close();
+                modal.addEventListener('cancel',e=>{if(saidaAlunoEmAndamento)e.preventDefault();});
+                sim.onclick=async()=>{
+                    if(saidaAlunoEmAndamento)return;
+                    saidaAlunoEmAndamento=true;sim.disabled=nao.disabled=true;sim.textContent='Saindo...';erro.textContent='';
+                    // Encerra a escuta antes do logout: sair não é perda de autorização.
+                    if(cancelarControlePortal){cancelarControlePortal();cancelarControlePortal=null;}
+                    try{await SE7.logout();modal.close();}
+                    catch(e){saidaAlunoEmAndamento=false;erro.textContent='Não foi possível sair. Tente novamente.';sim.disabled=nao.disabled=false;sim.textContent='Sim, sair';if(firebase.auth().currentUser)acompanharControlePortal();}
+                };
+                acoes.append(nao,sim);modal.append(titulo,texto,erro,acoes);document.body.append(modal);
+            }
+            document.getElementById('erro-saida-aluno').textContent='';modal.showModal();document.getElementById('nao-sair-aluno').focus();
+        }
     </script>
 <script src="/assets/se7-version.js"></script>
 <script src="/assets/vendor/pdf-lib.min.js"></script>
