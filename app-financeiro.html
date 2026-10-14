@@ -927,7 +927,7 @@
             if (fallback) fallback.style.display = institutionData.logo ? 'none' : 'block';
         }
 
-        function iniciarIdentidadeFinanceiro(){const refresh=async()=>{try{aplicarIdentidadeFinanceiro(await SE7.info());}catch(e){console.warn(e.message);}};void refresh();setInterval(refresh,60000);}
+        function iniciarIdentidadeFinanceiro(){const refresh=async()=>{try{aplicarIdentidadeFinanceiro(await SE7.info());}catch(e){console.warn(e.message);}};void refresh();}
 
         function ajustarAlturaLoginWebView() {
             const login = document.getElementById('login-modal');
@@ -1008,7 +1008,10 @@
             }
         })();
 
+        let dadosFinanceiroIniciados=false, dadosColaboradoresIniciados=false;
         async function carregarDadosNuvem() {
+            if(dadosFinanceiroIniciados)return;
+            dadosFinanceiroIniciados=true;
             await carregarCursosTurmasMatriz();
             await carregarDadosInstituicao();
 
@@ -1044,6 +1047,11 @@
                 }
             }, error => { console.error("Erro ao carregar faturas:", error); });
 
+        }
+
+        function iniciarDadosColaboradores(){
+            if(dadosColaboradoresIniciados)return;
+            dadosColaboradoresIniciados=true;
             // Colaboradores da Matriz
             db.collection("teachers").onSnapshot(snapshot => {
                 teachers = [];
@@ -2390,6 +2398,7 @@
                 renderizarAlunosQuitesGeral();
             } else if (aba === 'frequencia-colaboradores') {
                 document.getElementById('tab-frequencia-colaboradores').style.display = 'block';
+                iniciarDadosColaboradores();
                 document.getElementById('nav-btn-freq').className = "flex flex-col items-center text-blue-600 dark:text-blue-400 text-[9px] font-bold transition";
                 atualizarSeletorFrequenciaColaboradores();
                 renderizarTabelaValoresHora();

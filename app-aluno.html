@@ -823,7 +823,7 @@
                 if (tIcon) tIcon.className = "fa-solid fa-moon";
             }
 
-            await carregarConfiguracaoInstituicao();setInterval(carregarConfiguracaoInstituicao,60000);
+            await carregarConfiguracaoInstituicao();
             popularSelectsDataNascimento();
 
             const authProfile=await SE7.restore('aluno');const sessao=authProfile?JSON.stringify(authProfile):null;if(!authProfile)sessionStorage.removeItem('aluno_app_logado');
