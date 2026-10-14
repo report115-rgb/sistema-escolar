@@ -1,3 +1,4 @@
+import * as enrollmentAsaas from '../server/enrollment-asaas.mjs';
 import {preview as portalPreview} from '../server/portal-preview.mjs';
 import * as exams from '../server/exams.mjs';
 import {reviewLocal} from '../server/enrollment-finance.mjs';
@@ -77,7 +78,7 @@ async function dispatchOperation({auth,db},req,b){
   const ref=db.collection('students').doc();const uid=studentUid(ref.id),idx=db.collection('se7CpfIndex').doc(cpfKey(s.cpf));
   await db.runTransaction(async tx=>{const d=await tx.get(idx);if(d.exists)fail(409,'Já existe um cadastro com este CPF. Solicite ajuda à instituição.');tx.set(idx,{studentId:ref.id,pending:true});});
   try{await auth.createUser({uid,email:alias(ref.id),password:b.password,displayName:s.fullname});await claims(auth,uid,{role:'aluno',studentId:ref.id,portalVersion:0});
-   const code=`MAT-${new Date().getFullYear()}-${ref.id.slice(-8).toUpperCase()}`;await ref.set({...s,code,dob:s.birthDate,classId:'',status:'Ativo',documentos:{},attendance:{},se7AuthUid:uid,portalSessionVersion:0,createdAt:new Date().toISOString()});await idx.set({studentId:ref.id});const customToken=await auth.createCustomToken(uid,{role:'aluno',studentId:ref.id,portalVersion:0});try{await setConsent(db,ref.id,data.whatsappOptIn===true,{uid,role:'aluno'});await enrollmentNotifications(db,ref.id,{uid,role:'aluno'});}catch{console.warn('SE7 WhatsApp: matrícula salva; notificação não concluída.');}return {customToken,student:{id:ref.id,...s,code}};
+   const code=`MAT-${new Date().getFullYear()}-${ref.id.slice(-8).toUpperCase()}`;await ref.set({...s,code,dob:s.birthDate,classId:'',status:'Ativo',documentos:{},attendance:{},se7AuthUid:uid,portalSessionVersion:0,createdAt:new Date().toISOString()});await idx.set({studentId:ref.id});const customToken=await auth.createCustomToken(uid,{role:'aluno',studentId:ref.id,portalVersion:0});await enrollmentAsaas.markNew(db,ref.id);try{await setConsent(db,ref.id,data.whatsappOptIn===true,{uid,role:'aluno'});await enrollmentNotifications(db,ref.id,{uid,role:'aluno'});}catch{console.warn('SE7 WhatsApp: matrícula salva; notificação não concluída.');}return {customToken,student:{id:ref.id,...s,code}};
   }catch(e){await auth.deleteUser(uid).catch(()=>{});await ref.delete().catch(()=>{});await idx.delete();throw e;}
  }
  const u=await identity(auth,db,req);req.se7AuditIdentity=u;await limits(db,req,'gateway:'+u.uid);
@@ -86,6 +87,7 @@ async function dispatchOperation({auth,db},req,b){
   if(typeof b.acao!=='string'||!b.acao.trim()||b.acao.length>2000||typeof b.modulo!=='string'||!b.modulo.trim()||b.modulo.length>120)fail(400,'Registro de auditoria inválido.');
   await limits(db,req,'audit:'+u.uid);const now=new Date();await db.collection('systemLogs').add({dataHora:now.toLocaleString('pt-BR',{timeZone:'America/Fortaleza'}),createdAt:now.toISOString(),usuario:u.profile?.nome||u.name||u.email||u.uid,perfil:u.role.toUpperCase(),modulo:b.modulo.trim(),acao:b.acao.trim(),actorUid:u.uid,origem:'atividade do navegador'});return {ok:true};
  }
+ if(action.startsWith('enrollment-asaas-')){if(!['master','secretaria','financeiro'].includes(u.role))fail(403,'Acesso restrito.');if(action==='enrollment-asaas-list')return enrollmentAsaas.list(db,u);const id=validId(b.studentId);if(action==='enrollment-asaas-start')return enrollmentAsaas.start(db,id,u);if(action==='enrollment-asaas-step')return enrollmentAsaas.step(db,id,u);if(action==='enrollment-asaas-status')return enrollmentAsaas.status(db,id);if(action==='enrollment-asaas-retry')return enrollmentAsaas.retry(db,id,u);fail(400,'Operação inválida.');}
  if(action.startsWith('exam-')){if(['exam-save','exam-scan-preview','exam-scan-commit','exam-bind','exam-print'].includes(action))await limits(db,req,'asaas-bulk:exams:'+u.uid);return exams.dispatch(db,auth,b,u);}
  if(action==='portal-preview')return portalPreview(db,b,u);
  if(action.startsWith('notices-')){
@@ -210,7 +212,7 @@ async function dispatchOperation({auth,db},req,b){
   if(action==='student-config'){const d=(await db.collection('config').doc('institution').get()).data()||{};return {...await publicInfo(db),gdriveUrl:typeof d.gdriveUrl==='string'?d.gdriveUrl:''};}
   fail(403,'Operação não permitida.');
  }
- if(action==='prepare-student'){if(!['master','secretaria'].includes(u.role))fail(403,'Acesso restrito.');const d=await db.collection('students').doc(validId(b.id)).get();if(!d.exists)fail(404,'Aluno não encontrado.');await prepareStudent(db,d);return {ok:true};}
+ if(action==='prepare-student'){if(!['master','secretaria'].includes(u.role))fail(403,'Acesso restrito.');const d=await db.collection('students').doc(validId(b.id)).get();if(!d.exists)fail(404,'Aluno não encontrado.');await prepareStudent(db,d);if(b.newEnrollment===true&&d.createTime?.toMillis()>Date.now()-600000)await enrollmentAsaas.markNew(db,d.id);return {ok:true};}
  if(action==='attendance'){
   if(!['totem','master'].includes(u.role))fail(403,'Acesso restrito ao Totem.');await limits(db,req,'attendance:'+u.uid);
   if(typeof b.qr!=='string'||!/^SE7:ATTENDANCE:2:[a-f0-9]{48}$/.test(b.qr))fail(400,'QR Code antigo ou inválido. Abra novamente a carteirinha no aplicativo atualizado.');

@@ -1010,6 +1010,7 @@
 
         let dadosFinanceiroIniciados=false, dadosColaboradoresIniciados=false;
         async function carregarDadosNuvem() {
+            void window.SE7EnrollmentAuto?.resume();
             if(dadosFinanceiroIniciados)return;
             dadosFinanceiroIniciados=true;
             await carregarCursosTurmasMatriz();
@@ -2992,5 +2993,6 @@
 <script src="/assets/se7-receipt.js"></script>
 <script src="/assets/se7-cancellation.js"></script>
 <script src="/assets/se7-asaas.js"></script>
+<script src="/assets/se7-enrollment-auto.js"></script>
 </body>
 </html>

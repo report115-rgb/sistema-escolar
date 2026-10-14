@@ -3893,7 +3893,7 @@ function carregarDatasCalendarioParaFrequencia() {
         const beforeEnrollment = await db.collection('students').doc(editId).get();
         const hadClass = !!beforeEnrollment.data()?.classId;
         await db.collection("students").doc(editId).update(studentData);
-        if(!hadClass && studentData.classId) void SE7Email.notify('email-enrollment',{studentId:editId});
+        if(!hadClass && studentData.classId){void SE7Email.notify('email-enrollment',{studentId:editId});void SE7EnrollmentAuto.start(editId);}
         await SE7.api('prepare-student',{id:editId});
         await SE7.api('whatsapp-consent',{id:editId,optIn:document.getElementById('whatsapp-opt-in-aluno').checked});
         const alunoLocal = students.find(a => a.id === editId);
@@ -3912,7 +3912,7 @@ function carregarDatasCalendarioParaFrequencia() {
         studentData.fotoAluno = (typeof fotoRostoBase64Temp !== 'undefined' && fotoRostoBase64Temp) ? fotoRostoBase64Temp : "";
 
         const docRef = await db.collection("students").add(studentData);
-        await SE7.api('prepare-student',{id:docRef.id});
+        await SE7.api('prepare-student',{id:docRef.id,newEnrollment:true});
         await SE7.api('whatsapp-consent',{id:docRef.id,optIn:document.getElementById('whatsapp-opt-in-aluno').checked});
         const novoAlunoId = docRef.id;
         void SE7Email.notify('email-enrollment',{studentId:novoAlunoId});
@@ -3927,7 +3927,8 @@ function carregarDatasCalendarioParaFrequencia() {
         try {
             void notificarCentralWhatsAppMatriz(novoAlunoId);
             
-            if (cursoObj && cursoObj.valorParcela && cursoObj.qtdParcelas) {
+            const automatico=await SE7EnrollmentAuto.start(novoAlunoId);
+            if (!automatico && cursoObj && cursoObj.valorParcela && cursoObj.qtdParcelas) {
                 const qtdP = cursoObj.qtdParcelas;
                 const valP = cursoObj.valorParcela;
                 const valDesc = cursoObj.valorDesconto || valP;
@@ -5940,5 +5941,6 @@ function escutarRegistrosPontoManual() {
 <script src="/assets/vendor/pdf-lib.min.js"></script><script src="/assets/vendor/fontkit.umd.min.js"></script><script src="/assets/vendor/jsQR.js"></script><script src="/assets/vendor/qrcode.js"></script><script src="/assets/se7-exam-omr.js"></script><script src="/assets/se7-exam-pdf.js"></script><script src="/assets/se7-exams.js"></script>
 <link rel="stylesheet" href="/assets/se7-student-sheet.css"><script src="/assets/se7-student-sheet.js"></script>
 <script src="/assets/se7-academic-entry.js"></script>
+<script src="/assets/se7-enrollment-auto.js"></script>
 </body>
 </html>
