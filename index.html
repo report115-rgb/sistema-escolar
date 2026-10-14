@@ -429,8 +429,8 @@
             <button class="tab-button active px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap bg-blue-600 text-white shadow" onclick="openTab(event, 'tab-gestion-students')"><i class="fa-solid fa-users-gear mr-1.5"></i><span class="se7-nav-label">Gestão de Alunos</span></button>
 	    <button class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-slate-600" onclick="openTab(event, 'tab-gestao-eja')"><i class="fa-solid fa-graduation-cap mr-1.5"></i><span class="se7-nav-label">Gestão EJA</span></button>
             <button class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-slate-600" onclick="openTab(event, 'tab-students')"><i class="fa-solid fa-user-graduate mr-1.5"></i><span class="se7-nav-label">Matrícula</span></button>
-            <button class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-slate-600" onclick="openTab(event, 'tab-attendance')"><i class="fa-solid fa-clipboard-user mr-1.5"></i><span class="se7-nav-label">Frequência</span></button>
-            <button class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-slate-600" onclick="openTab(event, 'tab-grades')"><i class="fa-solid fa-star mr-1.5"></i><span class="se7-nav-label">Notas</span></button>
+            <button class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-slate-600" onclick="openTab(event, 'tab-attendance')"><i class="fa-solid fa-clipboard-user mr-1.5"></i><span class="se7-nav-label">Notas e frequência</span></button>
+            
             <button class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-slate-600" onclick="openTab(event, 'tab-student-finance')"><i class="fa-solid fa-wallet mr-1.5"></i><span class="se7-nav-label">Financeiro</span></button>
             <button class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-slate-600" onclick="openTab(event, 'tab-history')"><i class="fa-solid fa-file-pdf mr-1.5"></i><span class="se7-nav-label">Emissão de Documentos</span></button>
             <button class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-slate-600" onclick="openTab(event, 'tab-controle-ponto-manual')"><i class="fa-solid fa-business-time mr-1.5"></i><span class="se7-nav-label">Ponto Manual</span></button>
@@ -819,7 +819,8 @@
 </div>
 
         <!-- FREQUÊNCIA -->
-        <div id="tab-attendance" class="tab-content space-y-4" style="display: none;">
+        <div id="tab-attendance" class="tab-content space-y-4" style="display:none"><section class="bg-white dark:bg-slate-800 rounded-2xl shadow-md p-6 border border-gray-200 dark:border-slate-700"><h2 class="text-xl font-bold mb-3">Notas e frequência</h2><p class="text-sm mb-5">Escolha o lançamento que deseja realizar.</p><div class="flex gap-3 flex-wrap"><button type="button" onclick="SE7AcademicEntry.open('attendance')" class="px-5 py-3 rounded-xl bg-blue-600 text-white font-semibold"><i class="fa-solid fa-clipboard-user mr-2"></i>Lançar frequência</button><button type="button" onclick="SE7AcademicEntry.open('grades')" class="px-5 py-3 rounded-xl bg-blue-600 text-white font-semibold"><i class="fa-solid fa-star mr-2"></i>Lançar notas</button></div></section></div>
+        <div id="se7-attendance-source" style="display:none">
             <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-md p-6 border border-gray-200 dark:border-slate-700">
                 <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4 pb-2 border-b border-gray-100 dark:border-slate-700">Lançamento de Frequência</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -2479,6 +2480,7 @@ async function renderizarUsuariosSistemaFirebase(){const list=document.getElemen
 async function removerUsuarioSistemaFirebase(id){if(!confirm('Desativar esse funcionário?'))return;try{await SE7.api('staff-disable',{uid:id});await renderizarUsuariosSistemaFirebase();}catch(e){alert(e.message);}}
 
         function openTab(evt, tabId) {
+    if(tabId==='tab-grades'){const button=document.querySelector("#main-tabs-nav button[onclick*="+"'tab-attendance'"+"]");openTab({currentTarget:button},'tab-attendance');window.SE7AcademicEntry?.open('grades');return;}
     if (['tab-settings','tab-portal-admin'].includes(tabId) && !usuarioMasterAtivo()) return;
     if (!document.getElementById(tabId)) return;
 
@@ -5937,5 +5939,6 @@ function escutarRegistrosPontoManual() {
 <link rel="stylesheet" href="/assets/se7-exams.css">
 <script src="/assets/vendor/pdf-lib.min.js"></script><script src="/assets/vendor/fontkit.umd.min.js"></script><script src="/assets/vendor/jsQR.js"></script><script src="/assets/vendor/qrcode.js"></script><script src="/assets/se7-exam-omr.js"></script><script src="/assets/se7-exam-pdf.js"></script><script src="/assets/se7-exams.js"></script>
 <link rel="stylesheet" href="/assets/se7-student-sheet.css"><script src="/assets/se7-student-sheet.js"></script>
+<script src="/assets/se7-academic-entry.js"></script>
 </body>
 </html>

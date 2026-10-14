@@ -4,7 +4,7 @@ const se7ModulosMatriz={
  'tab-gestion-students':['Gestão de Alunos','Organize cadastros e acompanhe a documentação acadêmica.'],
  'tab-gestao-eja':['Gestão EJA','Gerencie apostilas, provas e documentação dos alunos EJA.'],
  'tab-students':['Matrícula','Cadastre alunos e acompanhe solicitações de matrícula.'],
- 'tab-attendance':['Frequência','Consulte e registre a frequência dos alunos.'],
+ 'tab-attendance':['Notas e frequência','Registre a frequência e lance as notas dos alunos.'],
  'tab-se7-exams':['Gestão de Avaliações','Consulte avaliações e organize a impressão e a correção das provas.'],
  'tab-grades':['Notas','Organize avaliações e acompanhe o desempenho acadêmico.'],
  'tab-student-finance':['Financeiro','Acompanhe cobranças e informações financeiras dos alunos.'],
