@@ -828,22 +828,23 @@
                         <label class="block text-xs font-semibold mb-1">Curso</label>
                         <select id="attendance-course-select" onchange="filterTurmasByAttendanceCourse()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></select>
                     </div>
-                    <div>
+                    <div class="grid grid-cols-2 gap-3"><div>
                         <label class="block text-xs font-semibold mb-1">Turma</label>
-                        <select id="class-select" onchange="carregarDatasCalendarioParaFrequencia()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></select>
-                    </div>
+                        <select id="class-select" onchange="atualizarSemestresFrequencia()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></select>
+                    </div><div><label class="block text-xs font-semibold mb-1">Semestre</label><select id="attendance-semester-select" onchange="carregarDatasCalendarioParaFrequencia()" class="w-full px-3 py-2 rounded-lg border dark:bg-slate-900"><option value="">Selecione...</option></select></div></div>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-xs font-semibold mb-1">Professor Responsável</label>
+                        <select id="attendance-teacher-select" required onchange="carregarDatasCalendarioParaFrequencia()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></select>
+                    </div>
                     <div>
                         <label class="block text-xs font-semibold mb-1">Data / Aula Programada (Calendário Semestral)</label>
                         <select id="attendance-calendar-date-select" onchange="renderAttendanceList()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
                             <option value="">Selecione a turma primeiro...</option>
                         </select>
                     </div>
-                    <div>
-                        <label class="block text-xs font-semibold mb-1">Professor Responsável</label>
-                        <select id="attendance-teacher-select" required class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></select>
-                    </div>
+
                 </div>
                 <h3 id="attendance-section-title" class="font-bold text-sm text-gray-700 dark:text-gray-300 mb-2">Lista de Alunos da Turma</h3>
                 <ul class="attendance-list divide-y divide-gray-200 dark:divide-slate-700 mb-4" id="student-attendance-list"></ul>
@@ -872,7 +873,7 @@
                     </div>
                     <div>
                         <label class="block text-xs font-semibold mb-1">Professor Responsável</label>
-                        <select id="grade-teacher-select" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></select>
+                        <select id="grade-teacher-select" required onchange="renderGradeList()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></select>
                     </div>
                 </div>
                 <h3 id="grade-section-title" class="font-bold text-sm text-gray-700 dark:text-gray-300 mb-2">Notas e Avaliações por Aluno</h3>
@@ -903,22 +904,13 @@
                 <div class="border-b border-gray-100 dark:border-slate-700 pb-2 flex justify-between items-center flex-wrap gap-2">
                     <div>
                         <h2 class="text-xl font-bold text-gray-900 dark:text-white">Financeiro</h2>
-                        <p class="text-xs text-gray-500">Selecione o aluno abaixo para visualizar todas as cobranças e o histórico financeiro.</p>
+                        <p class="text-xs text-gray-500">Selecione curso e turma para consultar a situação financeira dos alunos.</p>
                     </div>
                 </div>
                 
-                <div class="max-w-md">
-                    <label class="block text-xs font-semibold mb-1">Selecionar Aluno</label>
-                    <select id="fin-student-select" onchange="renderizarCobrancasAlunoSelecionadoFinanceiro(this.value)" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                        <option value="">Selecione o aluno...</option>
-                    </select>
-                </div>
-                <div class="mt-4">
-                    <h4 class="font-bold text-sm text-gray-700 dark:text-gray-300 mb-2">Cobranças Vinculadas ao Aluno Selecionado</h4>
-                    <div id="container-cobrancas-aluno-financeiro" class="space-y-2">
-                        <p class="text-xs text-gray-400">Selecione um aluno acima para visualizar as mensalidades e parcelas.</p>
-                    </div>
-                </div>
+                <div id="se7-finance-roster"></div>
+                <div hidden><select id="fin-student-select"><option value="">Selecione o aluno...</option></select><div id="container-cobrancas-aluno-financeiro" class="space-y-2"></div></div>
+
             </div>
         </div>
 
@@ -2734,13 +2726,13 @@ let dadosMatrizIniciados=false;function iniciarDadosAutenticadosMatriz(){window.
             db.collection("courses").onSnapshot((snapshot) => {
                 courses = [];
                 snapshot.forEach(doc => courses.push({ id: doc.id, ...doc.data() }));
-                renderTeachers(); renderCourses(); renderSubjectsManagement(); renderDropdowns(); loadCourseTemplate(); atualizarDisciplinasETurmasCalendario(); atualizarFiltrosGerenciarCalendarios();
+                renderTeachers(); renderCourses(); renderSubjectsManagement(); renderDropdowns(); window.SE7MatrizFinance?.refresh(); loadCourseTemplate(); atualizarDisciplinasETurmasCalendario(); atualizarFiltrosGerenciarCalendarios();
             });
 
             db.collection("classes").onSnapshot((snapshot) => {
                 classes = [];
                 snapshot.forEach(doc => classes.push({ id: doc.id, ...doc.data() }));
-                renderClasses(); renderDropdowns(); atualizarDisciplinasETurmasCalendario(); atualizarFiltrosGerenciarCalendarios();
+                renderClasses(); renderDropdowns(); window.SE7MatrizFinance?.refresh(); atualizarDisciplinasETurmasCalendario(); atualizarFiltrosGerenciarCalendarios();
             });
 
             db.collection("academicCalendars").onSnapshot((snapshot) => {
@@ -2893,10 +2885,10 @@ function renderTeachers() {
     ['attendance-teacher-select', 'grade-teacher-select'].forEach(id => {
         const el = document.getElementById(id);
         if(el) { 
-            el.innerHTML = '<option value="">Selecione...</option>'; 
+            const selectedTeacher=el.value;el.innerHTML = '<option value="">Selecione...</option>'; 
             teachers.filter(t => !t.cargo || t.cargo === 'Professor' || t.cargo === 'Coordenação').forEach(t => {
                 el.insertAdjacentHTML('beforeend', `<option value="${t.id}">${t.fullname}</option>`);
-            }); 
+            });el.value=selectedTeacher; 
         }
     });
 }
@@ -3261,9 +3253,9 @@ async function excluirColaborador(id) {
             const sigla=(curso.sigla||(/enfermagem/i.test(curso.name)?'ENF':/eja/i.test(curso.name)?'EJA':'TUR')).toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,12)||'TUR';
             const old=classes.find(c=>c.id===document.getElementById('edit-class-id').value);
             const number=old?.courseId===courseId&&old?.number?old.number:Math.max(0,...classes.filter(c=>c.courseId===courseId).map(c=>Number(c.number)||0))+1;
-            const code=sigla+'-'+String(number).padStart(3,'0');
+            const code=old?.courseId===courseId&&old?.number&&old?.code?old.code:sigla+'-'+String(number).padStart(3,'0');
             document.getElementById('input-class-code-auto').value=code;
-            document.getElementById('input-class-name-auto').value='Turma '+String(number).padStart(2,'0')+' • '+code;
+            document.getElementById('input-class-name-auto').value=SE7ClassFormat.className(curso,number);
         }
         async function addClass(){const button=document.getElementById('btn-save-class');if(button.disabled)return;button.disabled=true;const text=button.textContent;button.textContent='Aguarde…';try{const data={id:document.getElementById('edit-class-id').value,courseId:document.getElementById('input-class-course').value,semestre:document.getElementById('input-class-semester').value,entrySemester:document.getElementById('input-class-entry').value.trim(),stage:document.getElementById('input-class-stage').value,weekdays:[...document.querySelectorAll('[name="class-weekday"]:checked')].map(e=>Number(e.value)),startTime:document.getElementById('input-class-start').value,endTime:document.getElementById('input-class-end').value};if(!data.courseId)return alert('Selecione um curso.');const result=await SE7.api('class-save',data);const old=classes.find(c=>c.id===result.id);if(old)Object.assign(old,result);else classes.push(result);renderClasses();cancelarEdicaoTurma();alert('Turma salva com sucesso.');}catch(e){alert(e.message);}finally{button.disabled=false;button.textContent=document.getElementById('edit-class-id').value?text:'Salvar Turma';}}
 
@@ -3740,58 +3732,11 @@ async function saveCourseTemplates() {
             classes.filter(c => c.courseId == courseId).forEach(c => select.insertAdjacentHTML('beforeend', `<option value="${c.id}">${c.name}</option>`));
             
             // Aciona o carregamento das datas do calendário correspondentes à turma selecionada
-            carregarDatasCalendarioParaFrequencia();
+            atualizarSemestresFrequencia();
         }
 
-function carregarDatasCalendarioParaFrequencia() {
-            const classId = document.getElementById('class-select').value;
-            const selectData = document.getElementById('attendance-calendar-date-select');
-            
-            if (!selectData) return;
-            selectData.innerHTML = '<option value="">Selecione a data da aula...</option>';
-
-            if (!classId) return;
-
-            // Filtra os eventos de calendário cadastrados para esta turma específica
-            const eventosTurma = academicCalendars.filter(cal => cal.classId === classId);
-
-            if (eventosTurma.length === 0) {
-                selectData.innerHTML = '<option value="">Nenhuma data cadastrada no Calendário Semestral para esta turma</option>';
-                renderAttendanceList();
-                return;
-            }
-
-            // Coleta todas as datas individuais de todos os eventos da turma
-            let todasAsDatas = [];
-            eventosTurma.forEach(evento => {
-                if (evento.dates && Array.isArray(evento.dates)) {
-                    evento.dates.forEach(dataIso => {
-                        todasAsDatas.push({
-                            dataIso: dataIso, // Padrão "AAAA-MM-DD"
-                            subject: evento.subject,
-                            description: evento.description || 'Aula'
-                        });
-                    });
-                }
-            });
-
-            // ORDENAÇÃO CRONOLÓGICA PERFEITA (Do dia mais antigo para o mais recente)
-            todasAsDatas.sort((a, b) => a.dataIso.localeCompare(b.dataIso));
-
-            // Preenche o select de forma organizada e cronológica
-            todasAsDatas.forEach(item => {
-                const dataFormatada = item.dataIso.split('-').reverse().join('/');
-                const labelOpcao = `${dataFormatada} - ${item.subject} (${item.description})`;
-                
-                selectData.insertAdjacentHTML('beforeend', `
-                    <option value="${item.dataIso}" data-subject="${item.subject}">
-                        ${labelOpcao}
-                    </option>
-                `);
-            });
-
-            renderAttendanceList();
-        }
+function atualizarSemestresFrequencia(){const classId=document.getElementById('class-select').value,select=document.getElementById('attendance-semester-select');select.replaceChildren(new Option('Selecione o semestre...',''));const semesters=[...new Set(academicCalendars.filter(c=>c.classId===classId).map(c=>String(c.semestre||'').replace('.','/')).filter(Boolean))].sort();for(const semester of semesters)select.add(new Option(semester,semester));document.getElementById('attendance-teacher-select').value='';carregarDatasCalendarioParaFrequencia();}
+function carregarDatasCalendarioParaFrequencia(){const classId=document.getElementById('class-select').value,semester=document.getElementById('attendance-semester-select').value,teacher=document.getElementById('attendance-teacher-select').value,select=document.getElementById('attendance-calendar-date-select');select.replaceChildren(new Option('Selecione a data da aula...',''));select.disabled=!classId||!semester||!teacher;if(select.disabled){void renderAttendanceList();return;}const all=academicCalendars.filter(c=>c.classId===classId),holidays=new Set(all.filter(c=>c.eventType==='holiday').flatMap(c=>c.dates||[]));const rows=all.filter(c=>String(c.semestre||'').replace('.','/')===semester&&c.countsForAttendance!==false&&!['holiday','exam','simulation','inaugural'].includes(c.eventType)).flatMap(c=>(c.dates||[]).filter(d=>!holidays.has(d)).map(date=>({date,subject:c.subject||'Disciplina',description:c.description||'Aula'}))).sort((a,b)=>a.date.localeCompare(b.date)||a.subject.localeCompare(b.subject,'pt-BR'));const seen=new Set();for(const row of rows){const key=row.date+'|'+row.subject;if(seen.has(key))continue;seen.add(key);const option=new Option(row.date.split('-').reverse().join('/')+' — '+row.subject+' ('+row.description+')',row.date);option.dataset.subject=row.subject;select.add(option);}if(!rows.length)select.options[0].textContent='Nenhuma aula neste semestre.';void renderAttendanceList();}
 
         function filterTurmasByGradeCourse() {
             const courseId = document.getElementById('grade-course-select').value;
@@ -4144,11 +4089,13 @@ function carregarDatasCalendarioParaFrequencia() {
 async function renderAttendanceList() {
     const turmaId = document.getElementById('class-select').value;
     const dataAula = document.getElementById('attendance-calendar-date-select').value;
+    const teacherAtRender=document.getElementById('attendance-teacher-select').value;
     const container = document.getElementById('student-attendance-list');
     if (!container) return;
     
     container.innerHTML = '<li class="py-3 text-sm text-gray-500 text-center">Carregando lista e status da nuvem...</li>';
 
+    if(!document.getElementById('attendance-semester-select').value||!document.getElementById('attendance-teacher-select').value){container.textContent='Selecione curso, turma, semestre e professor responsável; depois escolha a data da aula.';return;}
     if (!turmaId || !dataAula) {
         container.innerHTML = '<li class="py-3 text-sm text-gray-500">Selecione a turma e a data da aula programada no calendário.</li>';
         return;
@@ -4179,6 +4126,7 @@ async function renderAttendanceList() {
         console.error("Erro ao verificar bloqueio na nuvem:", e);
     }
 
+    if(document.getElementById('class-select').value!==turmaId||document.getElementById('attendance-calendar-date-select').value!==dataAula||document.getElementById('attendance-teacher-select').value!==teacherAtRender)return;
     container.innerHTML = '';
 
     alunosTurma.forEach(aluno => {
@@ -4225,6 +4173,7 @@ async function saveAttendance() {
 
     if (!classId || !dataAula) return alert("Selecione a turma e a data da aula programada no calendário!");
 
+    if(!document.getElementById('attendance-semester-select').value)return alert('Selecione o semestre.');
     if(!professorId)return alert('Selecione a professora ou o professor que ministrou esta aula.');
     const alunosTurma = students.filter(s => s.classId == classId && s.status === "Ativo" && (window.SE7Ingress?.canAttend(s,dataAula,document.getElementById('attendance-calendar-date-select').selectedOptions[0]?.dataset.subject||'')??!s.enrollmentDate));
     if (alunosTurma.length === 0) return alert("Nenhum aluno ativo nesta turma.");
@@ -4274,7 +4223,8 @@ async function saveAttendance() {
             const list = document.getElementById('student-grade-list');
             if(!list) return;
             list.innerHTML = '';
-            
+            const manual=window.SE7ManualGrades?.status(academicCalendars,classId);if(manual?.blocked){list.textContent='Lançamento manual encerrado após o simulado de '+manual.deadline.split('-').reverse().join('/')+'. Utilize a correção de avaliações. As notas continuam disponíveis na ficha do aluno.';return;}
+            if(!document.getElementById('grade-teacher-select').value){list.textContent='Selecione o professor responsável para lançar ou editar notas.';return;}
             students
         .filter(s => s.classId == classId && s.status === "Ativo")
         .sort((a, b) => a.fullname.localeCompare(b.fullname))
@@ -4299,7 +4249,7 @@ async function saveAttendance() {
                         </div>
                         <div class="col-span-2 text-right space-x-1" id="action_btn_container_${s.id}">
                             ${notasAluno.salvo ? `
-                                <button type="button" onclick="habilitarEdicaoNota('${s.id}')" class="px-2 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded font-semibold shadow text-[10px]">Editar Nota</button>
+                                <button type="button" onclick="habilitarEdicaoNota('${s.id}')" class="px-2 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded font-semibold shadow text-[10px]">Editar Nota</button><button type="button" onclick="excluirNotaAluno('${s.id}')" class="px-2 py-1 bg-red-600 text-white rounded text-[10px]">Excluir nota</button>
                             ` : `
                                 <button type="button" onclick="salvarNotaIndividualAluno('${s.id}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-semibold shadow text-[10px]">Salvar</button>
                             `}
@@ -4307,6 +4257,8 @@ async function saveAttendance() {
                     </li>`;
             });
         }
+
+        async function excluirNotaAluno(studentId){const subjectId=document.getElementById('grade-subject-select').value;if(!subjectId)return;if(!confirm('Excluir a nota desta disciplina? Ela será removida da ficha e do portal do aluno.'))return;try{await SE7.api('email-delete-grade',{studentId,subjectId});const aluno=students.find(s=>s.id===studentId);if(aluno?.grades)delete aluno.grades[subjectId];renderGradeList();alert('Nota excluída com sucesso.');}catch(e){alert(e.message);}}
 
         // Soma direta: Atividade (0 a 5) + Avaliação (0 a 5) = Nota Final (0 a 10)
         function calcularNotaFinalAluno(studentId) {
@@ -4328,7 +4280,7 @@ async function saveAttendance() {
 
             // Troca o botão da linha para o botão de "Salvar" atualizado
             const btnContainer = document.getElementById(`action_btn_container_${studentId}`);
-            btnContainer.innerHTML = `<button type="button" onclick="salvarNotaIndividualAluno('${studentId}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-semibold shadow text-[10px]">Salvar</button>`;
+            btnContainer.innerHTML = `<button type="button" onclick="salvarNotaIndividualAluno('${studentId}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-semibold shadow text-[10px]">Salvar</button><button type="button" onclick="excluirNotaAluno('${studentId}')" class="px-2 py-1 bg-red-600 text-white rounded text-[10px]">Excluir nota</button>`;
         }
 
         // Salva a nota individual de um aluno específico ao clicar no botão "Salvar" da linha
@@ -4336,6 +4288,7 @@ async function saveAttendance() {
             const classId = document.getElementById('grade-class-select').value;
             const subjectId = document.getElementById('grade-subject-select').value;
             if (!subjectId) return alert("Selecione a disciplina!");
+            const teacherId=document.getElementById('grade-teacher-select').value;if(!teacherId)return alert('Selecione o professor responsável.');
 
             const ativ = document.getElementById(`grade_ativ_${studentId}`).value;
             const aval = document.getElementById(`grade_aval_${studentId}`).value;
@@ -4352,9 +4305,9 @@ async function saveAttendance() {
             };
 
             try {
-                const saved = await SE7.api('email-save-grade',{studentId,subjectId,grade:gradeToSave});
+                const saved = await SE7.api('email-save-grade',{studentId,subjectId,teacherId,grade:gradeToSave});
                 if(!aluno.grades) aluno.grades={};
-                aluno.grades[subjectId]=gradeToSave;
+                aluno.grades[subjectId]={...gradeToSave,teacherId,teacherName:teachers.find(t=>t.id===teacherId)?.fullname||''};
                 void SE7Email.consume(saved.emailJobs||[]);
                 if(saved.emailWarning) SE7Email.warning(saved.emailWarning);
                 registrarLogAuditoria(`Salvou a nota do aluno ${aluno.fullname} na disciplina ID ${subjectId}`, "Notas");
@@ -4492,18 +4445,7 @@ function renderizarCobrancasAlunoSelecionadoFinanceiro(studentId) {
 }
 
 // ADICIONE ESTA FUNÇÃO EXATAMENTE AQUI:
-function renderFinanceStudentSelect() {
-    const select = document.getElementById('fin-student-select');
-    if (!select) return;
-    select.innerHTML = '<option value="">Selecione o aluno...</option>';
-    
-    // Cria uma cópia da lista de alunos ordenada alfabeticamente
-    const alunosOrdenados = [...students].sort((a, b) => a.fullname.localeCompare(b.fullname));
-
-    alunosOrdenados.forEach(s => {
-        select.insertAdjacentHTML('beforeend', `<option value="${s.id}">${s.fullname} (${s.code || 'Sem Matrícula'})</option>`);
-    });
-}
+function renderFinanceStudentSelect(){const select=document.getElementById('fin-student-select');if(select){const old=select.value;select.replaceChildren(new Option('Selecione o aluno...',''));for(const s of students)select.add(new Option(s.fullname||'Aluno',s.id));select.value=old;}window.SE7MatrizFinance?.refresh();}
         function carregarPortalAlunoPorSelecaoMaster(id) {
             const aluno = students.find(s => s.id === id);
             if(aluno) carregarDadosPortalAluno(aluno);
@@ -5942,5 +5884,9 @@ function escutarRegistrosPontoManual() {
 <script src="/assets/se7-enrollment-auto.js"></script>
 <script type="module" src="/assets/se7-ingress-policy.js"></script><script src="/assets/se7-ingress.js"></script>
 <script src="/assets/se7-motion.js"></script>
+<script type="module" src="/assets/se7-class-format.js"></script>
+<script type="module" src="/assets/se7-manual-grades.js"></script>
+<script src="/assets/se7-busy.js"></script>
+<script src="/assets/se7-matriz-finance.js"></script>
 </body>
 </html>

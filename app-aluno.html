@@ -605,6 +605,10 @@
                     <p class="flex justify-between gap-3 items-start border-b border-slate-100 dark:border-slate-800 pb-1.5"><strong class="text-slate-500 dark:text-slate-400 shrink-0">Endereço:</strong> <span id="info-endereco" class="font-semibold text-right min-w-0 max-w-[200px] break-words">---</span></p>
                     <p class="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5"><strong class="text-slate-500 dark:text-slate-400">Curso:</strong> <span id="info-curso-completo" class="font-semibold text-right max-w-[200px] truncate">---</span></p>
                     <p class="flex justify-between pt-0.5"><strong class="text-slate-500 dark:text-slate-400">Turma:</strong> <span id="info-turma" class="font-semibold">---</span></p>
+<p class="flex justify-between gap-3 border-b border-slate-100 dark:border-slate-800 py-1.5"><strong class="text-slate-500 dark:text-slate-400">Dia de aula:</strong><span id="info-dias-aula" class="font-semibold text-right">---</span></p>
+<p class="flex justify-between gap-3 border-b border-slate-100 dark:border-slate-800 py-1.5"><strong class="text-slate-500 dark:text-slate-400">Horário de aula:</strong><span id="info-horario-aula" class="font-semibold text-right">---</span></p>
+<p class="flex justify-between gap-3 border-b border-slate-100 dark:border-slate-800 py-1.5"><strong class="text-slate-500 dark:text-slate-400">Semestre atual:</strong><span id="info-etapa-curso" class="font-semibold text-right">---</span></p>
+
                 </div>
             </div>
 
@@ -1630,7 +1634,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
                     const turmaDoc = await db.collection("classes").doc(alunoLogado.classId).get({source:'server'});
                     if(turmaDoc.exists) {
                         const turmaData = turmaDoc.data();
-                        document.getElementById('info-turma').textContent = turmaData.name+((turmaData.weekdays||[]).length?' — '+turmaData.weekdays.map(d=>['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'][d]).join(', ')+(turmaData.startTime?' • '+turmaData.startTime+' às '+turmaData.endTime:''):'')+(turmaData.stage?' • '+turmaData.stage+'º semestre':'');
+                        document.getElementById('info-turma').textContent=turmaData.name||'A definir';const detalhes=SE7ClassFormat.classDetails(turmaData);document.getElementById('info-dias-aula').textContent=detalhes.days;document.getElementById('info-horario-aula').textContent=detalhes.hours;document.getElementById('info-etapa-curso').textContent=detalhes.semester;
 
                         const calSnap = await db.collection("academicCalendars").where("classId", "==", alunoLogado.classId).get({source:'server'});
                         eventosCalendarioCache = [];
@@ -2233,5 +2237,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
 <script src="/assets/se7-asaas.js"></script>
 <link rel="stylesheet" href="/assets/se7-exams.css"><script src="/assets/se7-exam-student.js"></script><script type="module" src="/assets/se7-ingress-policy.js"></script>
 <script src="/assets/se7-motion.js"></script>
+<script type="module" src="/assets/se7-class-format.js"></script>
+<script src="/assets/se7-busy.js"></script>
 </body>
 </html>
