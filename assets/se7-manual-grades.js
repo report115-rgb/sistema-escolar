@@ -1,0 +1,3 @@
+export function manualGradeDeadline(events,classId){const dates=events.filter(e=>e.classId===classId&&(e.eventType==='simulation'||/simulado.*final/i.test(e.subject||e.description||''))).flatMap(e=>(e.dates||[]).filter(d=>/^2026-(0[7-9]|1[0-2])-\d{2}$/.test(d))).sort();return dates[0]||'';}
+export function manualGradeStatus(events,classId,today=new Date().toLocaleDateString('en-CA',{timeZone:'America/Fortaleza'})){const deadline=manualGradeDeadline(events,classId);return {deadline,blocked:!!deadline&&today>deadline};}
+if(typeof window!=='undefined')window.SE7ManualGrades={status:manualGradeStatus};

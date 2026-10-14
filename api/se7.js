@@ -109,6 +109,7 @@ async function dispatchOperation({auth,db},req,b){
  if(action==='finance-batch-preview'||action==='finance-batch-commit'){await limits(db,req,'asaas-bulk:finance-batch:'+u.uid);return action==='finance-batch-preview'?financeBatch.preview(db,b,u):financeBatch.commit(db,b,u);}
  if(action.startsWith('email-')){
   if(u.role==='professor'&&['email-save-grade','email-save-attendance','email-grade','email-attendance','email-list','email-pending'].includes(action))fail(403,'Use o ambiente dedicado do professor.');
+  if(action==='email-delete-grade'){await limits(db,req,'asaas-bulk:email-save:'+u.uid);return mail.deleteGrade(db,b,u);}
   if(action==='email-save-grade'){await limits(db,req,'asaas-bulk:email-save:'+u.uid);return mail.saveGradeWithEmail(db,b,u);}
   if(action==='email-save-attendance'){await limits(db,req,'asaas-bulk:email-save:'+u.uid);return mail.saveAttendanceWithEmail(db,b,u);}
   if(action==='email-enrollment')return mail.enrollmentEmail(db,b.studentId,u);
