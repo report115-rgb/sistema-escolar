@@ -438,7 +438,7 @@
             <button class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-slate-600" id="nav-btn-settings" onclick="openTab(event, 'tab-settings')"><i class="fa-solid fa-gear mr-1.5"></i><span class="se7-nav-label">Sistema</span></button>
 	    
            </nav>
-        <div class="se7-sidebar-footer"><span class="se7-sidebar-dot" aria-hidden="true"></span><span class="se7-nav-label">Tudo conectado ao sistema Matriz</span></div>
+        
     </aside>
 
     <!-- CABEÇALHO DO SISTEMA -->
@@ -968,7 +968,7 @@
 		    <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-audit')">Auditoria</button>
     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event,'subtab-whatsapp');carregarPainelWhatsApp()"><i class="fa-brands fa-whatsapp mr-1"></i> WhatsApp</button>
 <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event,'subtab-email');SE7Email.history()"><i class="fa-solid fa-envelope mr-1"></i> E-mails acadêmicos</button>
-<button id="btn-subtab-gestao-totem" class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" style="display: none;" onclick="openSubTab(event, 'subtab-gestao-totem')"><i class="fa-solid fa-clock mr-1.5"></i> Totem e Ponto</button>
+<button id="btn-subtab-gestao-totem" class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" style="display: none;" onclick="openSubTab(event, 'subtab-gestao-totem')"><i class="fa-solid fa-clock mr-1.5"></i> Registro de ponto</button>
 </div>
 
                 <!-- ABA PRINCIPAL CURSOS (DIVIDIDA EM DUAS SUBABAS) -->
@@ -1466,38 +1466,18 @@
         <div class="flex justify-between items-center">
             <div>
                 <h2 class="font-bold text-sm text-blue-600 dark:text-blue-400 flex items-center gap-2">
-                    <i class="fa-solid fa-face-recognition"></i> Gestão do Totem de Frequência e Ponto
+                    <i class="fa-solid fa-business-time"></i> Registro de ponto dos funcionários
                 </h2>
-                <p class="text-[11px] text-slate-500 mt-0.5">Gerencie os acessos, visualize os registros em tempo real e monitore as frequências e pontos batidos.</p>
+                <p class="text-[11px] text-slate-500 mt-0.5">Consulte os registros de entrada e saída dos funcionários.</p>
             </div>
-            <button onclick="carregarLogsTotemMatriz()" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow transition flex items-center gap-1.5">
+            <button onclick="carregarPontosTotemMatriz()" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow transition flex items-center gap-1.5">
                 <i class="fa-solid fa-rotate"></i> Atualizar Registros
             </button>
         </div>
     </div>
 
-    <!-- SELEÇÃO DE SUB-ABAS INTERNAS (ALUNOS X FUNCIONÁRIOS) -->
-    <div class="grid grid-cols-2 gap-2">
-        <button type="button" onclick="mudarSubAbaTotem('frequencias')" id="btn-sub-freq" class="py-2.5 bg-blue-600 text-white font-bold rounded-xl text-xs shadow transition">
-            <i class="fa-solid fa-user-check mr-1"></i> Frequência de Alunos
-        </button>
-        <button type="button" onclick="mudarSubAbaTotem('pontos')" id="btn-sub-ponto" class="py-2.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl text-xs transition">
-            <i class="fa-solid fa-business-time mr-1"></i> Ponto de Funcionários
-        </button>
-    </div>
-
-    <!-- PAINEL 1: FREQUÊNCIAS DOS ALUNOS -->
-    <div id="sub-painel-frequencias" class="space-y-2">
-        <div class="bg-white dark:bg-slate-900 p-4 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 space-y-3">
-            <h3 class="font-bold text-xs text-slate-800 dark:text-white uppercase tracking-wider">Frequências Registradas pelo Totem</h3>
-            <div id="lista-frequencias-totem-container" class="space-y-2 max-h-[60vh] overflow-y-auto">
-                <div class="text-center py-6 text-xs text-slate-400">Carregando registros de presença...</div>
-            </div>
-        </div>
-    </div>
-
     <!-- PAINEL 2: PONTO DOS FUNCIONÁRIOS -->
-    <div id="sub-painel-pontos" class="space-y-2" style="display: none;">
+    <div id="sub-painel-pontos" class="space-y-2">
         <div class="bg-white dark:bg-slate-900 p-4 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 space-y-3">
             <h3 class="font-bold text-xs text-slate-800 dark:text-white uppercase tracking-wider">Controle de Horas / Ponto Eletrônico</h3>
             <div id="lista-pontos-totem-container" class="space-y-2 max-h-[60vh] overflow-y-auto">
@@ -1534,61 +1514,6 @@
     let sessaoRealMatriz = null;
     function masterAutenticadoMatriz(){return !!firebase.auth().currentUser && firebase.auth().currentUser.uid==='UUBINdHfJZONVMcC0QogyAsUgvA3';}
     function usuarioMasterAtivo(){return masterAutenticadoMatriz() && !perfilVisualizadoMatriz;}
-
-    // Funções de controle da sub-aba do totem na matriz
-    function mudarSubAbaTotem(tipo) {
-        if (!usuarioMasterAtivo()) return;
-        const isFreq = tipo === 'frequencias';
-        document.getElementById('sub-painel-frequencias').style.display = isFreq ? 'block' : 'none';
-        document.getElementById('sub-painel-pontos').style.display = isFreq ? 'none' : 'block';
-        
-        document.getElementById('btn-sub-freq').className = isFreq ? 
-            "py-2.5 bg-blue-600 text-white font-bold rounded-xl text-xs shadow transition" : 
-            "py-2.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl text-xs transition";
-            
-        document.getElementById('btn-sub-ponto').className = !isFreq ? 
-            "py-2.5 bg-blue-600 text-white font-bold rounded-xl text-xs shadow transition" : 
-            "py-2.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl text-xs transition";
-            
-        if (isFreq) carregarFrequenciasTotemMatriz();
-        else carregarPontosTotemMatriz();
-    }
-
-    async function carregarLogsTotemMatriz() {
-        if (!usuarioMasterAtivo()) return;
-        carregarFrequenciasTotemMatriz();
-        carregarPontosTotemMatriz();
-    }
-
-    async function carregarFrequenciasTotemMatriz() {
-        if (!usuarioMasterAtivo()) return;
-        const container = document.getElementById('lista-frequencias-totem-container');
-        if (!container) return;
-        try {
-            const snapshot = await db.collection("attendance").orderBy("data", "desc").get();
-            if (!usuarioMasterAtivo()) return;
-            if (snapshot.empty) {
-                container.innerHTML = `<div class="text-center py-6 text-xs text-slate-400">Nenhuma presença registrada pelo totem ainda.</div>`;
-                return;
-            }
-            let html = '';
-            snapshot.forEach(doc => {
-                const d = doc.data();
-                html += `
-                    <div class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700 flex justify-between items-center text-xs">
-                        <div>
-                            <strong class="text-slate-900 dark:text-white">${d.nomeAluno || 'Aluno'}</strong>
-                            <p class="text-[10px] text-slate-400">Data: ${d.data} &bull; Horário: <span class="text-emerald-600 font-bold">${d.horario || '---'}</span></p>
-                        </div>
-                        <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 rounded-full text-[10px] font-bold">${d.status || 'PRESENTE'}</span>
-                    </div>
-                `;
-            });
-            container.innerHTML = html;
-        } catch (e) {
-            container.innerHTML = `<div class="text-center py-6 text-xs text-red-500">Erro ao carregar frequências: ${e.message}</div>`;
-        }
-    }
 
     async function carregarPontosTotemMatriz() {
         if (!usuarioMasterAtivo()) return;
@@ -2406,7 +2331,7 @@ async function rejeitarSolicitacaoFirebase(id) {
         if (painelTotem) painelTotem.style.display = 'none';
         const sistema = document.getElementById('tab-settings');
         if (sistema) sistema.style.display = 'none';
-        ['lista-frequencias-totem-container', 'lista-pontos-totem-container'].forEach(id => {
+        ['lista-pontos-totem-container'].forEach(id => {
             const lista = document.getElementById(id);
             if (lista) lista.innerHTML = '';
         });
@@ -2652,7 +2577,7 @@ async function removerUsuarioSistemaFirebase(id){if(!confirm('Desativar esse fun
     if(subtabId === 'subtab-calendar') setTimeout(renderizarCalendarioSemestralAdmin, 200);
     if(subtabId === 'subtab-portal-calendario') setTimeout(renderizarCalendarioSemestralPortalAluno, 200);
     if(subtabId === 'subtab-audit') setTimeout(renderizarLogsAuditoria, 200);
-    if(subtabId === 'subtab-gestao-totem') mudarSubAbaTotem('frequencias');
+    if(subtabId === 'subtab-gestao-totem') carregarPontosTotemMatriz();
 }
 
         // FUNÇÃO PARA GERENCIAR AS SUB-SUBABAS DE CURSOS
