@@ -1630,7 +1630,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
                     const turmaDoc = await db.collection("classes").doc(alunoLogado.classId).get({source:'server'});
                     if(turmaDoc.exists) {
                         const turmaData = turmaDoc.data();
-                        document.getElementById('info-turma').textContent = turmaData.name;
+                        document.getElementById('info-turma').textContent = turmaData.name+((turmaData.weekdays||[]).length?' — '+turmaData.weekdays.map(d=>['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'][d]).join(', ')+(turmaData.startTime?' • '+turmaData.startTime+' às '+turmaData.endTime:''):'')+(turmaData.stage?' • '+turmaData.stage+'º semestre':'');
 
                         const calSnap = await db.collection("academicCalendars").where("classId", "==", alunoLogado.classId).get({source:'server'});
                         eventosCalendarioCache = [];

@@ -516,7 +516,7 @@
             <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
                 <i class="fa-solid fa-magnifying-glass"></i>
             </span>
-            <input type="text" id="input-busca-aluno-gestao" oninput="renderGestionStudentsTable()" placeholder="Pesquisar por nome ou CPF..." class="w-full pl-9 pr-4 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-xs dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-blue-600 focus:outline-none">
+            <p id="se7-ingress-migration" class="text-xs text-blue-600" role="status"></p><input type="text" id="input-busca-aluno-gestao" oninput="renderGestionStudentsTable()" placeholder="Pesquisar por nome ou CPF..." class="w-full pl-9 pr-4 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-xs dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-blue-600 focus:outline-none">
         </div>
         <!-- FIM DO BLOCO DA LUPA -->
 
@@ -1159,7 +1159,7 @@
                                 <select id="input-class-course" onchange="atualizarPreviewTurmaAutomatica()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></select>
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold mb-1">Semestre Letivo</label>
+                                <label class="block text-xs font-semibold mb-1">Semestre atual do calendário</label>
                                 <select id="input-class-semester" onchange="atualizarPreviewTurmaAutomatica()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
                                     <option value="2025.1">2025/1 (Jan-Jun)</option><option value="2025.2">2025/2 (Jul-Dez)</option>
                                     <option value="2026.1">2026/1 (Jan-Jun)</option><option value="2026.2" selected>2026/2 (Jul-Dez)</option>
@@ -1181,6 +1181,13 @@
                                 <input type="text" id="input-class-name-auto" readonly class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm bg-gray-100 dark:bg-slate-900 font-bold">
                             </div>
                         </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <label>Semestre de ingresso<input id="input-class-entry" placeholder="2026/1" class="w-full px-3 py-2 rounded-lg border dark:bg-slate-900"></label>
+                            <label>Etapa do curso (opcional)<input id="input-class-stage" type="number" min="1" max="20" placeholder="Ex.: 2 = 2º semestre" class="w-full px-3 py-2 rounded-lg border dark:bg-slate-900"></label>
+                        </div>
+                        <fieldset><legend class="text-xs font-semibold mb-2">Dias de aula</legend><div class="flex flex-wrap gap-3"><label><input type="checkbox" name="class-weekday" value="1"> Segunda</label><label><input type="checkbox" name="class-weekday" value="2"> Terça</label><label><input type="checkbox" name="class-weekday" value="3"> Quarta</label><label><input type="checkbox" name="class-weekday" value="4"> Quinta</label><label><input type="checkbox" name="class-weekday" value="5"> Sexta</label><label><input type="checkbox" name="class-weekday" value="6"> Sábado</label><label><input type="checkbox" name="class-weekday" value="0"> Domingo</label></div></fieldset>
+                        <div class="grid grid-cols-2 gap-4"><label>Início da aula<input id="input-class-start" type="time" class="block p-2 rounded border dark:bg-slate-900"></label><label>Término da aula<input id="input-class-end" type="time" class="block p-2 rounded border dark:bg-slate-900"></label></div>
+                        <p class="text-xs">Dias e horários organizam o cadastro; as datas de cada aula continuam definidas no calendário semestral.</p>
                         <div class="flex gap-2">
                             <button type="button" id="btn-save-class" onclick="addClass()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow">Salvar Turma</button>
                             <button type="button" id="btn-cancel-edit-class" onclick="cancelarEdicaoTurma()" class="px-4 py-2 bg-gray-500 text-white text-xs font-semibold rounded-lg shadow" style="display: none;">Cancelar Edição</button>
@@ -2759,6 +2766,7 @@ let dadosMatrizIniciados=false;function iniciarDadosAutenticadosMatriz(){window.
                 });
 
     renderAllIntegratedViews();
+    void window.SE7Ingress?.migrate();
     popularSelectAlunosPortalMaster();
     popularSelectAlunosValidacaoGestao();
     renderFinanceStudentSelect(); // <--- ADICIONADO AQUI
@@ -3253,33 +3261,14 @@ async function excluirColaborador(id) {
             if(!courseId) return;
             const curso = courses.find(c => c.id == courseId);
             if(!curso) return;
-            const sigla = (curso.sigla || "TUR").toUpperCase();
-            const editId = document.getElementById('edit-class-id').value;
-            const count = editId ? classes.filter(c => c.courseId == courseId).length : classes.filter(c => c.courseId == courseId).length + 1;
-            document.getElementById('input-class-code-auto').value = `${sigla}-${semestre.replace('.','')}-${String(count).padStart(2,'0')}`;
-            document.getElementById('input-class-name-auto').value = `${curso.name} - ${semestre}`;
+            const sigla=(curso.sigla||(/enfermagem/i.test(curso.name)?'ENF':/eja/i.test(curso.name)?'EJA':'TUR')).toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,12)||'TUR';
+            const old=classes.find(c=>c.id===document.getElementById('edit-class-id').value);
+            const number=old?.courseId===courseId&&old?.number?old.number:Math.max(0,...classes.filter(c=>c.courseId===courseId).map(c=>Number(c.number)||0))+1;
+            const code=sigla+'-'+String(number).padStart(3,'0');
+            document.getElementById('input-class-code-auto').value=code;
+            document.getElementById('input-class-name-auto').value='Turma '+String(number).padStart(2,'0')+' • '+code;
         }
-
-        async function addClass() {
-            const editClassId = document.getElementById('edit-class-id').value;
-            const courseId = document.getElementById('input-class-course').value;
-            const semestre = document.getElementById('input-class-semester').value;
-            const code = document.getElementById('input-class-code-auto').value;
-            const name = document.getElementById('input-class-name-auto').value;
-            if (!courseId) return alert("Selecione um curso!");
-
-            const classData = { courseId, semestre, code, name };
-
-            if (editClassId) {
-                await db.collection("classes").doc(editClassId).update(classData);
-                cancelarEdicaoTurma();
-                alert("Turma atualizada com sucesso!");
-            } else {
-                await db.collection("classes").add(classData);
-                alert("Turma cadastrada com sucesso!");
-                cancelarEdicaoTurma();
-            }
-        }
+        async function addClass(){const button=document.getElementById('btn-save-class');if(button.disabled)return;button.disabled=true;const text=button.textContent;button.textContent='Aguarde…';try{const data={id:document.getElementById('edit-class-id').value,courseId:document.getElementById('input-class-course').value,semestre:document.getElementById('input-class-semester').value,entrySemester:document.getElementById('input-class-entry').value.trim(),stage:document.getElementById('input-class-stage').value,weekdays:[...document.querySelectorAll('[name="class-weekday"]:checked')].map(e=>Number(e.value)),startTime:document.getElementById('input-class-start').value,endTime:document.getElementById('input-class-end').value};if(!data.courseId)return alert('Selecione um curso.');const result=await SE7.api('class-save',data);const old=classes.find(c=>c.id===result.id);if(old)Object.assign(old,result);else classes.push(result);renderClasses();cancelarEdicaoTurma();alert('Turma salva com sucesso.');}catch(e){alert(e.message);}finally{button.disabled=false;button.textContent=document.getElementById('edit-class-id').value?text:'Salvar Turma';}}
 
         function editarTurma(id) {
             const t = classes.find(c => c.id === id);
@@ -3288,7 +3277,7 @@ async function excluirColaborador(id) {
             document.getElementById('input-class-course').value = t.courseId || '';
             document.getElementById('input-class-semester').value = t.semestre || '2026.2';
             document.getElementById('input-class-code-auto').value = t.code || '';
-            document.getElementById('input-class-name-auto').value = t.name || '';
+            document.getElementById('input-class-name-auto').value = t.name || '';document.getElementById('input-class-entry').value=(t.entrySemester||t.semestre||'').replace('.','/');document.getElementById('input-class-stage').value=t.stage||'';document.getElementById('input-class-start').value=t.startTime||'';document.getElementById('input-class-end').value=t.endTime||'';document.querySelectorAll('[name=class-weekday]').forEach(e=>e.checked=(t.weekdays||[]).includes(Number(e.value)));atualizarPreviewTurmaAutomatica();
 
             document.getElementById('btn-save-class').textContent = "Atualizar Turma";
             document.getElementById('btn-cancel-edit-class').style.display = 'inline-block';
@@ -3299,7 +3288,7 @@ async function excluirColaborador(id) {
 
         function cancelarEdicaoTurma() {
             fecharModalEdicaoConfiguracao();
-            document.getElementById('edit-class-id').value = '';
+            document.getElementById('edit-class-id').value = '';document.getElementById('input-class-entry').value='';document.getElementById('input-class-stage').value='';document.getElementById('input-class-start').value='';document.getElementById('input-class-end').value='';document.querySelectorAll('[name=class-weekday]').forEach(e=>e.checked=false);
             document.getElementById('btn-save-class').textContent = "Salvar Turma";
             document.getElementById('btn-cancel-edit-class').style.display = 'none';
             atualizarPreviewTurmaAutomatica();
@@ -3346,7 +3335,7 @@ async function excluirColaborador(id) {
                         <li class="py-3 text-xs flex justify-between items-center border-b border-gray-100 dark:border-slate-700">
                             <div>
                                 <strong class="text-sm text-gray-900 dark:text-white">${c.name}</strong><br>
-                                <span class="text-gray-500">Código: ${c.code} &bull; Curso: ${curso ? curso.name : '---'} &bull; Semestre: ${c.semestre || '---'}</span>
+                                <span class="text-gray-500">Código: ${c.code} &bull; Curso: ${curso ? curso.name : '---'} &bull; Ingresso: ${c.entrySemester||c.semestre||'---'} &bull; Calendário: ${c.semestre||'---'}${c.stage?' &bull; Etapa: '+c.stage+'º semestre':''}<br>${(c.weekdays||[]).map(d=>['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'][d]).join(', ')} ${c.startTime&&c.endTime?c.startTime+' às '+c.endTime:'Horário a definir'}</span>
                             </div>
                             <div class="flex gap-2 shrink-0">
                                 <button onclick="editarTurma('${c.id}')" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded font-semibold shadow flex items-center gap-1"><i class="fa-solid fa-pen"></i> Editar</button>

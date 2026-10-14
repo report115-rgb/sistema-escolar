@@ -1,3 +1,4 @@
+import {saveClass} from '../server/class-registration.mjs';
 import * as academicIngress from '../server/academic-ingress.mjs';
 import {today as enrollmentToday,planEntry} from '../assets/se7-ingress-policy.js';
 import * as enrollmentAsaas from '../server/enrollment-asaas.mjs';
@@ -89,6 +90,8 @@ async function dispatchOperation({auth,db},req,b){
   if(typeof b.acao!=='string'||!b.acao.trim()||b.acao.length>2000||typeof b.modulo!=='string'||!b.modulo.trim()||b.modulo.length>120)fail(400,'Registro de auditoria inválido.');
   await limits(db,req,'audit:'+u.uid);const now=new Date();await db.collection('systemLogs').add({dataHora:now.toLocaleString('pt-BR',{timeZone:'America/Fortaleza'}),createdAt:now.toISOString(),usuario:u.profile?.nome||u.name||u.email||u.uid,perfil:u.role.toUpperCase(),modulo:b.modulo.trim(),acao:b.acao.trim(),actorUid:u.uid,origem:'atividade do navegador'});return {ok:true};
  }
+ if(action==='class-save')return saveClass(db,{...b,id:b.id?validId(b.id):undefined,courseId:validId(b.courseId)},u);
+ if(action==='academic-entry-migrate')return academicIngress.migrate(db,(Array.isArray(b.studentIds)?b.studentIds:[]).map(validId),u);
  if(action==='academic-entry-plan')return academicIngress.refresh(db,validId(b.studentId),u,b.enrollmentDate);
  if(action.startsWith('enrollment-asaas-')){if(!['master','secretaria','financeiro'].includes(u.role))fail(403,'Acesso restrito.');if(action==='enrollment-asaas-list')return enrollmentAsaas.list(db,u);const id=validId(b.studentId);if(action==='enrollment-asaas-start')return enrollmentAsaas.start(db,id,u);if(action==='enrollment-asaas-step')return enrollmentAsaas.step(db,id,u);if(action==='enrollment-asaas-status')return enrollmentAsaas.status(db,id);if(action==='enrollment-asaas-retry')return enrollmentAsaas.retry(db,id,u);fail(400,'Operação inválida.');}
  if(action.startsWith('exam-')){if(['exam-save','exam-scan-preview','exam-scan-commit','exam-bind','exam-print'].includes(action))await limits(db,req,'asaas-bulk:exams:'+u.uid);return exams.dispatch(db,auth,b,u);}
@@ -231,7 +234,7 @@ async function dispatchOperation({auth,db},req,b){
    const studentRef=db.collection('students').doc(validId(q.studentId));
    const studentSnap=await tx.get(studentRef),student=studentSnap.data();
    if(!student||student.se7AuthUid!==q.authUid||(student.portalSessionVersion||0)!==q.portalVersion||student.portalBlocked||student.portalMustChangePassword||student.se7AuthLock||!['Ativo','Ativa'].includes(student.status)||!student.classId)fail(403,'Aluno sem acesso ativo ou turma. Procure a secretaria.');
-   const date=now.toLocaleDateString('en-CA',{timeZone:'America/Fortaleza'});if(student.enrollmentDate&&date<student.enrollmentDate||student.academicEntry?.startDate&&date<student.academicEntry.startDate)fail(409,'Presença anterior ao início acadêmico do aluno. Procure a secretaria.');
+   const date=now.toLocaleDateString('en-CA',{timeZone:'America/Fortaleza'});if(student.enrollmentDate&&date<student.enrollmentDate)fail(409,'Presença anterior ao início acadêmico do aluno. Procure a secretaria.');
    const attendanceRef=db.collection('attendance').doc(`presenca_${studentRef.id}_${date}`);
    const existing=await tx.get(attendanceRef);
    const dayEvents=await tx.get(db.collection('academicCalendars').where('classId','==',student.classId));if(dayEvents.docs.some(d=>d.data().eventType==='holiday'&&d.data().dates?.includes(date)))fail(409,'Data registrada como feriado para esta turma. Não será registrada presença de aula.');if(student.enrollmentDate){const entry=planEntry({courseId:student.courseId,classId:student.classId,enrollmentDate:student.enrollmentDate,calendars:dayEvents.docs.map(d=>d.data())});if(!entry.startDate||date<entry.startDate)fail(409,'Aluno ainda não iniciou a primeira disciplina prevista. Procure a secretaria.');}
