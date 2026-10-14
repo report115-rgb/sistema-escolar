@@ -31,7 +31,7 @@
     const rows=[...dates].sort((a,b)=>a[0].localeCompare(b[0])).map(([date,r])=>{const event=academicCalendars.find(c=>c.classId===s.classId&&(c.dates||[]).includes(date)&&!['holiday','exam','simulation'].includes(c.eventType));const status=/falta|ausente/i.test(r?.status||'')?'Falta':/presente|present/i.test(r?.status||'')?'Presente':r?.status||'Não informado';const subject=r?.subject||event?.subject||'';const eligible=window.SE7AcademicPolicy?.canAttend(s,date,academicCalendars,subject)??!s.enrollmentDate;return [br(date),subject||'Disciplina não informada',eligible?status:'Anterior ao ingresso — não contabiliza falta'];});node=table(['Data','Disciplina','Situação'],rows,'Nenhuma frequência registrada.');
    }catch(e){if(current===state)content.replaceChildren(el('p','Não foi possível consultar a frequência. Feche e tente novamente.'));return;}
   }
-  if(current===state&&node){content.replaceChildren(node);content.scrollTop=0;}
+  if(current===state&&node){content.replaceChildren(node);content.scrollTop=0;window.SE7Motion?.enter(content);}
  }
  function open(id){if(!allowed())return;const s=students.find(x=>x.id===id);if(!s)return;sequence++;current={id};title.textContent=s.fullname||'Ficha do aluno';if(!dialog.open){scrollLock={html:document.documentElement.style.overflow,body:document.body.style.overflow};document.documentElement.style.overflow='hidden';document.body.style.overflow='hidden';dialog.showModal();}void show('personal');}
  for(const [tab,label]of Object.entries(labels)){const b=el('button',label);b.type='button';b.dataset.tab=tab;b.onclick=()=>void show(tab);nav.append(b);}
