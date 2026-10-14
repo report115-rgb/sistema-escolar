@@ -1,6 +1,6 @@
 /* Ficha de consulta: usa dados já carregados; frequência do Totem apenas sob demanda. */
 (()=>{
- let current=null,sequence=0;
+ let current=null,sequence=0,scrollLock=null;
  const allowed=()=>['master','secretaria','financeiro'].includes(JSON.parse(sessionStorage.getItem('usuario_logado')||'{}').perfil);
  const el=(tag,text)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=String(text??'—');return n;};
  const br=v=>window.SE7Finance?.dateBR?SE7Finance.dateBR(v):/^\d{4}-\d{2}-\d{2}/.test(String(v||''))?String(v).slice(0,10).split('-').reverse().join('/'):v||'—';
@@ -10,7 +10,8 @@
  function table(head,rows,empty){if(!rows.length)return el('p',empty);const t=el('table'),h=el('thead'),tr=el('tr');for(const c of head)tr.append(el('th',c));h.append(tr);t.append(h);const body=el('tbody');for(const row of rows){const r=el('tr');for(const c of row)r.append(el('td',c));body.append(r);}t.append(body);return t;}
  const dialog=el('dialog');dialog.id='se7-student-sheet';dialog.className='se7-student-sheet';dialog.setAttribute('aria-labelledby','se7-sheet-title');
  const header=el('header'),title=el('h2');title.id='se7-sheet-title';const close=el('button','Fechar');close.type='button';close.onclick=()=>dialog.close();header.append(title,close);const subtitle=el('p','Ficha de consulta — somente visualização'),nav=el('nav'),content=el('section');content.setAttribute('aria-live','polite');dialog.append(header,subtitle,nav,content);
- dialog.addEventListener('close',()=>{sequence++;current=null;content.replaceChildren();});
+ dialog.addEventListener('close',()=>{sequence++;current=null;content.replaceChildren();if(scrollLock){document.documentElement.style.overflow=scrollLock.html;document.body.style.overflow=scrollLock.body;scrollLock=null;}});
+ dialog.addEventListener('wheel',event=>{const inside=content.contains(event.target),max=content.scrollHeight-content.clientHeight;if(!inside||max<=0||(event.deltaY<0&&content.scrollTop<=0)||(event.deltaY>0&&content.scrollTop>=max-1))event.preventDefault();},{passive:false});
  const labels={personal:'Dados pessoais',academic:'Dados acadêmicos',finance:'Financeiro',attendance:'Frequência',grades:'Notas'};
  async function show(tab){if(!current||!allowed()){dialog.close();return;}const state=current,s=students.find(x=>x.id===state.id);if(!s){content.replaceChildren(el('p','Aluno não encontrado.'));return;}for(const b of nav.children)b.setAttribute('aria-pressed',String(b.dataset.tab===tab));const course=courses.find(c=>c.id===s.courseId),group=classes.find(c=>c.id===s.classId);let node;
   if(tab==='personal')node=fields([['Nome completo',s.fullname],['Matrícula',s.code],['CPF',cpf(s.cpf)],['RG',s.rg],['Nascimento',br(s.dob||s.birthDate)],['Sexo',s.sexo||s.gender],['WhatsApp',phone(s.whatsapp)],['E-mail',s.email],['Endereço',[s.endereco||s.street||s.address,s.numero||s.number,s.bairro||s.neighborhood,s.cidade||s.city,s.estado||s.state].filter(Boolean).join(', ')],['CEP',s.cep],['Situação da matrícula',s.status||'Ativo']]);
@@ -24,9 +25,9 @@
     const rows=[...dates].sort((a,b)=>a[0].localeCompare(b[0])).map(([date,r])=>{const event=academicCalendars.find(c=>c.classId===s.classId&&(c.dates||[]).includes(date)&&!['holiday','exam','simulation'].includes(c.eventType));const status=/falta|ausente/i.test(r?.status||'')?'Falta':/presente|present/i.test(r?.status||'')?'Presente':r?.status||'Não informado';return [br(date),r?.subject||event?.subject||'Disciplina não informada',status];});node=table(['Data','Disciplina','Situação'],rows,'Nenhuma frequência registrada.');
    }catch(e){if(current===state)content.replaceChildren(el('p','Não foi possível consultar a frequência. Feche e tente novamente.'));return;}
   }
-  if(current===state&&node)content.replaceChildren(node);
+  if(current===state&&node){content.replaceChildren(node);content.scrollTop=0;}
  }
- function open(id){if(!allowed())return;const s=students.find(x=>x.id===id);if(!s)return;sequence++;current={id};title.textContent=s.fullname||'Ficha do aluno';if(!dialog.open)dialog.showModal();void show('personal');}
+ function open(id){if(!allowed())return;const s=students.find(x=>x.id===id);if(!s)return;sequence++;current={id};title.textContent=s.fullname||'Ficha do aluno';if(!dialog.open){scrollLock={html:document.documentElement.style.overflow,body:document.body.style.overflow};document.documentElement.style.overflow='hidden';document.body.style.overflow='hidden';dialog.showModal();}void show('personal');}
  for(const [tab,label]of Object.entries(labels)){const b=el('button',label);b.type='button';b.dataset.tab=tab;b.onclick=()=>void show(tab);nav.append(b);}
  document.addEventListener('DOMContentLoaded',()=>{document.body.append(dialog);document.addEventListener('click',event=>{const button=event.target.closest('[data-student-sheet]');if(button&&button.closest('#tab-gestion-students'))open(button.dataset.studentSheet);});});
  window.SE7StudentSheet={open};
