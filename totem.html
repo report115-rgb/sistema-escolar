@@ -2,19 +2,22 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
+<script src="/assets/vendor/purify.min.js"></script>
+<script src="/assets/se7-security-handlers.js"></script>
+<script src="/assets/se7-security.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SE7 — Totem autenticado</title>
     <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/assets/vendor/tailwind.min.css">
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Firebase SDK Compat -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="/assets/vendor/firebase-app-compat.js"></script>
+    <script src="/assets/vendor/firebase-firestore-compat.js"></script>
+<script src="/assets/vendor/firebase-auth-compat.js"></script>
 <script src="/assets/se7-auth.js"></script>
 <script src="/assets/se7-email.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<script src="/assets/vendor/jsQR.js"></script>
 <link rel="stylesheet" href="/assets/se7-suite.css">
 </head>
 <body class="se7-suite se7-totem bg-slate-950 text-white font-sans antialiased h-screen flex flex-col justify-between overflow-hidden select-none">
@@ -89,7 +92,7 @@
 
     <!-- RODAPÉ -->
     <footer class="bg-slate-900 border-t border-slate-800 py-3 px-6 text-center text-xs text-slate-500 shrink-0">
-        Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="totem">v1.2.7</span> • Totem
+        Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="totem">v1.3.1</span> • Totem
     </footer>
 
     <!-- SCRIPTS DE INTEGRAÇÃO -->

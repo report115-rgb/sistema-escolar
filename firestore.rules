@@ -16,7 +16,7 @@ service cloud.firestore {
     && get(/databases/$(database)/documents/students/$(studentId())).data.get('se7AuthLock',null) == null
     && get(/databases/$(database)/documents/students/$(studentId())).data.get('portalSessionVersion',0) == request.auth.token.get('portalVersion',0);
   }
-  function schoolCollection(c){return c in ['students','courses','classes','academicCalendars','config','teachers','teacherManualLogs','teacherPaymentRates','teacherMonthlyPayments','attendance','attendanceRecords','attendanceLocks','employeeLogs','systemLogs','pendingUsers','systemUsers'];}
+  function schoolCollection(c){return c in ['students','courses','classes','academicCalendars','config','teachers','teacherManualLogs','teacherPaymentRates','teacherMonthlyPayments','attendance','attendanceRecords','attendanceLocks','employeeLogs','pendingUsers','systemUsers'];}
   // Master can manage existing school data, but credentials, identities and permission assignments are server-only.
   match /{c}/{doc}/{rest=**} {allow read,write: if master() && schoolCollection(c);}
   match /students/{id} {
@@ -26,9 +26,9 @@ service cloud.firestore {
    allow update: if academic() && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['se7AuthUid','portalCredential','portalBlocked','portalMustChangePassword','portalSessionVersion','portalTemporaryExpiresAt','se7AuthLock']);
 
   }
-  match /courses/{id} {allow read: if staff() || (studentActive() && id == get(/databases/$(database)/documents/students/$(studentId())).data.courseId);allow write: if academic();}
-  match /classes/{id} {allow read: if staff() || (studentActive() && id == get(/databases/$(database)/documents/students/$(studentId())).data.classId);allow write: if academic();}
-  match /academicCalendars/{id} {allow read: if staff() || (studentActive() && resource.data.classId == get(/databases/$(database)/documents/students/$(studentId())).data.classId);allow write: if academic();}
+  match /courses/{id} {allow read: if staff() || (studentActive() && id == get(/databases/$(database)/documents/students/$(studentId())).data.courseId);allow write: if master();}
+  match /classes/{id} {allow read: if staff() || (studentActive() && id == get(/databases/$(database)/documents/students/$(studentId())).data.classId);allow write: if master();}
+  match /academicCalendars/{id} {allow read: if staff() || (studentActive() && resource.data.classId == get(/databases/$(database)/documents/students/$(studentId())).data.classId);allow write: if master();}
   match /financeLogs/{id} {
    allow read: if staff() || (studentActive() && resource.data.studentId == studentId());
    // Once reserved/linked, only the server can reconcile the financial record.
@@ -37,7 +37,7 @@ service cloud.firestore {
    allow delete: if finance() && !exists(/databases/$(database)/documents/se7AsaasInvoices/$(id)) && !resource.data.keys().hasAny(['asaasPaymentId']);
   }
   match /config/{id} {allow read: if staff() || (studentActive() && id == 'ejaSettings');}
-  match /teachers/{id} {allow read: if staff();allow create: if academic() && !request.resource.data.keys().hasAny(['authUid','profilePhoto']);allow update: if academic() && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['authUid','profilePhoto']);allow delete: if academic();}
+  match /teachers/{id} {allow read: if staff();allow write: if master();}
   match /teacherManualLogs/{id} {allow read: if staff();allow write: if academic();}
   match /teacherPaymentRates/{id} {allow read,write: if finance();}
   match /teacherMonthlyPayments/{id}/{rest=**} {allow read,write: if finance();}
@@ -45,7 +45,7 @@ service cloud.firestore {
   match /attendanceRecords/{id} {allow read: if staff();allow write: if academic();}
   match /attendanceLocks/{id} {allow read: if staff();allow write: if academic();}
   match /employeeLogs/{id} {allow read: if master();}
-  match /systemLogs/{id} {allow create: if (staff() || staffRole('professor')) && request.resource.data.keys().hasOnly(['dataHora','usuario','perfil','modulo','acao','createdAt']);}
+  match /systemLogs/{id} {allow read: if master();}
   // Everything else, including se7Staff, se7Credentials, se7CpfIndex and rate limits, is denied to browser clients.
  }
 }

@@ -2,10 +2,13 @@
 <html lang="pt-BR" class="dark">
 <head>
     <meta charset="UTF-8">
+<script src="/assets/vendor/purify.min.js"></script>
+<script src="/assets/se7-security-handlers.js"></script>
+<script src="/assets/se7-security.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SE7 Gestão Educacional - Sistema Integrado em Nuvem com Google Drive</title>
     <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/assets/vendor/tailwind.min.css">
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -13,34 +16,21 @@
     <link rel="icon" type="image/png" id="app-favicon" href="">
 
     <!-- Bibliotecas Externas para Geração de PDF, QR Code, Firebase e FullCalendar -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    
+    <script src="/assets/vendor/qrcode.js"></script>
     <!-- FullCalendar CSS & JS CDN -->
     <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css' rel='stylesheet' />
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
     <!-- Firebase App (Compat) e Firestore -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="/assets/vendor/firebase-app-compat.js"></script>
+    <script src="/assets/vendor/firebase-firestore-compat.js"></script>
+<script src="/assets/vendor/firebase-auth-compat.js"></script>
 <script src="/assets/se7-auth.js"></script>
 <script src="/assets/se7-portal-preview.js"></script>
 <script src="/assets/se7-email.js"></script>
 <script src="/assets/se7-whatsapp.js"></script>
     <!-- EmailJS SDK para Disparo de E-mails -->
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#1e40af',
-                        secondary: '#3b82f6',
-                        accent: '#f59e0b'
-                    }
-                }
-            }
-        }
-    </script>
+    
     <link rel="stylesheet" href="/assets/se7-matriz.css">
     <script>try { document.documentElement.classList.toggle('dark', localStorage.getItem('se7-matriz-theme') !== 'light'); } catch {}</script>
     <style>
@@ -251,7 +241,7 @@
             </div>
         </section>
     </div>
-    <div class="matriz-login-footer"><strong>Sistema SE7 de Gestão Acadêmica</strong><br><span data-se7-version="matriz">v1.5.11</span> • Sistema Matriz</div>
+    <div class="matriz-login-footer"><strong>Sistema SE7 de Gestão Acadêmica</strong><br><span data-se7-version="matriz">v1.6.1</span> • Sistema Matriz</div>
 </div>
 
 <!-- ========================================== -->
@@ -1523,7 +1513,6 @@
         <div id="subtab-audit" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
     <div class="flex justify-between items-center mb-4 pb-2 border-b border-gray-100 dark:border-slate-700">
         <h3 class="font-bold text-base text-blue-600 dark:text-blue-400"><i class="fa-solid fa-clock-rotate-left mr-2"></i> Auditoria e Rastreabilidade</h3>
-        <button type="button" onclick="limparLogsAuditoria()" class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg shadow">Limpar Logs</button>
     </div>
     <div class="overflow-x-auto">
         <table class="w-full text-left text-xs">
@@ -1636,7 +1625,7 @@
     <!-- RODAPÉ -->
     <footer id="se7-footer" class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border-t border-gray-200 dark:border-slate-700 py-2.5 px-6 text-center text-xs text-gray-500 dark:text-gray-400 flex flex-col sm:flex-row justify-between items-center gap-2 shadow-lg">
         <span>Sistema SE7 de Gestão Acadêmica • Matriz</span>
-        <span>Desenvolvido por <strong>JS & SS Serviços Educacionais e Cia Ltda</strong> &bull; <span data-se7-version="matriz">v1.5.11</span> • Sistema Matriz</span>
+        <span>Desenvolvido por <strong>JS & SS Serviços Educacionais e Cia Ltda</strong> &bull; <span data-se7-version="matriz">v1.6.1</span> • Sistema Matriz</span>
     </footer>
 
     <!-- MODAL DE NOVA MATRÍCULA / EDIÇÃO DE ALUNO -->
@@ -1872,25 +1861,7 @@
             setInterval(atualizarHora, 1000);
         }
 
-        async function registrarLogAuditoria(acao, modulo) {
-    const usuarioSessao = sessaoRealMatriz || JSON.parse(sessionStorage.getItem('usuario_logado')) || { nome: "Sistema", perfil: "geral" };
-    
-    const novoLog = {
-        dataHora: new Date().toLocaleString('pt-BR',{timeZone:'America/Fortaleza'}),
-        usuario: usuarioSessao.nome,
-        perfil: usuarioSessao.perfil ? usuarioSessao.perfil.toUpperCase() : 'GERAL',
-        modulo: modulo,
-        acao: acao,
-        createdAt: new Date().toISOString()
-    };
-
-    try {
-        // Salva diretamente na nuvem (Firestore) para que o Master veja de qualquer lugar
-        await db.collection("systemLogs").add(novoLog);
-    } catch (e) {
-        console.error("Erro ao registrar log na nuvem:", e);
-    }
-}
+        async function registrarLogAuditoria(acao,modulo){try{await SE7.api('audit-event',{acao:String(acao).slice(0,2000),modulo:String(modulo).slice(0,120)});}catch{console.warn('Não foi possível registrar a atividade na auditoria.');}}
 
 let cancelarEscutaAuditoria = null;
 
@@ -1916,19 +1887,7 @@ function renderizarLogsAuditoria() {
     });
 }
 
-async function limparLogsAuditoria() {
-    if (!confirm("Deseja limpar todos os logs da nuvem?")) return;
-    try {
-        const snapshot = await db.collection("systemLogs").get();
-        const batch = db.batch();
-        snapshot.forEach(doc => batch.delete(doc.ref));
-        await batch.commit();
-        alert("Logs limpos com sucesso!");
-        renderizarLogsAuditoria();
-    } catch (e) {
-        alert("Erro ao limpar logs: " + e.message);
-    }
-}
+async function limparLogsAuditoria(){alert('Os registros de auditoria são preservados e não podem ser apagados pela interface.');}
 
         function alternarSenhaAcesso(botao) {
             const campo = document.getElementById('login-pass');
@@ -4019,7 +3978,7 @@ function carregarDatasCalendarioParaFrequencia() {
         const code = `MAT-${new Date().getFullYear()}-${Date.now().toString().slice(-5)}`;
         studentData.code = code;
         studentData.status = "Ativo";
-        studentData.senhaAluno = code;
+        studentData.senhaAluno = Array.from(crypto.getRandomValues(new Uint8Array(24)),v=>v.toString(16).padStart(2,'0')).join('');
         studentData.documentos = {};
         
         // No cadastro novo, se tiver foto temporária, salva; senão, salva vazia
@@ -4207,11 +4166,11 @@ function carregarDatasCalendarioParaFrequencia() {
 
         htmlLinhas += `
             <tr class="border-b border-gray-100 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-900/40">
-                <td class="p-3 font-bold text-blue-600 dark:text-blue-400">${s.code || '---'}</td>
-                <td class="p-3 font-semibold">${s.fullname}</td>
-                <td class="p-3">${s.cpf || '---'}</td>
-                <td class="p-3">${s.whatsapp || ''} <br><span class="text-[10px] text-gray-400">${s.email || ''}</span></td>
-                <td class="p-3">${curso ? curso.name : '---'} <br><span class="text-[10px] text-gray-400">Turma: ${turma ? turma.name : '---'}</span></td>
+                <td class="p-3 font-bold text-blue-600 dark:text-blue-400">${SE7Safe.escape(s.code || '---')}</td>
+                <td class="p-3 font-semibold">${SE7Safe.escape(s.fullname)}</td>
+                <td class="p-3">${SE7Safe.escape(s.cpf || '---')}</td>
+                <td class="p-3">${SE7Safe.escape(s.whatsapp || '')} <br><span class="text-[10px] text-gray-400">${SE7Safe.escape(s.email || '')}</span></td>
+                <td class="p-3">${SE7Safe.escape(curso ? curso.name : '---')} <br><span class="text-[10px] text-gray-400">Turma: ${SE7Safe.escape(turma ? turma.name : '---')}</span></td>
                 <td class="p-3"><span class="px-2 py-0.5 ${classeStatusMatricula(s.status)} rounded text-[10px] font-bold">${rotuloStatusMatricula(s.status)}</span>${s.enrollmentRequest ? '<div class="text-[10px] text-amber-500 mt-1">Solicitação pendente</div>' : ''}</td>
                 <td class="p-3 text-right space-x-1">
                     <button onclick="editarAluno('${s.id}')" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs shadow"><i class="fa-solid fa-pen-to-square mr-1"></i> Editar</button>
@@ -4909,7 +4868,8 @@ async function emitirDocumentoSelecionado() {
                     .replace(/Vigia\/PA,.*<\/div>/g, `Vigia/PA, ${dataPorExtenso}</div>`);
 
                 const janelaImpressao = window.open('', '_blank', 'width=900,height=700');
-                janelaImpressao.document.write(htmlPreenchido);
+                janelaImpressao.opener=null;
+                janelaImpressao.document.write(SE7Safe.document(htmlPreenchido));
                 janelaImpressao.document.close();
                 
                 setTimeout(() => {
@@ -4970,7 +4930,8 @@ async function emitirDocumentoSelecionado() {
                     .replace(/Vigia\/PA,.*<\/div>/g, `Vigia/PA, ${dataPorExtenso}</div>`);
 
                 const janelaImpressao = window.open('', '_blank', 'width=900,height=700');
-                janelaImpressao.document.write(htmlPreenchido);
+                janelaImpressao.opener=null;
+                janelaImpressao.document.write(SE7Safe.document(htmlPreenchido));
                 janelaImpressao.document.close();
                 
                 setTimeout(() => {
@@ -5777,7 +5738,8 @@ async function gerarHistoricoEscolarDinamico(alunoId) {
 
     // 3. Abre a janela de impressão com o template devidamente preenchido
     const janelaImpressao = window.open('', '_blank', 'width=900,height=700');
-    janelaImpressao.document.write(htmlPreenchido);
+    janelaImpressao.opener=null;
+                janelaImpressao.document.write(SE7Safe.document(htmlPreenchido));
     janelaImpressao.document.close();
     
     setTimeout(() => {

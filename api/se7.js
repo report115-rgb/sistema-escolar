@@ -18,7 +18,7 @@ const at=()=>F.serverTimestamp();
 async function authPassword(email,senha){const r=await fetch(`${process.env.NODE_ENV==='test'&&process.env.FIREBASE_AUTH_EMULATOR_HOST?'http://'+process.env.FIREBASE_AUTH_EMULATOR_HOST+'/identitytoolkit.googleapis.com/v1':'https://identitytoolkit.googleapis.com/v1'}/accounts:signInWithPassword?key=${APIKEY}`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({email,password:senha,returnSecureToken:true}),signal:AbortSignal.timeout(10000)});const d=await r.json();return r.ok?d:null;}
 async function limits(db,req,action,account=''){
  const ip=req.headers['x-vercel-forwarded-for']||req.headers['x-forwarded-for']||req.socket?.remoteAddress||'unknown';const bucket=Math.floor(Date.now()/900000);
- for(const [key,max] of [[`ip:${ip}`,action.startsWith('email-send:')?2000:action.startsWith('asaas-bulk:')?180:action==='signup'?8:40],...(account?[[`account:${account}`,12]]:[])]){
+ for(const [key,max] of [[`ip:${ip}`,action.startsWith('audit:')?300:action.startsWith('gateway:')?600:action.startsWith('email-send:')?2000:action.startsWith('asaas-bulk:')?180:action==='signup'?8:40],...(account?[[`account:${account}`,12]]:[])]){
   const ref=db.collection('se7RateLimits').doc(digest(`${action}:${key}:${bucket}`));
   await db.runTransaction(async tx=>{const snap=await tx.get(ref);const count=snap.exists?snap.data().count:0;if(count>=max)fail(429,'Muitas tentativas. Aguarde 15 minutos.');tx.set(ref,{count:count+1,expiresAt:new Date((bucket+2)*900000)});});
  }
@@ -80,7 +80,12 @@ async function dispatchOperation({auth,db},req,b){
    const code=`MAT-${new Date().getFullYear()}-${ref.id.slice(-8).toUpperCase()}`;await ref.set({...s,code,dob:s.birthDate,classId:'',status:'Ativo',documentos:{},attendance:{},se7AuthUid:uid,portalSessionVersion:0,createdAt:new Date().toISOString()});await idx.set({studentId:ref.id});const customToken=await auth.createCustomToken(uid,{role:'aluno',studentId:ref.id,portalVersion:0});try{await setConsent(db,ref.id,data.whatsappOptIn===true,{uid,role:'aluno'});await enrollmentNotifications(db,ref.id,{uid,role:'aluno'});}catch{console.warn('SE7 WhatsApp: matrícula salva; notificação não concluída.');}return {customToken,student:{id:ref.id,...s,code}};
   }catch(e){await auth.deleteUser(uid).catch(()=>{});await ref.delete().catch(()=>{});await idx.delete();throw e;}
  }
- const u=await identity(auth,db,req);req.se7AuditIdentity=u;
+ const u=await identity(auth,db,req);req.se7AuditIdentity=u;await limits(db,req,'gateway:'+u.uid);
+ if(action==='audit-event'){
+  if(!['master','secretaria','professor','financeiro','totem'].includes(u.role))fail(403,'Acesso restrito.');
+  if(typeof b.acao!=='string'||!b.acao.trim()||b.acao.length>2000||typeof b.modulo!=='string'||!b.modulo.trim()||b.modulo.length>120)fail(400,'Registro de auditoria inválido.');
+  await limits(db,req,'audit:'+u.uid);const now=new Date();await db.collection('systemLogs').add({dataHora:now.toLocaleString('pt-BR',{timeZone:'America/Fortaleza'}),createdAt:now.toISOString(),usuario:u.profile?.nome||u.name||u.email||u.uid,perfil:u.role.toUpperCase(),modulo:b.modulo.trim(),acao:b.acao.trim(),actorUid:u.uid,origem:'atividade do navegador'});return {ok:true};
+ }
  if(action.startsWith('exam-')){if(['exam-save','exam-scan-preview','exam-scan-commit','exam-bind','exam-print'].includes(action))await limits(db,req,'asaas-bulk:exams:'+u.uid);return exams.dispatch(db,auth,b,u);}
  if(action==='portal-preview')return portalPreview(db,b,u);
  if(action.startsWith('notices-')){
@@ -191,7 +196,7 @@ async function dispatchOperation({auth,db},req,b){
   }
   if(action==='documents'){
    if(u.student.documentos?.[b.type]?.status==='Aprovado')fail(400,'Documento já aprovado. Solicite ajuda à instituição.');
-   if(!docTypes.includes(b.type)||typeof b.fileName!=='string'||b.fileName.length>180||typeof b.url!=='string'||b.url.length>1000||b.url&&!/^https:\/\//.test(b.url))fail(400,'Documento inválido.');
+   if(!docTypes.includes(b.type)||typeof b.fileName!=='string'||!b.fileName.trim()||b.fileName.length>180||/[<>\x00-\x1f]/.test(b.fileName)||typeof b.url!=='string'||b.url.length>1000||b.url&&!/^https:\/\/(?:drive\.google\.com|docs\.google\.com)\//.test(b.url))fail(400,'Documento inválido.');
    const submissionId=randomBytes(16).toString('hex');
    await db.runTransaction(async tx=>{
     const current=await tx.get(ref);if(!current.exists)fail(404,'Aluno não encontrado.');
@@ -250,7 +255,7 @@ async function dispatchOperation({auth,db},req,b){
  if(action==='staff-list'){const snap=await db.collection('se7Staff').get();return {users:snap.docs.map(d=>({id:d.id,...d.data()}))};}
  if(action==='legacy-staff'){const snap=await db.collection('systemUsers').get();return {users:snap.docs.map(d=>({id:d.id,nome:d.data().nome||d.data().name||'',email:d.data().email||'',perfil:d.data().perfil||''}))};}
  if(action==='staff-create'){
-  password(b.password);if(!roles.includes(b.role)||typeof b.email!=='string'||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(b.email)||typeof b.name!=='string'||!b.name.trim())fail(400,'Informe nome, e-mail e um perfil permitido.');
+  password(b.password);if(!roles.includes(b.role)||typeof b.email!=='string'||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(b.email)||typeof b.name!=='string'||!b.name.trim()||b.name.length>100||/[<>\x00-\x1f]/.test(b.name))fail(400,'Informe nome, e-mail e um perfil permitido.');
   const email=b.email.trim().toLowerCase();let existing;try{existing=await auth.getUserByEmail(email);}catch(e){if(e.code!=='auth/user-not-found')throw e;}
   if(existing)fail(409,'E-mail já cadastrado no Authentication. Use a função de vincular conta existente.');
   const user=await auth.createUser({email,password:b.password,displayName:b.name});await db.collection('se7Staff').doc(user.uid).set({nome:b.name,email,perfil:b.role,disabled:false});await claims(auth,user.uid,{role:b.role});return {uid:user.uid};
@@ -266,7 +271,7 @@ async function dispatchOperation({auth,db},req,b){
 const auditActionNames={'exam-catalog':'Consultou avaliações e dados do professor','exam-get':'Abriu uma avaliação para edição','exam-save':'Salvou avaliação','exam-roster':'Consultou alunos para impressão','exam-print':'Gerou prova nominal e cartão-resposta','exam-scan-start':'Identificou cartão-resposta para correção','exam-scan-preview':'Analisou foto do cartão-resposta','exam-scan-commit':'Registrou correção e notas da avaliação','exam-results':'Consultou correções','exam-result':'Consultou cartão corrigido','exam-point':'Consultou frequência e pagamentos','exam-bind':'Vinculou acesso do professor','exam-verify':'Validou QR de documento'};
 export async function dispatch(services,req,b){
  delete req.se7AuditIdentity;
- const record=async(result,failed=false)=>{const u=req.se7AuditIdentity;if(!u||!['master','secretaria','professor','financeiro','totem'].includes(u.role))return;const action=String(b.action||'').slice(0,100),details=[];for(const key of ['id','teacherId','classId','studentId','examId','planId','paymentId'])if(typeof b[key]==='string'&&/^[A-Za-z0-9_-]{1,150}$/.test(b[key]))details.push(key+': '+b[key]);if(action==='exam-save')details.push(b.state==='final'?'Finalizada':'Rascunho');if(result?.duplicate)details.push('Operação já registrada; sem duplicação');const now=new Date();try{await services.db.collection('systemLogs').add({dataHora:now.toLocaleString('pt-BR',{timeZone:'America/Fortaleza'}),createdAt:now.toISOString(),usuario:u.profile?.nome||u.name||u.email||u.uid,perfil:u.role.toUpperCase(),modulo:action.startsWith('exam-')?'Gestão de Avaliações':action.startsWith('asaas-')?'Financeiro / Asaas':action.startsWith('email-')?'E-mails':action.startsWith('notices-')?'Avisos':action.startsWith('staff-')?'Acessos':'Sistema / '+action,acao:(failed?'Não concluído: ':'Concluído: ')+(auditActionNames[action]||action)+(details.length?' • '+details.join(' • '):''),actorUid:u.uid,origem:'servidor'});}catch{console.warn('SE7: não foi possível gravar o registro de auditoria.');}};
+ const record=async(result,failed=false)=>{const u=req.se7AuditIdentity;if(b.action==='audit-event'||!u||!['master','secretaria','professor','financeiro','totem'].includes(u.role))return;const action=String(b.action||'').slice(0,100),details=[];for(const key of ['id','teacherId','classId','studentId','examId','planId','paymentId'])if(typeof b[key]==='string'&&/^[A-Za-z0-9_-]{1,150}$/.test(b[key]))details.push(key+': '+b[key]);if(action==='exam-save')details.push(b.state==='final'?'Finalizada':'Rascunho');if(result?.duplicate)details.push('Operação já registrada; sem duplicação');const now=new Date();try{await services.db.collection('systemLogs').add({dataHora:now.toLocaleString('pt-BR',{timeZone:'America/Fortaleza'}),createdAt:now.toISOString(),usuario:u.profile?.nome||u.name||u.email||u.uid,perfil:u.role.toUpperCase(),modulo:action.startsWith('exam-')?'Gestão de Avaliações':action.startsWith('asaas-')?'Financeiro / Asaas':action.startsWith('email-')?'E-mails':action.startsWith('notices-')?'Avisos':action.startsWith('staff-')?'Acessos':'Sistema / '+action,acao:(failed?'Não concluído: ':'Concluído: ')+(auditActionNames[action]||action)+(details.length?' • '+details.join(' • '):''),actorUid:u.uid,origem:'servidor'});}catch{console.warn('SE7: não foi possível gravar o registro de auditoria.');}};
  try{const result=await dispatchOperation(services,req,b);await record(result);return result;}catch(error){await record(null,true);throw error;}
 }
 
@@ -274,7 +279,7 @@ export default async function handler(req,res){
  res.setHeader('Cache-Control','no-store');res.setHeader('X-Content-Type-Options','nosniff');
  try {
   if(req.method!=='POST')fail(405,'Use POST.');const origin=req.headers.origin;if(origin!=='https://sistema-escolar-ten-mu.vercel.app')fail(403,'Origem não autorizada.');
-  if(!String(req.headers['content-type']||'').startsWith('application/json'))fail(415,'Envie JSON.');const b=typeof req.body==='string'?JSON.parse(req.body):req.body;if(!b||typeof b.action!=='string'||JSON.stringify(b).length>(b.action==='notices-save'||b.action==='exam-scan-preview'?750000:b.action==='exam-save'?250000:12000))fail(400,'Requisição inválida.');
+  if(!String(req.headers['content-type']||'').startsWith('application/json'))fail(415,'Envie JSON.');let b;try{b=typeof req.body==='string'?JSON.parse(req.body):req.body;}catch{fail(400,'JSON inválido.');}if(!b||Array.isArray(b)||typeof b.action!=='string'||JSON.stringify(b).length>(b.action==='notices-save'||b.action==='exam-scan-preview'?750000:b.action==='exam-save'?250000:12000))fail(400,'Requisição inválida.');
   if(!process.env.SE7_MASTER_UID)throw new Error('Master não configurado.');const result=await dispatch(services(),req,b);res.status(200).json(result);
  }catch(e){const status=e.status||500;if(status===500)console.error('SE7 API',e.code||'internal');res.status(status).json({error:status===500?'Não foi possível concluir. Verifique a configuração do servidor.':e.message});}
 }

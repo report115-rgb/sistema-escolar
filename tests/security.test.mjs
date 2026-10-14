@@ -217,12 +217,12 @@ test('professor dedicado não lê outros pontos, não escreve notas diretamente 
  await assertFails(getDoc(doc(teacher,'se7ExamImages','qualquer-imagem')));
 });
 
-test('foto do professor somente master; secretaria edita outros dados sem alterar foto',async()=>{
+test('cadastro e foto do professor são exclusivos do master',async()=>{
  await db.collection('se7Staff').doc('photo-sec').set({perfil:'secretaria',disabled:false});await db.collection('se7Staff').doc('photo-prof').set({perfil:'professor',disabled:false});
  await db.collection('teachers').doc('photo-teacher').set({fullname:'Professor Teste',profilePhoto:'foto-atual'});
  const m=env.authenticatedContext(MASTER).firestore(),s=env.authenticatedContext('photo-sec').firestore(),p=env.authenticatedContext('photo-prof').firestore();
  await assertSucceeds(updateDoc(doc(m,'teachers/photo-teacher'),{profilePhoto:'nova-foto'}));
- await assertSucceeds(updateDoc(doc(s,'teachers/photo-teacher'),{formation:'Formação atualizada'}));
+ await assertFails(updateDoc(doc(s,'teachers/photo-teacher'),{formation:'Formação atualizada'}));
  await assertFails(updateDoc(doc(s,'teachers/photo-teacher'),{profilePhoto:'troca-indevida'}));
  await assertFails(setDoc(doc(s,'teachers/photo-new'),{fullname:'Outro',profilePhoto:'foto'}));
  await assertFails(updateDoc(doc(p,'teachers/photo-teacher'),{profilePhoto:'troca-propria'}));
@@ -233,3 +233,32 @@ test('auditoria central registra consulta e tentativa negada da secretaria sem c
  await call(token,{action:'exam-catalog'});await assert.rejects(call(token,{action:'exam-save',password:'NUNCA-REGISTRAR',questions:[{correct:3,text:'GABARITO-PRIVADO'}]}));
  const records=(await db.collection('systemLogs').where('actorUid','==',uid).get()).docs.map(d=>d.data());assert(records.some(r=>r.usuario==='Secretária Auditoria'&&r.acao.includes('Concluído: Consultou')));assert(records.some(r=>r.acao.includes('Não concluído: Salvou avaliação')));assert(!JSON.stringify(records).includes('NUNCA-REGISTRAR'));assert(!JSON.stringify(records).includes('GABARITO-PRIVADO'));
 });
+
+async function hardeningStudentToken(){const sid='hardening-student',uid=studentUid(sid);try{await auth.createUser({uid,email:aliasForHardening(uid),password:'hardening-test-password'});}catch(e){if(e.code!=='auth/uid-already-exists')throw e;}await db.collection('students').doc(sid).set({fullname:'Aluno de Segurança',cpf:'52998224725',status:'Ativo',classId:'hardening-class',courseId:'hardening-course',se7AuthUid:uid,portalSessionVersion:0,documentos:{}});return custom(await auth.createCustomToken(uid,{role:'aluno',studentId:sid,portalVersion:0}));}
+function aliasForHardening(uid){return uid+'@alunos.se7.invalid';}
+
+test('auditoria não permite edição, exclusão nem autoria falsificada pelo navegador',async()=>{
+ const m=env.authenticatedContext(MASTER).firestore(),s=env.authenticatedContext('audit-secretaria').firestore();
+ await assertFails(setDoc(doc(m,'systemLogs/falso-master'),{usuario:'Outra pessoa',createdAt:'2000-01-01'}));
+ await assertFails(setDoc(doc(s,'systemLogs/falso-sec'),{usuario:'Master',perfil:'MASTER',modulo:'x',acao:'x',createdAt:'2000-01-01',dataHora:'x'}));
+ const token=await signIn('audit-secretaria@example.test','audit-secret-pass');await call(token,{action:'audit-event',acao:'Abriu uma aba',modulo:'Avaliações',usuario:'Master',perfil:'MASTER',createdAt:'2000-01-01'});
+ const logs=(await db.collection('systemLogs').where('actorUid','==','audit-secretaria').get()).docs;const row=logs.find(d=>d.data().acao==='Abriu uma aba');assert(row);assert.equal(row.data().perfil,'SECRETARIA');assert.equal(row.data().usuario,'Secretária Auditoria');assert(!row.data().createdAt.startsWith('2000'));
+ await assertFails(updateDoc(doc(m,'systemLogs/'+row.id),{acao:'Alterada'}));await assertFails(deleteDoc(doc(m,'systemLogs/'+row.id)));await assertSucceeds(getDocs(collection(m,'systemLogs')));await assertFails(getDocs(collection(s,'systemLogs')));
+});
+test('secretaria e financeiro não alteram configurações exclusivas do master diretamente',async()=>{
+ await db.collection('se7Staff').doc('security-fin').set({perfil:'financeiro',disabled:false});const s=env.authenticatedContext('audit-secretaria').firestore(),f=env.authenticatedContext('security-fin').firestore(),m=env.authenticatedContext(MASTER).firestore();
+ for(const collectionName of ['courses','classes','academicCalendars','teachers']){await db.collection(collectionName).doc('security-config').set({name:'Original'});await assertFails(updateDoc(doc(s,collectionName+'/security-config'),{name:'Indevido'}));await assertFails(updateDoc(doc(f,collectionName+'/security-config'),{name:'Indevido'}));await assertSucceeds(updateDoc(doc(m,collectionName+'/security-config'),{name:'Permitido'}));}
+ await assert.rejects(call(await hardeningStudentToken(),{action:'audit-event',acao:'x',modulo:'x'}),/restrito/);
+});
+test('documentos rejeitam nomes com código e links externos ao repositório autorizado',async()=>{
+ const token=await hardeningStudentToken();
+ await assert.rejects(call(token,{action:'documents',type:'cpf',fileName:'<img onerror=alert(1)>.pdf',url:'https://drive.google.com/file/doc'}),/inválido/);
+ await assert.rejects(call(token,{action:'documents',type:'cpf',fileName:'doc.pdf',url:'https://evil.example/doc'}),/inválido/);
+});
+
+test('produção recusa configuração de emulador para não aceitar tokens de teste',async()=>{
+ const {services}=await import('../server/admin.mjs');const old=process.env.VERCEL_ENV;try{process.env.VERCEL_ENV='production';assert.throws(()=>services(),/emulador não permitida/);}finally{if(old===undefined)delete process.env.VERCEL_ENV;else process.env.VERCEL_ENV=old;}
+});
+
+
+test('hash de migração usa 600 mil iterações e preserva credenciais legadas válidas',async()=>{const {pbkdf2Sync}=await import('node:crypto');const modern=await hashPassword('senha-de-teste');assert.equal(modern.iterations,600000);assert(await verifyPassword('senha-de-teste',modern));const salt='11'.repeat(16),legacy={algorithm:'PBKDF2-SHA256',iterations:210000,salt,hash:pbkdf2Sync('senha-antiga',Buffer.from(salt,'hex'),210000,32,'sha256').toString('hex')};assert(await verifyPassword('senha-antiga',legacy));assert.equal(await verifyPassword('senha-errada',legacy),false);assert.equal(await verifyPassword('senha-antiga',{...legacy,iterations:1e10}),false);});
