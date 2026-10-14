@@ -1778,8 +1778,8 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
                         if (!datasPorMes[mes]) datasPorMes[mes] = [];
 
                         const registroAluno = attendanceMap[dataIso];
-                        let status = alunoLogado.enrollmentDate&&!registroAluno&&(!entryPlan?.startDate||dataIso<entryPlan.startDate)?'Anterior ao ingresso':'Pendente';
-                        if (registroAluno) {
+                        const elegivel=window.SE7AcademicPolicy?.canAttend(alunoLogado,dataIso,eventosCalendarioCache,materia)??!alunoLogado.enrollmentDate;let status=elegivel?'Pendente':'Anterior ao ingresso';
+                        if (registroAluno&&elegivel) {
                             status = registroAluno.status || 'Presente';
                         }
 

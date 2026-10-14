@@ -842,7 +842,7 @@
                     </div>
                     <div>
                         <label class="block text-xs font-semibold mb-1">Professor Responsável</label>
-                        <select id="attendance-teacher-select" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></select>
+                        <select id="attendance-teacher-select" required class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></select>
                     </div>
                 </div>
                 <h3 id="attendance-section-title" class="font-bold text-sm text-gray-700 dark:text-gray-300 mb-2">Lista de Alunos da Turma</h3>
@@ -890,12 +890,8 @@
 
         <div id="tab-portal-admin" class="tab-content space-y-4" style="display:none"><section class="bg-white dark:bg-slate-800 rounded-2xl shadow-md p-6 border border-gray-200 dark:border-slate-700">
             <div class="flex flex-wrap gap-2 border-b border-gray-200 dark:border-slate-700 pb-3 mb-4">
-                <button class="subtab-button active px-4 py-2 rounded-xl text-xs font-semibold bg-blue-600 text-white" onclick="openSubTab(event,'subtab-visualizar-portal')">Visualizar portal</button>
-<button id="btn-avisos-portal" style="display:none;" class="subtab-button px-4 py-2 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event,'subtab-avisos-portal');SE7Notices.admin()">Avisos do Portal</button>
+<button id="btn-avisos-portal" style="display:none;" class="subtab-button px-4 py-2 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event,'subtab-avisos-portal')">Avisos do Portal</button>
 <button id="btn-acessos-portal" class="subtab-button px-4 py-2 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" style="display:none;" onclick="openSubTab(event,'subtab-acessos-portal')">Acessos ao Portal</button>
-            </div>
-            <div id="subtab-visualizar-portal" class="subtab-content space-y-4"><p class="text-sm">Pesquise e selecione um aluno para consultar o portal com os dados reais.</p>
-<div id="se7-portal-preview-launcher" hidden></div>
             </div>
 <div id="subtab-avisos-portal" class="subtab-content" style="display:none;"><section id="se7-notices-manager" class="se7-work-panel"></section></div>
 <div id="subtab-acessos-portal" class="subtab-content space-y-4" style="display:none;"><h2 class="text-xl font-bold">Acessos ao Portal do Aluno</h2><p class="text-sm">Entradas, atividades e abas mais acessadas desde a atualização do aplicativo. Senhas pessoais não são exibidas. Administração restrita ao master.</p><div class="flex gap-2"><input id="portal-acessos-busca" placeholder="Buscar nome ou matrícula" oninput="renderizarPainelAcessosPortal()" class="flex-1 border rounded-lg p-2 dark:bg-slate-900"><button onclick="carregarPainelAcessosPortal()" class="bg-blue-600 text-white rounded-lg px-4">Atualizar</button></div><div id="portal-senha-temporaria" class="p-4 bg-amber-100 text-amber-950 rounded-lg" style="display:none;"></div><button onclick="document.getElementById('portal-senha-temporaria').textContent='';document.getElementById('portal-senha-temporaria').style.display='none';" class="text-xs">Ocultar senha temporária</button><div id="portal-acessos-lista" class="space-y-3"></div><div id="portal-acessos-historico" class="p-4 rounded-xl bg-gray-50 dark:bg-slate-900 space-y-1"></div></div>
@@ -2583,6 +2579,7 @@ async function removerUsuarioSistemaFirebase(id){if(!confirm('Desativar esse fun
         evt.currentTarget.classList.add('bg-blue-600', 'text-white', 'shadow');
     }
 
+    if(subtabId==='subtab-avisos-portal')window.SE7Notices?.admin();
     if(subtabId==='subtab-acessos-portal') carregarPainelAcessosPortal();
     // Execuções específicas de renderização ao abrir certas subabas
     if(subtabId === 'subtab-calendar') setTimeout(renderizarCalendarioSemestralAdmin, 200);
@@ -4102,6 +4099,7 @@ function carregarDatasCalendarioParaFrequencia() {
                 <td class="p-3 text-right space-x-1">
                     <button onclick="editarAluno('${s.id}')" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs shadow"><i class="fa-solid fa-pen-to-square mr-1"></i> Editar</button>
                     <button type="button" onclick="verHistoricoMatricula('${s.id}')" class="px-2.5 py-1 bg-blue-600 text-white rounded text-xs">Histórico</button>
+                    ${window.SE7PortalPreview?.allowed()?`<button type="button" data-preview-student="${SE7Safe.escape(s.id)}" class="px-2.5 py-1 bg-indigo-600 text-white rounded text-xs shadow"><i class="fa-solid fa-mobile-screen-button mr-1" aria-hidden="true"></i> Visualizar portal</button>`:''}
                     ${botaoDeletar}
                 </td>
             </tr>
@@ -4158,7 +4156,7 @@ async function renderAttendanceList() {
 
     // Filtra os alunos ativos da turma
     let alunosTurma = students
-        .filter(s => s.classId === turmaId && s.status === "Ativo" && (window.SE7Ingress?.canAttend(s,dataAula)??true))
+        .filter(s => s.classId === turmaId && s.status === "Ativo" && (window.SE7Ingress?.canAttend(s,dataAula,document.getElementById('attendance-calendar-date-select').selectedOptions[0]?.dataset.subject||'')??!s.enrollmentDate))
         .sort((a, b) => a.fullname.localeCompare(b.fullname));
 
     if (alunosTurma.length === 0) {
@@ -4227,7 +4225,8 @@ async function saveAttendance() {
 
     if (!classId || !dataAula) return alert("Selecione a turma e a data da aula programada no calendário!");
 
-    const alunosTurma = students.filter(s => s.classId == classId && s.status === "Ativo" && (window.SE7Ingress?.canAttend(s,dataAula)??true));
+    if(!professorId)return alert('Selecione a professora ou o professor que ministrou esta aula.');
+    const alunosTurma = students.filter(s => s.classId == classId && s.status === "Ativo" && (window.SE7Ingress?.canAttend(s,dataAula,document.getElementById('attendance-calendar-date-select').selectedOptions[0]?.dataset.subject||'')??!s.enrollmentDate));
     if (alunosTurma.length === 0) return alert("Nenhum aluno ativo nesta turma.");
 
     const registrosFrequencia = [];

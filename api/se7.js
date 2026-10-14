@@ -1,6 +1,6 @@
 import {saveClass} from '../server/class-registration.mjs';
 import * as academicIngress from '../server/academic-ingress.mjs';
-import {today as enrollmentToday,planEntry} from '../assets/se7-ingress-policy.js';
+import {today as enrollmentToday,planEntry,canAttend} from '../assets/se7-ingress-policy.js';
 import * as enrollmentAsaas from '../server/enrollment-asaas.mjs';
 import {preview as portalPreview} from '../server/portal-preview.mjs';
 import * as exams from '../server/exams.mjs';
@@ -237,7 +237,7 @@ async function dispatchOperation({auth,db},req,b){
    const date=now.toLocaleDateString('en-CA',{timeZone:'America/Fortaleza'});if(student.enrollmentDate&&date<student.enrollmentDate)fail(409,'Presença anterior ao início acadêmico do aluno. Procure a secretaria.');
    const attendanceRef=db.collection('attendance').doc(`presenca_${studentRef.id}_${date}`);
    const existing=await tx.get(attendanceRef);
-   const dayEvents=await tx.get(db.collection('academicCalendars').where('classId','==',student.classId));if(dayEvents.docs.some(d=>d.data().eventType==='holiday'&&d.data().dates?.includes(date)))fail(409,'Data registrada como feriado para esta turma. Não será registrada presença de aula.');if(student.enrollmentDate){const entry=planEntry({courseId:student.courseId,classId:student.classId,enrollmentDate:student.enrollmentDate,calendars:dayEvents.docs.map(d=>d.data())});if(!entry.startDate||date<entry.startDate)fail(409,'Aluno ainda não iniciou a primeira disciplina prevista. Procure a secretaria.');}
+   const dayEvents=await tx.get(db.collection('academicCalendars').where('classId','==',student.classId));if(dayEvents.docs.some(d=>d.data().eventType==='holiday'&&d.data().dates?.includes(date)))fail(409,'Data registrada como feriado para esta turma. Não será registrada presença de aula.');if(student.enrollmentDate){const entry=planEntry({courseId:student.courseId,classId:student.classId,enrollmentDate:student.enrollmentDate,calendars:dayEvents.docs.map(d=>d.data())});if(!canAttend(student,date,dayEvents.docs.map(d=>d.data())))fail(409,'Aluno ainda não iniciou a primeira disciplina prevista. Procure a secretaria.');}
    tx.update(qrRef,{used:true,usedAt:at(),usedBy:u.uid});
    if(!existing.exists)tx.set(attendanceRef,{studentId:studentRef.id,nomeAluno:student.fullname||'Aluno',data:date,horario:now.toLocaleTimeString('pt-BR',{timeZone:'America/Fortaleza'}),status:'PRESENTE',registradoPor:'Totem QR dinâmico autenticado',actorUid:u.uid,createdAt:at()});
    return {name:student.fullname||'Aluno',repeated:existing.exists,emailStudentId:studentRef.id,emailDate:date,classId:student.classId};

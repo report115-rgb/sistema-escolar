@@ -15,9 +15,11 @@ export function planEntry({courseId,classId,enrollmentDate,calendars=[]}){
  if(!planned.length)return {...base,state:'awaiting_next_discipline',notTaken:previous};
  return {...base,state:'scheduled',startDate:planned[0].entryDate,startSubject:planned.filter(g=>g.entryDate===planned[0].entryDate).map(g=>g.subject).join(' / '),planned,notTaken:previous};
 }
-export function canAttend(student,date,calendars){
- if(!student.enrollmentDate||student.attendance?.[date])return true;
+export function canAttend(student,date,calendars,subject=''){
+ if(!student.enrollmentDate)return true;
+ if(date<student.enrollmentDate)return false;
  const p=calendars?planEntry({courseId:student.courseId,classId:student.classId,enrollmentDate:student.enrollmentDate,calendars}):student.academicEntry;
- return !!p?.startDate&&date>=p.startDate;
+ if(!p?.startDate||date<p.startDate)return false;
+ return (p.planned||[]).some(g=>(!subject||normalize(g.subject)===normalize(subject))&&g.dates?.includes(date)&&date>=(g.entryDate||g.firstDate));
 }
 if(typeof window!=='undefined')window.SE7AcademicPolicy={today,planEntry,canAttend};
