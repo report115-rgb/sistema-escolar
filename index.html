@@ -416,18 +416,16 @@
                 </div>
             </div>
         <nav class="tabs-nav bg-gray-200 dark:bg-slate-700 px-4 py-2 flex md:justify-center space-x-2 overflow-x-auto border-b border-gray-300 dark:border-slate-600" id="main-tabs-nav" aria-label="Módulos do Matriz">
-            <button class="tab-button active px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap bg-blue-600 text-white shadow" onclick="openTab(event, 'tab-gestion-students')"><i class="fa-solid fa-users-gear mr-1.5"></i><span class="se7-nav-label">Gestão de Alunos</span></button>
-	    <button class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-slate-600" onclick="openTab(event, 'tab-gestao-eja')"><i class="fa-solid fa-graduation-cap mr-1.5"></i><span class="se7-nav-label">Gestão EJA</span></button>
-            <button class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-slate-600" onclick="openTab(event, 'tab-students')"><i class="fa-solid fa-user-graduate mr-1.5"></i><span class="se7-nav-label">Matrícula</span></button>
-            <button class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-slate-600" onclick="openTab(event, 'tab-attendance')"><i class="fa-solid fa-clipboard-user mr-1.5"></i><span class="se7-nav-label">Notas e frequência</span></button>
-            
-            <button class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-slate-600" onclick="openTab(event, 'tab-student-finance')"><i class="fa-solid fa-wallet mr-1.5"></i><span class="se7-nav-label">Financeiro</span></button>
-            <button class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-slate-600" onclick="openTab(event, 'tab-history')"><i class="fa-solid fa-file-pdf mr-1.5"></i><span class="se7-nav-label">Emissão de Documentos</span></button>
-            <button class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-slate-600" onclick="openTab(event, 'tab-controle-ponto-manual')"><i class="fa-solid fa-business-time mr-1.5"></i><span class="se7-nav-label">Ponto Manual</span></button>
-            <button id="nav-btn-portal-admin" style="display:none" class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap" onclick="openTab(event,'tab-portal-admin')"><i class="fa-solid fa-mobile-screen-button mr-1.5" aria-hidden="true"></i><span class="se7-nav-label">Portal do Aluno</span></button>
-            <button class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-slate-600" id="nav-btn-settings" onclick="openTab(event, 'tab-settings')"><i class="fa-solid fa-gear mr-1.5"></i><span class="se7-nav-label">Sistema</span></button>
-	    
-           </nav>
+<button class="tab-button active px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap bg-blue-600 text-white shadow" onclick="openTab(event, 'tab-gestion-students')"><i class="fa-solid fa-users-gear mr-1.5"></i><span class="se7-nav-label">Gestão de Alunos</span></button>
+<button class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-slate-600" onclick="openTab(event, 'tab-students')"><i class="fa-solid fa-user-graduate mr-1.5"></i><span class="se7-nav-label">Matrículas</span></button>
+<button class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-slate-600" onclick="openTab(event, 'tab-gestao-eja')"><i class="fa-solid fa-graduation-cap mr-1.5"></i><span class="se7-nav-label">Gestão EJA</span></button>
+<button class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-slate-600" onclick="openTab(event, 'tab-attendance')"><i class="fa-solid fa-clipboard-user mr-1.5"></i><span class="se7-nav-label">Notas e frequência</span></button>
+<button class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-slate-600" onclick="openTab(event, 'tab-student-finance')"><i class="fa-solid fa-wallet mr-1.5"></i><span class="se7-nav-label">Financeiro</span></button>
+<button class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-slate-600" onclick="openTab(event, 'tab-history')"><i class="fa-solid fa-file-pdf mr-1.5"></i><span class="se7-nav-label">Emissão de Documentos</span></button>
+<button class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-slate-600" onclick="openTab(event, 'tab-controle-ponto-manual')"><i class="fa-solid fa-business-time mr-1.5"></i><span class="se7-nav-label">Ponto Manual</span></button>
+<button id="nav-btn-portal-admin" style="display:none" class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap" onclick="openTab(event,'tab-portal-admin')"><i class="fa-solid fa-mobile-screen-button mr-1.5" aria-hidden="true"></i><span class="se7-nav-label">Portal do Aluno</span></button>
+<button class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-slate-600" id="nav-btn-settings" onclick="openTab(event, 'tab-settings')"><i class="fa-solid fa-gear mr-1.5"></i><span class="se7-nav-label">Sistema</span></button>
+</nav>
         <div class="se7-product-signature"><img src="/assets/se7-brand-light.svg" alt="SE7 Gestão Acadêmica"></div>
     </aside>
 
@@ -1300,6 +1298,7 @@
                             <input type="text" id="input-inst-end" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
                         </div>
                     </div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label for="input-inst-state-registration" class="block text-xs font-semibold mb-1">Inscrição estadual</label><input type="text" id="input-inst-state-registration" maxlength="120" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></div><div><label for="input-inst-municipal-registration" class="block text-xs font-semibold mb-1">Inscrição municipal</label><input type="text" id="input-inst-municipal-registration" maxlength="120" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></div><div><label for="input-inst-council-authorization" class="block text-xs font-semibold mb-1">Número de autorização do conselho</label><input type="text" id="input-inst-council-authorization" maxlength="120" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></div><div><label for="input-inst-inep" class="block text-xs font-semibold mb-1">Número INEP da instituição</label><input type="text" id="input-inst-inep" maxlength="120" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></div></div>
                     <div>
                         <label class="block text-xs font-semibold mb-1 text-blue-600 dark:text-blue-400 font-bold">URL do Web App do Google Apps Script (Integração Google Drive)</label>
                         <input type="text" id="input-gdrive-url" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-3 py-2 rounded-lg border border-blue-300 dark:border-slate-600 text-sm dark:bg-slate-900 font-mono text-xs">
@@ -1310,10 +1309,6 @@
                         <input type="file" id="input-logo-file" accept="image/*" onchange="handleLogoUpload(event)" class="text-xs">
                         <div id="logo-preview" class="mt-2 w-32 h-16 border border-dashed rounded flex items-center justify-center text-xs text-gray-400 bg-gray-50 dark:bg-slate-900">Sem logo</div>
                         <button type="button" onclick="removeLogo()" class="mt-1 px-2 py-1 bg-red-600 text-white text-[10px] rounded">Remover Logo</button>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold mb-1">Texto Descritivo de Login</label>
-                        <textarea id="input-login-desc" rows="2" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></textarea>
                     </div>
                     <button onclick="salvarBrandingNaNuvem()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow">Salvar Configurações</button>
                 </div>
@@ -2576,6 +2571,10 @@ let dadosMatrizIniciados=false;function iniciarDadosAutenticadosMatriz(){window.
                     document.getElementById('input-inst-email').value = data.email || '';
                     document.getElementById('input-inst-tel').value = data.tel || '';
                     document.getElementById('input-inst-end').value = data.end || '';
+document.getElementById('input-inst-state-registration').value = data.stateRegistration || '';
+document.getElementById('input-inst-municipal-registration').value = data.municipalRegistration || '';
+document.getElementById('input-inst-council-authorization').value = data.councilAuthorization || '';
+document.getElementById('input-inst-inep').value = data.inep || '';
                     document.getElementById('input-gdrive-url').value = data.gdriveUrl || '';
                     if (data.name) {
                         document.getElementById('login-info-title').textContent = data.name;
@@ -4469,8 +4468,11 @@ function renderFinanceStudentSelect(){const select=document.getElementById('fin-
                 tel: document.getElementById('input-inst-tel').value,
                 end: document.getElementById('input-inst-end').value,
                 gdriveUrl: document.getElementById('input-gdrive-url').value.trim(),
-                logo: currentLogoDataUrl,
-                loginDesc: document.getElementById('input-login-desc').value
+                stateRegistration: document.getElementById('input-inst-state-registration').value.trim(),
+                municipalRegistration: document.getElementById('input-inst-municipal-registration').value.trim(),
+                councilAuthorization: document.getElementById('input-inst-council-authorization').value.trim(),
+                inep: document.getElementById('input-inst-inep').value.trim(),
+                logo: currentLogoDataUrl
             }, { merge: true });
             alert("Configurações salvas na nuvem!");
         }
