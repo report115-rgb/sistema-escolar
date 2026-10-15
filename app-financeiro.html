@@ -226,7 +226,7 @@
                             <button type="button" class="finance-login-eye" aria-label="Mostrar senha" aria-pressed="false" onclick="alternarSenhaFinanceiro(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button>
                         </div>
                     </div>
-                    <button id="btn-entrar" type="submit">Entrar no App</button>
+                    <button id="btn-entrar" data-busy-managed type="submit">Entrar no App</button>
                 </form>
             </div>
         </div>
@@ -976,7 +976,10 @@
             const email = document.getElementById('login-user').value.trim();
             const senha = document.getElementById('login-pass').value;
             if (!email || !senha) return alert('Informe e-mail e senha.');
-            btn.disabled = true;
+            const textoEntrada=btn.textContent;let pontosEntrada=0;
+            const pintarEntrada=()=>{btn.textContent='Acessando o sistema'+'.'.repeat(pontosEntrada=pontosEntrada%3+1);};
+            btn.disabled=true;btn.setAttribute('aria-busy','true');pintarEntrada();
+            const animacaoEntrada=setInterval(pintarEntrada,450);
             let boasVindas;
             try {
                 const u = await SE7.staffLogin(email, senha);
@@ -993,7 +996,7 @@
                 document.getElementById('header-user-display').textContent = u.nome;
                 carregarDadosNuvem();
             } catch (e) {if (boasVindas) await boasVindas;alert(e.message);}
-            finally {if (boasVindas) await boasVindas;btn.disabled = false;}
+            finally {if (boasVindas) await boasVindas;clearInterval(animacaoEntrada);btn.disabled=false;btn.removeAttribute('aria-busy');btn.textContent=textoEntrada;}
         }
 
 

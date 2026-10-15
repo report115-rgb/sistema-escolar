@@ -1700,6 +1700,12 @@
             { id: "historico_medio", label: "Histórico do Ensino Médio" }
         ];
 
+        function documentosObrigatoriosDoAluno(aluno) {
+            const curso=courses.find(c=>c.id===aluno?.courseId)||{};
+            const eja=/^(eja|supletivo)$/i.test(String(curso.nivel||'').trim())||/^eja$/i.test(String(curso.sigla||'').trim())||/eja|supletivo/i.test(curso.name||'');
+            return eja?tiposDocumentosObrigatorios.filter(t=>!['diploma_medio','historico_medio'].includes(t.id)):tiposDocumentosObrigatorios;
+        }
+
         // ==========================================
         // SISTEMA DE INATIVIDADE ATIVO (10 MINUTOS)
         // ==========================================
@@ -4415,7 +4421,7 @@ function renderFinanceStudentSelect(){const select=document.getElementById('fin-
             container.innerHTML = '';
             const docs = aluno.documentos || {};
 
-            tiposDocumentosObrigatorios.forEach(tipo => {
+            documentosObrigatoriosDoAluno(aluno).forEach(tipo => {
                 const docInfo = docs[tipo.id];
                 const status = docInfo ? docInfo.status : 'Pendente';
                 const motivo = docInfo ? docInfo.motivoReprovacao : '';
@@ -5091,10 +5097,10 @@ async function alternarProvaIndividualAluno(studentId, novoStatus) {
             if(!aluno) return;
 
             const docs = aluno.documentos || {};
-            tiposDocumentosObrigatorios.forEach(tipo => documentosAnalisadosNaTela.set(alunoId + '/' + tipo.id, assinaturaEnvioDocumento(docs[tipo.id])));
+            documentosObrigatoriosDoAluno(aluno).forEach(tipo => documentosAnalisadosNaTela.set(alunoId + '/' + tipo.id, assinaturaEnvioDocumento(docs[tipo.id])));
             container.innerHTML = `<h3 class="font-bold text-sm text-gray-800 dark:text-white mb-2">Documentação EJA de ${aluno.fullname}</h3>`;
 
-            tiposDocumentosObrigatorios.forEach(tipo => {
+            documentosObrigatoriosDoAluno(aluno).forEach(tipo => {
                 const docInfo = docs[tipo.id];
                 const status = docInfo ? docInfo.status : 'Pendente';
                 const motivo = docInfo ? docInfo.motivoReprovacao : '';

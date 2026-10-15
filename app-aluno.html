@@ -1945,7 +1945,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
         }
 
         function adaptarPainelPorModalidadeCurso(cursoObj) {
-            isAlunoEJA = cursoObj && (cursoObj.nivel === 'Supletivo' || cursoObj.sigla === 'EJA' || (cursoObj.name && cursoObj.name.toUpperCase().includes('EJA')));
+            isAlunoEJA = cursoObj && (/^(eja|supletivo)$/i.test(String(cursoObj.nivel||'').trim()) || /^eja$/i.test(String(cursoObj.sigla||'').trim()) || /eja|supletivo/i.test(cursoObj.name||''));
             
             window.cursoAtualEJA = isAlunoEJA;
 
