@@ -1,3 +1,5 @@
+import {validateServerDependencies} from './deployment-files.mjs';
+await validateServerDependencies();
 import {buildSafeHandlers} from './security-handlers.mjs';
 await buildSafeHandlers();
 import {mkdir,copyFile,cp,rm} from 'node:fs/promises';

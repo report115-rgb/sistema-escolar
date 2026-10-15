@@ -4,13 +4,16 @@
   "outputDirectory": "public",
   "functions": {
     "api/se7.js": {
-      "maxDuration": 60
+      "maxDuration": 60,
+      "includeFiles": "{server/**,assets/se7-ingress-policy.js,assets/se7-tuition.js,assets/se7-class-format.js,assets/se7-manual-grades.js}"
     },
     "api/whatsapp-webhook.js": {
-      "maxDuration": 60
+      "maxDuration": 60,
+      "includeFiles": "{server/**,assets/se7-ingress-policy.js,assets/se7-tuition.js,assets/se7-class-format.js,assets/se7-manual-grades.js}"
     },
     "api/asaas-webhook.js": {
-      "maxDuration": 60
+      "maxDuration": 60,
+      "includeFiles": "{server/**,assets/se7-ingress-policy.js,assets/se7-tuition.js,assets/se7-class-format.js,assets/se7-manual-grades.js}"
     }
   },
   "headers": [
