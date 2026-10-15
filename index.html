@@ -159,26 +159,27 @@
 <link rel="icon" type="image/svg+xml" href="/assets/se7-brand-icon.svg">
 <link rel="stylesheet" href="/assets/se7-brand.css">
 <script defer src="/assets/se7-brand.js"></script>
+<link rel="stylesheet" href="/assets/se7-welcome.css">
 </head>
 <body class="se7-suite se7-matriz bg-gray-100 dark:bg-slate-900 text-gray-800 dark:text-gray-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-300 pb-16">    
 
 
 <!-- Exibida somente após confirmar o login, sem logomarca. -->
 <div id="se7-welcome" hidden role="status" aria-live="polite" aria-atomic="true">
-    <svg class="welcome-art" viewBox="0 0 1672 940" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-        <g class="welcome-wire"><line x1="0" y1="260" x2="510" y2="940"/><line x1="1460" y1="0" x2="1672" y2="220"/><circle cx="-85" cy="760" r="365"/><circle cx="1640" cy="-65" r="365"/></g>
-        <g class="welcome-glow"><line x1="0" y1="260" x2="510" y2="940"/><line x1="1460" y1="0" x2="1672" y2="220"/><circle cx="-85" cy="760" r="365"/><circle cx="1640" cy="-65" r="365"/></g>
-    </svg>
+    <svg class="welcome-art" viewBox="0 0 1536 864" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="welcome-line-fade" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#00c7ef"/><stop offset=".65" stop-color="#00c7ef"/><stop offset="1" stop-color="#00c7ef" stop-opacity="0"/></linearGradient>
+<linearGradient id="welcome-relief-a" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#10345e" stop-opacity=".72"/><stop offset=".48" stop-color="#0b2a51" stop-opacity=".3"/><stop offset="1" stop-color="#133963" stop-opacity=".1"/></linearGradient>
+<linearGradient id="welcome-relief-b" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#0b4073" stop-opacity=".7"/><stop offset="1" stop-color="#071b37" stop-opacity=".15"/></linearGradient>
+<linearGradient id="welcome-bloom-0" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#54e7ff" stop-opacity=".3"><animate attributeName="stop-opacity" values=".18;.9;.18" dur="7s" begin="-0.0s" repeatCount="indefinite"/></stop><stop offset="35%" stop-color="#54e7ff" stop-opacity=".3"><animate attributeName="stop-opacity" values=".18;.9;.18" dur="7s" begin="-0.8s" repeatCount="indefinite"/></stop><stop offset="70%" stop-color="#54e7ff" stop-opacity=".3"><animate attributeName="stop-opacity" values=".18;.9;.18" dur="7s" begin="-1.6s" repeatCount="indefinite"/></stop><stop offset="100%" stop-color="#54e7ff" stop-opacity=".3"><animate attributeName="stop-opacity" values=".18;.9;.18" dur="7s" begin="-2.4000000000000004s" repeatCount="indefinite"/></stop></linearGradient><linearGradient id="welcome-bloom-1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#54e7ff" stop-opacity=".3"><animate attributeName="stop-opacity" values=".18;.9;.18" dur="7s" begin="-2.0s" repeatCount="indefinite"/></stop><stop offset="35%" stop-color="#54e7ff" stop-opacity=".3"><animate attributeName="stop-opacity" values=".18;.9;.18" dur="7s" begin="-2.8s" repeatCount="indefinite"/></stop><stop offset="70%" stop-color="#54e7ff" stop-opacity=".3"><animate attributeName="stop-opacity" values=".18;.9;.18" dur="7s" begin="-3.6s" repeatCount="indefinite"/></stop><stop offset="100%" stop-color="#54e7ff" stop-opacity=".3"><animate attributeName="stop-opacity" values=".18;.9;.18" dur="7s" begin="-4.4s" repeatCount="indefinite"/></stop></linearGradient><linearGradient id="welcome-bloom-2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#54e7ff" stop-opacity=".3"><animate attributeName="stop-opacity" values=".18;.9;.18" dur="7s" begin="-4.0s" repeatCount="indefinite"/></stop><stop offset="35%" stop-color="#54e7ff" stop-opacity=".3"><animate attributeName="stop-opacity" values=".18;.9;.18" dur="7s" begin="-4.8s" repeatCount="indefinite"/></stop><stop offset="70%" stop-color="#54e7ff" stop-opacity=".3"><animate attributeName="stop-opacity" values=".18;.9;.18" dur="7s" begin="-5.6s" repeatCount="indefinite"/></stop><stop offset="100%" stop-color="#54e7ff" stop-opacity=".3"><animate attributeName="stop-opacity" values=".18;.9;.18" dur="7s" begin="-6.4s" repeatCount="indefinite"/></stop></linearGradient></defs><g class="welcome-relief"><path fill="url(#welcome-relief-a)" d="M333-80H475L765 307Q790 338 766 366L526 648Q498 685 454 685H332L644 337Z"/><path fill="url(#welcome-relief-b)" d="M-30 590H191Q249 590 281 635L462 876H337L174 662Q168 658 159 658H-30Z"/><path fill="url(#welcome-relief-a)" d="M1536 327 1122 864H994L1536 165Z"/><path fill="url(#welcome-relief-a)" d="M1536 525 1271 864H1150L1536 359Z"/><path fill="url(#welcome-relief-b)" d="M-35 658H179Q198 658 188 677L48 864H-35L111 669H-35Z"/></g><g class="welcome-wire"><path d="M522 0 765 307Q790 338 766 366L710 425"/><path d="M-35 590H191Q249 590 281 635L462 876"/><path d="M1328-15 1422 105Q1457 150 1496 150H1560"/></g><g class="welcome-bloom"><path style="stroke:url(#welcome-bloom-0)" d="M522 0 765 307Q790 338 766 366L710 425"/><path style="stroke:url(#welcome-bloom-1)" d="M-35 590H191Q249 590 281 635L462 876"/><path style="stroke:url(#welcome-bloom-2)" d="M1328-15 1422 105Q1457 150 1496 150H1560"/></g></svg>
     <div class="welcome-kicker">Sistema Matriz</div>
     <div class="welcome-content">
         <svg class="welcome-check" viewBox="0 0 90 90" aria-hidden="true"><circle cx="45" cy="45" r="41"/><path d="m28 45 12 12 23-24" stroke="#b5e8ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
         <p class="welcome-greeting">Bem-vindo novamente,</p>
         <h2 class="welcome-name" id="welcome-user-name"></h2>
         <p class="welcome-role" id="welcome-user-role"></p>
-        <p class="welcome-tagline">Tudo conectado ao sistema Matriz</p>
+        <p class="welcome-tagline">Sua gestão acadêmica em um só lugar.</p>
         <div class="welcome-progress" aria-hidden="true"></div>
     </div>
-    <div class="welcome-footer">Sistema SE7 de Gestão Acadêmica</div>
+    <div class="welcome-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="matriz">v1.6.1</span> • Sistema Matriz</div>
 </div>
 
 <!-- TELA DE LOGIN / ACESSO INSTITUCIONAL -->
