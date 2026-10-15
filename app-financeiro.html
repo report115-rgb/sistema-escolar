@@ -168,6 +168,7 @@
 <link rel="icon" type="image/svg+xml" href="/assets/se7-brand-icon.svg">
 <link rel="stylesheet" href="/assets/se7-brand.css">
 <script defer src="/assets/se7-brand.js"></script>
+<link rel="stylesheet" href="/assets/se7-mobile-access.css">
 </head>
 <body class="se7-suite bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans antialiased h-screen overflow-hidden flex flex-col transition-colors duration-200">
 <div id="se7-welcome" hidden role="status" aria-live="polite" aria-atomic="true">
@@ -190,52 +191,42 @@
 
 
     <!-- TELA DE LOGIN DO APP FINANCEIRO -->
-    <div id="login-modal" class="app-screen finance-login" role="dialog" aria-modal="true" aria-labelledby="finance-login-title">
-        <svg class="finance-login-art" viewBox="0 0 420 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-            <g class="finance-login-wire">
-                <line x1="300" y1="0" x2="0" y2="310"/><line x1="0" y1="300" x2="420" y2="760"/>
-                <circle cx="-115" cy="190" r="245"/><circle cx="350" cy="940" r="245"/>
-            </g>
-            <circle class="finance-login-glow" cx="-115" cy="190" r="245"/>
-            <circle class="finance-login-glow" style="animation-delay:-3s" cx="350" cy="940" r="245"/>
-            <line class="finance-login-glow" style="animation-delay:-1.5s" x1="300" y1="0" x2="0" y2="310"/>
-            <line class="finance-login-glow" style="animation-delay:-4.5s" x1="0" y1="300" x2="420" y2="760"/>
-        </svg>
+    <div id="login-modal" class="app-screen finance-login" role="dialog" aria-modal="true" aria-labelledby="finance-access-heading">
+        <svg class="finance-login-art" viewBox="0 0 390 844" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="finance-relief-1" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#1d5889" stop-opacity=".23"/><stop offset="1" stop-color="#0c2d52" stop-opacity="0"/></linearGradient></defs><g class="mobile-access-relief" fill="url(#finance-relief-1)"><path d="M170-50h68L386 151q25 33 0 67L192 483h-72l191-265q25-33 0-67Z"/><path d="m390 430-280 414h62l218-321Z"/><path d="M-60 638H42q35 0 55 28l135 190h-64L46 684H-60Z"/></g><g class="mobile-access-wire"><path d="M-55 126C61 122 113 64 178-30"/><path d="M-50 620C70 805 290 808 470 659"/></g><g class="mobile-access-bloom"><path d="M-55 126C61 122 113 64 178-30"/><path d="M-50 620C70 805 290 808 470 659"/></g></svg>
         <div class="finance-login-shell">
             <div class="finance-login-brand">
                 <div class="finance-login-logo-box"><img class="se7-product-logo" src="/assets/se7-brand-light.svg" alt="SE7 Gestão Acadêmica">
                     <img id="finance-login-logo" alt="Logomarca da instituição" style="display:none;" onload="document.getElementById('finance-login-logo-fallback').style.display='none'" onerror="this.style.display='none';document.getElementById('finance-login-logo-fallback').style.display='block'">
                     <span id="finance-login-logo-fallback">Setor Financeiro</span>
                 </div>
-                <h1 class="finance-login-headline">Acesso institucional</h1>
+                <h1 id="finance-access-heading" class="finance-login-headline">Acesso institucional</h1>
                 <p class="finance-login-sector">Setor Financeiro</p>
             </div>
             <div class="finance-login-card">
-                <h2 id="finance-login-title">Entre com sua conta</h2>
-                <p class="finance-login-description">Entre com suas credenciais para continuar</p>
                 <form id="finance-login-form" onsubmit="event.preventDefault();fazerLogin();">
                     <div class="finance-login-field">
                         <label for="login-user">E-mail ou Usuário</label>
                         <div class="finance-login-input-box">
-                            <svg class="finance-login-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="7" r="4"/><path d="M4 21v-3a8 8 0 0 1 16 0v3"/></svg>
-                            <input id="login-user" type="text" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="next" placeholder="Seu e-mail ou usuário" class="finance-login-input">
+                            <svg class="finance-login-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 6 10 7L22 6"/></svg>
+                            <input id="login-user" type="text" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="next" placeholder="E-mail" class="finance-login-input">
                         </div>
                     </div>
                     <div class="finance-login-field">
                         <label for="login-pass">Senha</label>
                         <div class="finance-login-input-box">
                             <svg class="finance-login-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="10" width="16" height="12" rx="2"/><path d="M7 10V7a5 5 0 0 1 10 0v3M12 14v4"/></svg>
-                            <input id="login-pass" type="password" autocomplete="current-password" enterkeyhint="go" placeholder="••••••••" class="finance-login-input">
+                            <input id="login-pass" type="password" autocomplete="current-password" enterkeyhint="go" placeholder="Senha" class="finance-login-input">
                             <button type="button" class="finance-login-eye" aria-label="Mostrar senha" aria-pressed="false" onclick="alternarSenhaFinanceiro(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button>
                         </div>
                     </div>
-                    <button id="btn-entrar" data-busy-managed type="submit">Entrar no App</button>
+                    <button id="btn-entrar" data-busy-managed type="submit">Entrar no sistema</button><button type="button" class="finance-login-forgot" onclick="abrirRecuperacaoFinanceiro()">Esqueci minha senha</button>
                 </form>
             </div>
         </div>
         <div id="finance-login-developer-footer" class="finance-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="financeiro">v1.10.1</span> • Setor Financeiro</div>
     </div>
 
+<dialog id="finance-recovery" aria-labelledby="finance-recovery-title"><form onsubmit="event.preventDefault();enviarRecuperacaoFinanceiro();"><h2 id="finance-recovery-title">Recuperar senha</h2><p>Informe o e-mail cadastrado para receber as instruções de recuperação.</p><label for="finance-recovery-email">E-mail</label><input id="finance-recovery-email" type="email" autocomplete="email" required><p id="finance-recovery-status" role="status"></p><div><button type="button" onclick="fecharRecuperacaoFinanceiro()">Fechar</button><button type="submit" id="finance-recovery-send" data-busy-managed>Enviar link</button></div></form></dialog>
     <!-- MODAL DE EDIÇÃO DA COBRANÇA -->
     <div id="modal-editar-cobranca" class="se7-themed-surface fixed inset-0 z-[4000] flex items-center justify-center bg-black/70 p-4" style="display: none;">
         <div class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-3xl shadow-2xl max-w-sm w-full p-6 space-y-4 border border-slate-200 dark:border-slate-800">
@@ -973,6 +964,9 @@
                 }, 5000);
             });
         }
+        function abrirRecuperacaoFinanceiro(){const d=document.getElementById('finance-recovery');document.getElementById('finance-recovery-email').value=document.getElementById('login-user').value.trim();document.getElementById('finance-recovery-status').textContent='';if(!d.open)d.showModal();}
+        function fecharRecuperacaoFinanceiro(){document.getElementById('finance-recovery').close();}
+        async function enviarRecuperacaoFinanceiro(){const b=document.getElementById('finance-recovery-send');if(b.disabled)return;const email=document.getElementById('finance-recovery-email');if(!email.reportValidity())return;b.disabled=true;b.textContent='Aguarde…';b.setAttribute('aria-busy','true');const status=document.getElementById('finance-recovery-status');try{await SE7.recover(email.value.trim());status.textContent='Se a conta existir, você receberá as instruções no e-mail cadastrado.';}catch{status.textContent='Não foi possível enviar agora. Confira o e-mail e tente novamente.';}finally{b.disabled=false;b.removeAttribute('aria-busy');b.textContent='Enviar link';}}
         async function fazerLogin() {
             const btn = document.getElementById('btn-entrar');
             if (btn.disabled) return;
