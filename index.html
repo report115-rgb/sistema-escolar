@@ -969,7 +969,7 @@
                     <!-- BOTÕES DAS SUBABAS DE DISCIPLINAS -->
                     <div class="flex space-x-2 border-b border-gray-200 dark:border-slate-700 pb-3 mb-4">
                         <button class="subsubtab-subject-button active px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white shadow" onclick="openSubSubTabSubject(event, 'subsubtab-disciplinas-cadastradas')"><i class="fa-solid fa-list mr-1"></i> Disciplinas Cadastradas</button>
-                        <button class="subsubtab-subject-button px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="abrirNovaDisciplina()"><i class="fa-solid fa-plus mr-1"></i> Cadastrar Nova Disciplina</button>
+                        <button type="button" class="se7-primary-button" onclick="abrirNovaDisciplina()"><i class="fa-solid fa-plus" aria-hidden="true"></i> Cadastrar Nova Disciplina</button>
                     </div>
 
                     <!-- SUB-SUBABA 1: DISCIPLINAS CADASTRADAS -->
@@ -3107,16 +3107,14 @@ async function excluirColaborador(id) {
             atualizarDisciplinasPorTurmaCalendario();
         }
 
-        function disciplinaConcluidaNoCalendario(courseId,classId,subject){
+        function disciplinaJaProgramadaNoCalendario(courseId,classId,subject){
             if(!courseId||!classId||!subject)return false;const norm=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toLowerCase();
-            const today=window.SE7AcademicPolicy?.today()||new Intl.DateTimeFormat('en-CA',{timeZone:'America/Fortaleza'}).format(new Date());
-            const dates=academicCalendars.filter(c=>c.courseId===courseId&&c.classId===classId&&norm(c.subject)===norm(subject)&&(!c.eventType||c.eventType==='lesson')&&c.countsForAttendance!==false).flatMap(c=>c.dates||[]).filter(d=>/^\d{4}-\d{2}-\d{2}$/.test(d));
-            return dates.length>0&&dates.every(d=>d<today);
+            return academicCalendars.some(c=>c.courseId===courseId&&c.classId===classId&&norm(c.subject)===norm(subject)&&(!c.eventType||c.eventType==='lesson'));
         }
         function atualizarDisciplinasPorTurmaCalendario() {
             const courseId=document.getElementById('cal-course-select').value,classId=document.getElementById('cal-class-select').value,subjectSelect=document.getElementById('cal-subject-select');if(!subjectSelect)return;
             const old=subjectSelect.value,isLesson=document.getElementById('cal-event-type').value==='lesson',course=courses.find(c=>c.id===courseId);subjectSelect.replaceChildren(new Option('Selecione a disciplina...',''));
-            for(const subject of course?.subjects||[]){const done=disciplinaConcluidaNoCalendario(courseId,classId,subject.name),option=new Option(subject.name+(done?' — Já realizada nesta turma':''),subject.name);option.disabled=isLesson&&done;subjectSelect.add(option);}
+            for(const subject of course?.subjects||[]){const done=disciplinaJaProgramadaNoCalendario(courseId,classId,subject.name),option=new Option(subject.name+(done?' — Já incluída no calendário desta turma':''),subject.name);option.disabled=isLesson&&done;subjectSelect.add(option);}
             if([...subjectSelect.options].some(o=>o.value===old&&!o.disabled))subjectSelect.value=old;
         }
 
@@ -3152,7 +3150,7 @@ async function excluirColaborador(id) {
                 return alert("Preencha todos os campos do calendário acadêmico.");
             }
 
-            if(eventType==='lesson'&&disciplinaConcluidaNoCalendario(courseId,classId,subject))return alert('Esta disciplina já foi realizada nesta turma. Para corrigir um registro anterior, use o gerenciamento dos calendários.');
+            if(eventType==='lesson'&&disciplinaJaProgramadaNoCalendario(courseId,classId,subject))return alert('Esta disciplina já está incluída no calendário desta turma, mesmo que as aulas ainda não tenham ocorrido. Para corrigir um registro anterior, use o gerenciamento dos calendários.');
             let datasSelecionadas = [];
             for (let i = 1; i <= qtd; i++) {
                 const val = document.getElementById(`cal-date-${i}`).value;
