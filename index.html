@@ -3439,11 +3439,14 @@ async function excluirColaborador(id) {
 
         let tempUploadedHistoryPdf = "";
         function filterTurmasByCourse() {
-            const courseId = document.getElementById('input-student-course').value;
-            const select = document.getElementById('input-student-class');
-            if(!select) return;
-            select.innerHTML = '';
-            classes.filter(c => c.courseId == courseId && (!document.getElementById('input-student-polo')?.value||c.poloId===document.getElementById('input-student-polo').value)).forEach(c => select.insertAdjacentHTML('beforeend', `<option value="${c.id}">${c.name} — ${window.SE7Polos?.name(c.poloId)||'Polo não definido'}</option>`));
+            const courseId=document.getElementById('input-student-course').value,poloId=document.getElementById('input-student-polo')?.value,select=document.getElementById('input-student-class');if(!select)return;
+            const editing=students.find(s=>s.id===document.getElementById('edit-student-id').value),previous=select.value;
+            select.replaceChildren(new Option('Selecione a turma...',''));
+            const allowed=classes.filter(c=>c.courseId===courseId&&((poloId&&c.poloId===poloId)||(usuarioMasterAtivo()&&editing?.classId===c.id)));
+            for(const c of allowed)select.add(new Option(c.name+' — '+(c.poloId?(window.SE7Polos?.name(c.poloId)||c.poloName||c.poloId):'Polo ainda não definido')+(c.poloId&&poloId&&c.poloId!==poloId?' (vínculo atual; escolha uma turma do polo selecionado)':''),c.id));
+            const chosen=allowed.some(c=>c.id===previous)?previous:allowed.some(c=>c.id===editing?.classId)?editing.classId:'';select.value=chosen;
+            if(!allowed.length)select.options[0].textContent=poloId?'Nenhuma turma vinculada a este curso e polo.':'Selecione primeiro o polo e o curso.';
+            window.SE7Polos?.studentRepairUI();
         }
 
         function filterTurmasByAttendanceCourse() {
@@ -3515,7 +3518,7 @@ function carregarDatasCalendarioParaFrequencia(){const classId=document.getEleme
     const classId = document.getElementById('input-student-class').value;
 
     if (!fullname || !email || !cpf || !courseId || !classId) return alert("Preencha todos os campos!");
-    const chosenClass=classes.find(c=>c.id===classId);if(!chosenClass?.poloId||chosenClass.poloId!==document.getElementById('input-student-polo').value)return alert('Escolha uma turma vinculada ao mesmo polo do aluno.');
+    const chosenClass=classes.find(c=>c.id===classId);if(!chosenClass?.poloId)return alert('A turma atual ainda não tem polo. Use Corrigir somente o polo, depois vincule a turma em Sistema → Turmas.');if(chosenClass.poloId!==document.getElementById('input-student-polo').value)return alert('Escolha uma turma vinculada ao mesmo polo do aluno.');
     if (!validarCPF(cpf)) return alert("CPF inválido!");
     if(document.getElementById('whatsapp-opt-in-aluno').checked){
         let telefone=document.getElementById('whatsappAluno').value.replace(/\D/g,'');
