@@ -902,7 +902,7 @@
                     <!-- BOTÕES DAS SUBABAS DE CURSOS -->
                     <div class="flex space-x-2 border-b border-gray-200 dark:border-slate-700 pb-3 mb-4">
                         <button class="subsubtab-button active px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white shadow" onclick="openSubSubTab(event, 'subsubtab-cursos-cadastrados')"><i class="fa-solid fa-list mr-1"></i> Cursos Cadastrados</button>
-                        <button class="subsubtab-button px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="abrirNovoCurso()"><i class="fa-solid fa-plus mr-1"></i> Cadastrar Novo Curso</button>
+                        <button type="button" class="se7-primary-button" onclick="abrirNovoCurso()"><i class="fa-solid fa-plus mr-1"></i> Cadastrar Novo Curso</button>
                     </div>
 
                     <!-- SUB-SUBABA 1: CURSOS CADASTRADOS -->
@@ -1016,7 +1016,7 @@
                     <!-- BOTÕES DAS SUBABAS DE TURMAS -->
                     <div class="flex space-x-2 border-b border-gray-200 dark:border-slate-700 pb-3 mb-4">
                         <button class="subsubtab-class-button active px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white shadow" onclick="openSubSubTabClass(event, 'subsubtab-turmas-cadastradas')"><i class="fa-solid fa-list mr-1"></i> Turmas Cadastradas</button>
-                        <button class="subsubtab-class-button px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubSubTabClass(event, 'subsubtab-cadastrar-turma')"><i class="fa-solid fa-plus mr-1"></i> Cadastrar Nova Turma</button>
+                        <button type="button" class="se7-primary-button" onclick="abrirNovaTurma()"><i class="fa-solid fa-plus mr-1"></i> Cadastrar Nova Turma</button>
                     </div>
 
                     <!-- SUB-SUBABA 1: TURMAS CADASTRADAS -->
@@ -2846,6 +2846,7 @@ async function excluirColaborador(id) {
         function fecharModalEdicaoConfiguracao(){if(!edicaoConfiguracaoAtiva)return;const {dialog,form,parent,next,display}=edicaoConfiguracaoAtiva;edicaoConfiguracaoAtiva=null;dialog.close();parent.insertBefore(form,next&&next.parentNode===parent?next:null);form.style.display=display;dialog.remove();}
 
         function abrirNovoCurso(){cancelarEdicaoCurso();document.getElementById('input-course-nivel').selectedIndex=0;abrirModalEdicaoConfiguracao('subsubtab-cadastrar-curso','Cadastrar novo curso',cancelarEdicaoCurso);}
+        function abrirNovaTurma(){cancelarEdicaoTurma();document.getElementById('input-class-course').value='';document.getElementById('input-class-semester').value='';carregarFinanceiroCadastroTurma(true);atualizarPreviewTurmaAutomatica();abrirModalEdicaoConfiguracao('subsubtab-cadastrar-turma','Cadastrar nova turma',cancelarEdicaoTurma);}
         function abrirNovaDisciplina(){cancelarEdicaoDisciplina();document.getElementById('input-subject-course-select').value=document.getElementById('subjects-list-course').value;abrirModalEdicaoConfiguracao('subsubtab-cadastrar-disciplina','Cadastrar nova disciplina',cancelarEdicaoDisciplina);}
         function editarCurso(id) {
             const c = courses.find(item => item.id === id);
