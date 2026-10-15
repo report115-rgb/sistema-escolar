@@ -183,33 +183,33 @@
 
 <!-- TELA DE LOGIN / ACESSO INSTITUCIONAL -->
 <div id="login-modal" class="se7-login" role="dialog" aria-modal="true" aria-labelledby="login-box-title">
-    <svg class="login-art" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><g class="login-wire"><path d="M-80 620H170Q210 620 240 650L500 910"/><path d="M480-80 740 270Q780 320 750 360L650 500"/><path d="M1120-100V10Q1120 110 1220 110H1510"/><path d="M1500 760H1220Q1100 760 1100 880V980"/></g><g class="login-glow"><path d="M-80 620H170Q210 620 240 650L500 910"/><path d="M1120-100V10Q1120 110 1220 110H1510"/></g><g class="login-glow login-glow-second"><path d="M480-80 740 270Q780 320 750 360L650 500"/><path d="M1500 760H1220Q1100 760 1100 880V980"/></g></svg>
-    <div class="login-shell">
+    <svg class="login-art" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><g class="login-facets"><path d="M405 0H500L770 380Q810 420 780 460L610 690H0V625H170Q220 625 250 665L460 900H0V0Z"/><path d="M1440 340 1040 900H1130L1440 470Z"/></g><g class="login-wire"><path d="M520-60 820 365Q850 405 823 445L710 610"/><path d="M-80 615H175Q210 615 238 650L460 930"/><path d="M1200-100V15Q1200 120 1305 120H1520"/></g><g class="login-travelling"><path pathLength="100" style="animation-delay:-0s" d="M520-60 820 365Q850 405 823 445L710 610"/><path pathLength="100" style="animation-delay:-3s" d="M-80 615H175Q210 615 238 650L460 930"/><path pathLength="100" style="animation-delay:-6s" d="M1200-100V15Q1200 120 1305 120H1520"/></g></svg>
+    <img class="login-corner-brand" src="/assets/se7-brand-light.svg" alt="SE7 Gestão Acadêmica"><div class="login-shell">
         <section class="login-brand" aria-label="Identidade institucional">
             <div class="login-logo-slot">
                 <img id="login-logo-img" alt="Logomarca da instituição" style="display:none;" onload="document.getElementById('login-logo-fallback').style.display='none'" onerror="this.style.display='none';document.getElementById('login-logo-fallback').style.display='block'">
                 <span id="login-logo-fallback">Sistema Matriz</span><img class="se7-product-logo" src="/assets/se7-brand-light.svg" alt="SE7 Gestão Acadêmica">
             </div>
-            <h1 class="login-brand-heading" aria-label="Tudo conectado"><span style="color:inherit;">Tudo </span><span class="login-connected">conectado<span class="login-loading-dots" aria-hidden="true"><span>.</span><span>.</span><span>.</span></span></span></h1>
+            <div class="login-system-tag">SISTEMA MATRIZ</div><h1 class="login-brand-heading" aria-label="Tudo conectado"><span style="color:inherit;">Tudo </span><span class="login-connected">conectado<span class="login-loading-dots" aria-hidden="true"><span></span><span></span><span></span></span></span></h1>
             <p class="login-brand-subtitle">Sua gestão acadêmica em um só lugar.</p>
             <div class="login-institution-meta"><h3 id="login-info-title">Sistema de Ensino Técnico e Transporte</h3><p id="login-info-desc"></p><span id="login-info-version">SE7 Cloud</span></div>
         </section>
-        <section class="login-card">
-            <h2 id="login-box-title">Acesso Institucional</h2>
-            <p id="login-subtitle-text">Entre com suas credenciais para continuar</p>
+        <section class="login-card"><img class="login-card-brand" src="/assets/se7-brand-light.svg" alt="SE7 Gestão Acadêmica">
+            <h2 id="login-box-title">Acesso institucional</h2>
+            <p id="login-subtitle-text">Entre com sua conta para continuar.</p>
             <div id="form-login-admin" onkeydown="if(event.key==='Enter' &amp;&amp; event.target.tagName==='INPUT'){event.preventDefault();fazerLogin();}">
                 <div class="login-field">
                     <label for="login-user">E-mail ou Usuário</label>
                     <div class="login-input-wrap">
                         <svg class="login-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="7" r="4"/><path d="M4 21v-3a8 8 0 0 1 16 0v3"/></svg>
-                        <input type="text" id="login-user" autocomplete="username" placeholder="Seu e-mail ou usuário" class="login-input">
+                        <input type="text" id="login-user" autocomplete="username" placeholder="E-mail" class="login-input">
                     </div>
                 </div>
                 <div class="login-field">
                     <label for="login-pass">Senha</label>
                     <div class="login-input-wrap">
                         <svg class="login-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="10" width="16" height="12" rx="2"/><path d="M7 10V7a5 5 0 0 1 10 0v3M12 14v4"/></svg>
-                        <input type="password" id="login-pass" autocomplete="current-password" placeholder="••••••••" class="login-input">
+                        <input type="password" id="login-pass" autocomplete="current-password" placeholder="Senha" class="login-input">
                         <button type="button" class="login-password-toggle" aria-label="Mostrar senha" aria-pressed="false" onclick="alternarSenhaAcesso(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button>
                     </div>
                 </div>
