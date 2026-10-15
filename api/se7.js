@@ -36,12 +36,12 @@ async function identity(auth,db,req){
  const token=(req.headers.authorization||'').match(/^Bearer (.+)$/)?.[1];if(!token)fail(401,'Entre novamente.');
  let user;try{user=await auth.verifyIdToken(token,true);}catch{fail(401,'Sessão inválida. Entre novamente.');}
  if(user.uid===process.env.SE7_MASTER_UID)return {...user,role:'master'};
- const staff=await db.collection('se7Staff').doc(user.uid).get();if(staff.exists&&!staff.data().disabled)return {...user,role:staff.data().perfil,profile:staff.data()};
+ const staff=await db.collection('se7Staff').doc(user.uid).get();if(staff.exists&&!staff.data().disabled)return polos.activeAccess(db,{...user,role:staff.data().perfil,profile:staff.data()});
  const sid=user.studentId;if(!sid)fail(403,'Conta sem permissão. Contate o master.');
  const doc=await db.collection('students').doc(validId(sid)).get();const s=doc.exists?doc.data():null;
  if(!s||s.se7AuthUid!==user.uid||s.portalBlocked||s.se7AuthLock||(s.portalSessionVersion||0)!==(user.portalVersion||0))fail(403,'Acesso alterado. Entre novamente ou contate a instituição.');
  if(s.portalMustChangePassword&&(!s.portalTemporaryExpiresAt||Date.parse(s.portalTemporaryExpiresAt)<Date.now()))fail(403,'Senha temporária expirada.');
- return {...user,role:'aluno',studentId:sid,student:s};
+ return polos.activeAccess(db,{...user,role:'aluno',studentId:sid,student:s});
 }
 const master=u=>{if(u.role!=='master')fail(403,'Acesso restrito ao master.');};
 async function audit(db,id,u,action){await db.collection('students').doc(id).collection('portalAdminEvents').add({action,actorName:u.name||u.email||'Master',actorEmail:u.email||'',at:at()});}
@@ -68,7 +68,7 @@ async function loginStudent(auth,db,req,b){
   await doc.ref.update({se7AuthUid:uid,senhaAluno:F.delete(),portalCredential:F.delete(),...(b.password.length<6?{portalMustChangePassword:true,portalTemporaryExpiresAt:new Date(Date.now()+86400000).toISOString()}: {})});
   await db.collection('se7Credentials').doc(doc.id).delete();
  }else {if(user.disabled||!await authPassword(alias(doc.id),b.password))fail(401,'CPF ou senha inválidos.');await claims(auth,uid,{role:'aluno',studentId:doc.id,portalVersion:s.portalSessionVersion||0});}
- const fresh=await doc.ref.get();if(fresh.data().portalBlocked||fresh.data().se7AuthLock)fail(403,'Acesso alterado. Tente novamente.');return {customToken:await auth.createCustomToken(uid,{role:'aluno',studentId:doc.id,portalVersion:fresh.data().portalSessionVersion||0})};
+ const fresh=await doc.ref.get();await polos.activeAccess(db,{role:'aluno',student:fresh.data()});if(fresh.data().portalBlocked||fresh.data().se7AuthLock)fail(403,'Acesso alterado. Tente novamente.');return {customToken:await auth.createCustomToken(uid,{role:'aluno',studentId:doc.id,portalVersion:fresh.data().portalSessionVersion||0})};
 }
 async function lockStudent(db,id){const ref=db.collection('students').doc(id);const lock=randomBytes(12).toString('hex');await db.runTransaction(async tx=>{const d=await tx.get(ref);if(!d.exists)fail(404,'Aluno não encontrado.');if(d.data().se7AuthLock)fail(409,'Outra operação de acesso está em andamento.');tx.update(ref,{se7AuthLock:lock});});return {ref,lock};}
 async function unlock(ref,lock){await ref.firestore.runTransaction(async tx=>{const d=await tx.get(ref);if(d.exists&&d.data().se7AuthLock===lock)tx.update(ref,{se7AuthLock:F.delete()});});}
@@ -92,6 +92,7 @@ async function dispatchOperation({auth,db},req,b){
  }
  const u=await identity(auth,db,req);req.se7AuditIdentity=u;await limits(db,req,'gateway:'+u.uid);
  if(action==='polo-catalog')return polos.catalog(db,u);
+ if(action==='polo-state')return polos.setActive(db,b,u);
  if(action==='polo-save')return polos.save(db,b,u);
  if(action==='polo-bind')return polos.bind(db,b,u);
  if(action==='polo-student')return polos.assignStudent(db,b,u);

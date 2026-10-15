@@ -36,5 +36,5 @@
  function open(id){if(!allowed())return;const s=students.find(x=>x.id===id);if(!s)return;sequence++;current={id};title.textContent=s.fullname||'Ficha do aluno';if(!dialog.open){scrollLock={html:document.documentElement.style.overflow,body:document.body.style.overflow};document.documentElement.style.overflow='hidden';document.body.style.overflow='hidden';dialog.showModal();}void show('personal');}
  for(const [tab,label]of Object.entries(labels)){const b=el('button',label);b.type='button';b.dataset.tab=tab;b.onclick=()=>void show(tab);nav.append(b);}
  document.addEventListener('DOMContentLoaded',()=>{document.body.append(dialog);document.addEventListener('click',event=>{const button=event.target.closest('[data-student-sheet]');if(button&&button.closest('#tab-gestion-students'))open(button.dataset.studentSheet);});});
- window.SE7StudentSheet={open};
+ window.SE7StudentSheet={open,refreshAcademic(){if(current&&dialog.open&&nav.querySelector('[data-tab=academic]')?.getAttribute('aria-pressed')==='true')void show('academic');}};
 })();

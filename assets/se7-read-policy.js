@@ -1,6 +1,6 @@
 /* Session-only catalogue snapshots. No student records are persisted locally here. */
 (()=>{
- const catalogues=new Set(['config','courses','classes','academicCalendars','teachers','teacherPaymentRates','teacherMonthlyPayments','teacherManualLogs']);
+ const catalogues=new Set(['config','academicCalendars','teachers','teacherPaymentRates','teacherMonthlyPayments','teacherManualLogs']);
  const entries=new Set(),pending=new Map();let serial=0;
  async function fetch(entry){if(!entry.active)return;const key=entry.key;if(pending.has(key))return pending.get(key);entry.lastError=null;const p=entry.ref.get().then(s=>{if(entry.active){entry.fetchedAt=Date.now();entry.next(s);}}).catch(e=>{entry.lastError=e;if(entry.active&&typeof entry.error==='function')entry.error(e);else console.warn('SE7: não foi possível atualizar o cadastro.',e.message);}).finally(()=>pending.delete(key));pending.set(key,p);return p;}
  async function refresh(name){const selected=[...entries].filter(e=>e.active&&(!name||e.name===name));await Promise.all(selected.map(async e=>{const running=pending.get(e.key);if(running)await running;return fetch(e);}));return selected.filter(e=>e.lastError).map(e=>({name:e.name,message:e.lastError.message}));}

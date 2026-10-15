@@ -902,7 +902,7 @@
                     <!-- BOTÕES DAS SUBABAS DE CURSOS -->
                     <div class="flex space-x-2 border-b border-gray-200 dark:border-slate-700 pb-3 mb-4">
                         <button class="subsubtab-button active px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white shadow" onclick="openSubSubTab(event, 'subsubtab-cursos-cadastrados')"><i class="fa-solid fa-list mr-1"></i> Cursos Cadastrados</button>
-                        <button class="subsubtab-button px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubSubTab(event, 'subsubtab-cadastrar-curso')"><i class="fa-solid fa-plus mr-1"></i> Cadastrar Novo Curso</button>
+                        <button class="subsubtab-button px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="abrirNovoCurso()"><i class="fa-solid fa-plus mr-1"></i> Cadastrar Novo Curso</button>
                     </div>
 
                     <!-- SUB-SUBABA 1: CURSOS CADASTRADOS -->
@@ -969,7 +969,7 @@
                     <!-- BOTÕES DAS SUBABAS DE DISCIPLINAS -->
                     <div class="flex space-x-2 border-b border-gray-200 dark:border-slate-700 pb-3 mb-4">
                         <button class="subsubtab-subject-button active px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white shadow" onclick="openSubSubTabSubject(event, 'subsubtab-disciplinas-cadastradas')"><i class="fa-solid fa-list mr-1"></i> Disciplinas Cadastradas</button>
-                        <button class="subsubtab-subject-button px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubSubTabSubject(event, 'subsubtab-cadastrar-disciplina')"><i class="fa-solid fa-plus mr-1"></i> Cadastrar Nova Disciplina</button>
+                        <button class="subsubtab-subject-button px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="abrirNovaDisciplina()"><i class="fa-solid fa-plus mr-1"></i> Cadastrar Nova Disciplina</button>
                     </div>
 
                     <!-- SUB-SUBABA 1: DISCIPLINAS CADASTRADAS -->
@@ -978,6 +978,7 @@
                             <h4 class="font-bold text-sm text-gray-800 dark:text-white">Lista de Disciplinas Cadastradas</h4>
                             <span class="text-xs text-gray-500 font-semibold" id="total-subjects-count">Total: 0 disciplinas</span>
                         </div>
+                        <label class="block text-xs font-semibold">Curso<select id="subjects-list-course" onchange="renderSubjectsManagement()" class="block w-full mt-1 px-3 py-2 rounded-lg border dark:bg-slate-900"><option value="">Selecione o curso...</option></select></label>
                         <ul class="data-list divide-y divide-gray-200 dark:divide-slate-700" id="subjects-management-list"></ul>
                     </div>
 
@@ -1078,11 +1079,12 @@
                 <div id="subtab-calendar" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
                     <div class="bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700 space-y-4">
                         <h4 class="font-bold text-sm text-blue-600 dark:text-blue-400">Configurar Calendário Semestral por Turma</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                             <div>
                                 <label class="block text-xs font-semibold mb-1">Curso</label>
-                                <select id="cal-course-select" onchange="atualizarDisciplinasETurmasCalendario()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800"></select>
+                                <select id="cal-course-select" onchange="atualizarDisciplinasETurmasCalendario('course')" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800"></select>
                             </div>
+                            <label class="block text-xs font-semibold">Polo / Cidade<select id="cal-polo-select" disabled onchange="atualizarDisciplinasETurmasCalendario('polo')" class="block w-full mt-1 px-3 py-2 rounded-lg border dark:bg-slate-800"><option value="">Selecione o polo/cidade...</option></select></label>
                             <div>
                                 <label class="block text-xs font-semibold mb-1">Turma Vinculada</label>
                                 <select id="cal-class-select" onchange="atualizarDisciplinasPorTurmaCalendario()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800"></select>
@@ -1131,12 +1133,13 @@
 
                     <div class="mt-6 space-y-3">
                         <h4 class="font-bold text-sm text-gray-700 dark:text-gray-300">Calendários Cadastrados (Gerenciamento)</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
                             <label class="text-xs font-semibold">Curso<select id="manage-cal-course" onchange="atualizarFiltrosGerenciarCalendarios('course')" class="block w-full mt-1 px-3 py-2 rounded-lg border dark:bg-slate-800"><option value="">Selecione o curso...</option></select></label>
+                            <label class="text-xs font-semibold">Polo / Cidade<select id="manage-cal-polo" onchange="atualizarFiltrosGerenciarCalendarios('polo')" disabled class="block w-full mt-1 px-3 py-2 rounded-lg border dark:bg-slate-800"><option value="">Selecione o polo/cidade...</option></select></label>
                             <label class="text-xs font-semibold">Turma<select id="manage-cal-class" onchange="atualizarFiltrosGerenciarCalendarios('class')" disabled class="block w-full mt-1 px-3 py-2 rounded-lg border dark:bg-slate-800"><option value="">Selecione a turma...</option></select></label>
                             <label class="text-xs font-semibold">Semestre<select id="manage-cal-semester" onchange="renderizarTabelaGerenciarCalendarios()" disabled class="block w-full mt-1 px-3 py-2 rounded-lg border dark:bg-slate-800"><option value="">Selecione o semestre...</option></select></label>
                         </div>
-                        <p class="text-xs text-gray-500">Selecione curso, turma e semestre para consultar e editar as datas. Os feriados aparecem no calendário do aluno e não entram na frequência.</p>
+                        <p class="text-xs text-gray-500">Selecione curso, polo/cidade, turma e semestre para consultar e editar as datas. Os feriados aparecem no calendário do aluno e não entram na frequência.</p>
                         <div id="manage-cal-results" class="overflow-x-auto" style="display:none">
                             <table class="w-full text-left text-xs">
                                 <thead>
@@ -2169,7 +2172,7 @@ async function rejeitarSolicitacaoFirebase(id) {
         }
 
         function aplicarPermissoesPorPerfil(perfil) {
-    window.SE7Polos?.header(perfil);
+    window.SE7Polos?.header(perfil);window.SE7MatrizFinance?.refresh();
     window.SE7Exams?.apply(perfil);
 
     const acessoMaster=perfil==='master'&&usuarioMasterAtivo()&&!sessionStorage.getItem('se7_matriz_perfil_visualizado');
@@ -2552,7 +2555,7 @@ async function removerUsuarioSistemaFirebase(id){if(!confirm('Desativar esse fun
             });
         }
 
-let dadosMatrizIniciados=false;async function iniciarDadosAutenticadosMatriz(){if(!await window.SE7Polos.init())return;window.iniciarAuditoriaMovimentacoes?.();const perfil=JSON.parse(sessionStorage.getItem('usuario_logado')||'{}').perfil;if(perfil==='professor'){window.SE7Exams?.apply(perfil);return;}if(dadosMatrizIniciados)return;dadosMatrizIniciados=true;db=SE7Reads.wrap(db);SE7Reads.start();carregarDadosDaNuvem();if(usuarioMasterAtivo()){renderizarSolicitacoesPendentes();}}
+let matrizClassesCarregadas=false,matrizCursosCarregados=false,matrizClassesFalhou=false;let dadosMatrizIniciados=false;async function iniciarDadosAutenticadosMatriz(){if(!await window.SE7Polos.init())return;window.iniciarAuditoriaMovimentacoes?.();const perfil=JSON.parse(sessionStorage.getItem('usuario_logado')||'{}').perfil;if(perfil==='professor'){window.SE7Exams?.apply(perfil);return;}if(dadosMatrizIniciados)return;dadosMatrizIniciados=true;db=SE7Reads.wrap(db);SE7Reads.start();carregarDadosDaNuvem();if(usuarioMasterAtivo()){renderizarSolicitacoesPendentes();}}
         function carregarDadosDaNuvem() {
             db.collection("config").doc("institution").onSnapshot((doc) => {
                 if (doc.exists) {
@@ -2584,19 +2587,20 @@ document.getElementById('input-inst-inep').value = data.inep || '';
 
             db.collection("courses").onSnapshot((snapshot) => {
                 courses = [];
-                snapshot.forEach(doc => courses.push({ id: doc.id, ...doc.data() }));
+                snapshot.forEach(doc => courses.push({ id: doc.id, ...doc.data() }));matrizCursosCarregados=true;renderGestionStudentsTable();window.SE7StudentSheet?.refreshAcademic();
                 renderTeachers(); renderCourses(); renderSubjectsManagement(); renderDropdowns(); window.SE7MatrizFinance?.refresh(); atualizarDisciplinasETurmasCalendario(); atualizarFiltrosGerenciarCalendarios();
             });
 
             db.collection("classes").onSnapshot((snapshot) => {
                 classes = [];
-                snapshot.forEach(doc => classes.push({ id: doc.id, ...doc.data() }));
+                snapshot.forEach(doc => classes.push({ id: doc.id, ...doc.data() }));matrizClassesCarregadas=true;matrizClassesFalhou=false;renderGestionStudentsTable();window.SE7StudentSheet?.refreshAcademic();
                 renderClasses(); renderDropdowns(); window.SE7MatrizFinance?.refresh(); atualizarDisciplinasETurmasCalendario(); atualizarFiltrosGerenciarCalendarios();
-            });
+            },error=>{matrizClassesFalhou=true;console.warn('Não foi possível carregar as turmas.',error.message);renderGestionStudentsTable();});
 
             db.collection("academicCalendars").onSnapshot((snapshot) => {
                 academicCalendars = [];
                 snapshot.forEach(doc => academicCalendars.push({ id: doc.id, ...doc.data() }));
+                atualizarDisciplinasPorTurmaCalendario();
                 renderizarCalendarioSemestralAdmin();
                 atualizarFiltrosGerenciarCalendarios();
                 if (alunoLogadoCache) renderizarCalendarioSemestralPortalAluno();
@@ -2746,7 +2750,7 @@ function renderTeachers() {
         const el = document.getElementById(id);
         if(el) { 
             const selectedTeacher=el.value;el.innerHTML = '<option value="">Selecione...</option>'; 
-            teachers.filter(t => !t.cargo || t.cargo === 'Professor' || t.cargo === 'Coordenação').forEach(t => {
+            teachers.filter(t => !t.cargo || ['Professor','Professora','Coordenação','Coordenador','Coordenadora'].includes(t.cargo)).forEach(t => {
                 el.insertAdjacentHTML('beforeend', `<option value="${t.id}">${t.fullname}</option>`);
             });el.value=selectedTeacher; 
         }
@@ -2841,6 +2845,8 @@ async function excluirColaborador(id) {
         }
         function fecharModalEdicaoConfiguracao(){if(!edicaoConfiguracaoAtiva)return;const {dialog,form,parent,next,display}=edicaoConfiguracaoAtiva;edicaoConfiguracaoAtiva=null;dialog.close();parent.insertBefore(form,next&&next.parentNode===parent?next:null);form.style.display=display;dialog.remove();}
 
+        function abrirNovoCurso(){cancelarEdicaoCurso();document.getElementById('input-course-nivel').selectedIndex=0;abrirModalEdicaoConfiguracao('subsubtab-cadastrar-curso','Cadastrar novo curso',cancelarEdicaoCurso);}
+        function abrirNovaDisciplina(){cancelarEdicaoDisciplina();document.getElementById('input-subject-course-select').value=document.getElementById('subjects-list-course').value;abrirModalEdicaoConfiguracao('subsubtab-cadastrar-disciplina','Cadastrar nova disciplina',cancelarEdicaoDisciplina);}
         function editarCurso(id) {
             const c = courses.find(item => item.id === id);
             if (!c) return;
@@ -2926,7 +2932,7 @@ async function excluirColaborador(id) {
                 document.getElementById('input-subject-name').value = '';
                 document.getElementById('input-subject-hours').value = '';
                 document.getElementById('input-subject-ementa').value = '';
-                alert("Disciplina adicionada com sucesso!");
+                document.getElementById('subjects-list-course').value=courseId;cancelarEdicaoDisciplina();renderSubjectsManagement();alert("Disciplina adicionada com sucesso!");
             }
         }
 
@@ -2943,10 +2949,11 @@ async function excluirColaborador(id) {
         }
         function renderSubjectsManagement() {
             const list=document.getElementById('subjects-management-list'),counter=document.getElementById('total-subjects-count');let total=0;if(list)list.replaceChildren();
-            courses.forEach(course=>(course.subjects||[]).forEach(subject=>{total++;if(!list)return;const row=document.createElement('li');row.className='se7-subject-row';
+            const filter=document.getElementById('subjects-list-course'),selected=filter?.value||'';if(filter){filter.replaceChildren(new Option('Selecione o curso...',''));for(const c of courses)filter.add(new Option(c.name,c.id));filter.value=courses.some(c=>c.id===selected)?selected:'';}
+            courses.filter(c=>c.id===filter?.value).forEach(course=>(course.subjects||[]).forEach(subject=>{total++;if(!list)return;const row=document.createElement('li');row.className='se7-subject-row';
                 const info=document.createElement('div'),name=document.createElement('strong'),hours=document.createElement('p');name.textContent=subject.name;hours.textContent='Carga horária: '+cargaHorariaDisciplina(subject.hours);info.append(name,hours);
                 const actions=document.createElement('div');actions.className='se7-subject-actions';for(const [text,icon,fn]of [['Ver ementa','fa-eye',()=>verEmentaDisciplina(course.id,subject.id)],['Editar','fa-pen',()=>editarDisciplina(course.id,subject.id)],['Excluir','fa-trash',()=>removerDisciplina(course.id,subject.id)]]){const button=document.createElement('button');button.type='button';button.className='se7-exam-button'+(text==='Excluir'?' se7-subject-delete':'');const i=document.createElement('i');i.className='fa-solid '+icon;i.setAttribute('aria-hidden','true');button.append(i,document.createTextNode(' '+text));button.onclick=fn;actions.append(button);}row.append(info,actions);list.append(row);
-            }));if(list&&!total){const empty=document.createElement('li');empty.textContent='Nenhuma disciplina cadastrada.';list.append(empty);}if(counter)counter.textContent='Total: '+total+' disciplina(s)';
+            }));if(list&&!total){const empty=document.createElement('li');empty.textContent=filter?.value?'Nenhuma disciplina cadastrada neste curso.':'Selecione o curso para visualizar as disciplinas.';list.append(empty);}if(counter)counter.textContent='Total: '+total+' disciplina(s)';
         }
 
         function editarDisciplina(courseId, subjectId) {
@@ -3089,34 +3096,31 @@ async function excluirColaborador(id) {
             }
         }
 
-        function atualizarDisciplinasETurmasCalendario() {
-            const courseSelect = document.getElementById('cal-course-select');
-            const classSelect = document.getElementById('cal-class-select');
-            if (!courseSelect) return;
-            const selectedCourseId = courseSelect.value;
-            if (classSelect) {
-                classSelect.innerHTML = '<option value="">Selecione a turma...</option>';
-                classes.filter(cl => !selectedCourseId || cl.courseId === selectedCourseId).forEach(cl => {
-                    classSelect.insertAdjacentHTML('beforeend', `<option value="${cl.id}">${cl.name}</option>`);
-                });
-            }
+        function opcoesCalendario(select,rows,placeholder,value=''){select.replaceChildren(new Option(placeholder,''));for(const row of rows)select.add(new Option(row.name,row.id));select.value=rows.some(row=>row.id===value)?value:'';}
+        function polosCalendario(onlyActive=false){return (window.SE7Polos?.rows()||[]).filter(p=>!onlyActive||p.active!==false).map(p=>({id:p.id,name:p.name+(p.city&&p.city!==p.name?' — '+p.city:'' )}));}
+        function atualizarDisciplinasETurmasCalendario(changed) {
+            const course=document.getElementById('cal-course-select'),polo=document.getElementById('cal-polo-select'),turma=document.getElementById('cal-class-select');if(!course||!polo||!turma)return;
+            const oldPolo=changed==='course'?'':polo.value,oldClass=changed==='course'||changed==='polo'?'':turma.value;
+            opcoesCalendario(polo,course.value?polosCalendario(true):[],'Selecione o polo/cidade...',oldPolo);polo.disabled=!course.value;
+            const groups=classes.filter(c=>course.value&&polo.value&&c.courseId===course.value&&c.poloId===polo.value).map(c=>({id:c.id,name:c.name+' — '+(window.SE7Polos?.name(c.poloId)||c.poloName||'')})).sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'));
+            opcoesCalendario(turma,groups,'Selecione a turma...',oldClass);turma.disabled=!course.value||!polo.value;
             atualizarDisciplinasPorTurmaCalendario();
         }
 
+        function disciplinaConcluidaNoCalendario(courseId,classId,subject){
+            if(!courseId||!classId||!subject)return false;const norm=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toLowerCase();
+            const today=window.SE7AcademicPolicy?.today()||new Intl.DateTimeFormat('en-CA',{timeZone:'America/Fortaleza'}).format(new Date());
+            const dates=academicCalendars.filter(c=>c.courseId===courseId&&c.classId===classId&&norm(c.subject)===norm(subject)&&(!c.eventType||c.eventType==='lesson')&&c.countsForAttendance!==false).flatMap(c=>c.dates||[]).filter(d=>/^\d{4}-\d{2}-\d{2}$/.test(d));
+            return dates.length>0&&dates.every(d=>d<today);
+        }
         function atualizarDisciplinasPorTurmaCalendario() {
-            const courseId = document.getElementById('cal-course-select').value;
-            const subjectSelect = document.getElementById('cal-subject-select');
-            if (!subjectSelect) return;
-            subjectSelect.innerHTML = '<option value="">Selecione a disciplina...</option>';
-            const cursoObj = courses.find(c => c.id === courseId);
-            if (cursoObj && cursoObj.subjects) {
-                cursoObj.subjects.forEach(sub => {
-                    subjectSelect.insertAdjacentHTML('beforeend', `<option value="${sub.name}">${sub.name}</option>`);
-                });
-            }
+            const courseId=document.getElementById('cal-course-select').value,classId=document.getElementById('cal-class-select').value,subjectSelect=document.getElementById('cal-subject-select');if(!subjectSelect)return;
+            const old=subjectSelect.value,isLesson=document.getElementById('cal-event-type').value==='lesson',course=courses.find(c=>c.id===courseId);subjectSelect.replaceChildren(new Option('Selecione a disciplina...',''));
+            for(const subject of course?.subjects||[]){const done=disciplinaConcluidaNoCalendario(courseId,classId,subject.name),option=new Option(subject.name+(done?' — Já realizada nesta turma':''),subject.name);option.disabled=isLesson&&done;subjectSelect.add(option);}
+            if([...subjectSelect.options].some(o=>o.value===old&&!o.disabled))subjectSelect.value=old;
         }
 
-        function atualizarTipoEventoCalendario(){const t=document.getElementById('cal-event-type').value;document.getElementById('cal-subject-select').disabled=['holiday','simulation','inaugural'].includes(t);document.getElementById('cal-qtd-datas').disabled=t==='inaugural';if(t!=='lesson'){document.getElementById('cal-qtd-datas').value='1';renderizarCamposDatasCalendario();}if(t==='simulation')document.getElementById('cal-event-desc').value='Simulado Avaliativo Final de Semestre';if(t==='inaugural')document.getElementById('cal-event-desc').value='Apresentação da turma e orientações iniciais';}
+        function atualizarTipoEventoCalendario(){const t=document.getElementById('cal-event-type').value;document.getElementById('cal-subject-select').disabled=['holiday','simulation','inaugural'].includes(t);document.getElementById('cal-qtd-datas').disabled=t==='inaugural';if(t!=='lesson'){document.getElementById('cal-qtd-datas').value='1';renderizarCamposDatasCalendario();}if(t==='simulation')document.getElementById('cal-event-desc').value='Simulado Avaliativo Final de Semestre';if(t==='inaugural')document.getElementById('cal-event-desc').value='Apresentação da turma e orientações iniciais';atualizarDisciplinasPorTurmaCalendario();}
         function renderizarCamposDatasCalendario() {
             const qtd = document.getElementById('cal-event-type').value==='inaugural'?1:(parseInt(document.getElementById('cal-qtd-datas').value) || 2);
             const container = document.getElementById('container-datas-dinamicas');
@@ -3148,6 +3152,7 @@ async function excluirColaborador(id) {
                 return alert("Preencha todos os campos do calendário acadêmico.");
             }
 
+            if(eventType==='lesson'&&disciplinaConcluidaNoCalendario(courseId,classId,subject))return alert('Esta disciplina já foi realizada nesta turma. Para corrigir um registro anterior, use o gerenciamento dos calendários.');
             let datasSelecionadas = [];
             for (let i = 1; i <= qtd; i++) {
                 const val = document.getElementById(`cal-date-${i}`).value;
@@ -3159,7 +3164,7 @@ async function excluirColaborador(id) {
             const cursoObj = courses.find(c => c.id === courseId);
             const turmaObj = classes.find(cl => cl.id === classId);
 
-            if(!turmaObj?.poloId)return alert("Vincule esta turma a um polo no cadastro de turmas.");
+            if(turmaObj?.courseId!==courseId||turmaObj?.poloId!==document.getElementById('cal-polo-select').value)return alert('Selecione uma turma do curso e polo/cidade escolhidos.');if(!turmaObj?.poloId)return alert("Vincule esta turma a um polo no cadastro de turmas.");
             const eventoData = {poloId:turmaObj.poloId,poloName:turmaObj.poloName||"",
                 courseId,
                 courseName: cursoObj ? cursoObj.name : '---',
@@ -3181,17 +3186,13 @@ async function excluirColaborador(id) {
         }
 
         function atualizarFiltrosGerenciarCalendarios(changed) {
-            const course=document.getElementById('manage-cal-course'), turma=document.getElementById('manage-cal-class'), semester=document.getElementById('manage-cal-semester');
-            if(!course||!turma||!semester)return;
-            function options(select, rows, placeholder, value){select.replaceChildren(new Option(placeholder,''));rows.forEach(row=>select.add(new Option(row.name,row.id)));select.value=rows.some(row=>row.id===value)?value:'';}
-            const oldCourse=course.value, oldClass=changed==='course'?'':turma.value, oldSemester=changed==='course'||changed==='class'?'':semester.value;
-            options(course,courses.slice().sort((a,b)=>(a.name||'').localeCompare(b.name||'','pt-BR')),'Selecione o curso...',oldCourse);
-            options(turma,classes.filter(cl=>course.value&&cl.courseId===course.value).sort((a,b)=>(a.name||'').localeCompare(b.name||'','pt-BR')),'Selecione a turma...',oldClass);
-            turma.disabled=!course.value;
+            const course=document.getElementById('manage-cal-course'),polo=document.getElementById('manage-cal-polo'),turma=document.getElementById('manage-cal-class'),semester=document.getElementById('manage-cal-semester');if(!course||!polo||!turma||!semester)return;
+            const oldCourse=course.value,oldPolo=changed==='course'?'':polo.value,oldClass=['course','polo'].includes(changed)?'':turma.value,oldSemester=['course','polo','class'].includes(changed)?'':semester.value;
+            opcoesCalendario(course,courses.slice().sort((a,b)=>(a.name||'').localeCompare(b.name||'','pt-BR')),'Selecione o curso...',oldCourse);
+            opcoesCalendario(polo,course.value?polosCalendario():[],'Selecione o polo/cidade...',oldPolo);polo.disabled=!course.value;
+            opcoesCalendario(turma,classes.filter(c=>course.value&&polo.value&&c.courseId===course.value&&c.poloId===polo.value).map(c=>({id:c.id,name:c.name+' — '+(window.SE7Polos?.name(c.poloId)||c.poloName||'')})).sort((a,b)=>a.name.localeCompare(b.name,'pt-BR')),'Selecione a turma...',oldClass);turma.disabled=!course.value||!polo.value;
             const semesters=[...new Set(academicCalendars.filter(cal=>cal.courseId===course.value&&cal.classId===turma.value).map(cal=>cal.semestre||'2026/2'))].sort();
-            options(semester,semesters.map(id=>({id,name:id})),'Selecione o semestre...',oldSemester);
-            semester.disabled=!turma.value;
-            renderizarTabelaGerenciarCalendarios();
+            opcoesCalendario(semester,semesters.map(id=>({id,name:id})),'Selecione o semestre...',oldSemester);semester.disabled=!turma.value;renderizarTabelaGerenciarCalendarios();
         }
 
         function renderizarTabelaGerenciarCalendarios() {
@@ -3200,7 +3201,7 @@ async function excluirColaborador(id) {
             const courseId=document.getElementById('manage-cal-course').value, classId=document.getElementById('manage-cal-class').value, semester=document.getElementById('manage-cal-semester').value;
             document.getElementById('manage-cal-results').style.display=courseId&&classId&&semester?'block':'none';
             renderizarCalendarioSemestralAdmin();
-            if(!courseId||!classId||!semester){tbody.innerHTML='<tr><td colspan="5" class="p-3 text-center text-gray-400">Selecione curso, turma e semestre para visualizar o calendário.</td></tr>';return;}
+            if(!courseId||!classId||!semester){tbody.innerHTML='<tr><td colspan="5" class="p-3 text-center text-gray-400">Selecione curso, polo/cidade, turma e semestre para visualizar o calendário.</td></tr>';return;}
             const filtered=academicCalendars.filter(cal=>cal.courseId===courseId&&cal.classId===classId&&(cal.semestre||'2026/2')===semester).sort((a,b)=>(a.dates?.slice().sort()[0]||'').localeCompare(b.dates?.slice().sort()[0]||''));
             tbody.innerHTML=filtered.length?'':'<tr><td colspan="5" class="p-3 text-center text-gray-400">Nenhum calendário cadastrado para esta seleção.</td></tr>';
             
@@ -3768,7 +3769,7 @@ function carregarDatasCalendarioParaFrequencia(){const classId=document.getEleme
             <tr class="border-b border-gray-100 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-900/40">
                 <td class="p-3 font-bold text-blue-600 dark:text-blue-400">${SE7Safe.escape(s.code || '---')}</td>
                 <td class="p-3 font-semibold"><button type="button" class="se7-student-name" data-student-sheet="${SE7Safe.escape(s.id)}" title="Consultar ficha do aluno">${SE7Safe.escape(s.fullname)}</button></td>
-                <td class="p-3">${SE7Safe.escape(turma ? turma.name : '---')}<br><span class="text-[10px] text-gray-400">${SE7Safe.escape(curso ? curso.name : '---')}</span></td>
+                <td class="p-3">${SE7Safe.escape(turma?turma.name:s.classId?(matrizClassesFalhou?'Falha ao carregar turma':matrizClassesCarregadas?'Turma não encontrada':'Carregando turma…'):'Sem turma')}<br><span class="text-[10px] text-gray-400">${SE7Safe.escape(curso?curso.name:s.courseId?(matrizCursosCarregados?'Curso não encontrado':'Carregando curso…'):'Sem curso')}</span></td>
                 <td class="p-3"><span class="px-2 py-0.5 ${classeStatusMatricula(s.status)} rounded text-[10px] font-bold">${rotuloStatusMatricula(s.status)}</span>${s.enrollmentRequest ? '<div class="text-[10px] text-amber-500 mt-1">Solicitação pendente</div>' : ''}</td>
                 <td class="p-3 text-right space-x-1">
                     <button onclick="editarAluno('${s.id}')" title="Editar aluno" aria-label="Editar aluno" class="se7-edit-student px-2.5 py-1 bg-blue-600 text-white rounded text-xs"><i class="fa-solid fa-pen" aria-hidden="true"></i></button>
@@ -5205,12 +5206,12 @@ function carregarProfessoresPontoManual() {
     select.innerHTML = '<option value="">Selecione o professor...</option>';
     
     // Filtra os colaboradores que possuem cargo de Professor ou Coordenação
-    const docentes = teachers.filter(t => !t.cargo || t.cargo === 'Professor' || t.cargo === 'Coordenação');
+    const docentes = teachers.filter(t => !t.cargo || ['Professor','Professora','Coordenação','Coordenador','Coordenadora'].includes(t.cargo));
     docentes.forEach(t => {
         select.insertAdjacentHTML('beforeend', `<option value="${t.id}">${t.fullname} (${t.cargo || 'Professor'})</option>`);
     });
 
-    if (valorAtual) select.value = valorAtual;
+    if (valorAtual) select.value = valorAtual;window.SE7Polos?.pointPolo();
 }
 
 let pontoManualEmEdicao = null;
@@ -5231,7 +5232,7 @@ function editarPontoManualProfessor(id) {
     if (![...select.options].some(o => o.value === registro.professorId)) {
         select.add(new Option(registro.professorNome || 'Professor do registro', registro.professorId));
     }
-    select.value = registro.professorId;if(document.getElementById('manual-ponto-polo'))document.getElementById('manual-ponto-polo').value=registro.poloId||SE7Polos.current()||'';
+    select.value = registro.professorId;window.SE7Polos?.pointPolo(false,registro.poloId||'');
     for (const campo of ['data', 'turno', 'entrada', 'saida']) {
         document.getElementById('manual-ponto-' + campo).value = registro[campo] || '';
     }
@@ -5289,7 +5290,7 @@ async function salvarPontoManualProfessor() {
     if (idEdicao && !anterior) return alert("Este registro foi removido. Cancele a edição e atualize a lista.");
     const professorObj = teachers.find(t => t.id === professorId);
     if (!professorObj && (!anterior || anterior.professorId !== professorId)) return alert("Professor não encontrado.");
-    const poloId=document.getElementById('manual-ponto-polo')?.value||SE7Polos.current();if(!poloId)return alert('Selecione o polo do ponto.');const registroData = {
+    const poloId=document.getElementById('manual-ponto-polo')?.value||SE7Polos.current();if(!poloId)return alert('Selecione o polo do ponto.');if(!professorObj?.poloIds?.includes(poloId)||!SE7Polos.rows().some(p=>p.id===poloId&&p.active!==false))return alert('Escolha um polo ativo vinculado ao professor.');const registroData = {
         poloId,professorId,
         professorNome: professorObj ? professorObj.fullname : anterior.professorNome,
         cargo: professorObj ? (professorObj.cargo || 'Professor') : (anterior.cargo || 'Professor'),
@@ -5299,7 +5300,7 @@ async function salvarPontoManualProfessor() {
     try { sessao = JSON.parse(sessionStorage.getItem('usuario_logado')); } catch (_) {}
     const usuario = sessao ? (sessao.nome || sessao.perfil || 'Secretaria') : 'Secretaria';
     pontoManualSalvando = true;
-    const campos = ['manual-ponto-professor', 'manual-ponto-data', 'manual-ponto-turno', 'manual-ponto-entrada', 'manual-ponto-saida', 'btn-salvar-ponto-manual', 'btn-cancelar-edicao-ponto'];
+    const campos = ['manual-ponto-professor', 'manual-ponto-polo', 'manual-ponto-data', 'manual-ponto-turno', 'manual-ponto-entrada', 'manual-ponto-saida', 'btn-salvar-ponto-manual', 'btn-cancelar-edicao-ponto'];
     campos.forEach(id => document.getElementById(id).disabled = true);
     let sucesso = false;
     try {
@@ -5320,7 +5321,7 @@ async function salvarPontoManualProfessor() {
     } finally {
         pontoManualSalvando = false;
         campos.forEach(id => document.getElementById(id).disabled = false);
-        if (sucesso) cancelarEdicaoPontoManual();
+        if (sucesso) cancelarEdicaoPontoManual();window.SE7Polos?.pointPolo();
     }
 }
 
