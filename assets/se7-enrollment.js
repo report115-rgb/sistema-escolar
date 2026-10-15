@@ -17,7 +17,7 @@ async function gravarOperacaoMatricula(studentId,mode,data={}){
  if(mode==='reactivate'){
   if(!['Cancelado','Transferido','Trancado','Inativo'].includes(student.status))throw Error('A matrícula já está ativa ou não pode ser reativada.');
   if(student.enrollmentRequest)throw Error('Conclua a solicitação pendente antes de reativar.');
-  const classRef=db.collection('classes').doc(data.classId);const classSnap=await tx.get(classRef);if(!classSnap.exists)throw Error('Turma não encontrada.');const courseId=classSnap.data().courseId;if(!courseId)throw Error('Turma sem curso vinculado.');
+  const classRef=db.collection('classes').doc(data.classId);const classSnap=await tx.get(classRef);if(!classSnap.exists)throw Error('Turma não encontrada.');const courseId=classSnap.data().courseId;if(!courseId)throw Error('Turma sem curso vinculado.');if(!student.poloId||classSnap.data().poloId!==student.poloId)throw Error('Escolha uma turma do mesmo polo do aluno.');
   event={id:eventId,type:'reativacao',state:'efetivada',date:now.slice(0,10),reason:data.reason||'Reativação de matrícula',previousStatus:student.status,newStatus:'Ativo',previousClassId:student.classId||'',classId:data.classId,createdAt:now,actor};patch={status:'Ativo',classId:data.classId,courseId,enrollmentLastOperation:event};
  }else if(mode==='complete'||mode==='dismiss'){
   const request=student.enrollmentRequest;if(!request||request.id!==data.requestId)throw Error('Esta solicitação já foi concluída ou mudou. Atualize a tela.');

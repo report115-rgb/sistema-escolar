@@ -2,20 +2,20 @@
   "schema": 1,
   "apps": {
     "matriz": {
-      "version": "1.7.2",
-      "revision": "a6ee981c8bcb216d8b3f237ff4ed07ef47079437abebc0469ceec981f7456d41"
+      "version": "1.7.4",
+      "revision": "576333aaef058c103740bc74f54508505b94e361084674405d98779066b9c876"
     },
     "aluno": {
-      "version": "1.7.2",
-      "revision": "e3f400f4a1211eef95cbd80c7695562069c6e1159f054980f0a4fbf78789306b"
+      "version": "1.7.4",
+      "revision": "f48980ebf2ee1d93230218ac1ab3833ca9ef4cdfea6e3a38ac6c17afdf5f59c2"
     },
     "financeiro": {
-      "version": "1.11.2",
-      "revision": "7df4ece670cdee9a6a86d337fbcfef6ac94cfd197fe28ece8a962ddaa92a81d9"
+      "version": "1.11.4",
+      "revision": "be8b6a05dd87f085fe07a260946542bd2e8f5852c1e19652b96fe2e72425a114"
     },
     "totem": {
-      "version": "1.4.2",
-      "revision": "54a7fd3e50fa4006c2e102f7ab26d03af9eda59fcad75e47a1d3d7f503bf5e0e"
+      "version": "1.4.4",
+      "revision": "ba1b40c977ad03d1a93a3fa7ffe9990c7ba11759a4904708298569c3136934e2"
     }
   }
 }

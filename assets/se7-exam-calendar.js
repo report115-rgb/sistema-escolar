@@ -1,0 +1,10 @@
+const normal=value=>String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().replace(/\s+/g,' ').toLowerCase();
+export const calendarSemester=value=>{const s=String(value||'').trim().replace('.','/');return /^\d{4}\/[12]$/.test(s)?s:'';};
+export function matchesSubject(event,subject){if(!subject)return false;return event.subjectId?String(event.subjectId)===String(subject.id):normal(event.subject)===normal(subject.name);}
+export function assessmentEvents(events,{classId,courseId,kind,subject,semester=''}){
+ return events.filter(ev=>ev.classId===classId&&(!courseId||ev.courseId===courseId)&&(!semester||calendarSemester(ev.semestre||ev.semester)===calendarSemester(semester))&&(kind==='simulation'?(ev.eventType==='simulation'||(!ev.eventType||ev.eventType==='lesson')&&/^simulado.*(avaliativo|final)/.test(normal(ev.subject))):ev.eventType==='exam'&&matchesSubject(ev,subject))).sort((a,b)=>String(a.dates?.slice().sort()[0]||'').localeCompare(String(b.dates?.slice().sort()[0]||''))||String(a.id||'').localeCompare(String(b.id||'')));
+}
+export function semesterOptions(events,{classId,courseId,subject=null}){return [...new Set(events.filter(ev=>ev.classId===classId&&(!courseId||ev.courseId===courseId)&&(!subject||matchesSubject(ev,subject))).map(ev=>calendarSemester(ev.semestre||ev.semester)).filter(Boolean))].sort();}
+export function semesterSubjects(subjects,events,{classId,courseId,semester}){const rows=events.filter(ev=>ev.classId===classId&&ev.courseId===courseId&&calendarSemester(ev.semestre||ev.semester)===calendarSemester(semester));const found=subjects.filter(s=>rows.some(ev=>matchesSubject(ev,s)));return found.length?found:subjects;}
+export function assessmentDate(event,preferred=''){const dates=[...new Set((event?.dates||[]).filter(d=>/^\d{4}-\d{2}-\d{2}$/.test(d)))].sort();return {dates,value:dates.includes(preferred)?preferred:dates.length===1?dates[0]:''};}
+if(typeof window!=='undefined')window.SE7ExamCalendar={calendarSemester,matchesSubject,assessmentEvents,semesterOptions,semesterSubjects,assessmentDate};

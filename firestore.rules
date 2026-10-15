@@ -11,6 +11,7 @@ service cloud.firestore {
   function ownPolo(d){return secretaryPolo() != '' && d.get('poloId','') == secretaryPolo();}
   function ownStudent(id){return secretaryPolo() != '' && exists(/databases/$(database)/documents/students/$(id)) && ownPolo(get(/databases/$(database)/documents/students/$(id)).data);}
   function ownTeacher(id){return secretaryPolo() != '' && exists(/databases/$(database)/documents/teachers/$(id)) && secretaryPolo() in get(/databases/$(database)/documents/teachers/$(id)).data.get('poloIds',[]);}
+  function validClass(d){return d.get('classId','') == '' || (exists(/databases/$(database)/documents/classes/$(d.classId)) && get(/databases/$(database)/documents/classes/$(d.classId)).data.get('poloId','') == d.get('poloId','') && get(/databases/$(database)/documents/classes/$(d.classId)).data.courseId == d.courseId);}
   function studentId(){return request.auth.token.get('studentId','');}
   function studentActive(){
    return signed() && studentId() != '' && exists(/databases/$(database)/documents/students/$(studentId()))
@@ -26,13 +27,13 @@ service cloud.firestore {
   match /students/{id} {
    allow get: if finance() || ownPolo(resource.data) || (studentActive() && id == studentId());
    allow list: if finance() || ownPolo(resource.data);
-   allow create: if academic() && (master() || (ownPolo(request.resource.data) && exists(/databases/$(database)/documents/polos/$(request.resource.data.poloId)) && get(/databases/$(database)/documents/polos/$(request.resource.data.poloId)).data.active == true)) && !request.resource.data.keys().hasAny(['se7AuthUid','portalCredential','portalBlocked','portalMustChangePassword','portalSessionVersion']);
-   allow update: if academic() && (master() || (ownPolo(resource.data) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['poloId','poloName','poloUpdatedAt','poloUpdatedBy']))) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['se7AuthUid','portalCredential','portalBlocked','portalMustChangePassword','portalSessionVersion','portalTemporaryExpiresAt','se7AuthLock']);
+   allow create: if validClass(request.resource.data) && academic() && (master() || (ownPolo(request.resource.data) && exists(/databases/$(database)/documents/polos/$(request.resource.data.poloId)) && get(/databases/$(database)/documents/polos/$(request.resource.data.poloId)).data.active == true)) && !request.resource.data.keys().hasAny(['se7AuthUid','portalCredential','portalBlocked','portalMustChangePassword','portalSessionVersion']);
+   allow update: if validClass(request.resource.data) && academic() && (master() || (ownPolo(resource.data) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['poloId','poloName','poloUpdatedAt','poloUpdatedBy']))) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['se7AuthUid','portalCredential','portalBlocked','portalMustChangePassword','portalSessionVersion','portalTemporaryExpiresAt','se7AuthLock']);
 
   }
   match /courses/{id} {allow read: if staff() || (studentActive() && id == get(/databases/$(database)/documents/students/$(studentId())).data.courseId);allow write: if master();}
-  match /classes/{id} {allow read: if staff() || (studentActive() && id == get(/databases/$(database)/documents/students/$(studentId())).data.classId);allow write: if master();}
-  match /academicCalendars/{id} {allow read: if staff() || (studentActive() && resource.data.classId == get(/databases/$(database)/documents/students/$(studentId())).data.classId);allow write: if master();}
+  match /classes/{id} {allow read: if finance() || ownPolo(resource.data) || (studentActive() && id == get(/databases/$(database)/documents/students/$(studentId())).data.classId);allow write: if master();}
+  match /academicCalendars/{id} {allow read: if finance() || ownPolo(resource.data) || (studentActive() && resource.data.classId == get(/databases/$(database)/documents/students/$(studentId())).data.classId);allow write: if master();}
   match /financeLogs/{id} {
    allow read: if finance() || ownStudent(resource.data.get('studentId',resource.data.get('alunoId',''))) || (studentActive() && resource.data.studentId == studentId());
    // Once reserved/linked, only the server can reconcile the financial record.

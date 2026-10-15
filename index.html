@@ -161,6 +161,7 @@
 <script defer src="/assets/se7-brand.js"></script>
 <link rel="stylesheet" href="/assets/se7-welcome.css">
 <link rel="stylesheet" href="/assets/se7-polos.css">
+<script src="/assets/se7-read-policy.js" defer></script>
 <script src="/assets/se7-polos.js" defer></script>
 </head>
 <body class="se7-suite se7-matriz bg-gray-100 dark:bg-slate-900 text-gray-800 dark:text-gray-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-300 pb-16">    
@@ -1028,6 +1029,7 @@
 
                     <!-- SUB-SUBABA 2: CADASTRAR NOVA TURMA -->
                     <div id="subsubtab-cadastrar-turma" class="subsubtab-class-content space-y-4" style="display: none;">
+<label class="block text-xs font-semibold">Polo da turma<select id="input-class-polo" class="w-full px-3 py-2 rounded-lg border dark:bg-slate-900"></select></label>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-xs font-semibold mb-1">Curso</label>
@@ -1654,26 +1656,12 @@
 
 let cancelarEscutaAuditoria = null;
 
-function renderizarLogsAuditoria() {
-    const tbody = document.getElementById('tabela-logs-auditoria');
-    if (!tbody) return;
-    
-    tbody.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-gray-400">Carregando logs da nuvem...</td></tr>`;
-
-    // Utiliza onSnapshot para atualizar em tempo real as ações de qualquer perfil (Master, Secretaria, etc.)
-    if (cancelarEscutaAuditoria) cancelarEscutaAuditoria();
-    cancelarEscutaAuditoria = db.collection("systemLogs").orderBy("createdAt", "desc").onSnapshot((snapshot) => {
-        if (snapshot.empty) {
-            tbody.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-gray-400">Nenhum log encontrado na nuvem.</td></tr>`;
-            return;
-        }
-
-        tbody.replaceChildren();
-        snapshot.forEach(doc=>{const l=doc.data(),tr=document.createElement('tr');tr.className='border-b border-gray-100 dark:border-slate-700';for(const value of [l.dataHora,(l.usuario||'Sistema')+' ('+(l.perfil||'')+')',l.modulo,l.acao]){const td=document.createElement('td');td.className='p-3';td.textContent=value||'';tr.append(td);}tbody.append(tr);});
-    }, (error) => {
-        console.error("Erro ao carregar logs da nuvem:", error);
-        tbody.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-red-400">Erro ao carregar os logs.</td></tr>`;
-    });
+let auditoriaCursor=null,auditoriaBusy=false;
+async function renderizarLogsAuditoria(mais=false){
+ const tbody=document.getElementById('tabela-logs-auditoria');if(!tbody||auditoriaBusy)return;auditoriaBusy=true;
+ let controls=document.getElementById('se7-audit-paging');if(!controls){controls=document.createElement('div');controls.id='se7-audit-paging';for(const [text,fn]of [['Atualizar histórico',()=>renderizarLogsAuditoria()],['Carregar registros anteriores',()=>renderizarLogsAuditoria(true)]]){const b=document.createElement('button');b.type='button';b.textContent=text;b.className='px-3 py-2 text-xs rounded border m-1';b.onclick=fn;controls.append(b);}tbody.closest('table').after(controls);}
+ const buttons=[...controls.querySelectorAll('button')];buttons.forEach(b=>b.disabled=true);
+ try{if(!mais){auditoriaCursor=null;tbody.replaceChildren();}let q=db.collection('systemLogs').orderBy('createdAt','desc').limit(50);if(mais&&auditoriaCursor)q=q.startAfter(auditoriaCursor);const snap=await q.get();for(const doc of snap.docs){const l=doc.data(),tr=document.createElement('tr');tr.className='border-b';for(const value of [l.dataHora,(l.usuario||'Sistema')+' ('+(l.perfil||'')+')',l.modulo,l.acao]){const td=document.createElement('td');td.className='p-3';td.textContent=value||'';tr.append(td);}tbody.append(tr);}auditoriaCursor=snap.docs.at(-1)||auditoriaCursor;buttons[1].hidden=snap.size<50;if(!tbody.children.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=4;td.textContent='Nenhum registro encontrado.';tr.append(td);tbody.append(tr);}}catch(e){alert('Não foi possível consultar a auditoria: '+e.message);}finally{auditoriaBusy=false;buttons.forEach(b=>b.disabled=false);}
 }
 
 async function limparLogsAuditoria(){alert('Os registros de auditoria são preservados e não podem ser apagados pela interface.');}
@@ -2400,7 +2388,7 @@ async function removerUsuarioSistemaFirebase(id){if(!confirm('Desativar esse fun
     if (typeof atualizarModuloMatriz === 'function') atualizarModuloMatriz(tabId);
 
     // 5. Gatilhos de renderização específica para componentes que dependem do DOM visível
-    if(tabId === 'tab-controle-ponto-manual') carregarProfessoresPontoManual();
+    if(tabId === 'tab-controle-ponto-manual'){carregarProfessoresPontoManual();escutarRegistrosPontoManual();}
     if(tabId === 'tab-settings') setTimeout(renderizarCalendarioSemestralAdmin, 200);
     if(tabId === 'tab-portal-aluno') setTimeout(renderizarCalendarioSemestralPortalAluno, 200);
     if(tabId === 'tab-audit') setTimeout(renderizarLogsAuditoria, 200);
@@ -2562,7 +2550,7 @@ async function removerUsuarioSistemaFirebase(id){if(!confirm('Desativar esse fun
             });
         }
 
-let dadosMatrizIniciados=false;async function iniciarDadosAutenticadosMatriz(){if(!await window.SE7Polos.init())return;window.iniciarAuditoriaMovimentacoes?.();const perfil=JSON.parse(sessionStorage.getItem('usuario_logado')||'{}').perfil;if(perfil==='professor'){window.SE7Exams?.apply(perfil);return;}if(dadosMatrizIniciados)return;dadosMatrizIniciados=true;carregarDadosDaNuvem();escutarRegistrosPontoManual();if(usuarioMasterAtivo()){renderizarLogsAuditoria();renderizarSolicitacoesPendentes();}carregarAlunosSemTurma();}
+let dadosMatrizIniciados=false;async function iniciarDadosAutenticadosMatriz(){if(!await window.SE7Polos.init())return;window.iniciarAuditoriaMovimentacoes?.();const perfil=JSON.parse(sessionStorage.getItem('usuario_logado')||'{}').perfil;if(perfil==='professor'){window.SE7Exams?.apply(perfil);return;}if(dadosMatrizIniciados)return;dadosMatrizIniciados=true;db=SE7Reads.wrap(db);SE7Reads.installButton();carregarDadosDaNuvem();if(usuarioMasterAtivo()){renderizarSolicitacoesPendentes();}}
         function carregarDadosDaNuvem() {
             db.collection("config").doc("institution").onSnapshot((doc) => {
                 if (doc.exists) {
@@ -2623,6 +2611,7 @@ document.getElementById('input-inst-inep').value = data.inep || '';
                     return nomeA.localeCompare(nomeB, 'pt-BR');
                 });
 
+    void carregarAlunosSemTurma();
     renderAllIntegratedViews();
     void window.SE7Ingress?.migrate();
     popularSelectAlunosPortalMaster();
@@ -2808,7 +2797,7 @@ async function excluirColaborador(id) {
 }
 
         let salvandoCurso=false;
-        async function saveCourse(){if(salvandoCurso)return;salvandoCurso=true;const button=document.getElementById('btn-save-course');button.disabled=true;const label=button.textContent;button.textContent='Aguarde…';try{const id=document.getElementById('edit-course-id').value,course={};for(const key of ['name','sigla','nivel','eixo','hours','conselho'])course[key]=document.getElementById('input-course-'+key).value.trim();const result=await SE7.api('course-save',{...(id?{id}:{}),course});const old=courses.find(c=>c.id===result.id);if(old)Object.assign(old,result.course);else courses.push({id:result.id,...result.course});void registrarLogAuditoria('Atualizou cadastro do curso '+course.name+'; valores das turmas e faturas preservados.','Configurações / Curso');renderCourses();cancelarEdicaoCurso();alert('Curso salvo com sucesso. Configure os valores no cadastro da turma.');}catch(e){alert('Não foi possível salvar o curso: '+e.message);}finally{salvandoCurso=false;button.disabled=false;button.textContent=document.getElementById('edit-course-id').value?label:'Salvar Curso';}}
+        async function saveCourse(){if(salvandoCurso)return;salvandoCurso=true;const button=document.getElementById('btn-save-course');button.disabled=true;const label=button.textContent;button.textContent='Aguarde…';try{const id=document.getElementById('edit-course-id').value,course={};for(const key of ['name','sigla','nivel','eixo','hours','conselho'])course[key]=document.getElementById('input-course-'+key).value.trim();const result=await SE7.api('course-save',{...(id?{id}:{}),course});await SE7Reads.refresh('courses');const old=courses.find(c=>c.id===result.id);if(old)Object.assign(old,result.course);else courses.push({id:result.id,...result.course});void registrarLogAuditoria('Atualizou cadastro do curso '+course.name+'; valores das turmas e faturas preservados.','Configurações / Curso');renderCourses();cancelarEdicaoCurso();alert('Curso salvo com sucesso. Configure os valores no cadastro da turma.');}catch(e){alert('Não foi possível salvar o curso: '+e.message);}finally{salvandoCurso=false;button.disabled=false;button.textContent=document.getElementById('edit-course-id').value?label:'Salvar Curso';}}
         function renderCourses() {
             const list = document.getElementById('courses-list');
             const counter = document.getElementById('total-courses-count');
@@ -3017,12 +3006,12 @@ async function excluirColaborador(id) {
             document.getElementById('input-class-code-auto').value=code;
             document.getElementById('input-class-name-auto').value=SE7ClassFormat.className(curso,number);
         }
-        async function addClass(){const button=document.getElementById('btn-save-class');if(button.disabled)return;button.disabled=true;const text=button.textContent;button.textContent='Aguarde…';try{const data={id:document.getElementById('edit-class-id').value,courseId:document.getElementById('input-class-course').value,semestre:document.getElementById('input-class-semester').value,entrySemester:document.getElementById('input-class-entry').value.trim(),stage:document.getElementById('input-class-stage').value,weekdays:[...document.querySelectorAll('[name="class-weekday"]:checked')].map(e=>Number(e.value)),startTime:document.getElementById('input-class-start').value,endTime:document.getElementById('input-class-end').value,financeConfig:Object.fromEntries(['qtdParcelas','valorParcela','valorDesconto','vencimento'].map(k=>[k,document.getElementById('class-finance-'+k).value]))};if(!data.courseId)return alert('Selecione um curso.');SE7Tuition.validateTuition(data.financeConfig);const result=await SE7.api('class-save',data);const old=classes.find(c=>c.id===result.id);if(old)Object.assign(old,result);else classes.push(result);renderClasses();cancelarEdicaoTurma();alert('Turma salva com sucesso.');}catch(e){alert(e.message);}finally{button.disabled=false;button.textContent=document.getElementById('edit-class-id').value?text:'Salvar Turma';}}
+        async function addClass(){const button=document.getElementById('btn-save-class');if(button.disabled)return;button.disabled=true;const text=button.textContent;button.textContent='Aguarde…';try{const data={poloId:document.getElementById('input-class-polo').value,id:document.getElementById('edit-class-id').value,courseId:document.getElementById('input-class-course').value,semestre:document.getElementById('input-class-semester').value,entrySemester:document.getElementById('input-class-entry').value.trim(),stage:document.getElementById('input-class-stage').value,weekdays:[...document.querySelectorAll('[name="class-weekday"]:checked')].map(e=>Number(e.value)),startTime:document.getElementById('input-class-start').value,endTime:document.getElementById('input-class-end').value,financeConfig:Object.fromEntries(['qtdParcelas','valorParcela','valorDesconto','vencimento'].map(k=>[k,document.getElementById('class-finance-'+k).value]))};if(!data.courseId)return alert('Selecione um curso.');if(!data.poloId)return alert('Selecione o polo da turma.');SE7Tuition.validateTuition(data.financeConfig);const result=await SE7.api('class-save',data);const old=classes.find(c=>c.id===result.id);if(old)Object.assign(old,result);else classes.push(result);await window.SE7Reads?.refresh('classes');await window.SE7Reads?.refresh('academicCalendars');renderClasses();cancelarEdicaoTurma();alert('Turma salva com sucesso.');}catch(e){alert(e.message);}finally{button.disabled=false;button.textContent=document.getElementById('edit-class-id').value?text:'Salvar Turma';}}
 
         function editarTurma(id) {
             const t = classes.find(c => c.id === id);
             if (!t) return;
-            document.getElementById('edit-class-id').value = t.id;
+            document.getElementById('edit-class-id').value = t.id;document.getElementById('input-class-polo').value=t.poloId||'';
             document.getElementById('input-class-course').value = t.courseId || '';
             document.getElementById('input-class-semester').value = t.semestre || '2026.2';
             document.getElementById('input-class-code-auto').value = t.code || '';
@@ -3037,7 +3026,7 @@ async function excluirColaborador(id) {
 
         function cancelarEdicaoTurma() {
             fecharModalEdicaoConfiguracao();
-            document.getElementById('edit-class-id').value = '';document.getElementById('input-class-entry').value='';document.getElementById('input-class-stage').value='';document.getElementById('input-class-start').value='';document.getElementById('input-class-end').value='';document.querySelectorAll('[name=class-weekday]').forEach(e=>e.checked=false);
+            document.getElementById('edit-class-id').value = '';document.getElementById('input-class-polo').value=window.SE7Polos?.current()||'';document.getElementById('input-class-entry').value='';document.getElementById('input-class-stage').value='';document.getElementById('input-class-start').value='';document.getElementById('input-class-end').value='';document.querySelectorAll('[name=class-weekday]').forEach(e=>e.checked=false);
             document.getElementById('btn-save-class').textContent = "Salvar Turma";
             document.getElementById('btn-cancel-edit-class').style.display = 'none';
             carregarFinanceiroCadastroTurma(true);atualizarPreviewTurmaAutomatica();
@@ -3083,7 +3072,7 @@ async function excluirColaborador(id) {
                     list.innerHTML += `
                         <li class="py-3 text-xs flex justify-between items-center border-b border-gray-100 dark:border-slate-700">
                             <div>
-                                <strong class="text-sm text-gray-900 dark:text-white">${c.name}</strong><br>
+                                <strong class="text-sm text-gray-900 dark:text-white">${c.name} — ${window.SE7Polos?.name(c.poloId)||'Polo não definido'}</strong><br>
                                 <span class="text-gray-500">Código: ${c.code} &bull; Curso: ${curso ? curso.name : '---'} &bull; Ingresso: ${c.entrySemester||c.semestre||'---'} &bull; Calendário: ${c.semestre||'---'}${c.stage?' &bull; Etapa: '+c.stage+'º semestre':''}<br>${(c.weekdays||[]).map(d=>['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'][d]).join(', ')} ${c.startTime&&c.endTime?c.startTime+' às '+c.endTime:'Horário a definir'}</span>
                             </div>
                             <div class="flex gap-2 shrink-0">
@@ -3166,7 +3155,8 @@ async function excluirColaborador(id) {
             const cursoObj = courses.find(c => c.id === courseId);
             const turmaObj = classes.find(cl => cl.id === classId);
 
-            const eventoData = {
+            if(!turmaObj?.poloId)return alert("Vincule esta turma a um polo no cadastro de turmas.");
+            const eventoData = {poloId:turmaObj.poloId,poloName:turmaObj.poloName||"",
                 courseId,
                 courseName: cursoObj ? cursoObj.name : '---',
                 classId,
@@ -3284,7 +3274,8 @@ async function excluirColaborador(id) {
                 novasDatas.push(val);
             }
 
-            await db.collection("academicCalendars").doc(id).update({
+            const calendar=academicCalendars.find(c=>c.id===id),group=classes.find(c=>c.id===calendar?.classId);if(!group?.poloId)return alert("Vincule a turma a um polo antes de editar o calendário.");
+            await db.collection("academicCalendars").doc(id).update({poloId:group.poloId,poloName:group.poloName||"",
                 subject,
                 description,
                 dates: novasDatas,
@@ -3452,7 +3443,7 @@ async function excluirColaborador(id) {
             const select = document.getElementById('input-student-class');
             if(!select) return;
             select.innerHTML = '';
-            classes.filter(c => c.courseId == courseId).forEach(c => select.insertAdjacentHTML('beforeend', `<option value="${c.id}">${c.name}</option>`));
+            classes.filter(c => c.courseId == courseId && (!document.getElementById('input-student-polo')?.value||c.poloId===document.getElementById('input-student-polo').value)).forEach(c => select.insertAdjacentHTML('beforeend', `<option value="${c.id}">${c.name} — ${window.SE7Polos?.name(c.poloId)||'Polo não definido'}</option>`));
         }
 
         function filterTurmasByAttendanceCourse() {
@@ -3460,7 +3451,7 @@ async function excluirColaborador(id) {
             const select = document.getElementById('class-select');
             if(!select) return;
             select.innerHTML = '<option value="">Selecione a turma...</option>';
-            classes.filter(c => c.courseId == courseId).forEach(c => select.insertAdjacentHTML('beforeend', `<option value="${c.id}">${c.name}</option>`));
+            classes.filter(c => c.courseId == courseId).forEach(c => select.insertAdjacentHTML('beforeend', `<option value="${c.id}">${c.name} — ${window.SE7Polos?.name(c.poloId)||'Polo não definido'}</option>`));
             
             // Aciona o carregamento das datas do calendário correspondentes à turma selecionada
             atualizarSemestresFrequencia();
@@ -3474,7 +3465,7 @@ function carregarDatasCalendarioParaFrequencia(){const classId=document.getEleme
             const select = document.getElementById('grade-class-select');
             if(!select) return;
             select.innerHTML = '';
-            classes.filter(c => c.courseId == courseId).forEach(c => select.insertAdjacentHTML('beforeend', `<option value="${c.id}">${c.name}</option>`));
+            classes.filter(c => c.courseId == courseId).forEach(c => select.insertAdjacentHTML('beforeend', `<option value="${c.id}">${c.name} — ${window.SE7Polos?.name(c.poloId)||'Polo não definido'}</option>`));
             renderGradeSubjects();
         }
 
@@ -3524,6 +3515,7 @@ function carregarDatasCalendarioParaFrequencia(){const classId=document.getEleme
     const classId = document.getElementById('input-student-class').value;
 
     if (!fullname || !email || !cpf || !courseId || !classId) return alert("Preencha todos os campos!");
+    const chosenClass=classes.find(c=>c.id===classId);if(!chosenClass?.poloId||chosenClass.poloId!==document.getElementById('input-student-polo').value)return alert('Escolha uma turma vinculada ao mesmo polo do aluno.');
     if (!validarCPF(cpf)) return alert("CPF inválido!");
     if(document.getElementById('whatsapp-opt-in-aluno').checked){
         let telefone=document.getElementById('whatsappAluno').value.replace(/\D/g,'');
@@ -4419,7 +4411,7 @@ function renderFinanceStudentSelect(){const select=document.getElementById('fin-
                 const el = document.getElementById(id);
                 if(el && (id === 'class-select' || id === 'grade-class-select')) { 
                     el.innerHTML = ''; 
-                    classes.forEach(c => el.insertAdjacentHTML('beforeend', `<option value="${c.id}">${c.name}</option>`)); 
+                    classes.forEach(c => el.insertAdjacentHTML('beforeend', `<option value="${c.id}">${c.name} — ${window.SE7Polos?.name(c.poloId)||'Polo não definido'}</option>`)); 
                 }
             });
             filterTurmasByCourse(); filterTurmasByAttendanceCourse(); filterTurmasByGradeCourse(); window.SE7Templates?.refresh();
@@ -4995,7 +4987,7 @@ async function alternarProvaIndividualAluno(studentId, novoStatus) {
         if (!painel || !lista) return;
 
         try {
-            const snapshot = await db.collection("students").get();
+            const snapshot = {forEach:fn=>students.forEach(s=>fn({id:s.id,data:()=>s}))};
             let semTurma = [];
 
             snapshot.forEach(doc => {
@@ -5012,7 +5004,7 @@ async function alternarProvaIndividualAluno(studentId, novoStatus) {
                 lista.innerHTML = '';
 
                 // Busca as turmas e cursos disponíveis para preencher os selects
-                const classesSnap = await db.collection("classes").get();
+                const classesSnap = {forEach:fn=>classes.forEach(c=>fn({id:c.id,data:()=>c}))};
                 let turmasDoSistema = [];
                 classesSnap.forEach(cDoc => {
                     turmasDoSistema.push({ id: cDoc.id, ...cDoc.data() });
@@ -5021,7 +5013,7 @@ async function alternarProvaIndividualAluno(studentId, novoStatus) {
                 semTurma.forEach(aluno => {
                     let opcoesTurmas = '<option value="">Selecione a Turma...</option>';
                     turmasDoSistema.forEach(t => {
-                        if (!aluno.courseId || t.courseId === aluno.courseId) {
+                        if (t.poloId&&t.poloId===aluno.poloId&&(!aluno.courseId || t.courseId === aluno.courseId)) {
                             opcoesTurmas += `<option value="${t.id}">${t.name}</option>`;
                         }
                     });
@@ -5066,7 +5058,7 @@ async function alternarProvaIndividualAluno(studentId, novoStatus) {
                 const snapshotAluno = await tx.get(refAluno);
                 if (!snapshotAluno.exists) throw new Error("Aluno não encontrado.");
                 if (["Cancelado", "Transferido", "Trancado", "Inativo"].includes(snapshotAluno.data().status)) throw new Error("Use Reativação de Matrícula para este aluno.");
-                tx.update(refAluno, {classId: turmaId, status: "Ativo"});
+                const turma=await tx.get(db.collection('classes').doc(turmaId));if(!turma.exists||!turma.data().poloId||turma.data().poloId!==snapshotAluno.data().poloId||turma.data().courseId!==snapshotAluno.data().courseId)throw Error('Turma e aluno precisam pertencer ao mesmo curso e polo.');tx.update(refAluno, {classId: turmaId, status: "Ativo"});
             });
             alert("Turma atribuída com sucesso! O aluno agora está integrado a todas as abas.");
             carregarAlunosSemTurma(); // Atualiza a lista na hora
@@ -5408,7 +5400,7 @@ function escutarRegistrosPontoManual() {
 <link rel="stylesheet" href="/assets/se7-template-editor.css"><script src="/assets/se7-document-models.js"></script>
 <script src="/assets/se7-academic-documents.js"></script><script src="/assets/se7-template-editor.js"></script>
 <link rel="stylesheet" href="/assets/se7-exams.css">
-<script src="/assets/vendor/pdf-lib.min.js"></script><script src="/assets/vendor/fontkit.umd.min.js"></script><script src="/assets/vendor/jsQR.js"></script><script src="/assets/vendor/qrcode.js"></script><script src="/assets/se7-exam-omr.js"></script><script src="/assets/se7-exam-pdf.js"></script><script src="/assets/se7-exams.js"></script>
+<script src="/assets/vendor/pdf-lib.min.js"></script><script src="/assets/vendor/fontkit.umd.min.js"></script><script src="/assets/vendor/jsQR.js"></script><script src="/assets/vendor/qrcode.js"></script><script src="/assets/se7-exam-omr.js"></script><script src="/assets/se7-exam-pdf.js"></script><script src="/assets/se7-exam-calendar.js" type="module"></script><script src="/assets/se7-exams.js"></script>
 <link rel="stylesheet" href="/assets/se7-student-sheet.css"><script src="/assets/se7-student-sheet.js"></script>
 <script src="/assets/se7-academic-entry.js"></script>
 <script src="/assets/se7-enrollment-auto.js"></script>
