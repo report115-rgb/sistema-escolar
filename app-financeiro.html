@@ -165,6 +165,9 @@
 <script src="/assets/se7-cadastro.js"></script>
 <link rel="stylesheet" href="/assets/se7-notices.css">
 <script defer src="/assets/se7-finance-batch.js"></script>
+<link rel="icon" type="image/svg+xml" href="/assets/se7-brand-icon.svg">
+<link rel="stylesheet" href="/assets/se7-brand.css">
+<script defer src="/assets/se7-brand.js"></script>
 </head>
 <body class="se7-suite bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans antialiased h-screen overflow-hidden flex flex-col transition-colors duration-200">
 <div id="se7-welcome" hidden role="status" aria-live="polite" aria-atomic="true">
@@ -200,28 +203,28 @@
         </svg>
         <div class="finance-login-shell">
             <div class="finance-login-brand">
-                <div class="finance-login-logo-box">
+                <div class="finance-login-logo-box"><img class="se7-product-logo" src="/assets/se7-brand-light.svg" alt="SE7 Gestão Acadêmica">
                     <img id="finance-login-logo" alt="Logomarca da instituição" style="display:none;" onload="document.getElementById('finance-login-logo-fallback').style.display='none'" onerror="this.style.display='none';document.getElementById('finance-login-logo-fallback').style.display='block'">
                     <span id="finance-login-logo-fallback">Setor Financeiro</span>
                 </div>
-                <h1 class="finance-login-headline">Tudo <span>conectado.</span></h1>
+                <h1 class="finance-login-headline">Acesso institucional</h1>
                 <p class="finance-login-sector">Setor Financeiro</p>
             </div>
             <div class="finance-login-card">
-                <h2 id="finance-login-title">Acesso Institucional</h2>
+                <h2 id="finance-login-title">Entre com sua conta</h2>
                 <p class="finance-login-description">Entre com suas credenciais para continuar</p>
                 <form id="finance-login-form" onsubmit="event.preventDefault();fazerLogin();">
                     <div class="finance-login-field">
                         <label for="login-user">E-mail ou Usuário</label>
                         <div class="finance-login-input-box">
-                            <svg class="finance-login-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="7" r="4"/><path d="M3 21v-3a9 9 0 0 1 18 0v3z"/></svg>
+                            <svg class="finance-login-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="7" r="4"/><path d="M4 21v-3a8 8 0 0 1 16 0v3"/></svg>
                             <input id="login-user" type="text" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="next" placeholder="Seu e-mail ou usuário" class="finance-login-input">
                         </div>
                     </div>
                     <div class="finance-login-field">
                         <label for="login-pass">Senha</label>
                         <div class="finance-login-input-box">
-                            <svg class="finance-login-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="10" width="16" height="12" rx="2" fill="currentColor"/><path d="M7 10V7a5 5 0 0 1 10 0v3"/><path d="M12 14v4" stroke="#0b1b31"/></svg>
+                            <svg class="finance-login-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="10" width="16" height="12" rx="2"/><path d="M7 10V7a5 5 0 0 1 10 0v3M12 14v4"/></svg>
                             <input id="login-pass" type="password" autocomplete="current-password" enterkeyhint="go" placeholder="••••••••" class="finance-login-input">
                             <button type="button" class="finance-login-eye" aria-label="Mostrar senha" aria-pressed="false" onclick="alternarSenhaFinanceiro(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button>
                         </div>

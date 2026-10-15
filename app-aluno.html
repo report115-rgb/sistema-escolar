@@ -216,6 +216,9 @@
 <script src="/assets/se7-cadastro.js"></script>
 <link rel="stylesheet" href="/assets/se7-notices.css">
 <script defer src="/assets/se7-notices.js"></script>
+<link rel="icon" type="image/svg+xml" href="/assets/se7-brand-icon.svg">
+<link rel="stylesheet" href="/assets/se7-brand.css">
+<script defer src="/assets/se7-brand.js"></script>
 </head>
 <body class="se7-suite bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans antialiased h-screen overflow-hidden flex flex-col transition-colors duration-200">
 <div id="se7-welcome" hidden role="status" aria-live="polite" aria-atomic="true">
@@ -256,11 +259,11 @@
         </svg>
         <div class="student-login-shell">
             <div class="student-login-brand">
-                <div class="student-login-logo-box">
+                <div class="student-login-logo-box"><img class="se7-product-logo" src="/assets/se7-brand-light.svg" alt="SE7 Gestão Acadêmica">
                     <img id="welcome-logo-img" alt="Logomarca da instituição" style="display:none;" onerror="this.style.display='none';document.getElementById('welcome-icon-box').style.display='block'">
                     <span id="welcome-icon-box">Portal do Aluno</span>
                 </div>
-                <h1 class="student-login-headline">Tudo <span>conectado.</span></h1>
+                <h1 class="student-login-headline">Portal do Aluno</h1>
                 <p class="student-login-sector">Portal do Aluno</p>
             </div>
             <div class="student-login-card">
@@ -288,34 +291,34 @@
         <div class="student-login-shell">
             <button type="button" class="student-login-back" aria-label="Voltar às opções iniciais" onclick="mudarTelaComTransicao('login-screen','welcome-screen')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 12H4m7-7-7 7 7 7"/></svg></button>
             <div class="student-login-brand">
-                <div class="student-login-logo-box">
+                <div class="student-login-logo-box"><img class="se7-product-logo" src="/assets/se7-brand-light.svg" alt="SE7 Gestão Acadêmica">
                     <img id="student-login-logo" alt="Logomarca da instituição" style="display:none;" onload="document.getElementById('student-login-logo-fallback').style.display='none'" onerror="this.style.display='none';document.getElementById('student-login-logo-fallback').style.display='block'">
                     <span id="student-login-logo-fallback">Portal do Aluno</span>
                 </div>
-                <h1 class="student-login-headline">Tudo <span>conectado.</span></h1>
+                <h1 class="student-login-headline">Portal do Aluno</h1>
                 <p class="student-login-sector">Portal do Aluno</p>
             </div>
             <div class="student-login-card">
-                <h2 id="student-login-title">Acesso Institucional</h2>
+                <h2 id="student-login-title">Seu ambiente acadêmico</h2>
                 <p class="student-login-description">Entre com suas credenciais para continuar</p>
                 <form id="student-login-form" onsubmit="event.preventDefault();fazerLoginAluno();">
                     <div class="student-login-field">
                         <label for="login-cpf">CPF do Aluno</label>
                         <div class="student-login-input-box">
-                            <svg class="student-login-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="7" r="4"/><path d="M3 21v-3a9 9 0 0 1 18 0v3z"/></svg>
+                            <svg class="student-login-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="7" r="4"/><path d="M4 21v-3a8 8 0 0 1 16 0v3"/></svg>
                             <input id="login-cpf" type="text" autocomplete="username" inputmode="numeric" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="next" placeholder="000.000.000-00" class="student-login-input">
                         </div>
                     </div>
                     <div class="student-login-field">
-                        <label for="login-pass">Matrícula ou Senha</label>
+                        <label for="login-pass">Senha</label>
                         <div class="student-login-input-box">
-                            <svg class="student-login-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="10" width="16" height="12" rx="2" fill="currentColor"/><path d="M7 10V7a5 5 0 0 1 10 0v3"/><path d="M12 14v4" stroke="#0b1b31"/></svg>
+                            <svg class="student-login-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="10" width="16" height="12" rx="2"/><path d="M7 10V7a5 5 0 0 1 10 0v3M12 14v4"/></svg>
                             <input id="login-pass" type="password" autocomplete="current-password" enterkeyhint="go" placeholder="Sua matrícula ou senha" class="student-login-input">
                             <button type="button" class="student-login-eye" aria-label="Mostrar senha" aria-pressed="false" onclick="alternarSenhaAluno(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button>
                         </div>
                     </div>
                     <button id="btn-login-aluno" data-busy-managed type="submit">Entrar no Aplicativo</button>
-                    <button type="button" onclick="abrirModalEsqueciSenha()" class="student-login-forgot">Esqueci minha senha</button>
+                    <button type="button" onclick="abrirModalEsqueciSenha()" class="student-login-forgot">Esqueci minha senha</button><button type="button" onclick="irParaTelaMatriculaSuave()" class="se7-enroll-link">Quero me matricular <span aria-hidden="true">›</span></button>
                 </form>
             </div>
         </div>

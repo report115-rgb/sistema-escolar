@@ -156,6 +156,9 @@
 <link rel="stylesheet" href="/assets/se7-notices.css">
 <script defer src="/assets/se7-notices.js"></script>
 
+<link rel="icon" type="image/svg+xml" href="/assets/se7-brand-icon.svg">
+<link rel="stylesheet" href="/assets/se7-brand.css">
+<script defer src="/assets/se7-brand.js"></script>
 </head>
 <body class="se7-suite se7-matriz bg-gray-100 dark:bg-slate-900 text-gray-800 dark:text-gray-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-300 pb-16">    
 
@@ -180,31 +183,15 @@
 
 <!-- TELA DE LOGIN / ACESSO INSTITUCIONAL -->
 <div id="login-modal" class="se7-login" role="dialog" aria-modal="true" aria-labelledby="login-box-title">
-    <svg class="login-art" viewBox="0 0 1672 892" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-        <defs>
-            <radialGradient id="login-blue-aura"><stop stop-color="#1175ff" stop-opacity=".36"/><stop offset="1" stop-color="#1175ff" stop-opacity="0"/></radialGradient>
-        </defs>
-        <ellipse cx="125" cy="340" rx="330" ry="460" fill="url(#login-blue-aura)"/>
-        <!-- Duas retas e dois círculos com o mesmo raio, recortados pelas bordas da tela. -->
-        <g class="login-wire">
-            <line x1="490" y1="0" x2="0" y2="616"/>
-            <line x1="0" y1="424" x2="585" y2="892"/>
-            <circle cx="-100" cy="240" r="350"/>
-            <circle cx="240" cy="1050" r="350"/>
-        </g>
-        <circle class="login-glow" cx="-100" cy="240" r="350"/>
-        <circle class="login-glow login-glow-second" cx="240" cy="1050" r="350"/>
-        <line class="login-glow" style="animation-delay:-4s" x1="490" y1="0" x2="0" y2="616"/>
-        <line class="login-glow login-glow-second" x1="0" y1="424" x2="585" y2="892"/>
-    </svg>
+    <svg class="login-art" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><g class="login-wire"><path d="M-80 620H170Q210 620 240 650L500 910"/><path d="M480-80 740 270Q780 320 750 360L650 500"/><path d="M1120-100V10Q1120 110 1220 110H1510"/><path d="M1500 760H1220Q1100 760 1100 880V980"/></g><g class="login-glow"><path d="M-80 620H170Q210 620 240 650L500 910"/><path d="M1120-100V10Q1120 110 1220 110H1510"/></g><g class="login-glow login-glow-second"><path d="M480-80 740 270Q780 320 750 360L650 500"/><path d="M1500 760H1220Q1100 760 1100 880V980"/></g></svg>
     <div class="login-shell">
         <section class="login-brand" aria-label="Identidade institucional">
             <div class="login-logo-slot">
                 <img id="login-logo-img" alt="Logomarca da instituição" style="display:none;" onload="document.getElementById('login-logo-fallback').style.display='none'" onerror="this.style.display='none';document.getElementById('login-logo-fallback').style.display='block'">
-                <span id="login-logo-fallback">Sistema Matriz</span>
+                <span id="login-logo-fallback">Sistema Matriz</span><img class="se7-product-logo" src="/assets/se7-brand-light.svg" alt="SE7 Gestão Acadêmica">
             </div>
             <h1 class="login-brand-heading" aria-label="Tudo conectado"><span style="color:inherit;">Tudo </span><span class="login-connected">conectado<span class="login-loading-dots" aria-hidden="true"><span>.</span><span>.</span><span>.</span></span></span></h1>
-            <p class="login-brand-subtitle">Sistema Matriz</p>
+            <p class="login-brand-subtitle">Sua gestão acadêmica em um só lugar.</p>
             <div class="login-institution-meta"><h3 id="login-info-title">Sistema de Ensino Técnico e Transporte</h3><p id="login-info-desc"></p><span id="login-info-version">SE7 Cloud</span></div>
         </section>
         <section class="login-card">
@@ -214,14 +201,14 @@
                 <div class="login-field">
                     <label for="login-user">E-mail ou Usuário</label>
                     <div class="login-input-wrap">
-                        <svg class="login-input-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="7" r="4"/><path d="M3 21v-3a9 9 0 0 1 18 0v3z"/></svg>
+                        <svg class="login-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="7" r="4"/><path d="M4 21v-3a8 8 0 0 1 16 0v3"/></svg>
                         <input type="text" id="login-user" autocomplete="username" placeholder="Seu e-mail ou usuário" class="login-input">
                     </div>
                 </div>
                 <div class="login-field">
                     <label for="login-pass">Senha</label>
                     <div class="login-input-wrap">
-                        <svg class="login-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="10" width="16" height="12" rx="2" fill="currentColor"/><path d="M7 10V7a5 5 0 0 1 10 0v3"/><path d="M12 14v4" stroke="#0b1b31"/></svg>
+                        <svg class="login-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="10" width="16" height="12" rx="2"/><path d="M7 10V7a5 5 0 0 1 10 0v3M12 14v4"/></svg>
                         <input type="password" id="login-pass" autocomplete="current-password" placeholder="••••••••" class="login-input">
                         <button type="button" class="login-password-toggle" aria-label="Mostrar senha" aria-pressed="false" onclick="alternarSenhaAcesso(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button>
                     </div>
@@ -438,7 +425,7 @@
             <button class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-slate-600" id="nav-btn-settings" onclick="openTab(event, 'tab-settings')"><i class="fa-solid fa-gear mr-1.5"></i><span class="se7-nav-label">Sistema</span></button>
 	    
            </nav>
-        
+        <div class="se7-product-signature"><img src="/assets/se7-brand-light.svg" alt="SE7 Gestão Acadêmica"></div>
     </aside>
 
     <!-- CABEÇALHO DO SISTEMA -->
@@ -527,11 +514,9 @@
                             <thead>
                                 <tr class="border-b border-gray-200 dark:border-slate-700 text-gray-500">
                                     <th class="p-3">Matrícula</th>
-                                    <th class="p-3">Nome Completo</th>
-                                    <th class="p-3">CPF</th>
-                                    <th class="p-3">WhatsApp / E-mail</th>
-                                    <th class="p-3">Curso / Turma</th>
-                                    <th class="p-3">Status</th>
+                                    <th class="p-3">Aluno</th>
+                                    <th class="p-3">Turma</th>
+                                    <th class="p-3">Situação</th>
                                     <th class="p-3 text-right">Ações</th>
                                 </tr>
                             </thead>
@@ -560,11 +545,9 @@
                             <thead>
                                 <tr class="border-b border-gray-200 dark:border-slate-700 text-gray-500">
                                     <th class="p-3">Matrícula</th>
-                                    <th class="p-3">Nome Completo</th>
-                                    <th class="p-3">CPF</th>
-                                    <th class="p-3">WhatsApp / E-mail</th>
-                                    <th class="p-3">Curso / Turma</th>
-                                    <th class="p-3">Status</th>
+                                    <th class="p-3">Aluno</th>
+                                    <th class="p-3">Turma</th>
+                                    <th class="p-3">Situação</th>
                                     <th class="p-3 text-right">Ações</th>
                                 </tr>
                             </thead>
@@ -3763,7 +3746,7 @@ function carregarDatasCalendarioParaFrequencia(){const classId=document.getEleme
     if(counter) counter.textContent = `Total: ${alunosFiltrados.length} aluno(s) (Filtrados de ${ativos.length})`;
     
     if(alunosFiltrados.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-gray-400">Nenhum aluno encontrado com este termo.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400">Nenhum aluno encontrado com este termo.</td></tr>`;
         return;
     }
 
@@ -3781,15 +3764,12 @@ function carregarDatasCalendarioParaFrequencia(){const classId=document.getEleme
             <tr class="border-b border-gray-100 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-900/40">
                 <td class="p-3 font-bold text-blue-600 dark:text-blue-400">${SE7Safe.escape(s.code || '---')}</td>
                 <td class="p-3 font-semibold"><button type="button" class="se7-student-name" data-student-sheet="${SE7Safe.escape(s.id)}" title="Consultar ficha do aluno">${SE7Safe.escape(s.fullname)}</button></td>
-                <td class="p-3">${SE7Safe.escape(s.cpf || '---')}</td>
-                <td class="p-3">${SE7Safe.escape(s.whatsapp || '')} <br><span class="text-[10px] text-gray-400">${SE7Safe.escape(s.email || '')}</span></td>
-                <td class="p-3">${SE7Safe.escape(curso ? curso.name : '---')} <br><span class="text-[10px] text-gray-400">Turma: ${SE7Safe.escape(turma ? turma.name : '---')}</span></td>
+                <td class="p-3">${SE7Safe.escape(turma ? turma.name : '---')}<br><span class="text-[10px] text-gray-400">${SE7Safe.escape(curso ? curso.name : '---')}</span></td>
                 <td class="p-3"><span class="px-2 py-0.5 ${classeStatusMatricula(s.status)} rounded text-[10px] font-bold">${rotuloStatusMatricula(s.status)}</span>${s.enrollmentRequest ? '<div class="text-[10px] text-amber-500 mt-1">Solicitação pendente</div>' : ''}</td>
                 <td class="p-3 text-right space-x-1">
-                    <button onclick="editarAluno('${s.id}')" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs shadow"><i class="fa-solid fa-pen-to-square mr-1"></i> Editar</button>
-                    <button type="button" onclick="verHistoricoMatricula('${s.id}')" class="px-2.5 py-1 bg-blue-600 text-white rounded text-xs">Histórico</button>
-                    ${window.SE7PortalPreview?.allowed()?`<button type="button" data-preview-student="${SE7Safe.escape(s.id)}" class="px-2.5 py-1 bg-indigo-600 text-white rounded text-xs shadow"><i class="fa-solid fa-mobile-screen-button mr-1" aria-hidden="true"></i> Visualizar portal</button>`:''}
-                    ${botaoDeletar}
+                    <button onclick="editarAluno('${s.id}')" title="Editar aluno" aria-label="Editar aluno" class="se7-edit-student px-2.5 py-1 bg-blue-600 text-white rounded text-xs"><i class="fa-solid fa-pen" aria-hidden="true"></i></button>
+                    ${window.SE7PortalPreview?.allowed()?`<button type="button" data-preview-student="${SE7Safe.escape(s.id)}" class="px-2.5 py-1 bg-indigo-600 text-white rounded text-xs shadow"><i class="fa-solid fa-mobile-screen-button mr-1" aria-hidden="true"></i> Ver portal</button>`:''}
+                    <details class="se7-row-more"><summary aria-label="Mais ações do aluno" title="Mais ações">•••</summary><div><button type="button" onclick="verHistoricoMatricula('${s.id}')" class="px-2.5 py-1">Histórico de matrícula</button>${botaoDeletar}</div></details>
                 </td>
             </tr>
         `;
