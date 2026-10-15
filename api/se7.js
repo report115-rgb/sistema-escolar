@@ -1,3 +1,4 @@
+import * as academicDocuments from '../server/academic-documents.mjs';
 import {saveCourse as saveCourseConfiguration} from '../server/course-configuration.mjs';
 import {saveClass} from '../server/class-registration.mjs';
 import * as academicIngress from '../server/academic-ingress.mjs';
@@ -71,6 +72,7 @@ async function unlock(ref,lock){await ref.firestore.runTransaction(async tx=>{co
 async function publicInfo(db){const snap=await db.collection('config').doc('institution').get();const d=snap.data()||{};const fields=['name','razao','cnpj','email','tel','end','loginDesc','logo','logomarca','urlLogo','logoUrl','image','fileUrl'];return {institution:Object.fromEntries(fields.filter(k=>typeof d[k]==='string').map(k=>[k,d[k]]))};}
 async function dispatchOperation({auth,db},req,b){
  const action=b.action;
+ if(action==='academic-document-verify'){academicDocuments.publicLimit(req);return academicDocuments.verify(db,b);}
  if(action==='public-info')return publicInfo(db);
  if(action==='catalog'){const snap=await db.collection('courses').get();return {courses:snap.docs.map(d=>({id:d.id,name:d.data().name||'Curso'}))};}
  if(action==='student-login')return loginStudent(auth,db,req,b);
@@ -91,6 +93,8 @@ async function dispatchOperation({auth,db},req,b){
   if(typeof b.acao!=='string'||!b.acao.trim()||b.acao.length>2000||typeof b.modulo!=='string'||!b.modulo.trim()||b.modulo.length>120)fail(400,'Registro de auditoria inválido.');
   await limits(db,req,'audit:'+u.uid);const now=new Date();await db.collection('systemLogs').add({dataHora:now.toLocaleString('pt-BR',{timeZone:'America/Fortaleza'}),createdAt:now.toISOString(),usuario:u.profile?.nome||u.name||u.email||u.uid,perfil:u.role.toUpperCase(),modulo:b.modulo.trim(),acao:b.acao.trim(),actorUid:u.uid,origem:'atividade do navegador'});return {ok:true};
  }
+ if(action==='academic-document-issue')return academicDocuments.issue(db,b,u);
+ if(action==='academic-document-revoke')return academicDocuments.revoke(db,b,u);
  if(action==='course-save')return saveCourseConfiguration(db,b,u);
  if(action==='class-save')return saveClass(db,{...b,id:b.id?validId(b.id):undefined,courseId:validId(b.courseId)},u);
  if(action==='academic-entry-migrate')return academicIngress.migrate(db,(Array.isArray(b.studentIds)?b.studentIds:[]).map(validId),u);
@@ -279,10 +283,10 @@ async function dispatchOperation({auth,db},req,b){
  }
  fail(400,'Operação desconhecida.');
 }
-const auditActionNames={'exam-catalog':'Consultou avaliações e dados do professor','exam-get':'Abriu uma avaliação para edição','exam-save':'Salvou avaliação','exam-roster':'Consultou alunos para impressão','exam-print':'Gerou prova nominal e cartão-resposta','exam-scan-start':'Identificou cartão-resposta para correção','exam-scan-preview':'Analisou foto do cartão-resposta','exam-scan-commit':'Registrou correção e notas da avaliação','exam-results':'Consultou correções','exam-result':'Consultou cartão corrigido','exam-point':'Consultou frequência e pagamentos','exam-bind':'Vinculou acesso do professor','exam-verify':'Validou QR de documento'};
+const auditActionNames={'academic-document-issue':'Emitiu documento pela Secretaria Acadêmica','academic-document-revoke':'Revogou documento acadêmico','exam-catalog':'Consultou avaliações e dados do professor','exam-get':'Abriu uma avaliação para edição','exam-save':'Salvou avaliação','exam-roster':'Consultou alunos para impressão','exam-print':'Gerou prova nominal e cartão-resposta','exam-scan-start':'Identificou cartão-resposta para correção','exam-scan-preview':'Analisou foto do cartão-resposta','exam-scan-commit':'Registrou correção e notas da avaliação','exam-results':'Consultou correções','exam-result':'Consultou cartão corrigido','exam-point':'Consultou frequência e pagamentos','exam-bind':'Vinculou acesso do professor','exam-verify':'Validou QR de documento'};
 export async function dispatch(services,req,b){
  delete req.se7AuditIdentity;
- const record=async(result,failed=false)=>{const u=req.se7AuditIdentity;if(b.action==='audit-event'||!u||!['master','secretaria','professor','financeiro','totem'].includes(u.role))return;const action=String(b.action||'').slice(0,100),details=[];for(const key of ['id','teacherId','classId','studentId','examId','planId','paymentId'])if(typeof b[key]==='string'&&/^[A-Za-z0-9_-]{1,150}$/.test(b[key]))details.push(key+': '+b[key]);if(action==='exam-save')details.push(b.state==='final'?'Finalizada':'Rascunho');if(result?.duplicate)details.push('Operação já registrada; sem duplicação');const now=new Date();try{await services.db.collection('systemLogs').add({dataHora:now.toLocaleString('pt-BR',{timeZone:'America/Fortaleza'}),createdAt:now.toISOString(),usuario:u.profile?.nome||u.name||u.email||u.uid,perfil:u.role.toUpperCase(),modulo:action.startsWith('exam-')?'Gestão de Avaliações':action.startsWith('asaas-')?'Financeiro / Asaas':action.startsWith('email-')?'E-mails':action.startsWith('notices-')?'Avisos':action.startsWith('staff-')?'Acessos':'Sistema / '+action,acao:(failed?'Não concluído: ':'Concluído: ')+(auditActionNames[action]||action)+(details.length?' • '+details.join(' • '):''),actorUid:u.uid,origem:'servidor'});}catch{console.warn('SE7: não foi possível gravar o registro de auditoria.');}};
+ const record=async(result,failed=false)=>{const u=req.se7AuditIdentity;if(b.action==='audit-event'||!u||!['master','secretaria','professor','financeiro','totem'].includes(u.role))return;const action=String(b.action||'').slice(0,100),details=[];for(const key of ['id','teacherId','classId','studentId','examId','planId','paymentId'])if(typeof b[key]==='string'&&/^[A-Za-z0-9_-]{1,150}$/.test(b[key]))details.push(key+': '+b[key]);if(action==='exam-save')details.push(b.state==='final'?'Finalizada':'Rascunho');if(result?.duplicate)details.push('Operação já registrada; sem duplicação');const now=new Date();try{await services.db.collection('systemLogs').add({dataHora:now.toLocaleString('pt-BR',{timeZone:'America/Fortaleza'}),createdAt:now.toISOString(),usuario:u.profile?.nome||u.name||u.email||u.uid,perfil:u.role.toUpperCase(),modulo:action.startsWith('academic-document-')?'Secretaria Acadêmica / Documentos':action.startsWith('exam-')?'Gestão de Avaliações':action.startsWith('asaas-')?'Financeiro / Asaas':action.startsWith('email-')?'E-mails':action.startsWith('notices-')?'Avisos':action.startsWith('staff-')?'Acessos':'Sistema / '+action,acao:(failed?'Não concluído: ':'Concluído: ')+(auditActionNames[action]||action)+(details.length?' • '+details.join(' • '):''),actorUid:u.uid,origem:'servidor'});}catch{console.warn('SE7: não foi possível gravar o registro de auditoria.');}};
  try{const result=await dispatchOperation(services,req,b);await record(result);return result;}catch(error){await record(null,true);throw error;}
 }
 
