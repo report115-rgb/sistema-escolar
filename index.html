@@ -2169,6 +2169,7 @@ async function rejeitarSolicitacaoFirebase(id) {
         }
 
         function aplicarPermissoesPorPerfil(perfil) {
+    window.SE7Polos?.header(perfil);
     window.SE7Exams?.apply(perfil);
 
     const acessoMaster=perfil==='master'&&usuarioMasterAtivo()&&!sessionStorage.getItem('se7_matriz_perfil_visualizado');
@@ -2384,7 +2385,7 @@ async function removerUsuarioSistemaFirebase(id){if(!confirm('Desativar esse fun
     }
 
     const primeiraSubaba = Array.from(abaAlvo.querySelectorAll('.subtab-button')).find(button => button.style.display !== 'none');
-    const subabaId = primeiraSubaba?.getAttribute('onclick')?.match(/openSubTab\(event,\s*['"]([^'"]+)['"]\)/)?.[1];
+    const subabaId = primeiraSubaba?.dataset.subtab || primeiraSubaba?.getAttribute('onclick')?.match(/openSubTab\(event,\s*['"]([^'"]+)['"]\)/)?.[1];
     if (subabaId) openSubTab({currentTarget:primeiraSubaba}, subabaId);
     if (typeof atualizarModuloMatriz === 'function') atualizarModuloMatriz(tabId);
 
