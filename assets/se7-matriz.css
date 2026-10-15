@@ -88,3 +88,14 @@ html:not(.dark) .se7-matriz #se7-workspace td button.bg-red-600{color:#ac2341;bo
 
 .se7-matriz.se7-sidebar-collapsed #header-logo-img{width:44px;height:44px;max-height:44px;}
 @media(max-height:700px){.se7-matriz:not(.se7-sidebar-collapsed) #header-logo-img{height:60px;max-height:60px;}}
+
+/* Navegação EJA acompanha a rolagem abaixo do cabeçalho institucional. */
+.se7-matriz #se7-eja-tabs{position:sticky;top:var(--se7-eja-sticky-top,70px);z-index:40;display:flex;flex-wrap:wrap;gap:12px 14px;align-items:center;margin:0 0 22px;padding:12px 0;background:var(--se7-panel);border-bottom:1px solid var(--se7-border);box-shadow:0 6px 10px -10px #0008;}
+.se7-matriz #se7-eja-tabs>.subtab-eja-btn{margin:0!important;min-height:40px;padding:10px 16px;white-space:nowrap;transition:background-color .18s ease,border-color .18s ease,color .18s ease,box-shadow .18s ease;}
+.se7-matriz #se7-eja-tabs>.subtab-eja-btn:focus-visible{outline:2px solid #38c7ff;outline-offset:3px;}
+@media(prefers-reduced-motion:reduce){.se7-matriz #se7-eja-tabs>.subtab-eja-btn{transition:none;}}
+
+.se7-matriz .se7-point-month{border:1px solid var(--se7-border);border-radius:10px;background:var(--se7-panel-soft);overflow:hidden;}
+.se7-matriz .se7-point-month>summary{padding:14px 16px;cursor:pointer;font-size:13px;font-weight:600;color:var(--se7-text);}
+.se7-matriz .se7-point-month[open]>summary{border-bottom:1px solid var(--se7-border);}
+.se7-matriz .se7-point-month>div{padding:0 12px 10px;background:var(--se7-panel);}

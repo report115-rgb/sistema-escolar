@@ -3,13 +3,13 @@ const se7ModulosMatriz={
  'tab-portal-admin':['Portal do Aluno','Gerencie os avisos do portal e acompanhe os acessos dos alunos.'],
  'tab-gestion-students':['Gestão de Alunos','Organize cadastros e acompanhe a documentação acadêmica.'],
  'tab-gestao-eja':['Gestão EJA','Gerencie apostilas, provas e documentação dos alunos EJA.'],
- 'tab-students':['Matrícula','Cadastre alunos e acompanhe solicitações de matrícula.'],
+ 'tab-students':['Matrícula','Realize matrículas, cancelamentos e reativação de matrícula.'],
  'tab-attendance':['Notas e frequência','Registre a frequência e lance as notas dos alunos.'],
  'tab-se7-exams':['Gestão de Avaliações','Consulte avaliações e organize a impressão e a correção das provas.'],
  'tab-grades':['Notas','Organize avaliações e acompanhe o desempenho acadêmico.'],
  'tab-student-finance':['Financeiro','Acompanhe cobranças e informações financeiras dos alunos.'],
  'tab-history':['Emissão de Documentos','Emita declarações, contratos e históricos acadêmicos.'],
- 'tab-controle-ponto-manual':['Ponto Manual','Registre e consulte os horários dos colaboradores.'],
+ 'tab-controle-ponto-manual':['Ponto Manual','Registre e consulte os horários dos professores.'],
  'tab-settings':['Sistema','Gerencie cursos, turmas e configurações da instituição.']
 };
 function atualizarModuloMatriz(id){const [title,description]=se7ModulosMatriz[id]||['Sistema Matriz','Tudo conectado ao sistema Matriz'];document.getElementById('se7-page-title').textContent=title;document.getElementById('se7-page-description').textContent=description;atualizarCabecalhoMatriz(id);}
@@ -37,3 +37,6 @@ window.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('#main
   installed=true;
  };
 })();
+
+/* Apenas medição de layout; sem consultas ou gravações no Firebase. */
+(()=>{const header=document.getElementById('fixed-top-container');if(!header)return;const update=()=>{const h=Math.ceil(header.getBoundingClientRect().height);if(h>0)document.documentElement.style.setProperty('--se7-eja-sticky-top',h+'px');};update();if(window.ResizeObserver)new ResizeObserver(update).observe(header);else window.addEventListener('resize',update,{passive:true});})();

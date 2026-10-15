@@ -593,19 +593,11 @@
         <!-- ========================================== -->
         <div id="tab-gestao-eja" class="tab-content space-y-4" style="display: none;">
             <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-md p-6 border border-gray-200 dark:border-slate-700 space-y-6">
-                <div class="border-b border-gray-100 dark:border-slate-700 pb-3 flex justify-between items-center">
-                    <div>
-                        <h2 class="text-xl font-bold text-gray-900 dark:text-white">Painel Administrativo – EJA (Supletivo)</h2>
-                        <p class="text-xs text-gray-500">Gerencie apostilas, provas online e acompanhe os alunos matriculados na modalidade.</p>
-                    </div>
-                    <span class="px-3 py-1 bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 rounded-full text-xs font-bold">Módulo Ativo</span>
-                </div>
-
-                <div class="flex space-x-2 border-b border-gray-200 dark:border-slate-700 pb-3 overflow-x-auto">
-                    <button class="subtab-eja-btn active px-4 py-2 rounded-xl text-xs font-semibold bg-emerald-600 text-white shadow" onclick="openSubTabEJA(event, 'subeja-alunos')"><i class="fa-solid fa-users mr-1"></i> Alunos EJA</button>
-                    <button class="subtab-eja-btn px-4 py-2 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTabEJA(event, 'subeja-apostila')"><i class="fa-solid fa-file-pdf mr-1"></i> Enviar Apostila PDF</button>
-                    <button class="subtab-eja-btn px-4 py-2 rounded-xl text-xs font-semibold bg-gray-100 dark:text-gray-300" onclick="openSubTabEJA(event, 'subeja-prova')"><i class="fa-solid fa-laptop-file mr-1"></i> Prova Online & Status</button>
-                    <button class="subtab-eja-btn px-4 py-2 rounded-xl text-xs font-semibold bg-gray-100 dark:text-gray-300" onclick="openSubTabEJA(event, 'subeja-validar-docs')"><i class="fa-solid fa-folder-open mr-1"></i> Validar Documentação</button>
+                <div id="se7-eja-tabs" class="se7-eja-tabs" role="tablist" aria-label="Opções da Gestão EJA">
+                    <button class="subtab-eja-btn active px-4 py-2 rounded-xl text-xs font-semibold bg-emerald-600 text-white shadow" role="tab" aria-controls="subeja-alunos" aria-selected="true" onclick="openSubTabEJA(event, 'subeja-alunos')"><i class="fa-solid fa-users mr-1"></i> Alunos EJA</button>
+                    <button class="subtab-eja-btn px-4 py-2 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" role="tab" aria-controls="subeja-apostila" aria-selected="false" onclick="openSubTabEJA(event, 'subeja-apostila')"><i class="fa-solid fa-file-pdf mr-1"></i> Enviar Apostila PDF</button>
+                    <button class="subtab-eja-btn px-4 py-2 rounded-xl text-xs font-semibold bg-gray-100 dark:text-gray-300" role="tab" aria-controls="subeja-prova" aria-selected="false" onclick="openSubTabEJA(event, 'subeja-prova')"><i class="fa-solid fa-laptop-file mr-1"></i> Prova Online & Status</button>
+                    <button class="subtab-eja-btn px-4 py-2 rounded-xl text-xs font-semibold bg-gray-100 dark:text-gray-300" role="tab" aria-controls="subeja-validar-docs" aria-selected="false" onclick="openSubTabEJA(event, 'subeja-validar-docs')"><i class="fa-solid fa-folder-open mr-1"></i> Validar Documentação</button>
                 </div>
 
                 <div id="subeja-alunos" class="subeja-content space-y-3">
@@ -688,7 +680,6 @@
         <!-- MATRÍCULA -->
         <div id="tab-students" class="tab-content space-y-4" style="display: none;">
             <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-md p-6 border border-gray-200 dark:border-slate-700">
-                <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4 pb-2 border-b border-gray-100 dark:border-slate-700">Gerenciamento de Matrículas</h2>
                 <div class="flex space-x-2 mb-6 border-b border-gray-200 dark:border-slate-700 pb-3 flex-wrap gap-2">
                     <button class="subtab-button active px-4 py-2 rounded-xl text-xs font-semibold bg-blue-600 text-white shadow" onclick="openSubTab(event, 'subtab-nova-matricula')"><i class="fa-solid fa-user-plus mr-1"></i> Nova Matrícula</button>
                     <button class="subtab-button px-4 py-2 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-cancelamentos')"><i class="fa-solid fa-user-slash mr-1"></i> Cancelamento / Transferência / Trancamento</button>
@@ -756,10 +747,6 @@
 <!-- ABA DE CONTROLE E REGISTRO MANUAL DE PONTO DOS PROFESSORES -->
 <div id="tab-controle-ponto-manual" class="tab-content space-y-4" style="display: none;">
     <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-md p-6 border border-gray-200 dark:border-slate-700 space-y-6">
-        <div class="border-b border-gray-100 dark:border-slate-700 pb-3">
-            <h2 class="text-xl font-bold text-gray-900 dark:text-white">Registro Manual de Ponto de Professores</h2>
-            <p class="text-xs text-gray-500">A secretária pode registrar manualmente a data, o turno e os horários de entrada e saída dos docentes.</p>
-        </div>
 
         <!-- Formulário de Inserção -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700">
@@ -800,20 +787,9 @@
         <!-- Tabela de Registros Fixos -->
         <div class="mt-6 space-y-3">
             <h4 class="font-bold text-sm text-gray-700 dark:text-gray-300">Histórico de Horários Registrados</h4>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-xs">
-                    <thead>
-                        <tr class="border-b border-gray-200 dark:border-slate-700 text-gray-500">
-                            <th class="p-3">Data</th>
-                            <th class="p-3">Professor(a)</th>
-                            <th class="p-3">Turno</th>
-                            <th class="p-3">Entrada / Saída</th>
-                            <th class="p-3 text-right">Status / Ação</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tabela-ponto-manual-lista" class="divide-y divide-gray-200 dark:divide-slate-700"></tbody>
-                </table>
-            </div>
+            <label class="block text-xs font-semibold" for="manual-ponto-filtro-professor">Consultar professor(a)</label>
+            <select id="manual-ponto-filtro-professor" onchange="renderizarHistoricoPontoManual()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"><option value="">Todos os professores</option></select>
+            <div id="tabela-ponto-manual-lista" class="space-y-3"></div>
         </div>
     </div>
 </div>
@@ -901,12 +877,7 @@
         <!-- FINANCEIRO -->
         <div id="tab-student-finance" class="tab-content space-y-4" style="display: none;">
             <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-md p-6 border border-gray-200 dark:border-slate-700 space-y-4">
-                <div class="border-b border-gray-100 dark:border-slate-700 pb-2 flex justify-between items-center flex-wrap gap-2">
-                    <div>
-                        <h2 class="text-xl font-bold text-gray-900 dark:text-white">Financeiro</h2>
-                        <p class="text-xs text-gray-500">Selecione curso e turma para consultar a situação financeira dos alunos.</p>
-                    </div>
-                </div>
+
                 
                 <div id="se7-finance-roster"></div>
                 <div hidden><select id="fin-student-select"><option value="">Selecione o aluno...</option></select><div id="container-cobrancas-aluno-financeiro" class="space-y-2"></div></div>
@@ -917,7 +888,6 @@
         <!-- EMISSÃO DE DOCUMENTOS -->
         <div id="tab-history" class="tab-content space-y-4" style="display: none;">
             <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-md p-6 border border-gray-200 dark:border-slate-700">
-                <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4 pb-2 border-b border-gray-100 dark:border-slate-700">Emissão de Documentos e Contratos</h2>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                     <div>
                         <label class="block text-xs font-semibold mb-1">Turma</label>
@@ -945,11 +915,10 @@
             <!-- SISTEMA (CONFIGURAÇÕES) -->
         <div id="tab-settings" class="tab-content space-y-4" style="display: none;">
             <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-md p-6 border border-gray-200 dark:border-slate-700">
-                <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4 pb-2 border-b border-gray-100 dark:border-slate-700">Configurações do Sistema</h2>
                 <div class="flex space-x-2 mb-6 border-b border-gray-200 dark:border-slate-700 pb-3 overflow-x-auto">
                     <button class="subtab-button active px-3 py-1.5 rounded-xl text-xs font-semibold bg-blue-600 text-white shadow" onclick="openSubTab(event, 'subtab-courses')">Cursos</button>
-                    <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-subjects')">Disciplinas</button>
                     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-classes')">Turmas</button>
+                    <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-subjects')">Disciplinas</button>
                     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-calendar')">Calendário Semestral</button>
                     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200" onclick="openSubTab(event, 'subtab-teachers')">Colaboradores</button>
                     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-templates')">Edição de Documentos</button>
@@ -1329,22 +1298,9 @@
         <select id="template-course-select" onchange="loadCourseTemplate()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></select>
     </div>
 
-    <!-- Template HTML da Declaração de Matrícula -->
-    <div class="mt-4">
-        <label class="block text-xs font-semibold mb-1 text-emerald-600 dark:text-emerald-400">Template HTML Completo da Declaração de Matrícula</label>
-        <textarea id="input-declaracao-html-template" rows="8" placeholder="Cole o código HTML da declaração aqui..." class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-xs font-mono dark:bg-slate-900 dark:text-white"></textarea>
-    </div>
-
-    <!-- Template HTML do Histórico Escolar -->
-    <div class="mt-4">
-        <label class="block text-xs font-semibold mb-1 text-blue-600 dark:text-blue-400">Template HTML Completo do Histórico Escolar</label>
-        <textarea id="input-historico-html-template" rows="8" placeholder="Cole o código HTML do histórico aqui..." class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-xs font-mono dark:bg-slate-900 dark:text-white"></textarea>
-    </div>
-
-    <!-- Botão de Salvar -->
-    <div class="pt-2">
-        <button onclick="saveCourseTemplates()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow">Salvar Modelos HTML</button>
-    </div>
+    <div id="template-visual-host"></div>
+    <textarea id="input-declaracao-html-template" hidden aria-hidden="true"></textarea>
+    <textarea id="input-historico-html-template" hidden aria-hidden="true"></textarea>
 </div>
 
 <div id="subtab-email" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display:none;">
@@ -3548,22 +3504,7 @@ async function excluirColaborador(id) {
     }
 }
 
-async function saveCourseTemplates() {
-    const courseId = document.getElementById('template-course-select').value;
-    if(!courseId) return;
-
-    // Pega os valores dos campos HTML atuais
-    const declaracaoHtml = document.getElementById('input-declaracao-html-template').value;
-    const historicoHtml = document.getElementById('input-historico-html-template').value;
-
-    // Salva na nuvem apenas o que está sendo utilizado
-    await db.collection("courses").doc(courseId).update({
-        declaracaoHtmlTemplate: declaracaoHtml,
-        historicoHtmlTemplate: historicoHtml
-    });
-    
-    alert("Modelos HTML salvos com sucesso!");
-}
+async function saveCourseTemplates() { window.SE7Templates?.open(true); }
 
         function filterTurmasByCourse() {
             const courseId = document.getElementById('input-student-course').value;
@@ -4555,10 +4496,17 @@ async function emitirDocumentoSelecionado() {
             
             const curso = courses.find(c => c.id == aluno.courseId);
             const turma = classes.find(c => c.id == aluno.classId);
+            if(!['declaracao','historico'].includes(tipoDoc))return;
+            if(!SE7Templates.source(curso,tipoDoc).trim())return alert('Este curso ainda não possui este modelo. Configure em Sistema → Edição de Documentos.');
+            const janelaDocumento=window.open('', '_blank', 'width=900,height=700');
+            if(!janelaDocumento)return alert('Permita a abertura do documento no navegador e tente novamente.');
+            janelaDocumento.opener=null;
+            let frequenciaDocumento=()=> '—';
+            if(tipoDoc==='historico'){try{frequenciaDocumento=await SE7Templates.attendance(aluno);}catch(e){janelaDocumento.close();alert('Não foi possível consultar a frequência. Tente novamente antes de emitir o histórico.');return;}}
             const enderecoCompleto = `${aluno.endereco || ''}, nº ${aluno.numero || ''} - ${aluno.bairro || ''}, ${aluno.cidade || ''}/${aluno.estado || ''} - CEP: ${aluno.cep || ''}`;
 
             if(tipoDoc === 'declaracao') {
-                let templateHtmlDeclaracao = document.getElementById('input-declaracao-html-template').value || (curso ? curso.declaracaoHtmlTemplate : '');
+                let templateHtmlDeclaracao = (curso ? curso.declaracaoHtmlTemplate : '');
 
                 if (!templateHtmlDeclaracao || templateHtmlDeclaracao.trim() === "") {
                     alert("Nenhum template HTML de declaração cadastrado para este curso. Vá em Sistema > Edição de Documentos e salve o modelo.");
@@ -4568,9 +4516,9 @@ async function emitirDocumentoSelecionado() {
                 const hoje = new Date();
                 const dataPorExtenso = hoje.toLocaleDateString('pt-BR', { year: 'numeric', month: 'long', day: 'numeric' });
 
-                let htmlPreenchido = templateHtmlDeclaracao
+                let htmlPreenchido = SE7Templates.prepare(templateHtmlDeclaracao)
                     .replace(/\{\{instituicao_nome\}\}/g, globalInstitutionData.name || 'SE7 Gestão Educacional')
-                    .replace(/\{\{instituicao_razao\}\}/g, globalInstitutionData.razao || '')
+                    .replace(/\{\{instituicao_razao\}\}/g, globalInstitutionData.razao || globalInstitutionData.name || '')
                     .replace(/\{\{instituicao_endereco\}\}/g, globalInstitutionData.end || '')
                     .replace(/\{\{instituicao_cnpj\}\}/g, globalInstitutionData.cnpj || '')
                     .replace(/\{\{instituicao_logo\}\}/g, globalInstitutionData.logo || '')
@@ -4585,7 +4533,7 @@ async function emitirDocumentoSelecionado() {
                     .replace(/\{\{aluno_situacao\}\}/g, aluno.status || 'Ativo')
                     .replace(/Vigia\/PA,.*<\/div>/g, `Vigia/PA, ${dataPorExtenso}</div>`);
 
-                const janelaImpressao = window.open('', '_blank', 'width=900,height=700');
+                const janelaImpressao = janelaDocumento;
                 janelaImpressao.opener=null;
                 janelaImpressao.document.write(SE7Safe.document(htmlPreenchido));
                 janelaImpressao.document.close();
@@ -4596,7 +4544,7 @@ async function emitirDocumentoSelecionado() {
                 return;
             } 
             else if(tipoDoc === 'historico') {
-                let templateHtmlHistorico = document.getElementById('input-historico-html-template').value || (curso ? curso.historicoHtmlTemplate : '');
+                let templateHtmlHistorico = (curso ? curso.historicoHtmlTemplate : '');
 
                 if (!templateHtmlHistorico || templateHtmlHistorico.trim() === "") {
                     alert("Nenhum template HTML de histórico cadastrado para este curso. Vá em Sistema > Edição de Documentos e salve o modelo.");
@@ -4614,7 +4562,7 @@ async function emitirDocumentoSelecionado() {
                             <tr>
                                 <td style="padding: 8px; border: 1px solid #ddd;">${sub.name}</td>
                                 <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${sub.hours || '---'}</td>
-                                <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">100%</td>
+                                <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${frequenciaDocumento(sub.name)}</td>
                                 <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${registroNota.final !== undefined && registroNota.final !== '' ? registroNota.final : '---'}</td>
                                 <td style="padding: 8px; border: 1px solid #ddd; text-align: center; font-weight: bold; color: ${situacaoDisciplina === 'Aprovado' ? 'green' : '#333'};">${situacaoDisciplina}</td>
                             </tr>
@@ -4627,9 +4575,9 @@ async function emitirDocumentoSelecionado() {
                 const hoje = new Date();
                 const dataPorExtenso = hoje.toLocaleDateString('pt-BR', { year: 'numeric', month: 'long', day: 'numeric' });
 
-                let htmlPreenchido = templateHtmlHistorico
+                let htmlPreenchido = SE7Templates.prepare(templateHtmlHistorico)
                     .replace(/\{\{instituicao_nome\}\}/g, globalInstitutionData.name || 'SE7 Gestão Educacional')
-                    .replace(/\{\{instituicao_razao\}\}/g, globalInstitutionData.razao || '')
+                    .replace(/\{\{instituicao_razao\}\}/g, globalInstitutionData.razao || globalInstitutionData.name || '')
                     .replace(/\{\{instituicao_endereco\}\}/g, globalInstitutionData.end || '')
                     .replace(/\{\{instituicao_cnpj\}\}/g, globalInstitutionData.cnpj || '')
                     .replace(/\{\{instituicao_logo\}\}/g, globalInstitutionData.logo || '')
@@ -4647,7 +4595,7 @@ async function emitirDocumentoSelecionado() {
                     .replace(/\{\{tabela_disciplinas\}\}/g, linhasDisciplinasHtml)
                     .replace(/Vigia\/PA,.*<\/div>/g, `Vigia/PA, ${dataPorExtenso}</div>`);
 
-                const janelaImpressao = window.open('', '_blank', 'width=900,height=700');
+                const janelaImpressao = janelaDocumento;
                 janelaImpressao.opener=null;
                 janelaImpressao.document.write(SE7Safe.document(htmlPreenchido));
                 janelaImpressao.document.close();
@@ -4740,12 +4688,15 @@ async function emitirDocumentoSelecionado() {
         function openSubTabEJA(evt, subId) {
             document.querySelectorAll('.subeja-content').forEach(el => el.style.display = 'none');
             document.querySelectorAll('.subtab-eja-btn').forEach(el => {
-                el.classList.remove('bg-emerald-600', 'text-white', 'shadow');
+                el.classList.remove('active','bg-emerald-600', 'text-white', 'shadow');
+                el.setAttribute('aria-selected','false');
                 el.classList.add('bg-gray-100', 'dark:bg-slate-700', 'text-gray-700', 'dark:text-gray-300');
             });
             document.getElementById(subId).style.display = 'block';
             evt.currentTarget.classList.remove('bg-gray-100', 'dark:bg-slate-700', 'text-gray-700', 'dark:text-gray-300');
-            evt.currentTarget.classList.add('bg-emerald-600', 'text-white', 'shadow');
+            evt.currentTarget.classList.add('active','bg-emerald-600', 'text-white', 'shadow');
+            evt.currentTarget.setAttribute('aria-selected','true');
+            window.SE7Motion?.enter(document.getElementById(subId));
             
             if(subId === 'subeja-alunos') renderizarAlunosEJAAdmin();
             if(subId === 'subeja-prova') carregarConfiguracaoProvaEJAAdmin();
@@ -5404,12 +5355,18 @@ async function gerarHistoricoEscolarDinamico(alunoId) {
     const turma = classes.find(c => c.id === aluno.classId);
 
     // Pega o template HTML salvo na subaba de Edição de Documentos
-    let templateHtml = document.getElementById('input-historico-html-template').value || (curso ? curso.historicoHtmlTemplate : '');
+    let templateHtml = (curso ? curso.historicoHtmlTemplate : '');
     
     if (!templateHtml || templateHtml.trim() === "") {
         alert("Nenhum template HTML de histórico cadastrado para este curso. Vá em Sistema > Edição de Documentos e salve o modelo.");
         return;
     }
+
+    const janelaDocumento=window.open('', '_blank', 'width=900,height=700');
+    if(!janelaDocumento)return alert('Permita a abertura do documento no navegador e tente novamente.');
+    janelaDocumento.opener=null;
+    let frequenciaDocumento;
+    try{frequenciaDocumento=await SE7Templates.attendance(aluno);}catch(e){janelaDocumento.close();alert('Não foi possível consultar a frequência. Tente novamente.');return;}
 
     // 1. Montagem dinâmica das linhas da tabela de disciplinas com notas, carga horária e situação
     let linhasDisciplinasHtml = '';
@@ -5425,7 +5382,7 @@ async function gerarHistoricoEscolarDinamico(alunoId) {
                 <tr>
                     <td style="padding: 8px; border: 1px solid #ddd;">${sub.name}</td>
                     <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${sub.hours || '---'}</td>
-                    <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">100%</td>
+                    <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${frequenciaDocumento(sub.name)}</td>
                     <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${registroNota.final !== undefined && registroNota.final !== '' ? registroNota.final : '---'}</td>
                     <td style="padding: 8px; border: 1px solid #ddd; text-align: center; font-weight: bold; color: ${situacaoDisciplina === 'Aprovado' ? 'green' : '#333'};">${situacaoDisciplina}</td>
                 </tr>
@@ -5436,9 +5393,9 @@ async function gerarHistoricoEscolarDinamico(alunoId) {
     }
 
     // 2. Substituição rigorosa das tags de dados e da tabela de disciplinas no HTML
-    let htmlPreenchido = templateHtml
+    let htmlPreenchido = SE7Templates.prepare(templateHtml)
         .replace(/\{\{instituicao_nome\}\}/g, globalInstitutionData.name || 'SE7 Gestão Educacional')
-        .replace(/\{\{instituicao_razao\}\}/g, globalInstitutionData.razao || '')
+        .replace(/\{\{instituicao_razao\}\}/g, globalInstitutionData.razao || globalInstitutionData.name || '')
         .replace(/\{\{instituicao_endereco\}\}/g, globalInstitutionData.end || '')
         .replace(/\{\{instituicao_cnpj\}\}/g, globalInstitutionData.cnpj || '')
         .replace(/\{\{instituicao_logo\}\}/g, globalInstitutionData.logo || '')
@@ -5455,7 +5412,7 @@ async function gerarHistoricoEscolarDinamico(alunoId) {
         .replace(/\{\{tabela_disciplinas\}\}/g, linhasDisciplinasHtml);
 
     // 3. Abre a janela de impressão com o template devidamente preenchido
-    const janelaImpressao = window.open('', '_blank', 'width=900,height=700');
+    const janelaImpressao = janelaDocumento;
     janelaImpressao.opener=null;
                 janelaImpressao.document.write(SE7Safe.document(htmlPreenchido));
     janelaImpressao.document.close();
@@ -5649,34 +5606,26 @@ async function salvarPontoManualProfessor() {
 }
 
 // 3. Escuta em tempo real os registros salvos na nuvem para exibi-los fixos na tabela
-function escutarRegistrosPontoManual() {
-    const tbody = document.getElementById('tabela-ponto-manual-lista');
-    if (!tbody) return;
-
-    db.collection("teacherManualLogs").orderBy("createdAt", "desc").onSnapshot((snapshot) => {
-        registrosPontoManual.clear();
-        snapshot.forEach(doc => registrosPontoManual.set(doc.id, doc.data()));
-        if (snapshot.empty) {
-            tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400">Nenhum horário manual registrado ainda.</td></tr>`;
-            return;
-        }
-
-        tbody.innerHTML = '';
-        // Ordena pela data da aula e pela entrada, independentemente da data de cadastro.
-        const registrosOrdenados = [...registrosPontoManual.entries()].sort(([idA, a], [idB, b]) => {
-            const dataA = a.data || '9999-12-31';
-            const dataB = b.data || '9999-12-31';
-            return dataA.localeCompare(dataB)
-                || (a.entrada || '99:99').localeCompare(b.entrada || '99:99')
-                || (a.professorNome || '').localeCompare(b.professorNome || '', 'pt-BR')
-                || idA.localeCompare(idB);
-        });
-        registrosOrdenados.forEach(([id, registro]) => {
-            const r = Object.fromEntries(Object.entries(registro).map(([k, v]) => [k, escaparTextoPontoManual(v)]));
-            const idRegistro = escaparTextoPontoManual(id);
-            const dataFormatada = r.data ? r.data.split('-').reverse().join('/') : '';
-            
-            tbody.innerHTML += `
+function renderizarHistoricoPontoManual() {
+    const container=document.getElementById('tabela-ponto-manual-lista'),filter=document.getElementById('manual-ponto-filtro-professor');
+    if(!container||!filter)return;
+    const selected=filter.value,opened=new Set([...container.querySelectorAll('details[open]')].map(e=>e.dataset.month));
+    const docentes=new Map();
+    for(const [id,r]of registrosPontoManual){const key=r.professorId||'nome:'+String(r.professorNome||'Sem identificação');docentes.set(key,r.professorNome||'Professor sem identificação');}
+    filter.replaceChildren(new Option('Todos os professores',''));
+    for(const [id,name]of [...docentes].sort((a,b)=>a[1].localeCompare(b[1],'pt-BR')))filter.add(new Option(name,id));
+    if(docentes.has(selected))filter.value=selected;
+    const registros=[...registrosPontoManual].filter(([id,r])=>!filter.value||(r.professorId||'nome:'+String(r.professorNome||'Sem identificação'))===filter.value).sort(([ia,a],[ib,b])=>(a.data||'9999-12-31').localeCompare(b.data||'9999-12-31')||(a.entrada||'').localeCompare(b.entrada||'')||(a.professorNome||'').localeCompare(b.professorNome||'','pt-BR')||ia.localeCompare(ib));
+    container.replaceChildren();
+    if(!registros.length){const p=document.createElement('p');p.className='text-sm text-gray-500';p.textContent=filter.value?'Nenhum horário registrado para este professor.':'Nenhum horário manual registrado ainda.';container.append(p);return;}
+    const groups=new Map();for(const item of registros){const month=/^\d{4}-\d{2}-\d{2}$/.test(item[1].data||'')?item[1].data.slice(0,7):'sem-data';if(!groups.has(month))groups.set(month,[]);groups.get(month).push(item);}
+    for(const [month,rows]of groups){
+        const detail=document.createElement('details');detail.className='se7-point-month';detail.dataset.month=month;detail.open=opened.has(month);
+        const summary=document.createElement('summary');const parts=month.split('-');const title=month==='sem-data'?'Data não informada':new Date(Number(parts[0]),Number(parts[1])-1,1).toLocaleDateString('pt-BR',{month:'long',year:'numeric'});summary.textContent=title.charAt(0).toUpperCase()+title.slice(1)+' • '+rows.length+' registro(s)';detail.append(summary);
+        const wrap=document.createElement('div');wrap.className='overflow-x-auto';const table=document.createElement('table');table.className='w-full text-left text-xs';table.innerHTML='<thead><tr><th>Data</th><th>Professor(a)</th><th>Turno</th><th>Entrada / Saída</th><th>Status / Ação</th></tr></thead>';const body=document.createElement('tbody');
+        for(const [id,registro]of rows){
+            const r=Object.fromEntries(Object.entries(registro).map(([k,v])=>[k,escaparTextoPontoManual(v)])),idRegistro=escaparTextoPontoManual(id),dataFormatada=r.data?r.data.split('-').reverse().join('/'):'';
+            body.insertAdjacentHTML('beforeend', `
                 <tr class="border-b border-gray-100 dark:border-slate-700">
                     <td class="p-3 font-semibold">${dataFormatada}</td>
                     <td class="p-3">
@@ -5698,10 +5647,19 @@ function escutarRegistrosPontoManual() {
                         </div>
                     </td>
                 </tr>
-            `;
-        });
-    });
+            `);
+        }
+        table.append(body);wrap.append(table);detail.append(wrap);container.append(detail);
+    }
 }
+let cancelarEscutaPontoManual=null;
+function escutarRegistrosPontoManual() {
+    if(cancelarEscutaPontoManual||!document.getElementById('tabela-ponto-manual-lista'))return;
+    cancelarEscutaPontoManual=db.collection('teacherManualLogs').orderBy('createdAt','desc').onSnapshot(snapshot=>{
+        registrosPontoManual.clear();snapshot.forEach(doc=>registrosPontoManual.set(doc.id,doc.data()));renderizarHistoricoPontoManual();
+    },()=>{cancelarEscutaPontoManual=null;const box=document.getElementById('tabela-ponto-manual-lista');box.textContent='Não foi possível carregar o histórico. Atualize a página para tentar novamente.';});
+}
+
 	</script>
 <script src="/assets/se7-matriz.js"></script>
 
@@ -5727,6 +5685,7 @@ function escutarRegistrosPontoManual() {
 <script src="/assets/se7-enrollment.js"></script>
 <script src="/assets/se7-version.js"></script>
 <script src="/assets/se7-documents.js"></script>
+<link rel="stylesheet" href="/assets/se7-template-editor.css"><script src="/assets/se7-template-editor.js"></script>
 <link rel="stylesheet" href="/assets/se7-exams.css">
 <script src="/assets/vendor/pdf-lib.min.js"></script><script src="/assets/vendor/fontkit.umd.min.js"></script><script src="/assets/vendor/jsQR.js"></script><script src="/assets/vendor/qrcode.js"></script><script src="/assets/se7-exam-omr.js"></script><script src="/assets/se7-exam-pdf.js"></script><script src="/assets/se7-exams.js"></script>
 <link rel="stylesheet" href="/assets/se7-student-sheet.css"><script src="/assets/se7-student-sheet.js"></script>
