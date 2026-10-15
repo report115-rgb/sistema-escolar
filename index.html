@@ -795,7 +795,7 @@
 </div>
 
         <!-- FREQUÊNCIA -->
-        <div id="tab-attendance" class="tab-content space-y-4" style="display:none"><section class="bg-white dark:bg-slate-800 rounded-2xl shadow-md p-6 border border-gray-200 dark:border-slate-700"><h2 class="text-xl font-bold mb-3">Notas e frequência</h2><p class="text-sm mb-5">Escolha o lançamento que deseja realizar.</p><div class="flex gap-3 flex-wrap"><button type="button" onclick="SE7AcademicEntry.open('attendance')" class="px-5 py-3 rounded-xl bg-blue-600 text-white font-semibold"><i class="fa-solid fa-clipboard-user mr-2"></i>Lançar frequência</button><button type="button" onclick="SE7AcademicEntry.open('grades')" class="px-5 py-3 rounded-xl bg-blue-600 text-white font-semibold"><i class="fa-solid fa-star mr-2"></i>Lançar notas</button></div></section></div>
+        <div id="tab-attendance" class="tab-content space-y-4" style="display:none"><section class="bg-white dark:bg-slate-800 rounded-2xl shadow-md p-6 border border-gray-200 dark:border-slate-700"><h2 class="text-xl font-bold mb-3">Notas e frequência</h2><p class="text-sm mb-5">Escolha o lançamento que deseja realizar.</p><div class="flex gap-3 flex-wrap"><button type="button" onclick="SE7AcademicEntry.open('attendance')" class="px-3 py-2 text-xs rounded-lg bg-blue-600 text-white font-semibold"><i class="fa-solid fa-clipboard-user mr-2"></i>Lançar frequência</button><button type="button" onclick="SE7AcademicEntry.open('grades')" class="px-3 py-2 text-xs rounded-lg bg-blue-600 text-white font-semibold"><i class="fa-solid fa-star mr-2"></i>Lançar notas</button></div></section></div>
         <div id="se7-attendance-source" style="display:none">
             <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-md p-6 border border-gray-200 dark:border-slate-700">
                 <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4 pb-2 border-b border-gray-100 dark:border-slate-700">Lançamento de Frequência</h2>
@@ -888,27 +888,7 @@
         <!-- EMISSÃO DE DOCUMENTOS -->
         <div id="tab-history" class="tab-content space-y-4" style="display: none;">
             <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-md p-6 border border-gray-200 dark:border-slate-700">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                    <div>
-                        <label class="block text-xs font-semibold mb-1">Turma</label>
-                        <select id="report-class-select" onchange="onReportClassChange()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold mb-1">Aluno</label>
-                        <select id="report-student-select" disabled class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                            <option value="">Selecione a turma primeiro...</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold mb-1">Tipo de Documento</label>
-                        <select id="report-type-select" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                            <option value="declaracao">Declaração de Matrícula</option>
-                            <option value="contrato">Contrato de Prestação de Serviços</option>
-                            <option value="historico">Histórico Escolar</option>
-                        </select>
-                    </div>
-                </div>
-                <button type="button" onclick="emitirDocumentoSelecionado()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-sm shadow">Emitir e Salvar em PDF</button>
+                <div id="se7-document-emission"></div>
             </div>
         </div>
 
@@ -921,7 +901,6 @@
                     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-subjects')">Disciplinas</button>
                     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-calendar')">Calendário Semestral</button>
                     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200" onclick="openSubTab(event, 'subtab-teachers')">Colaboradores</button>
-                    <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-templates')">Edição de Documentos</button>
                     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-institution')">Instituição</button>
 		    <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-audit')">Auditoria</button>
     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event,'subtab-whatsapp');carregarPainelWhatsApp()"><i class="fa-brands fa-whatsapp mr-1"></i> WhatsApp</button>
@@ -1289,18 +1268,6 @@
             </table>
         </div>
     </div>
-</div>
-
-                <!-- SUBABA EDIÇÃO DE DOCUMENTOS -->
-<div id="subtab-templates" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
-    <div>
-        <label class="block text-xs font-semibold mb-1">Selecione o Curso</label>
-        <select id="template-course-select" onchange="loadCourseTemplate()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></select>
-    </div>
-
-    <div id="template-visual-host"></div>
-    <textarea id="input-declaracao-html-template" hidden aria-hidden="true"></textarea>
-    <textarea id="input-historico-html-template" hidden aria-hidden="true"></textarea>
 </div>
 
 <div id="subtab-email" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display:none;">
@@ -2640,7 +2607,7 @@ let dadosMatrizIniciados=false;function iniciarDadosAutenticadosMatriz(){window.
             db.collection("courses").onSnapshot((snapshot) => {
                 courses = [];
                 snapshot.forEach(doc => courses.push({ id: doc.id, ...doc.data() }));
-                renderTeachers(); renderCourses(); renderSubjectsManagement(); renderDropdowns(); window.SE7MatrizFinance?.refresh(); loadCourseTemplate(); atualizarDisciplinasETurmasCalendario(); atualizarFiltrosGerenciarCalendarios();
+                renderTeachers(); renderCourses(); renderSubjectsManagement(); renderDropdowns(); window.SE7MatrizFinance?.refresh(); atualizarDisciplinasETurmasCalendario(); atualizarFiltrosGerenciarCalendarios();
             });
 
             db.collection("classes").onSnapshot((snapshot) => {
@@ -3492,20 +3459,6 @@ async function excluirColaborador(id) {
         }
 
         let tempUploadedHistoryPdf = "";
-        function loadCourseTemplate() {
-    const course = courses.find(c => c.id == document.getElementById('template-course-select').value);
-    if(course) {
-        // Carrega apenas os templates HTML ativos
-        const inputDecl = document.getElementById('input-declaracao-html-template');
-        const inputHist = document.getElementById('input-historico-html-template');
-        
-        if(inputDecl) inputDecl.value = course.declaracaoHtmlTemplate || '';
-        if(inputHist) inputHist.value = course.historicoHtmlTemplate || '';
-    }
-}
-
-async function saveCourseTemplates() { window.SE7Templates?.open(true); }
-
         function filterTurmasByCourse() {
             const courseId = document.getElementById('input-student-course').value;
             const select = document.getElementById('input-student-class');
@@ -4460,155 +4413,12 @@ function renderFinanceStudentSelect(){const select=document.getElementById('fin-
             reader.readAsDataURL(file);
         }
 
-        function renderReportClasses() {
-    const select = document.getElementById('report-class-select');
-    if(!select) return;
-    select.innerHTML = '';
-    
-    // Ordena as turmas alfabeticamente pelo nome
-    const turmasOrdenadas = [...classes].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-
-    turmasOrdenadas.forEach(c => select.insertAdjacentHTML('beforeend', `<option value="${c.id}">${c.name}</option>`));
-    onReportClassChange();
-}
-
-        function onReportClassChange() {
-    const classId = document.getElementById('report-class-select').value;
-    const studentSelect = document.getElementById('report-student-select');
-    if(!studentSelect) return;
-    
-    studentSelect.innerHTML = '';
-    studentSelect.disabled = false;
-
-    // Filtra e ordena os alunos ativos da turma alfabeticamente pelo nome completo
-    const alunosTurma = students
-        .filter(s => s.classId == classId && s.status === "Ativo")
-        .sort((a, b) => a.fullname.localeCompare(b.fullname));
-
-    alunosTurma.forEach(s => studentSelect.insertAdjacentHTML('beforeend', `<option value="${s.id}">${s.fullname} (${s.code})</option>`));
-}
-
-async function emitirDocumentoSelecionado() {
-            const studentId = document.getElementById('report-student-select').value;
-            const tipoDoc = document.getElementById('report-type-select').value;
-            const aluno = students.find(s => s.id === studentId);
-            if(!aluno) return alert("Selecione um aluno válido!");
-            
-            const curso = courses.find(c => c.id == aluno.courseId);
-            const turma = classes.find(c => c.id == aluno.classId);
-            if(!['declaracao','historico'].includes(tipoDoc))return;
-            if(!SE7Templates.source(curso,tipoDoc).trim())return alert('Este curso ainda não possui este modelo. Configure em Sistema → Edição de Documentos.');
-            const janelaDocumento=window.open('', '_blank', 'width=900,height=700');
-            if(!janelaDocumento)return alert('Permita a abertura do documento no navegador e tente novamente.');
-            janelaDocumento.opener=null;
-            let frequenciaDocumento=()=> '—';
-            if(tipoDoc==='historico'){try{frequenciaDocumento=await SE7Templates.attendance(aluno);}catch(e){janelaDocumento.close();alert('Não foi possível consultar a frequência. Tente novamente antes de emitir o histórico.');return;}}
-            const enderecoCompleto = `${aluno.endereco || ''}, nº ${aluno.numero || ''} - ${aluno.bairro || ''}, ${aluno.cidade || ''}/${aluno.estado || ''} - CEP: ${aluno.cep || ''}`;
-
-            if(tipoDoc === 'declaracao') {
-                let templateHtmlDeclaracao = (curso ? curso.declaracaoHtmlTemplate : '');
-
-                if (!templateHtmlDeclaracao || templateHtmlDeclaracao.trim() === "") {
-                    alert("Nenhum template HTML de declaração cadastrado para este curso. Vá em Sistema > Edição de Documentos e salve o modelo.");
-                    return;
-                }
-
-                const hoje = new Date();
-                const dataPorExtenso = hoje.toLocaleDateString('pt-BR', { year: 'numeric', month: 'long', day: 'numeric' });
-
-                let htmlPreenchido = SE7Templates.prepare(templateHtmlDeclaracao)
-                    .replace(/\{\{instituicao_nome\}\}/g, globalInstitutionData.name || 'SE7 Gestão Educacional')
-                    .replace(/\{\{instituicao_razao\}\}/g, globalInstitutionData.razao || globalInstitutionData.name || '')
-                    .replace(/\{\{instituicao_endereco\}\}/g, globalInstitutionData.end || '')
-                    .replace(/\{\{instituicao_cnpj\}\}/g, globalInstitutionData.cnpj || '')
-                    .replace(/\{\{instituicao_logo\}\}/g, globalInstitutionData.logo || '')
-                    .replace(/\{\{aluno_nome\}\}/g, aluno.fullname || '')
-                    .replace(/\{\{aluno_matricula\}\}/g, aluno.code || '')
-                    .replace(/\{\{aluno_turma\}\}/g, turma ? turma.name : '---')
-                    .replace(/\{\{aluno_curso\}\}/g, curso ? curso.name : '---')
-                    .replace(/\{\{aluno_cpf\}\}/g, aluno.cpf || '')
-                    .replace(/\{\{aluno_rg\}\}/g, aluno.rg || '')
-                    .replace(/\{\{aluno_data_nascimento\}\}/g, aluno.dob ? aluno.dob.split('-').reverse().join('/') : '')
-                    .replace(/\{\{aluno_telefone\}\}/g, aluno.whatsapp || '')
-                    .replace(/\{\{aluno_situacao\}\}/g, aluno.status || 'Ativo')
-                    .replace(/Vigia\/PA,.*<\/div>/g, `Vigia/PA, ${dataPorExtenso}</div>`);
-
-                const janelaImpressao = janelaDocumento;
-                janelaImpressao.opener=null;
-                janelaImpressao.document.write(SE7Safe.document(htmlPreenchido));
-                janelaImpressao.document.close();
-                
-                setTimeout(() => {
-                    janelaImpressao.print();
-                }, 600);
-                return;
-            } 
-            else if(tipoDoc === 'historico') {
-                let templateHtmlHistorico = (curso ? curso.historicoHtmlTemplate : '');
-
-                if (!templateHtmlHistorico || templateHtmlHistorico.trim() === "") {
-                    alert("Nenhum template HTML de histórico cadastrado para este curso. Vá em Sistema > Edição de Documentos e salve o modelo.");
-                    return;
-                }
-
-                let linhasDisciplinasHtml = '';
-                if (curso && curso.subjects && curso.subjects.length > 0) {
-                    curso.subjects.forEach(sub => {
-                        const registroNota = (aluno.grades && aluno.grades[sub.id]) ? aluno.grades[sub.id] : { final: '---' };
-                        const notaFinalNum = parseFloat(registroNota.final);
-                        const situacaoDisciplina = !isNaN(notaFinalNum) ? (notaFinalNum >= 6 ? 'Aprovado' : 'Reprovado') : 'Cursando';
-                        
-                        linhasDisciplinasHtml += `
-                            <tr>
-                                <td style="padding: 8px; border: 1px solid #ddd;">${sub.name}</td>
-                                <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${sub.hours || '---'}</td>
-                                <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${frequenciaDocumento(sub.name)}</td>
-                                <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${registroNota.final !== undefined && registroNota.final !== '' ? registroNota.final : '---'}</td>
-                                <td style="padding: 8px; border: 1px solid #ddd; text-align: center; font-weight: bold; color: ${situacaoDisciplina === 'Aprovado' ? 'green' : '#333'};">${situacaoDisciplina}</td>
-                            </tr>
-                        `;
-                    });
-                } else {
-                    linhasDisciplinasHtml = `<tr><td colspan="5" style="text-align: center; padding: 12px;">Nenhuma disciplina cadastrada na grade curricular deste curso.</td></tr>`;
-                }
-
-                const hoje = new Date();
-                const dataPorExtenso = hoje.toLocaleDateString('pt-BR', { year: 'numeric', month: 'long', day: 'numeric' });
-
-                let htmlPreenchido = SE7Templates.prepare(templateHtmlHistorico)
-                    .replace(/\{\{instituicao_nome\}\}/g, globalInstitutionData.name || 'SE7 Gestão Educacional')
-                    .replace(/\{\{instituicao_razao\}\}/g, globalInstitutionData.razao || globalInstitutionData.name || '')
-                    .replace(/\{\{instituicao_endereco\}\}/g, globalInstitutionData.end || '')
-                    .replace(/\{\{instituicao_cnpj\}\}/g, globalInstitutionData.cnpj || '')
-                    .replace(/\{\{instituicao_logo\}\}/g, globalInstitutionData.logo || '')
-                    .replace(/\{\{aluno_name\}\}/g, aluno.fullname || '')
-                    .replace(/\{\{aluno_nome\}\}/g, aluno.fullname || '')
-                    .replace(/\{\{aluno_matricula\}\}/g, aluno.code || '')
-                    .replace(/\{\{aluno_turma\}\}/g, turma ? turma.name : '---')
-                    .replace(/\{\{aluno_curso\}\}/g, curso ? curso.name : '---')
-                    .replace(/\{\{carga_horaria_curso\}\}/g, curso ? (curso.hours || '3600h') : '3600h')
-                    .replace(/\{\{aluno_cpf\}\}/g, aluno.cpf || '')
-                    .replace(/\{\{aluno_rg\}\}/g, aluno.rg || '')
-                    .replace(/\{\{aluno_data_nascimento\}\}/g, aluno.dob ? aluno.dob.split('-').reverse().join('/') : '')
-                    .replace(/\{\{aluno_telefone\}\}/g, aluno.whatsapp || '')
-                    .replace(/\{\{aluno_situacao\}\}/g, aluno.status || 'Ativo')
-                    .replace(/\{\{tabela_disciplinas\}\}/g, linhasDisciplinasHtml)
-                    .replace(/Vigia\/PA,.*<\/div>/g, `Vigia/PA, ${dataPorExtenso}</div>`);
-
-                const janelaImpressao = janelaDocumento;
-                janelaImpressao.opener=null;
-                janelaImpressao.document.write(SE7Safe.document(htmlPreenchido));
-                janelaImpressao.document.close();
-                
-                setTimeout(() => {
-                    janelaImpressao.print();
-                }, 600);
-                return;
-            }
-        }
+        function renderReportClasses(){ window.SE7Templates?.refresh(); }
+        function onReportClassChange(){ window.SE7Templates?.refresh(); }
+        async function emitirDocumentoSelecionado(tipo='declaracao'){ return window.SE7Templates?.emit(tipo); }
 
         function renderDropdowns() {
-            ['input-class-course', 'input-student-course', 'input-subject-course-select', 'attendance-course-select', 'grade-course-select', 'template-course-select', 'cal-course-select'].forEach(id => {
+            ['input-class-course', 'input-student-course', 'input-subject-course-select', 'attendance-course-select', 'grade-course-select', 'cal-course-select'].forEach(id => {
                 const el = document.getElementById(id);
                 if(el) {
                     const currentVal = el.value;
@@ -4624,7 +4434,7 @@ async function emitirDocumentoSelecionado() {
                     classes.forEach(c => el.insertAdjacentHTML('beforeend', `<option value="${c.id}">${c.name}</option>`)); 
                 }
             });
-            filterTurmasByCourse(); filterTurmasByAttendanceCourse(); filterTurmasByGradeCourse(); loadCourseTemplate();
+            filterTurmasByCourse(); filterTurmasByAttendanceCourse(); filterTurmasByGradeCourse(); window.SE7Templates?.refresh();
             atualizarDisciplinasETurmasCalendario();
         }
 
@@ -5347,89 +5157,7 @@ async function executarBaixaManualComDetalhes(financeLogId) {
     }
 }
 
-async function gerarHistoricoEscolarDinamico(alunoId) {
-    const aluno = students.find(s => s.id === alunoId);
-    if (!aluno) return alert("Aluno não encontrado!");
-
-    const curso = courses.find(c => c.id === aluno.courseId);
-    const turma = classes.find(c => c.id === aluno.classId);
-
-    // Pega o template HTML salvo na subaba de Edição de Documentos
-    let templateHtml = (curso ? curso.historicoHtmlTemplate : '');
-    
-    if (!templateHtml || templateHtml.trim() === "") {
-        alert("Nenhum template HTML de histórico cadastrado para este curso. Vá em Sistema > Edição de Documentos e salve o modelo.");
-        return;
-    }
-
-    const janelaDocumento=window.open('', '_blank', 'width=900,height=700');
-    if(!janelaDocumento)return alert('Permita a abertura do documento no navegador e tente novamente.');
-    janelaDocumento.opener=null;
-    let frequenciaDocumento;
-    try{frequenciaDocumento=await SE7Templates.attendance(aluno);}catch(e){janelaDocumento.close();alert('Não foi possível consultar a frequência. Tente novamente.');return;}
-
-    // 1. Montagem dinâmica das linhas da tabela de disciplinas com notas, carga horária e situação
-    let linhasDisciplinasHtml = '';
-    let cargaHorariaTotalCurso = curso && curso.hours ? curso.hours : '3600h';
-
-    if (curso && curso.subjects && curso.subjects.length > 0) {
-        curso.subjects.forEach(sub => {
-            const registroNota = (aluno.grades && aluno.grades[sub.id]) ? aluno.grades[sub.id] : { final: '---' };
-            const notaFinalNum = parseFloat(registroNota.final);
-            const situacaoDisciplina = !isNaN(notaFinalNum) ? (notaFinalNum >= 6 ? 'Aprovado' : 'Reprovado') : 'Cursando';
-            
-            linhasDisciplinasHtml += `
-                <tr>
-                    <td style="padding: 8px; border: 1px solid #ddd;">${sub.name}</td>
-                    <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${sub.hours || '---'}</td>
-                    <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${frequenciaDocumento(sub.name)}</td>
-                    <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${registroNota.final !== undefined && registroNota.final !== '' ? registroNota.final : '---'}</td>
-                    <td style="padding: 8px; border: 1px solid #ddd; text-align: center; font-weight: bold; color: ${situacaoDisciplina === 'Aprovado' ? 'green' : '#333'};">${situacaoDisciplina}</td>
-                </tr>
-            `;
-        });
-    } else {
-        linhasDisciplinasHtml = `<tr><td colspan="5" style="text-align: center; padding: 12px;">Nenhuma disciplina cadastrada na grade curricular deste curso.</td></tr>`;
-    }
-
-    // 2. Substituição rigorosa das tags de dados e da tabela de disciplinas no HTML
-    let htmlPreenchido = SE7Templates.prepare(templateHtml)
-        .replace(/\{\{instituicao_nome\}\}/g, globalInstitutionData.name || 'SE7 Gestão Educacional')
-        .replace(/\{\{instituicao_razao\}\}/g, globalInstitutionData.razao || globalInstitutionData.name || '')
-        .replace(/\{\{instituicao_endereco\}\}/g, globalInstitutionData.end || '')
-        .replace(/\{\{instituicao_cnpj\}\}/g, globalInstitutionData.cnpj || '')
-        .replace(/\{\{instituicao_logo\}\}/g, globalInstitutionData.logo || '')
-        .replace(/\{\{aluno_nome\}\}/g, aluno.fullname || '')
-        .replace(/\{\{aluno_matricula\}\}/g, aluno.code || '')
-        .replace(/\{\{aluno_turma\}\}/g, turma ? turma.name : '---')
-        .replace(/\{\{aluno_curso\}\}/g, curso ? curso.name : '---')
-        .replace(/\{\{carga_horaria_curso\}\}/g, cargaHorariaTotalCurso)
-        .replace(/\{\{aluno_cpf\}\}/g, aluno.cpf || '')
-        .replace(/\{\{aluno_rg\}\}/g, aluno.rg || '')
-        .replace(/\{\{aluno_data_nascimento\}\}/g, aluno.dob ? aluno.dob.split('-').reverse().join('/') : '')
-        .replace(/\{\{aluno_telefone\}\}/g, aluno.whatsapp || '')
-        .replace(/\{\{aluno_situacao\}\}/g, aluno.status || 'Ativo')
-        .replace(/\{\{tabela_disciplinas\}\}/g, linhasDisciplinasHtml);
-
-    // 3. Abre a janela de impressão com o template devidamente preenchido
-    const janelaImpressao = janelaDocumento;
-    janelaImpressao.opener=null;
-                janelaImpressao.document.write(SE7Safe.document(htmlPreenchido));
-    janelaImpressao.document.close();
-    
-    setTimeout(() => {
-        janelaImpressao.print();
-    }, 600);
-}	
-
-// Abre ou fecha o bloco de edição de vencimento e valor da fatura
-function toggleModoEdicaoFinanceiro(financeLogId) {
-    return alert('O financeiro do Matriz é somente para consulta. Faça a gestão de faturas pelo app financeiro.');
-    const box = document.getElementById(`edit-box-fin-${financeLogId}`);
-    if (box) {
-        box.style.display = box.style.display === 'none' ? 'grid' : 'none';
-    }
-}
+async function gerarHistoricoEscolarDinamico(alunoId){return window.SE7Templates?.emit('historico',alunoId);}
 
 // Salva a nova data de vencimento e o novo valor diretamente na nuvem
 async function salvarEdicaoVencimentoValor(financeLogId) {
@@ -5685,7 +5413,7 @@ function escutarRegistrosPontoManual() {
 <script src="/assets/se7-enrollment.js"></script>
 <script src="/assets/se7-version.js"></script>
 <script src="/assets/se7-documents.js"></script>
-<link rel="stylesheet" href="/assets/se7-template-editor.css"><script src="/assets/se7-template-editor.js"></script>
+<link rel="stylesheet" href="/assets/se7-template-editor.css"><script src="/assets/se7-academic-documents.js"></script><script src="/assets/se7-template-editor.js"></script>
 <link rel="stylesheet" href="/assets/se7-exams.css">
 <script src="/assets/vendor/pdf-lib.min.js"></script><script src="/assets/vendor/fontkit.umd.min.js"></script><script src="/assets/vendor/jsQR.js"></script><script src="/assets/vendor/qrcode.js"></script><script src="/assets/se7-exam-omr.js"></script><script src="/assets/se7-exam-pdf.js"></script><script src="/assets/se7-exams.js"></script>
 <link rel="stylesheet" href="/assets/se7-student-sheet.css"><script src="/assets/se7-student-sheet.js"></script>
