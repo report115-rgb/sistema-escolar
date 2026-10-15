@@ -87,13 +87,13 @@
 @media screen{#login-modal .login-loading-dots span,#login-modal .login-loading-dots span:first-child,#login-modal .login-loading-dots span:nth-child(2){width:17px;height:17px}#login-modal .login-loading-dots{gap:11px;margin-left:17px}}
 @media screen{#login-modal .login-brand-heading{font-size:clamp(68px,8.1vw,126px);font-weight:730;line-height:.85}#login-modal .login-connected{font-size:clamp(55px,6.9vw,110px);font-weight:720}#login-modal .login-loading-dots{letter-spacing:0}}
 
-/* Matriz desktop: retain the approved composition at 60% of its former size. */
+/* Matriz desktop: retain the approved composition at 80% of its former size. */
 @media screen{
-body.se7-matriz #login-modal .login-shell{transform:scale(.6);transform-origin:center center}
+body.se7-matriz #login-modal .login-shell{transform:scale(.8);transform-origin:center center}
 body.se7-matriz #login-modal .login-corner-brand{width:147px}
 }
 
-/* Compact text grouping: keep the same proportional 40% reduction. */
+/* Compact text grouping: keep the same proportional 20% reduction. */
 @media screen{
 body.se7-matriz #login-modal .login-system-tag{margin-bottom:12px}
 body.se7-matriz #login-modal .login-brand-heading>span:first-child{margin-bottom:-.08em}
