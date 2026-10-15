@@ -1011,7 +1011,7 @@
         async function carregarDadosNuvem() {
             void window.SE7EnrollmentAuto?.resume();
             if(dadosFinanceiroIniciados)return;
-            dadosFinanceiroIniciados=true;SE7Reads.installButton();
+            dadosFinanceiroIniciados=true;SE7Reads.start();
             await carregarCursosTurmasMatriz();
             await carregarDadosInstituicao();
 

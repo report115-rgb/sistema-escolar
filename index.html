@@ -1029,7 +1029,8 @@
 
                     <!-- SUB-SUBABA 2: CADASTRAR NOVA TURMA -->
                     <div id="subsubtab-cadastrar-turma" class="subsubtab-class-content space-y-4" style="display: none;">
-<label class="block text-xs font-semibold">Polo da turma<select id="input-class-polo" class="w-full px-3 py-2 rounded-lg border dark:bg-slate-900"></select></label>
+<label id="class-renumber-panel" hidden class="block text-xs"><input id="class-renumber-polo" type="checkbox" onchange="atualizarPreviewTurmaAutomatica()"> Corrigir numeração antiga para a sequência deste curso e polo</label>
+<label class="block text-xs font-semibold">Polo da turma<select id="input-class-polo" onchange="atualizarPreviewTurmaAutomatica()" class="w-full px-3 py-2 rounded-lg border dark:bg-slate-900"></select></label>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-xs font-semibold mb-1">Curso</label>
@@ -2550,7 +2551,7 @@ async function removerUsuarioSistemaFirebase(id){if(!confirm('Desativar esse fun
             });
         }
 
-let dadosMatrizIniciados=false;async function iniciarDadosAutenticadosMatriz(){if(!await window.SE7Polos.init())return;window.iniciarAuditoriaMovimentacoes?.();const perfil=JSON.parse(sessionStorage.getItem('usuario_logado')||'{}').perfil;if(perfil==='professor'){window.SE7Exams?.apply(perfil);return;}if(dadosMatrizIniciados)return;dadosMatrizIniciados=true;db=SE7Reads.wrap(db);SE7Reads.installButton();carregarDadosDaNuvem();if(usuarioMasterAtivo()){renderizarSolicitacoesPendentes();}}
+let dadosMatrizIniciados=false;async function iniciarDadosAutenticadosMatriz(){if(!await window.SE7Polos.init())return;window.iniciarAuditoriaMovimentacoes?.();const perfil=JSON.parse(sessionStorage.getItem('usuario_logado')||'{}').perfil;if(perfil==='professor'){window.SE7Exams?.apply(perfil);return;}if(dadosMatrizIniciados)return;dadosMatrizIniciados=true;db=SE7Reads.wrap(db);SE7Reads.start();carregarDadosDaNuvem();if(usuarioMasterAtivo()){renderizarSolicitacoesPendentes();}}
         function carregarDadosDaNuvem() {
             db.collection("config").doc("institution").onSnapshot((doc) => {
                 if (doc.exists) {
@@ -3001,17 +3002,19 @@ async function excluirColaborador(id) {
             if(!curso) return;
             const sigla=(curso.sigla||(/enfermagem/i.test(curso.name)?'ENF':/eja/i.test(curso.name)?'EJA':'TUR')).toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,12)||'TUR';
             const old=classes.find(c=>c.id===document.getElementById('edit-class-id').value);
-            const number=old?.courseId===courseId&&old?.number?old.number:Math.max(0,...classes.filter(c=>c.courseId===courseId).map(c=>Number(c.number)||0))+1;
-            const code=old?.courseId===courseId&&old?.number&&old?.code?old.code:sigla+'-'+String(number).padStart(3,'0');
+            const poloId=document.getElementById('input-class-polo').value,renumber=document.getElementById('class-renumber-polo').checked;
+            const same=old?.courseId===courseId&&(!old.poloId||old.poloId===poloId)&&old.number&&!renumber;
+            const number=same?old.number:Math.max(0,...classes.filter(c=>c.courseId===courseId&&c.poloId===poloId&&c.id!==old?.id).map(c=>Number(c.number)||0))+1;
+            const code=same&&old.code?old.code:sigla+'-'+String(number).padStart(3,'0');
             document.getElementById('input-class-code-auto').value=code;
             document.getElementById('input-class-name-auto').value=SE7ClassFormat.className(curso,number);
         }
-        async function addClass(){const button=document.getElementById('btn-save-class');if(button.disabled)return;button.disabled=true;const text=button.textContent;button.textContent='Aguarde…';try{const data={poloId:document.getElementById('input-class-polo').value,id:document.getElementById('edit-class-id').value,courseId:document.getElementById('input-class-course').value,semestre:document.getElementById('input-class-semester').value,entrySemester:document.getElementById('input-class-entry').value.trim(),stage:document.getElementById('input-class-stage').value,weekdays:[...document.querySelectorAll('[name="class-weekday"]:checked')].map(e=>Number(e.value)),startTime:document.getElementById('input-class-start').value,endTime:document.getElementById('input-class-end').value,financeConfig:Object.fromEntries(['qtdParcelas','valorParcela','valorDesconto','vencimento'].map(k=>[k,document.getElementById('class-finance-'+k).value]))};if(!data.courseId)return alert('Selecione um curso.');if(!data.poloId)return alert('Selecione o polo da turma.');SE7Tuition.validateTuition(data.financeConfig);const result=await SE7.api('class-save',data);const old=classes.find(c=>c.id===result.id);if(old)Object.assign(old,result);else classes.push(result);await window.SE7Reads?.refresh('classes');await window.SE7Reads?.refresh('academicCalendars');renderClasses();cancelarEdicaoTurma();alert('Turma salva com sucesso.');}catch(e){alert(e.message);}finally{button.disabled=false;button.textContent=document.getElementById('edit-class-id').value?text:'Salvar Turma';}}
+        async function addClass(){const button=document.getElementById('btn-save-class');if(button.disabled)return;button.disabled=true;const text=button.textContent;button.textContent='Aguarde…';try{const data={renumberForPolo:document.getElementById('class-renumber-polo').checked,poloId:document.getElementById('input-class-polo').value,id:document.getElementById('edit-class-id').value,courseId:document.getElementById('input-class-course').value,semestre:document.getElementById('input-class-semester').value,entrySemester:document.getElementById('input-class-entry').value.trim(),stage:document.getElementById('input-class-stage').value,weekdays:[...document.querySelectorAll('[name="class-weekday"]:checked')].map(e=>Number(e.value)),startTime:document.getElementById('input-class-start').value,endTime:document.getElementById('input-class-end').value,financeConfig:Object.fromEntries(['qtdParcelas','valorParcela','valorDesconto','vencimento'].map(k=>[k,document.getElementById('class-finance-'+k).value]))};if(!data.courseId)return alert('Selecione um curso.');if(!data.poloId)return alert('Selecione o polo da turma.');SE7Tuition.validateTuition(data.financeConfig);if(data.renumberForPolo&&!confirm('Corrigir o código e o nome desta turma para a sequência do polo? O identificador interno e os vínculos serão mantidos; documentos e avaliações já emitidos manterão a identificação histórica.'))return;const result=await SE7.api('class-save',data);const old=classes.find(c=>c.id===result.id);if(old)Object.assign(old,result);else classes.push(result);await window.SE7Reads?.refresh('classes');await window.SE7Reads?.refresh('academicCalendars');renderClasses();cancelarEdicaoTurma();alert('Turma salva com sucesso.');}catch(e){alert(e.message);}finally{button.disabled=false;button.textContent=document.getElementById('edit-class-id').value?text:'Salvar Turma';}}
 
         function editarTurma(id) {
             const t = classes.find(c => c.id === id);
             if (!t) return;
-            document.getElementById('edit-class-id').value = t.id;document.getElementById('input-class-polo').value=t.poloId||'';
+            document.getElementById('class-renumber-polo').checked=false;document.getElementById('class-renumber-panel').hidden=t.numberScope==='course-polo-v1';document.getElementById('edit-class-id').value = t.id;document.getElementById('input-class-polo').value=t.poloId||'';
             document.getElementById('input-class-course').value = t.courseId || '';
             document.getElementById('input-class-semester').value = t.semestre || '2026.2';
             document.getElementById('input-class-code-auto').value = t.code || '';
@@ -3026,7 +3029,7 @@ async function excluirColaborador(id) {
 
         function cancelarEdicaoTurma() {
             fecharModalEdicaoConfiguracao();
-            document.getElementById('edit-class-id').value = '';document.getElementById('input-class-polo').value=window.SE7Polos?.current()||'';document.getElementById('input-class-entry').value='';document.getElementById('input-class-stage').value='';document.getElementById('input-class-start').value='';document.getElementById('input-class-end').value='';document.querySelectorAll('[name=class-weekday]').forEach(e=>e.checked=false);
+            document.getElementById('class-renumber-panel').hidden=true;document.getElementById('class-renumber-polo').checked=false;document.getElementById('edit-class-id').value = '';document.getElementById('input-class-polo').value=window.SE7Polos?.current()||'';document.getElementById('input-class-entry').value='';document.getElementById('input-class-stage').value='';document.getElementById('input-class-start').value='';document.getElementById('input-class-end').value='';document.querySelectorAll('[name=class-weekday]').forEach(e=>e.checked=false);
             document.getElementById('btn-save-class').textContent = "Salvar Turma";
             document.getElementById('btn-cancel-edit-class').style.display = 'none';
             carregarFinanceiroCadastroTurma(true);atualizarPreviewTurmaAutomatica();
