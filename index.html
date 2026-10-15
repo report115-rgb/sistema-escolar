@@ -160,6 +160,8 @@
 <link rel="stylesheet" href="/assets/se7-brand.css">
 <script defer src="/assets/se7-brand.js"></script>
 <link rel="stylesheet" href="/assets/se7-welcome.css">
+<link rel="stylesheet" href="/assets/se7-polos.css">
+<script src="/assets/se7-polos.js" defer></script>
 </head>
 <body class="se7-suite se7-matriz bg-gray-100 dark:bg-slate-900 text-gray-800 dark:text-gray-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-300 pb-16">    
 
@@ -1485,7 +1487,7 @@
                     </div>
                 </div>
 
-                <h4 class="font-bold text-xs text-blue-600 dark:text-blue-400 uppercase pt-2">3. Vínculo Acadêmico</h4>
+                <h4 class="font-bold text-xs text-blue-600 dark:text-blue-400 uppercase pt-2">3. Vínculo Acadêmico</h4><label class="block text-xs font-semibold">Polo do aluno<select id="input-student-polo" class="se7-polo-select" required></select></label>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-semibold mb-1">Curso</label>
@@ -1562,7 +1564,7 @@
                         </select>
                     </div>
                 </div>
-                <button type="button" onclick="cadastrarNovoUsuarioSistema()" class="px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded-lg shadow">Cadastrar Usuário</button>
+                <label class="block text-xs font-semibold">Polo da secretaria<select id="new-user-polo" class="se7-polo-select"></select></label><button type="button" onclick="cadastrarNovoUsuarioSistema()" class="px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded-lg shadow">Cadastrar Usuário</button>
             </div>
             <h4 class="font-bold text-xs text-gray-700 dark:text-gray-300 uppercase mb-2">Usuários Ativos no Sistema</h4>
             <ul class="data-list divide-y divide-gray-200 dark:divide-slate-700 max-h-48 overflow-y-auto" id="system-users-list"></ul>
@@ -1589,7 +1591,7 @@
         };
 
         firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+        let db = firebase.firestore();
 
 
         document.getElementById('cancel-date').valueAsDate = new Date();
@@ -2167,7 +2169,7 @@ async function rejeitarSolicitacaoFirebase(id) {
                 const resultado = await SE7.api('staff-list');
                 const usuario = resultado.users.find(u => u.id === id && !u.disabled && ['master','secretaria','professor','financeiro'].includes(u.perfil));
                 if (!usuario || id === firebase.auth().currentUser.uid) throw new Error('Perfil indisponível');
-                perfilVisualizadoMatriz = {nome:usuario.nome || usuario.email, email:usuario.email, perfil:usuario.perfil, id:usuario.id};
+                perfilVisualizadoMatriz = {nome:usuario.nome || usuario.email, email:usuario.email, perfil:usuario.perfil, id:usuario.id,poloId:usuario.poloId||'',poloIds:usuario.poloIds||[]};
                 const aviso = document.getElementById('aviso-perfil-matriz');
                 aviso.hidden = false;
                 document.getElementById('nome-perfil-matriz').textContent = 'Visualizando: ' + perfilVisualizadoMatriz.nome + ' — ' + perfilVisualizadoMatriz.perfil + '. Sua sessão continua como master.';
@@ -2331,10 +2333,10 @@ function fecharModalControleAcesso() {
 }
         
         // 1. Cadastrar novo usuário manualmente direto na nuvem
-async function cadastrarNovoUsuarioSistema(){try{await SE7.api('staff-create',{name:document.getElementById('new-user-name').value.trim(),email:document.getElementById('new-user-email').value.trim(),password:document.getElementById('new-user-pass').value,role:document.getElementById('new-user-perfil').value});document.getElementById('new-user-pass').value='';alert('Conta criada no Authentication.');await renderizarUsuariosSistemaFirebase();}catch(e){alert(e.message);}}
+async function cadastrarNovoUsuarioSistema(){try{await SE7.api('staff-create',{name:document.getElementById('new-user-name').value.trim(),email:document.getElementById('new-user-email').value.trim(),password:document.getElementById('new-user-pass').value,role:document.getElementById('new-user-perfil').value,poloId:document.getElementById('new-user-polo').value});document.getElementById('new-user-pass').value='';alert('Conta criada no Authentication.');await renderizarUsuariosSistemaFirebase();}catch(e){alert(e.message);}}
 
 // 2. Renderizar a lista de usuários ativos direto do Firebase (incluindo os usuários padrão)
-async function renderizarUsuariosSistemaFirebase(){const list=document.getElementById('system-users-list');if(!list||!usuarioMasterAtivo())return;list.textContent='Carregando contas…';try{const d=await SE7.api('staff-list');list.innerHTML='';for(const u of d.users){const li=document.createElement('li');li.className='py-2 flex gap-2 justify-between text-xs';const span=document.createElement('span');span.textContent=u.nome+' ('+u.email+') — '+u.perfil+(u.disabled?' — desativado':'');li.appendChild(span);if(!u.disabled){const btn=document.createElement('button');btn.textContent='Desativar';btn.onclick=()=>removerUsuarioSistemaFirebase(u.id);li.appendChild(btn);}list.appendChild(li);}if(!d.users.length)list.textContent='Nenhum funcionário vinculado. O master usa a conta configurada na Vercel.';}catch(e){list.textContent=e.message;}}
+async function renderizarUsuariosSistemaFirebase(){const list=document.getElementById('system-users-list');if(!list||!usuarioMasterAtivo())return;list.textContent='Carregando contas…';try{const d=await SE7.api('staff-list');list.innerHTML='';for(const u of d.users){const li=document.createElement('li');li.className='py-2 flex gap-2 justify-between text-xs';const span=document.createElement('span');span.textContent=u.nome+' ('+u.email+') — '+u.perfil+(u.disabled?' — desativado':'');li.appendChild(span);if(!u.disabled&&['secretaria','professor'].includes(u.perfil)){const edit=document.createElement('button');edit.type='button';edit.textContent='Editar acesso';edit.className='se7-polo-button';edit.onclick=()=>SE7Polos.bindUser(u);li.appendChild(edit);const polo=document.createElement('small');polo.textContent='Polos: '+((u.poloIds||[u.poloId]).filter(Boolean).map(id=>SE7Polos.name(id)||id).join(', ')||'Não vinculado');li.appendChild(polo);}if(!u.disabled){const btn=document.createElement('button');btn.textContent='Desativar';btn.onclick=()=>removerUsuarioSistemaFirebase(u.id);li.appendChild(btn);}list.appendChild(li);}if(!d.users.length)list.textContent='Nenhum funcionário vinculado. O master usa a conta configurada na Vercel.';}catch(e){list.textContent=e.message;}}
 
 // 3. Remover usuário da nuvem
 async function removerUsuarioSistemaFirebase(id){if(!confirm('Desativar esse funcionário?'))return;try{await SE7.api('staff-disable',{uid:id});await renderizarUsuariosSistemaFirebase();}catch(e){alert(e.message);}}
@@ -2492,7 +2494,7 @@ async function removerUsuarioSistemaFirebase(id){if(!confirm('Desativar esse fun
             redefinirFotoCadastroAluno();
             document.getElementById('edit-student-id').value = "";
             document.getElementById('modal-student-title').textContent = "Nova Matrícula";
-            document.getElementById('formFichaMatricula').reset();
+            document.getElementById('formFichaMatricula').reset();SE7Polos.studentForm();
             document.getElementById('new-student-modal').style.display = 'flex';
             window.SE7Ingress?.preview();
         }
@@ -2560,7 +2562,7 @@ async function removerUsuarioSistemaFirebase(id){if(!confirm('Desativar esse fun
             });
         }
 
-let dadosMatrizIniciados=false;function iniciarDadosAutenticadosMatriz(){window.iniciarAuditoriaMovimentacoes?.();const perfil=JSON.parse(sessionStorage.getItem('usuario_logado')||'{}').perfil;if(perfil==='professor'){window.SE7Exams?.apply(perfil);return;}if(dadosMatrizIniciados)return;dadosMatrizIniciados=true;carregarDadosDaNuvem();escutarRegistrosPontoManual();if(usuarioMasterAtivo()){renderizarLogsAuditoria();renderizarSolicitacoesPendentes();}carregarAlunosSemTurma();}
+let dadosMatrizIniciados=false;async function iniciarDadosAutenticadosMatriz(){if(!await window.SE7Polos.init())return;window.iniciarAuditoriaMovimentacoes?.();const perfil=JSON.parse(sessionStorage.getItem('usuario_logado')||'{}').perfil;if(perfil==='professor'){window.SE7Exams?.apply(perfil);return;}if(dadosMatrizIniciados)return;dadosMatrizIniciados=true;carregarDadosDaNuvem();escutarRegistrosPontoManual();if(usuarioMasterAtivo()){renderizarLogsAuditoria();renderizarSolicitacoesPendentes();}carregarAlunosSemTurma();}
         function carregarDadosDaNuvem() {
             db.collection("config").doc("institution").onSnapshot((doc) => {
                 if (doc.exists) {
@@ -3533,7 +3535,7 @@ function carregarDatasCalendarioParaFrequencia(){const classId=document.getEleme
 
     // Monta os dados básicos do aluno (sem a foto fixa aqui para tratar separadamente)
     const studentData = {
-        fullname, 
+        ...SE7Polos.studentValue(),fullname, 
         dob: document.getElementById('dataNascimento').value,
         sexo: document.getElementById('sexoAluno').value, 
         whatsapp: document.getElementById('whatsappAluno').value.trim(),
@@ -3560,7 +3562,7 @@ function carregarDatasCalendarioParaFrequencia(){const classId=document.getEleme
         const beforeEnrollment = await db.collection('students').doc(editId).get();
         const hadClass = !!beforeEnrollment.data()?.classId;
         const enrollmentDate=document.getElementById('student-enrollment-date').value;const oldDate=beforeEnrollment.data()?.enrollmentDate||'';if(oldDate&&!enrollmentDate)return alert('Informe a data da matrícula; a data registrada não pode ser apagada.');if(enrollmentDate&&enrollmentDate>SE7AcademicPolicy.today())return alert('A data da matrícula não pode ser futura.');const dateChanged=enrollmentDate!==oldDate;const recalculateEntry=!!enrollmentDate&&(dateChanged||beforeEnrollment.data().classId!==classId||beforeEnrollment.data().courseId!==courseId);
-        await db.collection("students").doc(editId).update(studentData);
+        if(!usuarioMasterAtivo()){delete studentData.poloId;delete studentData.poloName;}await db.collection("students").doc(editId).update(studentData);
         if(recalculateEntry){const entry=await SE7.api('academic-entry-plan',{studentId:editId,...(dateChanged?{enrollmentDate}:{})});Object.assign(studentData,{enrollmentDate,academicEntry:entry});}
         if(!hadClass && studentData.classId){void SE7Email.notify('email-enrollment',{studentId:editId});void SE7EnrollmentAuto.start(editId);}
         await SE7.api('prepare-student',{id:editId});
@@ -3639,7 +3641,7 @@ function carregarDatasCalendarioParaFrequencia(){const classId=document.getEleme
     const aluno = students.find(s => s.id === id);
     if (!aluno) return;
 
-    document.getElementById('edit-student-id').value = aluno.id;
+    document.getElementById('edit-student-id').value = aluno.id;SE7Polos.studentForm(aluno.poloId||'');
     document.getElementById('modal-student-title').textContent = `Editar Aluno: ${aluno.fullname}`;
     document.getElementById('nomeAluno').value = aluno.fullname || '';
     document.getElementById('dataNascimento').value = aluno.dob || '';
@@ -3843,7 +3845,7 @@ async function renderAttendanceList() {
 
     try {
         // Consulta na nuvem (Firestore) se já existe chamada salva para esta turma e data
-        const docRef = await db.collection("attendanceLocks").doc(`${turmaId}_${dataAula}`).get();
+        const docRef = await db.collection("attendanceLocks").doc(`${turmaId}_${dataAula}${SE7Polos.current()?'_'+SE7Polos.current():''}`).get();
         if (docRef.exists) {
             const dadosNuves = docRef.data();
             jaLancado = dadosNuves.finalizada || false;
@@ -3857,7 +3859,7 @@ async function renderAttendanceList() {
     container.innerHTML = '';
 
     alunosTurma.forEach(aluno => {
-        let statusSalvo = registrosAnteriores[aluno.id];
+        let statusSalvo = registrosAnteriores[aluno.id]||aluno.attendance?.[dataAula]?.status;
         let alunoBloqueado = jaLancado || statusSalvo !== undefined;
 
         let li = document.createElement('li');
@@ -3928,7 +3930,7 @@ async function saveAttendance() {
 
     });
     try {
-        const saved = await SE7.api('email-save-attendance',{classId,date:dataAula,subject:document.getElementById('attendance-calendar-date-select').selectedOptions[0]?.dataset.subject||'',teacherId:professorId||null,rows:registrosFrequencia.map(r=>({studentId:r.studentId,status:r.status}))});
+        const saved = await SE7.api('email-save-attendance',{poloId:SE7Polos.current(),classId,date:dataAula,subject:document.getElementById('attendance-calendar-date-select').selectedOptions[0]?.dataset.subject||'',teacherId:professorId||null,rows:registrosFrequencia.map(r=>({studentId:r.studentId,status:r.status}))});
         void SE7Email.consume(saved.emailJobs||[]);
         if(saved.emailWarning) SE7Email.warning(saved.emailWarning);
         registrarLogAuditoria(`Chamada realizada para a turma ${classId} em ${dataAula} (${totalFaltas} falta(s) registrada(s))`, "Frequência");
@@ -4049,7 +4051,10 @@ async function saveAttendance() {
 // RENDERIZAÇÃO E EDIÇÃO DO FINANCEIRO DO ALUNO
 // ==========================================
 
-function renderizarCobrancasAlunoSelecionadoFinanceiro(studentId) {
+async function renderizarCobrancasAlunoSelecionadoFinanceiro(studentId) {
+    const request=window.se7FinanceViewRequest=(window.se7FinanceViewRequest||0)+1;
+    if(studentId){try{await SE7Polos.finance(studentId);}catch(e){alert(e.message);return;}}
+    if(request!==window.se7FinanceViewRequest)return;
     const container = document.getElementById('container-cobrancas-aluno-financeiro');
     if(!container) return;
     if(!studentId) {
@@ -5227,7 +5232,7 @@ function editarPontoManualProfessor(id) {
     if (![...select.options].some(o => o.value === registro.professorId)) {
         select.add(new Option(registro.professorNome || 'Professor do registro', registro.professorId));
     }
-    select.value = registro.professorId;
+    select.value = registro.professorId;if(document.getElementById('manual-ponto-polo'))document.getElementById('manual-ponto-polo').value=registro.poloId||SE7Polos.current()||'';
     for (const campo of ['data', 'turno', 'entrada', 'saida']) {
         document.getElementById('manual-ponto-' + campo).value = registro[campo] || '';
     }
@@ -5285,8 +5290,8 @@ async function salvarPontoManualProfessor() {
     if (idEdicao && !anterior) return alert("Este registro foi removido. Cancele a edição e atualize a lista.");
     const professorObj = teachers.find(t => t.id === professorId);
     if (!professorObj && (!anterior || anterior.professorId !== professorId)) return alert("Professor não encontrado.");
-    const registroData = {
-        professorId,
+    const poloId=document.getElementById('manual-ponto-polo')?.value||SE7Polos.current();if(!poloId)return alert('Selecione o polo do ponto.');const registroData = {
+        poloId,professorId,
         professorNome: professorObj ? professorObj.fullname : anterior.professorNome,
         cargo: professorObj ? (professorObj.cargo || 'Professor') : (anterior.cargo || 'Professor'),
         data, turno, entrada, saida

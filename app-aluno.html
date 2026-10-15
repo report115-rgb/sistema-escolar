@@ -433,7 +433,7 @@
                 <!-- CURSO E SENHA -->
                 <div class="space-y-3 pt-2">
                     <h3 class="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 border-b border-slate-100 dark:border-slate-800 pb-1">4. Curso e Acesso</h3>
-                    <div>
+                    <div><label class="block text-xs font-semibold mb-1">Polo de atendimento *</label><select id="mat-polo-select" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm"><option value="">Selecione o polo</option></select></div><div>
                         <label class="block text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Escolha o Curso *</label>
                         <select id="mat-curso-select" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm focus:ring-2 focus:ring-emerald-600 focus:outline-none">
                             <option value="">Carregando cursos disponíveis...</option>
@@ -577,6 +577,7 @@
 
                 <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 space-y-2 text-xs">
                     <h3 class="font-bold text-slate-700 dark:text-slate-200 text-sm mb-2"><i class="fa-solid fa-user-shield text-blue-600 mr-1.5"></i> Meus Dados Cadastrais</h3>
+                    <p class="flex justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-1.5"><strong class="text-slate-500 dark:text-slate-400">Polo:</strong><span id="info-polo" class="font-semibold text-right">Não informado</span></p>
                     <p class="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5"><strong class="text-slate-500 dark:text-slate-400">Matrícula:</strong> <span id="info-mat" class="font-semibold">---</span></p>
                     <p class="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5"><strong class="text-slate-500 dark:text-slate-400">CPF:</strong> <span id="info-cpf" class="font-semibold">---</span></p>
                     <p class="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5"><strong class="text-slate-500 dark:text-slate-400">RG:</strong> <span id="info-rg" class="font-semibold">---</span></p>
@@ -939,7 +940,7 @@ let cancelarIdentidadeAluno = null;
             });
         }
 
-        async function carregarCursosNoSelect(){const el=document.getElementById('mat-curso-select');try{const d=await SE7.api('catalog',{},false);el.innerHTML='<option value="">Selecione um curso</option>';for(const c of d.courses){const o=document.createElement('option');o.value=c.id;o.textContent=c.name;el.appendChild(o);}}catch(e){el.innerHTML='<option value="">Não foi possível carregar</option>';}}
+        async function carregarCursosNoSelect(){const el=document.getElementById('mat-curso-select');try{const d=await SE7.api('catalog',{},false);const ps=document.getElementById('mat-polo-select');ps.replaceChildren(new Option('Selecione o polo',''));for(const p of d.polos||[])ps.add(new Option(p.name+' — '+p.city+'/'+p.state,p.id));el.innerHTML='<option value="">Selecione um curso</option>';for(const c of d.courses){const o=document.createElement('option');o.value=c.id;o.textContent=c.name;el.appendChild(o);}}catch(e){el.innerHTML='<option value="">Não foi possível carregar</option>';}}
 
         let ultimoCepPreenchido = '';
         let versaoConsultaCep = 0;
@@ -1005,7 +1006,7 @@ let cancelarIdentidadeAluno = null;
             if (!whatsapp) return alert("Por favor, informe o número do seu WhatsApp.");
             if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return alert("Informe um e-mail válido ou deixe o campo em branco.");
             if (!cep || !rua || !numero || !bairro || !cidade) return alert("Por favor, preencha o endereço completo (CEP, número, etc.).");
-            if (!courseId) return alert("ATENÇÃO: Você deve obrigatoriamente escolher um Curso para realizar a matrícula.");
+            if(!document.getElementById('mat-polo-select').value)return alert('Selecione o polo de atendimento.');if (!courseId) return alert("ATENÇÃO: Você deve obrigatoriamente escolher um Curso para realizar a matrícula.");
             if (!senha || senha.length < 8) return alert("Por favor, crie uma senha de acesso com no mínimo 8 caracteres.");
 
             const nascimento = `${anoNasc}-${mesNasc}-${diaNasc}`;
@@ -1034,7 +1035,7 @@ let cancelarIdentidadeAluno = null;
                     neighborhood: bairro,
                     city: cidade,
                     state: estado,
-                    courseId: courseId,
+                    poloId:document.getElementById('mat-polo-select').value,courseId: courseId,
                     classId: "",
                     status: "Ativo",
                     
@@ -1543,6 +1544,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
                 if(abaPortalAtual===null){abaPortalAtual='home';void registrarEventoPortal('tab','home');}
                 document.getElementById('header-aluno-nome').textContent = alunoLogado.fullname || '---';
                 document.getElementById('info-mat').textContent = alunoLogado.code || '---';
+                document.getElementById('info-polo').textContent=alunoLogado.poloName||'Não informado';
                 document.getElementById('info-cpf').textContent = formatarCPFCadastral(alunoLogado.cpf);
                 document.getElementById('info-rg').textContent = alunoLogado.rg || '---';
 

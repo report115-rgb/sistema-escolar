@@ -1,0 +1,45 @@
+import {validId} from './security.mjs';
+const fail=(status,message)=>{throw Object.assign(new Error(message),{status});};
+export const poloIds=u=>u.role==='secretaria'?[u.profile?.poloId].filter(Boolean):u.role==='professor'?(u.profile?.poloIds||[]):[];
+export async function requirePolo(db,id){const r=await db.collection('polos').doc(validId(id)).get();if(!r.exists||r.data().active===false)fail(400,'Selecione um polo ativo.');return {id:r.id,...r.data()};}
+export async function catalog(db,u){if(!['master','secretaria','professor','financeiro'].includes(u.role))fail(403,'Acesso restrito.');const snap=await db.collection('polos').get(),ids=poloIds(u);return {polos:snap.docs.filter(d=>['master','financeiro'].includes(u.role)||ids.includes(d.id)).map(d=>({id:d.id,...d.data()}))};}
+export async function save(db,b,u){if(u.role!=='master')fail(403,'Apenas o Master cadastra polos.');const name=String(b.name||'').trim(),city=String(b.city||'').trim(),state=String(b.state||'').trim().toUpperCase();if(name.length<2||name.length>100||city.length<2||city.length>100||! /^[A-Z]{2}$/.test(state)||/[<>\x00-\x1f]/.test(name+city))fail(400,'Preencha nome, cidade e UF do polo.');const ref=b.id?db.collection('polos').doc(validId(b.id)):db.collection('polos').doc();await ref.set({name,city,state,active:b.active!==false,updatedAt:new Date().toISOString(),updatedBy:u.uid},{merge:true});return {id:ref.id};}
+export async function bind(db,b,u){if(u.role!=='master')fail(403,'Vínculo restrito ao Master.');const uid=validId(b.uid),ref=db.collection('se7Staff').doc(uid);const ids=[...new Set((Array.isArray(b.poloIds)?b.poloIds:[b.poloId]).filter(Boolean).map(validId))];if(!ids.length||ids.length>30)fail(400,'Selecione ao menos um polo.');for(const id of ids)await requirePolo(db,id);await db.runTransaction(async tx=>{const s=await tx.get(ref);let teacherRef=null;if(s.exists&&s.data().teacherId){teacherRef=db.collection('teachers').doc(validId(s.data().teacherId));await tx.get(teacherRef);}if(!s.exists||s.data().disabled||!['secretaria','professor'].includes(s.data().perfil))fail(400,'Escolha uma conta ativa de secretaria ou professor.');if(s.data().perfil==='secretaria'&&ids.length!==1)fail(400,'A secretaria deve ter exatamente um polo.');tx.update(ref,{poloId:ids[0],poloIds:ids,poloUpdatedAt:new Date().toISOString(),poloUpdatedBy:u.uid});if(teacherRef)tx.update(teacherRef,{poloIds:ids});});return {ok:true};}
+export function assertStudent(u,s){if(u.role==='secretaria'&&(!u.profile?.poloId||s?.poloId!==u.profile.poloId))fail(403,'Aluno de outro polo ou sem polo definido. Solicite ao Master.');}
+export function assertExam(u,e){if(['secretaria','professor'].includes(u.role)&&(!e?.poloId||!poloIds(u).includes(e.poloId)))fail(403,'Avaliação de outro polo ou sem polo definido. Solicite ao Master.');}
+// No migration: assignment changes only this student's campus. Related records are
+// authorized against the live student, so moving a student revokes the old campus.
+export async function assignStudent(db,b,u){if(u.role!=='master')fail(403,'Somente o Master altera o polo do aluno.');const p=await requirePolo(db,b.poloId);await db.collection('students').doc(validId(b.studentId)).update({poloId:p.id,poloName:p.name,poloUpdatedAt:new Date().toISOString(),poloUpdatedBy:u.uid});return {poloId:p.id,poloName:p.name};}
+
+// Admin SDK bypasses browser rules. Every secretary operation receives this
+// request-local adapter. Reads and transaction writes recheck live ownership.
+export function scopedDatabase(raw,u){
+ if(u.role!=='secretaria')return raw;
+ const polo=u.profile?.poloId;if(!polo)fail(403,'Sua conta ainda não possui polo. Peça ao Master para vincular o acesso.');
+ const refs=new WeakMap(),cache=new Map();const unwrap=r=>refs.get(r)||r;
+ const student=async(id,read)=>{const ref=raw.collection('students').doc(validId(id));const s=await read(ref);if(!s.exists)fail(403,'Aluno indisponível para este polo.');assertStudent(u,s.data());};
+ const plainRead=r=>{if(!cache.has(r.path))cache.set(r.path,r.get());return cache.get(r.path);};
+ async function allowed(ref,data,read=plainRead){
+  if(!data)return;
+  const path=ref.path.split('/'),c=path[0],id=path[1];
+  if(c==='students'){assertStudent(u,data);return;}
+  if(data.poloId&&['se7Exams','attendanceRecords','attendanceLocks','teacherManualLogs'].includes(c)&&data.poloId!==polo)fail(403,'Registro de outro polo.');
+  if(c==='se7Exams'){assertExam(u,data);return;}
+  let sid=data.studentId||data.alunoId;
+  if(!sid&&['se7Credentials','se7EnrollmentCandidates','se7EnrollmentBilling','se7AsaasCustomers','se7WhatsAppConsents'].includes(c))sid=id;
+  if(sid)await student(sid,read);
+  if(Array.isArray(data.frequencias))for(const row of data.frequencias)await student(row.studentId,read);
+  if(data.registros&&typeof data.registros==='object')for(const key of Object.keys(data.registros))await student(key,read);
+  if(data.versionId&&c!=='se7Exams'){const vr=raw.collection('se7ExamVersions').doc(validId(data.versionId));const v=await read(vr);if(v.exists)await allowed(vr,v.data(),read);}
+  if(c==='se7AcademicDocumentRequests'&&data.token){const r=raw.collection('se7AcademicDocuments').doc(data.token),d=await read(r);if(d.exists)await allowed(r,d.data(),read);}
+ }
+ const snap=async(s,read,query=false)=>{if(s.docs){const docs=[];for(const d of s.docs){try{await allowed(d.ref,d.data(),read);docs.push(wrapSnap(d));}catch(e){if(!query||e.status!==403)throw e;}}return new Proxy(s,{get(t,k){if(k==='docs')return docs;if(k==='size')return docs.length;if(k==='empty')return !docs.length;if(k==='forEach')return fn=>docs.forEach(fn);const v=t[k];return typeof v==='function'?v.bind(t):v;}});}if(s.exists)await allowed(s.ref,s.data(),read);return wrapSnap(s);};
+ function wrapSnap(s){return new Proxy(s,{get(t,k){if(k==='ref')return wrap(t.ref);const v=t[k];return typeof v==='function'?v.bind(t):v;}});}
+ async function transaction(fn,options){return raw.runTransaction(async tx=>{const queued=[],pending=new Map(),reads=new Map();const read=r=>{r=unwrap(r);const key=r.path||r;if(!reads.has(key))reads.set(key,tx.get(r));return reads.get(key);};const checkRead=async r=>{r=unwrap(r);const d=await read(r);return snap(d,read,Boolean(d.docs));};const view={get:checkRead,getAll:async(...rs)=>Promise.all(rs.map(checkRead))};for(const op of ['set','update','delete','create'])view[op]=(r,...args)=>{r=unwrap(r);queued.push([op,r,args]);if(op!=='delete')pending.set(r.path,args[0]);return view;};const access=await read(raw.collection('se7Staff').doc(u.uid));if(!access.exists||access.data().disabled||access.data().perfil!=='secretaria'||access.data().poloId!==polo)fail(403,'Seu vínculo de polo mudou. Entre novamente.');const result=await fn(view);const pendingRead=async r=>pending.has(r.path)?{exists:true,data:()=>pending.get(r.path)}:read(r);
+ // Complete all authorization reads before applying writes, including updates
+ // whose caller did not first read the affected student document.
+ for(const [op,r,args]of queued){const old=await read(r);if(old.exists)await allowed(r,old.data(),read);if(op!=='delete'){const data={...(old.data()||{}),...args[0]};await allowed(r,data,pendingRead);}}
+ for(const [op,r,args]of queued){tx[op](r,...args);cache.delete(r.path);}return result;},options);}
+ function wrap(obj){if(!obj||typeof obj!=='object')return obj;const p=new Proxy(obj,{get(t,k){if(k==='firestore')return db;if(k==='get')return async(...args)=>{let target=t;if(t.path==='students')target=t.where('poloId','==',polo);return snap(await target.get(...args),plainRead,typeof target.doc==='function'||!t.path);};if(['set','update','delete','create'].includes(k)&&t.path?.split('/').length%2===0)return(...args)=>transaction(tx=>{tx[k](p,...args);});if(k==='add')return async data=>{const r=wrap(t.doc());await r.set(data);return r;};if(k==='where'||k==='orderBy'||k==='limit'||k==='startAfter'||k==='select'){return(...a)=>{let target=t;if(t.path==='students')target=t.where('poloId','==',polo);return wrap(target[k](...a.map(unwrap)));};}if(k==='doc'||k==='collection')return(...a)=>wrap(t[k](...a));const v=t[k];return typeof v==='function'?v.bind(t):v;}});refs.set(p,obj);return p;}
+ const db={collection:n=>wrap(raw.collection(n)),doc:n=>wrap(raw.doc(n)),runTransaction:transaction,getAll:async(...rs)=>Promise.all(rs.map(r=>wrap(unwrap(r)).get())),batch:()=>{const ops=[];const b={};for(const op of ['set','update','delete','create'])b[op]=(r,...args)=>{ops.push([op,r,args]);return b;};b.commit=()=>transaction(tx=>{for(const [op,r,args]of ops)tx[op](r,...args);});return b;}};return db;
+}
