@@ -676,14 +676,14 @@
 
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
                         <div>
-                            <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Competência</label>
-                            <input type="month" id="freq-colab-mes" onchange="renderizarFrequenciaColaboradores()" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs dark:bg-slate-800 dark:text-white">
-                        </div>
-                        <div>
                             <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Colaborador</label>
                             <select id="freq-colab-professor" onchange="renderizarFrequenciaColaboradores()" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs dark:bg-slate-800 dark:text-white">
-                                <option value="">Todos os colaboradores</option>
+                                <option value="">Selecione o colaborador</option>
                             </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Competência</label>
+                            <input type="month" id="freq-colab-mes" onchange="renderizarFrequenciaColaboradores()" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs dark:bg-slate-800 dark:text-white">
                         </div>
                         <div class="flex items-end">
                             <div class="w-full p-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/50">
@@ -2454,7 +2454,7 @@
             const registrar = document.getElementById('freq-btn-pagamento');
             registrar.textContent = ativo ? 'Corrigir pagamento' : 'Registrar pagamento';
             registrar.disabled = !professorId || pagamentosColaboradoresErro;
-            document.getElementById('freq-btn-estorno').style.display = ativo ? 'inline-block' : 'none';
+            document.getElementById('freq-btn-estorno').style.display = ativo ? 'inline-block' : 'none';window.SE7PayrollFinance?.payment(pagamento,professorId,mes);
         }
         function abrirPagamentoColaborador() {
             if (pagamentoSalvando) return;
@@ -2476,7 +2476,7 @@
             document.getElementById('pagamento-metodo').value = atual?.status === 'pago' ? atual.metodo : 'Pix';
             document.getElementById('pagamento-data').value = atual?.status === 'pago' ? atual.dataPagamento : dataHoje;
             document.getElementById('pagamento-observacao').value = atual?.status === 'pago' ? atual.observacao || '' : '';
-            document.getElementById('pagamento-motivo').value = '';
+            document.getElementById('pagamento-motivo').value = '';document.getElementById('pagamento-comprovante').value='';
             document.getElementById('pagamento-motivo-box').style.display = pagamentoFormulario.corrigindo ? 'block' : 'none';
             document.getElementById('pagamento-titulo').textContent = pagamentoFormulario.corrigindo ? 'Corrigir registro de pagamento' : 'Registrar pagamento';
             document.getElementById('modal-pagamento-colaborador').style.display = 'flex';
@@ -2507,9 +2507,9 @@
             if (!['Pix','Transferência bancária','Dinheiro','Outro'].includes(metodo)) return alert('Selecione um método válido.');
             if (form.corrigindo && !motivo) return alert('Informe o motivo da correção.');
             pagamentoSalvando = true;
-            document.getElementById('pagamento-btn-salvar').disabled = true;
+            document.getElementById('pagamento-btn-salvar').disabled = true;document.getElementById('pagamento-btn-salvar').textContent='Aguarde…';document.getElementById('pagamento-btn-cancelar').disabled=true;
             try {
-                const usuario = pagamentoUsuario();
+                const arquivo=document.getElementById('pagamento-comprovante').files[0],comprovanteArquivo=arquivo?await SE7PayrollReceipt.prepare(arquivo):null;const usuario = pagamentoUsuario();
                 // Reconsulta pontos e valores/hora no servidor antes de registrar a apuração.
                 const [pontos, taxas, docentes] = await Promise.all([
                     db.collection('teacherManualLogs').where('professorId','==',form.professorId).get({source:'server'}),
@@ -2537,20 +2537,20 @@
                     if ((anterior?.revisao || 0) !== form.revisao) throw new Error('Este pagamento foi alterado por outro usuário. Feche o formulário, atualize e confira o registro.');
                     if (anterior?.status === 'pago' && !form.corrigindo) throw new Error('Esta competência já tem um pagamento registrado. Use Corrigir pagamento.');
                     if (form.corrigindo && anterior?.status !== 'pago') throw new Error('O pagamento não está mais ativo. Atualize e confira o registro.');
-                    salvo = {professorId:form.professorId,professorNome:docente.fullname || form.nome,competencia:form.mes,status:'pago',metodo,dataPagamento:data,valorPagoCentavos:valor,observacao,valorCalculadoCentavos:registros.reduce((s,r)=>s+r.totalCentavos,0),minutosCalculados:registros.reduce((s,r)=>s+r.minutos,0),registros,registradoPor:anterior?.registradoPor || usuario,createdAt:anterior?.createdAt || agora,atualizadoPor:usuario,updatedAt:agora,revisao:(anterior?.revisao || 0)+1};
+                    salvo = {...(anterior?.comprovante?{comprovante:anterior.comprovante}:{}),professorId:form.professorId,professorNome:docente.fullname || form.nome,competencia:form.mes,status:'pago',metodo,dataPagamento:data,valorPagoCentavos:valor,observacao,valorCalculadoCentavos:registros.reduce((s,r)=>s+r.totalCentavos,0),minutosCalculados:registros.reduce((s,r)=>s+r.minutos,0),registros,registradoPor:anterior?.registradoPor || usuario,createdAt:anterior?.createdAt || agora,atualizadoPor:usuario,updatedAt:agora,revisao:(anterior?.revisao || 0)+1};
                     tx.set(ref,salvo);
                     tx.set(historico,{acao:form.corrigindo?'correcao':'registro',motivo,anterior:anterior || null,novo:salvo,usuario,data:agora});
                 });
-                pagamentosColaboradores[chave] = salvo;
+                let avisoComprovante='';if(comprovanteArquivo){try{const anexo=await SE7.api('payroll-receipt-save',{paymentId:chave,revision:salvo.revisao,...comprovanteArquivo});salvo.comprovante=anexo.comprovante;}catch(e){avisoComprovante='Pagamento registrado, mas o comprovante não foi anexado: '+e.message+'. Use Anexar comprovante para tentar novamente, sem registrar outro pagamento.';}}pagamentosColaboradores[chave] = salvo;
                 pagamentoSalvando = false;
                 fecharPagamentoColaborador();
                 renderizarPagamentoColaborador();
-                alert('Pagamento registrado com sucesso no Firebase.');
+                SE7PayrollFinance.message(salvo,chave,avisoComprovante);
             } catch (e) {
                 alert('Não foi possível salvar o pagamento: '+e.message);
             } finally {
                 pagamentoSalvando = false;
-                document.getElementById('pagamento-btn-salvar').disabled = false;
+                document.getElementById('pagamento-btn-salvar').disabled = false;document.getElementById('pagamento-btn-salvar').textContent='Salvar pagamento';document.getElementById('pagamento-btn-cancelar').disabled=false;
             }
         }
         async function estornarPagamentoColaborador() {
@@ -2677,7 +2677,7 @@
             const select = document.getElementById('freq-colab-professor');
             if (!select) return;
             const valorAtual = select.value;
-            select.innerHTML = '<option value="">Todos os colaboradores</option>';
+            select.innerHTML = '<option value="">Selecione o colaborador</option>';
             teachers.forEach(t => {
                 select.insertAdjacentHTML('beforeend',
                     `<option value="${freqEscaparHtml(t.id)}">${freqEscaparHtml(t.fullname || 'Colaborador sem nome')} (${freqEscaparHtml(t.cargo || 'Professor')})</option>`
@@ -2695,7 +2695,7 @@
                 return;
             }
 
-            container.innerHTML = teachers.map(t => {
+            container.innerHTML = teachers.filter(t=>t.id===document.getElementById('freq-colab-professor').value).map(t => {
                 const valor = freqValorHoraProfessor(t.id);
                 return `
                     <div class="flex flex-col sm:flex-row sm:items-center gap-2 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
@@ -2742,7 +2742,7 @@
 
             return teacherManualLogs
                 .filter(r => !mes || String(r.data || '').startsWith(mes))
-                .filter(r => !professorId || r.professorId === professorId)
+                .filter(r => professorId && r.professorId === professorId)
                 .sort((a, b) => String(b.data || '').localeCompare(String(a.data || '')));
         }
 
@@ -2759,6 +2759,7 @@
         }
 
         function renderizarFrequenciaColaboradores() {
+            window.SE7PayrollFinance?.selection();renderizarTabelaValoresHora();
             renderizarPagamentoColaborador();
             const tbody = document.getElementById('freq-colab-tbody');
             if (!tbody) return;
@@ -2812,6 +2813,7 @@
         }
 
         function gerarRelatorioFrequenciaColaboradores() {
+            if(!document.getElementById('freq-colab-professor').value)return alert('Selecione o colaborador para gerar o relatório.');
             const mes = freqObterMesSelecionado();
             const registros = freqMontarCalculos(freqRegistrosFiltrados()).sort((a, b) => {
                 return (a.data || '9999-12-31').localeCompare(b.data || '9999-12-31')
@@ -2985,10 +2987,11 @@
   <div><label for="pagamento-valor" class="block text-xs font-bold dark:text-white">Valor pago (R$)</label><input id="pagamento-valor" inputmode="decimal" class="w-full border rounded-lg p-2 dark:bg-slate-800 dark:text-white"></div>
   <div><label for="pagamento-metodo" class="block text-xs font-bold dark:text-white">Método de pagamento</label><select id="pagamento-metodo" class="w-full border rounded-lg p-2 dark:bg-slate-800 dark:text-white"><option>Pix</option><option>Transferência bancária</option><option>Dinheiro</option><option>Outro</option></select></div>
   <div><label for="pagamento-data" class="block text-xs font-bold dark:text-white">Data do pagamento</label><input id="pagamento-data" type="date" class="w-full border rounded-lg p-2 dark:bg-slate-800 dark:text-white"></div>
+  <div><label for="pagamento-comprovante" class="block text-xs font-bold dark:text-white">Comprovante de pagamento (opcional)</label><input id="pagamento-comprovante" type="file" accept="application/pdf,image/jpeg,image/png,image/webp" class="w-full p-2"><p class="text-xs text-slate-500">PDF até 500 KB ou imagem até 8 MB. Disponível ao colaborador após salvar.</p></div>
   <div><label for="pagamento-observacao" class="block text-xs font-bold dark:text-white">Observação (opcional)</label><textarea id="pagamento-observacao" maxlength="1000" class="w-full border rounded-lg p-2 dark:bg-slate-800 dark:text-white"></textarea></div>
   <div id="pagamento-motivo-box" style="display:none;"><label for="pagamento-motivo" class="block text-xs font-bold dark:text-white">Motivo da correção</label><input id="pagamento-motivo" maxlength="500" class="w-full border rounded-lg p-2 dark:bg-slate-800 dark:text-white"></div>
   <p class="text-xs text-slate-500">Registre aqui o pagamento já realizado pelo banco.</p>
-  <div class="flex justify-end gap-2"><button type="button" onclick="fecharPagamentoColaborador()" class="bg-slate-200 rounded-lg px-4 py-2 text-xs">Cancelar</button><button type="button" id="pagamento-btn-salvar" onclick="salvarPagamentoColaborador()" class="bg-emerald-600 text-white rounded-lg px-4 py-2 text-xs font-bold">Salvar pagamento</button></div>
+  <div class="flex justify-end gap-2"><button type="button" id="pagamento-btn-cancelar" onclick="fecharPagamentoColaborador()" class="bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-white rounded-lg px-4 py-2 text-xs font-semibold">Cancelar</button><button type="button" id="pagamento-btn-salvar" onclick="salvarPagamentoColaborador()" class="bg-emerald-600 text-white rounded-lg px-4 py-2 text-xs font-bold">Salvar pagamento</button></div>
  </div>
 </div>
 
@@ -3002,5 +3005,7 @@
 <script src="/assets/se7-motion.js"></script>
 <script src="/assets/se7-busy.js"></script>
 <script src="/assets/se7-ambient.js"></script>
+<script src="/assets/se7-payroll-receipt.js"></script>
+<script src="/assets/se7-payroll-finance.js"></script>
 </body>
 </html>

@@ -1,3 +1,4 @@
+import {dispatchReceipt} from '../server/payroll-receipt.mjs';
 import {saveStudentAvatar} from '../server/student-avatar.mjs';
 import {readProfile,saveProfile} from '../server/user-profile.mjs';
 import * as eja from '../server/eja-workflow.mjs';
@@ -95,6 +96,7 @@ async function dispatchOperation({auth,db},req,b){
   }catch(e){await auth.deleteUser(uid).catch(()=>{});await ref.delete().catch(()=>{});await db.collection('se7EjaContracts').doc(ref.id).delete().catch(()=>{});await idx.delete();throw e;}
  }
  const u=await identity(auth,db,req);req.se7AuditIdentity=u;await limits(db,req,'gateway:'+u.uid);
+ if(action.startsWith('payroll-receipt-'))return dispatchReceipt(db,b,u);
  if(action==='student-avatar-save')return saveStudentAvatar(db,b,u);
  if(action.startsWith('eja-'))return eja.dispatch(db,b,u);
  if(action==='polo-catalog')return polos.catalog(db,u);
@@ -315,7 +317,7 @@ export default async function handler(req,res){
  res.setHeader('Cache-Control','no-store');res.setHeader('X-Content-Type-Options','nosniff');
  try {
   const native=scannerCors(req,res);if(req.method==='OPTIONS'&&native){res.status(204).end();return;}if(req.method!=='POST')fail(405,'Use POST.');const origin=req.headers.origin;if(origin!=='https://sistema-escolar-ten-mu.vercel.app'&&!native)fail(403,'Origem não autorizada.');
-  if(!String(req.headers['content-type']||'').startsWith('application/json'))fail(415,'Envie JSON.');let b;try{b=typeof req.body==='string'?JSON.parse(req.body):req.body;}catch{fail(400,'JSON inválido.');}if(!b||Array.isArray(b)||typeof b.action!=='string'||JSON.stringify(b).length>(b.action==='notices-save'||b.action==='exam-scan-preview'?750000:b.action==='exam-save'?250000:['profile-save','student-avatar-save'].includes(b.action)?100000:12000))fail(400,'Requisição inválida.');
+  if(!String(req.headers['content-type']||'').startsWith('application/json'))fail(415,'Envie JSON.');let b;try{b=typeof req.body==='string'?JSON.parse(req.body):req.body;}catch{fail(400,'JSON inválido.');}if(!b||Array.isArray(b)||typeof b.action!=='string'||JSON.stringify(b).length>(b.action==='notices-save'||b.action==='exam-scan-preview'||b.action==='payroll-receipt-save'?750000:b.action==='exam-save'?250000:['profile-save','student-avatar-save'].includes(b.action)?100000:12000))fail(400,'Requisição inválida.');
   if(!nativeRequestAllowed(req,b))fail(403,'Operação não permitida para o leitor de avaliações.');
   if(!process.env.SE7_MASTER_UID)throw new Error('Master não configurado.');const result=await dispatch(services(),req,b);res.status(200).json(result);
  }catch(e){const status=e.status||500;if(status===500)console.error('SE7 API',e.code||'internal');res.status(status).json({error:status===500?'Não foi possível concluir. Verifique a configuração do servidor.':e.message});}
