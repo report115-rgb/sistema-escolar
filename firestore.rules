@@ -1,59 +1,12 @@
 rules_version = '2';
 service cloud.firestore {
  match /databases/{database}/documents {
-  function signed(){return request.auth != null;}
-  function master(){return signed() && request.auth.uid == 'UUBINdHfJZONVMcC0QogyAsUgvA3';}
-  function activePolo(id){return id != '' && exists(/databases/$(database)/documents/polos/$(id)) && get(/databases/$(database)/documents/polos/$(id)).data.get('active',true) == true;}
-  function staffRole(role){return signed() && exists(/databases/$(database)/documents/se7Staff/$(request.auth.uid)) && get(/databases/$(database)/documents/se7Staff/$(request.auth.uid)).data.disabled == false && get(/databases/$(database)/documents/se7Staff/$(request.auth.uid)).data.perfil == role && (role != 'secretaria' || activePolo(get(/databases/$(database)/documents/se7Staff/$(request.auth.uid)).data.get('poloId','')));}
-  function staff(){return master() || staffRole('secretaria') || staffRole('financeiro');}
-  function academic(){return master() || staffRole('secretaria');}
-  function finance(){return master() || staffRole('financeiro');}
-  function secretaryPolo(){return signed() && staffRole('secretaria') ? get(/databases/$(database)/documents/se7Staff/$(request.auth.uid)).data.get('poloId','') : ''; }
-  function ownPolo(d){return secretaryPolo() != '' && d.get('poloId','') == secretaryPolo();}
-  function ownStudent(id){return secretaryPolo() != '' && exists(/databases/$(database)/documents/students/$(id)) && ownPolo(get(/databases/$(database)/documents/students/$(id)).data);}
-  function ownTeacher(id){return secretaryPolo() != '' && exists(/databases/$(database)/documents/teachers/$(id)) && secretaryPolo() in get(/databases/$(database)/documents/teachers/$(id)).data.get('poloIds',[]);}
-  function validClass(d){return d.get('classId','') == '' || (exists(/databases/$(database)/documents/classes/$(d.classId)) && get(/databases/$(database)/documents/classes/$(d.classId)).data.get('poloId','') == d.get('poloId','') && get(/databases/$(database)/documents/classes/$(d.classId)).data.courseId == d.courseId);}
-  function studentId(){return request.auth.token.get('studentId','');}
-  function studentActive(){
-   return signed() && studentId() != '' && exists(/databases/$(database)/documents/students/$(studentId()))
-    && get(/databases/$(database)/documents/students/$(studentId())).data.get('se7AuthUid','') == request.auth.uid
-    && (get(/databases/$(database)/documents/students/$(studentId())).data.get('poloId','') == '' || activePolo(get(/databases/$(database)/documents/students/$(studentId())).data.get('poloId','')))
-    && get(/databases/$(database)/documents/students/$(studentId())).data.get('portalBlocked',false) == false
-    && get(/databases/$(database)/documents/students/$(studentId())).data.get('portalMustChangePassword',false) == false
-    && get(/databases/$(database)/documents/students/$(studentId())).data.get('se7AuthLock',null) == null
-    && get(/databases/$(database)/documents/students/$(studentId())).data.get('portalSessionVersion',0) == request.auth.token.get('portalVersion',0);
+  function owner(){return request.auth != null && exists(/databases/$(database)/documents/academicPlatformOwners/$(request.auth.uid)) && get(/databases/$(database)/documents/academicPlatformOwners/$(request.auth.uid)).data.active == true;}
+  match /academicInstitutions/{institutionId}/{c}/{document}/{rest=**} {
+   allow read,write: if owner() && c in ['students','courses','classes','academicCalendars','config','teachers','teacherManualLogs','teacherPaymentRates','teacherMonthlyPayments','attendance','attendanceRecords','attendanceLocks','employeeLogs','pendingUsers','systemUsers','financeLogs'];
+   allow read: if owner() && c in ['polos','systemLogs'];
   }
-  function schoolCollection(c){return c in ['students','courses','classes','academicCalendars','config','teachers','teacherManualLogs','teacherPaymentRates','teacherMonthlyPayments','attendance','attendanceRecords','attendanceLocks','employeeLogs','pendingUsers','systemUsers'];}
-  // Master can manage existing school data, but credentials, identities and permission assignments are server-only.
-  match /{c}/{doc}/{rest=**} {allow read,write: if master() && schoolCollection(c);}
-  match /students/{id} {
-   allow get: if finance() || ownPolo(resource.data) || (studentActive() && id == studentId());
-   allow list: if finance() || ownPolo(resource.data);
-   allow create: if validClass(request.resource.data) && academic() && (master() || (ownPolo(request.resource.data) && exists(/databases/$(database)/documents/polos/$(request.resource.data.poloId)) && get(/databases/$(database)/documents/polos/$(request.resource.data.poloId)).data.active == true)) && !request.resource.data.keys().hasAny(['se7AuthUid','portalCredential','portalBlocked','portalMustChangePassword','portalSessionVersion']);
-   allow update: if validClass(request.resource.data) && academic() && (master() || (ownPolo(resource.data) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['poloId','poloName','poloUpdatedAt','poloUpdatedBy']))) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['se7AuthUid','portalCredential','portalBlocked','portalMustChangePassword','portalSessionVersion','portalTemporaryExpiresAt','se7AuthLock']);
-
-  }
-  match /courses/{id} {allow read: if staff() || (studentActive() && id == get(/databases/$(database)/documents/students/$(studentId())).data.courseId);allow write: if master();}
-  match /classes/{id} {allow read: if finance() || ownPolo(resource.data) || (studentActive() && id == get(/databases/$(database)/documents/students/$(studentId())).data.classId);allow write: if master();}
-  match /academicCalendars/{id} {allow read: if finance() || ownPolo(resource.data) || (studentActive() && resource.data.classId == get(/databases/$(database)/documents/students/$(studentId())).data.classId);allow write: if master();}
-  match /financeLogs/{id} {
-   allow read: if finance() || ownStudent(resource.data.get('studentId',resource.data.get('alunoId',''))) || (studentActive() && resource.data.studentId == studentId());
-   // Once reserved/linked, only the server can reconcile the financial record.
-   allow create: if finance() && !exists(/databases/$(database)/documents/se7AsaasInvoices/$(id)) && !request.resource.data.keys().hasAny(['asaasPaymentId','asaasStatus','asaasReview','asaasUpdatedAt','asaasNetValue','asaasCreditDate','asaasPaidValueCents','asaasOriginalValueCents','asaasDiscountCents','asaasSurchargeCents']);
-   allow update: if finance() && !exists(/databases/$(database)/documents/se7AsaasInvoices/$(id)) && !resource.data.keys().hasAny(['asaasPaymentId']) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['asaasPaymentId','asaasStatus','asaasReview','asaasUpdatedAt','asaasNetValue','asaasCreditDate','asaasPaidValueCents','asaasOriginalValueCents','asaasDiscountCents','asaasSurchargeCents']);
-   allow delete: if finance() && !exists(/databases/$(database)/documents/se7AsaasInvoices/$(id)) && !resource.data.keys().hasAny(['asaasPaymentId']);
-  }
-  match /config/{id} {allow read: if staff() || (studentActive() && id == 'ejaSettings');}
-  match /teachers/{id} {allow read: if finance() || (secretaryPolo() != '' && secretaryPolo() in resource.data.get('poloIds',[]));allow write: if master();}
-  match /teacherManualLogs/{id} {allow read: if finance() || ownPolo(resource.data);allow create: if master() || (ownPolo(request.resource.data) && ownTeacher(request.resource.data.professorId));allow update: if master() || (ownPolo(resource.data) && ownPolo(request.resource.data) && ownTeacher(request.resource.data.professorId));allow delete: if master() || ownPolo(resource.data);}
-  match /teacherPaymentRates/{id} {allow read,write: if finance();}
-  match /teacherMonthlyPayments/{id}/{rest=**} {allow read,write: if finance();}
-  match /attendance/{id} {allow read: if finance() || ownStudent(resource.data.studentId);}
-  match /attendanceRecords/{id} {allow read: if finance() || ownPolo(resource.data);allow write: if master();}
-  match /attendanceLocks/{id} {allow read: if finance() || ownPolo(resource.data);allow write: if master();}
-  match /employeeLogs/{id} {allow read: if master();}
-  match /polos/{id} {allow read: if staff();allow write: if false;}
-  match /systemLogs/{id} {allow read: if master();}
-  // Everything else, including se7Staff, se7Credentials, se7CpfIndex and rate limits, is denied to browser clients.
+  // Commercial data and owner markers stay server-only. No global browser access.
+  match /{document=**} {allow read,write: if false;}
  }
 }

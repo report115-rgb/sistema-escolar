@@ -1,3 +1,4 @@
+import {prepareContext} from '../server/platform-pilot.mjs';
 import * as polos from '../server/polos.mjs';
 import {scannerCors,nativeRequestAllowed} from '../server/scanner-access.mjs';
 import * as documentAuthorizations from '../server/academic-document-authorizations.mjs';
@@ -33,6 +34,7 @@ async function limits(db,req,action,account=''){
  }
 }
 async function identity(auth,db,req){
+ if(req.se7PlatformIdentity)return req.se7PlatformIdentity;
  const token=(req.headers.authorization||'').match(/^Bearer (.+)$/)?.[1];if(!token)fail(401,'Entre novamente.');
  let user;try{user=await auth.verifyIdToken(token,true);}catch{fail(401,'Sessão inválida. Entre novamente.');}
  if(user.uid===process.env.SE7_MASTER_UID)return {...user,role:'master'};
@@ -182,7 +184,7 @@ async function dispatchOperation({auth,db},req,b){
  }
  if(action==='session'){
   if(u.role==='aluno')return {profile:{id:u.studentId,...publicStudent(u.student)},role:u.role};
-  if(u.role==='master')await claims(auth,u.uid,{role:'master'});
+  if(u.role==='master'&&!req.se7PlatformIdentity)await claims(auth,u.uid,{role:'master'});
   const account=await auth.getUser(u.uid);
   const storedName=account.displayName||u.profile?.nome||'';
   const nome=storedName&&!storedName.includes('@')?storedName:({master:'Master',secretaria:'Secretaria',professor:'Professor',financeiro:'Financeiro',totem:'Totem'}[u.role]||'Usuário');
@@ -306,9 +308,9 @@ export async function dispatch(services,req,b){
 export default async function handler(req,res){
  res.setHeader('Cache-Control','no-store');res.setHeader('X-Content-Type-Options','nosniff');
  try {
-  const native=scannerCors(req,res);if(req.method==='OPTIONS'&&native){res.status(204).end();return;}if(req.method!=='POST')fail(405,'Use POST.');const origin=req.headers.origin;if(origin!=='https://sistema-escolar-ten-mu.vercel.app'&&!native)fail(403,'Origem não autorizada.');
+  const native=scannerCors(req,res);if(req.method==='OPTIONS'&&native){res.status(204).end();return;}if(req.method!=='POST')fail(405,'Use POST.');const origin=req.headers.origin;if(!process.env.SE7_PLATFORM_ORIGIN||origin!==process.env.SE7_PLATFORM_ORIGIN)fail(403,'Origem não autorizada.');
   if(!String(req.headers['content-type']||'').startsWith('application/json'))fail(415,'Envie JSON.');let b;try{b=typeof req.body==='string'?JSON.parse(req.body):req.body;}catch{fail(400,'JSON inválido.');}if(!b||Array.isArray(b)||typeof b.action!=='string'||JSON.stringify(b).length>(b.action==='notices-save'||b.action==='exam-scan-preview'?750000:b.action==='exam-save'?250000:12000))fail(400,'Requisição inválida.');
   if(!nativeRequestAllowed(req,b))fail(403,'Operação não permitida para o leitor de avaliações.');
-  if(!process.env.SE7_MASTER_UID)throw new Error('Master não configurado.');const result=await dispatch(services(),req,b);res.status(200).json(result);
+  const scoped=await prepareContext(services(),req,b);const result=scoped.result??await dispatch(scoped.services,req,b);res.status(200).json(result);
  }catch(e){const status=e.status||500;if(status===500)console.error('SE7 API',e.code||'internal');res.status(status).json({error:status===500?'Não foi possível concluir. Verifique a configuração do servidor.':e.message});}
 }
