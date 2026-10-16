@@ -99,3 +99,10 @@ html:not(.dark) .se7-matriz #se7-workspace td button.bg-red-600{color:#ac2341;bo
 .se7-matriz .se7-point-month>summary{padding:14px 16px;cursor:pointer;font-size:13px;font-weight:600;color:var(--se7-text);}
 .se7-matriz .se7-point-month[open]>summary{border-bottom:1px solid var(--se7-border);}
 .se7-matriz .se7-point-month>div{padding:0 12px 10px;background:var(--se7-panel);}
+
+/* Menus flutuantes não participam do fluxo do cabeçalho. */
+.se7-matriz #app-header{overflow:visible;}
+.se7-matriz #se7-account-menu{position:absolute;inset:auto 0 auto auto;top:calc(100% + 22px);display:block;width:245px;max-width:calc(100vw - 32px);max-height:calc(100dvh - 110px);overflow-y:auto;}
+.se7-matriz #se7-account-menu[hidden],.se7-matriz #subsubtab-cadastrar-curso [hidden]{display:none!important;}
+
+.se7-matriz #subsubtab-cadastrar-turma [hidden]{display:none!important;}
