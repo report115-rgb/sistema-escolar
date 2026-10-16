@@ -171,6 +171,8 @@
 <link rel="stylesheet" href="/assets/se7-mobile-access.css">
 <link rel="stylesheet" href="/assets/se7-welcome.css">
 <link rel="stylesheet" href="assets/se7-eja.css?v=1"><script defer src="assets/se7-eja-admin.js?v=1"></script><link rel="stylesheet" href="/assets/se7-ambient.css">
+<link rel="stylesheet" href="/assets/se7-payroll-print.css">
+<script src="/assets/vendor/qrcode.js"></script>
 </head>
 <body class="se7-suite bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans antialiased h-screen overflow-hidden flex flex-col transition-colors duration-200">
 <div id="se7-welcome" hidden role="status" aria-live="polite" aria-atomic="true">
@@ -573,18 +575,6 @@
             </div>
 
             <!-- ABA 2: NOVOS ALUNOS MATRICULADOS -->
-            <div id="tab-novos-alunos" class="space-y-3 tab-pane" style="display: none;">
-                <div class="bg-white dark:bg-slate-900 p-4 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 space-y-2">
-                    <h2 class="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
-                        <i class="fa-solid fa-user-plus text-blue-600"></i> Novos Alunos Matriculados
-                    </h2>
-                    <p class="text-[11px] text-slate-500">Lista geral de alunos recém-matriculados aguardando conferência para emissão de boletos. Ao abrir o cadastro de um aluno, ele sairá desta lista automaticamente.</p>
-                </div>
-
-                <div id="lista-novos-alunos-container" class="space-y-2"></div>
-            </div>
-
-            <!-- ABA 3: FATURAS E COBRANÇAS -->
             <div id="tab-financeiro" class="space-y-3 tab-pane" style="display: none;">
                 <div class="bg-white dark:bg-slate-900 p-4 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 space-y-3">
                     <div class="flex justify-between items-center flex-wrap gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
@@ -787,13 +777,7 @@
             <button onclick="mudarAbaApp('alunos')" id="nav-btn-alunos" class="flex flex-col items-center text-slate-400 dark:text-slate-500 text-[9px] font-bold transition">
                 <i class="fa-solid fa-users text-sm mb-0.5"></i> Alunos
             </button>
-            <button onclick="mudarAbaApp('novos')" id="nav-btn-novos" class="flex flex-col items-center text-slate-400 dark:text-slate-500 text-[9px] font-bold transition relative">
-                <div class="relative">
-                    <i class="fa-solid fa-user-plus text-sm mb-0.5"></i>
-                    <span id="badge-alerta-novos" class="absolute -top-1 -right-2 w-3.5 h-3.5 rounded-full animacao-piscar-alerta bg-red-500 text-white" style="display: none;"></span>
-                </div>
-                <span>Novos</span>
-            </button>
+
             <button onclick="mudarAbaApp('financeiro')" id="nav-btn-fin" class="flex flex-col items-center text-slate-400 dark:text-slate-500 text-[9px] font-bold transition">
                 <i class="fa-solid fa-wallet text-sm mb-0.5"></i>
                 <span>Faturas</span>
@@ -862,7 +846,7 @@
             cartao: null
         };
 
-        let novosAlunosLidos = JSON.parse(localStorage.getItem('novos_alunos_lidos') || '[]');
+
 
         window.addEventListener('DOMContentLoaded', async () => {
             iniciarIdentidadeFinanceiro();
@@ -1026,7 +1010,7 @@
                 });
                 students.sort((a, b) => (a.fullname || '').localeCompare(b.fullname || ''));
                 renderizarListaAlunos();
-                renderizarNovosAlunos();
+
                 atualizarSeletorCursosUI();
                 renderizarNegociacoesAtivasGeral();
                 renderizarAlunosQuitesGeral();
@@ -2127,7 +2111,7 @@
             renderizarNegociacoesAtivasGeral();
         }
 
-        function fecharVisualizadorTermo() { document.getElementById('modal-visualizador-termo').style.display = 'none'; }
+        function fecharVisualizadorTermo() {document.body.classList.remove('se7-payroll-print'); document.getElementById('modal-visualizador-termo').style.display = 'none'; }
 
         function abrirModalFecharAcordoParaProposta(propostaId) {
             const prop = financeLogs.find(f => f.id === propostaId);
@@ -2260,47 +2244,6 @@
             } catch (e) { alert("Erro ao estornar: " + e.message); }
         }
 
-        function renderizarNovosAlunos() {
-            const container = document.getElementById('lista-novos-alunos-container');
-            const badgeAlerta = document.getElementById('badge-alerta-novos');
-            if (!container) return;
-
-            const novosMatriculados = students.filter(s => s.status!=='Cancelado' && !novosAlunosLidos.includes(s.id));
-            if (badgeAlerta) badgeAlerta.style.display = novosMatriculados.length > 0 ? 'flex' : 'none';
-
-            if (novosMatriculados.length === 0) {
-                container.innerHTML = `<div class="bg-white dark:bg-slate-900 p-6 rounded-3xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">Nenhum novo aluno pendente no momento.</div>`;
-                return;
-            }
-
-            container.innerHTML = '';
-            novosMatriculados.forEach(s => {
-                const rawCurso = s.course || s.curso || s.turma || s.nomeCurso || s.courseName || s.courseId || 'Não informado';
-                const cursoExibir = coursesMap[rawCurso] || coursesMap[normalizarTexto(rawCurso)] || String(rawCurso);
-                container.innerHTML += `
-                    <div onclick="marcarComoLidoEVerAluno('${s.id}')" class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl shadow-sm border-2 border-blue-500/40 flex justify-between items-center active:scale-98 transition cursor-pointer">
-                        <div>
-                            <div class="flex items-center gap-2">
-                                <span class="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span>
-                                <strong class="text-xs font-bold text-slate-900 dark:text-white">${s.fullname || s.name || 'Sem Nome'}</strong><p class="text-[10px] font-bold ${s.status==='Cancelado'?'text-red-500':'text-blue-500'}">${SE7Cadastro.escape(s.status==='Cancelado'?'Matrícula cancelada':s.status||'Ativo')}</p>
-                            </div>
-                            <p class="text-[10px] text-slate-400 mt-0.5">Curso: ${cursoExibir} &bull; CPF: ${SE7Cadastro.escape(SE7Cadastro.cpf(s.cpf))}</p>
-                        </div>
-                        <span class="px-2 py-1 bg-blue-600 text-white text-[10px] font-bold rounded-lg shadow">Ver Dados</span>
-                    </div>
-                `;
-            });
-        }
-
-        function marcarComoLidoEVerAluno(id) {
-            if (!novosAlunosLidos.includes(id)) {
-                novosAlunosLidos.push(id);
-                localStorage.setItem('novos_alunos_lidos', JSON.stringify(novosAlunosLidos));
-            }
-            renderizarNovosAlunos();
-            abrirDetalhesAluno(id, 'novos');
-        }
-
         function abrirDetalhesAluno(id, origem) {
             alunoSelecionadoId = id;
             abaOrigemRetorno = origem;
@@ -2376,11 +2319,11 @@
 
         function mudarAbaApp(aba) {
             if(['financeiro','negociacoes','quitacao','detalhes'].includes(aba))iniciarFaturasFinanceiro();
-            ['tab-alunos', 'tab-novos-alunos', 'tab-financeiro', 'tab-negociacoes', 'tab-quitacao', 'tab-frequencia-colaboradores', 'tab-detalhes-aluno'].forEach(id => {
+            ['tab-alunos', 'tab-financeiro', 'tab-negociacoes', 'tab-quitacao', 'tab-frequencia-colaboradores', 'tab-detalhes-aluno'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.style.display = 'none';
             });
-            ['nav-btn-alunos', 'nav-btn-novos', 'nav-btn-fin', 'nav-btn-neg', 'nav-btn-quit', 'nav-btn-freq'].forEach(id => {
+            ['nav-btn-alunos', 'nav-btn-fin', 'nav-btn-neg', 'nav-btn-quit', 'nav-btn-freq'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.className = "flex flex-col items-center text-slate-400 dark:text-slate-500 text-[9px] font-bold transition";
             });
@@ -2388,9 +2331,6 @@
             if (aba === 'alunos') {
                 document.getElementById('tab-alunos').style.display = 'block';
                 document.getElementById('nav-btn-alunos').className = "flex flex-col items-center text-blue-600 dark:text-blue-400 text-[9px] font-bold transition";
-            } else if (aba === 'novos') {
-                document.getElementById('tab-novos-alunos').style.display = 'block';
-                document.getElementById('nav-btn-novos').className = "flex flex-col items-center text-blue-600 dark:text-blue-400 text-[9px] font-bold transition relative";
             } else if (aba === 'financeiro') {
                 document.getElementById('tab-financeiro').style.display = 'block';
                 document.getElementById('nav-btn-fin').className = "flex flex-col items-center text-blue-600 dark:text-blue-400 text-[9px] font-bold transition";
@@ -2463,12 +2403,12 @@
             if (!professorId || !/^\d{4}-\d{2}$/.test(mes)) return alert('Selecione o colaborador e a competência.');
             if (pagamentosColaboradoresErro) return alert('Não foi possível consultar os pagamentos. Atualize a página.');
             const registros = freqMontarCalculos(freqRegistrosFiltrados());
-            const atual = pagamentoAtual(professorId, mes);
+            const atual = pagamentoAtual(professorId, mes);if(atual&&!window.SE7PayrollFinance?.isEditable(atual))return alert('O prazo de 12 horas terminou. Use Ver registro.');
             if (!registros.length && atual?.status !== 'pago') return alert('Não existem pontos nesta competência para registrar o pagamento.');
             const professor = teachers.find(t => t.id === professorId);
             const nome = professor?.fullname || registros[0]?.professorNome || atual?.professorNome || 'Colaborador';
             pagamentoFormulario = {professorId, mes, nome, revisao: atual?.revisao || 0, corrigindo: atual?.status === 'pago'};
-            const hoje = new Date();
+            document.getElementById('pagamento-btn-salvar').disabled=false;document.getElementById('pagamento-btn-salvar').textContent='Salvar pagamento';const hoje = new Date();
             const dataHoje = `${hoje.getFullYear()}-${String(hoje.getMonth()+1).padStart(2,'0')}-${String(hoje.getDate()).padStart(2,'0')}`;
             document.getElementById('pagamento-identificacao').textContent = `${nome} — Competência ${mes.split('-').reverse().join('/')}`;
             document.getElementById('pagamento-calculado').textContent = freqFormatarMoeda(freqSomarValores(registros));
@@ -2493,97 +2433,8 @@
             } catch (_) {}
             throw new Error('Sua sessão expirou. Entre novamente para registrar o pagamento.');
         }
-        async function salvarPagamentoColaborador() {
-            if (pagamentoSalvando || !pagamentoFormulario) return;
-            const form = {...pagamentoFormulario};
-            const valor = freqCentavos(freqParseMoeda(document.getElementById('pagamento-valor').value));
-            const metodo = document.getElementById('pagamento-metodo').value;
-            const data = document.getElementById('pagamento-data').value;
-            const observacao = document.getElementById('pagamento-observacao').value.trim();
-            const motivo = document.getElementById('pagamento-motivo').value.trim();
-            if (!Number.isSafeInteger(valor) || valor <= 0) return alert('Informe um valor pago maior que zero.');
-            const dataValidada = new Date(data+'T12:00:00');
-            if (!/^\d{4}-\d{2}-\d{2}$/.test(data) || !Number.isFinite(dataValidada.getTime()) || dataValidada.toISOString().slice(0,10) !== data) return alert('Informe uma data válida.');
-            if (!['Pix','Transferência bancária','Dinheiro','Outro'].includes(metodo)) return alert('Selecione um método válido.');
-            if (form.corrigindo && !motivo) return alert('Informe o motivo da correção.');
-            pagamentoSalvando = true;
-            document.getElementById('pagamento-btn-salvar').disabled = true;document.getElementById('pagamento-btn-salvar').textContent='Aguarde…';document.getElementById('pagamento-btn-cancelar').disabled=true;
-            try {
-                const arquivo=document.getElementById('pagamento-comprovante').files[0],comprovanteArquivo=arquivo?await SE7PayrollReceipt.prepare(arquivo):null;const usuario = pagamentoUsuario();
-                // Reconsulta pontos e valores/hora no servidor antes de registrar a apuração.
-                const [pontos, taxas, docentes] = await Promise.all([
-                    db.collection('teacherManualLogs').where('professorId','==',form.professorId).get({source:'server'}),
-                    db.collection('teacherPaymentRates').doc(form.professorId).get({source:'server'}),
-                    db.collection('teachers').doc(form.professorId).get({source:'server'})
-                ]);
-                const docente = docentes.exists ? docentes.data() : {};
-                const valorHora = taxas.exists ? freqParseMoeda(taxas.data().valorHora) : freqParseMoeda(docente.valorHora ?? docente.valorHoraAula ?? docente.valor_hora ?? docente.horaValor ?? 0);
-                const registros = [];
-                pontos.forEach(doc => {
-                    const r = doc.data();
-                    if (!String(r.data || '').startsWith(form.mes)) return;
-                    const minutos = freqMinutos(r.entrada,r.saida);
-                    registros.push({id:doc.id,data:r.data,turno:r.turno || '',entrada:r.entrada || '',saida:r.saida || '',minutos,valorHoraCentavos:freqCentavos(valorHora),totalCentavos:Math.round(minutos*freqCentavos(valorHora)/60)});
-                });
-                if (!registros.length && !form.corrigindo) throw new Error('Nenhum ponto encontrado nesta competência no Firebase.');
-                const chave = pagamentoChave(form.professorId,form.mes);
-                const ref = db.collection('teacherMonthlyPayments').doc(chave);
-                const historico = ref.collection('history').doc();
-                const agora = new Date().toISOString();
-                let salvo;
-                await db.runTransaction(async tx => {
-                    const snap = await tx.get(ref);
-                    const anterior = snap.exists ? snap.data() : null;
-                    if ((anterior?.revisao || 0) !== form.revisao) throw new Error('Este pagamento foi alterado por outro usuário. Feche o formulário, atualize e confira o registro.');
-                    if (anterior?.status === 'pago' && !form.corrigindo) throw new Error('Esta competência já tem um pagamento registrado. Use Corrigir pagamento.');
-                    if (form.corrigindo && anterior?.status !== 'pago') throw new Error('O pagamento não está mais ativo. Atualize e confira o registro.');
-                    salvo = {...(anterior?.comprovante?{comprovante:anterior.comprovante}:{}),professorId:form.professorId,professorNome:docente.fullname || form.nome,competencia:form.mes,status:'pago',metodo,dataPagamento:data,valorPagoCentavos:valor,observacao,valorCalculadoCentavos:registros.reduce((s,r)=>s+r.totalCentavos,0),minutosCalculados:registros.reduce((s,r)=>s+r.minutos,0),registros,registradoPor:anterior?.registradoPor || usuario,createdAt:anterior?.createdAt || agora,atualizadoPor:usuario,updatedAt:agora,revisao:(anterior?.revisao || 0)+1};
-                    tx.set(ref,salvo);
-                    tx.set(historico,{acao:form.corrigindo?'correcao':'registro',motivo,anterior:anterior || null,novo:salvo,usuario,data:agora});
-                });
-                let avisoComprovante='';if(comprovanteArquivo){try{const anexo=await SE7.api('payroll-receipt-save',{paymentId:chave,revision:salvo.revisao,...comprovanteArquivo});salvo.comprovante=anexo.comprovante;}catch(e){avisoComprovante='Pagamento registrado, mas o comprovante não foi anexado: '+e.message+'. Use Anexar comprovante para tentar novamente, sem registrar outro pagamento.';}}pagamentosColaboradores[chave] = salvo;
-                pagamentoSalvando = false;
-                fecharPagamentoColaborador();
-                renderizarPagamentoColaborador();
-                SE7PayrollFinance.message(salvo,chave,avisoComprovante);
-            } catch (e) {
-                alert('Não foi possível salvar o pagamento: '+e.message);
-            } finally {
-                pagamentoSalvando = false;
-                document.getElementById('pagamento-btn-salvar').disabled = false;document.getElementById('pagamento-btn-salvar').textContent='Salvar pagamento';document.getElementById('pagamento-btn-cancelar').disabled=false;
-            }
-        }
-        async function estornarPagamentoColaborador() {
-            if (pagamentoSalvando) return;
-            const professorId = document.getElementById('freq-colab-professor').value;
-            const mes = freqObterMesSelecionado();
-            const anteriorLocal = pagamentoAtual(professorId,mes);
-            if (anteriorLocal?.status !== 'pago') return;
-            if (!confirm(`Estornar o registro de pagamento de ${anteriorLocal.professorNome}, competência ${mes}? Isto corrige o registro; não devolve o dinheiro transferido.`)) return;
-            const motivo = prompt('Informe o motivo do estorno:');
-            if (!motivo?.trim()) return;
-            pagamentoSalvando = true;
-            try {
-                const usuario = pagamentoUsuario();
-                const chave = pagamentoChave(professorId,mes);
-                const ref = db.collection('teacherMonthlyPayments').doc(chave);
-                const historico = ref.collection('history').doc();
-                const agora = new Date().toISOString();
-                let salvo;
-                await db.runTransaction(async tx => {
-                    const snap = await tx.get(ref);
-                    const anterior = snap.exists ? snap.data() : null;
-                    if (anterior?.status !== 'pago' || anterior.revisao !== anteriorLocal.revisao) throw new Error('O registro mudou. Atualize e confira antes de estornar.');
-                    salvo = {...anterior,status:'estornado',motivoEstorno:motivo.trim(),estornadoPor:usuario,estornadoEm:agora,updatedAt:agora,revisao:anterior.revisao+1};
-                    tx.set(ref,salvo);
-                    tx.set(historico,{acao:'estorno',motivo:motivo.trim(),anterior,novo:salvo,usuario,data:agora});
-                });
-                pagamentosColaboradores[chave]=salvo;
-                renderizarPagamentoColaborador();
-                alert('Registro estornado com sucesso. O histórico foi preservado.');
-            } catch(e) { alert('Não foi possível estornar: '+e.message); }
-            finally { pagamentoSalvando=false; }
-        }
+        async function salvarPagamentoColaborador(){if(pagamentoSalvando||!pagamentoFormulario)return;const form={...pagamentoFormulario},save=document.getElementById('pagamento-btn-salvar'),cancel=document.getElementById('pagamento-btn-cancelar');pagamentoSalvando=true;save.disabled=cancel.disabled=true;save.textContent='Aguarde…';try{const file=document.getElementById('pagamento-comprovante').files[0],prepared=file?await SE7PayrollReceipt.prepare(file):null,r=await SE7.api('payroll-save',{professorId:form.professorId,competencia:form.mes,revision:form.revisao,correcting:form.corrigindo,amountCents:freqCentavos(freqParseMoeda(document.getElementById('pagamento-valor').value)),method:document.getElementById('pagamento-metodo').value,date:document.getElementById('pagamento-data').value,observation:document.getElementById('pagamento-observacao').value.trim(),reason:document.getElementById('pagamento-motivo').value.trim()});const key=pagamentoChave(form.professorId,form.mes),salvo=r.payment;let warning='';if(prepared){try{salvo.comprovante=(await SE7.api('payroll-receipt-save',{paymentId:key,revision:salvo.revisao,...prepared})).comprovante;}catch(e){warning='Pagamento registrado, mas o comprovante não foi anexado: '+e.message+'. Não registre outro pagamento; use Anexar comprovante.';}}pagamentosColaboradores[key]=salvo;pagamentoSalvando=false;fecharPagamentoColaborador();renderizarPagamentoColaborador();SE7PayrollFinance.message(salvo,key,warning);}catch(e){alert('Não foi possível salvar o pagamento: '+e.message);}finally{pagamentoSalvando=false;save.disabled=cancel.disabled=false;save.textContent='Salvar pagamento';}}
+        async function estornarPagamentoColaborador(){if(pagamentoSalvando)return;const id=document.getElementById('freq-colab-professor').value,month=freqObterMesSelecionado(),p=pagamentoAtual(id,month);if(p?.status!=='pago')return;if(!SE7PayrollFinance.isEditable(p))return alert('O prazo de 12 horas terminou. Registro disponível somente para consulta.');if(!confirm('Estornar o registro de '+p.professorNome+'? Isso não devolve o dinheiro transferido.'))return;const reason=prompt('Informe o motivo do estorno:');if(!reason?.trim())return;pagamentoSalvando=true;try{const r=await SE7.api('payroll-reverse',{professorId:id,competencia:month,revision:p.revisao,reason:reason.trim()});pagamentosColaboradores[pagamentoChave(id,month)]=r.payment;renderizarPagamentoColaborador();alert('Registro estornado com sucesso.');}catch(e){alert('Não foi possível estornar: '+e.message);}finally{pagamentoSalvando=false;}}
 
         function freqFormatarMoeda(valor) {
             return Number(valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -2812,7 +2663,9 @@
             }
         }
 
-        function gerarRelatorioFrequenciaColaboradores() {
+        let payrollReportGenerating=false;
+        async function gerarRelatorioFrequenciaColaboradores() {
+            if(payrollReportGenerating)return;payrollReportGenerating=true;try {if(pagamentosColaboradoresErro)throw Error('Atualize a consulta de pagamentos antes de emitir o relatório.');
             if(!document.getElementById('freq-colab-professor').value)return alert('Selecione o colaborador para gerar o relatório.');
             const mes = freqObterMesSelecionado();
             const registros = freqMontarCalculos(freqRegistrosFiltrados()).sort((a, b) => {
@@ -2850,7 +2703,7 @@
 
             let blocos = Object.values(grupos).map((g) => {
                 const p = g.professor || {};
-                const nome = g.registros[0]?.professorNome || p.fullname || 'Colaborador';
+                const nome = p.fullname || g.registros[0]?.professorNome || 'Colaborador';
                 const horas = g.registros.reduce((s, r) => s + r.minutos, 0) / 60;
                 const total = freqSomarValores(g.registros);
                 const rates = [...new Set(g.registros.map(r => r.valorHora).filter(v => v > 0))];
@@ -2873,7 +2726,7 @@
                 }).join('');
 
                 return `
-                    <div style="page-break-inside: avoid; margin-bottom: 32px;">
+                    <div class="se7-report-group" style="page-break-inside: avoid; margin-bottom: 32px;">
                         <h2 style="font-size: 14px; color: #1e3a8a; text-transform: uppercase; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 6px; margin-top: 25px; margin-bottom: 12px; font-weight: bold;">1. Identificação do Colaborador</h2>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 12px; background: #f1f5f9; padding: 16px; border-radius: 10px;">
                             <div>
@@ -2940,8 +2793,8 @@
             const subtitulo = 'Visualização pronta para impressão ou conferência';
 
             const htmlRelatorio = `
-                <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #1e293b; padding: 10px;">
-                    <div style="background: #1e3a8a; color: #ffffff; padding: 25px 30px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px;">
+                <div class="se7-payroll-report" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #1e293b; padding: 10px;">
+                    <div class="se7-report-header" style="background: #1e3a8a; color: #ffffff; padding: 25px 30px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px;">
                         <div style="display: flex; align-items: center; gap: 20px;">
                             <div style="width: 75px; height: 75px; background: transparent; color: #ffffff; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 22px; flex-shrink: 0; overflow: hidden;">
                                 ${logoUrl ? `<img src="${freqEscaparHtml(logoUrl)}" alt="Logo" style="max-width:100%; max-height:100%; object-fit:contain;">` : 'SE7'}
@@ -2960,10 +2813,10 @@
                     <h2 style="text-align: center; font-size: 17px; color: #1e3a8a; margin-bottom: 20px; text-transform: uppercase; font-weight: bold;">REGISTRO DE FREQUÊNCIA DE COLABORADORES</h2>
                     ${blocos}
 
-                    <div style="margin-top: 45px; display: flex; justify-content: space-between; text-align: center;">
+                    <div class="se7-report-footer"><div class="se7-report-signatures">
                         <div style="width: 45%; border-top: 1.5px solid #1e293b; padding-top: 6px; font-size: 11px;">${freqEscaparHtml(razaoSocial)}<br>Setor Financeiro</div>
                         <div style="width: 45%; border-top: 1.5px solid #1e293b; padding-top: 6px; font-size: 11px;">Responsável pela Conferência<br>Assinatura</div>
-                    </div>
+                    </div></div>
                 </div>
             `;
 
@@ -2974,8 +2827,9 @@
             if (subtituloEl) subtituloEl.textContent = subtitulo;
             if (iconEl) iconEl.className = 'fa-solid fa-clipboard-check';
 
-            document.getElementById('conteudo-termo-Dinamico').innerHTML = htmlRelatorio;
+            document.getElementById('conteudo-termo-Dinamico').innerHTML = htmlRelatorio;await SE7PayrollReport.seal(document.querySelector('.se7-payroll-report'),{teacherId:professorId,teacher:teachers.find(t=>t.id===professorId)||{},institution:instituicao,rows:teacherManualLogs.filter(r=>r.professorId===professorId),rate:freqValorHoraProfessor(professorId),payment:pagamentoAtual(professorId,mes),month:mes});
             document.getElementById('modal-visualizador-termo').style.display = 'flex';
+            } catch(e){document.body.classList.remove('se7-payroll-print');alert('Não foi possível emitir o relatório: '+e.message);}finally{payrollReportGenerating=false;}
         }
 
     </script>
@@ -3006,6 +2860,7 @@
 <script src="/assets/se7-busy.js"></script>
 <script src="/assets/se7-ambient.js"></script>
 <script src="/assets/se7-payroll-receipt.js"></script>
-<script src="/assets/se7-payroll-finance.js"></script>
+<script type="module" src="/assets/se7-payroll-finance.js"></script>
+<script type="module" src="/assets/se7-payroll-report.js"></script>
 </body>
 </html>

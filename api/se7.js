@@ -1,3 +1,5 @@
+import {issuePayrollReport,verifyPayrollReport} from '../server/payroll-report.mjs';
+import {dispatchPayment} from '../server/payroll-payments.mjs';
 import {dispatchReceipt} from '../server/payroll-receipt.mjs';
 import {saveStudentAvatar} from '../server/student-avatar.mjs';
 import {readProfile,saveProfile} from '../server/user-profile.mjs';
@@ -80,6 +82,7 @@ async function unlock(ref,lock){await ref.firestore.runTransaction(async tx=>{co
 async function publicInfo(db){const snap=await db.collection('config').doc('institution').get();const d=snap.data()||{};const fields=['name','razao','cnpj','email','tel','end','loginDesc','logo','logomarca','urlLogo','logoUrl','image','fileUrl'];return {institution:Object.fromEntries(fields.filter(k=>typeof d[k]==='string').map(k=>[k,d[k]]))};}
 async function dispatchOperation({auth,db},req,b){
  const action=b.action;
+ if(action==='payroll-report-verify'){academicDocuments.publicLimit(req);return verifyPayrollReport(db,b);}
  if(action==='academic-document-verify'){academicDocuments.publicLimit(req);return academicDocuments.verify(db,b);}
  if(action==='public-info')return publicInfo(db);
  if(action==='catalog'){const [snap,ps]=await Promise.all([db.collection('courses').get(),db.collection('polos').where('active','==',true).get()]);return {ejaConditions:await eja.publicConditions(db),courses:snap.docs.map(d=>({id:d.id,name:d.data().name||'Curso',isEja:isSingleExam(d.data())})),polos:ps.docs.map(d=>({id:d.id,name:d.data().name,city:d.data().city,state:d.data().state}))};}
@@ -96,6 +99,8 @@ async function dispatchOperation({auth,db},req,b){
   }catch(e){await auth.deleteUser(uid).catch(()=>{});await ref.delete().catch(()=>{});await db.collection('se7EjaContracts').doc(ref.id).delete().catch(()=>{});await idx.delete();throw e;}
  }
  const u=await identity(auth,db,req);req.se7AuditIdentity=u;await limits(db,req,'gateway:'+u.uid);
+ if(action==='payroll-report-issue')return issuePayrollReport(db,b,u);
+ if(['payroll-save','payroll-reverse'].includes(action))return dispatchPayment(db,b,u);
  if(action.startsWith('payroll-receipt-'))return dispatchReceipt(db,b,u);
  if(action==='student-avatar-save')return saveStudentAvatar(db,b,u);
  if(action.startsWith('eja-'))return eja.dispatch(db,b,u);

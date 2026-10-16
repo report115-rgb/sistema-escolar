@@ -23,7 +23,7 @@ service cloud.firestore {
     && get(/databases/$(database)/documents/students/$(studentId())).data.get('se7AuthLock',null) == null
     && get(/databases/$(database)/documents/students/$(studentId())).data.get('portalSessionVersion',0) == request.auth.token.get('portalVersion',0);
   }
-  function schoolCollection(c){return c in ['students','courses','classes','academicCalendars','config','teachers','teacherManualLogs','teacherPaymentRates','teacherMonthlyPayments','attendance','attendanceRecords','attendanceLocks','employeeLogs','pendingUsers','systemUsers'];}
+  function schoolCollection(c){return c in ['students','courses','classes','academicCalendars','config','teachers','teacherManualLogs','teacherPaymentRates','attendance','attendanceRecords','attendanceLocks','employeeLogs','pendingUsers','systemUsers'];}
   // Master can manage existing school data, but credentials, identities and permission assignments are server-only.
   match /{c}/{doc}/{rest=**} {allow read,write: if master() && schoolCollection(c);}
   match /students/{id} {
@@ -47,7 +47,7 @@ service cloud.firestore {
   match /teachers/{id} {allow read: if finance() || (secretaryPolo() != '' && secretaryPolo() in resource.data.get('poloIds',[]));allow write: if master();}
   match /teacherManualLogs/{id} {allow read: if finance() || ownPolo(resource.data);allow create: if master() || (ownPolo(request.resource.data) && ownTeacher(request.resource.data.professorId));allow update: if master() || (ownPolo(resource.data) && ownPolo(request.resource.data) && ownTeacher(request.resource.data.professorId));allow delete: if master() || ownPolo(resource.data);}
   match /teacherPaymentRates/{id} {allow read,write: if finance();}
-  match /teacherMonthlyPayments/{id}/{rest=**} {allow read,write: if finance();}
+  match /teacherMonthlyPayments/{id}/{rest=**} {allow read: if finance();allow write: if false;}
   match /attendance/{id} {allow read: if finance() || ownStudent(resource.data.studentId);}
   match /attendanceRecords/{id} {allow read: if finance() || ownPolo(resource.data);allow write: if master();}
   match /attendanceLocks/{id} {allow read: if finance() || ownPolo(resource.data);allow write: if master();}
