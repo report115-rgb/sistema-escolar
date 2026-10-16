@@ -25,7 +25,7 @@
     <script src="/assets/vendor/firebase-app-compat.js"></script>
     <script src="/assets/vendor/firebase-firestore-compat.js"></script>
 <script src="/assets/vendor/firebase-auth-compat.js"></script>
-<script src="/assets/se7-auth.js"></script>
+<script src="/assets/se7-platform-config.js"></script><script defer src="/assets/se7-platform-pilot.js"></script><script src="/assets/se7-auth.js"></script>
 <script src="/assets/se7-portal-preview.js"></script>
 <script src="/assets/se7-email.js"></script>
 <script src="/assets/se7-whatsapp.js"></script>
@@ -1374,7 +1374,7 @@
 <script>
     let perfilVisualizadoMatriz = null;
     let sessaoRealMatriz = null;
-    function masterAutenticadoMatriz(){return !!firebase.auth().currentUser && firebase.auth().currentUser.uid==='UUBINdHfJZONVMcC0QogyAsUgvA3';}
+    function masterAutenticadoMatriz(){return !!window.SE7Platform?.isOwner();}
     function usuarioMasterAtivo(){return masterAutenticadoMatriz() && !perfilVisualizadoMatriz;}
 
     async function carregarPontosTotemMatriz() {
@@ -1587,15 +1587,8 @@
 
     <!-- SCRIPTS DA APLICAÇÃO -->
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyBeJ-fqzwiQt0PZEKQ6e8zAPSuh7WRuaHo",
-            authDomain: "sistema-escolar-nuvem.firebaseapp.com",
-            projectId: "sistema-escolar-nuvem",
-            storageBucket: "sistema-escolar-nuvem.firebasestorage.app",
-            messagingSenderId: "343442411308",
-            appId: "1:343442411308:web:e4500b862fa29b6b326689"
-        };
-
+        const firebaseConfig = window.SE7PlatformConfig;
+        if(!firebaseConfig)throw new Error('Configuração do Matriz de testes ausente.');
         firebase.initializeApp(firebaseConfig);
         let db = firebase.firestore();
 
@@ -4464,7 +4457,14 @@ function renderFinanceStudentSelect(){const select=document.getElementById('fin-
     }
 }
 
+        let salvandoInstituicao = false;
         async function salvarBrandingNaNuvem() {
+            if (salvandoInstituicao) return;
+            salvandoInstituicao = true;
+            const botao = document.activeElement instanceof HTMLButtonElement ? document.activeElement : null;
+            const texto = botao?.innerHTML;
+            if (botao) {botao.disabled=true;botao.textContent='Aguarde…';}
+            try {
             await db.collection("config").doc("institution").set({
                 name: document.getElementById('input-inst-name').value,
                 razao: document.getElementById('input-inst-razao').value,
@@ -4480,6 +4480,8 @@ function renderFinanceStudentSelect(){const select=document.getElementById('fin-
                 logo: currentLogoDataUrl
             }, { merge: true });
             alert("Configurações salvas na nuvem!");
+            } catch(e) {alert('Não foi possível salvar: '+e.message);}
+            finally {salvandoInstituicao=false;if(botao){botao.disabled=false;botao.innerHTML=texto;}}
         }
 
         function toggleDarkMode() { const escuro = document.documentElement.classList.toggle('dark'); try {localStorage.setItem('se7-matriz-theme', escuro ? 'dark' : 'light');} catch {} }
