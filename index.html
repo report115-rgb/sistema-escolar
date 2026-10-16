@@ -3577,7 +3577,8 @@ function carregarDatasCalendarioParaFrequencia(){const classId=document.getEleme
         if(!usuarioMasterAtivo()){delete studentData.poloId;delete studentData.poloName;}await db.collection("students").doc(editId).update(studentData);
         if(recalculateEntry){const entry=await SE7.api('academic-entry-plan',{studentId:editId,...(dateChanged?{enrollmentDate}:{})});Object.assign(studentData,{enrollmentDate,academicEntry:entry});}
         if(!hadClass && studentData.classId){void SE7Email.notify('email-enrollment',{studentId:editId});void SE7EnrollmentAuto.start(editId);}
-        await SE7.api('prepare-student',{id:editId});
+        const cadastroAindaEmPreparo=!beforeEnrollment.data()?.enrollmentRegisteredAt&&!beforeEnrollment.data()?.se7AuthUid;const escolhaRetomada=cadastroAindaEmPreparo?await window.SE7EjaAdmin?.newEnrollmentChoice(cursoObj):null;await SE7.api('prepare-student',{id:editId,...(cadastroAindaEmPreparo?{newEnrollment:true,...(escolhaRetomada?{ejaChoice:escolhaRetomada}:{})}:{})});
+        if(cadastroAindaEmPreparo){if(escolhaRetomada)void SE7EjaAdmin.process(editId,1).catch(()=>{});else void SE7EnrollmentAuto.start(editId);}
         await SE7.api('whatsapp-consent',{id:editId,optIn:document.getElementById('whatsapp-opt-in-aluno').checked});
         const alunoLocal = students.find(a => a.id === editId);
         if (alunoLocal) Object.assign(alunoLocal, studentData);
@@ -3595,7 +3596,9 @@ function carregarDatasCalendarioParaFrequencia(){const classId=document.getEleme
         // No cadastro novo, se tiver foto temporária, salva; senão, salva vazia
         studentData.fotoAluno = (typeof fotoRostoBase64Temp !== 'undefined' && fotoRostoBase64Temp) ? fotoRostoBase64Temp : "";
 
+        const cpfNumeros=cpf.replace(/\D/g,''),cpfMascara=cpfNumeros.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,'$1.$2.$3-$4');const existentes=await Promise.all([...new Set([cpf,cpfNumeros,cpfMascara])].map(valor=>db.collection('students').where('poloId','==',studentData.poloId).where('cpf','==',valor).limit(1).get()));if(existentes.some(s=>!s.empty))return alert('Já existe um cadastro com este CPF neste polo. Abra o aluno em Gestão de Alunos e use Editar para concluir ou corrigir a matrícula, sem criar outro cadastro.');
         const docRef = await db.collection("students").add(studentData);
+        document.getElementById('edit-student-id').value=docRef.id;
         await SE7.api('prepare-student',{id:docRef.id,newEnrollment:true,...(ejaChoice?{ejaChoice}:{})});
         await SE7.api('whatsapp-consent',{id:docRef.id,optIn:document.getElementById('whatsapp-opt-in-aluno').checked});
         const novoAlunoId = docRef.id;
@@ -3623,7 +3626,7 @@ function carregarDatasCalendarioParaFrequencia(){const classId=document.getEleme
                     const dataV = new Date();
                     dataV.setMonth(dataV.getMonth() + (i - 1));
                     dataV.setDate(diaVenc);
-                    const dataStr = dataV.toISOString().slice(0, 10);
+                    const dataStr = SE7Tuition.isNursingTechnical(cursoObj)?SE7Tuition.nursingEnrollmentDates(qtdP,SE7AcademicPolicy.today())[i-1]:dataV.toISOString().slice(0,10);
 
                     await db.collection("financeLogs").add({
                         studentId: novoAlunoId,

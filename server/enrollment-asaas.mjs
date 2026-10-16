@@ -1,4 +1,4 @@
-import {tuitionFor} from '../assets/se7-tuition.js';
+import {tuitionFor,isNursingTechnical,nursingEnrollmentDates} from '../assets/se7-tuition.js';
 import {api,config,cents,dueDate,linkCustomer,emit,importPayment} from './asaas.mjs';
 import {randomUUID,createHash} from 'node:crypto';
 const fail=(status,message)=>{throw Object.assign(Error(message),{status});};
@@ -10,6 +10,7 @@ export function newInstallments(course,now=new Date()){
  if(!Number.isInteger(count)||count<1||count>60||!Number.isInteger(day)||day<1||day>31||discount>amount)fail(409,'Configuração financeira do curso inválida.');
  const today=now.toLocaleDateString('en-CA',{timeZone:'America/Fortaleza'}),[year,month]=today.split('-').map(Number);let offset=0;
  const date=i=>{const first=new Date(Date.UTC(year,month-1+i,1)),last=new Date(Date.UTC(first.getUTCFullYear(),first.getUTCMonth()+1,0)).getUTCDate();return first.getUTCFullYear()+'-'+String(first.getUTCMonth()+1).padStart(2,'0')+'-'+String(Math.min(day,last)).padStart(2,'0');};
+ if(isNursingTechnical(course))return nursingEnrollmentDates(count,today).map((date,i)=>({date,amount:amount/100,discountAmount:discount/100,description:'Mensalidade '+(i+1)+'/'+count+' - '+course.name}));
  if(date(0)<today)offset=1;return Array.from({length:count},(_,i)=>({date:date(i+offset),amount:amount/100,discountAmount:discount/100,description:'Mensalidade '+(i+1)+'/'+count+' - '+course.name}));
 }
 export async function markNew(db,id){await db.collection('se7EnrollmentCandidates').doc(id).set({version:1,createdAt:new Date().toISOString()});}
@@ -20,7 +21,7 @@ export async function start(db,id,u){
  const candidate=await db.collection('se7EnrollmentCandidates').doc(id).get();if(!candidate.exists)return {enabled:false,legacy:true};
  const s=await db.collection('students').doc(id).get();if(!s.exists||!s.data().classId||!s.data().courseId||!['Ativo','Ativa'].includes(s.data().status))return {enabled:true,state:'waiting',message:'Aguardando confirmação da turma e matrícula ativa.'};
  const turma=await db.collection('classes').doc(s.data().classId).get();if(!turma.exists||turma.data().courseId!==s.data().courseId)fail(409,'Confira o curso e a turma da matrícula.');
- await db.runTransaction(async tx=>{const ref=jobRef(db,id),old=await tx.get(ref);if(old.exists)return;tx.set(ref,{studentId:id,courseId:s.data().courseId,state:'pending',phase:'customer',cursor:0,entries:[],createdAt:new Date().toISOString(),actorUid:u.uid});});return {enabled:true,...await status(db,id)};
+ await db.runTransaction(async tx=>{const ref=jobRef(db,id),old=await tx.get(ref);if(old.exists)return;tx.set(ref,{studentId:id,courseId:s.data().courseId,enrollmentDate:s.data().enrollmentDate||new Date(candidate.data().createdAt).toLocaleDateString('en-CA',{timeZone:'America/Fortaleza'}),state:'pending',phase:'customer',cursor:0,entries:[],createdAt:new Date().toISOString(),actorUid:u.uid});});return {enabled:true,...await status(db,id)};
 }
 export async function status(db,id){const s=await jobRef(db,id).get();if(!s.exists)return {studentId:id,state:'none'};const j=s.data();return {studentId:id,state:j.state,phase:j.phase,completed:j.cursor||0,total:j.entries?.length||0,message:j.message||''};}
 export async function retry(db,id,u){
@@ -52,7 +53,7 @@ export async function step(db,id,u){
     payments.sort((a,b)=>dueDate(a.dueDate).localeCompare(dueDate(b.dueDate))||a.id.localeCompare(b.id));
     const reverses=await Promise.all(payments.map(p=>db.collection('se7AsaasPayments').doc(p.id).get()));for(const [index,p] of payments.entries()){if(p.customer!==job.customerId)fail(409,'Cliente divergente.');const reverse=reverses[index];if(reverse.exists)fail(409,'Cobrança já vinculada. Revise os vínculos existentes.');cents(p.originalValue??p.value);dueDate(p.dueDate);entries.push({invoiceId:'auto_'+createHash('sha256').update(id+':'+p.id).digest('hex').slice(0,32),paymentId:p.id,amount:p.originalValue??p.value,date:p.dueDate,description:p.description||'Mensalidade '+(entries.length+1)+'/'+payments.length,mode:'import'});}
    }else{
-    if(!local.docs.length){const c=await db.collection('courses').doc(s.courseId).get();if(!c.exists)fail(409,'Curso não encontrado.');const turma=await db.collection('classes').doc(s.classId).get();if(!turma.exists||turma.data().courseId!==s.courseId)fail(409,'Confira a turma e o curso.');for(const [i,row]of newInstallments(tuitionFor(c.data(),turma.data())).entries())entries.push({...row,invoiceId:'enroll_'+id+'_'+(i+1),mode:'create'});}
+    if(!local.docs.length){const c=await db.collection('courses').doc(s.courseId).get();if(!c.exists)fail(409,'Curso não encontrado.');const turma=await db.collection('classes').doc(s.classId).get();if(!turma.exists||turma.data().courseId!==s.courseId)fail(409,'Confira a turma e o curso.');for(const [i,row]of newInstallments(tuitionFor(c.data(),turma.data()),isNursingTechnical(c.data())&&job.enrollmentDate?new Date(job.enrollmentDate+'T12:00:00-03:00'):new Date()).entries())entries.push({...row,invoiceId:'enroll_'+id+'_'+(i+1),mode:'create'});}
     for(const d of local.docs){const f=d.data();cents(f.amount);dueDate(f.date);if(f.date<new Date().toLocaleDateString('en-CA',{timeZone:'America/Fortaleza'}))fail(409,'Primeiro vencimento passado. Ajuste as parcelas antes da emissão.');entries.push({invoiceId:d.id,mode:'create'});}
     if(local.docs.length)entries.sort((a,b)=>local.docs.find(d=>d.id===a.invoiceId).data().date.localeCompare(local.docs.find(d=>d.id===b.invoiceId).data().date));
    }
