@@ -1,5 +1,6 @@
+import {readProfile,saveProfile} from '../server/user-profile.mjs';
 import * as eja from '../server/eja-workflow.mjs';
-import {isEja} from '../server/eja-policy.mjs';
+import {isEja,isSingleExam} from '../server/eja-policy.mjs';
 import * as polos from '../server/polos.mjs';
 import {scannerCors,nativeRequestAllowed} from '../server/scanner-access.mjs';
 import * as documentAuthorizations from '../server/academic-document-authorizations.mjs';
@@ -79,7 +80,7 @@ async function dispatchOperation({auth,db},req,b){
  const action=b.action;
  if(action==='academic-document-verify'){academicDocuments.publicLimit(req);return academicDocuments.verify(db,b);}
  if(action==='public-info')return publicInfo(db);
- if(action==='catalog'){const [snap,ps]=await Promise.all([db.collection('courses').get(),db.collection('polos').where('active','==',true).get()]);return {ejaConditions:await eja.publicConditions(db),courses:snap.docs.map(d=>({id:d.id,name:d.data().name||'Curso',isEja:isEja(d.data())})),polos:ps.docs.map(d=>({id:d.id,name:d.data().name,city:d.data().city,state:d.data().state}))};}
+ if(action==='catalog'){const [snap,ps]=await Promise.all([db.collection('courses').get(),db.collection('polos').where('active','==',true).get()]);return {ejaConditions:await eja.publicConditions(db),courses:snap.docs.map(d=>({id:d.id,name:d.data().name||'Curso',isEja:isSingleExam(d.data())})),polos:ps.docs.map(d=>({id:d.id,name:d.data().name,city:d.data().city,state:d.data().state}))};}
  if(action==='student-login')return loginStudent(auth,db,req,b);
  if(action==='signup'){
   await limits(db,req,'signup');password(b.password);const data=b.student||{};if(!validCPF(data.cpf))fail(400,'CPF inválido.');for(const k of ['fullname','birthDate','gender','rg','whatsapp','cep','street','number','neighborhood','city','state','courseId'])if(typeof data[k]!=='string'||!data[k].trim()||data[k].length>200)fail(400,`Preencha ${k}.`);
@@ -99,7 +100,7 @@ async function dispatchOperation({auth,db},req,b){
  if(action==='polo-save')return polos.save(db,b,u);
  if(action==='polo-bind')return polos.bind(db,b,u);
  if(action==='polo-student')return polos.assignStudent(db,b,u);
- if(!['session','profile-name','audit-event'].includes(action))db=polos.scopedDatabase(db,u);
+ if(!['session','profile-name','profile-save','audit-event'].includes(action))db=polos.scopedDatabase(db,u);
 
  if(action==='audit-event'){
   if(!['master','secretaria','professor','financeiro','totem'].includes(u.role))fail(403,'Acesso restrito.');
@@ -183,13 +184,15 @@ async function dispatchOperation({auth,db},req,b){
   if(action==='whatsapp-check')return checkConnection();await limits(db,req,'whatsapp:'+u.uid);
   if(action==='whatsapp-test')return centralTest(db,u);return sendJob(db,validId(b.id));
  }
+ if(action==='profile-save')return saveProfile(db,auth,b,u);
  if(action==='session'){
   if(u.role==='aluno')return {profile:{id:u.studentId,...publicStudent(u.student)},role:u.role};
   if(u.role==='master')await claims(auth,u.uid,{role:'master'});
   const account=await auth.getUser(u.uid);
+  const ownProfile=await readProfile(db,u.uid);
   const storedName=account.displayName||u.profile?.nome||'';
   const nome=storedName&&!storedName.includes('@')?storedName:({master:'Master',secretaria:'Secretaria',professor:'Professor',financeiro:'Financeiro',totem:'Totem'}[u.role]||'Usuário');
-  return {profile:{uid:u.uid,email:account.email||u.email,nome,perfil:u.role,poloId:u.profile?.poloId||'',poloIds:u.profile?.poloIds||[]},role:u.role};
+  return {profile:{...ownProfile,uid:u.uid,email:account.email||u.email,nome,perfil:u.role,poloId:u.profile?.poloId||'',poloIds:u.profile?.poloIds||[]},role:u.role};
  }
  if(action==='profile-name'){
   if(!['master','secretaria','professor','financeiro','totem'].includes(u.role))fail(403,'Ação não permitida.');
@@ -310,7 +313,7 @@ export default async function handler(req,res){
  res.setHeader('Cache-Control','no-store');res.setHeader('X-Content-Type-Options','nosniff');
  try {
   const native=scannerCors(req,res);if(req.method==='OPTIONS'&&native){res.status(204).end();return;}if(req.method!=='POST')fail(405,'Use POST.');const origin=req.headers.origin;if(origin!=='https://sistema-escolar-ten-mu.vercel.app'&&!native)fail(403,'Origem não autorizada.');
-  if(!String(req.headers['content-type']||'').startsWith('application/json'))fail(415,'Envie JSON.');let b;try{b=typeof req.body==='string'?JSON.parse(req.body):req.body;}catch{fail(400,'JSON inválido.');}if(!b||Array.isArray(b)||typeof b.action!=='string'||JSON.stringify(b).length>(b.action==='notices-save'||b.action==='exam-scan-preview'?750000:b.action==='exam-save'?250000:12000))fail(400,'Requisição inválida.');
+  if(!String(req.headers['content-type']||'').startsWith('application/json'))fail(415,'Envie JSON.');let b;try{b=typeof req.body==='string'?JSON.parse(req.body):req.body;}catch{fail(400,'JSON inválido.');}if(!b||Array.isArray(b)||typeof b.action!=='string'||JSON.stringify(b).length>(b.action==='notices-save'||b.action==='exam-scan-preview'?750000:b.action==='exam-save'?250000:b.action==='profile-save'?100000:12000))fail(400,'Requisição inválida.');
   if(!nativeRequestAllowed(req,b))fail(403,'Operação não permitida para o leitor de avaliações.');
   if(!process.env.SE7_MASTER_UID)throw new Error('Master não configurado.');const result=await dispatch(services(),req,b);res.status(200).json(result);
  }catch(e){const status=e.status||500;if(status===500)console.error('SE7 API',e.code||'internal');res.status(status).json({error:status===500?'Não foi possível concluir. Verifique a configuração do servidor.':e.message});}

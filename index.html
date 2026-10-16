@@ -163,7 +163,8 @@
 <link rel="stylesheet" href="/assets/se7-polos.css">
 <script src="/assets/se7-read-policy.js" defer></script>
 <script src="/assets/se7-polos.js" defer></script>
-<link rel="stylesheet" href="assets/se7-eja.css?v=1"><script defer src="assets/se7-eja-admin.js?v=1"></script></head>
+<link rel="stylesheet" href="assets/se7-eja.css?v=1"><script defer src="assets/se7-eja-admin.js?v=1"></script><link rel="stylesheet" href="/assets/se7-account-menu.css">
+</head>
 <body class="se7-suite se7-matriz bg-gray-100 dark:bg-slate-900 text-gray-800 dark:text-gray-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-300 pb-16">    
 
 
@@ -441,26 +442,22 @@
                 <div><p class="se7-header-greeting">Bem-vindo ao Sistema SE7!</p><p class="se7-header-caption">Gestão acadêmica de forma simples e eficiente.</p></div>
             </div>
 
-            <div class="flex items-center space-x-4">
-                <div class="se7-header-user">
-                    <div class="flex items-center justify-end gap-2"><span class="text-blue-200 text-xs font-medium" id="header-user-display">Usuário Conectado</span><span id="se7-header-role" class="se7-role-badge">Master</span><button type="button" onclick="editarNomeUsuarioLogado()" class="text-blue-200 hover:text-white" title="Editar meu nome" aria-label="Editar meu nome"><i class="fa-solid fa-pen text-[10px]"></i></button></div>
-                    <span class="font-semibold text-white" id="header-live-clock">Carregando relógio...</span>
-                </div>
-                <div class="flex items-center space-x-2">
-                    <button type="button" onclick="toggleDarkMode()" class="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-xs font-semibold rounded-lg transition border border-white/20">
-                        <i class="fa-solid fa-moon mr-1"></i> Tema
-                    </button>
+            <div class="se7-account-header">
+                <span id="header-user-display" hidden></span><span id="se7-header-role" hidden></span>
+                <div class="se7-account-anchor"><button type="button" id="se7-account-trigger" aria-label="Abrir menu da minha conta" aria-expanded="false" aria-controls="se7-account-menu"><i class="fa-solid fa-user" aria-hidden="true"></i></button>
+                <div id="se7-account-menu" hidden><div id="se7-account-identity"></div><div id="header-live-clock" class="se7-account-clock" style="padding:4px 10px 10px">Carregando relógio...</div>
+                <button type="button" data-account-action="profile"><i class="fa-solid fa-user-pen"></i> Editar cadastro</button>
+                <button type="button" data-account-action="password"><i class="fa-solid fa-key"></i> Alterar senha</button>
+                <button type="button" data-account-action="theme"><i class="fa-solid fa-circle-half-stroke"></i> Mudar tema</button>
                     <button type="button" id="btn-access-control" onclick="abrirModalControleAcesso()" class="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-xs font-semibold rounded-lg transition border border-white/20 relative" style="display:none;">
-                        <i class="fa-solid fa-shield-halved mr-1"></i> Acessos
+                        <i class="fa-solid fa-shield-halved mr-1"></i> Cadastros e Acessos
                         <span id="badge-pendentes-cont" class="absolute -top-1 -right-1 bg-red-600 text-white text-[9px] px-1.5 py-0.2 rounded-full font-bold" style="display:none;">0</span>
                     </button>
                     <button type="button" id="btn-switch-user" onclick="abrirModalAlternarUsuario()" class="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-xs font-semibold rounded-lg transition border border-white/20" style="display:none;">
                         <i class="fa-solid fa-users mr-1"></i> Alternar
                     </button>
-                    <button type="button" onclick="fazerLogout()" class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-xs font-semibold rounded-lg transition shadow">
-                        <i class="fa-solid fa-power-off mr-1"></i> Sair
-                    </button>
-                </div>
+                <button type="button" data-account-action="logout"><i class="fa-solid fa-arrow-right-from-bracket"></i> Sair</button>
+                </div></div>
             </div>
             <div id="aviso-perfil-matriz" hidden style="width:100%;flex-basis:100%;padding:10px 16px;background:#102f4a;border-top:1px solid #2a5c9f;color:#e8f1fa;font-size:12px;">
                 <span id="nome-perfil-matriz"></span>
@@ -928,6 +925,14 @@
         </select>
     </div>
                         
+<div id="course-eja-options" hidden class="space-y-3">
+<label class="block text-xs font-semibold">Modalidade do supletivo<select id="course-eja-mode" class="w-full px-3 py-2 rounded-lg border dark:bg-slate-900"><option value="">Selecione a modalidade...</option><option value="modular">Modular</option><option value="prova-unica">Prova única</option></select></label>
+<div id="course-modular-options" hidden class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<label class="text-xs font-semibold">Etapa<select id="course-eja-stage" class="w-full px-3 py-2 rounded-lg border dark:bg-slate-900"><option value="">Selecione...</option><option value="fundamental">Ensino Fundamental</option><option value="medio">Ensino Médio</option></select></label>
+<label class="text-xs font-semibold">Quantidade de mensalidades<input id="course-modular-count" type="number" min="1" max="60" class="w-full px-3 py-2 rounded-lg border dark:bg-slate-900"></label>
+<label class="text-xs font-semibold">Valor da mensalidade (R$)<input id="course-modular-value" type="number" min="0.01" step="0.01" class="w-full px-3 py-2 rounded-lg border dark:bg-slate-900"></label>
+<label class="text-xs font-semibold">Dia de vencimento<input id="course-modular-day" type="number" min="1" max="31" value="10" class="w-full px-3 py-2 rounded-lg border dark:bg-slate-900"></label>
+</div><p id="course-single-info" hidden class="text-xs">Prova única: utiliza as condições financeiras e o agendamento configurados na Gestão EJA. Não altera faturas já emitidas.</p></div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-xs font-semibold mb-1">Nome do Curso</label>
@@ -1534,7 +1539,7 @@
     <div id="access-control-modal" class="fixed inset-0 z-[2000] flex items-center justify-center bg-black/50 p-4" style="display: none;">
         <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-xl w-full p-6 border border-gray-200 dark:border-slate-700 relative shadow-2xl max-h-[90vh] overflow-y-auto">
             <button type="button" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 text-xl font-bold" onclick="fecharModalControleAcesso()">&times;</button>
-            <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Controle de Acesso</h2><a href="/administracao-auth.html" target="_blank" class="text-blue-600 text-sm">Preparar migração e vincular contas existentes</a>
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Cadastros e Acessos</h2><a href="/administracao-auth.html" target="_blank" class="text-blue-600 text-sm">Preparar migração e vincular contas existentes</a>
             
             <div class="mb-6 p-4 bg-amber-50 dark:bg-slate-900/60 rounded-xl border border-amber-200 dark:border-slate-700">
                 <h4 class="font-bold text-xs text-amber-700 dark:text-amber-400 mb-3 uppercase"><i class="fa-solid fa-clock mr-1"></i> Solicitações de Primeiro Acesso Pendentes</h4>
@@ -2802,8 +2807,11 @@ async function excluirColaborador(id) {
     }
 }
 
+        function atualizarModalidadeCurso(){const eja=document.getElementById('input-course-nivel').value==='Supletivo',mode=document.getElementById('course-eja-mode').value;document.getElementById('course-eja-options').hidden=!eja;document.getElementById('course-modular-options').hidden=!eja||mode!=='modular';document.getElementById('course-single-info').hidden=!eja||mode!=='prova-unica';}
+        function carregarModalidadeCurso(c={}){document.getElementById('course-eja-mode').value=c.ejaMode||'';document.getElementById('course-eja-stage').value=c.ejaStage||'';document.getElementById('course-modular-count').value=c.modularFinance?.qtdParcelas||'';document.getElementById('course-modular-value').value=c.modularFinance?.valorParcela||'';document.getElementById('course-modular-day').value=c.modularFinance?.vencimento||10;atualizarModalidadeCurso();}
+        document.getElementById('input-course-nivel').addEventListener('change',atualizarModalidadeCurso);document.getElementById('course-eja-mode').addEventListener('change',atualizarModalidadeCurso);
         let salvandoCurso=false;
-        async function saveCourse(){if(salvandoCurso)return;salvandoCurso=true;const button=document.getElementById('btn-save-course');button.disabled=true;const label=button.textContent;button.textContent='Aguarde…';try{const id=document.getElementById('edit-course-id').value,course={};for(const key of ['name','sigla','nivel','eixo','hours','conselho'])course[key]=document.getElementById('input-course-'+key).value.trim();const result=await SE7.api('course-save',{...(id?{id}:{}),course});await SE7Reads.refresh('courses');const old=courses.find(c=>c.id===result.id);if(old)Object.assign(old,result.course);else courses.push({id:result.id,...result.course});void registrarLogAuditoria('Atualizou cadastro do curso '+course.name+'; valores das turmas e faturas preservados.','Configurações / Curso');renderCourses();cancelarEdicaoCurso();alert('Curso salvo com sucesso. Configure os valores no cadastro da turma.');}catch(e){alert('Não foi possível salvar o curso: '+e.message);}finally{salvandoCurso=false;button.disabled=false;button.textContent=document.getElementById('edit-course-id').value?label:'Salvar Curso';}}
+        async function saveCourse(){if(salvandoCurso)return;salvandoCurso=true;const button=document.getElementById('btn-save-course');button.disabled=true;const label=button.textContent;button.textContent='Aguarde…';try{const id=document.getElementById('edit-course-id').value,course={};for(const key of ['name','sigla','nivel','eixo','hours','conselho'])course[key]=document.getElementById('input-course-'+key).value.trim();if(course.nivel==='Supletivo'){course.ejaMode=document.getElementById('course-eja-mode').value;course.ejaStage=document.getElementById('course-eja-stage').value;if(course.ejaMode==='modular')course.modularFinance={qtdParcelas:Number(document.getElementById('course-modular-count').value),valorParcela:Number(document.getElementById('course-modular-value').value),vencimento:Number(document.getElementById('course-modular-day').value)};}const result=await SE7.api('course-save',{...(id?{id}:{}),course});await SE7Reads.refresh('courses');const old=courses.find(c=>c.id===result.id);if(old)Object.assign(old,result.course);else courses.push({id:result.id,...result.course});void registrarLogAuditoria('Atualizou cadastro do curso '+course.name+'; valores das turmas e faturas preservados.','Configurações / Curso');renderCourses();cancelarEdicaoCurso();alert('Curso salvo com sucesso. As cobranças anteriores foram preservadas.');}catch(e){alert('Não foi possível salvar o curso: '+e.message);}finally{salvandoCurso=false;button.disabled=false;button.textContent=document.getElementById('edit-course-id').value?label:'Salvar Curso';}}
         function renderCourses() {
             const list = document.getElementById('courses-list');
             const counter = document.getElementById('total-courses-count');
@@ -2845,7 +2853,7 @@ async function excluirColaborador(id) {
         }
         function fecharModalEdicaoConfiguracao(){if(!edicaoConfiguracaoAtiva)return;const {dialog,form,parent,next,display}=edicaoConfiguracaoAtiva;edicaoConfiguracaoAtiva=null;dialog.close();parent.insertBefore(form,next&&next.parentNode===parent?next:null);form.style.display=display;dialog.remove();}
 
-        function abrirNovoCurso(){cancelarEdicaoCurso();document.getElementById('input-course-nivel').selectedIndex=0;abrirModalEdicaoConfiguracao('subsubtab-cadastrar-curso','Cadastrar novo curso',cancelarEdicaoCurso);}
+        function abrirNovoCurso(){cancelarEdicaoCurso();document.getElementById('input-course-nivel').selectedIndex=0;carregarModalidadeCurso();abrirModalEdicaoConfiguracao('subsubtab-cadastrar-curso','Cadastrar novo curso',cancelarEdicaoCurso);}
         function abrirNovaTurma(){cancelarEdicaoTurma();document.getElementById('input-class-course').value='';document.getElementById('input-class-semester').value='';carregarFinanceiroCadastroTurma(true);atualizarPreviewTurmaAutomatica();abrirModalEdicaoConfiguracao('subsubtab-cadastrar-turma','Cadastrar nova turma',cancelarEdicaoTurma);}
         function abrirNovaDisciplina(){cancelarEdicaoDisciplina();document.getElementById('input-subject-course-select').value=document.getElementById('subjects-list-course').value;abrirModalEdicaoConfiguracao('subsubtab-cadastrar-disciplina','Cadastrar nova disciplina',cancelarEdicaoDisciplina);}
         function editarCurso(id) {
@@ -2857,7 +2865,7 @@ async function excluirColaborador(id) {
             document.getElementById('input-course-nivel').value = c.nivel || '';            
             document.getElementById('input-course-eixo').value = c.eixo || '';
             document.getElementById('input-course-hours').value = c.hours || '';
-            document.getElementById('input-course-conselho').value = c.conselho || '';
+            document.getElementById('input-course-conselho').value = c.conselho || '';carregarModalidadeCurso(c);
 
             document.getElementById('btn-save-course').textContent = "Atualizar Curso";
             document.getElementById('btn-cancel-edit-course').style.display = 'inline-block';
@@ -5420,5 +5428,6 @@ function escutarRegistrosPontoManual() {
 <script src="/assets/se7-busy.js"></script>
 <script src="/assets/se7-matriz-finance.js"></script>
 <script type="module" src="/assets/se7-tuition.js"></script>
+<script src="/assets/se7-account-menu.js"></script>
 </body>
 </html>

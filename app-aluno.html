@@ -1932,6 +1932,12 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
             isAlunoEJA = cursoObj && (/^(eja|supletivo)$/i.test(String(cursoObj.nivel||'').trim()) || /^eja$/i.test(String(cursoObj.sigla||'').trim()) || /eja|supletivo/i.test(cursoObj.name||''));
             
             window.cursoAtualEJA = isAlunoEJA;
+            if(cursoObj?.ejaMode==='modular'){
+                const banner=document.getElementById('banner-padrao-home')||document.getElementById('bloco-acoes-eja');
+                if(banner){banner.replaceChildren();const title=document.createElement('h3'),message=document.createElement('p');title.textContent='Supletivo modular — '+(cursoObj.ejaStage==='medio'?'Ensino Médio':'Ensino Fundamental');message.textContent='As orientações do ambiente modular serão disponibilizadas pela instituição.';banner.append(title,message);banner.removeAttribute('id');}
+                return;
+            }
+
 
             if (isAlunoEJA) {
                 const controle = alunoLogado.controleEJA || { apostilaAtiva: true, provaAtiva: false, dataInicio: '', dataFim: '' };

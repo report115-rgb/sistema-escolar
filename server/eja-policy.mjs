@@ -13,3 +13,5 @@ export function questionsFor(config){if(!config?.provaAtiva)fail(409,'A prova ai
 export function score(questions,answers){const correct=questions.reduce((s,q,i)=>s+(answers[String(i)]===q.correta?1:0),0),grade=Math.round(correct/questions.length*100)/10;return {correct,total:questions.length,grade,approved:grade>=7};}
 export function validAnswers(patch,questions){if(!patch||typeof patch!=='object'||Array.isArray(patch)||Object.keys(patch).length>questions.length)fail(400,'Respostas inválidas.');const out={};for(const [key,v]of Object.entries(patch)){if(!/^(0|[1-9]\d*)$/.test(key)||!questions[Number(key)]||!Number.isInteger(v)||v<0||v>=questions[Number(key)].opcoes.length)fail(400,'Alternativa inválida.');out[key]=v;}return out;}
 export function publicAttempt(a){if(!a)return null;const {questions,...rest}=a;return {...rest,questions:(questions||[]).map(({correta,...q})=>q)};}
+
+export const isSingleExam=c=>isEja(c)&&c?.ejaMode!=='modular';
