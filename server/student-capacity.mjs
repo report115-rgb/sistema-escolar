@@ -10,6 +10,7 @@ export async function studentCapacity(raw,institutionId,user,b){
  const [c,u,s,n]=await Promise.all([tx.get(catalog),tx.get(usage),tx.get(studentRef),tx.get(inbox)]);
  const institution=c.data()?.institutions?.find(i=>i.id===institutionId),plan=c.data()?.plans?.find(p=>p.id===institution?.plan);
  if(!institution||!plan||!Number.isInteger(plan.maxStudents)||plan.maxStudents<1)fail(409,'A instituição precisa de um plano com limite válido.');
+ const limit=plan.maxStudents+(Number.isInteger(institution.additionalStudents)&&institution.additionalStudents>=0?institution.additionalStudents:0);
  let count;if(u.exists)count=u.data().activeStudents;else{const active=await tx.get(scoped.collection('students').where('status','==','Ativo'));count=active.size??active.docs.length;}
  if(!Number.isInteger(count)||count<0)fail(409,'A contagem da instituição precisa ser conferida.');
  let next,event=null,delta=0;const now=new Date().toISOString(),student=s.data();
@@ -32,12 +33,12 @@ export async function studentCapacity(raw,institutionId,user,b){
  if(student.status!=='Ativo'||student.enrollmentRequest||!states[data.type]||typeof data.reason!=='string'||!data.reason.trim()||!/^\d{4}-\d{2}-\d{2}$/.test(data.date||''))fail(400,'Confira os dados da operação de matrícula.');event={id:randomUUID(),type:data.type,state:mode==='request'?'pendente':'efetivada',date:data.date,reason:data.reason.slice(0,2000),previousStatus:student.status,newStatus:mode==='request'?student.status:states[data.type],createdAt:now,actor};patch=mode==='request'?{enrollmentRequest:event}:{status:event.newStatus,enrollmentLastOperation:event};if(mode==='direct')delta=-1;
  }else fail(400,'Operação inválida.');next={...patch,enrollmentHistory:[...history,event]};
  }
- const blocked=delta>0&&!institution.own&&count>=plan.maxStudents;
+ const blocked=delta>0&&!institution.own&&count>=limit;
  const total=blocked?count:Math.max(0,count+delta),entries={...(n.data()?.entries||{})};const key='capacity_'+institutionId;
- if(!institution.own&&total>=plan.maxStudents){const old=entries[key];entries[key]={id:key,type:'capacity',institutionId,institutionName:institution.name,activeStudents:total,limit:plan.maxStudents,at:old?.limit===plan.maxStudents?old.at:now,enforced:true};}else delete entries[key];
+ if(!institution.own&&total>=limit){const old=entries[key];entries[key]={id:key,type:'capacity',institutionId,institutionName:institution.name,activeStudents:total,limit,at:old?.limit===limit?old.at:now,enforced:true};}else delete entries[key];
  tx.set(usage,{activeStudents:total,enforced:true,updatedAt:now});tx.set(inbox,{entries,updatedAt:now});
  if(!blocked){if(s.exists)tx.update(studentRef,next);else tx.create(studentRef,next);}
- return {id,event,blocked,limit:plan.maxStudents};
+ return {id,event,blocked,limit};
  });
  if(result.blocked)fail(409,'O plano atingiu o limite de '+result.limit+' alunos ativos. Solicite a ampliação do plano para matricular ou reativar alunos.');return result;
 }

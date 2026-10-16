@@ -312,5 +312,5 @@ export default async function handler(req,res){
   if(!String(req.headers['content-type']||'').startsWith('application/json'))fail(415,'Envie JSON.');let b;try{b=typeof req.body==='string'?JSON.parse(req.body):req.body;}catch{fail(400,'JSON inválido.');}if(!b||Array.isArray(b)||typeof b.action!=='string'||JSON.stringify(b).length>(b.action==='notices-save'||b.action==='exam-scan-preview'?750000:b.action==='exam-save'?250000:b.action==='platform-student-create'?180000:12000))fail(400,'Requisição inválida.');
   if(!nativeRequestAllowed(req,b))fail(403,'Operação não permitida para o leitor de avaliações.');
   const scoped=await prepareContext(services(),req,b);const result=scoped.result??await dispatch(scoped.services,req,b);res.status(200).json(result);
- }catch(e){const status=e.status||500;if(status===500)console.error('SE7 API',e.code||'internal');res.status(status).json({error:status===500?'Não foi possível concluir. Verifique a configuração do servidor.':e.message});}
+ }catch(e){const status=e.status||500;if(status===500)console.error('SE7 API',e.code||'internal');res.status(status).json({...(e.maintenance?{maintenance:e.maintenance}:{}),error:status===500?'Não foi possível concluir. Verifique a configuração do servidor.':e.message});}
 }

@@ -1,3 +1,4 @@
+import {publicMaintenance} from './platform-maintenance.mjs';
 import {studentCapacity} from './student-capacity.mjs';
 import {institutionDatabase,safePart} from './institution-scope.mjs';
 const fail=(status,message)=>{throw Object.assign(new Error(message),{status});};
@@ -21,7 +22,11 @@ export async function prepareContext({auth,db},req,body){
  if(account.mustChangePassword)fail(403,'Redefina sua senha antes de acessar a instituição.');
  const institutionId=safePart(req.headers['x-se7-institution']);
  if(!account.company&&institutionId!==account.institutionId)fail(403,'Instituição não autorizada para esta conta.');
+ if(body.action==='platform-maintenance')return {result:{maintenance:publicMaintenance((await db.collection('commercialPrivate').doc('maintenance').get()).data(),institutionId)}};
  const catalog=await db.collection('commercialPrivate').doc('catalog').get();const institution=(catalog.data()?.institutions||[]).find(i=>i.id===institutionId);if(!institution)fail(403,'Instituição não autorizada.');
+ const maintenance=(await db.collection('commercialPrivate').doc('maintenance').get()).data(),activeMaintenance=publicMaintenance(maintenance,institutionId);
+ if(body.action==='platform-maintenance')return {result:{maintenance:activeMaintenance}};
+ if(activeMaintenance)throw Object.assign(new Error('Sistema em manutenção. Por favor, aguarde.'),{status:503,maintenance:activeMaintenance});
  const scoped=institutionDatabase(db,institutionId),profile={uid:user.uid,email:user.email||'',nome:account.name||user.name||process.env.COMMERCIAL_OWNER_NAME||'Master',perfil:'master',institutionId,poloId:'',poloIds:[]};
  if(['platform-student-create','platform-enrollment-operation'].includes(body.action))return {result:await studentCapacity(db,institutionId,{...user,role:'master',profile},body)};
  if(body.action==='platform-select'){

@@ -163,7 +163,7 @@
 <link rel="stylesheet" href="/assets/se7-polos.css">
 <script src="/assets/se7-read-policy.js" defer></script>
 <script src="/assets/se7-polos.js" defer></script>
-</head>
+<link rel="stylesheet" href="assets/se7-maintenance.css?v=0.6.0"></head>
 <body class="se7-suite se7-matriz bg-gray-100 dark:bg-slate-900 text-gray-800 dark:text-gray-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-300 pb-16">    
 
 
@@ -1727,7 +1727,7 @@ async function limparLogsAuditoria(){alert('Os registros de auditoria são prese
                 registrarLogAuditoria('Efetuou login no sistema', 'Autenticação');
                 await boasVindas;
                 resetarTemporizadorInatividade();
-            } catch (e) {alert(e.message);}
+            } catch (e) {if(!e.maintenance)alert(e.message);}
             finally {
                 loginMatrizEmAndamento = false;
                 if (botao) {botao.disabled = false;botao.innerHTML = textoOriginal;}
