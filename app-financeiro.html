@@ -170,7 +170,7 @@
 <script defer src="/assets/se7-brand.js"></script>
 <link rel="stylesheet" href="/assets/se7-mobile-access.css">
 <link rel="stylesheet" href="/assets/se7-welcome.css">
-</head>
+<link rel="stylesheet" href="assets/se7-eja.css?v=1"><script defer src="assets/se7-eja-admin.js?v=1"></script></head>
 <body class="se7-suite bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans antialiased h-screen overflow-hidden flex flex-col transition-colors duration-200">
 <div id="se7-welcome" hidden role="status" aria-live="polite" aria-atomic="true">
     <svg class="welcome-art" viewBox="0 0 390 844" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="welcome-mobile-relief" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#1d5889" stop-opacity=".23"/><stop offset="1" stop-color="#0c2d52" stop-opacity="0"/></linearGradient></defs><g class="welcome-relief" fill="url(#welcome-mobile-relief)"><path d="M170-50h68L386 151q25 33 0 67L192 483h-72l191-265q25-33 0-67Z"/><path d="m390 430-280 414h62l218-321Z"/><path d="M-60 638H42q35 0 55 28l135 190h-64L46 684H-60Z"/></g><g class="welcome-wire"><path d="M-55 126C61 122 113 64 178-30"/><path d="M-50 620C70 805 290 808 470 659"/></g><g class="welcome-bloom"><path d="M-55 126C61 122 113 64 178-30"/><path d="M-50 620C70 805 290 808 470 659"/></g></svg>
@@ -1271,7 +1271,7 @@
             faturasDoAluno.forEach(f => {
                 const jaPago = f.status && f.status.toUpperCase().includes('PAGO');
                 const corBadge = jaPago ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : /CANCELADO/i.test(f.status||'')?'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200':'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300';
-                const dataVencimentoFormatada = formatarDataParaExibicao(f.date || f.vencimento);
+                const dataVencimentoFormatada = f.ejaManaged&&!f.date&&!f.vencimento?'A definir após a prova':formatarDataParaExibicao(f.date || f.vencimento);
                 const valorAtual = f.amount || f.valor || '0';
                 const dataPag = formatarDataParaExibicao(f.dataPagamento || '---');
                 const formaPag = f.formaPagamento || 'Manual';

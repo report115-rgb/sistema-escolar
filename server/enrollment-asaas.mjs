@@ -16,6 +16,7 @@ export async function markNew(db,id){await db.collection('se7EnrollmentCandidate
 export async function start(db,id,u){
  if(!['master','secretaria','financeiro'].includes(u.role))fail(403,'Acesso restrito.');
  if(!enabled())return {enabled:false};
+ const managed=await db.collection('se7EjaContracts').doc(id).get();if(managed.exists)return {enabled:false,ejaManaged:true};
  const candidate=await db.collection('se7EnrollmentCandidates').doc(id).get();if(!candidate.exists)return {enabled:false,legacy:true};
  const s=await db.collection('students').doc(id).get();if(!s.exists||!s.data().classId||!s.data().courseId||!['Ativo','Ativa'].includes(s.data().status))return {enabled:true,state:'waiting',message:'Aguardando confirmação da turma e matrícula ativa.'};
  const turma=await db.collection('classes').doc(s.data().classId).get();if(!turma.exists||turma.data().courseId!==s.data().courseId)fail(409,'Confira o curso e a turma da matrícula.');

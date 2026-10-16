@@ -163,7 +163,7 @@
 <link rel="stylesheet" href="/assets/se7-polos.css">
 <script src="/assets/se7-read-policy.js" defer></script>
 <script src="/assets/se7-polos.js" defer></script>
-</head>
+<link rel="stylesheet" href="assets/se7-eja.css?v=1"><script defer src="assets/se7-eja-admin.js?v=1"></script></head>
 <body class="se7-suite se7-matriz bg-gray-100 dark:bg-slate-900 text-gray-800 dark:text-gray-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-300 pb-16">    
 
 
@@ -3577,12 +3577,13 @@ function carregarDatasCalendarioParaFrequencia(){const classId=document.getEleme
         studentData.status = "Ativo";
         studentData.senhaAluno = Array.from(crypto.getRandomValues(new Uint8Array(24)),v=>v.toString(16).padStart(2,'0')).join('');
         studentData.documentos = {};
+        const ejaChoice=await window.SE7EjaAdmin?.newEnrollmentChoice(cursoObj);
         
         // No cadastro novo, se tiver foto temporária, salva; senão, salva vazia
         studentData.fotoAluno = (typeof fotoRostoBase64Temp !== 'undefined' && fotoRostoBase64Temp) ? fotoRostoBase64Temp : "";
 
         const docRef = await db.collection("students").add(studentData);
-        await SE7.api('prepare-student',{id:docRef.id,newEnrollment:true});
+        await SE7.api('prepare-student',{id:docRef.id,newEnrollment:true,...(ejaChoice?{ejaChoice}:{})});
         await SE7.api('whatsapp-consent',{id:docRef.id,optIn:document.getElementById('whatsapp-opt-in-aluno').checked});
         const novoAlunoId = docRef.id;
         void SE7Email.notify('email-enrollment',{studentId:novoAlunoId});
@@ -3597,7 +3598,7 @@ function carregarDatasCalendarioParaFrequencia(){const classId=document.getEleme
         try {
             void notificarCentralWhatsAppMatriz(novoAlunoId);
             
-            const automatico=await SE7EnrollmentAuto.start(novoAlunoId);
+            const automatico=ejaChoice?true:await SE7EnrollmentAuto.start(novoAlunoId);if(ejaChoice)void SE7EjaAdmin.process(novoAlunoId,1).catch(()=>console.warn('EJA: cobrança aguardando conferência financeira.'));
             const valoresTurma=SE7Tuition.tuitionFor(cursoObj,classes.find(t=>t.id===classId));
             if (!automatico && valoresTurma && valoresTurma.valorParcela && valoresTurma.qtdParcelas) {
                 const qtdP = valoresTurma.qtdParcelas;
@@ -4646,6 +4647,7 @@ setInterval(() => {
     const agora = new Date();
 
     students.forEach(s => {
+        if(s.ejaManaged)return;
         if (s.controleEJA && s.controleEJA.dataInicio && s.controleEJA.dataFim) {
             const inicio = new Date(s.controleEJA.dataInicio);
             const fim = new Date(s.controleEJA.dataFim);

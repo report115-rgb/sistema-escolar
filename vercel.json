@@ -14,6 +14,10 @@
     "api/asaas-webhook.js": {
       "maxDuration": 60,
       "includeFiles": "{server/**,assets/se7-exam-calendar.js,assets/se7-ingress-policy.js,assets/se7-tuition.js,assets/se7-class-format.js,assets/se7-manual-grades.js}"
+    },
+    "api/eja-maintenance.js": {
+      "maxDuration": 60,
+      "includeFiles": "{server/**,assets/se7-tuition.js}"
     }
   },
   "headers": [
@@ -67,6 +71,12 @@
           "value": "no-store"
         }
       ]
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/eja-maintenance",
+      "schedule": "25 23 * * *"
     }
   ]
 }

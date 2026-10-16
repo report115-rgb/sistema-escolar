@@ -1,3 +1,5 @@
+import * as eja from '../server/eja-workflow.mjs';
+import {isEja} from '../server/eja-policy.mjs';
 import * as polos from '../server/polos.mjs';
 import {scannerCors,nativeRequestAllowed} from '../server/scanner-access.mjs';
 import * as documentAuthorizations from '../server/academic-document-authorizations.mjs';
@@ -77,20 +79,21 @@ async function dispatchOperation({auth,db},req,b){
  const action=b.action;
  if(action==='academic-document-verify'){academicDocuments.publicLimit(req);return academicDocuments.verify(db,b);}
  if(action==='public-info')return publicInfo(db);
- if(action==='catalog'){const [snap,ps]=await Promise.all([db.collection('courses').get(),db.collection('polos').where('active','==',true).get()]);return {courses:snap.docs.map(d=>({id:d.id,name:d.data().name||'Curso'})),polos:ps.docs.map(d=>({id:d.id,name:d.data().name,city:d.data().city,state:d.data().state}))};}
+ if(action==='catalog'){const [snap,ps]=await Promise.all([db.collection('courses').get(),db.collection('polos').where('active','==',true).get()]);return {ejaConditions:await eja.publicConditions(db),courses:snap.docs.map(d=>({id:d.id,name:d.data().name||'Curso',isEja:isEja(d.data())})),polos:ps.docs.map(d=>({id:d.id,name:d.data().name,city:d.data().city,state:d.data().state}))};}
  if(action==='student-login')return loginStudent(auth,db,req,b);
  if(action==='signup'){
   await limits(db,req,'signup');password(b.password);const data=b.student||{};if(!validCPF(data.cpf))fail(400,'CPF inválido.');for(const k of ['fullname','birthDate','gender','rg','whatsapp','cep','street','number','neighborhood','city','state','courseId'])if(typeof data[k]!=='string'||!data[k].trim()||data[k].length>200)fail(400,`Preencha ${k}.`);
-  if(data.email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email))fail(400,'E-mail inválido.');const polo=await polos.requirePolo(db,data.poloId);const course=await db.collection('courses').doc(validId(data.courseId)).get();if(!course.exists)fail(400,'Curso inválido.');
+  if(data.email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email))fail(400,'E-mail inválido.');const polo=await polos.requirePolo(db,data.poloId);const course=await db.collection('courses').doc(validId(data.courseId)).get();if(!course.exists)fail(400,'Curso inválido.');const ejaContract=await eja.prepareEnrollment(db,course.data(),data);
   for(const value of Object.values(data))if(typeof value==='string'&&(value.length>1000||/[<>]/.test(value)))fail(400,'Texto de cadastro inválido.');
   const fields=['fullname','birthDate','gender','cpf','rg','whatsapp','email','address','endereco','cep','street','number','neighborhood','city','state','courseId'];const s=Object.fromEntries(fields.filter(k=>typeof data[k]==='string').map(k=>[k,data[k].trim()]));s.cpf=s.cpf.replace(/\D/g,'');
   const ref=db.collection('students').doc();const uid=studentUid(ref.id),idx=db.collection('se7CpfIndex').doc(cpfKey(s.cpf));
   await db.runTransaction(async tx=>{const d=await tx.get(idx);if(d.exists)fail(409,'Já existe um cadastro com este CPF. Solicite ajuda à instituição.');tx.set(idx,{studentId:ref.id,pending:true});});
   try{await auth.createUser({uid,email:alias(ref.id),password:b.password,displayName:s.fullname});await claims(auth,uid,{role:'aluno',studentId:ref.id,portalVersion:0});
-   const code=`MAT-${new Date().getFullYear()}-${ref.id.slice(-8).toUpperCase()}`;await ref.set({...s,poloId:polo.id,poloName:polo.name,code,dob:s.birthDate,classId:'',status:'Ativo',documentos:{},attendance:{},enrollmentDate:enrollmentToday(),enrollmentRegisteredAt:new Date().toISOString(),academicEntry:{version:1,state:'awaiting_class',startDate:'',notTaken:[],planned:[]},se7AuthUid:uid,portalSessionVersion:0,createdAt:new Date().toISOString()});await idx.set({studentId:ref.id});const customToken=await auth.createCustomToken(uid,{role:'aluno',studentId:ref.id,portalVersion:0});await enrollmentAsaas.markNew(db,ref.id);try{await setConsent(db,ref.id,data.whatsappOptIn===true,{uid,role:'aluno'});await enrollmentNotifications(db,ref.id,{uid,role:'aluno'});}catch{console.warn('SE7 WhatsApp: matrícula salva; notificação não concluída.');}return {customToken,student:{id:ref.id,...s,code}};
-  }catch(e){await auth.deleteUser(uid).catch(()=>{});await ref.delete().catch(()=>{});await idx.delete();throw e;}
+   const code=`MAT-${new Date().getFullYear()}-${ref.id.slice(-8).toUpperCase()}`;await ref.set({...s,poloId:polo.id,poloName:polo.name,code,dob:s.birthDate,classId:'',status:'Ativo',documentos:{},attendance:{},enrollmentDate:enrollmentToday(),enrollmentRegisteredAt:new Date().toISOString(),academicEntry:{version:1,state:'awaiting_class',startDate:'',notTaken:[],planned:[]},se7AuthUid:uid,portalSessionVersion:0,createdAt:new Date().toISOString()});await idx.set({studentId:ref.id});const customToken=await auth.createCustomToken(uid,{role:'aluno',studentId:ref.id,portalVersion:0});if(ejaContract)await eja.initialize(db,ref.id,{...s,poloId:polo.id},ejaContract);if(!ejaContract)await enrollmentAsaas.markNew(db,ref.id);try{await setConsent(db,ref.id,data.whatsappOptIn===true,{uid,role:'aluno'});await enrollmentNotifications(db,ref.id,{uid,role:'aluno'});}catch{console.warn('SE7 WhatsApp: matrícula salva; notificação não concluída.');}return {customToken,ejaEnabled:!!ejaContract,student:{id:ref.id,...s,code}};
+  }catch(e){await auth.deleteUser(uid).catch(()=>{});await ref.delete().catch(()=>{});await db.collection('se7EjaContracts').doc(ref.id).delete().catch(()=>{});await idx.delete();throw e;}
  }
  const u=await identity(auth,db,req);req.se7AuditIdentity=u;await limits(db,req,'gateway:'+u.uid);
+ if(action.startsWith('eja-'))return eja.dispatch(db,b,u);
  if(action==='polo-catalog')return polos.catalog(db,u);
  if(action==='polo-state')return polos.setActive(db,b,u);
  if(action==='polo-save')return polos.save(db,b,u);
@@ -238,7 +241,7 @@ async function dispatchOperation({auth,db},req,b){
   if(action==='student-config'){const d=(await db.collection('config').doc('institution').get()).data()||{};return {...await publicInfo(db),gdriveUrl:typeof d.gdriveUrl==='string'?d.gdriveUrl:''};}
   fail(403,'Operação não permitida.');
  }
- if(action==='prepare-student'){if(!['master','secretaria'].includes(u.role))fail(403,'Acesso restrito.');const d=await db.collection('students').doc(validId(b.id)).get();if(!d.exists)fail(404,'Aluno não encontrado.');await prepareStudent(db,d);if(b.newEnrollment===true&&d.createTime?.toMillis()>Date.now()-600000){await enrollmentAsaas.markNew(db,d.id);await academicIngress.stampNew(db,d.id);}return {ok:true};}
+ if(action==='prepare-student'){if(!['master','secretaria'].includes(u.role))fail(403,'Acesso restrito.');const d=await db.collection('students').doc(validId(b.id)).get();if(!d.exists)fail(404,'Aluno não encontrado.');await prepareStudent(db,d);if(b.newEnrollment===true&&d.createTime?.toMillis()>Date.now()-600000){const c=await db.collection('courses').doc(d.data().courseId).get(),contract=await eja.prepareEnrollment(db,c.data(),{ejaPaymentMode:b.ejaChoice?.paymentMode,ejaCardInstallments:b.ejaChoice?.cardInstallments,ejaPricingRevision:b.ejaChoice?.pricingRevision});if(contract)await eja.initialize(db,d.id,d.data(),contract);else await enrollmentAsaas.markNew(db,d.id);await academicIngress.stampNew(db,d.id);}return {ok:true};}
  if(action==='attendance'){
   if(!['totem','master'].includes(u.role))fail(403,'Acesso restrito ao Totem.');await limits(db,req,'attendance:'+u.uid);
   if(typeof b.qr!=='string'||!/^SE7:ATTENDANCE:2:[a-f0-9]{48}$/.test(b.qr))fail(400,'QR Code antigo ou inválido. Abra novamente a carteirinha no aplicativo atualizado.');

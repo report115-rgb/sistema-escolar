@@ -1,5 +1,5 @@
 import {validateServerDependencies} from './deployment-files.mjs';
-await validateServerDependencies();
+await validateServerDependencies(process.cwd(),['api/se7.js','api/asaas-webhook.js','api/whatsapp-webhook.js','api/eja-maintenance.js']);
 import {buildSafeHandlers} from './security-handlers.mjs';
 await buildSafeHandlers();
 import {mkdir,copyFile,cp,rm} from 'node:fs/promises';
