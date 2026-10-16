@@ -12,6 +12,7 @@ function dadosSolicitacaoMatricula(){const studentId=document.getElementById('ca
 function autorMatricula(){const user=(typeof sessaoRealMatriz!=='undefined'&&sessaoRealMatriz)||JSON.parse(sessionStorage.getItem('usuario_logado')||'{}');return {uid:firebase.auth().currentUser.uid,name:user.nome||user.email||'Colaborador',role:user.perfil};}
 async function gravarOperacaoMatricula(studentId,mode,data={}){
  if(!podeOperarMatricula())throw Error('Apenas master ou secretaria podem alterar matrículas.');
+ if(window.SE7Platform){const result=await SE7.api('platform-enrollment-operation',{id:studentId,mode,data});return result.event;}
  const ref=db.collection('students').doc(studentId),actor=autorMatricula(),now=new Date().toISOString(),eventId=crypto.randomUUID();
  const event=await db.runTransaction(async tx=>{const snap=await tx.get(ref);if(!snap.exists)throw Error('Aluno não encontrado.');const student=snap.data();const history=Array.isArray(student.enrollmentHistory)?student.enrollmentHistory:[];let event,patch;
  if(mode==='reactivate'){

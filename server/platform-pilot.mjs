@@ -1,3 +1,4 @@
+import {studentCapacity} from './student-capacity.mjs';
 import {institutionDatabase,safePart} from './institution-scope.mjs';
 const fail=(status,message)=>{throw Object.assign(new Error(message),{status});};
 export const pilotAllowed=new Set(['session','audit-event','audit-list','staff-list','exam-catalog','notices-catalog','notices-get','notices-feed','course-save','class-save','polo-catalog','polo-save','polo-state','academic-entry-migrate','notices-list','notices-save','notices-delete']);
@@ -22,6 +23,7 @@ export async function prepareContext({auth,db},req,body){
  if(!account.company&&institutionId!==account.institutionId)fail(403,'Instituição não autorizada para esta conta.');
  const catalog=await db.collection('commercialPrivate').doc('catalog').get();const institution=(catalog.data()?.institutions||[]).find(i=>i.id===institutionId);if(!institution)fail(403,'Instituição não autorizada.');
  const scoped=institutionDatabase(db,institutionId),profile={uid:user.uid,email:user.email||'',nome:account.name||user.name||process.env.COMMERCIAL_OWNER_NAME||'Master',perfil:'master',institutionId,poloId:'',poloIds:[]};
+ if(['platform-student-create','platform-enrollment-operation'].includes(body.action))return {result:await studentCapacity(db,institutionId,{...user,role:'master',profile},body)};
  if(body.action==='platform-select'){
  await db.runTransaction(async tx=>{const config=scoped.collection('config').doc('institution');const a=await tx.get(config);if(account.company)tx.set(db.collection('academicPlatformOwners').doc(user.uid),{active:true});if(!a.exists)tx.set(config,{name:institution.name,razao:institution.legalName||'',cnpj:institution.cnpj||'',email:institution.contactEmail||'',platformInstitutionId:institutionId});});
  return {result:{institution:{id:institutionId,name:institution.name},profile}};

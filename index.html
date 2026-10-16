@@ -3574,7 +3574,8 @@ function carregarDatasCalendarioParaFrequencia(){const classId=document.getEleme
         // No cadastro novo, se tiver foto temporária, salva; senão, salva vazia
         studentData.fotoAluno = (typeof fotoRostoBase64Temp !== 'undefined' && fotoRostoBase64Temp) ? fotoRostoBase64Temp : "";
 
-        const docRef = await db.collection("students").add(studentData);
+        const docRef = window.SE7Platform?await SE7.api('platform-student-create',{id:crypto.randomUUID(),student:studentData}):await db.collection("students").add(studentData);
+        if(window.SE7Platform){closeNewStudentModal();fotoRostoBase64Temp='';alert('Matrícula salva na instituição de testes. Integrações externas continuam desativadas.');return;}
         await SE7.api('prepare-student',{id:docRef.id,newEnrollment:true});
         await SE7.api('whatsapp-consent',{id:docRef.id,optIn:document.getElementById('whatsapp-opt-in-aluno').checked});
         const novoAlunoId = docRef.id;
