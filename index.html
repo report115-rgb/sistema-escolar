@@ -164,6 +164,7 @@
 <script src="/assets/se7-read-policy.js" defer></script>
 <script src="/assets/se7-polos.js" defer></script>
 <link rel="stylesheet" href="assets/se7-eja.css?v=1"><script defer src="assets/se7-eja-admin.js?v=1"></script><link rel="stylesheet" href="/assets/se7-account-menu.css">
+<link rel="stylesheet" href="/assets/se7-ambient.css">
 </head>
 <body class="se7-suite se7-matriz bg-gray-100 dark:bg-slate-900 text-gray-800 dark:text-gray-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-300 pb-16">    
 
@@ -4653,28 +4654,8 @@ async function salvarAgendamentoProvaAluno(studentId) {
     }
 }
 
-// 3. Verificador automático executado a cada minuto para travar/destravar conforme o agendamento
-setInterval(() => {
-    const agora = new Date();
+// A janela da prova é validada pelo servidor, sem gravar liberações a cada minuto.
 
-    students.forEach(s => {
-        if(s.ejaManaged)return;
-        if (s.controleEJA && s.controleEJA.dataInicio && s.controleEJA.dataFim) {
-            const inicio = new Date(s.controleEJA.dataInicio);
-            const fim = new Date(s.controleEJA.dataFim);
-
-            let deveEstarLiberada = agora >= inicio && agora <= fim;
-
-            if (s.controleEJA.provaAtiva !== deveEstarLiberada) {
-                s.controleEJA.provaAtiva = deveEstarLiberada;
-                // Atualiza em background no banco de dados
-                db.collection("students").doc(s.id).set({
-                    controleEJA: s.controleEJA
-                }, { merge: true }).catch(err => console.error(err));
-            }
-        }
-    });
-}, 60000);
 
 async function alternarApostilaIndividualAluno(studentId, novoStatus) {
     try {
@@ -5432,5 +5413,6 @@ function escutarRegistrosPontoManual() {
 <script src="/assets/se7-matriz-finance.js"></script>
 <script type="module" src="/assets/se7-tuition.js"></script>
 <script src="/assets/se7-account-menu.js"></script>
+<script src="/assets/se7-ambient.js"></script>
 </body>
 </html>

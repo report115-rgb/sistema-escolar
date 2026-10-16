@@ -30,7 +30,7 @@ service cloud.firestore {
    allow get: if finance() || ownPolo(resource.data) || (studentActive() && id == studentId());
    allow list: if finance() || ownPolo(resource.data);
    allow create: if validClass(request.resource.data) && academic() && (master() || (ownPolo(request.resource.data) && exists(/databases/$(database)/documents/polos/$(request.resource.data.poloId)) && get(/databases/$(database)/documents/polos/$(request.resource.data.poloId)).data.active == true)) && !request.resource.data.keys().hasAny(['se7AuthUid','portalCredential','portalBlocked','portalMustChangePassword','portalSessionVersion']);
-   allow update: if validClass(request.resource.data) && academic() && (master() || (ownPolo(resource.data) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['poloId','poloName','poloUpdatedAt','poloUpdatedBy']))) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['se7AuthUid','portalCredential','portalBlocked','portalMustChangePassword','portalSessionVersion','portalTemporaryExpiresAt','se7AuthLock']);
+   allow update: if validClass(request.resource.data) && academic() && (master() || (ownPolo(resource.data) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['poloId','poloName','poloUpdatedAt','poloUpdatedBy','controleEJA']))) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['se7AuthUid','portalCredential','portalBlocked','portalMustChangePassword','portalSessionVersion','portalTemporaryExpiresAt','se7AuthLock']);
 
   }
   match /courses/{id} {allow read: if staff() || (studentActive() && id == get(/databases/$(database)/documents/students/$(studentId())).data.courseId);allow write: if master();}
