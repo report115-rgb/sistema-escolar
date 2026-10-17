@@ -858,7 +858,7 @@
 <button id="btn-acessos-portal" class="subtab-button px-4 py-2 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" style="display:none;" onclick="openSubTab(event,'subtab-acessos-portal')">Acessos ao Portal</button>
             </div>
 <div id="subtab-avisos-portal" class="subtab-content" style="display:none;"><section id="se7-notices-manager" class="se7-work-panel"></section></div>
-<div id="subtab-acessos-portal" class="subtab-content space-y-4" style="display:none;"><h2 class="text-xl font-bold">Acessos ao Portal do Aluno</h2><p class="text-sm">Entradas, atividades e abas mais acessadas desde a atualização do aplicativo. Senhas pessoais não são exibidas. Administração restrita ao master.</p><div class="flex gap-2"><input id="portal-acessos-busca" placeholder="Buscar nome ou matrícula" oninput="renderizarPainelAcessosPortal()" class="flex-1 border rounded-lg p-2 dark:bg-slate-900"><button onclick="carregarPainelAcessosPortal()" class="bg-blue-600 text-white rounded-lg px-4">Atualizar</button></div><div id="portal-senha-temporaria" class="p-4 bg-amber-100 text-amber-950 rounded-lg" style="display:none;"></div><button onclick="document.getElementById('portal-senha-temporaria').textContent='';document.getElementById('portal-senha-temporaria').style.display='none';" class="text-xs">Ocultar senha temporária</button><div id="portal-acessos-lista" class="space-y-3"></div><div id="portal-acessos-historico" class="p-4 rounded-xl bg-gray-50 dark:bg-slate-900 space-y-1"></div></div>
+<div id="subtab-acessos-portal" class="subtab-content space-y-4" style="display:none;"><h2 class="text-xl font-bold">Acessos ao Portal do Aluno</h2><p class="text-sm">Entradas, atividades e abas mais acessadas desde a atualização do aplicativo. Senhas pessoais não são exibidas. Administração restrita ao master.</p><div class="flex gap-2"><input id="portal-acessos-busca" placeholder="Buscar nome ou matrícula" oninput="renderizarPainelAcessosPortal()" class="flex-1 border rounded-lg p-2 dark:bg-slate-900"><button onclick="carregarPainelAcessosPortal()" class="bg-blue-600 text-white rounded-lg px-4">Atualizar</button></div><div id="portal-acessos-lista" class="space-y-3"></div><div id="portal-acessos-historico" class="p-4 rounded-xl bg-gray-50 dark:bg-slate-900 space-y-1"></div></div>
         </section></div>
 
         <!-- FINANCEIRO -->
@@ -1960,7 +1960,7 @@ function renderizarPainelAcessosPortal() {
         const ranking=Object.entries(a.portalTabCounts||{}).filter(([k])=>nomesAbasPortal[k]).sort((x,y)=>y[1]-x[1]);
         row.innerHTML=`<div class="font-bold">${portalTexto(a.fullname)} <span class="text-xs font-normal">${portalTexto(a.code)}</span></div><div class="text-xs">${a.portalBlocked?'Bloqueado':'Liberado'} • Senha: ${a.portalMustChangePassword?'troca obrigatória':a.se7AuthUid?'Authentication preparado':'cadastro a preparar'}<br>Última entrada: ${portalTexto(portalData(a.portalLastLoginAt))}<br>Última atividade: ${portalTexto(portalData(a.portalLastAccessAt))}<br>Entradas registradas: ${Number(a.portalLoginCount)||0}<br>Abas mais acessadas: ${ranking.length?ranking.map(([k,n])=>`${nomesAbasPortal[k]} (${Number(n)||0})`).join(' • '):'Sem registros'}</div>`;
         const actions=document.createElement('div');actions.className='flex flex-wrap gap-2';
-        for(const [label,fn] of [['Histórico',()=>verHistoricoPortal(a.id)],['Redefinir acesso',()=>redefinirAcessoPortal(a.id)],[a.portalBlocked?'Liberar acesso':'Bloquear acesso',()=>alternarBloqueioPortal(a.id)]]){const b=document.createElement('button');b.textContent=label;b.className='px-3 py-2 rounded-lg bg-blue-100 text-blue-900 text-xs';b.onclick=fn;actions.appendChild(b);}
+        for(const [label,fn] of [['Histórico',()=>verHistoricoPortal(a.id)],[a.portalBlocked?'Liberar acesso':'Bloquear acesso',()=>alternarBloqueioPortal(a.id)]]){const b=document.createElement('button');b.textContent=label;b.className='px-3 py-2 rounded-lg bg-blue-100 text-blue-900 text-xs';b.onclick=fn;actions.appendChild(b);}
         row.appendChild(actions);box.appendChild(row);
     }
     if(!lista.length) box.textContent='Nenhum aluno encontrado.';
@@ -1982,7 +1982,7 @@ async function verHistoricoPortal(id) {
         box.scrollIntoView({behavior:'smooth',block:'start'});
     }catch(e){if(versao===portalHistoricoVersao)box.textContent='Erro ao consultar histórico: '+e.message;}
 }
-async function redefinirAcessoPortal(id){if(!usuarioMasterAtivo())return;if(!confirm('Gerar senha temporária válida por 24 horas?'))return;try{const d=await SE7.api('reset-student',{id});const box=document.getElementById('portal-senha-temporaria');box.textContent='Senha temporária: '+d.temporary+' — entregue ao aluno e oculte após anotar.';box.style.display='block';await carregarPainelAcessosPortal();}catch(e){alert(e.message);}}
+
 async function alternarBloqueioPortal(id){if(!usuarioMasterAtivo())return;const a=portalAlunosPainel.find(a=>a.id===id);if(!a)return;try{await SE7.api('block-student',{id,blocked:!a.portalBlocked});await carregarPainelAcessosPortal();}catch(e){alert(e.message);}}
 
         function fazerLoginAluno(){location.href='/app-aluno.html';}
@@ -2078,7 +2078,7 @@ async function rejeitarSolicitacaoFirebase(id) {
         async function executarRedefinicaoSenha(){try{await SE7.recover(document.getElementById('forgot-user-email').value.trim());alert('Se a conta existir, você receberá instruções no e-mail.');fecharModalEsqueciSenhaAdmin();}catch(e){alert('Não foi possível enviar a recuperação. Confira o e-mail.');}}
 
         function executarRedefinicaoSenhaAluno() {
-            alert('Solicite uma senha temporária à instituição. A redefinição está disponível ao master em Portal do Aluno → Acessos ao Portal.');
+            alert('Solicite uma senha temporária à instituição. A geração está disponível na ficha de consulta do aluno → Gerar senha temporária.');
         }
 
         let saidaMatrizEmAndamento = false;
@@ -2188,7 +2188,7 @@ async function rejeitarSolicitacaoFirebase(id) {
     const acessoMaster=perfil==='master'&&usuarioMasterAtivo()&&!sessionStorage.getItem('se7_matriz_perfil_visualizado');
     document.getElementById('btn-avisos-portal').style.display=acessoMaster?'inline-block':'none';
     document.getElementById('nav-btn-portal-admin').style.display=acessoMaster?'flex':'none';
-    if(!acessoMaster){document.getElementById('tab-portal-admin').style.display='none';document.getElementById('portal-senha-temporaria').textContent='';document.getElementById('portal-senha-temporaria').style.display='none';}
+    if(!acessoMaster){document.getElementById('tab-portal-admin').style.display='none';}
     window.SE7PortalPreview?.visibility(acessoMaster);
     if(!acessoMaster){document.getElementById('subtab-avisos-portal').style.display='none';document.getElementById('se7-notices-manager').replaceChildren();}
     const botaoTotem = document.getElementById('btn-subtab-gestao-totem');
@@ -5408,7 +5408,7 @@ function escutarRegistrosPontoManual() {
 <script src="/assets/se7-academic-documents.js"></script><script src="/assets/se7-template-editor.js"></script>
 <link rel="stylesheet" href="/assets/se7-exams.css">
 <script src="/assets/vendor/pdf-lib.min.js"></script><script src="/assets/vendor/fontkit.umd.min.js"></script><script src="/assets/vendor/jsQR.js"></script><script src="/assets/vendor/qrcode.js"></script><script src="/assets/se7-exam-omr.js"></script><script src="/assets/se7-exam-pdf.js"></script><script src="/assets/se7-exam-calendar.js" type="module"></script><script src="/assets/se7-exams.js"></script>
-<link rel="stylesheet" href="/assets/se7-student-sheet.css"><script src="/assets/se7-student-sheet.js"></script>
+<link rel="stylesheet" href="/assets/se7-student-sheet.css?v=senha-ficha-1"><script src="/assets/se7-student-sheet.js?v=senha-ficha-1"></script>
 <script src="/assets/se7-academic-entry.js"></script>
 <script src="/assets/se7-enrollment-auto.js"></script>
 <script type="module" src="/assets/se7-ingress-policy.js"></script><script src="/assets/se7-ingress.js"></script>

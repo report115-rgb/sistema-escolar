@@ -295,19 +295,20 @@ async function dispatchOperation({auth,db},req,b,delegated=null){
    return {name:student.fullname||'Aluno',repeated:existing.exists,emailStudentId:studentRef.id,emailDate:date,classId:student.classId};
   });let emailJobs=[];try{const subject=await mail.calendarSubject(db,attendanceResult.classId,attendanceResult.emailDate);const job=await mail.queuePresence(db,attendanceResult.emailStudentId,attendanceResult.emailDate,subject,'totem',u.uid);if(job)emailJobs=[job];}catch{console.warn('Presença salva; aviso de e-mail não preparado.');}return {name:attendanceResult.name,repeated:attendanceResult.repeated,emailJobs};
  }
+ if(action==='reset-student'){
+  if(!['master','secretaria'].includes(u.role))fail(403,'Apenas o master e a secretaria podem gerar senha temporária.');
+  const id=validId(b.id),ref=db.collection('students').doc(id);const doc=await ref.get();if(!doc.exists)fail(404,'Aluno não encontrado.');polos.assertStudent(u,doc.data());await prepareStudent(db,doc);
+  const {lock}=await lockStudent(db,id);try{const fresh=(await ref.get()).data();const uid=studentUid(id),temporary=randomBytes(9).toString('hex');let user;try{user=await auth.getUser(uid);}catch(e){if(e.code!=='auth/user-not-found')throw e;}
+   if(user)await auth.updateUser(uid,{password:temporary});else await auth.createUser({uid,email:alias(id),password:temporary,displayName:fresh.fullname||'Aluno'});
+   const v=(fresh.portalSessionVersion||0)+1;await claims(auth,uid,{role:'aluno',studentId:id,portalVersion:v});await auth.revokeRefreshTokens(uid);await ref.update({portalMustChangePassword:true,portalTemporaryExpiresAt:new Date(Date.now()+86400000).toISOString(),portalSessionVersion:v});await db.collection('se7Credentials').doc(id).delete();await audit(db,id,u,'Redefinição de acesso');return {temporary};
+  }finally{await unlock(ref,lock);}
+ }
  master(u);
  if(action==='health'){return {ok:true,project:PROJECT,uid:u.uid};}
  if(action==='migrate-students'){
   const limit=30;let query=db.collection('students').orderBy('__name__').limit(limit);if(b.after)query=query.startAfter(validId(b.after));const snap=await query.get();const results=[];
   for(const d of snap.docs){try{await prepareStudent(db,d);results.push({id:d.id,ok:true});}catch(e){results.push({id:d.id,ok:false,error:e.message});}}
   return {results,next:snap.size===limit?snap.docs.at(-1).id:null};
- }
- if(action==='reset-student'){
-  const id=validId(b.id),ref=db.collection('students').doc(id);const doc=await ref.get();if(!doc.exists)fail(404,'Aluno não encontrado.');await prepareStudent(db,doc);
-  const {lock}=await lockStudent(db,id);try{const fresh=(await ref.get()).data();const uid=studentUid(id),temporary=randomBytes(9).toString('hex');let user;try{user=await auth.getUser(uid);}catch(e){if(e.code!=='auth/user-not-found')throw e;}
-   if(user)await auth.updateUser(uid,{password:temporary});else await auth.createUser({uid,email:alias(id),password:temporary,displayName:fresh.fullname||'Aluno'});
-   const v=(fresh.portalSessionVersion||0)+1;await claims(auth,uid,{role:'aluno',studentId:id,portalVersion:v});await auth.revokeRefreshTokens(uid);await ref.update({portalMustChangePassword:true,portalTemporaryExpiresAt:new Date(Date.now()+86400000).toISOString(),portalSessionVersion:v});await db.collection('se7Credentials').doc(id).delete();await audit(db,id,u,'Redefinição de acesso');return {temporary};
-  }finally{await unlock(ref,lock);}
  }
  if(action==='block-student'){
   const id=validId(b.id),ref=db.collection('students').doc(id);if(typeof b.blocked!=='boolean')fail(400,'Situação inválida.');await ref.update({portalBlocked:b.blocked,portalSessionVersion:F.increment(1)});try{await auth.updateUser(studentUid(id),{disabled:b.blocked});await auth.revokeRefreshTokens(studentUid(id));}catch(e){if(e.code!=='auth/user-not-found')throw e;}await audit(db,id,u,b.blocked?'Acesso bloqueado':'Acesso liberado');return {ok:true};

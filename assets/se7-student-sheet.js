@@ -12,6 +12,30 @@
  const header=el('header'),title=el('h2');title.id='se7-sheet-title';const close=el('button','Fechar');close.type='button';close.onclick=()=>dialog.close();header.append(title,close);const subtitle=el('p','Ficha de consulta — somente visualização'),nav=el('nav'),content=el('section');content.setAttribute('aria-live','polite');dialog.append(header,subtitle,nav,content);
  dialog.addEventListener('close',()=>{sequence++;current=null;content.replaceChildren();if(scrollLock){document.documentElement.style.overflow=scrollLock.html;document.body.style.overflow=scrollLock.body;scrollLock=null;}});
  dialog.addEventListener('wheel',event=>{const inside=content.contains(event.target),max=content.scrollHeight-content.clientHeight;if(!inside||max<=0||(event.deltaY<0&&content.scrollTop<=0)||(event.deltaY>0&&content.scrollTop>=max-1))event.preventDefault();},{passive:false});
+ const canReset=()=>['master','secretaria'].includes(JSON.parse(sessionStorage.getItem('usuario_logado')||'{}').perfil);
+ const accessDialog=el('dialog');accessDialog.className='se7-student-access';accessDialog.setAttribute('aria-labelledby','se7-access-title');
+ const accessTitle=el('h2','Gerar senha temporária');accessTitle.id='se7-access-title';
+ const accessBody=el('div'),accessActions=el('div');accessActions.className='se7-access-actions';
+ const generate=el('button','Gerar senha temporária'),copy=el('button','Copiar dados de acesso'),dismiss=el('button','Fechar');
+ for(const b of [generate,copy,dismiss])b.type='button';copy.hidden=true;
+ let accessStudent=null,accessText='',accessBusy=false;
+ const accessStatus=el('p');accessStatus.setAttribute('role','status');
+ accessActions.append(generate,copy,dismiss);accessDialog.append(accessTitle,accessBody,accessStatus,accessActions);
+ function clearAccess(){accessStudent=null;accessText='';accessBody.replaceChildren();accessStatus.textContent='';copy.hidden=true;}
+ accessDialog.addEventListener('close',clearAccess);accessDialog.addEventListener('cancel',e=>{if(accessBusy)e.preventDefault();});
+ dismiss.onclick=()=>accessDialog.close();
+ function openAccess(){if(!canReset()||!current)return;const student=students.find(s=>s.id===current.id);if(!student)return;clearAccess();accessStudent={id:student.id,fullname:student.fullname,cpf:student.cpf};
+  accessBody.append(el('p',student.fullname),el('p','A nova senha substituirá a senha anterior e encerrará as sessões do aluno. Ela vale por 24 horas; o aluno deverá criar outra senha ao entrar.'));
+  generate.hidden=false;generate.disabled=false;dismiss.disabled=false;accessDialog.showModal();
+ }
+ generate.onclick=async()=>{if(accessBusy||!canReset()||!accessStudent)return;const target=accessStudent;accessBusy=true;generate.disabled=true;dismiss.disabled=true;generate.textContent='Aguarde…';accessStatus.textContent='Gerando os dados de acesso…';
+  try{const result=await SE7.api('reset-student',{id:target.id});if(!result.temporary)throw Error('O servidor não retornou a senha temporária.');
+   accessText='Olá, '+target.fullname+'!\nSeus dados de acesso ao Portal do Aluno:\nCPF: '+cpf(target.cpf)+'\nSenha temporária: '+result.temporary+'\n\nA senha vale por 24 horas. Ao entrar, crie sua nova senha. Não compartilhe seus dados de acesso.';
+   const text=el('textarea');text.readOnly=true;text.value=accessText;text.rows=9;text.setAttribute('aria-label','Dados de acesso para copiar');accessBody.replaceChildren(text);generate.hidden=true;copy.hidden=false;accessStatus.textContent='Senha temporária gerada. Copie e envie somente ao aluno.';
+  }catch(e){accessStatus.textContent='Não foi possível gerar a senha: '+e.message;}finally{accessBusy=false;generate.disabled=false;dismiss.disabled=false;generate.textContent='Gerar senha temporária';}
+ };
+ copy.onclick=async()=>{try{await navigator.clipboard.writeText(accessText);accessStatus.textContent='Dados de acesso copiados.';}catch{const text=accessBody.querySelector('textarea');text?.focus();text?.select();accessStatus.textContent='Selecione o texto e pressione Ctrl+C para copiar.';}};
+ const accessButton=el('button','Gerar senha temporária');accessButton.type='button';accessButton.className='se7-sheet-access-button';accessButton.onclick=openAccess;
  const labels={personal:'Dados pessoais',academic:'Dados acadêmicos',finance:'Financeiro',attendance:'Frequência',grades:'Notas'};
  async function show(tab){if(!current||!allowed()){dialog.close();return;}const state=current,s=students.find(x=>x.id===state.id);if(!s){content.replaceChildren(el('p','Aluno não encontrado.'));return;}for(const b of nav.children)b.setAttribute('aria-pressed',String(b.dataset.tab===tab));const course=courses.find(c=>c.id===s.courseId),group=classes.find(c=>c.id===s.classId);let node;
   if(tab==='personal')node=fields([['Nome completo',s.fullname],['Matrícula',s.code],['CPF',cpf(s.cpf)],['RG',s.rg],['Nascimento',br(s.dob||s.birthDate)],['Sexo',s.sexo||s.gender],['WhatsApp',phone(s.whatsapp)],['E-mail',s.email],['Endereço',[s.endereco||s.street||s.address,s.numero||s.number,s.bairro||s.neighborhood,s.cidade||s.city,s.estado||s.state].filter(Boolean).join(', ')],['CEP',s.cep],['Situação da matrícula',s.status||'Ativo']]);
@@ -33,8 +57,9 @@
   }
   if(current===state&&node){content.replaceChildren(node);content.scrollTop=0;window.SE7Motion?.enter(content);}
  }
- function open(id){if(!allowed())return;const s=students.find(x=>x.id===id);if(!s)return;sequence++;current={id};title.textContent=s.fullname||'Ficha do aluno';if(!dialog.open){scrollLock={html:document.documentElement.style.overflow,body:document.body.style.overflow};document.documentElement.style.overflow='hidden';document.body.style.overflow='hidden';dialog.showModal();}void show('personal');}
+ function open(id){if(!allowed())return;const s=students.find(x=>x.id===id);if(!s)return;sequence++;current={id};accessButton.hidden=!canReset();title.textContent=s.fullname||'Ficha do aluno';if(!dialog.open){scrollLock={html:document.documentElement.style.overflow,body:document.body.style.overflow};document.documentElement.style.overflow='hidden';document.body.style.overflow='hidden';dialog.showModal();}void show('personal');}
  for(const [tab,label]of Object.entries(labels)){const b=el('button',label);b.type='button';b.dataset.tab=tab;b.onclick=()=>void show(tab);nav.append(b);}
- document.addEventListener('DOMContentLoaded',()=>{document.body.append(dialog);document.addEventListener('click',event=>{const button=event.target.closest('[data-student-sheet]');if(button&&button.closest('#tab-gestion-students'))open(button.dataset.studentSheet);});});
+ nav.append(accessButton);
+ document.addEventListener('DOMContentLoaded',()=>{document.body.append(dialog,accessDialog);document.addEventListener('click',event=>{const button=event.target.closest('[data-student-sheet]');if(button&&button.closest('#tab-gestion-students'))open(button.dataset.studentSheet);});});
  window.SE7StudentSheet={open,refreshAcademic(){if(current&&dialog.open&&nav.querySelector('[data-tab=academic]')?.getAttribute('aria-pressed')==='true')void show('academic');}};
 })();
