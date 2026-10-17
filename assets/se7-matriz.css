@@ -106,3 +106,24 @@ html:not(.dark) .se7-matriz #se7-workspace td button.bg-red-600{color:#ac2341;bo
 .se7-matriz #se7-account-menu[hidden],.se7-matriz #subsubtab-cadastrar-curso [hidden]{display:none!important;}
 
 .se7-matriz #subsubtab-cadastrar-turma [hidden]{display:none!important;}
+
+/* Área de trabalho fixa na largura disponível, sem deslocamento lateral. */
+html:has(body.se7-matriz){overflow-x:clip}
+body.se7-matriz{min-width:0;width:100%;max-width:100%;overflow-x:clip}
+.se7-matriz #se7-workspace,.se7-matriz #fixed-top-container{box-sizing:border-box;width:calc(100% - var(--se7-sidebar-width));max-width:calc(100% - var(--se7-sidebar-width));min-width:0}
+.se7-matriz #se7-workspace>.tab-content{min-width:0;max-width:100%}
+.se7-matriz #tab-gestion-students>.bg-white{min-width:0;max-width:100%;box-sizing:border-box}
+.se7-matriz #tab-gestion-students>.bg-white>.flex{flex-wrap:wrap;gap:8px}
+.se7-matriz :is(#subtab-alunos-lista,#subtab-alunos-inativos)>.overflow-x-auto{overflow-x:clip;max-width:100%;min-width:0}
+.se7-matriz :is(#subtab-alunos-lista,#subtab-alunos-inativos) table{table-layout:fixed;width:100%;max-width:100%}
+.se7-matriz :is(#subtab-alunos-lista,#subtab-alunos-inativos) :is(td,th){white-space:normal!important;min-width:0!important;overflow-wrap:anywhere;box-sizing:border-box}
+.se7-matriz :is(#subtab-alunos-lista,#subtab-alunos-inativos) :is(td,th):nth-child(1){width:17%}
+.se7-matriz :is(#subtab-alunos-lista,#subtab-alunos-inativos) :is(td,th):nth-child(2){width:29%}
+.se7-matriz :is(#subtab-alunos-lista,#subtab-alunos-inativos) :is(td,th):nth-child(3){width:20%}
+.se7-matriz :is(#subtab-alunos-lista,#subtab-alunos-inativos) :is(td,th):nth-child(4){width:14%}
+.se7-matriz :is(#subtab-alunos-lista,#subtab-alunos-inativos) :is(td,th):nth-child(5){width:20%}
+.se7-matriz :is(#subtab-alunos-lista,#subtab-alunos-inativos) td:last-child :is(div,span){max-width:100%;flex-wrap:wrap;white-space:normal}
+.se7-matriz :is(#subtab-alunos-lista,#subtab-alunos-inativos) td:last-child button{max-width:100%;white-space:normal}
+.se7-matriz #app-header>.se7-header-welcome{min-width:0;flex:1 1 250px}
+.se7-matriz #app-header>.se7-account-header{min-width:0;max-width:100%;flex-wrap:wrap}
+@media(max-width:1050px){.se7-matriz #se7-workspace{padding:16px}.se7-matriz :is(#subtab-alunos-lista,#subtab-alunos-inativos) :is(td,th){padding:8px 5px}}

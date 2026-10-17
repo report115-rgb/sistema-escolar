@@ -823,6 +823,7 @@
                 document.getElementById('matricula-screen').style.display = 'none';
                 const mainApp = document.getElementById('main-app');
                 mainApp.style.display = 'flex';
+                if(window.SE7AdminPortal?.active) await mostrarBoasVindasApp(alunoLogado);
                 await carregarDadosPainel();
                 if(alunoLogado) {acompanharControlePortal();await carregarConfiguracaoAlunoAutenticado();await registrarEventoPortal('resume');}
             }
