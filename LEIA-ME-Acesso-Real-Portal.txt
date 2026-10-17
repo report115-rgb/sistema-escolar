@@ -1,0 +1,75 @@
+SE7 — ACESSO ADMINISTRATIVO REAL AO PORTAL DO ALUNO
+16/10/2026 — horário de Fortaleza
+
+DESTINO: repositório sistema-escolar, branch main, Vercel sistema-escolar.
+O painel comercial continua pausado. Não enviar à branch da matriz de testes.
+Este pacote reúne também as últimas mudanças de cartão no modal, declaração anual,
+e-mail de matrícula, avatar e relógio. Pode usar só este pacote em lugar dos dois
+anteriores. Preserve pastas e demais arquivos: não apague o repositório.
+Os três arquivos LEIA-ME são apenas guias e não precisam ir ao GitHub.
+
+PUBLICAÇÃO
+1. Extraia o ZIP e envie as pastas/arquivos à branch main.
+2. Faça o commit e aguarde o deployment finalizar na Vercel.
+3. Reabra o Matriz ou atualize a página para carregar os scripts novos.
+Esta função de acesso administrativo não exige novas regras de Firestore nem novas
+variáveis. Os requisitos anteriores de CRON_SECRET (declaração anual) e habilitação
+responsável do cartão permanecem nos guias específicos.
+
+COMO USAR
+Entre como master > Gestão de alunos > Ver portal, na linha do aluno desejado.
+O botão agora abre o portal real com uma faixa de Acesso administrativo e o nome
+do aluno. Use as abas e funções normalmente. Não é mais a visualização somente
+leitura. Documentos enviados, agendamentos, confirmações e demais alterações
+permitidas são reais e podem gerar avisos, cobranças ou resultados acadêmicos.
+
+O portal usa o cadastro selecionado, mantendo sua autenticação de master.
+Não usa, revela, modifica ou substitui a senha do aluno. Não faz login na conta dele.
+As ações passam pelo servidor com permissão de aluno para aquele cadastro e
+identificação do master responsável. Não concede funções de funcionário ao portal.
+
+Para sair, clique Voltar ao Matriz na faixa do portal ou no cabeçalho da janela.
+A opção Sair do próprio portal também encerra somente este acesso administrativo;
+não desconecta o master do Matriz. Cada acesso dura no máximo 30 minutos e pode
+ser aberto novamente. Não foi acrescentada consulta contínua a todos os alunos.
+O prazo é validado no servidor; remover a faixa ou alterar a tela não remove o prazo.
+
+AUDITORIA
+As aberturas, encerramentos, consultas e ações encaminhadas ficam nos registros do
+Matriz com o nome/identificador do master e o identificador do aluno, operação e
+campos relevantes (tipo de documento, aviso, data, aba, quando aplicáveis).
+O acesso administrativo não incrementa a contagem de logins do aluno. Eventos
+administrativos ficam identificados separadamente no histórico do portal.
+Número de cartão, CVV e senhas não são incluídos na auditoria.
+
+PROTEÇÕES
+- Exclusivo do master, validado no servidor a cada operação.
+- Cadastro de outro aluno, comandos de funcionário e troca de senha são recusados.
+- Ações de envio/mudança ficam bloqueadas se o aluno estiver com acesso bloqueado,
+  senha temporária pendente ou trava de autenticação. Corrija isso no Matriz.
+- Regras normais de pagamento, data de prova, carência e documentação permanecem.
+- Iniciar/finalizar prova EJA ou solicitar taxa de reagendamento pede confirmação
+  adicional, pois altera o registro real do aluno. Não use aluno real para simular
+  respostas ou resultados acadêmicos.
+- Pagamento no cartão exige marcar que existe autorização do titular, além da
+  confirmação. A habilitação do cartão depende do guia específico.
+- A comunicação da janela verifica origem, janela e canal. O aluno selecionado é
+  fixado pelo servidor e não pode ser trocado pelo conteúdo de uma solicitação.
+- Inserções HTML recebem a mesma proteção de conteúdo usada na prévia anterior.
+
+TESTE INICIAL RECOMENDADO
+1. Abra o portal de um aluno, confira o nome na faixa e navegue nas abas.
+2. Verifique uma consulta de cobrança e um documento já existente.
+3. Use Voltar ao Matriz e confirme que seu acesso de master continua ativo.
+4. Confira a auditoria. Depois, faça apenas alterações reais que você deseja manter.
+
+VALIDAÇÃO LOCAL
+Build e importações passaram. 188 testes locais aprovados, incluindo 5 testes novos
+para exclusividade do master, escopo de aluno, expiração, revogação, bloqueio de
+escalada e integração real do código do servidor para envio de documento/auditoria.
+Teste do navegador com portal completo de Técnico e EJA: upload de documento com
+serviço simulado, retorno ao Matriz, sessão master preservada, bloqueio de conteúdo
+HTML perigoso e ausência de leitura direta de Firestore pela janela administrativa.
+Teste adicional do modal de cartão exigiu autorização do titular antes do envio.
+Não houve alteração de dados reais, cobrança ou envio real de e-mail nestes testes.
+Testes com emulador Firestore não foram executados neste ambiente.

@@ -19,6 +19,7 @@
     <script src="/assets/vendor/firebase-firestore-compat.js"></script>
 <script src="/assets/vendor/firebase-auth-compat.js"></script>
 <script src="/assets/se7-auth.js"></script>
+<script src="/assets/se7-portal-admin.js"></script>
 <script src="/assets/se7-portal-preview.js"></script>
 <script src="/assets/se7-email.js"></script>
     <!-- Canvas Confetti -->
@@ -757,7 +758,7 @@
             appId: "1:343442411308:web:e4500b862fa29b6b326689"
         };
         firebase.initializeApp(firebaseConfig);
-        const db = window.SE7Preview?.active ? SE7Preview.database() : firebase.firestore();
+        const db = window.SE7AdminPortal?.active ? SE7AdminPortal.database() : window.SE7Preview?.active ? SE7Preview.database() : firebase.firestore();
 
         function obterDocumentosObrigatoriosAluno() {
             let isEJA = window.cursoAtualEJA || false;
@@ -1149,7 +1150,7 @@ let cancelarIdentidadeAluno = null;
 
 let cancelarControlePortal=null;
 let saidaAlunoEmAndamento=false;
-let se7LastGradesSignature=null;function acompanharControlePortal(){if(window.SE7Preview?.active)return;if(cancelarControlePortal)cancelarControlePortal();if(!alunoLogado?.id||alunoLogado.portalMustChangePassword)return;cancelarControlePortal=db.collection('students').doc(alunoLogado.id).onSnapshot(doc=>{if(saidaAlunoEmAndamento||!alunoLogado||doc.metadata.hasPendingWrites||doc.metadata.fromCache)return;const d=doc.exists?doc.data():null;const signature=JSON.stringify(d?.grades||{});if(se7LastGradesSignature!==null&&signature!==se7LastGradesSignature)void window.SE7ExamsStudent?.refresh(true);se7LastGradesSignature=signature;if(!d||d.portalBlocked||(d.portalSessionVersion||0)!==(alunoLogado.portalSessionVersion||0)){alert('Seu acesso foi alterado. Entre novamente.');SE7.logout();}},e=>{if(saidaAlunoEmAndamento||!firebase.auth().currentUser)return;if(e.code==='permission-denied'){alert('Sessão sem acesso. Entre novamente.');SE7.logout();}else console.warn(e.message);});}
+let se7LastGradesSignature=null;function acompanharControlePortal(){if(window.SE7Preview?.active||window.SE7AdminPortal?.active)return;if(cancelarControlePortal)cancelarControlePortal();if(!alunoLogado?.id||alunoLogado.portalMustChangePassword)return;cancelarControlePortal=db.collection('students').doc(alunoLogado.id).onSnapshot(doc=>{if(saidaAlunoEmAndamento||!alunoLogado||doc.metadata.hasPendingWrites||doc.metadata.fromCache)return;const d=doc.exists?doc.data():null;const signature=JSON.stringify(d?.grades||{});if(se7LastGradesSignature!==null&&signature!==se7LastGradesSignature)void window.SE7ExamsStudent?.refresh(true);se7LastGradesSignature=signature;if(!d||d.portalBlocked||(d.portalSessionVersion||0)!==(alunoLogado.portalSessionVersion||0)){alert('Seu acesso foi alterado. Entre novamente.');SE7.logout();}},e=>{if(saidaAlunoEmAndamento||!firebase.auth().currentUser)return;if(e.code==='permission-denied'){alert('Sessão sem acesso. Entre novamente.');SE7.logout();}else console.warn(e.message);});}
 let abaPortalAtual = null;
 function guardarSessaoPortal(aluno) {
     if(window.SE7Preview?.active)return;
@@ -1351,7 +1352,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
             document.getElementById('modal-carteirinha').style.display='none';
         }
 
-        async function executarRedefinicaoSenha() {if(window.SE7Preview?.active){alert('Modo de visualização: alterações e envios desativados.');return;}
+        async function executarRedefinicaoSenha() {if(window.SE7AdminPortal?.active){alert('A senha do aluno deve ser administrada pelo Matriz.');return;}if(window.SE7Preview?.active){alert('Modo de visualização: alterações e envios desativados.');return;}
             alert('Solicite à instituição uma senha temporária. Por segurança, o CPF sozinho não permite redefinir a senha.');
         }
 
