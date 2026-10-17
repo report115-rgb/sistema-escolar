@@ -1,3 +1,4 @@
+import {cardPrepare,cardPay} from '../server/card-payment.mjs';
 import {annualAction,verifyAnnual} from '../server/annual-statements.mjs';
 import {issuePayrollReport,verifyPayrollReport} from '../server/payroll-report.mjs';
 import {dispatchPayment} from '../server/payroll-payments.mjs';
@@ -166,6 +167,7 @@ async function dispatchOperation({auth,db},req,b){
   if(u.role==='aluno'&&u.student.portalMustChangePassword)fail(403,'Troque sua senha antes de consultar pagamentos.');
   if(action==='asaas-invoices')return asaas.invoices(db,u.role==='aluno'?u.studentId:validId(b.studentId));
   if(action==='asaas-payment')return asaas.paymentDetails(db,validId(b.invoiceId),u,b.mode);
+  if(action==='asaas-card-prepare'||action==='asaas-card-pay'){await limits(db,req,'card:'+u.uid);return action==='asaas-card-prepare'?cardPrepare(db,b,u):cardPay(db,b,u,req);}
   if(!finance)fail(403,'Aluno não pode emitir ou alterar cobranças.');
   if(action.startsWith('asaas-replacement-')){await limits(db,req,'asaas-bulk:replacement:'+u.uid);if(action==='asaas-replacement-candidates')return replacement.candidates(db,validId(b.invoiceId),u);if(action==='asaas-replacement-preview')return replacement.preview(db,b,u);if(action==='asaas-replacement-commit')return replacement.commit(db,b,u);fail(400,'Operação de substituição desconhecida.');}
   if(action==='asaas-config')return asaas.config();
