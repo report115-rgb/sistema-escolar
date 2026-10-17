@@ -1992,6 +1992,7 @@ async function alternarBloqueioPortal(id){if(!usuarioMasterAtivo())return;const 
             const displayEl = document.getElementById('header-user-display');
             if (displayEl && sessao) displayEl.textContent = sessao.nome || 'Usuário';
             if (typeof atualizarCabecalhoMatriz === 'function') atualizarCabecalhoMatriz();
+            window.dispatchEvent(new Event('se7:account-updated'));
         }
 
         async function editarNomeUsuarioLogado() {
@@ -5417,7 +5418,7 @@ function escutarRegistrosPontoManual() {
 <script src="/assets/se7-busy.js"></script>
 <script src="/assets/se7-matriz-finance.js"></script>
 <script type="module" src="/assets/se7-tuition.js"></script>
-<script src="/assets/se7-account-menu.js?v=menu-suave-3"></script>
+<script src="/assets/se7-account-menu.js?v=avatar-sessao-4"></script>
 <script src="/assets/se7-ambient.js"></script>
 <script src="/assets/se7-payroll-receipt.js"></script>
 <link rel="stylesheet" href="/assets/se7-annual-statements.css"><script src="/assets/se7-annual-statements.js"></script></body>
