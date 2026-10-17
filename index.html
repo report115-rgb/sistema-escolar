@@ -168,6 +168,8 @@
 <link rel="stylesheet" href="/assets/se7-ambient.css">
 <script src="/assets/se7-subject-kind.js?v=1"></script>
 <script src="/assets/se7-lesson-realization.js?v=1"></script>
+<script src="/assets/se7-attendance-proof.js?v=2"></script>
+<script type="module" src="/assets/se7-attendance-rules.js?v=1"></script>
 </head>
 <body class="se7-suite se7-matriz bg-gray-100 dark:bg-slate-900 text-gray-800 dark:text-gray-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-300 pb-16">    
 
@@ -3875,7 +3877,7 @@ async function renderAttendanceList() {
 
     try {
         // Consulta na nuvem (Firestore) se já existe chamada salva para esta turma e data
-        const docRef = await db.collection("attendanceLocks").doc(`${turmaId}_${dataAula}${SE7Polos.current()?'_'+SE7Polos.current():''}`).get();
+        const attendancePoloId=classes.find(c=>c.id===turmaId)?.poloId||'';const docRef = await db.collection("attendanceLocks").doc(`${turmaId}_${dataAula}${attendancePoloId?'_'+attendancePoloId:''}`).get();
         if (docRef.exists) {
             const dadosNuves = docRef.data();
             jaLancado = dadosNuves.finalizada || false;
@@ -3908,6 +3910,7 @@ async function renderAttendanceList() {
                 ${alunoBloqueado ? `<button type="button" onclick="habilitarEdicaoAlunoFrequencia(this, '${aluno.id}')" class="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-semibold rounded shadow transition"><i class="fa-solid fa-pen-to-square mr-1"></i> Editar</button>` : ''}
             </div>
         `;
+        window.SE7AttendanceProof?.decorate(li,aluno,dataAula);
         container.appendChild(li);
     });
 }
@@ -5417,10 +5420,10 @@ function escutarRegistrosPontoManual() {
 <script src="/assets/se7-version.js"></script>
 <script src="/assets/se7-documents.js"></script>
 <link rel="stylesheet" href="/assets/se7-template-editor.css"><script src="/assets/se7-document-models.js"></script>
-<script src="/assets/se7-academic-documents.js"></script><script src="/assets/se7-template-editor.js"></script>
+<script src="/assets/se7-academic-documents.js?v=frequencia-2"></script><script src="/assets/se7-template-editor.js"></script>
 <link rel="stylesheet" href="/assets/se7-exams.css">
-<script src="/assets/vendor/pdf-lib.min.js"></script><script src="/assets/vendor/fontkit.umd.min.js"></script><script src="/assets/vendor/jsQR.js"></script><script src="/assets/vendor/qrcode.js"></script><script src="/assets/se7-exam-omr.js"></script><script src="/assets/se7-exam-pdf.js"></script><script src="/assets/se7-exam-calendar.js" type="module"></script><script src="/assets/se7-exams.js?v=nominal-ingresso-1"></script>
-<link rel="stylesheet" href="/assets/se7-student-sheet.css?v=senha-laranja-2"><script src="/assets/se7-student-sheet.js?v=realizacao-aula-2"></script>
+<script src="/assets/vendor/pdf-lib.min.js"></script><script src="/assets/vendor/fontkit.umd.min.js"></script><script src="/assets/vendor/jsQR.js"></script><script src="/assets/vendor/qrcode.js"></script><script src="/assets/se7-exam-omr.js"></script><script src="/assets/se7-exam-pdf.js"></script><script src="/assets/se7-exam-calendar.js" type="module"></script><script src="/assets/se7-exams.js?v=frequencia-regra-2"></script>
+<link rel="stylesheet" href="/assets/se7-student-sheet.css?v=senha-laranja-2"><script src="/assets/se7-student-sheet.js?v=frequencia-regra-4"></script>
 <script src="/assets/se7-academic-entry.js"></script>
 <script src="/assets/se7-enrollment-auto.js"></script>
 <script type="module" src="/assets/se7-ingress-policy.js"></script><script src="/assets/se7-ingress.js"></script>

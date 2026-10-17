@@ -225,6 +225,7 @@
 <link rel="stylesheet" href="assets/se7-eja.css?v=1"><script defer src="assets/se7-eja-student.js?v=1"></script><link rel="stylesheet" href="/assets/se7-ambient.css">
 <script src="/assets/se7-subject-kind.js?v=1"></script>
 <script src="/assets/se7-lesson-realization.js?v=1"></script>
+<script type="module" src="/assets/se7-attendance-rules.js?v=1"></script>
 </head>
 <body class="se7-suite bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans antialiased h-screen overflow-hidden flex flex-col transition-colors duration-200">
 <div id="se7-welcome" hidden role="status" aria-live="polite" aria-atomic="true">
@@ -1621,7 +1622,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
                                 }
 
                                 gradesList.innerHTML += `
-                                    <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-2 text-xs">
+                                    <div data-attendance-subject="${sub.id}" class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-2 text-xs">
                                         <div class="flex justify-between items-center">
                                             <strong class="text-slate-800 dark:text-slate-100 text-sm">${sub.name}</strong>
                                             <div>${badgeStatus}</div>
@@ -1656,6 +1657,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
                             if (ev.semestre) semestresDisponiveis.add(ev.semestre);
                         });
 
+                        window.SE7AttendanceRules?.applyPortal(alunoLogado,window.se7CalendarCourse,eventosCalendarioCache);
                         const selectSemestre = document.getElementById('select-filtro-semestre');
                         const valorAtualSelect = selectSemestre.value;
                         selectSemestre.innerHTML = `<option value="">Todos os Semestres</option>`;
@@ -1803,7 +1805,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
                             dataFormatada: `${dia}/${mes}/${ano}`,
                             materia: materia,
                             realizationHtml: SE7LessonChange.badge(ev,dataIso),
-                            status: status
+                            status: status,justified:registroAluno?.justified===true
                         });
                     }
                 });
@@ -1840,7 +1842,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
                     } else if (stLower === 'falta' || stLower === 'ausente') {
                         badgeClass = 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300 border border-red-200 dark:border-red-800';
                         iconeStatus = '<i class="fa-solid fa-circle-xmark mr-1"></i>';
-                        textoStatus = 'Falta';
+                        textoStatus = item.justified?'Falta justificada':'Falta';
                     }
 
                     htmlItensDatas += `
