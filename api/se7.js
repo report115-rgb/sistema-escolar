@@ -1,3 +1,4 @@
+import {annualAction,verifyAnnual} from '../server/annual-statements.mjs';
 import {issuePayrollReport,verifyPayrollReport} from '../server/payroll-report.mjs';
 import {dispatchPayment} from '../server/payroll-payments.mjs';
 import {dispatchReceipt} from '../server/payroll-receipt.mjs';
@@ -82,6 +83,7 @@ async function unlock(ref,lock){await ref.firestore.runTransaction(async tx=>{co
 async function publicInfo(db){const snap=await db.collection('config').doc('institution').get();const d=snap.data()||{};const fields=['name','razao','cnpj','email','tel','end','loginDesc','logo','logomarca','urlLogo','logoUrl','image','fileUrl'];return {institution:Object.fromEntries(fields.filter(k=>typeof d[k]==='string').map(k=>[k,d[k]]))};}
 async function dispatchOperation({auth,db},req,b){
  const action=b.action;
+ if(action==='annual-verify'){academicDocuments.publicLimit(req);return verifyAnnual(db,b.token);}
  if(action==='payroll-report-verify'){academicDocuments.publicLimit(req);return verifyPayrollReport(db,b);}
  if(action==='academic-document-verify'){academicDocuments.publicLimit(req);return academicDocuments.verify(db,b);}
  if(action==='public-info')return publicInfo(db);
@@ -99,6 +101,7 @@ async function dispatchOperation({auth,db},req,b){
   }catch(e){await auth.deleteUser(uid).catch(()=>{});await ref.delete().catch(()=>{});await db.collection('se7EjaContracts').doc(ref.id).delete().catch(()=>{});await idx.delete();throw e;}
  }
  const u=await identity(auth,db,req);req.se7AuditIdentity=u;await limits(db,req,'gateway:'+u.uid);
+ if(action==='annual-statements')return annualAction(db,b,u);
  if(action==='payroll-report-issue')return issuePayrollReport(db,b,u);
  if(['payroll-save','payroll-reverse'].includes(action))return dispatchPayment(db,b,u);
  if(action.startsWith('payroll-receipt-'))return dispatchReceipt(db,b,u);
@@ -144,6 +147,7 @@ async function dispatchOperation({auth,db},req,b){
   if(action==='email-delete-grade'){await limits(db,req,'asaas-bulk:email-save:'+u.uid);return mail.deleteGrade(db,b,u);}
   if(action==='email-save-grade'){const st=await db.collection('students').doc(validId(b.studentId)).get(),t=await db.collection('teachers').doc(validId(b.teacherId)).get();if(!st.exists||!st.data().poloId||!t.exists||!(t.data().poloIds||[]).includes(st.data().poloId))fail(403,'Confira o polo do aluno e o vínculo do professor ao polo.');await limits(db,req,'asaas-bulk:email-save:'+u.uid);return mail.saveGradeWithEmail(db,b,u);}
   if(action==='email-save-attendance'){const poloId=u.role==='secretaria'?u.profile.poloId:b.poloId;if(!poloId)fail(400,'Selecione o polo no cabeçalho antes de registrar a chamada.');await polos.requirePolo(db,poloId);b={...b,poloId};const t=await db.collection('teachers').doc(validId(b.teacherId)).get();if(!t.exists||!(t.data().poloIds||[]).includes(poloId))fail(403,'Vincule o professor ao polo antes de registrar a chamada.');await limits(db,req,'asaas-bulk:email-save:'+u.uid);return mail.saveAttendanceWithEmail(db,b,u);}
+  if(action==='email-enrollment-status')return mail.enrollmentStatus(db,validId(b.studentId),u);
   if(action==='email-enrollment')return mail.enrollmentEmail(db,b.studentId,u);
   if(action==='email-list')return mail.listEmails(db,u);
   if(action==='email-pending')return mail.pendingEmails(db,u);

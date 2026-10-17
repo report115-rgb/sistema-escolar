@@ -444,9 +444,9 @@
             </div>
 
             <div class="se7-account-header">
-                <span id="header-user-display" hidden></span><span id="se7-header-role" hidden></span>
+                <div id="header-live-clock" class="se7-account-clock">Carregando relógio...</div><span id="header-user-display" hidden></span><span id="se7-header-role" hidden></span>
                 <div class="se7-account-anchor"><button type="button" id="se7-account-trigger" aria-label="Abrir menu da minha conta" aria-expanded="false" aria-controls="se7-account-menu"><i class="fa-solid fa-user" aria-hidden="true"></i></button>
-                <div id="se7-account-menu" hidden><div id="se7-account-identity"></div><div id="header-live-clock" class="se7-account-clock" style="padding:4px 10px 10px">Carregando relógio...</div>
+                <div id="se7-account-menu" hidden><div id="se7-account-identity"></div>
                 <button type="button" data-account-action="profile"><i class="fa-solid fa-user-pen"></i> Editar cadastro</button>
                 <button type="button" data-account-action="password"><i class="fa-solid fa-key"></i> Alterar senha</button>
                 <button type="button" data-account-action="theme"><i class="fa-solid fa-circle-half-stroke"></i> Mudar tema</button>
@@ -3576,9 +3576,9 @@ function carregarDatasCalendarioParaFrequencia(){const classId=document.getEleme
         const enrollmentDate=document.getElementById('student-enrollment-date').value;const oldDate=beforeEnrollment.data()?.enrollmentDate||'';if(oldDate&&!enrollmentDate)return alert('Informe a data da matrícula; a data registrada não pode ser apagada.');if(enrollmentDate&&enrollmentDate>SE7AcademicPolicy.today())return alert('A data da matrícula não pode ser futura.');const dateChanged=enrollmentDate!==oldDate;const recalculateEntry=!!enrollmentDate&&(dateChanged||beforeEnrollment.data().classId!==classId||beforeEnrollment.data().courseId!==courseId);
         if(!usuarioMasterAtivo()){delete studentData.poloId;delete studentData.poloName;}await db.collection("students").doc(editId).update(studentData);
         if(recalculateEntry){const entry=await SE7.api('academic-entry-plan',{studentId:editId,...(dateChanged?{enrollmentDate}:{})});Object.assign(studentData,{enrollmentDate,academicEntry:entry});}
-        if(!hadClass && studentData.classId){void SE7Email.notify('email-enrollment',{studentId:editId});void SE7EnrollmentAuto.start(editId);}
+        if(!hadClass && studentData.classId){void SE7EnrollmentAuto.start(editId);}
         const cadastroAindaEmPreparo=!beforeEnrollment.data()?.enrollmentRegisteredAt&&!beforeEnrollment.data()?.se7AuthUid;const escolhaRetomada=cadastroAindaEmPreparo?await window.SE7EjaAdmin?.newEnrollmentChoice(cursoObj):null;await SE7.api('prepare-student',{id:editId,...(cadastroAindaEmPreparo?{newEnrollment:true,...(escolhaRetomada?{ejaChoice:escolhaRetomada}:{})}:{})});
-        if(cadastroAindaEmPreparo){if(escolhaRetomada)void SE7EjaAdmin.process(editId,1).catch(()=>{});else void SE7EnrollmentAuto.start(editId);}
+        await SE7Email.notify('email-enrollment',{studentId:editId});if(cadastroAindaEmPreparo){if(escolhaRetomada)void SE7EjaAdmin.process(editId,1).catch(()=>{});else void SE7EnrollmentAuto.start(editId);}
         await SE7.api('whatsapp-consent',{id:editId,optIn:document.getElementById('whatsapp-opt-in-aluno').checked});
         const alunoLocal = students.find(a => a.id === editId);
         if (alunoLocal) Object.assign(alunoLocal, studentData);
@@ -5419,5 +5419,5 @@ function escutarRegistrosPontoManual() {
 <script src="/assets/se7-account-menu.js"></script>
 <script src="/assets/se7-ambient.js"></script>
 <script src="/assets/se7-payroll-receipt.js"></script>
-</body>
+<link rel="stylesheet" href="/assets/se7-annual-statements.css"><script src="/assets/se7-annual-statements.js"></script></body>
 </html>

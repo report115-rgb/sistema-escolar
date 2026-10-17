@@ -18,6 +18,10 @@
     "api/eja-maintenance.js": {
       "maxDuration": 60,
       "includeFiles": "{server/**,assets/se7-tuition.js,assets/se7-payroll-policy.js,assets/se7-payroll-report-model.js}"
+    },
+    "api/annual-statements.js": {
+      "maxDuration": 60,
+      "includeFiles": "server/**"
     }
   },
   "headers": [
@@ -77,6 +81,10 @@
     {
       "path": "/api/eja-maintenance",
       "schedule": "25 23 * * *"
+    },
+    {
+      "path": "/api/annual-statements",
+      "schedule": "10 4 * * *"
     }
   ]
 }
