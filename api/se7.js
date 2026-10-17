@@ -1,3 +1,4 @@
+import {attendancePolo} from '../server/attendance-polo.mjs';
 import {save as saveLessonRealization} from '../server/lesson-realization.mjs';
 import * as portalAdmin from '../server/portal-admin.mjs';
 import {cardPrepare,cardPay} from '../server/card-payment.mjs';
@@ -159,7 +160,7 @@ async function dispatchOperation({auth,db},req,b,delegated=null){
   if(u.role==='professor'&&['email-save-grade','email-save-attendance','email-grade','email-attendance','email-list','email-pending'].includes(action))fail(403,'Use o ambiente dedicado do professor.');
   if(action==='email-delete-grade'){await limits(db,req,'asaas-bulk:email-save:'+u.uid);return mail.deleteGrade(db,b,u);}
   if(action==='email-save-grade'){const st=await db.collection('students').doc(validId(b.studentId)).get(),t=await db.collection('teachers').doc(validId(b.teacherId)).get();if(!st.exists||!st.data().poloId||!t.exists||!(t.data().poloIds||[]).includes(st.data().poloId))fail(403,'Confira o polo do aluno e o vínculo do professor ao polo.');await limits(db,req,'asaas-bulk:email-save:'+u.uid);return mail.saveGradeWithEmail(db,b,u);}
-  if(action==='email-save-attendance'){const poloId=u.role==='secretaria'?u.profile.poloId:b.poloId;if(!poloId)fail(400,'Selecione o polo no cabeçalho antes de registrar a chamada.');await polos.requirePolo(db,poloId);b={...b,poloId};const t=await db.collection('teachers').doc(validId(b.teacherId)).get();if(!t.exists||!(t.data().poloIds||[]).includes(poloId))fail(403,'Vincule o professor ao polo antes de registrar a chamada.');await limits(db,req,'asaas-bulk:email-save:'+u.uid);return mail.saveAttendanceWithEmail(db,b,u);}
+  if(action==='email-save-attendance'){const poloId=await attendancePolo(db,b,u);b={...b,poloId};await limits(db,req,'asaas-bulk:email-save:'+u.uid);return mail.saveAttendanceWithEmail(db,b,u);}
   if(action==='email-enrollment-status')return mail.enrollmentStatus(db,validId(b.studentId),u);
   if(action==='email-enrollment')return mail.enrollmentEmail(db,b.studentId,u);
   if(action==='email-list')return mail.listEmails(db,u);

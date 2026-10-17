@@ -3960,7 +3960,7 @@ async function saveAttendance() {
 
     });
     try {
-        const saved = await SE7.api('email-save-attendance',{poloId:SE7Polos.current(),classId,date:dataAula,subject:document.getElementById('attendance-calendar-date-select').selectedOptions[0]?.dataset.subject||'',teacherId:professorId||null,rows:registrosFrequencia.map(r=>({studentId:r.studentId,status:r.status}))});
+        const saved = await SE7.api('email-save-attendance',{poloId:classes.find(c=>c.id===classId)?.poloId||'',classId,date:dataAula,subject:document.getElementById('attendance-calendar-date-select').selectedOptions[0]?.dataset.subject||'',teacherId:professorId||null,rows:registrosFrequencia.map(r=>({studentId:r.studentId,status:r.status}))});
         void SE7Email.consume(saved.emailJobs||[]);
         if(saved.emailWarning) SE7Email.warning(saved.emailWarning);
         registrarLogAuditoria(`Chamada realizada para a turma ${classId} em ${dataAula} (${totalFaltas} falta(s) registrada(s))`, "Frequência");
