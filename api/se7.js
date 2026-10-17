@@ -106,7 +106,8 @@ async function dispatchOperation({auth,db},req,b,delegated=null){
  if(action==='portal-admin'){
   if(b.operation==='open')return portalAdmin.openAccess(db,b,u);
   if(b.operation==='close')return portalAdmin.closeAccess(db,b,u);
-  const ctx=await portalAdmin.accessContext(db,b,u);req.se7PortalAdmin={studentId:ctx.id,accessId:b.accessId,action:b.operation==='read'?'Consulta '+b.collection:b.callAction};
+  const ctx=await portalAdmin.accessContext(db,b,u);req.se7PortalAdmin={studentId:ctx.id,accessId:b.accessId,action:b.operation==='read'?'Consulta '+b.collection:b.operation==='bootstrap'?'Atualizou dados do portal':b.callAction};
+  if(b.operation==='bootstrap')return portalAdmin.bootstrap(db,ctx);
   if(b.operation==='read')return portalAdmin.readPortal(db,b,ctx);
   if(b.operation!=='call')fail(400,'Operação inválida.');const inner=portalAdmin.allowedCall(ctx,b);
   try{return await dispatchOperation({auth,db},{...req},inner,ctx.user);}finally{req.se7AuditIdentity=u;}

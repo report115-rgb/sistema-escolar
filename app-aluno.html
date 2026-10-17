@@ -19,7 +19,7 @@
     <script src="/assets/vendor/firebase-firestore-compat.js"></script>
 <script src="/assets/vendor/firebase-auth-compat.js"></script>
 <script src="/assets/se7-auth.js"></script>
-<script src="/assets/se7-portal-admin.js?v=portal-explicito-3"></script>
+<script src="/assets/se7-portal-admin.js?v=portal-dados-5"></script>
 <script src="/assets/se7-portal-preview.js"></script>
 <script src="/assets/se7-email.js"></script>
     <!-- Canvas Confetti -->
@@ -831,16 +831,16 @@
         });
 
         let inicializacaoPortalAdministrativo=null;
-        function iniciarPortalAdministrativo(profile){
+        function iniciarPortalAdministrativo(profile,initialData){
             if(!window.SE7AdminPortal?.active)throw Error('Entrada administrativa não habilitada nesta janela.');
             if(inicializacaoPortalAdministrativo)return inicializacaoPortalAdministrativo;
             if(!profile?.id||!profile.fullname)throw Error('Cadastro do aluno não foi recebido do Matriz.');
             inicializacaoPortalAdministrativo=(async()=>{
-                alunoLogado=profile;SE7AdminPortal.setProfile(profile);guardarSessaoPortal(profile);
+                SE7AdminPortal.seed(initialData);alunoLogado=profile;SE7AdminPortal.setProfile(profile);guardarSessaoPortal(profile);
                 for(const id of ['welcome-screen','login-screen','matricula-screen'])document.getElementById(id).style.display='none';
                 document.getElementById('main-app').style.display='flex';
                 const boasVindas=mostrarBoasVindasApp(profile);
-                try{await carregarConfiguracaoInstituicao();await carregarConfiguracaoAlunoAutenticado();await carregarDadosPainel();await registrarEventoPortal('resume');}
+                try{await carregarConfiguracaoInstituicao();await carregarConfiguracaoAlunoAutenticado();await carregarDadosPainel({refreshAdmin:false});void registrarEventoPortal('resume').catch(()=>{});}
                 finally{await boasVindas;}
             })();return inicializacaoPortalAdministrativo;
         }
@@ -1543,7 +1543,8 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
         const formatarNascimentoCadastral=valor=>SE7Cadastro.nascimento(valor);
         const formatarEnderecoCadastral=aluno=>SE7Cadastro.endereco(aluno);
 
-        async function carregarDadosPainel() {
+        async function carregarDadosPainel({refreshAdmin=true}={}) {
+            if(window.SE7AdminPortal?.active&&refreshAdmin)await SE7AdminPortal.refresh();
             if(window.SE7Preview?.active)await SE7Preview.refresh();
             if(!alunoLogado) return;
             if(alunoLogado.portalMustChangePassword){abrirTrocaObrigatoriaPortal();return;}
@@ -1581,7 +1582,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
                     document.getElementById('header-avatar-box').innerHTML = '<i class="fa-solid fa-user text-blue-200"></i>';
                 }
 
-                await SE7Cancellation.local(alunoLogado.id);
+                if(window.SE7AdminPortal?.active)void SE7Cancellation.local(alunoLogado.id).catch(()=>{});else await SE7Cancellation.local(alunoLogado.id);
                 renderizarFrequenciaAluno();
 
                 // 2. Carrega curso e notas pontualmente
@@ -1742,6 +1743,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
                 void SE7Notices.refresh(alunoLogado.id);document.dispatchEvent(new Event('se7:portal-ready'));void window.SE7ExamsStudent?.refresh();
             } catch(e) {
                 console.error("Erro ao carregar dados do painel do aluno:", e);
+                if(window.SE7AdminPortal?.active)throw e;
             }
         }
 
