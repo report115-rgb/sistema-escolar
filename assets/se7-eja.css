@@ -4,3 +4,9 @@
 /* O cartão inicial mantém o modelo esmeralda original do portal. */
 #bloco-acoes-eja.se7-eja-study-card{background:linear-gradient(to bottom right,#059669,#0f766e);color:#fff;padding:16px;border-radius:16px;box-shadow:0 10px 15px -3px #0002,0 4px 6px -4px #0002;font:12px/1.5 Inter,system-ui,sans-serif;border:0;}
 .se7-eja-study-card>div+div{margin-top:12px}.se7-eja-study-card h4{margin:0;font-size:14px;font-weight:700}.se7-eja-study-details{background:#ffffff1a;border:1px solid #ffffff33;padding:12px;border-radius:12px}.se7-eja-study-details p{margin:4px 0;color:inherit}.se7-eja-study-card .se7-eja-study-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding-top:4px;margin-top:12px}.se7-eja-study-actions .se7-eja-button{display:flex;justify-content:center;align-items:center;text-align:center;border-radius:12px;padding:10px 12px;background:#065f46;border:0;font-size:12px;font-weight:700;color:#fff;min-width:0}.se7-eja-study-actions .se7-eja-button:hover{background:#064e3b}.se7-eja-study-actions .se7-eja-study-material{background:white;color:#065f46}.se7-eja-study-actions .se7-eja-study-material:hover{background:#ecfdf5}.se7-eja-study-actions .se7-eja-button:disabled{background:#ffffff33;color:#ffffffb3;opacity:1;cursor:not-allowed}.se7-eja-study-card[hidden]{display:none!important;}
+
+/* Ajuste restrito à tabela EJA: ação alinhada sob o título de agendamento. */
+#tabela-alunos-eja .se7-eja-schedule-cell{text-align:center;vertical-align:middle;white-space:normal}
+#tabela-alunos-eja .se7-eja-schedule-actions{display:flex;align-items:center;justify-content:center;width:100%;margin:0 auto}
+#tabela-alunos-eja .se7-eja-schedule-actions button{display:inline-flex;justify-content:center;align-items:center;margin:0;max-width:100%;white-space:normal}
+#tabela-alunos-eja .se7-eja-legacy-note{display:block;margin-top:7px;font-size:10px;line-height:1.4;color:var(--se7-muted,#64748b);white-space:normal}

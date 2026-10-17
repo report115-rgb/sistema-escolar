@@ -19,7 +19,7 @@
     <script src="/assets/vendor/firebase-firestore-compat.js"></script>
 <script src="/assets/vendor/firebase-auth-compat.js"></script>
 <script src="/assets/se7-auth.js"></script>
-<script src="/assets/se7-portal-admin.js"></script>
+<script src="/assets/se7-portal-admin.js?v=portal-explicito-3"></script>
 <script src="/assets/se7-portal-preview.js"></script>
 <script src="/assets/se7-email.js"></script>
     <!-- Canvas Confetti -->
@@ -812,6 +812,7 @@
                 if (tIcon) tIcon.className = "fa-solid fa-moon";
             }
 
+            if(window.SE7AdminPortal?.active){popularSelectsDataNascimento();return;}
             await carregarConfiguracaoInstituicao();
             popularSelectsDataNascimento();
 
@@ -828,6 +829,21 @@
                 if(alunoLogado) {acompanharControlePortal();await carregarConfiguracaoAlunoAutenticado();await registrarEventoPortal('resume');}
             }
         });
+
+        let inicializacaoPortalAdministrativo=null;
+        function iniciarPortalAdministrativo(profile){
+            if(!window.SE7AdminPortal?.active)throw Error('Entrada administrativa não habilitada nesta janela.');
+            if(inicializacaoPortalAdministrativo)return inicializacaoPortalAdministrativo;
+            if(!profile?.id||!profile.fullname)throw Error('Cadastro do aluno não foi recebido do Matriz.');
+            inicializacaoPortalAdministrativo=(async()=>{
+                alunoLogado=profile;SE7AdminPortal.setProfile(profile);guardarSessaoPortal(profile);
+                for(const id of ['welcome-screen','login-screen','matricula-screen'])document.getElementById(id).style.display='none';
+                document.getElementById('main-app').style.display='flex';
+                const boasVindas=mostrarBoasVindasApp(profile);
+                try{await carregarConfiguracaoInstituicao();await carregarConfiguracaoAlunoAutenticado();await carregarDadosPainel();await registrarEventoPortal('resume');}
+                finally{await boasVindas;}
+            })();return inicializacaoPortalAdministrativo;
+        }
 
         function mudarTelaComTransicao(idTelaOrigem, idTelaDestino) {
             const origem = document.getElementById(idTelaOrigem);
