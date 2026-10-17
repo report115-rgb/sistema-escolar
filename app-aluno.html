@@ -223,6 +223,7 @@
 <link rel="stylesheet" href="/assets/se7-mobile-access.css">
 <link rel="stylesheet" href="/assets/se7-welcome.css">
 <link rel="stylesheet" href="assets/se7-eja.css?v=1"><script defer src="assets/se7-eja-student.js?v=1"></script><link rel="stylesheet" href="/assets/se7-ambient.css">
+<script src="/assets/se7-subject-kind.js?v=1"></script>
 </head>
 <body class="se7-suite bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans antialiased h-screen overflow-hidden flex flex-col transition-colors duration-200">
 <div id="se7-welcome" hidden role="status" aria-live="polite" aria-atomic="true">
@@ -1156,7 +1157,7 @@ let cancelarIdentidadeAluno = null;
             if (alunoLogado.courseId) {
                 const courseDoc = await db.collection("courses").doc(alunoLogado.courseId).get();
                 if (courseDoc.exists) {
-                    const curso = courseDoc.data();
+                    const curso = courseDoc.data();window.se7CalendarCourse=curso;
                     badge.style.display = (curso.subjects && curso.subjects.length > 0) ? 'flex' : 'none';
                 }
             }
@@ -1589,7 +1590,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
                 if(alunoLogado.courseId) {
                     const courseDoc = await db.collection("courses").doc(alunoLogado.courseId).get({source:'server'});
                     if(courseDoc.exists) {
-                        const curso = courseDoc.data();
+                        const curso = courseDoc.data();window.se7CalendarCourse=curso;
                         adaptarPainelPorModalidadeCurso(curso);
                         
                         renderizarDocumentosObrigatorios();
@@ -1909,7 +1910,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
                             dataIso: dataIso,
                             dataFormatada: `${dia}/${mes}/${ano}`,
                             materia: materia,
-                            descricao: ev.description || 'Aula programada',
+                            descricao: SE7SubjectKind.description(ev,window.se7CalendarCourse),
                             semestre: ev.semestre
                         });
                     }

@@ -166,6 +166,7 @@
 <script src="/assets/se7-polos.js" defer></script>
 <link rel="stylesheet" href="assets/se7-eja.css?v=1"><script defer src="assets/se7-eja-admin.js?v=1"></script><link rel="stylesheet" href="/assets/se7-account-menu.css?v=menu-suave-3">
 <link rel="stylesheet" href="/assets/se7-ambient.css">
+<script src="/assets/se7-subject-kind.js?v=1"></script>
 </head>
 <body class="se7-suite se7-matriz bg-gray-100 dark:bg-slate-900 text-gray-800 dark:text-gray-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-300 pb-16">    
 
@@ -389,8 +390,8 @@
                 <input type="text" id="edit-cal-subject" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 dark:text-white">
             </div>
             <div>
-                <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase mb-1">Descrição / Tópico</label>
-                <input type="text" id="edit-cal-desc" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 dark:text-white">
+                <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase mb-1">Módulo</label>
+                <select id="edit-cal-desc" class="w-full px-3 py-2 rounded-lg border dark:bg-slate-800"><option value="">Selecione o módulo...</option><option value="1">Módulo 1</option><option value="2">Módulo 2</option><option value="3">Módulo 3</option><option value="4">Módulo 4</option></select>
             </div>
             <div>
                 <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase mb-1">Quantidade de Datas (1 a 6)</label>
@@ -997,6 +998,7 @@
                                 <label class="block text-xs font-semibold mb-1">Curso</label>
                                 <select id="input-subject-course-select" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></select>
                             </div>
+<div><label class="block text-xs font-semibold mb-1">Tipo da disciplina</label><select id="input-subject-type" class="w-full px-3 py-2 rounded-lg border dark:bg-slate-900"><option value="">Selecione o tipo...</option><option value="theory">Teórica</option><option value="theory_practice">Teórico-prática</option><option value="internship">Estágio curricular obrigatório</option></select></div>
                             <div>
                                 <label class="block text-xs font-semibold mb-1">Nome da Disciplina</label>
                                 <input type="text" id="input-subject-name" placeholder="Anatomia" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
@@ -1128,8 +1130,8 @@
                         </div>
                         
                         <div>
-                            <label class="block text-xs font-semibold mb-1">Descrição / Tópico / Módulo</label>
-                            <input type="text" id="cal-event-desc" placeholder="Ex: Aulas Teórico-Práticas / Módulo 01" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800">
+                            <label class="block text-xs font-semibold mb-1">Módulo</label>
+                            <select id="cal-event-desc" class="w-full px-3 py-2 rounded-lg border dark:bg-slate-800"><option value="">Selecione o módulo...</option><option value="1">Módulo 1</option><option value="2">Módulo 2</option><option value="3">Módulo 3</option><option value="4">Módulo 4</option></select>
                         </div>
 
                         <div>
@@ -2925,27 +2927,30 @@ async function excluirColaborador(id) {
             const name = document.getElementById('input-subject-name').value.trim();
             const hours = document.getElementById('input-subject-hours').value.trim();
             const ementa = document.getElementById('input-subject-ementa').value.trim();
+            const teachingType=document.getElementById('input-subject-type').value;
+            if(!SE7SubjectKind.labels[teachingType])return alert('Selecione o tipo da disciplina.');
             if (!courseId || !name) return alert("Preencha todos os campos obrigatórios!");
 
             const course = courses.find(c => c.id == courseId);
             if (!course) return;
+            if(!SE7SubjectKind.supports(course))return alert('EJA Prova Única não utiliza cadastro de disciplinas.');
 
             if (!course.subjects) course.subjects = [];
 
             if (editSubjectId) {
                 const index = course.subjects.findIndex(s => s.id == editSubjectId);
                 if (index !== -1) {
-                    course.subjects[index] = { ...course.subjects[index], name, hours, ementa };
+                    course.subjects[index] = { ...course.subjects[index], name, hours, ementa, teachingType };
                 }
                 await db.collection("courses").doc(courseId).update({ subjects: course.subjects });
                 cancelarEdicaoDisciplina();
                 alert("Disciplina atualizada com sucesso!");
             } else {
-                course.subjects.push({ id: Date.now(), name, hours, ementa });
+                course.subjects.push({ id: Date.now(), name, hours, ementa, teachingType });
                 await db.collection("courses").doc(courseId).update({ subjects: course.subjects });
                 document.getElementById('input-subject-name').value = '';
                 document.getElementById('input-subject-hours').value = '';
-                document.getElementById('input-subject-ementa').value = '';
+                document.getElementById('input-subject-ementa').value = '';document.getElementById('input-subject-type').value='';
                 document.getElementById('subjects-list-course').value=courseId;cancelarEdicaoDisciplina();renderSubjectsManagement();alert("Disciplina adicionada com sucesso!");
             }
         }
@@ -2982,6 +2987,7 @@ async function excluirColaborador(id) {
             document.getElementById('input-subject-name').value = sub.name || '';
             document.getElementById('input-subject-hours').value = sub.hours || '';
             document.getElementById('input-subject-ementa').value = sub.ementa || '';
+            document.getElementById('input-subject-type').value=sub.teachingType||'';
 
             document.getElementById('btn-save-subject').textContent = "Atualizar Disciplina";
             document.getElementById('btn-cancel-edit-subject').style.display = 'inline-block';
@@ -2996,7 +3002,7 @@ async function excluirColaborador(id) {
             document.getElementById('input-subject-course-select').disabled=false;
             document.getElementById('input-subject-name').value = '';
             document.getElementById('input-subject-hours').value = '';
-            document.getElementById('input-subject-ementa').value = '';
+            document.getElementById('input-subject-ementa').value = '';document.getElementById('input-subject-type').value='';
             document.getElementById('btn-save-subject').textContent = "Salvar Disciplina";
             document.getElementById('btn-cancel-edit-subject').style.display = 'none';
 
@@ -3134,7 +3140,7 @@ async function excluirColaborador(id) {
             if([...subjectSelect.options].some(o=>o.value===old&&!o.disabled))subjectSelect.value=old;
         }
 
-        function atualizarTipoEventoCalendario(){const t=document.getElementById('cal-event-type').value;document.getElementById('cal-subject-select').disabled=['holiday','simulation','inaugural'].includes(t);document.getElementById('cal-qtd-datas').disabled=t==='inaugural';if(t!=='lesson'){document.getElementById('cal-qtd-datas').value='1';renderizarCamposDatasCalendario();}if(t==='simulation')document.getElementById('cal-event-desc').value='Simulado Avaliativo Final de Semestre';if(t==='inaugural')document.getElementById('cal-event-desc').value='Apresentação da turma e orientações iniciais';atualizarDisciplinasPorTurmaCalendario();}
+        function atualizarTipoEventoCalendario(){const t=document.getElementById('cal-event-type').value;document.getElementById('cal-subject-select').disabled=['holiday','simulation','inaugural'].includes(t);document.getElementById('cal-qtd-datas').disabled=t==='inaugural';if(t!=='lesson'){document.getElementById('cal-qtd-datas').value='1';renderizarCamposDatasCalendario();}document.getElementById('cal-event-desc').closest('div').style.display=t==='lesson'?'':'none';atualizarDisciplinasPorTurmaCalendario();}
         function renderizarCamposDatasCalendario() {
             const qtd = document.getElementById('cal-event-type').value==='inaugural'?1:(parseInt(document.getElementById('cal-qtd-datas').value) || 2);
             const container = document.getElementById('container-datas-dinamicas');
@@ -3160,7 +3166,9 @@ async function excluirColaborador(id) {
             const eventType=document.getElementById('cal-event-type').value;
             const subject=eventType==='inaugural'?'Aula inaugural':eventType==='holiday'?'Feriado / Sem aula':eventType==='simulation'?'Simulado Avaliativo Final de Semestre':document.getElementById('cal-subject-select').value;
             const qtd = document.getElementById('cal-event-type').value==='inaugural'?1:(parseInt(document.getElementById('cal-qtd-datas').value) || 2);
-            const description = document.getElementById('cal-event-desc').value.trim() || (eventType==='simulation'?'Simulado Avaliativo Final de Semestre':'');
+            const module=eventType==='lesson'?document.getElementById('cal-event-desc').value:'';
+            if(eventType==='lesson'&&!module)return alert('Selecione o módulo.');
+            const description=eventType==='lesson'?SE7SubjectKind.description({subject,module},courses.find(c=>c.id===courseId)):subject;
 
             if (!courseId || !classId || !subject || !description) {
                 return alert("Preencha todos os campos do calendário acadêmico.");
@@ -3188,7 +3196,7 @@ async function excluirColaborador(id) {
                 subject,
                 dates: datasSelecionadas,
                 eventType,countsForAttendance:eventType==='lesson',
-                description,
+                description,module,
                 createdAt: new Date().toISOString()
             };
 
@@ -3241,10 +3249,10 @@ async function excluirColaborador(id) {
             if (!cal) return;
             document.getElementById('edit-cal-id').value = cal.id;
             document.getElementById('edit-cal-subject').value = cal.subject || '';
-            document.getElementById('edit-cal-desc').value = cal.description || '';
+            document.getElementById('edit-cal-desc').value=SE7SubjectKind.moduleOf(cal);
             
             const qtd = cal.eventType==='inaugural'?1:(cal.dates?.length || 1);document.getElementById('edit-cal-qtd').disabled=cal.eventType==='inaugural';document.getElementById('edit-cal-subject').readOnly=cal.eventType==='inaugural';
-            document.getElementById('edit-cal-type').value=cal.eventType||'lesson';
+            document.getElementById('edit-cal-type').value=cal.eventType||'lesson';document.getElementById('edit-cal-desc').closest('div').style.display=(!cal.eventType||cal.eventType==='lesson')?'':'none';
             document.getElementById('edit-cal-qtd').value = qtd;
             renderizarCamposEdicaoCalendario();
 
@@ -3262,7 +3270,7 @@ async function excluirColaborador(id) {
             document.getElementById('modal-editar-calendario').style.display = 'none';
         }
 
-        function atualizarTipoEdicaoCalendario(){const inaugural=document.getElementById('edit-cal-type').value==='inaugural';const qtd=document.getElementById('edit-cal-qtd');qtd.disabled=inaugural;const subject=document.getElementById('edit-cal-subject');subject.readOnly=inaugural;if(inaugural){subject.value='Aula inaugural';const date=document.getElementById('edit-cal-date-1')?.value||'';qtd.value='1';renderizarCamposEdicaoCalendario();document.getElementById('edit-cal-date-1').value=date;}}
+        function atualizarTipoEdicaoCalendario(){document.getElementById('edit-cal-desc').closest('div').style.display=document.getElementById('edit-cal-type').value==='lesson'?'':'none';const inaugural=document.getElementById('edit-cal-type').value==='inaugural';const qtd=document.getElementById('edit-cal-qtd');qtd.disabled=inaugural;const subject=document.getElementById('edit-cal-subject');subject.readOnly=inaugural;if(inaugural){subject.value='Aula inaugural';const date=document.getElementById('edit-cal-date-1')?.value||'';qtd.value='1';renderizarCamposEdicaoCalendario();document.getElementById('edit-cal-date-1').value=date;}}
         function renderizarCamposEdicaoCalendario() {
             const qtd = document.getElementById('edit-cal-type').value==='inaugural'?1:(parseInt(document.getElementById('edit-cal-qtd').value) || 2);
             const container = document.getElementById('container-edit-datas-dinamicas');
@@ -3281,7 +3289,9 @@ async function excluirColaborador(id) {
         async function salvarEdicaoCalendario() {
             const id = document.getElementById('edit-cal-id').value;
             const subject = document.getElementById('edit-cal-type').value==='inaugural'?'Aula inaugural':document.getElementById('edit-cal-subject').value.trim();
-            const description = document.getElementById('edit-cal-desc').value.trim();
+            const previous=academicCalendars.find(c=>c.id===id),eventType=document.getElementById('edit-cal-type').value,module=eventType==='lesson'?document.getElementById('edit-cal-desc').value:'';
+            if(eventType==='lesson'&&!module)return alert('Selecione o módulo.');
+            const description=eventType==='lesson'?SE7SubjectKind.description({subject,module},courses.find(c=>c.id===previous?.courseId)):subject;
             const qtd = document.getElementById('edit-cal-type').value==='inaugural'?1:(parseInt(document.getElementById('edit-cal-qtd').value) || 2);
 
             if (!subject) return alert("Informe a disciplina.");
@@ -3296,7 +3306,7 @@ async function excluirColaborador(id) {
             const calendar=academicCalendars.find(c=>c.id===id),group=classes.find(c=>c.id===calendar?.classId);if(!group?.poloId)return alert("Vincule a turma a um polo antes de editar o calendário.");
             await db.collection("academicCalendars").doc(id).update({poloId:group.poloId,poloName:group.poloName||"",
                 subject,
-                description,
+                description,module,
                 dates: novasDatas,
                 eventType:document.getElementById('edit-cal-type').value,
                 countsForAttendance:document.getElementById('edit-cal-type').value==='lesson'
@@ -3363,7 +3373,7 @@ async function excluirColaborador(id) {
                                             <span class="text-[10px] bg-blue-600 text-white px-1.5 py-0.2 rounded">${ev.className || ''}</span>
                                         </div>
                                         <div class="font-semibold text-gray-900 dark:text-white">${ev.subject}</div>
-                                        <div class="text-[11px] text-gray-500 dark:text-gray-400">${ev.description || ''}</div>
+                                        <div class="text-[11px] text-gray-500 dark:text-gray-400">${SE7SubjectKind.description(ev,courses.find(c=>c.id===ev.courseId))}</div>
                                     </div>
                                 `;
                             }
@@ -3432,7 +3442,7 @@ async function excluirColaborador(id) {
                                             <span class="text-[10px] bg-emerald-600 text-white px-1.5 py-0.2 rounded">${ev.eventType==='inaugural'?'Aula inaugural':ev.eventType==='holiday'?'Feriado':ev.eventType==='simulation'?'Simulado':ev.eventType==='exam'?'Prova':'Aula'}</span>
                                         </div>
                                         <div class="font-semibold text-gray-900 dark:text-white">${ev.subject}</div>
-                                        <div class="text-[11px] text-gray-500 dark:text-gray-400">${ev.description || ''}</div>
+                                        <div class="text-[11px] text-gray-500 dark:text-gray-400">${SE7SubjectKind.description(ev,courses.find(c=>c.id===ev.courseId))}</div>
                                     </div>
                                 `;
                             }
@@ -4429,7 +4439,7 @@ function renderFinanceStudentSelect(){const select=document.getElementById('fin-
                 if(el) {
                     const currentVal = el.value;
                     el.innerHTML = '<option value="">Selecione o curso...</option>';
-                    courses.forEach(c => el.insertAdjacentHTML('beforeend', `<option value="${c.id}">${c.name}</option>`));
+                    courses.filter(c=>id!=='input-subject-course-select'||SE7SubjectKind.supports(c)).forEach(c => el.insertAdjacentHTML('beforeend', `<option value="${c.id}">${c.name}</option>`));
                     if(currentVal) el.value = currentVal;
                 }
             });
