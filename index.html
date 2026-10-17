@@ -2178,10 +2178,11 @@ async function rejeitarSolicitacaoFirebase(id) {
                 const resultado = await SE7.api('staff-list');
                 const usuario = resultado.users.find(u => u.id === id && !u.disabled && ['master','secretaria','professor','financeiro'].includes(u.perfil));
                 if (!usuario || id === firebase.auth().currentUser.uid) throw new Error('Perfil indisponível');
-                perfilVisualizadoMatriz = {nome:usuario.nome || usuario.email, email:usuario.email, perfil:usuario.perfil, id:usuario.id,poloId:usuario.poloId||'',poloIds:usuario.poloIds||[]};
+                const accountDetails=await SE7.api('staff-profile-get',{targetId:usuario.id});
+                perfilVisualizadoMatriz = {...accountDetails,nome:usuario.nome || usuario.email, email:usuario.email, perfil:usuario.perfil, id:usuario.id,poloId:usuario.poloId||'',poloIds:usuario.poloIds||[]};
                 const aviso = document.getElementById('aviso-perfil-matriz');
                 aviso.hidden = false;
-                document.getElementById('nome-perfil-matriz').textContent = 'Visualizando: ' + perfilVisualizadoMatriz.nome + ' — ' + perfilVisualizadoMatriz.perfil + '. Sua sessão continua como master.';
+                document.getElementById('nome-perfil-matriz').textContent = 'Visualizando: ' + perfilVisualizadoMatriz.nome + ' — ' + perfilVisualizadoMatriz.perfil + '. Ações neste perfil devem respeitar o acesso do funcionário.';
                 return perfilVisualizadoMatriz;
             } catch (erro) {
                 sessionStorage.removeItem('se7_matriz_perfil_visualizado'); return sessao;
@@ -5423,7 +5424,7 @@ function escutarRegistrosPontoManual() {
 <link rel="stylesheet" href="/assets/se7-template-editor.css"><script src="/assets/se7-document-models.js"></script>
 <script src="/assets/se7-academic-documents.js?v=frequencia-2"></script><script src="/assets/se7-template-editor.js"></script>
 <link rel="stylesheet" href="/assets/se7-exams.css">
-<script src="/assets/vendor/pdf-lib.min.js"></script><script src="/assets/vendor/fontkit.umd.min.js"></script><script src="/assets/vendor/jsQR.js"></script><script src="/assets/vendor/qrcode.js"></script><script src="/assets/se7-exam-omr.js"></script><script src="/assets/se7-exam-pdf.js"></script><script src="/assets/se7-exam-calendar.js" type="module"></script><script src="/assets/se7-material-pdf.js?v=1"></script><script src="/assets/se7-materials.js?v=1"></script><script src="/assets/se7-exams.js?v=apostilas-3"></script>
+<script src="/assets/vendor/pdf-lib.min.js"></script><script src="/assets/vendor/fontkit.umd.min.js"></script><script src="/assets/vendor/jsQR.js"></script><script src="/assets/vendor/qrcode.js"></script><script src="/assets/se7-exam-omr.js"></script><script src="/assets/se7-exam-pdf.js"></script><script src="/assets/se7-exam-calendar.js" type="module"></script><script src="/assets/se7-material-pdf.js?v=1"></script><script src="/assets/se7-materials.js?v=apostilas-aluno-4"></script><script src="/assets/se7-exams.js?v=apostilas-3"></script>
 <link rel="stylesheet" href="/assets/se7-student-sheet.css?v=senha-laranja-2"><script src="/assets/se7-student-sheet.js?v=frequencia-regra-4"></script>
 <script src="/assets/se7-academic-entry.js"></script>
 <script src="/assets/se7-enrollment-auto.js"></script>
@@ -5434,7 +5435,7 @@ function escutarRegistrosPontoManual() {
 <script src="/assets/se7-busy.js"></script>
 <script src="/assets/se7-matriz-finance.js"></script>
 <script type="module" src="/assets/se7-tuition.js"></script>
-<script src="/assets/se7-account-menu.js?v=avatar-sessao-4"></script>
+<script src="/assets/se7-account-menu.js?v=perfil-alternado-5"></script>
 <script src="/assets/se7-ambient.js"></script>
 <script src="/assets/se7-payroll-receipt.js"></script>
 <link rel="stylesheet" href="/assets/se7-annual-statements.css"><script src="/assets/se7-annual-statements.js"></script></body>
