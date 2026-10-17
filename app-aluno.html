@@ -224,6 +224,7 @@
 <link rel="stylesheet" href="/assets/se7-welcome.css">
 <link rel="stylesheet" href="assets/se7-eja.css?v=1"><script defer src="assets/se7-eja-student.js?v=1"></script><link rel="stylesheet" href="/assets/se7-ambient.css">
 <script src="/assets/se7-subject-kind.js?v=1"></script>
+<script src="/assets/se7-lesson-realization.js?v=1"></script>
 </head>
 <body class="se7-suite bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans antialiased h-screen overflow-hidden flex flex-col transition-colors duration-200">
 <div id="se7-welcome" hidden role="status" aria-live="polite" aria-atomic="true">
@@ -1801,6 +1802,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
                             dataIso: dataIso,
                             dataFormatada: `${dia}/${mes}/${ano}`,
                             materia: materia,
+                            realizationHtml: SE7LessonChange.badge(ev,dataIso),
                             status: status
                         });
                     }
@@ -1910,6 +1912,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
                             dataIso: dataIso,
                             dataFormatada: `${dia}/${mes}/${ano}`,
                             materia: materia,
+                            realizationHtml: SE7LessonChange.badge(ev,dataIso),
                             descricao: SE7SubjectKind.description(ev,window.se7CalendarCourse),
                             semestre: ev.semestre
                         });
@@ -1931,7 +1934,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
                                 <span class="font-bold text-blue-600 dark:text-blue-400 mr-2"><i class="fa-regular fa-calendar-check mr-1"></i> ${item.dataFormatada}</span>
                                 <span class="text-slate-700 dark:text-slate-200 font-semibold">${item.materia}</span>
                             </div>
-                            <span class="text-[10px] text-slate-500 italic">${item.descricao}</span>
+                            <span class="text-[10px] text-slate-500 italic">${item.descricao}${item.realizationHtml||''}</span>
                         </div>
                     `;
                 });

@@ -167,6 +167,7 @@
 <link rel="stylesheet" href="assets/se7-eja.css?v=1"><script defer src="assets/se7-eja-admin.js?v=1"></script><link rel="stylesheet" href="/assets/se7-account-menu.css?v=menu-suave-3">
 <link rel="stylesheet" href="/assets/se7-ambient.css">
 <script src="/assets/se7-subject-kind.js?v=1"></script>
+<script src="/assets/se7-lesson-realization.js?v=1"></script>
 </head>
 <body class="se7-suite se7-matriz bg-gray-100 dark:bg-slate-900 text-gray-800 dark:text-gray-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-300 pb-16">    
 
@@ -810,6 +811,7 @@
                     </div>
 
                 </div>
+                <button type="button" id="lesson-realization-edit" hidden class="px-3 py-2 mb-3 rounded-lg bg-cyan-700 text-white text-xs">Alterar data de realização</button>
                 <h3 id="attendance-section-title" class="font-bold text-sm text-gray-700 dark:text-gray-300 mb-2">Lista de Alunos da Turma</h3>
                 <ul class="attendance-list divide-y divide-gray-200 dark:divide-slate-700 mb-4" id="student-attendance-list"></ul>
                 <button onclick="saveAttendance()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-sm shadow">Finalizar e Salvar Chamada</button>
@@ -3228,7 +3230,7 @@ async function excluirColaborador(id) {
             tbody.innerHTML=filtered.length?'':'<tr><td colspan="5" class="p-3 text-center text-gray-400">Nenhum calendário cadastrado para esta seleção.</td></tr>';
             
             filtered.forEach(cal => {
-                const datasFormatadas = (cal.dates || []).map(d => d.split('-').reverse().join('/')).join(', ');
+                const datasFormatadas = (cal.dates || []).map(d => d.split('-').reverse().join('/')+SE7LessonChange.badge(cal,d)).join(', ');
                 tbody.innerHTML += `
                     <tr class="border-b border-gray-100 dark:border-slate-700">
                         <td class="p-2.5 font-semibold">${cal.className || '---'} <br><span class="text-[10px] text-gray-400">${cal.courseName || ''}</span></td>
@@ -3373,7 +3375,7 @@ async function excluirColaborador(id) {
                                             <span class="text-[10px] bg-blue-600 text-white px-1.5 py-0.2 rounded">${ev.className || ''}</span>
                                         </div>
                                         <div class="font-semibold text-gray-900 dark:text-white">${ev.subject}</div>
-                                        <div class="text-[11px] text-gray-500 dark:text-gray-400">${SE7SubjectKind.description(ev,courses.find(c=>c.id===ev.courseId))}</div>
+                                        <div class="text-[11px] text-gray-500 dark:text-gray-400">${SE7SubjectKind.description(ev,courses.find(c=>c.id===ev.courseId))}</div>${SE7LessonChange.badge(ev,d)}
                                     </div>
                                 `;
                             }
@@ -3442,7 +3444,7 @@ async function excluirColaborador(id) {
                                             <span class="text-[10px] bg-emerald-600 text-white px-1.5 py-0.2 rounded">${ev.eventType==='inaugural'?'Aula inaugural':ev.eventType==='holiday'?'Feriado':ev.eventType==='simulation'?'Simulado':ev.eventType==='exam'?'Prova':'Aula'}</span>
                                         </div>
                                         <div class="font-semibold text-gray-900 dark:text-white">${ev.subject}</div>
-                                        <div class="text-[11px] text-gray-500 dark:text-gray-400">${SE7SubjectKind.description(ev,courses.find(c=>c.id===ev.courseId))}</div>
+                                        <div class="text-[11px] text-gray-500 dark:text-gray-400">${SE7SubjectKind.description(ev,courses.find(c=>c.id===ev.courseId))}</div>${SE7LessonChange.badge(ev,d)}
                                     </div>
                                 `;
                             }
@@ -3490,7 +3492,7 @@ async function excluirColaborador(id) {
         }
 
 function atualizarSemestresFrequencia(){const classId=document.getElementById('class-select').value,select=document.getElementById('attendance-semester-select');select.replaceChildren(new Option('Selecione o semestre...',''));const semesters=[...new Set(academicCalendars.filter(c=>c.classId===classId).map(c=>String(c.semestre||'').replace('.','/')).filter(Boolean))].sort();for(const semester of semesters)select.add(new Option(semester,semester));document.getElementById('attendance-teacher-select').value='';carregarDatasCalendarioParaFrequencia();}
-function carregarDatasCalendarioParaFrequencia(){const classId=document.getElementById('class-select').value,semester=document.getElementById('attendance-semester-select').value,teacher=document.getElementById('attendance-teacher-select').value,select=document.getElementById('attendance-calendar-date-select');select.replaceChildren(new Option('Selecione a data da aula...',''));select.disabled=!classId||!semester||!teacher;if(select.disabled){void renderAttendanceList();return;}const all=academicCalendars.filter(c=>c.classId===classId),holidays=new Set(all.filter(c=>c.eventType==='holiday').flatMap(c=>c.dates||[]));const rows=all.filter(c=>String(c.semestre||'').replace('.','/')===semester&&c.countsForAttendance!==false&&!['holiday','exam','simulation','inaugural'].includes(c.eventType)).flatMap(c=>(c.dates||[]).filter(d=>!holidays.has(d)).map(date=>({date,subject:c.subject||'Disciplina',description:c.description||'Aula'}))).sort((a,b)=>a.date.localeCompare(b.date)||a.subject.localeCompare(b.subject,'pt-BR'));const seen=new Set();for(const row of rows){const key=row.date+'|'+row.subject;if(seen.has(key))continue;seen.add(key);const option=new Option(row.date.split('-').reverse().join('/')+' — '+row.subject+' ('+row.description+')',row.date);option.dataset.subject=row.subject;select.add(option);}if(!rows.length)select.options[0].textContent='Nenhuma aula neste semestre.';void renderAttendanceList();}
+function carregarDatasCalendarioParaFrequencia(){const classId=document.getElementById('class-select').value,semester=document.getElementById('attendance-semester-select').value,teacher=document.getElementById('attendance-teacher-select').value,select=document.getElementById('attendance-calendar-date-select');select.replaceChildren(new Option('Selecione a data da aula...',''));select.disabled=!classId||!semester||!teacher;if(select.disabled){void renderAttendanceList();return;}const all=academicCalendars.filter(c=>c.classId===classId),holidays=new Set(all.filter(c=>c.eventType==='holiday').flatMap(c=>c.dates||[]));const rows=all.filter(c=>String(c.semestre||'').replace('.','/')===semester&&c.countsForAttendance!==false&&!['holiday','exam','simulation','inaugural'].includes(c.eventType)).flatMap(c=>(c.dates||[]).filter(d=>!holidays.has(d)).map(date=>({date,calendarId:c.id,subject:c.subject||'Disciplina',description:c.description||'Aula'}))).sort((a,b)=>a.date.localeCompare(b.date)||a.subject.localeCompare(b.subject,'pt-BR'));const seen=new Set();for(const row of rows){const key=row.date+'|'+row.subject;if(seen.has(key))continue;seen.add(key);const option=new Option(row.date.split('-').reverse().join('/')+' — '+row.subject+' ('+row.description+')',row.date);option.dataset.subject=row.subject;option.dataset.calendarId=row.calendarId;select.add(option);}if(!rows.length)select.options[0].textContent='Nenhuma aula neste semestre.';void renderAttendanceList();}
 
         function filterTurmasByGradeCourse() {
             const courseId = document.getElementById('grade-course-select').value;
@@ -5418,7 +5420,7 @@ function escutarRegistrosPontoManual() {
 <script src="/assets/se7-academic-documents.js"></script><script src="/assets/se7-template-editor.js"></script>
 <link rel="stylesheet" href="/assets/se7-exams.css">
 <script src="/assets/vendor/pdf-lib.min.js"></script><script src="/assets/vendor/fontkit.umd.min.js"></script><script src="/assets/vendor/jsQR.js"></script><script src="/assets/vendor/qrcode.js"></script><script src="/assets/se7-exam-omr.js"></script><script src="/assets/se7-exam-pdf.js"></script><script src="/assets/se7-exam-calendar.js" type="module"></script><script src="/assets/se7-exams.js?v=nominal-ingresso-1"></script>
-<link rel="stylesheet" href="/assets/se7-student-sheet.css?v=senha-laranja-2"><script src="/assets/se7-student-sheet.js?v=senha-ficha-1"></script>
+<link rel="stylesheet" href="/assets/se7-student-sheet.css?v=senha-laranja-2"><script src="/assets/se7-student-sheet.js?v=realizacao-aula-2"></script>
 <script src="/assets/se7-academic-entry.js"></script>
 <script src="/assets/se7-enrollment-auto.js"></script>
 <script type="module" src="/assets/se7-ingress-policy.js"></script><script src="/assets/se7-ingress.js"></script>
