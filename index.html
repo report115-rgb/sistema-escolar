@@ -168,8 +168,9 @@
 <link rel="stylesheet" href="/assets/se7-ambient.css">
 <script src="/assets/se7-subject-kind.js?v=1"></script>
 <script src="/assets/se7-lesson-realization.js?v=1"></script>
-<script src="/assets/se7-attendance-proof.js?v=2"></script>
+<script src="/assets/se7-attendance-proof.js?v=analise-3"></script>
 <script type="module" src="/assets/se7-attendance-rules.js?v=1"></script>
+<script src="/assets/se7-justification-review.js?v=1"></script>
 </head>
 <body class="se7-suite se7-matriz bg-gray-100 dark:bg-slate-900 text-gray-800 dark:text-gray-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-300 pb-16">    
 
@@ -786,7 +787,7 @@
 </div>
 
         <!-- FREQUÊNCIA -->
-        <div id="tab-attendance" class="tab-content space-y-4" style="display:none"><section class="bg-white dark:bg-slate-800 rounded-2xl shadow-md p-6 border border-gray-200 dark:border-slate-700"><h2 class="text-xl font-bold mb-3">Notas e frequência</h2><p class="text-sm mb-5">Escolha o lançamento que deseja realizar.</p><div class="flex gap-3 flex-wrap"><button type="button" onclick="SE7AcademicEntry.open('attendance')" class="px-3 py-2 text-xs rounded-lg bg-blue-600 text-white font-semibold"><i class="fa-solid fa-clipboard-user mr-2"></i>Lançar frequência</button><button type="button" onclick="SE7AcademicEntry.open('grades')" class="px-3 py-2 text-xs rounded-lg bg-blue-600 text-white font-semibold"><i class="fa-solid fa-star mr-2"></i>Lançar notas</button></div></section></div>
+        <div id="tab-attendance" class="tab-content space-y-4" style="display:none"><section class="bg-white dark:bg-slate-800 rounded-2xl shadow-md p-6 border border-gray-200 dark:border-slate-700"><h2 class="text-xl font-bold mb-3">Notas e frequência</h2><p class="text-sm mb-5">Escolha o lançamento que deseja realizar.</p><div class="flex gap-3 flex-wrap"><button type="button" onclick="SE7AcademicEntry.open('attendance')" class="px-3 py-2 text-xs rounded-lg bg-blue-600 text-white font-semibold"><i class="fa-solid fa-clipboard-user mr-2"></i>Lançar frequência</button><button type="button" onclick="SE7AcademicEntry.open('grades')" class="px-3 py-2 text-xs rounded-lg bg-blue-600 text-white font-semibold"><i class="fa-solid fa-star mr-2"></i>Lançar notas</button><button id="se7-review-justifications" type="button" hidden class="px-3 py-2 text-xs rounded-lg bg-orange-600 text-white font-semibold">Analisar justificativas de falta</button></div></section></div>
         <div id="se7-attendance-source" style="display:none">
             <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-md p-6 border border-gray-200 dark:border-slate-700">
                 <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4 pb-2 border-b border-gray-100 dark:border-slate-700">Lançamento de Frequência</h2>
@@ -3892,7 +3893,7 @@ async function renderAttendanceList() {
 
     alunosTurma.forEach(aluno => {
         let statusSalvo = registrosAnteriores[aluno.id]||aluno.attendance?.[dataAula]?.status;
-        let alunoBloqueado = jaLancado || statusSalvo !== undefined;
+        let alunoBloqueado = jaLancado || statusSalvo !== undefined;const proofState=aluno.attendance?.[dataAula]?.justification?.state;const canEditProof=proofState!=='pending'&&(!['approved','rejected'].includes(proofState)||usuarioMasterAtivo());
 
         let li = document.createElement('li');
         li.className = "py-3 flex items-center justify-between border-b border-gray-100 dark:border-slate-700";
@@ -3907,7 +3908,7 @@ async function renderAttendanceList() {
                     <input type="radio" name="att_${aluno.id}" value="Falta" ${statusSalvo === 'Falta' ? 'checked' : ''} ${alunoBloqueado ? 'disabled' : ''} class="text-red-600 focus:ring-red-500">
                     <span class="text-xs ${alunoBloqueado && statusSalvo !== 'Falta' ? 'opacity-50' : ''}">Falta</span>
                 </label>
-                ${alunoBloqueado ? `<button type="button" onclick="habilitarEdicaoAlunoFrequencia(this, '${aluno.id}')" class="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-semibold rounded shadow transition"><i class="fa-solid fa-pen-to-square mr-1"></i> Editar</button>` : ''}
+                ${alunoBloqueado&&canEditProof ? `<button type="button" onclick="habilitarEdicaoAlunoFrequencia(this, '${aluno.id}')" class="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-semibold rounded shadow transition"><i class="fa-solid fa-pen-to-square mr-1"></i> Editar</button>` : ''}
             </div>
         `;
         window.SE7AttendanceProof?.decorate(li,aluno,dataAula);
@@ -5422,7 +5423,7 @@ function escutarRegistrosPontoManual() {
 <link rel="stylesheet" href="/assets/se7-template-editor.css"><script src="/assets/se7-document-models.js"></script>
 <script src="/assets/se7-academic-documents.js?v=frequencia-2"></script><script src="/assets/se7-template-editor.js"></script>
 <link rel="stylesheet" href="/assets/se7-exams.css">
-<script src="/assets/vendor/pdf-lib.min.js"></script><script src="/assets/vendor/fontkit.umd.min.js"></script><script src="/assets/vendor/jsQR.js"></script><script src="/assets/vendor/qrcode.js"></script><script src="/assets/se7-exam-omr.js"></script><script src="/assets/se7-exam-pdf.js"></script><script src="/assets/se7-exam-calendar.js" type="module"></script><script src="/assets/se7-exams.js?v=frequencia-regra-2"></script>
+<script src="/assets/vendor/pdf-lib.min.js"></script><script src="/assets/vendor/fontkit.umd.min.js"></script><script src="/assets/vendor/jsQR.js"></script><script src="/assets/vendor/qrcode.js"></script><script src="/assets/se7-exam-omr.js"></script><script src="/assets/se7-exam-pdf.js"></script><script src="/assets/se7-exam-calendar.js" type="module"></script><script src="/assets/se7-material-pdf.js?v=1"></script><script src="/assets/se7-materials.js?v=1"></script><script src="/assets/se7-exams.js?v=apostilas-3"></script>
 <link rel="stylesheet" href="/assets/se7-student-sheet.css?v=senha-laranja-2"><script src="/assets/se7-student-sheet.js?v=frequencia-regra-4"></script>
 <script src="/assets/se7-academic-entry.js"></script>
 <script src="/assets/se7-enrollment-auto.js"></script>

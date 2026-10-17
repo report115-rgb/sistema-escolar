@@ -1,3 +1,4 @@
+import {materials} from '../server/materials.mjs';
 import {justification as attendanceJustification} from '../server/attendance-justification.mjs';
 import {attendancePolo} from '../server/attendance-polo.mjs';
 import {save as saveLessonRealization} from '../server/lesson-realization.mjs';
@@ -115,13 +116,14 @@ async function dispatchOperation({auth,db},req,b,delegated=null){
   if(b.operation!=='call')fail(400,'Operação inválida.');const inner=portalAdmin.allowedCall(ctx,b);
   try{return await dispatchOperation({auth,db},{...req},inner,ctx.user);}finally{req.se7AuditIdentity=u;}
  }
+ if(action.startsWith('materials-'))return materials(db,b,u);
  if(action==='annual-statements')return annualAction(db,b,u);
  if(action==='payroll-report-issue')return issuePayrollReport(db,b,u);
  if(['payroll-save','payroll-reverse'].includes(action))return dispatchPayment(db,b,u);
  if(action.startsWith('payroll-receipt-'))return dispatchReceipt(db,b,u);
  if(action==='student-avatar-save')return saveStudentAvatar(db,b,u);
  if(action.startsWith('eja-'))return eja.dispatch(db,b,u);
- if(['attendance-justification-save','attendance-justification-get'].includes(action))return attendanceJustification(polos.scopedDatabase(db,u),b,u);
+ if(['attendance-justification-save','attendance-justification-get','attendance-justification-list','attendance-justification-decide'].includes(action))return attendanceJustification(polos.scopedDatabase(db,u),b,u);
  if(action==='lesson-realization-save')return saveLessonRealization(db,b,u);
  if(action==='polo-catalog')return polos.catalog(db,u);
  if(action==='polo-state')return polos.setActive(db,b,u);
@@ -345,7 +347,7 @@ export default async function handler(req,res){
  res.setHeader('Cache-Control','no-store');res.setHeader('X-Content-Type-Options','nosniff');
  try {
   const native=scannerCors(req,res);if(req.method==='OPTIONS'&&native){res.status(204).end();return;}if(req.method!=='POST')fail(405,'Use POST.');const origin=req.headers.origin;if(origin!=='https://sistema-escolar-ten-mu.vercel.app'&&!native)fail(403,'Origem não autorizada.');
-  if(!String(req.headers['content-type']||'').startsWith('application/json'))fail(415,'Envie JSON.');let b;try{b=typeof req.body==='string'?JSON.parse(req.body):req.body;}catch{fail(400,'JSON inválido.');}if(!b||Array.isArray(b)||typeof b.action!=='string'||JSON.stringify(b).length>(b.action==='notices-save'||b.action==='exam-scan-preview'||b.action==='payroll-receipt-save'||b.action==='attendance-justification-save'?750000:b.action==='exam-save'?250000:(['profile-save','student-avatar-save'].includes(b.action)||(b.action==='portal-admin'&&b.callAction==='student-avatar-save'))?100000:12000))fail(400,'Requisição inválida.');
+  if(!String(req.headers['content-type']||'').startsWith('application/json'))fail(415,'Envie JSON.');let b;try{b=typeof req.body==='string'?JSON.parse(req.body):req.body;}catch{fail(400,'JSON inválido.');}if(!b||Array.isArray(b)||typeof b.action!=='string'||JSON.stringify(b).length>(b.action==='materials-save'?2900000:b.action==='notices-save'||b.action==='exam-scan-preview'||b.action==='payroll-receipt-save'||b.action==='attendance-justification-save'?750000:b.action==='exam-save'?250000:(['profile-save','student-avatar-save'].includes(b.action)||(b.action==='portal-admin'&&b.callAction==='student-avatar-save'))?100000:12000))fail(400,'Requisição inválida.');
   if(!nativeRequestAllowed(req,b))fail(403,'Operação não permitida para o leitor de avaliações.');
   if(!process.env.SE7_MASTER_UID)throw new Error('Master não configurado.');const result=await dispatch(services(),req,b);res.status(200).json(result);
  }catch(e){const status=e.status||500;if(status===500)console.error('SE7 API',e.code||'internal');res.status(status).json({error:status===500?'Não foi possível concluir. Verifique a configuração do servidor.':e.message});}

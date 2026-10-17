@@ -1170,7 +1170,7 @@ let cancelarIdentidadeAluno = null;
 
 let cancelarControlePortal=null;
 let saidaAlunoEmAndamento=false;
-let se7LastGradesSignature=null;function acompanharControlePortal(){if(window.SE7Preview?.active||window.SE7AdminPortal?.active)return;if(cancelarControlePortal)cancelarControlePortal();if(!alunoLogado?.id||alunoLogado.portalMustChangePassword)return;cancelarControlePortal=db.collection('students').doc(alunoLogado.id).onSnapshot(doc=>{if(saidaAlunoEmAndamento||!alunoLogado||doc.metadata.hasPendingWrites||doc.metadata.fromCache)return;const d=doc.exists?doc.data():null;const signature=JSON.stringify(d?.grades||{});if(se7LastGradesSignature!==null&&signature!==se7LastGradesSignature)void window.SE7ExamsStudent?.refresh(true);se7LastGradesSignature=signature;if(!d||d.portalBlocked||(d.portalSessionVersion||0)!==(alunoLogado.portalSessionVersion||0)){alert('Seu acesso foi alterado. Entre novamente.');SE7.logout();}},e=>{if(saidaAlunoEmAndamento||!firebase.auth().currentUser)return;if(e.code==='permission-denied'){alert('Sessão sem acesso. Entre novamente.');SE7.logout();}else console.warn(e.message);});}
+let se7LastGradesSignature=null;function acompanharControlePortal(){if(window.SE7Preview?.active||window.SE7AdminPortal?.active)return;if(cancelarControlePortal)cancelarControlePortal();if(!alunoLogado?.id||alunoLogado.portalMustChangePassword)return;cancelarControlePortal=db.collection('students').doc(alunoLogado.id).onSnapshot(doc=>{if(saidaAlunoEmAndamento||!alunoLogado||doc.metadata.hasPendingWrites||doc.metadata.fromCache)return;const d=doc.exists?doc.data():null;const attendanceSignature=JSON.stringify(d?.attendance||{});if(d&&attendanceSignature!==JSON.stringify(alunoLogado.attendance||{})){alunoLogado.attendance=d.attendance||{};alunoLogado.attendanceFailures=d.attendanceFailures||{};if(window.se7CalendarCourse){renderizarFrequenciaAluno();window.SE7AttendanceRules?.applyPortal(alunoLogado,window.se7CalendarCourse,eventosCalendarioCache);}}const signature=JSON.stringify(d?.grades||{});if(se7LastGradesSignature!==null&&signature!==se7LastGradesSignature)void window.SE7ExamsStudent?.refresh(true);se7LastGradesSignature=signature;if(!d||d.portalBlocked||(d.portalSessionVersion||0)!==(alunoLogado.portalSessionVersion||0)){alert('Seu acesso foi alterado. Entre novamente.');SE7.logout();}},e=>{if(saidaAlunoEmAndamento||!firebase.auth().currentUser)return;if(e.code==='permission-denied'){alert('Sessão sem acesso. Entre novamente.');SE7.logout();}else console.warn(e.message);});}
 let abaPortalAtual = null;
 function guardarSessaoPortal(aluno) {
     if(window.SE7Preview?.active)return;
@@ -1657,7 +1657,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
                             if (ev.semestre) semestresDisponiveis.add(ev.semestre);
                         });
 
-                        window.SE7AttendanceRules?.applyPortal(alunoLogado,window.se7CalendarCourse,eventosCalendarioCache);
+                        window.SE7AttendanceRules?.applyPortal(alunoLogado,window.se7CalendarCourse,eventosCalendarioCache);window.SE7Materials?.studentMount();
                         const selectSemestre = document.getElementById('select-filtro-semestre');
                         const valorAtualSelect = selectSemestre.value;
                         selectSemestre.innerHTML = `<option value="">Todos os Semestres</option>`;
@@ -1835,7 +1835,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
                     let textoStatus = 'Aguardando';
 
                     const stLower = item.status.toLowerCase();
-                    if(stLower==='anterior ao ingresso'){textoStatus='Anterior ao ingresso';iconeStatus='<i class="fa-solid fa-calendar-minus mr-1"></i>';} else if (stLower === 'presente') {
+                    if(stLower==='pendente de justificativa'){textoStatus='Justificativa pendente';iconeStatus='<i class="fa-solid fa-hourglass mr-1"></i>';}else if(stLower==='anterior ao ingresso'){textoStatus='Anterior ao ingresso';iconeStatus='<i class="fa-solid fa-calendar-minus mr-1"></i>';} else if (stLower === 'presente') {
                         badgeClass = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800';
                         iconeStatus = '<i class="fa-solid fa-circle-check mr-1"></i>';
                         textoStatus = 'Presente';
@@ -2279,7 +2279,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
     </script>
 <script src="/assets/se7-version.js"></script>
 <script src="/assets/vendor/pdf-lib.min.js"></script>
-<script src="/assets/vendor/fontkit.umd.min.js"></script>
+<script src="/assets/vendor/fontkit.umd.min.js"></script><script src="/assets/se7-material-pdf.js?v=1"></script><script src="/assets/se7-materials.js?v=1"></script>
 <script src="/assets/se7-receipt.js"></script>
 <script src="/assets/se7-cancellation.js"></script>
 <script src="/assets/se7-asaas.js"></script>
