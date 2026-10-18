@@ -2,9 +2,10 @@ rules_version = '2';
 service cloud.firestore {
  match /databases/{database}/documents {
   function signed(){return request.auth != null;}
-  function master(){return signed() && request.auth.uid == 'UUBINdHfJZONVMcC0QogyAsUgvA3';}
+  function linkedEmployee(){let a=get(/databases/$(database)/documents/se7Staff/$(request.auth.uid)).data;return a.get('teacherId','') != '' && a.get('accessAuthorized',true) == true && exists(/databases/$(database)/documents/teachers/$(a.teacherId)) && get(/databases/$(database)/documents/teachers/$(a.teacherId)).data.get('active',true) == true;}
+  function master(){return signed() && (request.auth.uid == 'UUBINdHfJZONVMcC0QogyAsUgvA3' || (staffRole('master') && get(/databases/$(database)/documents/se7Staff/$(request.auth.uid)).data.get('masterAccess',false) == true));}
   function activePolo(id){return id != '' && exists(/databases/$(database)/documents/polos/$(id)) && get(/databases/$(database)/documents/polos/$(id)).data.get('active',true) == true;}
-  function staffRole(role){return signed() && exists(/databases/$(database)/documents/se7Staff/$(request.auth.uid)) && get(/databases/$(database)/documents/se7Staff/$(request.auth.uid)).data.disabled == false && get(/databases/$(database)/documents/se7Staff/$(request.auth.uid)).data.perfil == role && (role != 'secretaria' || activePolo(get(/databases/$(database)/documents/se7Staff/$(request.auth.uid)).data.get('poloId','')));}
+  function staffRole(role){return signed() && exists(/databases/$(database)/documents/se7Staff/$(request.auth.uid)) && get(/databases/$(database)/documents/se7Staff/$(request.auth.uid)).data.disabled == false && get(/databases/$(database)/documents/se7Staff/$(request.auth.uid)).data.perfil == role && linkedEmployee() && (role != 'secretaria' || activePolo(get(/databases/$(database)/documents/se7Staff/$(request.auth.uid)).data.get('poloId','')));}
   function staff(){return master() || staffRole('secretaria') || staffRole('financeiro');}
   function academic(){return master() || staffRole('secretaria');}
   function finance(){return master() || staffRole('financeiro');}
@@ -54,6 +55,7 @@ service cloud.firestore {
   match /employeeLogs/{id} {allow read: if master();}
   match /polos/{id} {allow read: if staff();allow write: if false;}
   match /systemLogs/{id} {allow read: if master();}
+  match /se7Staff/{uid} {allow get: if signed() && request.auth.uid == uid;allow list,write: if false;}
   // Everything else, including se7Staff, se7Credentials, se7CpfIndex and rate limits, is denied to browser clients.
  }
 }

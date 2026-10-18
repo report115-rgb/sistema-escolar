@@ -457,10 +457,7 @@
                 <button type="button" data-account-action="profile"><i class="fa-solid fa-user-pen"></i> Editar cadastro</button>
                 <button type="button" data-account-action="password"><i class="fa-solid fa-key"></i> Alterar senha</button>
                 <button type="button" data-account-action="theme"><i class="fa-solid fa-circle-half-stroke"></i> Mudar tema</button>
-                    <button type="button" id="btn-access-control" onclick="abrirModalControleAcesso()" class="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-xs font-semibold rounded-lg transition border border-white/20 relative" style="display:none;">
-                        <i class="fa-solid fa-shield-halved mr-1"></i> Cadastros e Acessos
-                        <span id="badge-pendentes-cont" class="absolute -top-1 -right-1 bg-red-600 text-white text-[9px] px-1.5 py-0.2 rounded-full font-bold" style="display:none;">0</span>
-                    </button>
+
                     <button type="button" id="btn-switch-user" onclick="abrirModalAlternarUsuario()" class="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-xs font-semibold rounded-lg transition border border-white/20" style="display:none;">
                         <i class="fa-solid fa-users mr-1"></i> Alternar
                     </button>
@@ -1186,17 +1183,18 @@
         <span class="text-xs text-gray-500">Cadastro e informações dos colaboradores</span>
     </div>
 
-    <button type="button" onclick="abrirNovoColaborador()" class="se7-primary-button"><i class="fa-solid fa-user-plus" aria-hidden="true"></i> Cadastrar novo colaborador</button>
+    <div class="flex flex-wrap gap-2"><button type="button" onclick="abrirNovoColaborador()" class="se7-primary-button"><i class="fa-solid fa-user-plus" aria-hidden="true"></i> Cadastrar novo colaborador</button><button type="button" onclick="SE7Collaborators.importAccess()" class="se7-primary-button">Vincular acesso existente</button></div>
     <dialog id="collaborator-editor-modal" class="se7-exam-dialog se7-collaborator-dialog" aria-labelledby="collaborator-editor-title">
         <div class="flex justify-between items-center"><h3 id="collaborator-editor-title">Cadastrar novo colaborador</h3><button type="button" onclick="cancelarEdicaoColaborador()" aria-label="Fechar cadastro">Fechar</button></div>
         <div class="space-y-4">
     <input type="hidden" id="edit-teacher-id" value="">
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
             <label class="block text-xs font-semibold mb-1">Nome Completo</label>
             <input type="text" id="input-teacher-name" placeholder="Ex: Carlos Silva" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 dark:text-white">
         </div>
+        <div><label class="block text-xs font-semibold mb-1">Situação</label><select id="input-teacher-active" class="w-full px-3 py-2 rounded-lg border dark:bg-slate-900 text-sm"><option value="true">Ativo</option><option value="false">Inativo</option></select></div>
         <div>
             <label class="block text-xs font-semibold mb-1">Cargo / Função</label>
             <select id="input-teacher-cargo" onchange="atualizarHorarioColaborador()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 dark:text-white">
@@ -1209,14 +1207,27 @@
         </div>
     </div>
 
+    <p class="text-xs text-gray-500 mb-3">Os dados complementares são opcionais por enquanto. Você pode completar esta ficha depois.</p>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+<label class="block text-xs font-semibold">CPF<input id="collaborator-cpf" type="text" class="block w-full mt-1 px-3 py-2 border rounded-lg dark:bg-slate-900 text-sm"></label>
+<label class="block text-xs font-semibold">RG<input id="collaborator-rg" type="text" class="block w-full mt-1 px-3 py-2 border rounded-lg dark:bg-slate-900 text-sm"></label>
+<label class="block text-xs font-semibold">E-mail<input id="collaborator-contactEmail" type="email" class="block w-full mt-1 px-3 py-2 border rounded-lg dark:bg-slate-900 text-sm"></label>
+<label class="block text-xs font-semibold">Telefone / WhatsApp<input id="collaborator-phone" type="tel" class="block w-full mt-1 px-3 py-2 border rounded-lg dark:bg-slate-900 text-sm"></label>
+<label class="block text-xs font-semibold">CEP<input id="collaborator-cep" type="text" class="block w-full mt-1 px-3 py-2 border rounded-lg dark:bg-slate-900 text-sm"></label>
+<label class="block text-xs font-semibold">Rua / Avenida<input id="collaborator-street" type="text" class="block w-full mt-1 px-3 py-2 border rounded-lg dark:bg-slate-900 text-sm"></label>
+<label class="block text-xs font-semibold">Número<input id="collaborator-number" type="text" class="block w-full mt-1 px-3 py-2 border rounded-lg dark:bg-slate-900 text-sm"></label>
+<label class="block text-xs font-semibold">Bairro<input id="collaborator-neighborhood" type="text" class="block w-full mt-1 px-3 py-2 border rounded-lg dark:bg-slate-900 text-sm"></label>
+<label class="block text-xs font-semibold">Cidade<input id="collaborator-city" type="text" class="block w-full mt-1 px-3 py-2 border rounded-lg dark:bg-slate-900 text-sm"></label>
+<label class="block text-xs font-semibold">UF<input id="collaborator-state" type="text" class="block w-full mt-1 px-3 py-2 border rounded-lg dark:bg-slate-900 text-sm"></label>
+<p id="collaborator-cep-status" class="text-xs text-gray-500" role="status"></p></div>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div><label class="block text-xs font-semibold mb-1">Formação / Especialidade</label><input type="text" id="input-teacher-formation" class="w-full px-3 py-2 rounded-lg border dark:bg-slate-900 text-sm"></div>
-        <div><label class="block text-xs font-semibold mb-1">Conselho de Classe / Registro</label><input type="text" id="input-teacher-council" class="w-full px-3 py-2 rounded-lg border dark:bg-slate-900 text-sm"></div>
+        <div><label id="teacher-formation-label" class="block text-xs font-semibold mb-1">Formação / Especialidade</label><input type="text" id="input-teacher-formation" class="w-full px-3 py-2 rounded-lg border dark:bg-slate-900 text-sm"></div>
+        <div id="teacher-council-field"><label class="block text-xs font-semibold mb-1">Conselho de Classe / Registro (opcional)</label><input type="text" id="input-teacher-council" class="w-full px-3 py-2 rounded-lg border dark:bg-slate-900 text-sm"></div>
         <div><label class="block text-xs font-semibold mb-1">ID / Matrícula Automática</label><input type="text" id="input-teacher-pin" readonly placeholder="Gerado automaticamente..." class="w-full px-3 py-2 rounded-lg border dark:bg-slate-900 text-sm font-mono"></div>
-        <div><label class="block text-xs font-semibold mb-1">Curso vinculado ao colaborador</label><select id="input-teacher-course" class="w-full px-3 py-2 rounded-lg border dark:bg-slate-900 text-sm"></select></div>
+        <div id="teacher-course-field"><label class="block text-xs font-semibold mb-1">Curso vinculado ao professor</label><select id="input-teacher-course" class="w-full px-3 py-2 rounded-lg border dark:bg-slate-900 text-sm"></select></div>
     </div>
 
-<!-- ADICIONE ESTES CAMPOS DENTRO DO FORMULÁRIO DE CADASTRO DE COLABORADORES -->
+<div class="mb-4"><p class="block text-xs font-semibold mb-1">Polo(s) do colaborador</p><div id="se7-collaborator-polos"></div></div>
 <div id="teacher-hours-panel" style="display:none" class="bg-blue-50 dark:bg-slate-800/60 p-4 rounded-xl border border-blue-200 dark:border-slate-700 space-y-3">
     <h4 class="font-bold text-xs text-blue-700 dark:text-blue-300 uppercase"><i class="fa-solid fa-clock mr-1"></i> Configuração de Horário e Folha de Ponto</h4>
     
@@ -1253,7 +1264,8 @@
     </div>
 </div>
 
-    <div id="teacher-photo-master" class="mt-4 mb-4"><label class="block text-xs font-semibold">Foto 3×4 do colaborador (somente master)<input id="input-teacher-photo" type="file" accept="image/jpeg,image/png,image/webp" class="block mt-2 text-xs"></label><img id="teacher-photo-preview" alt="Foto cadastrada" style="display:none;width:90px;height:120px;object-fit:cover;margin-top:8px;border-radius:8px"><p class="text-xs text-gray-500 mt-2">A foto ficará disponível para visualização no ambiente do professor.</p></div>
+    <section id="se7-collaborator-access" class="p-3 rounded-xl border border-gray-300 dark:border-slate-600 space-y-2"></section>
+    <div id="teacher-photo-master" class="mt-4 mb-4"><label class="block text-xs font-semibold">Foto 3×4 do colaborador (somente master)<input id="input-teacher-photo" type="file" accept="image/jpeg,image/png,image/webp" class="block mt-2 text-xs"></label><img id="teacher-photo-preview" alt="Foto cadastrada" style="display:none;width:90px;height:120px;object-fit:cover;margin-top:8px;border-radius:8px"><p class="text-xs text-gray-500 mt-2">A foto ficará vinculada ao cadastro do colaborador e aos ambientes que exibem sua identificação.</p></div>
     <div class="se7-collaborator-actions">
         <button type="button" id="save-collaborator-button" onclick="saveTeacher()" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow transition">Salvar Colaborador</button>
         <button type="button" id="btn-cancel-edit-teacher" onclick="cancelarEdicaoColaborador()" class="px-4 py-2.5 bg-gray-500 text-white text-xs font-semibold rounded-lg shadow" >Cancelar</button>
@@ -1391,7 +1403,8 @@
 <script>
     let perfilVisualizadoMatriz = null;
     let sessaoRealMatriz = null;
-    function masterAutenticadoMatriz(){return !!firebase.auth().currentUser && firebase.auth().currentUser.uid==='UUBINdHfJZONVMcC0QogyAsUgvA3';}
+    function ownerMasterAtivo(){return !!firebase.auth().currentUser&&firebase.auth().currentUser.uid==='UUBINdHfJZONVMcC0QogyAsUgvA3';}
+    function masterAutenticadoMatriz(){const real=sessaoRealMatriz||JSON.parse(sessionStorage.getItem('usuario_logado')||'{}');return ownerMasterAtivo()||!!firebase.auth().currentUser&&real.perfil==='master'&&real.uid===firebase.auth().currentUser.uid;}
     function usuarioMasterAtivo(){return masterAutenticadoMatriz() && !perfilVisualizadoMatriz;}
 
     async function carregarPontosTotemMatriz() {
@@ -1548,52 +1561,6 @@
     </div>
 
     <!-- MODAIS DE ACESSO E ALTERNAR -->
-    <div id="access-control-modal" class="fixed inset-0 z-[2000] flex items-center justify-center bg-black/50 p-4" style="display: none;">
-        <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-xl w-full p-6 border border-gray-200 dark:border-slate-700 relative shadow-2xl max-h-[90vh] overflow-y-auto">
-            <button type="button" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 text-xl font-bold" onclick="fecharModalControleAcesso()">&times;</button>
-            <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Cadastros e Acessos</h2><a href="/administracao-auth.html" target="_blank" class="text-blue-600 text-sm">Preparar migração e vincular contas existentes</a>
-            
-            <div class="mb-6 p-4 bg-amber-50 dark:bg-slate-900/60 rounded-xl border border-amber-200 dark:border-slate-700">
-                <h4 class="font-bold text-xs text-amber-700 dark:text-amber-400 mb-3 uppercase"><i class="fa-solid fa-clock mr-1"></i> Solicitações de Primeiro Acesso Pendentes</h4>
-                <div id="lista-solicitacoes-pendentes" class="space-y-2">
-                    <p class="text-xs text-gray-400">Nenhuma solicitação pendente no momento.</p>
-                </div>
-            </div>
-
-            <div class="space-y-4 mb-4 border-t pt-4 border-gray-200 dark:border-slate-700">
-                <h4 class="font-bold text-xs text-blue-600 dark:text-blue-400 uppercase">Cadastrar Novo Usuário Manualmente</h4>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-semibold mb-1">Nome</label>
-                        <input type="text" id="new-user-name" placeholder="João da Silva" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold mb-1">E-mail</label>
-                        <input type="text" id="new-user-email" placeholder="joao@admin.com" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                    </div>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-semibold mb-1">Senha</label>
-                        <input type="password" id="new-user-pass" placeholder="••••••••" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold mb-1">Perfil</label>
-                        <select id="new-user-perfil" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
-                            <option value="totem">Totem (dispositivo)</option>
-                            <option value="secretaria">Secretaria</option>
-                            <option value="professor">Professor</option>
-			    <option value="financeiro">Financeiro</option>
-                        </select>
-                    </div>
-                </div>
-                <label class="block text-xs font-semibold">Polo da secretaria<select id="new-user-polo" class="se7-polo-select"></select></label><button type="button" onclick="cadastrarNovoUsuarioSistema()" class="px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded-lg shadow">Cadastrar Usuário</button>
-            </div>
-            <h4 class="font-bold text-xs text-gray-700 dark:text-gray-300 uppercase mb-2">Usuários Ativos no Sistema</h4>
-            <ul class="data-list divide-y divide-gray-200 dark:divide-slate-700 max-h-48 overflow-y-auto" id="system-users-list"></ul>
-        </div>
-    </div>
-
     <div id="switch-user-modal" class="fixed inset-0 z-[2000] flex items-center justify-center bg-black/50 p-4" style="display: none;">
         <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full p-6 border border-gray-200 dark:border-slate-700 relative shadow-2xl">
             <button type="button" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 text-xl font-bold" onclick="fecharModalAlternarUsuario()">&times;</button>
@@ -2334,14 +2301,10 @@ async function rejeitarSolicitacaoFirebase(id) {
             } catch (e) { console.error(e); }
         }
 
-        function abrirModalControleAcesso() { 
-    document.getElementById('access-control-modal').style.display = 'flex'; 
-    renderizarUsuariosSistemaFirebase(); // <-- Agora chama a versão do Firebase
-    renderizarSolicitacoesPendentes(); 
-}
+        function abrirModalControleAcesso(){if(!usuarioMasterAtivo())return;const old=document.getElementById('access-control-modal');if(old)old.style.display='none';const main=document.querySelector('#main-tabs-nav [onclick*="tab-settings"]');if(main)openTab({currentTarget:main},'tab-settings');const sub=document.querySelector('#tab-settings [onclick*="subtab-teachers"]');if(sub)openSubTab({currentTarget:sub},'subtab-teachers');document.getElementById('subtab-teachers').scrollIntoView({block:'start',behavior:'smooth'});}
 
 function fecharModalControleAcesso() {
-    document.getElementById('access-control-modal').style.display = 'none';
+    const old=document.getElementById('access-control-modal');if(old)old.style.display='none';
 }
         
         // 1. Cadastrar novo usuário manualmente direto na nuvem
@@ -2668,8 +2631,8 @@ document.getElementById('input-inst-inep').value = data.inep || '';
         }
 
         function atualizarPinAutomaticoColaborador(){const used=new Set(teachers.map(t=>t.pin));let n=teachers.length+1;while(used.has('COLAB-'+String(n).padStart(3,'0')))n++;document.getElementById('input-teacher-pin').value='COLAB-'+String(n).padStart(3,'0');}
-        function atualizarHorarioColaborador(){const cargo=document.getElementById('input-teacher-cargo').value;document.getElementById('teacher-hours-panel').style.display=['Secretaria','Secretário','Secretária','Atendimento'].includes(cargo)?'block':'none';}
-        function abrirNovoColaborador(){cancelarEdicaoColaborador();document.getElementById('input-teacher-cargo').value='Professor';document.getElementById('input-teacher-course').value='';for(const [id,v] of [['entrada-1','08:00'],['saida-1','12:00'],['entrada-2','14:00'],['saida-2','18:00']])document.getElementById('input-teacher-'+id).value=v;atualizarPinAutomaticoColaborador();atualizarHorarioColaborador();document.getElementById('teacher-photo-master').style.display=usuarioMasterAtivo()?'block':'none';document.getElementById('collaborator-editor-title').textContent='Cadastrar novo colaborador';document.getElementById('collaborator-editor-modal').showModal();}
+        function atualizarHorarioColaborador(){if(window.SE7Collaborators){SE7Collaborators.update();return;}const cargo=document.getElementById('input-teacher-cargo').value;document.getElementById('teacher-hours-panel').style.display=['Secretaria','Secretário','Secretária','Atendimento'].includes(cargo)?'block':'none';}
+        function abrirNovoColaborador(){cancelarEdicaoColaborador();document.getElementById('input-teacher-cargo').value='Professor';document.getElementById('input-teacher-course').value='';for(const [id,v] of [['entrada-1','08:00'],['saida-1','12:00'],['entrada-2','14:00'],['saida-2','18:00']])document.getElementById('input-teacher-'+id).value=v;atualizarPinAutomaticoColaborador();atualizarHorarioColaborador();document.getElementById('teacher-photo-master').style.display=usuarioMasterAtivo()?'block':'none';document.getElementById('collaborator-editor-title').textContent='Cadastrar novo colaborador';document.getElementById('input-teacher-active').value='true';window.SE7Collaborators?.prepareAccess();document.getElementById('collaborator-editor-modal').showModal();}
         async function prepararFotoColaborador(file){
             if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>10*1024*1024)throw Error('Escolha uma foto JPG, PNG ou WebP de até 10 MB.');
             const url=URL.createObjectURL(file);try{const image=new Image();await new Promise((resolve,reject)=>{image.onload=resolve;image.onerror=()=>reject(Error('Não foi possível ler a foto.'));image.src=url;});const canvas=document.createElement('canvas');canvas.width=360;canvas.height=480;const ratio=Math.max(360/image.width,480/image.height),w=image.width*ratio,h=image.height*ratio;canvas.getContext('2d').drawImage(image,(360-w)/2,(480-h)/2,w,h);return canvas.toDataURL('image/jpeg',.85);}finally{URL.revokeObjectURL(url);}
@@ -2699,10 +2662,11 @@ document.getElementById('input-inst-inep').value = data.inep || '';
 
     const teacherData = { 
         fullname, 
+        active:document.getElementById('input-teacher-active').value==='true',
         cargo, 
         formation, 
-        council, 
-        courseId:document.getElementById('input-teacher-course').value,
+        council:cargo==='Professor'?council:'', 
+        courseId:cargo==='Professor'?document.getElementById('input-teacher-course').value:'',
         pin: pinFinal 
     };
 
@@ -2711,11 +2675,11 @@ document.getElementById('input-inst-inep').value = data.inep || '';
         const photoFile=document.getElementById('input-teacher-photo').files[0];
         if(photoFile){if(!usuarioMasterAtivo())throw Error('Somente o master pode alterar a foto.');teacherData.profilePhoto=await prepararFotoColaborador(photoFile);}
         if (editId) {
-            await db.collection("teachers").doc(editId).update(teacherData);
+            await SE7Collaborators.save(teacherData,editId);
             alert("Colaborador atualizado com sucesso!");
             cancelarEdicaoColaborador();
         } else {
-            await db.collection("teachers").add(teacherData);
+            await SE7Collaborators.save(teacherData);
             alert(`Colaborador cadastrado com sucesso!\nID / Matrícula: ${pinFinal}`);
             
             document.getElementById('input-teacher-photo').value='';
@@ -2752,12 +2716,12 @@ function renderTeachers() {
                         <strong class="text-gray-900 dark:text-white">${t.fullname}</strong><br>
                         <span class="text-[10px] text-gray-400 font-mono">ID / Matrícula: ${t.pin || '---'}</span>
                     </td>
-                    <td class="p-2.5"><span class="px-2 py-0.5 ${corBadge} rounded text-[10px] font-bold">${t.cargo || 'Professor'}</span></td>
-                    <td class="p-2.5">${t.formation || '---'} <br><span class="text-xs text-blue-400">Curso: ${courses.find(c=>c.id===t.courseId)?.name||'Não vinculado'}</span><br><span class="text-[10px] text-gray-400">${t.council || ''}</span></td>
+                    <td class="p-2.5"><span class="px-2 py-0.5 ${corBadge} rounded text-[10px] font-bold">${t.cargo || 'Professor'}</span><br><small>${t.active===false?'Inativo':'Ativo'}</small></td>
+                    <td class="p-2.5">${t.formation || '---'} <br><span class="text-xs text-blue-400">${(!t.cargo||t.cargo==='Professor')?'Curso: '+(courses.find(c=>c.id===t.courseId)?.name||'Não vinculado'):['Coordenação','Financeiro'].includes(t.cargo)?'Toda a rede':'Polo: '+(t.poloIds||[]).map(id=>(window.SE7Polos?.rows()||[]).find(p=>p.id===id)?.name||id).join(', ')}</span><br><span class="text-[10px] text-gray-400">${t.council || ''}</span></td>
                     <td class="p-2.5 text-right space-x-1">
-                        ${usuarioMasterAtivo()?`<button type="button" onclick="SE7Exams.bind('${t.id}')" class="px-2 py-1 bg-indigo-600 text-white rounded text-xs">Vincular acesso</button>`:''}
+                        
                         <button onclick="editarColaborador('${t.id}')" class="px-2 py-1 bg-blue-600 text-white rounded text-[11px] font-semibold"><i class="fa-solid fa-pen"></i></button>
-                        <button onclick="excluirColaborador('${t.id}')" class="px-2 py-1 bg-red-600 text-white rounded text-[11px] font-semibold"><i class="fa-solid fa-trash"></i></button>
+                        <button onclick="excluirColaborador('${t.id}')" class="px-2 py-1 bg-red-600 text-white rounded text-[11px] font-semibold">${t.active===false?'Reativar':'Inativar'}</button>
                     </td>
                 </tr>
             `;
@@ -2769,7 +2733,7 @@ function renderTeachers() {
         const el = document.getElementById(id);
         if(el) { 
             const selectedTeacher=el.value;el.innerHTML = '<option value="">Selecione...</option>'; 
-            teachers.filter(t => !t.cargo || ['Professor','Professora','Coordenação','Coordenador','Coordenadora'].includes(t.cargo)).forEach(t => {
+            teachers.filter(t => !t.cargo || /^professor(a)?$/i.test(t.cargo)).forEach(t => {
                 el.insertAdjacentHTML('beforeend', `<option value="${t.id}">${t.fullname}</option>`);
             });el.value=selectedTeacher; 
         }
@@ -2798,10 +2762,11 @@ function editarColaborador(id) {
     }
 
     document.getElementById('teacher-photo-master').style.display=usuarioMasterAtivo()?'block':'none';
-    atualizarHorarioColaborador();document.getElementById('collaborator-editor-title').textContent='Editar colaborador';document.getElementById('collaborator-editor-modal').showModal();
+    document.getElementById('input-teacher-active').value=t.active===false?'false':'true';window.SE7Collaborators?.edit(t);atualizarHorarioColaborador();document.getElementById('collaborator-editor-title').textContent='Editar colaborador';document.getElementById('collaborator-editor-modal').showModal();
 }
 
 function cancelarEdicaoColaborador() {
+    window.SE7Collaborators?.reset();
     document.getElementById('edit-teacher-id').value = '';
     document.getElementById('input-teacher-name').value = '';
     document.getElementById('input-teacher-formation').value = '';
@@ -2812,13 +2777,9 @@ function cancelarEdicaoColaborador() {
 }
 
 async function excluirColaborador(id) {
-    if (!confirm("Deseja realmente excluir este colaborador?")) return;
-    try {
-        await db.collection("teachers").doc(id).delete();
-        alert("Colaborador excluído com sucesso!");
-    } catch (e) {
-        alert("Erro ao excluir: " + e.message);
-    }
+ const t=teachers.find(t=>t.id===id);if(!t)return;
+ if(!confirm(t.active===false?'Reativar este colaborador?':'Inativar este colaborador e bloquear seu acesso? Os registros serão preservados.'))return;
+ try{await SE7.api('collaborator-state',{id,active:t.active===false});alert('Situação atualizada.');}catch(e){alert(e.message);}
 }
 
         function atualizarModalidadeCurso(){const eja=document.getElementById('input-course-nivel').value==='Supletivo',mode=document.getElementById('course-eja-mode').value;document.getElementById('course-eja-options').hidden=!eja;document.getElementById('course-modular-options').hidden=!eja||mode!=='modular';document.getElementById('course-single-info').hidden=!eja||mode!=='prova-unica';for(const id of ['input-course-eixo','input-course-hours']){const input=document.getElementById(id);input.parentElement.hidden=eja&&['prova-unica','modular'].includes(mode);}document.getElementById('input-course-conselho').parentElement.hidden=eja&&mode==='modular';}
@@ -5172,7 +5133,7 @@ function carregarProfessoresPontoManual() {
     select.innerHTML = '<option value="">Selecione o professor...</option>';
     
     // Filtra os colaboradores que possuem cargo de Professor ou Coordenação
-    const docentes = teachers.filter(t => !t.cargo || ['Professor','Professora','Coordenação','Coordenador','Coordenadora'].includes(t.cargo));
+    const docentes = teachers.filter(t => !t.cargo || /^professor(a)?$/i.test(t.cargo));
     docentes.forEach(t => {
         select.insertAdjacentHTML('beforeend', `<option value="${t.id}">${t.fullname} (${t.cargo || 'Professor'})</option>`);
     });
@@ -5369,6 +5330,8 @@ function escutarRegistrosPontoManual() {
 <div id="modal-historico-matricula" class="fixed inset-0 z-[4000] flex items-center justify-center bg-black/70 p-4" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="historico-matricula-titulo"><div class="se7-modal-panel rounded-2xl border w-full max-w-lg p-6 max-h-[80vh] overflow-y-auto"><div class="flex justify-between gap-3 mb-4"><h3 id="historico-matricula-titulo" class="font-bold">Histórico da matrícula</h3><button type="button" aria-label="Fechar histórico" onclick="document.getElementById('modal-historico-matricula').style.display='none'">Fechar</button></div><div id="historico-matricula-conteudo" class="space-y-3 text-sm"></div></div></div>
 <script src="/assets/se7-cancellation.js"></script>
 <script src="/assets/se7-enrollment.js"></script>
+<script type="module" src="/assets/se7-collaborators.js?v=1"></script>
+<script src="/assets/se7-staff-session.js?v=1"></script>
 <script src="/assets/se7-version.js"></script>
 <script src="/assets/se7-documents.js?v=drive-analise-2"></script>
 <link rel="stylesheet" href="/assets/se7-template-editor.css"><script src="/assets/se7-document-models.js"></script>

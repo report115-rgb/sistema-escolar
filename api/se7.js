@@ -1,3 +1,6 @@
+import {collaboratorAccess} from '../server/collaborator-access.mjs';
+import {saveCollaborator} from '../server/collaborators.mjs';
+import {expenses} from '../server/expenses.mjs';
 import {submitDocument,reviewDocument} from '../server/document-drive-review.mjs';
 import {materials} from '../server/materials.mjs';
 import {justification as attendanceJustification} from '../server/attendance-justification.mjs';
@@ -51,7 +54,7 @@ async function identity(auth,db,req){
  const token=(req.headers.authorization||'').match(/^Bearer (.+)$/)?.[1];if(!token)fail(401,'Entre novamente.');
  let user;try{user=await auth.verifyIdToken(token,true);}catch{fail(401,'Sessão inválida. Entre novamente.');}
  if(user.uid===process.env.SE7_MASTER_UID)return {...user,role:'master'};
- const staff=await db.collection('se7Staff').doc(user.uid).get();if(staff.exists&&!staff.data().disabled)return polos.activeAccess(db,{...user,role:staff.data().perfil,profile:staff.data()});
+ const staff=await db.collection('se7Staff').doc(user.uid).get();if(staff.exists&&!staff.data().disabled){const profile=staff.data();if(profile.perfil!=='totem'){const linked=profile.teacherId?await db.collection('teachers').doc(validId(profile.teacherId)).get():null;if(!linked?.exists||linked.data().active===false||profile.accessAuthorized===false)fail(403,'Acesso não autorizado no cadastro do colaborador. Contate o Master.');if(profile.perfil==='master'&&profile.masterAccess!==true)fail(403,'Acesso Master não autorizado.');}return polos.activeAccess(db,{...user,role:profile.perfil,profile});}
  const sid=user.studentId;if(!sid)fail(403,'Conta sem permissão. Contate o master.');
  const doc=await db.collection('students').doc(validId(sid)).get();const s=doc.exists?doc.data():null;
  if(!s||s.se7AuthUid!==user.uid||s.portalBlocked||s.se7AuthLock||(s.portalSessionVersion||0)!==(user.portalVersion||0))fail(403,'Acesso alterado. Entre novamente ou contate a instituição.');
@@ -118,6 +121,10 @@ async function dispatchOperation({auth,db},req,b,delegated=null){
   try{return await dispatchOperation({auth,db},{...req},inner,ctx.user);}finally{req.se7AuditIdentity=u;}
  }
  if(['staff-profile-get','staff-profile-save'].includes(action))return staffProfile(db,auth,b,u);
+ if(action.startsWith('collaborator-access-'))return collaboratorAccess(db,auth,b,u);
+ if(action==='collaborator-state'){master(u);const id=validId(b.id),ref=db.collection('teachers').doc(id);if(typeof b.active!=='boolean')fail(400,'Situação inválida.');const accounts=await db.collection('se7Staff').where('teacherId','==',id).get();if(accounts.docs.some(d=>d.id===u.uid||d.id===process.env.SE7_MASTER_UID))fail(400,'Não é permitido bloquear o Master.');await db.runTransaction(async tx=>{const t=await tx.get(ref);const entries=await Promise.all(accounts.docs.map(d=>tx.get(db.collection('se7Staff').doc(d.id))));if(!t.exists)fail(404,'Colaborador não encontrado.');tx.update(ref,{active:b.active});entries.forEach((s,i)=>{const a=s.data();tx.update(db.collection('se7Staff').doc(accounts.docs[i].id),{disabled:!b.active||a.accessAuthorized===false||a.disabled&&!a.disabledByCollaborator,disabledByCollaborator:!b.active&&a.accessAuthorized!==false});});});for(const d of accounts.docs){const s=await db.collection('se7Staff').doc(d.id).get();await auth.updateUser(d.id,{disabled:s.data().disabled});await auth.revokeRefreshTokens(d.id);}return {ok:true};}
+ if(action==='collaborator-save')return saveCollaborator(db,b,u,{auth});
+ if(action.startsWith('expenses-'))return expenses(db,b,u);
  if(action==='documents-review')return reviewDocument(db,b,u);
  if(action==='documents-submit'){if(!['master','secretaria'].includes(u.role))fail(403,'Acesso restrito.');return submitDocument(db,b,u);}
  if(action.startsWith('materials-'))return materials(db,b,u);
@@ -341,7 +348,7 @@ export default async function handler(req,res){
  res.setHeader('Cache-Control','no-store');res.setHeader('X-Content-Type-Options','nosniff');
  try {
   const native=scannerCors(req,res);if(req.method==='OPTIONS'&&native){res.status(204).end();return;}if(req.method!=='POST')fail(405,'Use POST.');const origin=req.headers.origin;if(origin!=='https://sistema-escolar-ten-mu.vercel.app'&&!native)fail(403,'Origem não autorizada.');
-  if(!String(req.headers['content-type']||'').startsWith('application/json'))fail(415,'Envie JSON.');let b;try{b=typeof req.body==='string'?JSON.parse(req.body):req.body;}catch{fail(400,'JSON inválido.');}if(!b||Array.isArray(b)||typeof b.action!=='string'||JSON.stringify(b).length>(b.action==='materials-save'?2900000:b.action==='notices-save'||b.action==='exam-scan-preview'||b.action==='payroll-receipt-save'||b.action==='attendance-justification-save'?750000:b.action==='exam-save'?250000:(['profile-save','staff-profile-save','student-avatar-save'].includes(b.action)||(b.action==='portal-admin'&&b.callAction==='student-avatar-save'))?100000:12000))fail(400,'Requisição inválida.');
+  if(!String(req.headers['content-type']||'').startsWith('application/json'))fail(415,'Envie JSON.');let b;try{b=typeof req.body==='string'?JSON.parse(req.body):req.body;}catch{fail(400,'JSON inválido.');}if(!b||Array.isArray(b)||typeof b.action!=='string'||JSON.stringify(b).length>(b.action==='materials-save'?2900000:b.action==='collaborator-save'?350000:b.action==='notices-save'||b.action==='exam-scan-preview'||b.action==='payroll-receipt-save'||b.action==='expenses-pay'||b.action==='expenses-receipt-save'||b.action==='attendance-justification-save'?750000:b.action==='exam-save'?250000:(['profile-save','staff-profile-save','student-avatar-save'].includes(b.action)||(b.action==='portal-admin'&&b.callAction==='student-avatar-save'))?100000:12000))fail(400,'Requisição inválida.');
   if(!nativeRequestAllowed(req,b))fail(403,'Operação não permitida para o leitor de avaliações.');
   if(!process.env.SE7_MASTER_UID)throw new Error('Master não configurado.');const result=await dispatch(services(),req,b);res.status(200).json(result);
  }catch(e){const status=e.status||500;if(status===500)console.error('SE7 API',e.code||'internal');res.status(status).json({error:status===500?'Não foi possível concluir. Verifique a configuração do servidor.':e.message});}

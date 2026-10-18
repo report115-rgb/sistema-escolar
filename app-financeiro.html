@@ -6,7 +6,9 @@
 <script src="/assets/se7-security-handlers.js"></script>
 <script src="/assets/se7-security.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SE7 Mobile - Setor Financeiro</title>
+    <title>SE7 Financeiro</title>
+<link rel="icon" type="image/svg+xml" href="/assets/se7-brand-icon.svg">
+<link rel="stylesheet" href="/assets/se7-expenses.css?v=1">
     <!-- Tailwind CSS CDN -->
     <link rel="stylesheet" href="/assets/vendor/tailwind.min.css">
     
@@ -525,10 +527,10 @@
         <header class="bg-blue-900 text-white p-4 flex justify-between items-center shadow-md shrink-0 z-20">
             <div class="flex items-center space-x-3">
                 <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center font-bold text-base shadow">
-                    <i class="fa-solid fa-wallet"></i>
+                    <img src="/assets/se7-brand-symbol.svg" alt="SE7" class="se7-exp-finance-symbol">
                 </div>
                 <div>
-                    <h1 class="font-bold text-sm leading-tight">SE7 Financeiro Mobile</h1>
+                    <h1 class="font-bold text-sm leading-tight">SE7 Financeiro</h1>
                     <p class="text-[10px] text-blue-200" id="header-user-display">Conectado</p>
                 </div>
             </div>
@@ -648,6 +650,7 @@
 
 
             <!-- ABA 6: REGISTRO DE FREQUÊNCIA DE COLABORADORES -->
+            <section id="tab-contas-pagar" class="space-y-3 tab-pane" style="display:none" aria-label="Contas a pagar"></section>
             <div id="tab-frequencia-colaboradores" class="space-y-3 tab-pane" style="display: none;">
                 <div class="bg-white dark:bg-slate-900 p-4 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 space-y-3">
                     <div class="flex justify-between items-start gap-2 flex-wrap border-b border-slate-100 dark:border-slate-800 pb-3">
@@ -772,8 +775,8 @@
 
         </main>
 
-        <!-- Menu Inferior Fixo com 5 Abas -->
-        <nav class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-1 py-2 flex justify-around items-center absolute bottom-0 left-0 right-0 shadow-lg z-30">
+        <!-- Menu inferior -->
+        <nav class="se7-finance-nav bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-1 py-2 flex justify-around items-center absolute bottom-0 left-0 right-0 shadow-lg z-30">
             <button onclick="mudarAbaApp('alunos')" id="nav-btn-alunos" class="flex flex-col items-center text-slate-400 dark:text-slate-500 text-[9px] font-bold transition">
                 <i class="fa-solid fa-users text-sm mb-0.5"></i> Alunos
             </button>
@@ -790,6 +793,7 @@
                 <i class="fa-solid fa-certificate text-sm mb-0.5"></i>
                 <span>Quitação</span>
             </button>
+            <button type="button" onclick="mudarAbaApp('contas-pagar')" id="nav-btn-contas" class="flex flex-col items-center text-slate-400 dark:text-slate-500 text-[9px] font-bold transition" aria-label="Contas a pagar"><i class="fa-solid fa-file-invoice-dollar text-sm mb-0.5" aria-hidden="true"></i><span>Contas</span></button>
             <button onclick="mudarAbaApp('frequencia-colaboradores')" id="nav-btn-freq" class="flex flex-col items-center text-slate-400 dark:text-slate-500 text-[9px] font-bold transition">
                 <i class="fa-solid fa-user-clock text-sm mb-0.5"></i>
                 <span>Frequência</span>
@@ -1525,7 +1529,7 @@
                     </div>
 
                     <div style="margin-top: 35px; text-align: center; font-size: 10px; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 10px;">
-                        Documento gerado eletronicamente pelo Aplicativo SE7 Financeiro Mobile em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}.
+                        Documento gerado eletronicamente pelo Aplicativo SE7 Financeiro em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}.
                     </div>
                 </div>
             `;
@@ -2319,11 +2323,11 @@
 
         function mudarAbaApp(aba) {
             if(['financeiro','negociacoes','quitacao','detalhes'].includes(aba))iniciarFaturasFinanceiro();
-            ['tab-alunos', 'tab-financeiro', 'tab-negociacoes', 'tab-quitacao', 'tab-frequencia-colaboradores', 'tab-detalhes-aluno'].forEach(id => {
+            ['tab-alunos', 'tab-financeiro', 'tab-negociacoes', 'tab-quitacao', 'tab-frequencia-colaboradores', 'tab-contas-pagar', 'tab-detalhes-aluno'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.style.display = 'none';
             });
-            ['nav-btn-alunos', 'nav-btn-fin', 'nav-btn-neg', 'nav-btn-quit', 'nav-btn-freq'].forEach(id => {
+            ['nav-btn-alunos', 'nav-btn-fin', 'nav-btn-neg', 'nav-btn-quit', 'nav-btn-freq', 'nav-btn-contas'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.className = "flex flex-col items-center text-slate-400 dark:text-slate-500 text-[9px] font-bold transition";
             });
@@ -2342,6 +2346,10 @@
                 document.getElementById('tab-quitacao').style.display = 'block';
                 document.getElementById('nav-btn-quit').className = "flex flex-col items-center text-indigo-600 dark:text-indigo-400 text-[9px] font-bold transition";
                 renderizarAlunosQuitesGeral();
+            } else if (aba === 'contas-pagar') {
+                document.getElementById('tab-contas-pagar').style.display='block';
+                document.getElementById('nav-btn-contas').className='flex flex-col items-center text-blue-600 dark:text-blue-400 text-[9px] font-bold transition';
+                window.SE7Expenses?.open();
             } else if (aba === 'frequencia-colaboradores') {
                 document.getElementById('tab-frequencia-colaboradores').style.display = 'block';
                 iniciarDadosColaboradores();
@@ -2396,6 +2404,7 @@
             registrar.disabled = !professorId || pagamentosColaboradoresErro;
             document.getElementById('freq-btn-estorno').style.display = ativo ? 'inline-block' : 'none';window.SE7PayrollFinance?.payment(pagamento,professorId,mes);
         }
+        window.SE7ExpensesPayrollOpen=function(id,month,name){mudarAbaApp('frequencia-colaboradores');document.getElementById('freq-colab-mes').value=month;const select=document.getElementById('freq-colab-professor');if(![...select.options].some(o=>o.value===id))select.add(new Option(name||'Colaborador',id));select.value=id;renderizarFrequenciaColaboradores();};
         function abrirPagamentoColaborador() {
             if (pagamentoSalvando) return;
             const professorId = document.getElementById('freq-colab-professor').value;
@@ -2433,8 +2442,8 @@
             } catch (_) {}
             throw new Error('Sua sessão expirou. Entre novamente para registrar o pagamento.');
         }
-        async function salvarPagamentoColaborador(){if(pagamentoSalvando||!pagamentoFormulario)return;const form={...pagamentoFormulario},save=document.getElementById('pagamento-btn-salvar'),cancel=document.getElementById('pagamento-btn-cancelar');pagamentoSalvando=true;save.disabled=cancel.disabled=true;save.textContent='Aguarde…';try{const file=document.getElementById('pagamento-comprovante').files[0],prepared=file?await SE7PayrollReceipt.prepare(file):null,r=await SE7.api('payroll-save',{professorId:form.professorId,competencia:form.mes,revision:form.revisao,correcting:form.corrigindo,amountCents:freqCentavos(freqParseMoeda(document.getElementById('pagamento-valor').value)),method:document.getElementById('pagamento-metodo').value,date:document.getElementById('pagamento-data').value,observation:document.getElementById('pagamento-observacao').value.trim(),reason:document.getElementById('pagamento-motivo').value.trim()});const key=pagamentoChave(form.professorId,form.mes),salvo=r.payment;let warning='';if(prepared){try{salvo.comprovante=(await SE7.api('payroll-receipt-save',{paymentId:key,revision:salvo.revisao,...prepared})).comprovante;}catch(e){warning='Pagamento registrado, mas o comprovante não foi anexado: '+e.message+'. Não registre outro pagamento; use Anexar comprovante.';}}pagamentosColaboradores[key]=salvo;pagamentoSalvando=false;fecharPagamentoColaborador();renderizarPagamentoColaborador();SE7PayrollFinance.message(salvo,key,warning);}catch(e){alert('Não foi possível salvar o pagamento: '+e.message);}finally{pagamentoSalvando=false;save.disabled=cancel.disabled=false;save.textContent='Salvar pagamento';}}
-        async function estornarPagamentoColaborador(){if(pagamentoSalvando)return;const id=document.getElementById('freq-colab-professor').value,month=freqObterMesSelecionado(),p=pagamentoAtual(id,month);if(p?.status!=='pago')return;if(!SE7PayrollFinance.isEditable(p))return alert('O prazo de 12 horas terminou. Registro disponível somente para consulta.');if(!confirm('Estornar o registro de '+p.professorNome+'? Isso não devolve o dinheiro transferido.'))return;const reason=prompt('Informe o motivo do estorno:');if(!reason?.trim())return;pagamentoSalvando=true;try{const r=await SE7.api('payroll-reverse',{professorId:id,competencia:month,revision:p.revisao,reason:reason.trim()});pagamentosColaboradores[pagamentoChave(id,month)]=r.payment;renderizarPagamentoColaborador();alert('Registro estornado com sucesso.');}catch(e){alert('Não foi possível estornar: '+e.message);}finally{pagamentoSalvando=false;}}
+        async function salvarPagamentoColaborador(){if(pagamentoSalvando||!pagamentoFormulario)return;const form={...pagamentoFormulario},save=document.getElementById('pagamento-btn-salvar'),cancel=document.getElementById('pagamento-btn-cancelar');pagamentoSalvando=true;save.disabled=cancel.disabled=true;save.textContent='Aguarde…';try{const file=document.getElementById('pagamento-comprovante').files[0],prepared=file?await SE7PayrollReceipt.prepare(file):null,r=await SE7.api('payroll-save',{professorId:form.professorId,competencia:form.mes,revision:form.revisao,correcting:form.corrigindo,amountCents:freqCentavos(freqParseMoeda(document.getElementById('pagamento-valor').value)),method:document.getElementById('pagamento-metodo').value,date:document.getElementById('pagamento-data').value,observation:document.getElementById('pagamento-observacao').value.trim(),reason:document.getElementById('pagamento-motivo').value.trim()});const key=pagamentoChave(form.professorId,form.mes),salvo=r.payment;let warning='';if(prepared){try{salvo.comprovante=(await SE7.api('payroll-receipt-save',{paymentId:key,revision:salvo.revisao,...prepared})).comprovante;}catch(e){warning='Pagamento registrado, mas o comprovante não foi anexado: '+e.message+'. Não registre outro pagamento; use Anexar comprovante.';}}pagamentosColaboradores[key]=salvo;window.SE7Expenses?.invalidate();pagamentoSalvando=false;fecharPagamentoColaborador();renderizarPagamentoColaborador();SE7PayrollFinance.message(salvo,key,warning);}catch(e){alert('Não foi possível salvar o pagamento: '+e.message);}finally{pagamentoSalvando=false;save.disabled=cancel.disabled=false;save.textContent='Salvar pagamento';}}
+        async function estornarPagamentoColaborador(){if(pagamentoSalvando)return;const id=document.getElementById('freq-colab-professor').value,month=freqObterMesSelecionado(),p=pagamentoAtual(id,month);if(p?.status!=='pago')return;if(!SE7PayrollFinance.isEditable(p))return alert('O prazo de 12 horas terminou. Registro disponível somente para consulta.');if(!confirm('Estornar o registro de '+p.professorNome+'? Isso não devolve o dinheiro transferido.'))return;const reason=prompt('Informe o motivo do estorno:');if(!reason?.trim())return;pagamentoSalvando=true;try{const r=await SE7.api('payroll-reverse',{professorId:id,competencia:month,revision:p.revisao,reason:reason.trim()});pagamentosColaboradores[pagamentoChave(id,month)]=r.payment;window.SE7Expenses?.invalidate();renderizarPagamentoColaborador();alert('Registro estornado com sucesso.');}catch(e){alert('Não foi possível estornar: '+e.message);}finally{pagamentoSalvando=false;}}
 
         function freqFormatarMoeda(valor) {
             return Number(valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -2849,6 +2858,7 @@
  </div>
 </div>
 
+<script src="/assets/se7-staff-session.js?v=1"></script>
 <script src="/assets/se7-version.js"></script>
 <script src="/assets/vendor/pdf-lib.min.js"></script>
 <script src="/assets/vendor/fontkit.umd.min.js"></script>
@@ -2860,6 +2870,7 @@
 <script src="/assets/se7-busy.js"></script>
 <script src="/assets/se7-ambient.js"></script>
 <script src="/assets/se7-payroll-receipt.js"></script>
+<script src="/assets/se7-expenses.js?v=1"></script>
 <script type="module" src="/assets/se7-payroll-finance.js"></script>
 <script type="module" src="/assets/se7-payroll-report.js"></script>
 <link rel="stylesheet" href="/assets/se7-annual-statements.css"><script src="/assets/se7-annual-statements.js"></script></body>
