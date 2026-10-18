@@ -24,6 +24,7 @@ export async function prepareContext({auth,db},req,body){
  if(!account.company&&institutionId!==account.institutionId)fail(403,'Instituição não autorizada para esta conta.');
  if(body.action==='platform-maintenance')return {result:{maintenance:publicMaintenance((await db.collection('commercialPrivate').doc('maintenance').get()).data(),institutionId)}};
  const catalog=await db.collection('commercialPrivate').doc('catalog').get();const institution=(catalog.data()?.institutions||[]).find(i=>i.id===institutionId);if(!institution)fail(403,'Instituição não autorizada.');
+ if(!institution.own){const onboarding=(await db.collection('commercialOnboarding').doc(institutionId).get()).data();if(onboarding?.required&&!onboarding.activatedAt)fail(403,'Instituição em implantação. Aguarde a liberação da equipe comercial.');}
  const maintenance=(await db.collection('commercialPrivate').doc('maintenance').get()).data(),activeMaintenance=publicMaintenance(maintenance,institutionId);
  if(body.action==='platform-maintenance')return {result:{maintenance:activeMaintenance}};
  if(activeMaintenance)throw Object.assign(new Error('Sistema em manutenção. Por favor, aguarde.'),{status:503,maintenance:activeMaintenance});
