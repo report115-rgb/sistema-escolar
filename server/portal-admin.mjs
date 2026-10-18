@@ -2,7 +2,7 @@ import {randomBytes} from 'node:crypto';
 import {validId,publicStudent,studentUid} from './security.mjs';
 const fail=(status,message)=>{throw Object.assign(Error(message),{status});};
 export const portalActions=new Set(['asaas-card-installment-quote','asaas-card-installment-pay','asaas-card-installment-status','renegotiation-catalog','renegotiation-quote','renegotiation-begin','renegotiation-step','renegotiation-status','materials-list','materials-get','session','student-config','event','qr','documents','whatsapp-consent','student-avatar-save','email-documents','email-send','notices-feed','notices-open','notices-read','exam-results','exam-result','asaas-invoices','asaas-payment','asaas-card-prepare','asaas-card-pay','enrollment-finance-local','eja-status','eja-billing-process','eja-payment-sync','eja-material','eja-schedule','eja-reschedule-request','eja-reschedule-process','eja-reschedule-sync','eja-exam-start','eja-exam-save','eja-exam-finish']);
-const reads=new Set(['renegotiation-catalog','renegotiation-status','materials-list','materials-get','session','student-config','event','qr','notices-feed','notices-open','exam-results','exam-result','asaas-invoices','asaas-payment','eja-status','eja-material']);
+const reads=new Set(['renegotiation-quote','renegotiation-catalog','renegotiation-status','materials-list','materials-get','session','student-config','event','qr','notices-feed','notices-open','exam-results','exam-result','asaas-invoices','asaas-payment','eja-status','eja-material']);
 function master(u){if(u.role!=='master')fail(403,'Acesso administrativo ao portal exclusivo do master.');}
 
 export async function bootstrap(db,ctx){
