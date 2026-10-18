@@ -164,7 +164,7 @@
 <link rel="stylesheet" href="/assets/se7-welcome.css">
 <link rel="stylesheet" href="/assets/se7-polos.css">
 <script src="/assets/se7-read-policy.js" defer></script>
-<script src="/assets/se7-polos.js?v=master-sem-seletor-1" defer></script>
+<script src="/assets/se7-polos.js?v=navegacao-2" defer></script>
 <link rel="stylesheet" href="assets/se7-eja.css?v=1"><script defer src="assets/se7-eja-admin.js?v=1"></script><link rel="stylesheet" href="/assets/se7-account-menu.css?v=menu-suave-3">
 <link rel="stylesheet" href="/assets/se7-ambient.css">
 <script src="/assets/se7-subject-kind.js?v=1"></script>
@@ -172,6 +172,7 @@
 <script src="/assets/se7-attendance-proof.js?v=analise-3"></script>
 <script type="module" src="/assets/se7-attendance-rules.js?v=1"></script>
 <script src="/assets/se7-justification-review.js?v=zoom-e-carregamento-4"></script>
+<link rel="stylesheet" href="/assets/se7-navigation.css?v=1">
 </head>
 <body class="se7-suite se7-matriz bg-gray-100 dark:bg-slate-900 text-gray-800 dark:text-gray-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-300 pb-16">    
 
@@ -778,7 +779,7 @@
         <div class="mt-6 space-y-3">
             <h4 class="font-bold text-sm text-gray-700 dark:text-gray-300">Histórico de Horários Registrados</h4>
             <label class="block text-xs font-semibold" for="manual-ponto-filtro-professor">Consultar professor(a)</label>
-            <select id="manual-ponto-filtro-professor" onchange="renderizarHistoricoPontoManual()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"><option value="">Todos os professores</option></select>
+            <select id="manual-ponto-filtro-professor" onchange="renderizarHistoricoPontoManual()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"><option value="">Consultar professor</option><option value="*">Todos os professores</option></select>
             <div id="tabela-ponto-manual-lista" class="space-y-3"></div>
         </div>
     </div>
@@ -5261,12 +5262,14 @@ function renderizarHistoricoPontoManual() {
     const selected=filter.value,opened=new Set([...container.querySelectorAll('details[open]')].map(e=>e.dataset.month));
     const docentes=new Map();
     for(const [id,r]of registrosPontoManual){const key=r.professorId||'nome:'+String(r.professorNome||'Sem identificação');docentes.set(key,r.professorNome||'Professor sem identificação');}
-    filter.replaceChildren(new Option('Todos os professores',''));
+    for(const t of teachers.filter(t=>!t.mergedInto&&(!t.cargo||/^professor(a)?$/i.test(t.cargo))))if(!docentes.has(t.id))docentes.set(t.id,t.fullname||'Professor sem identificação');
+    filter.replaceChildren(new Option('Consultar professor',''),new Option('Todos os professores','*'));
     for(const [id,name]of [...docentes].sort((a,b)=>a[1].localeCompare(b[1],'pt-BR')))filter.add(new Option(name,id));
-    if(docentes.has(selected))filter.value=selected;
-    const registros=[...registrosPontoManual].filter(([id,r])=>!filter.value||(r.professorId||'nome:'+String(r.professorNome||'Sem identificação'))===filter.value).sort(([ia,a],[ib,b])=>(a.data||'9999-12-31').localeCompare(b.data||'9999-12-31')||(a.entrada||'').localeCompare(b.entrada||'')||(a.professorNome||'').localeCompare(b.professorNome||'','pt-BR')||ia.localeCompare(ib));
+    if(selected==='*'||docentes.has(selected))filter.value=selected;
+    if(!filter.value){container.replaceChildren();return;}
+    const registros=[...registrosPontoManual].filter(([id,r])=>filter.value==='*'||(r.professorId||'nome:'+String(r.professorNome||'Sem identificação'))===filter.value).sort(([ia,a],[ib,b])=>(a.data||'9999-12-31').localeCompare(b.data||'9999-12-31')||(a.entrada||'').localeCompare(b.entrada||'')||(a.professorNome||'').localeCompare(b.professorNome||'','pt-BR')||ia.localeCompare(ib));
     container.replaceChildren();
-    if(!registros.length){const p=document.createElement('p');p.className='text-sm text-gray-500';p.textContent=filter.value?'Nenhum horário registrado para este professor.':'Nenhum horário manual registrado ainda.';container.append(p);return;}
+    if(!registros.length){const p=document.createElement('p');p.className='text-sm text-gray-500';p.textContent=filter.value!=='*'?'Nenhum horário registrado para este professor.':'Nenhum horário manual registrado ainda.';container.append(p);return;}
     const groups=new Map();for(const item of registros){const month=/^\d{4}-\d{2}-\d{2}$/.test(item[1].data||'')?item[1].data.slice(0,7):'sem-data';if(!groups.has(month))groups.set(month,[]);groups.get(month).push(item);}
     for(const [month,rows]of groups){
         const detail=document.createElement('details');detail.className='se7-point-month';detail.dataset.month=month;detail.open=opened.has(month);
@@ -5339,7 +5342,7 @@ function escutarRegistrosPontoManual() {
 <link rel="stylesheet" href="/assets/se7-template-editor.css"><script src="/assets/se7-document-models.js"></script>
 <script src="/assets/se7-academic-documents.js?v=frequencia-2"></script><script src="/assets/se7-template-editor.js"></script>
 <link rel="stylesheet" href="/assets/se7-exams.css">
-<script src="/assets/vendor/pdf-lib.min.js"></script><script src="/assets/vendor/fontkit.umd.min.js"></script><script src="/assets/vendor/jsQR.js"></script><script src="/assets/vendor/qrcode.js"></script><script src="/assets/se7-exam-omr.js"></script><script src="/assets/se7-exam-pdf.js"></script><script src="/assets/se7-exam-calendar.js" type="module"></script><script src="/assets/se7-material-pdf.js?v=1"></script><script src="/assets/se7-materials.js?v=apostilas-aluno-4"></script><script src="/assets/se7-exams.js?v=apostilas-3"></script>
+<script src="/assets/vendor/pdf-lib.min.js"></script><script src="/assets/vendor/fontkit.umd.min.js"></script><script src="/assets/vendor/jsQR.js"></script><script src="/assets/vendor/qrcode.js"></script><script src="/assets/se7-exam-omr.js"></script><script src="/assets/se7-exam-pdf.js"></script><script src="/assets/se7-exam-calendar.js" type="module"></script><script src="/assets/se7-material-pdf.js?v=1"></script><script src="/assets/se7-materials.js?v=navegacao-5"></script><script src="/assets/se7-exams.js?v=apostilas-3"></script>
 <link rel="stylesheet" href="/assets/se7-student-sheet.css?v=senha-laranja-2"><script src="/assets/se7-student-sheet.js?v=frequencia-regra-4"></script>
 <script src="/assets/se7-academic-entry.js"></script>
 <script src="/assets/se7-enrollment-auto.js"></script>
@@ -5347,7 +5350,7 @@ function escutarRegistrosPontoManual() {
 <script src="/assets/se7-motion.js"></script>
 <script type="module" src="/assets/se7-class-format.js"></script>
 <script type="module" src="/assets/se7-manual-grades.js"></script>
-<script src="/assets/se7-busy.js?v=feedback-2"></script>
+<script src="/assets/se7-busy.js?v=feedback-3"></script>
 <script src="/assets/se7-matriz-finance.js"></script>
 <script type="module" src="/assets/se7-tuition.js"></script>
 <script src="/assets/se7-account-menu.js?v=perfil-alternado-5"></script>

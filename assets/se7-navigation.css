@@ -1,0 +1,7 @@
+/* Navigation feedback: hover/focus only, without loading or layout movement. */
+:is(.tab-button,.subtab-button,.subtab-eja-btn,.subsubtab-button,.subsubtab-subject-button,.subsubtab-class-button,[role="tab"],#se7-material-tabs > button,button[onclick*="mudarAba("],button[onclick*="mudarAbaApp("]){transition:background-color .16s ease,color .16s ease,box-shadow .16s ease,filter .16s ease;}
+@media(hover:hover) and (pointer:fine){
+:is(.tab-button,.subtab-button,.subtab-eja-btn,.subsubtab-button,.subsubtab-subject-button,.subsubtab-class-button,[role="tab"],#se7-material-tabs > button,button[onclick*="mudarAba("],button[onclick*="mudarAbaApp("]):not(:disabled):hover{background-color:#0e2a49!important;color:#fff!important;box-shadow:inset 0 0 0 1px #38bdf85c;filter:brightness(1.06);}
+}
+:is(.tab-button,.subtab-button,.subtab-eja-btn,.subsubtab-button,.subsubtab-subject-button,.subsubtab-class-button,[role="tab"],#se7-material-tabs > button,button[onclick*="mudarAba("],button[onclick*="mudarAbaApp("]):focus-visible{outline:2px solid #38bdf8;outline-offset:2px;}
+@media(prefers-reduced-motion:reduce){:is(.tab-button,.subtab-button,.subtab-eja-btn,.subsubtab-button,.subsubtab-subject-button,.subsubtab-class-button,[role="tab"],#se7-material-tabs > button,button[onclick*="mudarAba("],button[onclick*="mudarAbaApp("]){transition:none;}}
