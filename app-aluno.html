@@ -19,6 +19,7 @@
     <script src="/assets/vendor/firebase-firestore-compat.js"></script>
 <script src="/assets/vendor/firebase-auth-compat.js"></script>
 <script src="/assets/se7-auth.js"></script>
+<script src="/assets/se7-drive-upload.js?v=1"></script>
 <script src="/assets/se7-portal-admin.js?v=portal-dados-5"></script>
 <script src="/assets/se7-portal-preview.js"></script>
 <script src="/assets/se7-email.js"></script>
@@ -1170,7 +1171,7 @@ let cancelarIdentidadeAluno = null;
 
 let cancelarControlePortal=null;
 let saidaAlunoEmAndamento=false;
-let se7LastGradesSignature=null;function acompanharControlePortal(){if(window.SE7Preview?.active||window.SE7AdminPortal?.active)return;if(cancelarControlePortal)cancelarControlePortal();if(!alunoLogado?.id||alunoLogado.portalMustChangePassword)return;cancelarControlePortal=db.collection('students').doc(alunoLogado.id).onSnapshot(doc=>{if(saidaAlunoEmAndamento||!alunoLogado||doc.metadata.hasPendingWrites||doc.metadata.fromCache)return;const d=doc.exists?doc.data():null;const attendanceSignature=JSON.stringify(d?.attendance||{});if(d&&attendanceSignature!==JSON.stringify(alunoLogado.attendance||{})){alunoLogado.attendance=d.attendance||{};alunoLogado.attendanceFailures=d.attendanceFailures||{};if(window.se7CalendarCourse){renderizarFrequenciaAluno();window.SE7AttendanceRules?.applyPortal(alunoLogado,window.se7CalendarCourse,eventosCalendarioCache);}}const signature=JSON.stringify(d?.grades||{});if(se7LastGradesSignature!==null&&signature!==se7LastGradesSignature)void window.SE7ExamsStudent?.refresh(true);se7LastGradesSignature=signature;if(!d||d.portalBlocked||(d.portalSessionVersion||0)!==(alunoLogado.portalSessionVersion||0)){alert('Seu acesso foi alterado. Entre novamente.');SE7.logout();}},e=>{if(saidaAlunoEmAndamento||!firebase.auth().currentUser)return;if(e.code==='permission-denied'){alert('Sessão sem acesso. Entre novamente.');SE7.logout();}else console.warn(e.message);});}
+let se7LastGradesSignature=null;function acompanharControlePortal(){if(window.SE7Preview?.active||window.SE7AdminPortal?.active)return;if(cancelarControlePortal)cancelarControlePortal();if(!alunoLogado?.id||alunoLogado.portalMustChangePassword)return;cancelarControlePortal=db.collection('students').doc(alunoLogado.id).onSnapshot(doc=>{if(saidaAlunoEmAndamento||!alunoLogado||doc.metadata.hasPendingWrites||doc.metadata.fromCache)return;const d=doc.exists?doc.data():null;if(d&&JSON.stringify(d.documentos||{})!==JSON.stringify(alunoLogado.documentos||{})){alunoLogado.documentos=d.documentos||{};guardarSessaoPortal(alunoLogado);renderizarDocumentosObrigatorios();verificarPendenciaDocumentos();}const attendanceSignature=JSON.stringify(d?.attendance||{});if(d&&attendanceSignature!==JSON.stringify(alunoLogado.attendance||{})){alunoLogado.attendance=d.attendance||{};alunoLogado.attendanceFailures=d.attendanceFailures||{};if(window.se7CalendarCourse){renderizarFrequenciaAluno();window.SE7AttendanceRules?.applyPortal(alunoLogado,window.se7CalendarCourse,eventosCalendarioCache);}}const signature=JSON.stringify(d?.grades||{});if(se7LastGradesSignature!==null&&signature!==se7LastGradesSignature)void window.SE7ExamsStudent?.refresh(true);se7LastGradesSignature=signature;if(!d||d.portalBlocked||(d.portalSessionVersion||0)!==(alunoLogado.portalSessionVersion||0)){alert('Seu acesso foi alterado. Entre novamente.');SE7.logout();}},e=>{if(saidaAlunoEmAndamento||!firebase.auth().currentUser)return;if(e.code==='permission-denied'){alert('Sessão sem acesso. Entre novamente.');SE7.logout();}else console.warn(e.message);});}
 let abaPortalAtual = null;
 function guardarSessaoPortal(aluno) {
     if(window.SE7Preview?.active)return;
@@ -1381,52 +1382,26 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
             location.reload();
         }
 
-        async function enviarDocumentoPDFAluno(tipoId) {if(window.SE7Preview?.active){alert('Modo de visualização: alterações e envios desativados.');return;}
-            const fileInput = document.getElementById(`file_doc_${tipoId}`);
-            if(!fileInput || !fileInput.files[0]) return alert("Selecione um PDF.");
-            const file = fileInput.files[0];
-            if(file.type !== "application/pdf") return alert("O documento precisa estar em PDF.");
-
-            const documentosAtuais = obterDocumentosObrigatoriosAluno();
-            const tipoObj = documentosAtuais.find(t => t.id === tipoId);
-            const reader = new FileReader();
-            reader.onload = async function(e) {
-                try {
-                    const payload = {
-                        nomeAluno: alunoLogado.fullname,
-                        matriculaAluno: alunoLogado.code,
-                        nomeDocumento: tipoObj.label,
-                        arquivoBase64: e.target.result,
-                        mimeType: "application/pdf"
-                    };
-                    const res = await fetch(gdriveUrlGlobal, { method: "POST", body: JSON.stringify(payload) });
-                    const resultado = await res.json();
-
-                    if(!alunoLogado.documentos) alunoLogado.documentos = {};
-                    alunoLogado.documentos[tipoId] = { status: "Pendente", fileName: file.name, driveUrl: resultado.fileUrl || "" };
-
-                    const avisoEmail = await SE7.api('documents',{type:tipoId,fileName:file.name,url:alunoLogado.documentos[tipoId].driveUrl||''});
-                    void SE7Email.consume(avisoEmail.emailJobs||[]);
-                    guardarSessaoPortal(alunoLogado);
-                    
-                    renderizarDocumentosObrigatorios();
-                    await verificarTodasPendencias();void SE7Notices.refresh(alunoLogado.id);
-
-                    alert("Documento enviado com sucesso!");
-                } catch(err) {
-                    if(!alunoLogado.documentos) alunoLogado.documentos = {};
-                    alunoLogado.documentos[tipoId] = { status: "Pendente", fileName: file.name, driveUrl: "" };
-                    const avisoEmail = await SE7.api('documents',{type:tipoId,fileName:file.name,url:alunoLogado.documentos[tipoId].driveUrl||''});
-                    void SE7Email.consume(avisoEmail.emailJobs||[]);
-                    guardarSessaoPortal(alunoLogado);
-
-                    renderizarDocumentosObrigatorios();
-                    await verificarTodasPendencias();void SE7Notices.refresh(alunoLogado.id);
-
-                    alert("Documento enviado com sucesso!");
-                }
-            };
-            reader.readAsDataURL(file);
+        async function enviarDocumentoPDFAluno(tipoId) {
+            if(window.SE7Preview?.active){alert('Modo de visualização: alterações e envios desativados.');return;}
+            const input=document.getElementById(`file_doc_${tipoId}`),file=input?.files?.[0];
+            if(!file)return alert('Selecione um PDF.');
+            const tipo=obterDocumentosObrigatoriosAluno().find(t=>t.id===tipoId);
+            if(!tipo)return;
+            const buttons=[...(input.parentElement?.querySelectorAll('button')||[])];
+            if(input.dataset.uploading)return;
+            input.dataset.uploading='1';const labels=buttons.map(b=>b.textContent);buttons.forEach(b=>{b.disabled=true;b.textContent='Aguarde…';});
+            let uploaded=false;
+            try{
+                const result=await SE7DriveUpload.upload({student:alunoLogado,file,typeId:tipoId,typeName:tipo.label,url:gdriveUrlGlobal,database:db});uploaded=true;
+                const aviso=await SE7.api('documents',{type:tipoId,fileName:file.name,url:result.fileUrl});
+                alunoLogado.documentos=alunoLogado.documentos||{};
+                alunoLogado.documentos[tipoId]={status:'Pendente',fileName:file.name,driveUrl:result.fileUrl};
+                guardarSessaoPortal(alunoLogado);void SE7Email.consume(aviso.emailJobs||[]);
+                renderizarDocumentosObrigatorios();void verificarTodasPendencias();void SE7Notices.refresh(alunoLogado.id);
+                alert('Documento enviado com sucesso!');
+            }catch(error){alert(uploaded?'O PDF foi salvo no Drive, mas não foi possível registrar o envio no sistema. Tente novamente com o mesmo arquivo para concluir sem duplicá-lo.':error.message||'Não foi possível enviar o documento. Tente novamente.');}
+            finally{delete input.dataset.uploading;buttons.forEach((b,i)=>{b.disabled=false;b.textContent=labels[i];});}
         }
 
         function verificarStatusCompletoDocumentos() {
@@ -1444,6 +1419,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
             return todosAprovados;
         }
 
+        function documentoTexto(value){const n=document.createElement('span');n.textContent=String(value||'');return n.innerHTML;}
         function renderizarDocumentosObrigatorios() {
             const docList = document.getElementById('documents-list');
             const bannerInstrucoes = document.getElementById('docs-banner-msg');
@@ -1477,6 +1453,8 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
                 
                 if (status === 'Aprovado') {
                     statusBadge = `<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded text-[10px] font-bold">Aprovado</span>`;
+                } else if (status === 'Reprovado') {
+                    statusBadge = `<span class="px-2 py-0.5 bg-red-100 text-red-800 rounded text-[10px] font-bold">Reprovado</span>`;
                 } else if (temArquivoEnviado) {
                     statusBadge = `<span class="px-2 py-0.5 bg-blue-100 text-blue-800 rounded text-[10px] font-bold">Enviado</span>`;
                 }
@@ -1487,10 +1465,11 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
                             <strong>${tipo.label}</strong>
                             <div>${statusBadge}</div>
                         </div>
-                        ${driveUrl ? `<p class="text-[11px] text-emerald-600 truncate"><a href="${driveUrl}" target="_blank" class="underline font-semibold"><i class="fa-brands fa-google-drive"></i> ${fileName}</a></p>` : ''}
+                        ${status==='Reprovado'?`<p class="text-xs text-red-600 dark:text-red-400">Motivo: ${documentoTexto(docInfo.motivoReprovacao||'Solicite orientação à secretaria.')}</p>`:''}
+                        ${driveUrl&&status!=='Reprovado' ? `<p class="text-[11px] text-emerald-600 truncate"><a href="${documentoTexto(driveUrl)}" target="_blank" rel="noopener noreferrer" class="underline font-semibold"><i class="fa-brands fa-google-drive"></i> ${documentoTexto(fileName)}</a></p>` : ''}
                         <div class="flex items-center gap-2 pt-1 border-t border-slate-100 dark:border-slate-800">
-                            <input type="file" id="file_doc_${tipo.id}" accept="application/pdf" class="text-[10px] w-full border border-slate-200 dark:border-slate-700 p-1 rounded bg-slate-50 dark:bg-slate-800">
-                            <button onclick="enviarDocumentoPDFAluno('${tipo.id}')" class="px-3 py-1.5 bg-blue-600 text-white rounded-xl text-xs font-bold shrink-0">Enviar PDF</button>
+                            <input type="file" id="file_doc_${tipo.id}" ${status==='Aprovado'||docInfo?.analysisPending?'disabled':''} accept="application/pdf" class="text-[10px] w-full border border-slate-200 dark:border-slate-700 p-1 rounded bg-slate-50 dark:bg-slate-800">
+                            <button onclick="enviarDocumentoPDFAluno('${tipo.id}')" ${status==='Aprovado'||docInfo?.analysisPending?'disabled':''} class="px-3 py-1.5 bg-blue-600 text-white rounded-xl text-xs font-bold shrink-0">Enviar PDF</button>
                         </div>
                     </div>
                 `;

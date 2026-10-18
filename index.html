@@ -26,6 +26,7 @@
     <script src="/assets/vendor/firebase-firestore-compat.js"></script>
 <script src="/assets/vendor/firebase-auth-compat.js"></script>
 <script src="/assets/se7-auth.js"></script>
+<script src="/assets/se7-drive-upload.js?v=1"></script>
 <script src="/assets/se7-portal-admin.js?v=portal-dados-5"></script>
 <script src="/assets/se7-portal-preview.js"></script>
 <script src="/assets/se7-email.js"></script>
@@ -4341,7 +4342,7 @@ function renderFinanceStudentSelect(){const select=document.getElementById('fin-
             documentosObrigatoriosDoAluno(aluno).forEach(tipo => {
                 const docInfo = docs[tipo.id];
                 const status = docInfo ? docInfo.status : 'Pendente';
-                const motivo = docInfo ? docInfo.motivoReprovacao : '';
+                const motivo = docInfo ? docInfo.analysisPending?.reason || docInfo.motivoReprovacao : '';
                 const fileUrl = docInfo ? docInfo.fileUrl : '';
                 const driveUrl = docInfo ? docInfo.driveUrl : '';
 
@@ -4366,74 +4367,21 @@ function renderFinanceStudentSelect(){const select=document.getElementById('fin-
             });
         }
 
-        async function enviarDocumentoPDFAluno(alunoId, tipoId) {
-            const fileInput = document.getElementById(`file_doc_${alunoId}_${tipoId}`);
-            if(!fileInput || !fileInput.files || fileInput.files.length === 0) return alert("Selecione um arquivo PDF.");
-            const file = fileInput.files[0];
-            if(file.type !== "application/pdf") return alert("O documento precisa obrigatoriamente estar em formato PDF.");
-
-            const gdriveUrl = document.getElementById('input-gdrive-url').value.trim();
-            if(!gdriveUrl) {
-                return alert("A URL do Google Drive não está configurada em Sistema > Instituição.");
-            }
-
-            const reader = new FileReader();
-            reader.onload = async function(e) {
-                const base64Pdf = e.target.result;
-                const aluno = students.find(s => s.id === alunoId);
-                if(!aluno) return;
-
-                if(!aluno.documentos) aluno.documentos = {};
-
-                const tipoObj = tiposDocumentosObrigatorios.find(t => t.id === tipoId);
-                const nomeDocFormatado = tipoObj ? tipoObj.label : tipoId;
-
-                try {
-                    const payload = {
-                        nomeAluno: aluno.fullname,
-                        matriculaAluno: aluno.code,
-                        nomeDocumento: nomeDocFormatado,
-                        arquivoBase64: base64Pdf,
-                        mimeType: "application/pdf"
-                    };
-
-                    // Envia e aguarda a resposta do Web App do Google
-                    const response = await fetch(gdriveUrl, {
-                        method: "POST",
-                        headers: { "Content-Type": "text/plain;charset=utf-8" }, // Usar text/plain evita bloqueio de CORS no fetch simples
-                        body: JSON.stringify(payload)
-                    });
-                    
-                    const resultado = await response.json();
-                    const linkDireto = resultado.fileUrl || "https://drive.google.com";
-
-                    // Salva o link real do arquivo do Drive no documento do aluno
-                    aluno.documentos[tipoId] = { 
-                        status: "Pendente", 
-                        motivoReprovacao: "", 
-                        fileUrl: "", 
-                        fileName: file.name, 
-                        driveUrl: linkDireto 
-                    };
-
-                    await db.collection("students").doc(alunoId).update({ 
-                        documentos: aluno.documentos 
-                    });
-
-                    if (alunoLogadoCache && alunoLogadoCache.id === alunoId) {
-                        alunoLogadoCache.documentos = aluno.documentos;
-                    }
-
-                    alert("Documento enviado com sucesso para a pasta do aluno no Google Drive!");
-                    renderizarUploadDocumentosAluno(aluno);
-                    popularSelectAlunosValidacaoGestao();
-                } catch (error) {
-                    console.error("Erro ao enviar para o Drive:", error);
-                    // Fallback caso dê erro de CORS no fetch, mas o script execute no servidor
-                    alert("Documento processado e enviado para a nuvem!");
-                }
-            };
-            reader.readAsDataURL(file);
+        async function enviarDocumentoPDFAluno(alunoId,tipoId){
+            const input=document.getElementById(`file_doc_${alunoId}_${tipoId}`),file=input?.files?.[0],aluno=students.find(s=>s.id===alunoId);
+            if(!file)return alert('Selecione um arquivo PDF.');if(!aluno)return;
+            if(input.dataset.uploading)return;input.dataset.uploading='1';
+            const buttons=[...(input.parentElement?.querySelectorAll('button')||[])],labels=buttons.map(b=>b.textContent);buttons.forEach(b=>{b.disabled=true;b.textContent='Aguarde…';});
+            let uploaded=false;
+            try{
+                const result=await SE7DriveUpload.upload({student:aluno,file,typeId:tipoId,typeName:tiposDocumentosObrigatorios.find(t=>t.id===tipoId)?.label||tipoId,url:document.getElementById('input-gdrive-url').value.trim(),database:db,course:courses.find(c=>c.id===aluno.courseId),group:classes.find(g=>g.id===aluno.classId),poloName:window.SE7Polos?.name(aluno.poloId)||''});uploaded=true;
+                const record={status:'Pendente',motivoReprovacao:'',fileUrl:'',fileName:file.name,driveUrl:result.fileUrl};
+                const saved=await SE7.api('documents-submit',{studentId:alunoId,type:tipoId,fileName:file.name,url:result.fileUrl});Object.assign(record,saved.document);
+                aluno.documentos=aluno.documentos||{};aluno.documentos[tipoId]=record;
+                if(alunoLogadoCache&&alunoLogadoCache.id===alunoId)alunoLogadoCache.documentos=aluno.documentos;
+                alert('Documento enviado com sucesso para a pasta do aluno no Google Drive!');renderizarUploadDocumentosAluno(aluno);popularSelectAlunosValidacaoGestao();
+            }catch(error){alert(uploaded?'O PDF foi salvo no Drive, mas não foi possível registrar o envio no sistema. Tente novamente com o mesmo arquivo para concluir sem duplicá-lo.':error.message||'Não foi possível enviar o documento. Tente novamente.');}
+            finally{delete input.dataset.uploading;buttons.forEach((b,i)=>{b.disabled=false;b.textContent=labels[i];});}
         }
 
         function renderReportClasses(){ window.SE7Templates?.refresh(); }
@@ -4872,7 +4820,7 @@ async function alternarProvaIndividualAluno(studentId, novoStatus) {
             documentosObrigatoriosDoAluno(aluno).forEach(tipo => {
                 const docInfo = docs[tipo.id];
                 const status = docInfo ? docInfo.status : 'Pendente';
-                const motivo = docInfo ? docInfo.motivoReprovacao : '';
+                const motivo = docInfo ? docInfo.analysisPending?.reason || docInfo.motivoReprovacao : '';
                 const driveUrl = docInfo ? docInfo.driveUrl : '';
                 const fileName = docInfo && docInfo.fileName ? docInfo.fileName : 'Documento em PDF';
 
@@ -4888,6 +4836,8 @@ async function alternarProvaIndividualAluno(studentId, novoStatus) {
                 let botoesAcaoHtml = '';
                 if (status === 'Aprovado') {
                     botoesAcaoHtml = `<div class="text-xs text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1"><i class="fa-solid fa-circle-check"></i> Documento EJA validado e aprovado.</div>`;
+                } else if (status === 'Reprovado') {
+                    botoesAcaoHtml = `<p class="text-xs text-red-600 dark:text-red-400">Reprovado: ${portalTexto(motivo||'Solicite o reenvio ao aluno.')}</p>`;
                 } else if (!driveUrl) {
                     botoesAcaoHtml = `<span class="text-xs text-gray-400 italic">Aguardando o envio do documento pelo aluno da EJA.</span>`;
                 } else {
@@ -5420,7 +5370,7 @@ function escutarRegistrosPontoManual() {
 <script src="/assets/se7-cancellation.js"></script>
 <script src="/assets/se7-enrollment.js"></script>
 <script src="/assets/se7-version.js"></script>
-<script src="/assets/se7-documents.js"></script>
+<script src="/assets/se7-documents.js?v=drive-analise-2"></script>
 <link rel="stylesheet" href="/assets/se7-template-editor.css"><script src="/assets/se7-document-models.js"></script>
 <script src="/assets/se7-academic-documents.js?v=frequencia-2"></script><script src="/assets/se7-template-editor.js"></script>
 <link rel="stylesheet" href="/assets/se7-exams.css">

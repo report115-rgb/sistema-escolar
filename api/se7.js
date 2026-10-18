@@ -1,3 +1,4 @@
+import {submitDocument,reviewDocument} from '../server/document-drive-review.mjs';
 import {materials} from '../server/materials.mjs';
 import {justification as attendanceJustification} from '../server/attendance-justification.mjs';
 import {attendancePolo} from '../server/attendance-polo.mjs';
@@ -117,6 +118,8 @@ async function dispatchOperation({auth,db},req,b,delegated=null){
   try{return await dispatchOperation({auth,db},{...req},inner,ctx.user);}finally{req.se7AuditIdentity=u;}
  }
  if(['staff-profile-get','staff-profile-save'].includes(action))return staffProfile(db,auth,b,u);
+ if(action==='documents-review')return reviewDocument(db,b,u);
+ if(action==='documents-submit'){if(!['master','secretaria'].includes(u.role))fail(403,'Acesso restrito.');return submitDocument(db,b,u);}
  if(action.startsWith('materials-'))return materials(db,b,u);
  if(action==='annual-statements')return annualAction(db,b,u);
  if(action==='payroll-report-issue')return issuePayrollReport(db,b,u);
@@ -263,17 +266,7 @@ async function dispatchOperation({auth,db},req,b,delegated=null){
    });
   }
   if(action==='documents'){
-   if(u.student.documentos?.[b.type]?.status==='Aprovado')fail(400,'Documento já aprovado. Solicite ajuda à instituição.');
-   if(!docTypes.includes(b.type)||typeof b.fileName!=='string'||!b.fileName.trim()||b.fileName.length>180||/[<>\x00-\x1f]/.test(b.fileName)||typeof b.url!=='string'||b.url.length>1000||b.url&&!/^https:\/\/(?:drive\.google\.com|docs\.google\.com)\//.test(b.url))fail(400,'Documento inválido.');
-   const submissionId=randomBytes(16).toString('hex');
-   await db.runTransaction(async tx=>{
-    const current=await tx.get(ref);if(!current.exists)fail(404,'Aluno não encontrado.');
-    const previous=current.data().documentos?.[b.type];
-    if(previous?.status==='Aprovado')fail(400,'Documento já aprovado. Solicite ajuda à instituição.');
-    const reviewHistory=Array.isArray(previous?.reviewHistory)?[...previous.reviewHistory]:[];
-    if(!reviewHistory.length&&previous?.status==='Reprovado'&&previous.motivoReprovacao)reviewHistory.push({status:'Reprovado',motivo:previous.motivoReprovacao,reviewedAt:previous.reviewedAt||null,reviewedBy:previous.reviewedBy||{name:'Secretaria'},submissionId:previous.submissionId||'',legacy:true});
-    tx.update(ref,{[`documentos.${b.type}`]:{status:'Pendente',fileName:b.fileName,driveUrl:b.url,submissionId,submittedAt:new Date().toISOString(),motivoReprovacao:'',reviewHistory}});
-   });let emailJobs=[],emailWarning='';try{emailJobs=(await mail.documentsEmail(db,u.studentId)).jobs;}catch{emailWarning='Documento salvo. O aviso por e-mail precisa ser preparado novamente.';}return {ok:true,submissionId,emailJobs,emailWarning};
+   const result=await submitDocument(db,b,u);let emailJobs=[],emailWarning='';try{emailJobs=(await mail.documentsEmail(db,u.studentId)).jobs;}catch{emailWarning='Documento salvo. O aviso por e-mail precisa ser preparado novamente.';}return {...result,emailJobs,emailWarning};
   }
   if(action==='student-config'){const d=(await db.collection('config').doc('institution').get()).data()||{};return {...await publicInfo(db),gdriveUrl:typeof d.gdriveUrl==='string'?d.gdriveUrl:''};}
   fail(403,'Operação não permitida.');
