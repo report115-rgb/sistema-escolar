@@ -22,10 +22,11 @@ export function writeSalarySetup(tx,db,id,t,old,change,setup){
  // Import the existing hourly rate as the historical fallback, never replace its previous competences.
  if(!history.length&&change.kind==='hourly'){const amount=numericMoney(setup.legacy.valorHora??old.valorHora??old.valorHoraAula??0);if(Number.isFinite(amount)&&amount>0)history.push({from:'2000-01',kind:'hourly',amountCents:Math.round(amount*100),dueDay:10,legacy:true});}
  history.push(change);tx.update(db.collection('teachers').doc(id),{compensationHistory:history});
- if(change.kind!=='salary')return;
+ if(change.kind!=='salary')return history;
  const p=setup.plan,pid=p?.id||'salary_'+id,oldSchedule=p?.salarySchedule||[];
  if(p&&!oldSchedule.length&&p.startMonth<change.from)oldSchedule.push({from:p.startMonth,amountCents:p.amountCents,dueDay:p.dueDay});
  const schedule=[...oldSchedule,change].sort((a,b)=>a.from.localeCompare(b.from));
  tx.set(db.collection('se7ExpensePlans').doc(pid),{...(p||{}),id:pid,title:'Salário',category:'Colaboradores',recurrence:'monthly',amountMode:'fixed',amountCents:change.amountCents,startMonth:p?.startMonth&&p.startMonth<change.from?p.startMonth:change.from,dueDay:change.dueDay,employeeId:id,employeeName:t.fullname,poloId:t.poloId||'',endMonth:'',salaryManaged:true,salarySchedule:schedule,createdAt:p?.createdAt||change.at,createdBy:p?.createdBy||{uid:change.by},updatedAt:change.at});
+ return history;
 }
 export function salaryPlanAt(p,month){const c=[...(p.salarySchedule||[])].filter(c=>c.from<=month).sort((a,b)=>b.from.localeCompare(a.from))[0];return c?{...p,amountCents:c.amountCents,dueDay:c.dueDay}:p;}

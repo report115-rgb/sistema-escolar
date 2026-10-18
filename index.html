@@ -1178,7 +1178,7 @@
                     <div id="admin-calendar-view" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div></div>
                 </div>
 
-                <div id="subtab-docentes" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display:none"><h3 class="font-bold text-sm text-blue-600">Cadastro docente</h3><button type="button" onclick="SE7Workforce.newTeacher()" class="se7-primary-button"><i class="fa-solid fa-user-plus" aria-hidden="true"></i> Cadastrar novo docente</button><div class="overflow-x-auto"><table class="w-full text-left text-xs"><thead><tr><th class="p-2.5">Nome / Identificação</th><th class="p-2.5">Cargo / Função</th><th class="p-2.5">Formação / Registro</th><th class="p-2.5">Ações</th></tr></thead><tbody id="docentes-list"></tbody></table></div></div>
+                <div id="subtab-docentes" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display:none"><h3 class="font-bold text-sm text-blue-600">Cadastro docente</h3><button type="button" onclick="SE7Workforce.newTeacher()" class="se7-primary-button"><i class="fa-solid fa-user-plus" aria-hidden="true"></i> Cadastrar novo docente</button><div class="overflow-x-auto"><table class="w-full text-left text-xs"><thead><tr><th class="p-2.5">Nome / Identificação</th><th class="p-2.5">Cargo / Função</th><th class="p-2.5">Formação / Registro</th><th class="p-2.5 text-right">Ações</th></tr></thead><tbody id="docentes-list"></tbody></table></div></div>
 <!-- SUBABA COLABORADORES -->
 <div id="subtab-teachers" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
     <div class="flex justify-between items-center border-b border-gray-200 dark:border-slate-700 pb-2">
@@ -1270,7 +1270,7 @@
     <section id="se7-collaborator-access" class="p-3 rounded-xl border border-gray-300 dark:border-slate-600 space-y-2"></section>
     <div id="teacher-photo-master" class="mt-4 mb-4"><label class="block text-xs font-semibold">Foto 3×4 do colaborador (somente master)<input id="input-teacher-photo" type="file" accept="image/jpeg,image/png,image/webp" class="block mt-2 text-xs"></label><img id="teacher-photo-preview" alt="Foto cadastrada" style="display:none;width:90px;height:120px;object-fit:cover;margin-top:8px;border-radius:8px"><p class="text-xs text-gray-500 mt-2">A foto ficará vinculada ao cadastro do colaborador e aos ambientes que exibem sua identificação.</p></div>
     <div class="se7-collaborator-actions">
-        <button type="button" id="save-collaborator-button" onclick="saveTeacher()" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow transition">Salvar Colaborador</button>
+        <button type="button" id="save-collaborator-button" data-busy-managed onclick="saveTeacher()" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow transition">Salvar Colaborador</button>
         <button type="button" id="btn-cancel-edit-teacher" onclick="cancelarEdicaoColaborador()" class="px-4 py-2.5 bg-gray-500 text-white text-xs font-semibold rounded-lg shadow" >Cancelar</button>
     </div>
 
@@ -2635,13 +2635,14 @@ document.getElementById('input-inst-inep').value = data.inep || '';
 
         function atualizarPinAutomaticoColaborador(){const used=new Set(teachers.map(t=>t.pin));let n=teachers.length+1;while(used.has('COLAB-'+String(n).padStart(3,'0')))n++;document.getElementById('input-teacher-pin').value='COLAB-'+String(n).padStart(3,'0');}
         function atualizarHorarioColaborador(){if(window.SE7Collaborators){SE7Collaborators.update();return;}const cargo=document.getElementById('input-teacher-cargo').value;document.getElementById('teacher-hours-panel').style.display=['Secretaria','Secretário','Secretária','Atendimento'].includes(cargo)?'block':'none';}
-        function abrirNovoColaborador(){cancelarEdicaoColaborador();document.getElementById('input-teacher-cargo').value='Secretaria';document.getElementById('input-teacher-course').value='';for(const [id,v] of [['entrada-1','08:00'],['saida-1','12:00'],['entrada-2','14:00'],['saida-2','18:00']])document.getElementById('input-teacher-'+id).value=v;atualizarPinAutomaticoColaborador();atualizarHorarioColaborador();document.getElementById('teacher-photo-master').style.display=usuarioMasterAtivo()?'block':'none';document.getElementById('collaborator-editor-title').textContent='Cadastrar novo colaborador';document.getElementById('input-teacher-active').value='true';window.SE7Collaborators?.prepareAccess();document.getElementById('collaborator-editor-modal').showModal();}
+        function abrirNovoColaborador(){cancelarEdicaoColaborador();document.getElementById('input-teacher-cargo').value='Secretaria';document.getElementById('input-teacher-course').value='';for(const [id,v] of [['entrada-1','08:00'],['saida-1','12:00'],['entrada-2','14:00'],['saida-2','18:00']])document.getElementById('input-teacher-'+id).value=v;atualizarPinAutomaticoColaborador();atualizarHorarioColaborador();document.getElementById('teacher-photo-master').style.display=usuarioMasterAtivo()?'block':'none';document.getElementById('collaborator-editor-title').textContent='Cadastrar novo colaborador';document.getElementById('save-collaborator-button').textContent='Salvar cadastro';document.getElementById('input-teacher-active').value='true';window.SE7Collaborators?.prepareAccess();document.getElementById('collaborator-editor-modal').showModal();}
         async function prepararFotoColaborador(file){
             if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>10*1024*1024)throw Error('Escolha uma foto JPG, PNG ou WebP de até 10 MB.');
             const url=URL.createObjectURL(file);try{const image=new Image();await new Promise((resolve,reject)=>{image.onload=resolve;image.onerror=()=>reject(Error('Não foi possível ler a foto.'));image.src=url;});const canvas=document.createElement('canvas');canvas.width=360;canvas.height=480;const ratio=Math.max(360/image.width,480/image.height),w=image.width*ratio,h=image.height*ratio;canvas.getContext('2d').drawImage(image,(360-w)/2,(480-h)/2,w,h);return canvas.toDataURL('image/jpeg',.85);}finally{URL.revokeObjectURL(url);}
         }
+        let colaboradorSalvando=false;
         async function saveTeacher() {
-    const saveButton=document.getElementById('save-collaborator-button');if(saveButton.disabled)return;
+    const saveButton=document.getElementById('save-collaborator-button');if(colaboradorSalvando)return;
     const editId = document.getElementById('edit-teacher-id').value;
     const fullname = document.getElementById('input-teacher-name').value.trim();
     const cargo = document.getElementById('input-teacher-cargo').value;
@@ -2675,28 +2676,18 @@ document.getElementById('input-inst-inep').value = data.inep || '';
     };
 
     if(window.SE7Workforce?.roles().includes('Secretaria')||['Secretaria','Secretário','Secretária','Atendimento'].includes(cargo))teacherData.horarios={entrada1,saida1,entrada2,saida2};
-    saveButton.disabled=true;saveButton.textContent='Aguarde…';
+    colaboradorSalvando=true;saveButton.disabled=true;saveButton.setAttribute('aria-busy','true');saveButton.textContent='Aguarde…';window.SE7Workforce?.saving(true);window.SE7Workforce?.saveStage('Aguarde… preparando a atualização.');
     try {
         const photoFile=document.getElementById('input-teacher-photo').files[0];
         if(photoFile){if(!usuarioMasterAtivo())throw Error('Somente o master pode alterar a foto.');teacherData.profilePhoto=await prepararFotoColaborador(photoFile);}
-        if (editId) {
-            await SE7Collaborators.save(teacherData,editId);
-            alert("Colaborador atualizado com sucesso!");
-            cancelarEdicaoColaborador();
-        } else {
-            await SE7Collaborators.save(teacherData);
-            alert(`Colaborador cadastrado com sucesso!\nID / Matrícula: ${pinFinal}`);
-            
-            document.getElementById('input-teacher-photo').value='';
-            document.getElementById('input-teacher-name').value = '';
-            document.getElementById('input-teacher-formation').value = '';
-            document.getElementById('input-teacher-council').value = '';
-            cancelarEdicaoColaborador();
-            atualizarPinAutomaticoColaborador();
-        }
+        const result=await SE7Collaborators.save(teacherData,editId||undefined);
+        window.SE7Workforce?.savedRecord(result);
+        cancelarEdicaoColaborador();
+        window.SE7Workforce?.success(editId?'Cadastro atualizado com sucesso.':'Cadastro realizado com sucesso.');
     } catch (e) {
-        alert("Erro ao salvar colaborador: " + e.message);
-    }finally{saveButton.disabled=false;saveButton.textContent="Salvar Colaborador";}
+        window.SE7Workforce?.saveError(e.message);
+        if(!window.SE7Workforce)alert('Não foi possível concluir: '+e.message);
+    }finally{colaboradorSalvando=false;saveButton.disabled=false;saveButton.removeAttribute('aria-busy');window.SE7Workforce?.saving(false);saveButton.textContent=document.getElementById('edit-teacher-id').value?'Atualizar cadastro':'Salvar cadastro';}
 }
 
 function renderTeachers() {
@@ -2739,7 +2730,7 @@ function editarColaborador(id) {
     }
 
     document.getElementById('teacher-photo-master').style.display=usuarioMasterAtivo()?'block':'none';
-    document.getElementById('input-teacher-active').value=t.active===false?'false':'true';window.SE7Collaborators?.edit(t);atualizarHorarioColaborador();document.getElementById('collaborator-editor-title').textContent='Editar colaborador';document.getElementById('collaborator-editor-modal').showModal();
+    document.getElementById('input-teacher-active').value=t.active===false?'false':'true';window.SE7Collaborators?.edit(t);atualizarHorarioColaborador();document.getElementById('collaborator-editor-title').textContent='Editar cadastro';document.getElementById('save-collaborator-button').textContent='Atualizar cadastro';document.getElementById('collaborator-editor-modal').showModal();
 }
 
 function cancelarEdicaoColaborador() {
@@ -5309,7 +5300,7 @@ function escutarRegistrosPontoManual() {
 <div id="modal-historico-matricula" class="fixed inset-0 z-[4000] flex items-center justify-center bg-black/70 p-4" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="historico-matricula-titulo"><div class="se7-modal-panel rounded-2xl border w-full max-w-lg p-6 max-h-[80vh] overflow-y-auto"><div class="flex justify-between gap-3 mb-4"><h3 id="historico-matricula-titulo" class="font-bold">Histórico da matrícula</h3><button type="button" aria-label="Fechar histórico" onclick="document.getElementById('modal-historico-matricula').style.display='none'">Fechar</button></div><div id="historico-matricula-conteudo" class="space-y-3 text-sm"></div></div></div>
 <script src="/assets/se7-cancellation.js"></script>
 <script src="/assets/se7-enrollment.js"></script>
-<script type="module" src="/assets/se7-collaborators.js?v=workforce-1"></script>
+<script type="module" src="/assets/se7-collaborators.js?v=workforce-2"></script>
 <script src="/assets/se7-staff-session.js?v=1"></script>
 <script src="/assets/se7-version.js"></script>
 <script src="/assets/se7-documents.js?v=drive-analise-2"></script>
@@ -5330,6 +5321,6 @@ function escutarRegistrosPontoManual() {
 <script src="/assets/se7-account-menu.js?v=perfil-alternado-5"></script>
 <script src="/assets/se7-ambient.js"></script>
 <script src="/assets/se7-payroll-receipt.js"></script>
-<link rel="stylesheet" href="/assets/se7-annual-statements.css"><script src="/assets/se7-annual-statements.js"></script><script type="module" src="/assets/se7-workforce.js?v=1"></script>
+<link rel="stylesheet" href="/assets/se7-annual-statements.css"><script src="/assets/se7-annual-statements.js"></script><script type="module" src="/assets/se7-workforce.js?v=2"></script>
 </body>
 </html>
