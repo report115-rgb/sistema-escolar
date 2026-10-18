@@ -613,15 +613,15 @@
                 </div>
 
                 <div class="student-finance-sections" aria-label="Opções financeiras">
-                    <details class="student-finance-section" id="student-finance-renegotiate">
+                    <details class="student-finance-section" id="student-finance-renegotiate" name="student-finance">
                         <summary>Renegociar mensalidade<span aria-hidden="true">⌄</span></summary>
                         <div class="student-finance-section-body" id="student-finance-renegotiate-content"></div>
                     </details>
-                    <details class="student-finance-section" id="student-finance-paid">
+                    <details class="student-finance-section" id="student-finance-paid" name="student-finance">
                         <summary>Mensalidades pagas<span aria-hidden="true">⌄</span></summary>
                         <div class="student-finance-section-body" id="student-finance-paid-content"></div>
                     </details>
-                    <details class="student-finance-section" id="student-finance-upcoming">
+                    <details class="student-finance-section" id="student-finance-upcoming" name="student-finance">
                         <summary>Mensalidades a vencer<span aria-hidden="true">⌄</span></summary>
                         <div class="student-finance-section-body" id="student-finance-upcoming-content"></div>
                     </details>
@@ -1685,20 +1685,24 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
 
                 // 4. Carrega faturas pontualmente
                 const finSnap = await db.collection("financeLogs").where("studentId", "==", alunoLogado.id).get({source:'server'});
-                const finList = document.getElementById('finance-list');
-                if(finList) {
-                    finList.innerHTML = '';
-                    
-                    if(finSnap.empty) {
-                        finList.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">Nenhuma fatura encontrada.</p>`;
-                    } else {
-                        let faturas = [];
-                        finSnap.forEach(doc => {
-                            faturas.push({ id: doc.id, ...doc.data() });
-                        });
+                const faturas=[];
+                finSnap.forEach(doc=>faturas.push({id:doc.id,...doc.data()}));
+                renderizarFaturasAluno(faturas);
 
-                        SE7Finance.sort(faturas);
+                await verificarTodasPendencias();
+                void SE7Notices.refresh(alunoLogado.id);document.dispatchEvent(new Event('se7:portal-ready'));void window.SE7ExamsStudent?.refresh();
+            } catch(e) {
+                console.error("Erro ao carregar dados do painel do aluno:", e);
+                if(window.SE7AdminPortal?.active)throw e;
+            }
+        }
 
+        function renderizarFaturasAluno(faturas) {
+            const finList=document.getElementById('finance-list'),paid=document.getElementById('student-finance-paid-content'),upcoming=document.getElementById('student-finance-upcoming-content');
+            if(!finList||!paid||!upcoming)return;
+            for(const el of [finList,paid,upcoming])el.replaceChildren();
+            const today=SE7Finance.dateISO(new Date());
+            SE7Finance.sort(faturas);
                         faturas.forEach(f => {
                             const statusUpper = (f.status || '').toUpperCase();
                             const jaPago = statusUpper.includes('PAGO');
@@ -1707,7 +1711,10 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
 
                             const dataVencExibicao = f.ejaManaged&&!f.date&&!f.vencimento?'A definir após conclusão da prova':SE7Finance.dateBR(f.date || f.vencimento);
 
-                            finList.innerHTML += `
+                            const due=SE7Finance.dateISO(f.date||f.vencimento||f.dueDate);
+                            const inactive=/CANCELADO|ESTORNADO|CONTESTADO|NEGOCIADO|PROPOSTA/i.test(f.status||'')||f.asaasReview;
+                            const target=jaPago&&!inactive?paid:!jaPago&&!inactive&&due&&due>=today?upcoming:finList;
+                            target.insertAdjacentHTML('beforeend', `
                                 <div class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-2 text-xs">
                                     <div class="flex justify-between items-start sm:items-center">
                                         <div>
@@ -1732,17 +1739,13 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
                                         ` : ''}
                                     `}
                                 </div>
-                            `;
+                            `);
                         });
-                    }
-                }
-
-                await verificarTodasPendencias();
-                void SE7Notices.refresh(alunoLogado.id);document.dispatchEvent(new Event('se7:portal-ready'));void window.SE7ExamsStudent?.refresh();
-            } catch(e) {
-                console.error("Erro ao carregar dados do painel do aluno:", e);
-                if(window.SE7AdminPortal?.active)throw e;
-            }
+            const empty=(el,message)=>{if(!el.children.length){const p=document.createElement('p');p.className='text-xs text-slate-500 dark:text-slate-400';p.textContent=message;el.append(p);}};
+            empty(paid,'Nenhuma mensalidade paga registrada.');
+            empty(upcoming,'Nenhuma mensalidade a vencer registrada.');
+            finList.hidden=!finList.children.length;
+            if(!finList.hidden){const title=document.createElement('h3');title.className='font-bold text-sm text-slate-700 dark:text-slate-200';title.textContent='Demais faturas e registros';finList.prepend(title);}
         }
 
         // --- RENDERIZAÇÃO DA FREQUÊNCIA DO ALUNO ---
@@ -2283,5 +2286,8 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
 <script src="/assets/se7-busy.js?v=feedback-3"></script>
 <script src="/assets/se7-eja-avatar.js"></script>
 <script src="/assets/se7-ambient.js"></script>
+<script>
+(()=>{const sections=[...document.querySelectorAll('.student-finance-sections > details')];for(const section of sections)section.addEventListener('toggle',()=>{if(section.open)for(const other of sections)if(other!==section)other.open=false;});})();
+</script>
 </body>
 </html>
