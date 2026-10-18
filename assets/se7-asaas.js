@@ -1,6 +1,6 @@
 (() => {
  const finance=location.pathname.endsWith('app-financeiro.html');
- const button=(label,fn)=>{const b=document.createElement('button');b.type='button';b.className='se7-asaas-button';b.textContent=label;b.addEventListener('click',async()=>{b.disabled=true;try{await fn();}catch(e){alert(e.message||'Não foi possível concluir.');}finally{b.disabled=false;}});return b;};
+ const button=(label,fn)=>{const b=document.createElement('button');b.type='button';b.className='se7-asaas-button';b.textContent=label;b.onclick=async()=>{b.disabled=true;try{await fn();}catch(e){alert(e.message||'Não foi possível concluir.');}finally{b.disabled=false;}};return b;};
  const text=(tag,value)=>{const e=document.createElement(tag);e.textContent=value;return e;};
  let panel,rows,message,reviewBox;
  function showPaymentReview(history){if(!reviewBox)return;reviewBox.replaceChildren();reviewBox.hidden=!history?.review;if(!history?.review)return;reviewBox.append(text('h3','Pagamentos do Asaas para conferir'),text('p',history.warning));for(const item of history.items||[]){const card=document.createElement('div');card.className='se7-asaas-card';card.append(text('strong','Pagamento confirmado • Vencimento '+SE7Finance.dateBR(item.dueDate)),text('p',item.message));if(item.value!=null)card.append(text('p','Valor de referência: R$ '+item.value));reviewBox.append(card);}}

@@ -10,5 +10,5 @@ async function criar(){const btn=document.getElementById('create');btn.disabled=
 async function vincular(){try{await SE7.api('staff-link',{uid:document.getElementById('uid').value.trim(),role:document.getElementById('link-role').value,poloId:document.getElementById('link-polo').value});show('Conta vinculada. Faça um novo login nessa conta.');}catch(e){show(e.message);}}
 async function listar(){try{show(await SE7.api('staff-list'));}catch(e){show(e.message);}}
 async function listarLegados(){try{show(await SE7.api('legacy-staff'));}catch(e){show(e.message);}}
-</script><script src="/assets/se7-busy.js"></script>
+</script><script src="/assets/se7-busy.js?v=feedback-2"></script>
 </body></html>
