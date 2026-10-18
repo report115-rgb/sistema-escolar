@@ -213,7 +213,7 @@
     </style>
 <link rel="stylesheet" href="/assets/se7-suite.css">
 <script>try{if(localStorage.getItem('se7_aluno_theme')==='light')document.documentElement.classList.remove('dark');}catch(e){}</script>
-<link rel="stylesheet" href="/assets/se7-asaas.css">
+<link rel="stylesheet" href="/assets/se7-asaas.css?v=cartao-parcelado-2">
 <script src="/assets/se7-finance-dates.js"></script>
 <script src="/assets/se7-cadastro.js"></script>
 <link rel="stylesheet" href="/assets/se7-notices.css">
@@ -231,6 +231,7 @@
 <style>
 .student-finance-sections{display:grid;gap:10px}.student-finance-section{border:1px solid #cbddec;border-radius:14px;background:#fff;color:#17314c;overflow:hidden}.dark .student-finance-section{background:#0b213a;border-color:#254765;color:#e5f0fb}.student-finance-section summary{display:flex;align-items:center;justify-content:space-between;gap:12px;list-style:none;padding:15px 16px;font-size:13px;font-weight:700;cursor:pointer;transition:background-color .16s,color .16s}.student-finance-section summary::-webkit-details-marker{display:none}.student-finance-section summary span{font-size:20px;line-height:1;transition:transform .2s}.student-finance-section[open] summary span{transform:rotate(180deg)}.student-finance-section[open] summary{border-bottom:1px solid #7896b333}.student-finance-section summary:focus-visible{outline:2px solid #38bdf8;outline-offset:-3px}.student-finance-section-body{padding:14px 16px;min-height:34px}@media(hover:hover){.student-finance-section summary:hover{background:#0e2a49;color:#fff}}@media(prefers-reduced-motion:reduce){.student-finance-section summary,.student-finance-section summary span{transition:none}}
 </style>
+<link rel="stylesheet" href="/assets/se7-renegotiation.css?v=1">
 </head>
 <body class="se7-suite bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans antialiased h-screen overflow-hidden flex flex-col transition-colors duration-200">
 <div id="se7-welcome" hidden role="status" aria-live="polite" aria-atomic="true">
@@ -1704,7 +1705,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
             SE7Finance.sort(faturas);
                         faturas.forEach(f => {
                             const statusUpper = (f.status || '').toUpperCase();
-                            if(/CANCELAD[OA]/.test(statusUpper))return;
+                            if(/CANCELAD[OA]|PROPOSTA|ACORDO/.test(statusUpper))return;
                             const jaPago = statusUpper.includes('PAGO');
                             const formaPg = f.formaPagamento || 'Manual';
                             const dataPg = SE7Finance.dateBR(f.dataPagamento, '');
@@ -1726,13 +1727,13 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
                                     ${SE7Finance.cancellationText(f)?`<p class="text-[11px] text-red-400">${SE7Cadastro.escape(SE7Finance.cancellationText(f))}</p>`:''}
                                     ${SE7Finance.settlementHTML(f)}
                         ${SE7Finance.replacementText(f)?`<p class="text-[11px] text-blue-400">${SE7Cadastro.escape(SE7Finance.replacementText(f))}</p>`:''}
-                                    ${f.asaasPaymentId && /^(PAGO|PENDENTE|VENCIDO)$/i.test(f.status||'') ? `<div class="se7-payment-actions" data-invoice-id="${SE7Cadastro.escape(f.id)}" data-paid="${jaPago}"></div>` : ''}
+                                    ${!f.renegotiationLock && f.asaasPaymentId && (/^(PAGO|PENDENTE|VENCIDO)$/i.test(f.status||'')||f.cardInstallmentCount) ? `<div class="se7-payment-actions" data-invoice-id="${SE7Cadastro.escape(f.id)}" data-paid="${jaPago}" data-renegotiation-method="${f.renegotiationMethod==='card'?'card':f.renegotiationMethod==='bank'?'bank':''}"></div>` : ''}
                                     ${jaPago ? `
                                         <div class="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold pt-1 border-t border-slate-100 dark:border-slate-800">
                                             <i class="fa-solid fa-circle-check"></i> Quitado${dataPg ? ` em <strong>${dataPg}</strong>` : ''} • ${formaPg}
                                         </div>
                                     ` : `
-                                        ${!/CANCELADO|ESTORNADO|CONTESTADO/i.test(f.status||'') && !f.asaasPaymentId && f.invoiceUrl && f.invoiceUrl !== '#' ? `
+                                        ${!/CANCELADO|ESTORNADO|CONTESTADO/i.test(f.status||'') && !f.renegotiationLock && !f.asaasPaymentId && f.invoiceUrl && f.invoiceUrl !== '#' ? `
                                             <div class="pt-1 border-t border-slate-100 dark:border-slate-800 flex justify-end">
                                                 <a href="${f.invoiceUrl}" target="_blank" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-[10px] shadow">Baixar Boleto</a>
                                             </div>
@@ -1745,6 +1746,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
             empty(paid,'Nenhuma mensalidade paga registrada.');
             empty(upcoming,'Nenhuma mensalidade liberada para pagamento.');
             finList.hidden=!finList.children.length;
+            void window.SE7Renegotiation?.refreshStudent(faturas);
             if(!finList.hidden){const title=document.createElement('h3');title.className='font-bold text-sm text-slate-700 dark:text-slate-200';title.textContent='Demais faturas e registros';finList.prepend(title);}
         }
 
@@ -2279,7 +2281,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
 <script src="/assets/vendor/fontkit.umd.min.js"></script><script src="/assets/se7-material-pdf.js?v=1"></script><script src="/assets/se7-materials.js?v=navegacao-5"></script>
 <script src="/assets/se7-receipt.js"></script>
 <script src="/assets/se7-cancellation.js"></script>
-<script src="/assets/se7-asaas.js"></script>
+<script src="/assets/se7-asaas.js?v=cartao-parcelado-2"></script>
 <link rel="stylesheet" href="/assets/se7-exams.css"><script src="/assets/se7-exam-student.js"></script><script type="module" src="/assets/se7-ingress-policy.js"></script>
 <script src="/assets/se7-motion.js"></script>
 <script type="module" src="/assets/se7-class-format.js"></script>
@@ -2289,5 +2291,6 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
 <script>
 (()=>{const sections=[...document.querySelectorAll('.student-finance-sections > details')];for(const section of sections)section.addEventListener('toggle',()=>{if(section.open)for(const other of sections)if(other!==section)other.open=false;});})();
 </script>
+<script src="/assets/se7-renegotiation.js?v=cartao-parcelado-2"></script>
 </body>
 </html>

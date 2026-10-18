@@ -163,7 +163,7 @@
 @media(max-height:560px){#se7-welcome .welcome-kicker{top:calc(5% + env(safe-area-inset-top,0px))}#se7-welcome .welcome-check{width:46px;height:46px;margin-bottom:12px}#se7-welcome .welcome-name{font-size:22px}#se7-welcome .welcome-role{margin:8px 0 14px}#se7-welcome .welcome-progress{margin-top:14px}}
     </style>
 <link rel="stylesheet" href="/assets/se7-suite.css">
-<link rel="stylesheet" href="/assets/se7-asaas.css">
+<link rel="stylesheet" href="/assets/se7-asaas.css?v=cartao-parcelado-2">
 <script src="/assets/se7-finance-dates.js"></script>
 <script src="/assets/se7-cadastro.js"></script>
 <link rel="stylesheet" href="/assets/se7-notices.css">
@@ -177,6 +177,7 @@
 <link rel="stylesheet" href="/assets/se7-payroll-print.css">
 <script src="/assets/vendor/qrcode.js"></script>
 <link rel="stylesheet" href="/assets/se7-navigation.css?v=1">
+<link rel="stylesheet" href="/assets/se7-renegotiation.css?v=1">
 </head>
 <body class="se7-suite bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans antialiased h-screen overflow-hidden flex flex-col transition-colors duration-200">
 <div id="se7-welcome" hidden role="status" aria-live="polite" aria-atomic="true">
@@ -619,17 +620,10 @@
                     <h2 class="font-bold text-sm text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
                         <i class="fa-solid fa-handshake-angle"></i> Aba de Negociações
                     </h2>
-                    <p class="text-[11px] text-slate-500">Alunos com negociações em andamento ou aprovadas aparecem listados abaixo automaticamente. Consulte os alunos em atraso ou busque por nome ou CPF para iniciar uma negociação.</p>
-                    
-                    <button type="button" id="se7-overdue-students" class="se7-agreement-shortcut" onclick="SE7Agreements.openOverdue()">Ver alunos em atraso <span id="se7-overdue-count">0</span><span id="se7-overdue-badge" class="se7-agreement-alert" hidden aria-label="Há alunos em atraso">!</span></button>
-                <div class="relative">
-                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
-                            <i class="fa-solid fa-magnifying-glass text-xs"></i>
-                        </span>
-                        <input type="text" id="input-busca-negociacao" oninput="pesquisarAlunoNegociacao()" placeholder="Pesquisar novo aluno por nome ou CPF..." class="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-emerald-600 focus:outline-none">
-                    </div>
+                    <p class="text-[11px] text-slate-500">Acompanhe os atrasos e as negociações dos alunos. Acordos manuais são liberados a partir de seis mensalidades vencidas.</p>
+                    <input type="hidden" id="input-busca-negociacao" value="">
                 </div>
-
+                <div id="se7-negotiation-dashboard" class="space-y-3"></div>
                 <div id="lista-negociacoes-ativas-container" class="space-y-2"></div>
                 <div id="lista-busca-negociacao-container" class="space-y-2"></div>
                 <div id="se7-rejected-proposals"></div>
@@ -791,7 +785,7 @@
             </button>
             <button onclick="mudarAbaApp('negociacoes')" id="nav-btn-neg" class="flex flex-col items-center text-slate-400 dark:text-slate-500 text-[9px] font-bold transition">
                 <i class="fa-solid fa-handshake-angle text-sm mb-0.5"></i>
-                <span class="se7-agreement-nav-label">Acordos<span id="se7-overdue-nav-badge" class="se7-agreement-alert" hidden aria-label="Há alunos em atraso">!</span></span>
+                <span class="se7-agreement-nav-label">Negociações<span id="se7-overdue-nav-badge" class="se7-agreement-alert" hidden aria-label="Há alunos em atraso">!</span></span>
             </button>
             <button onclick="mudarAbaApp('quitacao')" id="nav-btn-quit" class="flex flex-col items-center text-slate-400 dark:text-slate-500 text-[9px] font-bold transition">
                 <i class="fa-solid fa-certificate text-sm mb-0.5"></i>
@@ -1554,6 +1548,7 @@
         // --- NEGOCIAÇÕES ---
         function renderizarNegociacoesAtivasGeral() {
             window.SE7Agreements?.refresh();
+            if(document.getElementById('se7-negotiation-dashboard'))return;
             const container = document.getElementById('lista-negociacoes-ativas-container');
             const termoBusca = document.getElementById('input-busca-negociacao').value.trim();
             if (!container) return;
@@ -2868,15 +2863,16 @@
 <script src="/assets/vendor/fontkit.umd.min.js"></script>
 <script src="/assets/se7-receipt.js"></script>
 <script src="/assets/se7-cancellation.js"></script>
-<script src="/assets/se7-asaas.js"></script>
+<script src="/assets/se7-asaas.js?v=cartao-parcelado-2"></script>
 <script src="/assets/se7-enrollment-auto.js"></script>
 <script src="/assets/se7-motion.js"></script>
 <script src="/assets/se7-busy.js?v=feedback-3"></script>
 <script src="/assets/se7-ambient.js"></script>
 <script src="/assets/se7-payroll-receipt.js"></script>
 <script src="/assets/se7-expenses.js?v=6"></script>
-<script type="module" src="/assets/se7-agreements.js?v=1"></script>
+<script type="module" src="/assets/se7-agreements.js?v=cartao-parcelado-3"></script>
 <script type="module" src="/assets/se7-payroll-finance.js"></script>
 <script type="module" src="/assets/se7-payroll-report.js"></script>
-<link rel="stylesheet" href="/assets/se7-annual-statements.css"><script src="/assets/se7-annual-statements.js"></script></body>
+<link rel="stylesheet" href="/assets/se7-annual-statements.css"><script src="/assets/se7-annual-statements.js"></script><script src="/assets/se7-renegotiation.js?v=cartao-parcelado-2"></script>
+</body>
 </html>
