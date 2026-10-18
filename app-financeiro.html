@@ -649,14 +649,14 @@
             </div>
 
 
-            <!-- ABA 6: REGISTRO DE FREQUÊNCIA DE COLABORADORES -->
+            <!-- ABA 6: REGISTRO DE FREQUÊNCIA DE PROFESSORES -->
             <section id="tab-contas-pagar" class="space-y-3 tab-pane" style="display:none" aria-label="Contas a pagar"></section>
             <div id="tab-frequencia-colaboradores" class="space-y-3 tab-pane" style="display: none;">
                 <div class="bg-white dark:bg-slate-900 p-4 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 space-y-3">
                     <div class="flex justify-between items-start gap-2 flex-wrap border-b border-slate-100 dark:border-slate-800 pb-3">
                         <div>
                             <h2 class="font-bold text-sm text-blue-600 dark:text-blue-400 flex items-center gap-2">
-                                <i class="fa-solid fa-user-clock"></i> Registro de Frequência de Colaboradores
+                                <i class="fa-solid fa-user-clock"></i> Registro de Frequência de Professores
                             </h2>
                             <p class="text-[10px] text-slate-400 mt-1">
                                 Integração automática com o Ponto Manual da Matriz. Os lançamentos chegam em tempo real e o valor é calculado pela carga horária registrada.
@@ -669,9 +669,9 @@
 
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
                         <div>
-                            <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Colaborador</label>
+                            <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Professor</label>
                             <select id="freq-colab-professor" onchange="renderizarFrequenciaColaboradores()" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs dark:bg-slate-800 dark:text-white">
-                                <option value="">Selecione o colaborador</option>
+                                <option value="">Selecione o professor</option>
                             </select>
                         </div>
                         <div>
@@ -710,7 +710,7 @@
 
                 <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
                     <h3 class="font-bold text-xs dark:text-white">Pagamento da competência</h3>
-                    <p id="freq-pagamento-status" class="text-xs text-slate-600 dark:text-slate-300">Selecione um colaborador para consultar o pagamento.</p>
+                    <p id="freq-pagamento-status" class="text-xs text-slate-600 dark:text-slate-300">Selecione um professor para consultar o pagamento.</p>
                     <div class="flex flex-wrap gap-2">
                         <button id="freq-btn-pagamento" type="button" onclick="abrirPagamentoColaborador()" disabled class="bg-emerald-600 text-white px-4 py-2 rounded-xl text-xs font-bold disabled:opacity-50">Registrar pagamento</button>
                         <button id="freq-btn-estorno" type="button" onclick="estornarPagamentoColaborador()" style="display:none;" class="bg-red-600 text-white px-4 py-2 rounded-xl text-xs font-bold">Estornar registro</button>
@@ -1049,6 +1049,8 @@
             db.collection("teachers").onSnapshot(snapshot => {
                 teachers = [];
                 snapshot.forEach(doc => teachers.push({ id: doc.id, ...doc.data() }));
+                teachers=teachers.filter(t=>!t.mergedInto&&(!t.cargo||/^professor(a)?$/i.test(String(t.cargo).trim())));
+                window.SE7Expenses?.invalidateCatalog?.();
                 teachers.sort((a, b) => (a.fullname || '').localeCompare(b.fullname || '', 'pt-BR'));
                 atualizarSeletorFrequenciaColaboradores();
                 renderizarTabelaValoresHora();
@@ -2363,7 +2365,7 @@
         }
 
         // ============================================================
-        // REGISTRO DE FREQUÊNCIA DE COLABORADORES
+        // REGISTRO DE FREQUÊNCIA DE PROFESSORES
         // Integração: Matriz -> teacherManualLogs -> Financeiro
         // ============================================================
 
@@ -2397,19 +2399,19 @@
             const mes = freqObterMesSelecionado();
             const pagamento = professorId ? pagamentoAtual(professorId, mes) : null;
             const registros = freqMontarCalculos(freqRegistrosFiltrados());
-            el.textContent = pagamentosColaboradoresErro ? 'Não foi possível consultar os pagamentos. Tente atualizar a página.' : !professorId ? 'Selecione um colaborador e a competência para registrar ou consultar o pagamento.' : pagamentoTexto(pagamento, registros.reduce((s, r) => s + r.totalCentavos, 0));
+            el.textContent = pagamentosColaboradoresErro ? 'Não foi possível consultar os pagamentos. Tente atualizar a página.' : !professorId ? 'Selecione um professor e a competência para registrar ou consultar o pagamento.' : pagamentoTexto(pagamento, registros.reduce((s, r) => s + r.totalCentavos, 0));
             const ativo = pagamento?.status === 'pago';
             const registrar = document.getElementById('freq-btn-pagamento');
             registrar.textContent = ativo ? 'Corrigir pagamento' : 'Registrar pagamento';
             registrar.disabled = !professorId || pagamentosColaboradoresErro;
             document.getElementById('freq-btn-estorno').style.display = ativo ? 'inline-block' : 'none';window.SE7PayrollFinance?.payment(pagamento,professorId,mes);
         }
-        window.SE7ExpensesPayrollOpen=function(id,month,name){mudarAbaApp('frequencia-colaboradores');document.getElementById('freq-colab-mes').value=month;const select=document.getElementById('freq-colab-professor');if(![...select.options].some(o=>o.value===id))select.add(new Option(name||'Colaborador',id));select.value=id;renderizarFrequenciaColaboradores();};
+        window.SE7ExpensesPayrollOpen=async function(id,month,name){if(!teachers.some(t=>t.id===id)){const snap=await db.collection('teachers').doc(id).get();const t=snap.exists?{id:snap.id,...snap.data()}:null;if(!t||t.mergedInto||t.cargo&&!/^professor(a)?$/i.test(String(t.cargo).trim()))throw Error('Este registro não está na lista atual de professores. Seu histórico permanece disponível em Contas a pagar.');teachers.push(t);atualizarSeletorFrequenciaColaboradores();}mudarAbaApp('frequencia-colaboradores');document.getElementById('freq-colab-mes').value=month;document.getElementById('freq-colab-professor').value=id;renderizarFrequenciaColaboradores();};
         function abrirPagamentoColaborador() {
             if (pagamentoSalvando) return;
             const professorId = document.getElementById('freq-colab-professor').value;
             const mes = freqObterMesSelecionado();
-            if (!professorId || !/^\d{4}-\d{2}$/.test(mes)) return alert('Selecione o colaborador e a competência.');
+            if (!professorId || !/^\d{4}-\d{2}$/.test(mes)) return alert('Selecione o professor e a competência.');
             if (pagamentosColaboradoresErro) return alert('Não foi possível consultar os pagamentos. Atualize a página.');
             const registros = freqMontarCalculos(freqRegistrosFiltrados());
             const atual = pagamentoAtual(professorId, mes);if(atual&&!window.SE7PayrollFinance?.isEditable(atual))return alert('O prazo de 12 horas terminou. Use Ver registro.');
@@ -2537,7 +2539,7 @@
             const select = document.getElementById('freq-colab-professor');
             if (!select) return;
             const valorAtual = select.value;
-            select.innerHTML = '<option value="">Selecione o colaborador</option>';
+            select.innerHTML = '<option value="">Selecione o professor</option>';
             teachers.forEach(t => {
                 select.insertAdjacentHTML('beforeend',
                     `<option value="${freqEscaparHtml(t.id)}">${freqEscaparHtml(t.fullname || 'Colaborador sem nome')} (${freqEscaparHtml(t.cargo || 'Professor')})</option>`
@@ -2551,7 +2553,7 @@
             if (!container) return;
 
             if (!teachers.length) {
-                container.innerHTML = `<div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 text-center text-[10px] text-slate-400">Nenhum colaborador cadastrado na Matriz.</div>`;
+                container.innerHTML = `<div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 text-center text-[10px] text-slate-400">Nenhum professor cadastrado na Matriz.</div>`;
                 return;
             }
 
@@ -2675,7 +2677,7 @@
         let payrollReportGenerating=false;
         async function gerarRelatorioFrequenciaColaboradores() {
             if(payrollReportGenerating)return;payrollReportGenerating=true;try {if(pagamentosColaboradoresErro)throw Error('Atualize a consulta de pagamentos antes de emitir o relatório.');
-            if(!document.getElementById('freq-colab-professor').value)return alert('Selecione o colaborador para gerar o relatório.');
+            if(!document.getElementById('freq-colab-professor').value)return alert('Selecione o professor para gerar o relatório.');
             const mes = freqObterMesSelecionado();
             const registros = freqMontarCalculos(freqRegistrosFiltrados()).sort((a, b) => {
                 return (a.data || '9999-12-31').localeCompare(b.data || '9999-12-31')
@@ -2736,7 +2738,7 @@
 
                 return `
                     <div class="se7-report-group" style="page-break-inside: avoid; margin-bottom: 32px;">
-                        <h2 style="font-size: 14px; color: #1e3a8a; text-transform: uppercase; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 6px; margin-top: 25px; margin-bottom: 12px; font-weight: bold;">1. Identificação do Colaborador</h2>
+                        <h2 style="font-size: 14px; color: #1e3a8a; text-transform: uppercase; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 6px; margin-top: 25px; margin-bottom: 12px; font-weight: bold;">1. Identificação do Professor</h2>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 12px; background: #f1f5f9; padding: 16px; border-radius: 10px;">
                             <div>
                                 <strong>Nome Completo:</strong><br>${freqEscaparHtml(nome)}<br><br>
@@ -2798,7 +2800,7 @@
                 blocos = `<div style="padding: 30px; text-align: center; color: #64748b; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 10px;">Nenhum registro encontrado para gerar o relatório.</div>`;
             }
 
-            const titulo = 'Registro de Frequência de Colaboradores';
+            const titulo = 'Registro de Frequência de Professores';
             const subtitulo = 'Visualização pronta para impressão ou conferência';
 
             const htmlRelatorio = `
@@ -2819,7 +2821,7 @@
                         </div>
                     </div>
 
-                    <h2 style="text-align: center; font-size: 17px; color: #1e3a8a; margin-bottom: 20px; text-transform: uppercase; font-weight: bold;">REGISTRO DE FREQUÊNCIA DE COLABORADORES</h2>
+                    <h2 style="text-align: center; font-size: 17px; color: #1e3a8a; margin-bottom: 20px; text-transform: uppercase; font-weight: bold;">REGISTRO DE FREQUÊNCIA DE PROFESSORES</h2>
                     ${blocos}
 
                     <div class="se7-report-footer"><div class="se7-report-signatures">
