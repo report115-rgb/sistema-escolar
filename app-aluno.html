@@ -622,7 +622,7 @@
                         <div class="student-finance-section-body" id="student-finance-paid-content"></div>
                     </details>
                     <details class="student-finance-section" id="student-finance-upcoming" name="student-finance">
-                        <summary>Mensalidades a vencer<span aria-hidden="true">⌄</span></summary>
+                        <summary>Mensalidades liberadas para pagamento<span aria-hidden="true">⌄</span></summary>
                         <div class="student-finance-section-body" id="student-finance-upcoming-content"></div>
                     </details>
                 </div>
@@ -1701,10 +1701,10 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
             const finList=document.getElementById('finance-list'),paid=document.getElementById('student-finance-paid-content'),upcoming=document.getElementById('student-finance-upcoming-content');
             if(!finList||!paid||!upcoming)return;
             for(const el of [finList,paid,upcoming])el.replaceChildren();
-            const today=SE7Finance.dateISO(new Date());
             SE7Finance.sort(faturas);
                         faturas.forEach(f => {
                             const statusUpper = (f.status || '').toUpperCase();
+                            if(/CANCELAD[OA]/.test(statusUpper))return;
                             const jaPago = statusUpper.includes('PAGO');
                             const formaPg = f.formaPagamento || 'Manual';
                             const dataPg = SE7Finance.dateBR(f.dataPagamento, '');
@@ -1713,7 +1713,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
 
                             const due=SE7Finance.dateISO(f.date||f.vencimento||f.dueDate);
                             const inactive=/CANCELADO|ESTORNADO|CONTESTADO|NEGOCIADO|PROPOSTA/i.test(f.status||'')||f.asaasReview;
-                            const target=jaPago&&!inactive?paid:!jaPago&&!inactive&&due&&due>=today?upcoming:finList;
+                            const target=jaPago&&!inactive?paid:!jaPago&&!inactive&&due?upcoming:finList;
                             target.insertAdjacentHTML('beforeend', `
                                 <div class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-2 text-xs">
                                     <div class="flex justify-between items-start sm:items-center">
@@ -1743,7 +1743,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
                         });
             const empty=(el,message)=>{if(!el.children.length){const p=document.createElement('p');p.className='text-xs text-slate-500 dark:text-slate-400';p.textContent=message;el.append(p);}};
             empty(paid,'Nenhuma mensalidade paga registrada.');
-            empty(upcoming,'Nenhuma mensalidade a vencer registrada.');
+            empty(upcoming,'Nenhuma mensalidade liberada para pagamento.');
             finList.hidden=!finList.children.length;
             if(!finList.hidden){const title=document.createElement('h3');title.className='font-bold text-sm text-slate-700 dark:text-slate-200';title.textContent='Demais faturas e registros';finList.prepend(title);}
         }
