@@ -1183,7 +1183,7 @@
         <span class="text-xs text-gray-500">Cadastro e informações dos colaboradores</span>
     </div>
 
-    <div class="flex flex-wrap gap-2"><button type="button" onclick="abrirNovoColaborador()" class="se7-primary-button"><i class="fa-solid fa-user-plus" aria-hidden="true"></i> Cadastrar novo colaborador</button><button type="button" onclick="SE7Collaborators.importAccess()" class="se7-primary-button">Vincular acesso existente</button></div>
+    <div class="flex flex-wrap gap-2"><button type="button" onclick="abrirNovoColaborador()" class="se7-primary-button"><i class="fa-solid fa-user-plus" aria-hidden="true"></i> Cadastrar novo colaborador</button><button type="button" onclick="SE7Collaborators.importAccess()" class="se7-primary-button">Vincular acesso existente</button><button type="button" onclick="SE7Collaborators.resolveDuplicates()" class="se7-primary-button">Resolver duplicidade</button></div>
     <dialog id="collaborator-editor-modal" class="se7-exam-dialog se7-collaborator-dialog" aria-labelledby="collaborator-editor-title">
         <div class="flex justify-between items-center"><h3 id="collaborator-editor-title">Cadastrar novo colaborador</h3><button type="button" onclick="cancelarEdicaoColaborador()" aria-label="Fechar cadastro">Fechar</button></div>
         <div class="space-y-4">
@@ -2638,6 +2638,7 @@ document.getElementById('input-inst-inep').value = data.inep || '';
             const url=URL.createObjectURL(file);try{const image=new Image();await new Promise((resolve,reject)=>{image.onload=resolve;image.onerror=()=>reject(Error('Não foi possível ler a foto.'));image.src=url;});const canvas=document.createElement('canvas');canvas.width=360;canvas.height=480;const ratio=Math.max(360/image.width,480/image.height),w=image.width*ratio,h=image.height*ratio;canvas.getContext('2d').drawImage(image,(360-w)/2,(480-h)/2,w,h);return canvas.toDataURL('image/jpeg',.85);}finally{URL.revokeObjectURL(url);}
         }
         async function saveTeacher() {
+    const saveButton=document.getElementById('save-collaborator-button');if(saveButton.disabled)return;
     const editId = document.getElementById('edit-teacher-id').value;
     const fullname = document.getElementById('input-teacher-name').value.trim();
     const cargo = document.getElementById('input-teacher-cargo').value;
@@ -2671,6 +2672,7 @@ document.getElementById('input-inst-inep').value = data.inep || '';
     };
 
     if(['Secretaria','Secretário','Secretária','Atendimento'].includes(cargo))teacherData.horarios={entrada1,saida1,entrada2,saida2};
+    saveButton.disabled=true;saveButton.textContent='Aguarde…';
     try {
         const photoFile=document.getElementById('input-teacher-photo').files[0];
         if(photoFile){if(!usuarioMasterAtivo())throw Error('Somente o master pode alterar a foto.');teacherData.profilePhoto=await prepararFotoColaborador(photoFile);}
@@ -2691,7 +2693,7 @@ document.getElementById('input-inst-inep').value = data.inep || '';
         }
     } catch (e) {
         alert("Erro ao salvar colaborador: " + e.message);
-    }
+    }finally{saveButton.disabled=false;saveButton.textContent="Salvar Colaborador";}
 }
 
 function renderTeachers() {
@@ -2704,7 +2706,7 @@ function renderTeachers() {
             list.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-gray-400">Nenhum colaborador cadastrado.</td></tr>`;
             return;
         }
-        teachers.forEach(t => {
+        teachers.filter(t=>!t.mergedInto).forEach(t => {
             let corBadge = 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300';
             if (t.cargo === 'Secretaria') corBadge = 'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300';
             if (t.cargo === 'Limpeza') corBadge = 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300';
@@ -2733,7 +2735,7 @@ function renderTeachers() {
         const el = document.getElementById(id);
         if(el) { 
             const selectedTeacher=el.value;el.innerHTML = '<option value="">Selecione...</option>'; 
-            teachers.filter(t => !t.cargo || /^professor(a)?$/i.test(t.cargo)).forEach(t => {
+            teachers.filter(t => !t.mergedInto&&(!t.cargo || /^professor(a)?$/i.test(t.cargo))).forEach(t => {
                 el.insertAdjacentHTML('beforeend', `<option value="${t.id}">${t.fullname}</option>`);
             });el.value=selectedTeacher; 
         }
@@ -5133,7 +5135,7 @@ function carregarProfessoresPontoManual() {
     select.innerHTML = '<option value="">Selecione o professor...</option>';
     
     // Filtra os colaboradores que possuem cargo de Professor ou Coordenação
-    const docentes = teachers.filter(t => !t.cargo || /^professor(a)?$/i.test(t.cargo));
+    const docentes = teachers.filter(t => !t.mergedInto&&(!t.cargo || /^professor(a)?$/i.test(t.cargo)));
     docentes.forEach(t => {
         select.insertAdjacentHTML('beforeend', `<option value="${t.id}">${t.fullname} (${t.cargo || 'Professor'})</option>`);
     });
@@ -5330,7 +5332,7 @@ function escutarRegistrosPontoManual() {
 <div id="modal-historico-matricula" class="fixed inset-0 z-[4000] flex items-center justify-center bg-black/70 p-4" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="historico-matricula-titulo"><div class="se7-modal-panel rounded-2xl border w-full max-w-lg p-6 max-h-[80vh] overflow-y-auto"><div class="flex justify-between gap-3 mb-4"><h3 id="historico-matricula-titulo" class="font-bold">Histórico da matrícula</h3><button type="button" aria-label="Fechar histórico" onclick="document.getElementById('modal-historico-matricula').style.display='none'">Fechar</button></div><div id="historico-matricula-conteudo" class="space-y-3 text-sm"></div></div></div>
 <script src="/assets/se7-cancellation.js"></script>
 <script src="/assets/se7-enrollment.js"></script>
-<script type="module" src="/assets/se7-collaborators.js?v=1"></script>
+<script type="module" src="/assets/se7-collaborators.js?v=2"></script>
 <script src="/assets/se7-staff-session.js?v=1"></script>
 <script src="/assets/se7-version.js"></script>
 <script src="/assets/se7-documents.js?v=drive-analise-2"></script>

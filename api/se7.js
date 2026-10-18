@@ -1,3 +1,4 @@
+import {collaboratorDuplicates} from '../server/collaborator-duplicates.mjs';
 import {collaboratorAccess} from '../server/collaborator-access.mjs';
 import {saveCollaborator} from '../server/collaborators.mjs';
 import {expenses} from '../server/expenses.mjs';
@@ -121,6 +122,7 @@ async function dispatchOperation({auth,db},req,b,delegated=null){
   try{return await dispatchOperation({auth,db},{...req},inner,ctx.user);}finally{req.se7AuditIdentity=u;}
  }
  if(['staff-profile-get','staff-profile-save'].includes(action))return staffProfile(db,auth,b,u);
+ if(action.startsWith('collaborator-duplicates-'))return collaboratorDuplicates(db,b,u);
  if(action.startsWith('collaborator-access-'))return collaboratorAccess(db,auth,b,u);
  if(action==='collaborator-state'){master(u);const id=validId(b.id),ref=db.collection('teachers').doc(id);if(typeof b.active!=='boolean')fail(400,'Situação inválida.');const accounts=await db.collection('se7Staff').where('teacherId','==',id).get();if(accounts.docs.some(d=>d.id===u.uid||d.id===process.env.SE7_MASTER_UID))fail(400,'Não é permitido bloquear o Master.');await db.runTransaction(async tx=>{const t=await tx.get(ref);const entries=await Promise.all(accounts.docs.map(d=>tx.get(db.collection('se7Staff').doc(d.id))));if(!t.exists)fail(404,'Colaborador não encontrado.');tx.update(ref,{active:b.active});entries.forEach((s,i)=>{const a=s.data();tx.update(db.collection('se7Staff').doc(accounts.docs[i].id),{disabled:!b.active||a.accessAuthorized===false||a.disabled&&!a.disabledByCollaborator,disabledByCollaborator:!b.active&&a.accessAuthorized!==false});});});for(const d of accounts.docs){const s=await db.collection('se7Staff').doc(d.id).get();await auth.updateUser(d.id,{disabled:s.data().disabled});await auth.revokeRefreshTokens(d.id);}return {ok:true};}
  if(action==='collaborator-save')return saveCollaborator(db,b,u,{auth});
