@@ -9,6 +9,7 @@
     <title>SE7 Financeiro</title>
 <link rel="icon" type="image/svg+xml" href="/assets/se7-brand-icon.svg">
 <link rel="stylesheet" href="/assets/se7-expenses.css?v=2">
+<link rel="stylesheet" href="/assets/se7-agreements.css?v=1">
     <!-- Tailwind CSS CDN -->
     <link rel="stylesheet" href="/assets/vendor/tailwind.min.css">
     
@@ -617,9 +618,10 @@
                     <h2 class="font-bold text-sm text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
                         <i class="fa-solid fa-handshake-angle"></i> Aba de Negociações
                     </h2>
-                    <p class="text-[11px] text-slate-500">Alunos com negociações em andamento ou aprovadas aparecem listados abaixo automaticamente. Você também pode buscar por nome ou CPF para iniciar um novo acordo.</p>
+                    <p class="text-[11px] text-slate-500">Alunos com negociações em andamento ou aprovadas aparecem listados abaixo automaticamente. Consulte os alunos em atraso ou busque por nome ou CPF para iniciar uma negociação.</p>
                     
-                    <div class="relative">
+                    <button type="button" id="se7-overdue-students" class="se7-agreement-shortcut" onclick="SE7Agreements.openOverdue()">Ver alunos em atraso <span id="se7-overdue-count">0</span><span id="se7-overdue-badge" class="se7-agreement-alert" hidden aria-label="Há alunos em atraso">!</span></button>
+                <div class="relative">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
                             <i class="fa-solid fa-magnifying-glass text-xs"></i>
                         </span>
@@ -629,6 +631,7 @@
 
                 <div id="lista-negociacoes-ativas-container" class="space-y-2"></div>
                 <div id="lista-busca-negociacao-container" class="space-y-2"></div>
+                <div id="se7-rejected-proposals"></div>
                 <div id="painel-negociacao-aluno" class="space-y-3" style="display: none;"></div>
             </div>
 
@@ -787,7 +790,7 @@
             </button>
             <button onclick="mudarAbaApp('negociacoes')" id="nav-btn-neg" class="flex flex-col items-center text-slate-400 dark:text-slate-500 text-[9px] font-bold transition">
                 <i class="fa-solid fa-handshake-angle text-sm mb-0.5"></i>
-                <span>Acordos</span>
+                <span class="se7-agreement-nav-label">Acordos<span id="se7-overdue-nav-badge" class="se7-agreement-alert" hidden aria-label="Há alunos em atraso">!</span></span>
             </button>
             <button onclick="mudarAbaApp('quitacao')" id="nav-btn-quit" class="flex flex-col items-center text-slate-400 dark:text-slate-500 text-[9px] font-bold transition">
                 <i class="fa-solid fa-certificate text-sm mb-0.5"></i>
@@ -837,6 +840,7 @@
         };
         let alunoSelecionadoId = null;
         let alunoNegociacaoId = null;
+        let propostaAprovacaoId=null;
         let valorTotalOriginalGlobal = 0;
         let multaTotalGlobal = 0;
         let jurosTotalGlobal = 0;
@@ -1003,6 +1007,7 @@
             dadosFinanceiroIniciados=true;SE7Reads.start();
             await carregarCursosTurmasMatriz();
             await carregarDadosInstituicao();
+            iniciarFaturasFinanceiro();
 
             db.collection("students").onSnapshot(snapshot => {
                 students = [];
@@ -1018,7 +1023,7 @@
                 atualizarSeletorCursosUI();
                 renderizarNegociacoesAtivasGeral();
                 renderizarAlunosQuitesGeral();
-                if (alunoNegociacaoId) selecionarAlunoNegociacao(alunoNegociacaoId);
+                if(alunoNegociacaoId&&!window.SE7Agreements?.isProposalOpen())selecionarAlunoNegociacao(alunoNegociacaoId);
                 renderizarFaturasDoAlunoSelecionado();
                 if(alunoSelecionadoId && document.getElementById('tab-detalhes-aluno').style.display==='flex')abrirDetalhesAluno(alunoSelecionadoId,abaOrigemRetorno);
             }, error => { console.error("Erro ao carregar alunos:", error); });
@@ -1034,7 +1039,7 @@
                 renderizarFaturasDoAlunoSelecionado();
                 renderizarNegociacoesAtivasGeral();
                 renderizarAlunosQuitesGeral();
-                if (alunoNegociacaoId) selecionarAlunoNegociacao(alunoNegociacaoId);
+                if(alunoNegociacaoId&&!window.SE7Agreements?.isProposalOpen())selecionarAlunoNegociacao(alunoNegociacaoId);
                 if (alunoSelecionadoId && document.getElementById('tab-detalhes-aluno').style.display === 'flex') {
                     abrirDetalhesAluno(alunoSelecionadoId, abaOrigemRetorno);
                 }
@@ -1234,6 +1239,8 @@
         function parseDataParaOrdem(value) {const iso=SE7Finance.dateISO(value);if(!iso)return new Date(NaN);const [y,m,d]=iso.split('-').map(Number);return new Date(y,m-1,d);}
         function formatarDataParaExibicao(value) {return SE7Finance.dateBR(value);}
 
+        function textoQuitacaoFinanceiro(f){if(f.asaasReview)return 'Pagamento em conferência pelo financeiro';const iso=SE7Finance.dateISO(f.dataPagamento||f.paymentDate||''),raw=String(f.formaPagamento||f.paymentMethod||f.billingType||f.asaasBillingType||'').trim(),labels={PIX:'Pix',BOLETO:'Boleto',CREDIT_CARD:'Cartão de crédito',DEBIT_CARD:'Cartão de débito',TRANSFER:'Transferência',BANK_TRANSFER:'Transferência bancária',CASH:'Dinheiro'};const method=labels[raw.toUpperCase()]||raw||'Forma de pagamento não informada';return (iso?'Quitado em '+SE7Finance.dateBR(iso):'Data de quitação não informada')+' • '+method;}
+
         function renderizarFaturasDoAlunoSelecionado() {
             const alunoId = document.getElementById('select-fin-aluno').value;
             const container = document.getElementById('lista-faturas-aluno-container');
@@ -1264,8 +1271,7 @@
                 const corBadge = jaPago ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : /CANCELADO/i.test(f.status||'')?'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200':'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300';
                 const dataVencimentoFormatada = f.ejaManaged&&!f.date&&!f.vencimento?'A definir após a prova':formatarDataParaExibicao(f.date || f.vencimento);
                 const valorAtual = f.amount || f.valor || '0';
-                const dataPag = formatarDataParaExibicao(f.dataPagamento || '---');
-                const formaPag = f.formaPagamento || 'Manual';
+                const quitacaoTexto=jaPago?textoQuitacaoFinanceiro(f):'';
 
                 htmlAcumulado += `
                     <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 space-y-3 text-xs">
@@ -1290,7 +1296,7 @@
 
                         ${SE7Finance.settlementHTML(f)}
                         ${SE7Finance.replacementText(f)?`<p class="text-[11px] text-blue-400">${SE7Cadastro.escape(SE7Finance.replacementText(f))}</p>`:''}
-                        ${/CANCELADO|ESTORNADO|CONTESTADO|EM ANÁLISE/i.test(f.status||'') ? `<p class="text-xs text-slate-500">${SE7Cadastro.escape(SE7Finance.cancellationText(f)) || 'Cobrança indisponível para novo pagamento. Histórico preservado.'}</p>` : f.asaasPaymentId ? `<p class="text-xs text-blue-500"><span class="se7-payment-actions" data-invoice-id="${SE7Cadastro.escape(f.id)}" data-paid="${jaPago}"></span></p>` : !jaPago ? `
+                        ${/CANCELADO|ESTORNADO|CONTESTADO|EM ANÁLISE/i.test(f.status||'') ? `<p class="text-xs text-slate-500">${SE7Cadastro.escape(SE7Finance.cancellationText(f)) || 'Cobrança indisponível para novo pagamento. Histórico preservado.'}</p>` : f.asaasPaymentId ? `<p class="text-xs text-blue-500 flex flex-wrap items-center gap-2"><span class="se7-payment-actions" data-invoice-id="${SE7Cadastro.escape(f.id)}" data-paid="${jaPago}"></span>${jaPago?`<span class="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">${SE7Cadastro.escape(quitacaoTexto)}</span>`:''}</p>` : !jaPago ? `
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-2 pt-2 border-t border-slate-100 dark:border-slate-800 items-center">
                                 <div>
                                     <label class="block text-[10px] font-semibold uppercase text-slate-400 mb-1">Forma de Pagamento</label>
@@ -1316,7 +1322,7 @@
                         ` : `
                             <div class="pt-2 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
                                 <div class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
-                                    <i class="fa-solid fa-circle-check mr-1"></i> Quitado em ${dataPag} (${formaPag})
+                                    <i class="fa-solid fa-circle-check mr-1"></i> ${SE7Cadastro.escape(quitacaoTexto)}
                                 </div>
                                 <button type="button" onclick="estornarBaixaApp('${f.id}')" class="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg text-[10px] font-bold shadow transition">
                                     <i class="fa-solid fa-rotate-left mr-1"></i> Estornar Pagamento
@@ -1546,6 +1552,7 @@
 
         // --- NEGOCIAÇÕES ---
         function renderizarNegociacoesAtivasGeral() {
+            window.SE7Agreements?.refresh();
             const container = document.getElementById('lista-negociacoes-ativas-container');
             const termoBusca = document.getElementById('input-busca-negociacao').value.trim();
             if (!container) return;
@@ -1557,7 +1564,7 @@
 
             const propostasOuAcordos = financeLogs.filter(f => {
                 const status = (f.status || '').toUpperCase();
-                return status.includes("PROPOSTA") || status.includes("AGUARDANDO") || status.includes("ACORDO ACEITO") || status.includes("ACORDO EFETIVADO");
+                return !/REPROV|RECUS/.test(status)&&(status.includes('PROPOSTA')||status.includes('AGUARDANDO')||status.includes('ACORDO ACEITO')||status.includes('ACORDO EFETIVADO'));
             });
 
             if (propostasOuAcordos.length === 0) {
@@ -1596,7 +1603,7 @@
                         </div>
                         <div class="flex justify-between items-center text-[10px] text-slate-500 border-t border-slate-100 dark:border-slate-800 pt-2">
                             <span>Valor do Acordo: <strong>R$ ${valorExibir}</strong></span>
-                            <button type="button" onclick="selecionarAlunoNegociacao('${alunoId}')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[10px] shadow transition">
+                            <button type="button" onclick="SE7Agreements.openProposal('${p.id}')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[10px] shadow transition">
                                 <i class="fa-solid fa-folder-open mr-1"></i> Ver Situação / Detalhes
                             </button>
                         </div>
@@ -1621,9 +1628,9 @@
                 return;
             }
 
-            const encontrados = students.filter(s => normalizarTexto(s.fullname || s.name || '').includes(termo) || normalizarTexto(s.cpf || '').includes(termo));
+            const encontrados = students.filter(s => window.SE7Agreements?.hasOverdue(s.id)&&(normalizarTexto(s.fullname || s.name || '').includes(termo) || normalizarTexto(s.cpf || '').includes(termo)));
             if (encontrados.length === 0) {
-                container.innerHTML = `<div class="bg-white dark:bg-slate-900 p-4 rounded-2xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">Nenhum aluno encontrado com este nome ou CPF.</div>`;
+                container.innerHTML = `<div class="bg-white dark:bg-slate-900 p-4 rounded-2xl text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">Nenhum aluno em atraso encontrado com este nome ou CPF.</div>`;
                 if (painel) painel.style.display = 'none';
                 return;
             }
@@ -1646,7 +1653,7 @@
             container.innerHTML = html;
         }
 
-        function selecionarAlunoNegociacao(alunoId) {
+        function selecionarAlunoNegociacao(alunoId, somenteContexto=false) {
             alunoNegociacaoId = alunoId;
             const aluno = studentsMap[alunoId];
             const containerBusca = document.getElementById('lista-busca-negociacao-container');
@@ -1654,29 +1661,19 @@
             const painel = document.getElementById('painel-negociacao-aluno');
             if (!aluno || !painel) return;
 
-            containerBusca.innerHTML = '';
-            if (containerAtivas) containerAtivas.innerHTML = '';
             const rawCursoAluno = aluno.course || aluno.curso || aluno.turma || aluno.nomeCurso || aluno.courseName || aluno.courseId || '---';
             const cursoAlunoExibir = coursesMap[rawCursoAluno] || coursesMap[normalizarTexto(rawCursoAluno)] || String(rawCursoAluno);
+            if(!somenteContexto){
+            containerBusca.innerHTML = '';
+            if (containerAtivas) containerAtivas.innerHTML = '';
             document.getElementById('input-busca-negociacao').value = '';
             painel.style.display = 'block';
 
+            }
             const hoje = new Date();
             hoje.setHours(0, 0, 0, 0);
 
-            faturasAtrasadasGlobal = financeLogs.filter(f => {
-                const pertenceAluno = (f.studentId === alunoId || f.alunoId === alunoId);
-                const jaPago = f.status && (f.status.toUpperCase().includes('PAGO') || f.status.includes('NEGOCIADO'));
-                const statusLower = (f.status || '').toLowerCase();
-                const descLower = (f.description || f.descricao || '').toLowerCase();
-                const eTermoOuProposta = statusLower.includes('proposta') || statusLower.includes('aguardando') || descLower.includes('termo') || descLower.includes('proposta') || descLower.includes('acordo consolidado');
-                if (!pertenceAluno || jaPago || /CANCELADO|ESTORNADO|CONTESTADO/i.test(f.status||'') || eTermoOuProposta) return false;
-
-                const vencimentoStr = f.date || f.vencimento || '';
-                let dataVenc = parseDataParaOrdem(vencimentoStr);
-                dataVenc.setHours(0, 0, 0, 0);
-                return dataVenc < hoje;
-            });
+            faturasAtrasadasGlobal=financeLogs.filter(f=>(f.studentId===alunoId||f.alunoId===alunoId)&&window.SE7Agreements?.isOverdue(f));
 
             SE7Finance.sort(faturasAtrasadasGlobal);
 
@@ -1695,7 +1692,8 @@
             });
             valorAtualNegociacaoGlobal = valorTotalOriginalGlobal + multaTotalGlobal + jurosTotalGlobal;
 
-            const propostasAluno = financeLogs.filter(f => (f.studentId === alunoId || f.alunoId === alunoId) && (f.status && (f.status.includes("PROPOSTA") || f.status.includes("AGUARDANDO") || f.status.includes("ACORDO ACEITO") || f.status.includes("ACORDO EFETIVADO"))));
+            if(somenteContexto)return;
+            const propostasAluno = financeLogs.filter(f => (f.studentId === alunoId || f.alunoId === alunoId) && !/REPROV|RECUS/i.test(f.status||'') && (f.status && (f.status.includes("PROPOSTA") || f.status.includes("AGUARDANDO") || f.status.includes("ACORDO ACEITO") || f.status.includes("ACORDO EFETIVADO"))));
 
             let htmlPropostasRealizadas = '';
             let temPropostaAtiva = false;
@@ -1728,6 +1726,7 @@
                                     <button type="button" onclick="abrirModalFecharAcordoParaProposta('${p.id}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold text-[10px] shadow">
                                         <i class="fa-solid fa-handshake mr-0.5"></i> Aprovar
                                     </button>
+                                    <button type="button" onclick="SE7Agreements.rejectProposal('${p.id}')" class="px-2.5 py-1 bg-amber-600 text-white rounded-lg font-semibold text-[10px]">Reprovar</button>
                                 </div>
                             ` : ''}
                         </div>
@@ -1849,7 +1848,7 @@
             try {
                 await db.collection("financeLogs").doc(propostaId).delete();
                 alert("Proposta excluída com sucesso!");
-                if (alunoNegociacaoId) selecionarAlunoNegociacao(alunoNegociacaoId);
+                if(alunoNegociacaoId&&!window.SE7Agreements?.isProposalOpen())selecionarAlunoNegociacao(alunoNegociacaoId);
                 renderizarNegociacoesAtivasGeral();
             } catch (e) { alert("Erro ao excluir proposta: " + e.message); }
         }
@@ -2113,13 +2112,14 @@
 
             document.getElementById('conteudo-termo-Dinamico').innerHTML = htmlCompletoTermo;
             document.getElementById('modal-visualizador-termo').style.display = 'flex';
-            selecionarAlunoNegociacao(alunoNegociacaoId);
+            if(window.SE7Agreements?.isProposalOpen())SE7Agreements.refresh();else selecionarAlunoNegociacao(alunoNegociacaoId);
             renderizarNegociacoesAtivasGeral();
         }
 
         function fecharVisualizadorTermo() {document.body.classList.remove('se7-payroll-print'); document.getElementById('modal-visualizador-termo').style.display = 'none'; }
 
         function abrirModalFecharAcordoParaProposta(propostaId) {
+            propostaAprovacaoId=propostaId;
             const prop = financeLogs.find(f => f.id === propostaId);
             if (prop && prop.opcoesSalvas) opcoesGeradas = prop.opcoesSalvas;
             const container = document.getElementById('container-opcoes-fechamento');
@@ -2148,6 +2148,7 @@
         function fecharModalFecharAcordo() { document.getElementById('modal-fechar-acordo').style.display = 'none'; }
 
         async function executarFechamentoAcordoDefinitivo() {
+            const selected=financeLogs.find(f=>f.id===propostaAprovacaoId);if(!selected||window.SE7Agreements?.state(selected)!=='pending')return alert('A proposta não está aguardando aprovação. Atualize para conferir.');
             const radioSelecionado = document.querySelector('input[name="opcao-escolhida-fechamento"]:checked');
             if (!radioSelecionado) return alert("Selecione qual das opções o aluno escolheu.");
             const escolhaKey = radioSelecionado.value;
@@ -2188,14 +2189,14 @@
                     });
                 }
 
-                const propostasPendentes = financeLogs.filter(f => (f.studentId === alunoNegociacaoId || f.alunoId === alunoNegociacaoId) && f.status && (f.status.includes("PROPOSTA") || f.status.includes("AGUARDANDO")));
+                const propostasPendentes = financeLogs.filter(f => f.id===propostaAprovacaoId && (f.studentId === alunoNegociacaoId || f.alunoId === alunoNegociacaoId) && !/REPROV|RECUS/i.test(f.status||'') && f.status && (f.status.includes("PROPOSTA") || f.status.includes("AGUARDANDO")));
                 for (let p of propostasPendentes) {
                     await db.collection("financeLogs").doc(p.id).update({ status: "ACORDO ACEITO", description: `Acordo Aceito - ${escolhaKey.toUpperCase()}` });
                 }
 
                 fecharModalFecharAcordo();
                 alert(`🎉 Acordo aprovado com sucesso para ${nome}!`);
-                selecionarAlunoNegociacao(alunoNegociacaoId);
+                if(window.SE7Agreements?.isProposalOpen())SE7Agreements.refresh();else selecionarAlunoNegociacao(alunoNegociacaoId);
                 renderizarNegociacoesAtivasGeral();
             } catch (e) { alert("Erro ao fechar acordo: " + e.message); }
         }
@@ -2873,6 +2874,7 @@
 <script src="/assets/se7-ambient.js"></script>
 <script src="/assets/se7-payroll-receipt.js"></script>
 <script src="/assets/se7-expenses.js?v=6"></script>
+<script type="module" src="/assets/se7-agreements.js?v=1"></script>
 <script type="module" src="/assets/se7-payroll-finance.js"></script>
 <script type="module" src="/assets/se7-payroll-report.js"></script>
 <link rel="stylesheet" href="/assets/se7-annual-statements.css"><script src="/assets/se7-annual-statements.js"></script></body>
