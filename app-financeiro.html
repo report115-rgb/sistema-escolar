@@ -1049,7 +1049,7 @@
             db.collection("teachers").onSnapshot(snapshot => {
                 teachers = [];
                 snapshot.forEach(doc => teachers.push({ id: doc.id, ...doc.data() }));
-                teachers=teachers.filter(t=>!t.mergedInto&&(!t.cargo||/^professor(a)?$/i.test(String(t.cargo).trim())));
+                teachers=teachers.filter(t=>!t.mergedInto&&!t.deletedAt&&(!t.cargo||/^professor(a)?$/i.test(String(t.cargo).trim())));
                 window.SE7Expenses?.invalidateCatalog?.();
                 teachers.sort((a, b) => (a.fullname || '').localeCompare(b.fullname || '', 'pt-BR'));
                 atualizarSeletorFrequenciaColaboradores();
@@ -2501,6 +2501,7 @@
         }
 
         function freqValorHoraProfessor(professorId) {
+            if(window.SE7Remuneration)return SE7Remuneration.hourlyRate(teachers.find(t=>t.id===professorId),teacherPaymentRates[professorId],freqObterMesSelecionado());
             const rate = teacherPaymentRates[professorId];
             if (rate && rate.valorHora !== undefined) {
                 const valor = freqParseMoeda(rate.valorHora);
@@ -2564,36 +2565,13 @@
                         </div>
                         <div class="flex items-center gap-2">
                             <span class="text-[10px] text-slate-500">R$/hora</span>
-                            <input type="text" inputmode="decimal" id="freq-rate-${freqEscaparHtml(t.id)}" value="${valor.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}" class="w-28 px-2.5 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs dark:text-white text-right">
-                            <button type="button" onclick="salvarValorHoraColaborador('${freqEscaparHtml(t.id)}')" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-bold">
-                                Salvar
-                            </button>
+                            <span class="text-xs font-semibold">${freqFormatarMoeda(valor)}</span><span class="text-[10px] text-slate-500">Definido no cadastro docente do Matriz</span>
                         </div>
                     </div>`;
             }).join('');
         }
 
-        async function salvarValorHoraColaborador(professorId) {
-            const input = document.getElementById(`freq-rate-${professorId}`);
-            const valorHora = freqCentavos(freqParseMoeda(input ? input.value : 0)) / 100;
-            const professor = teachers.find(t => t.id === professorId);
-            if (!professor) return alert('Colaborador não encontrado.');
-            if (valorHora <= 0) return alert('Informe um valor da hora maior que zero.');
-
-            try {
-                await db.collection('teacherPaymentRates').doc(professorId).set({
-                    professorId,
-                    professorNome: professor.fullname || 'Colaborador',
-                    valorHora,
-                    atualizadoEm: new Date().toISOString()
-                }, { merge: true });
-
-                alert(`Valor da hora de ${professor.fullname || 'colaborador'} salvo: ${freqFormatarMoeda(valorHora)}.`);
-            } catch (e) {
-                console.error(e);
-                alert('Erro ao salvar o valor da hora: ' + e.message);
-            }
-        }
+        async function salvarValorHoraColaborador(){alert('O valor da hora-aula é definido pelo Master em Sistemas → Cadastro docente → Editar → Remuneração.');}
 
         function freqRegistrosFiltrados() {
             const mes = freqObterMesSelecionado();
@@ -2606,6 +2584,8 @@
         }
 
         function freqMontarCalculos(registros) {
+            const id=document.getElementById('freq-colab-professor')?.value,paid=pagamentoAtual(id,freqObterMesSelecionado());
+            if(paid?.registros?.length)return paid.registros.map(r=>({...r,professorId:id,professorNome:paid.professorNome,horas:r.minutos/60,valorHora:r.valorHoraCentavos/100,total:r.totalCentavos/100}));
             return registros.map(r => {
                 const minutos = freqMinutos(r.entrada, r.saida);
                 const horas = minutos / 60;
@@ -2869,10 +2849,11 @@
 <script src="/assets/se7-busy.js?v=feedback-3"></script>
 <script src="/assets/se7-ambient.js"></script>
 <script src="/assets/se7-payroll-receipt.js"></script>
-<script src="/assets/se7-expenses.js?v=6"></script>
+<script src="/assets/se7-expenses.js?v=workforce-1-6"></script>
 <script type="module" src="/assets/se7-agreements.js?v=cartao-parcelado-3"></script>
 <script type="module" src="/assets/se7-payroll-finance.js"></script>
-<script type="module" src="/assets/se7-payroll-report.js"></script>
+<script type="module" src="/assets/se7-payroll-report.js?v=workforce-1"></script>
 <link rel="stylesheet" href="/assets/se7-annual-statements.css"><script src="/assets/se7-annual-statements.js"></script><script src="/assets/se7-renegotiation.js?v=portal-negociacao-4"></script>
+<script type="module" src="/assets/se7-remuneration-ui.js?v=1"></script>
 </body>
 </html>

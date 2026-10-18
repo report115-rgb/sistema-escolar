@@ -1,0 +1,4 @@
+export function currentMonth(){return new Intl.DateTimeFormat('en-CA',{timeZone:'America/Fortaleza',year:'numeric',month:'2-digit'}).format(new Date()).slice(0,7);}
+export function nextMonth(){const [y,m]=currentMonth().split('-').map(Number);return new Date(Date.UTC(y,m,1)).toISOString().slice(0,7);}
+export function employmentPatch(old,active){const pauses=[...(old.salaryPauses||[])];if(!active&&old.active!==false){const from=nextMonth();pauses.push({from,to:''});return {inactiveFrom:from,salaryPauses:pauses};}if(active&&old.active===false){const to=currentMonth();for(const p of pauses)if(!p.to)p.to=to;return {inactiveFrom:'',salaryPauses:pauses.filter(p=>!p.to||p.to>p.from)};}return {};}
+export function salarySuspended(t,month){return !t||(t.salaryPauses||[]).some(p=>month>=p.from&&(!p.to||month<p.to))||!!t.deletedAt&&month>=(t.deletedMonth||nextMonth())||t.active===false&&month>=(t.inactiveFrom||nextMonth());}

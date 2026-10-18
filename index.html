@@ -893,6 +893,7 @@
                     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-subjects')">Disciplinas</button>
                     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-calendar')">Calendário Semestral</button>
                     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200" onclick="openSubTab(event, 'subtab-teachers')">Colaboradores</button>
+ <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200" onclick="openSubTab(event, 'subtab-docentes')">Cadastro docente</button>
                     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-institution')">Instituição</button>
 		    <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-audit')">Auditoria</button>
     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event,'subtab-whatsapp');carregarPainelWhatsApp()"><i class="fa-brands fa-whatsapp mr-1"></i> WhatsApp</button>
@@ -1177,7 +1178,8 @@
                     <div id="admin-calendar-view" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div></div>
                 </div>
 
-                <!-- SUBABA COLABORADORES (ANTIGA PROFESSORES) -->
+                <div id="subtab-docentes" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display:none"><h3 class="font-bold text-sm text-blue-600">Cadastro docente</h3><button type="button" onclick="SE7Workforce.newTeacher()" class="se7-primary-button"><i class="fa-solid fa-user-plus" aria-hidden="true"></i> Cadastrar novo docente</button><div class="overflow-x-auto"><table class="w-full text-left text-xs"><thead><tr><th class="p-2.5">Nome / Identificação</th><th class="p-2.5">Cargo / Função</th><th class="p-2.5">Formação / Registro</th><th class="p-2.5">Ações</th></tr></thead><tbody id="docentes-list"></tbody></table></div></div>
+<!-- SUBABA COLABORADORES -->
 <div id="subtab-teachers" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
     <div class="flex justify-between items-center border-b border-gray-200 dark:border-slate-700 pb-2">
         <h3 class="font-bold text-sm text-blue-600 dark:text-blue-400"><i class="fa-solid fa-id-card-clip mr-1.5"></i> Colaboradores</h3>
@@ -1200,10 +1202,10 @@
             <label class="block text-xs font-semibold mb-1">Cargo / Função</label>
             <select id="input-teacher-cargo" onchange="atualizarHorarioColaborador()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 dark:text-white">
                 <option value="Professor">Professor(a)</option>
-                <option value="Secretaria">Secretaria / Atendimento</option>
+                <option value="Secretaria">Atendente</option>
                 <option value="Limpeza">Funcionário(a) de Limpeza</option>
                 <option value="Coordenação">Coordenação Pedagógica</option>
-                <option value="Financeiro">Financeiro / Administrativo</option>
+                <option value="Financeiro">Financeiro</option><option value="Direção">Diretor(a)</option><option value="Secretaria escolar">Secretário(a) escolar</option><option value="Coordenação técnica">Coordenador(a) técnico(a)</option><option value="Apoio administrativo">Apoio administrativo</option>
             </select>
         </div>
     </div>
@@ -2614,7 +2616,7 @@ document.getElementById('input-inst-inep').value = data.inep || '';
 
             db.collection("teachers").onSnapshot((snapshot) => {
                 teachers = [];
-                snapshot.forEach(doc => teachers.push({ id: doc.id, ...doc.data() }));
+                snapshot.forEach(doc => {if(!doc.data().deletedAt)teachers.push({ id: doc.id, ...doc.data() });});
                 renderTeachers();
 		carregarProfessoresPontoManual();
             });
@@ -2633,7 +2635,7 @@ document.getElementById('input-inst-inep').value = data.inep || '';
 
         function atualizarPinAutomaticoColaborador(){const used=new Set(teachers.map(t=>t.pin));let n=teachers.length+1;while(used.has('COLAB-'+String(n).padStart(3,'0')))n++;document.getElementById('input-teacher-pin').value='COLAB-'+String(n).padStart(3,'0');}
         function atualizarHorarioColaborador(){if(window.SE7Collaborators){SE7Collaborators.update();return;}const cargo=document.getElementById('input-teacher-cargo').value;document.getElementById('teacher-hours-panel').style.display=['Secretaria','Secretário','Secretária','Atendimento'].includes(cargo)?'block':'none';}
-        function abrirNovoColaborador(){cancelarEdicaoColaborador();document.getElementById('input-teacher-cargo').value='Professor';document.getElementById('input-teacher-course').value='';for(const [id,v] of [['entrada-1','08:00'],['saida-1','12:00'],['entrada-2','14:00'],['saida-2','18:00']])document.getElementById('input-teacher-'+id).value=v;atualizarPinAutomaticoColaborador();atualizarHorarioColaborador();document.getElementById('teacher-photo-master').style.display=usuarioMasterAtivo()?'block':'none';document.getElementById('collaborator-editor-title').textContent='Cadastrar novo colaborador';document.getElementById('input-teacher-active').value='true';window.SE7Collaborators?.prepareAccess();document.getElementById('collaborator-editor-modal').showModal();}
+        function abrirNovoColaborador(){cancelarEdicaoColaborador();document.getElementById('input-teacher-cargo').value='Secretaria';document.getElementById('input-teacher-course').value='';for(const [id,v] of [['entrada-1','08:00'],['saida-1','12:00'],['entrada-2','14:00'],['saida-2','18:00']])document.getElementById('input-teacher-'+id).value=v;atualizarPinAutomaticoColaborador();atualizarHorarioColaborador();document.getElementById('teacher-photo-master').style.display=usuarioMasterAtivo()?'block':'none';document.getElementById('collaborator-editor-title').textContent='Cadastrar novo colaborador';document.getElementById('input-teacher-active').value='true';window.SE7Collaborators?.prepareAccess();document.getElementById('collaborator-editor-modal').showModal();}
         async function prepararFotoColaborador(file){
             if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>10*1024*1024)throw Error('Escolha uma foto JPG, PNG ou WebP de até 10 MB.');
             const url=URL.createObjectURL(file);try{const image=new Image();await new Promise((resolve,reject)=>{image.onload=resolve;image.onerror=()=>reject(Error('Não foi possível ler a foto.'));image.src=url;});const canvas=document.createElement('canvas');canvas.width=360;canvas.height=480;const ratio=Math.max(360/image.width,480/image.height),w=image.width*ratio,h=image.height*ratio;canvas.getContext('2d').drawImage(image,(360-w)/2,(480-h)/2,w,h);return canvas.toDataURL('image/jpeg',.85);}finally{URL.revokeObjectURL(url);}
@@ -2668,11 +2670,11 @@ document.getElementById('input-inst-inep').value = data.inep || '';
         cargo, 
         formation, 
         council:cargo==='Professor'?council:'', 
-        courseId:cargo==='Professor'?document.getElementById('input-teacher-course').value:'',
+        courseId:document.getElementById('input-teacher-course').value,
         pin: pinFinal 
     };
 
-    if(['Secretaria','Secretário','Secretária','Atendimento'].includes(cargo))teacherData.horarios={entrada1,saida1,entrada2,saida2};
+    if(window.SE7Workforce?.roles().includes('Secretaria')||['Secretaria','Secretário','Secretária','Atendimento'].includes(cargo))teacherData.horarios={entrada1,saida1,entrada2,saida2};
     saveButton.disabled=true;saveButton.textContent='Aguarde…';
     try {
         const photoFile=document.getElementById('input-teacher-photo').files[0];
@@ -2700,36 +2702,7 @@ document.getElementById('input-inst-inep').value = data.inep || '';
 function renderTeachers() {
     document.getElementById('teacher-photo-master').style.display=usuarioMasterAtivo()?'block':'none';
     const courseSelect=document.getElementById('input-teacher-course');if(courseSelect){const selected=courseSelect.value;courseSelect.replaceChildren(new Option('Selecione o curso',''));courses.forEach(c=>courseSelect.append(new Option(c.name,c.id)));courseSelect.value=selected;}
-    const list = document.getElementById('teachers-list');
-    if(list) {
-        list.innerHTML = '';
-        if (teachers.length === 0) {
-            list.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-gray-400">Nenhum colaborador cadastrado.</td></tr>`;
-            return;
-        }
-        teachers.filter(t=>!t.mergedInto).forEach(t => {
-            let corBadge = 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300';
-            if (t.cargo === 'Secretaria') corBadge = 'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300';
-            if (t.cargo === 'Limpeza') corBadge = 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300';
-            if (t.cargo === 'Coordenação') corBadge = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300';
-
-            list.innerHTML += `
-                <tr class="border-b border-gray-100 dark:border-slate-700">
-                    <td class="p-2.5">
-                        <strong class="text-gray-900 dark:text-white">${t.fullname}</strong><br>
-                        <span class="text-[10px] text-gray-400 font-mono">ID / Matrícula: ${t.pin || '---'}</span>
-                    </td>
-                    <td class="p-2.5"><span class="px-2 py-0.5 ${corBadge} rounded text-[10px] font-bold">${t.cargo || 'Professor'}</span><br><small>${t.active===false?'Inativo':'Ativo'}</small></td>
-                    <td class="p-2.5">${t.formation || '---'} <br><span class="text-xs text-blue-400">${(!t.cargo||t.cargo==='Professor')?'Curso: '+(courses.find(c=>c.id===t.courseId)?.name||'Não vinculado'):['Coordenação','Financeiro'].includes(t.cargo)?'Toda a rede':'Polo: '+(t.poloIds||[]).map(id=>(window.SE7Polos?.rows()||[]).find(p=>p.id===id)?.name||id).join(', ')}</span><br><span class="text-[10px] text-gray-400">${t.council || ''}</span></td>
-                    <td class="p-2.5 text-right space-x-1">
-                        
-                        <button onclick="editarColaborador('${t.id}')" class="px-2 py-1 bg-blue-600 text-white rounded text-[11px] font-semibold"><i class="fa-solid fa-pen"></i></button>
-                        <button onclick="excluirColaborador('${t.id}')" class="px-2 py-1 bg-red-600 text-white rounded text-[11px] font-semibold">${t.active===false?'Reativar':'Inativar'}</button>
-                    </td>
-                </tr>
-            `;
-        });
-    }
+    window.SE7Workforce?.render();
 
     // Mantém os selects de professores atualizados onde forem necessários (ex: Frequência/Notas)
     ['attendance-teacher-select', 'grade-teacher-select'].forEach(id => {
@@ -2741,6 +2714,7 @@ function renderTeachers() {
             });el.value=selectedTeacher; 
         }
     });
+    window.SE7Workforce?.render();
 }
 
 function editarColaborador(id) {
@@ -5335,7 +5309,7 @@ function escutarRegistrosPontoManual() {
 <div id="modal-historico-matricula" class="fixed inset-0 z-[4000] flex items-center justify-center bg-black/70 p-4" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="historico-matricula-titulo"><div class="se7-modal-panel rounded-2xl border w-full max-w-lg p-6 max-h-[80vh] overflow-y-auto"><div class="flex justify-between gap-3 mb-4"><h3 id="historico-matricula-titulo" class="font-bold">Histórico da matrícula</h3><button type="button" aria-label="Fechar histórico" onclick="document.getElementById('modal-historico-matricula').style.display='none'">Fechar</button></div><div id="historico-matricula-conteudo" class="space-y-3 text-sm"></div></div></div>
 <script src="/assets/se7-cancellation.js"></script>
 <script src="/assets/se7-enrollment.js"></script>
-<script type="module" src="/assets/se7-collaborators.js?v=2"></script>
+<script type="module" src="/assets/se7-collaborators.js?v=workforce-1"></script>
 <script src="/assets/se7-staff-session.js?v=1"></script>
 <script src="/assets/se7-version.js"></script>
 <script src="/assets/se7-documents.js?v=drive-analise-2"></script>
@@ -5356,5 +5330,6 @@ function escutarRegistrosPontoManual() {
 <script src="/assets/se7-account-menu.js?v=perfil-alternado-5"></script>
 <script src="/assets/se7-ambient.js"></script>
 <script src="/assets/se7-payroll-receipt.js"></script>
-<link rel="stylesheet" href="/assets/se7-annual-statements.css"><script src="/assets/se7-annual-statements.js"></script></body>
+<link rel="stylesheet" href="/assets/se7-annual-statements.css"><script src="/assets/se7-annual-statements.js"></script><script type="module" src="/assets/se7-workforce.js?v=1"></script>
+</body>
 </html>

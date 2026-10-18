@@ -1,6 +1,8 @@
 export function isProfessor(role){return !role||/^professor(a)?$/i.test(String(role).trim());}
-export function isSecretary(role){return /^(secretaria|secretário|secretária|atendimento)$/i.test(String(role).trim());}
-export function canonicalRole(role){if(isProfessor(role))return 'Professor';if(isSecretary(role))return 'Secretaria';if(/^(coordenação|coordenador|coordenadora)$/i.test(role))return 'Coordenação';if(['Limpeza','Financeiro'].includes(role))return role;throw Error('Escolha um cargo válido.');}
-
-export function networkRole(role){return ['Coordenação','Financeiro'].includes(canonicalRole(role));}
-export function singlePoloRole(role){return isSecretary(role)||canonicalRole(role)==='Limpeza';}
+export function isSecretary(role){return /^(secretaria|secretário|secretária|atendimento|atendente)$/i.test(String(role).trim());}
+export function canonicalRole(role){if(isProfessor(role))return 'Professor';if(isSecretary(role))return 'Secretaria';if(/^(coordenação|coordenador|coordenadora|coordenador\(a\) pedagógico\(a\))$/i.test(role))return 'Coordenação';if(['Limpeza','Financeiro','Direção','Secretaria escolar','Coordenação técnica','Apoio administrativo'].includes(role))return role;throw Error('Escolha um cargo válido.');}
+export const roleLabels={Professor:'Professor(a)',Secretaria:'Atendente',Limpeza:'Limpeza','Coordenação':'Coordenador(a) pedagógico(a)',Financeiro:'Financeiro','Direção':'Diretor(a)','Secretaria escolar':'Secretário(a) escolar','Coordenação técnica':'Coordenador(a) técnico(a)','Apoio administrativo':'Apoio administrativo'};
+export function networkRole(role){return ['Coordenação','Financeiro','Direção','Secretaria escolar','Coordenação técnica'].includes(canonicalRole(role));}
+export function singlePoloRole(role){return ['Secretaria','Limpeza','Apoio administrativo'].includes(canonicalRole(role));}
+export function employeeRoles(t){return [...new Set((Array.isArray(t?.roles)&&t.roles.length?t.roles:[t?.cargo||'Professor']).map(canonicalRole))];}
+export function accessRoles(t){const roles=employeeRoles(t),out=[];if(roles.includes('Professor'))out.push('professor');if(roles.some(r=>['Secretaria','Secretaria escolar','Coordenação','Coordenação técnica','Direção'].includes(r)))out.push('secretaria');if(roles.includes('Financeiro')||roles.includes('Coordenação'))out.push('financeiro');return out;}
