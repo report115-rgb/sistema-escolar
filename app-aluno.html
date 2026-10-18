@@ -1108,15 +1108,15 @@ let cancelarIdentidadeAluno = null;
             await carregarDadosPainel();
         }
 
+        let se7FinanceAlertCache=null,se7FinanceAlertStudent='';
         async function verificarTodasPendencias() {
             if(!alunoLogado) return;
             
             verificarPendenciaDocumentos();
 
             if (isAlunoEJA) {
-                const bFin = document.getElementById('badge-alerta-financeiro');
                 const bNotas = document.getElementById('badge-alerta-notas');
-                if(bFin) bFin.style.display = 'none';
+                await verificarPendenciaFinanceiro();
                 if(bNotas) bNotas.style.display = 'none';
             } else {
                 await verificarPendenciaFinanceiro();
@@ -1140,33 +1140,24 @@ let cancelarIdentidadeAluno = null;
             badge.style.display = pendenteOuReprovado ? 'flex' : 'none';
         }
 
+        function atualizarAlertaFinanceiro(faturas) {
+            const badge=document.getElementById('badge-alerta-financeiro');if(!badge)return;
+            const today=SE7Finance.dateISO(new Date());
+            const overdue=faturas.some(f=>{
+                const status=String(f.status||'').toUpperCase(),due=SE7Finance.dateISO(f.date||f.vencimento||f.dueDate);
+                const paid=/^(?:PAGO|PAGA|QUITADO|QUITADA)(?:$|[\s(])/.test(status)||/^(?:RECEIVED|CONFIRMED|RECEIVED_IN_CASH)$/.test(status);
+                return due&&due<today&&!paid&&!/CANCELAD|NEGOCIAD|ESTORNAD|CONTESTAD|PROPOSTA|ACORDO/.test(status)&&!f.dataPagamento&&!f.paymentDate;
+            });
+            badge.style.display=overdue?'flex':'none';
+            badge.setAttribute('aria-label',overdue?'Há mensalidades em atraso':'Sem mensalidades em atraso');
+        }
         async function verificarPendenciaFinanceiro() {
-            const badge = document.getElementById('badge-alerta-financeiro');
-            if(!badge) return;
-            if (sessionStorage.getItem(`visto_financeiro_${alunoLogado.id}`)) return;
-
+            if(!alunoLogado)return;
+            if(se7FinanceAlertCache&&se7FinanceAlertStudent===alunoLogado.id){atualizarAlertaFinanceiro(se7FinanceAlertCache);return;}
             try {
-                const snap = await db.collection("financeLogs").where("studentId", "==", alunoLogado.id).get();
-                let temVencendo = false;
-                const hoje = new Date();
-                hoje.setHours(0,0,0,0);
-
-                snap.forEach(doc => {
-                    const f = doc.data();
-                    const statusUpper = (f.status || '').toUpperCase();
-                    if (!/PAGO|CANCELADO|NEGOCIADO|ESTORNADO|CONTESTADO/.test(statusUpper) && f.date) {
-                        let dataVencStr = f.date;
-                        if(dataVencStr.includes('/')) {
-                            const partes = dataVencStr.split('/');
-                            dataVencStr = `${partes[2]}-${partes[1]}-${partes[0]}`;
-                        }
-                        const dataVenc = new Date(dataVencStr);
-                        const diffDays = Math.ceil((dataVenc - hoje) / (1000 * 60 * 60 * 24));
-                        if (diffDays <= 2) temVencendo = true;
-                    }
-                });
-                badge.style.display = temVencendo ? 'flex' : 'none';
-            } catch(e) { console.error(e); }
+                const snap=await db.collection('financeLogs').where('studentId','==',alunoLogado.id).get();
+                atualizarAlertaFinanceiro(snap.docs.map(doc=>doc.data()));
+            } catch(e){console.warn('Não foi possível atualizar o indicador financeiro.');}
         }
 
         async function verificarPendenciaNotas() {
@@ -1523,9 +1514,8 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
                 if (badgeNotas) badgeNotas.style.display = 'none';
             }
             if (aba === 'financeiro' && alunoLogado) {
-                if(!window.SE7Preview?.active)sessionStorage.setItem(`visto_financeiro_${alunoLogado.id}`, 'true');
-                const badgeFin = document.getElementById('badge-alerta-financeiro');
-                if (badgeFin) badgeFin.style.display = 'none';
+                sessionStorage.removeItem(`visto_financeiro_${alunoLogado.id}`);
+                void verificarPendenciaFinanceiro();
             }
         }
 
@@ -1699,6 +1689,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
         }
 
         function renderizarFaturasAluno(faturas) {
+            se7FinanceAlertCache=faturas;se7FinanceAlertStudent=alunoLogado?.id||'';atualizarAlertaFinanceiro(faturas);
             const finList=document.getElementById('finance-list'),paid=document.getElementById('student-finance-paid-content'),upcoming=document.getElementById('student-finance-upcoming-content');
             if(!finList||!paid||!upcoming)return;
             for(const el of [finList,paid,upcoming])el.replaceChildren();
@@ -2291,6 +2282,6 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
 <script>
 (()=>{const sections=[...document.querySelectorAll('.student-finance-sections > details')];for(const section of sections)section.addEventListener('toggle',()=>{if(section.open)for(const other of sections)if(other!==section)other.open=false;});})();
 </script>
-<script src="/assets/se7-renegotiation.js?v=cartao-parcelado-2"></script>
+<script src="/assets/se7-renegotiation.js?v=consulta-elegibilidade-3"></script>
 </body>
 </html>

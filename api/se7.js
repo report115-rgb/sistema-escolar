@@ -1,5 +1,5 @@
 import {installmentQuote,installmentPay,installmentStatus} from '../server/card-installments.mjs';
-import {dispatch as renegotiations} from '../server/renegotiations.mjs';
+import {dispatch as renegotiations,consultationFailure} from '../server/renegotiations.mjs';
 import {rejectAgreement} from '../server/agreements.mjs';
 import {collaboratorDuplicates} from '../server/collaborator-duplicates.mjs';
 import {collaboratorAccess} from '../server/collaborator-access.mjs';
@@ -353,11 +353,13 @@ export async function dispatch(services,req,b){
 }
 
 export default async function handler(req,res){
+ let requestedAction='';
  res.setHeader('Cache-Control','no-store');res.setHeader('X-Content-Type-Options','nosniff');
  try {
   const native=scannerCors(req,res);if(req.method==='OPTIONS'&&native){res.status(204).end();return;}if(req.method!=='POST')fail(405,'Use POST.');const origin=req.headers.origin;if(origin!=='https://sistema-escolar-ten-mu.vercel.app'&&!native)fail(403,'Origem não autorizada.');
   if(!String(req.headers['content-type']||'').startsWith('application/json'))fail(415,'Envie JSON.');let b;try{b=typeof req.body==='string'?JSON.parse(req.body):req.body;}catch{fail(400,'JSON inválido.');}if(!b||Array.isArray(b)||typeof b.action!=='string'||JSON.stringify(b).length>(b.action==='materials-save'?2900000:b.action==='collaborator-save'?350000:b.action==='notices-save'||b.action==='exam-scan-preview'||b.action==='payroll-receipt-save'||b.action==='expenses-pay'||b.action==='expenses-receipt-save'||b.action==='attendance-justification-save'?750000:b.action==='exam-save'?250000:(['profile-save','staff-profile-save','student-avatar-save'].includes(b.action)||(b.action==='portal-admin'&&b.callAction==='student-avatar-save'))?100000:12000))fail(400,'Requisição inválida.');
+  requestedAction=b.action==='portal-admin'?String(b.callAction||''):b.action;
   if(!nativeRequestAllowed(req,b))fail(403,'Operação não permitida para o leitor de avaliações.');
   if(!process.env.SE7_MASTER_UID)throw new Error('Master não configurado.');const result=await dispatch(services(),req,b);res.status(200).json(result);
- }catch(e){const status=e.status||500;if(status===500)console.error('SE7 API',e.code||'internal');res.status(status).json({error:status===500?'Não foi possível concluir. Verifique a configuração do servidor.':e.message});}
+ }catch(e){if(requestedAction.startsWith('renegotiation-')&&(!e.status||e.status===500)){console.error('SE7 renegotiation consultation',{action:requestedAction,code:String(e.code||'internal').slice(0,80),name:String(e.name||'Error').slice(0,60),frames:String(e.stack||'').split('\n').slice(1,6).map(line=>line.trim())});e=consultationFailure(e);}const status=e.status||500;if(status===500)console.error('SE7 API',e.code||'internal');res.status(status).json({error:status===500?'Não foi possível concluir. Verifique a configuração do servidor.':e.message,...(e.safeCode?{code:e.safeCode}:{})});}
 }
