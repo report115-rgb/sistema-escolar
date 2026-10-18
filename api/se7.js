@@ -122,7 +122,7 @@ async function dispatchOperation({auth,db},req,b,delegated=null){
   if(b.operation==='bootstrap')return portalAdmin.bootstrap(db,ctx);
   if(b.operation==='read')return portalAdmin.readPortal(db,b,ctx);
   if(b.operation!=='call')fail(400,'Operação inválida.');const inner=portalAdmin.allowedCall(ctx,b);
-  try{return await dispatchOperation({auth,db},{...req},inner,ctx.user);}finally{req.se7AuditIdentity=u;}
+  try{return await dispatchOperation({auth,db},{...req,headers:req.headers,socket:req.socket},inner,ctx.user);}finally{req.se7AuditIdentity=u;}
  }
  if(['staff-profile-get','staff-profile-save'].includes(action))return staffProfile(db,auth,b,u);
  if(action.startsWith('collaborator-duplicates-'))return collaboratorDuplicates(db,b,u);
