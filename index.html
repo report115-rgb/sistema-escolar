@@ -2759,7 +2759,7 @@ function cancelarEdicaoColaborador() {
 
 async function excluirColaborador(id) {
  const t=teachers.find(t=>t.id===id);if(!t)return;
- if(!confirm(t.active===false?'Reativar este colaborador?':'Inativar este colaborador e bloquear seu acesso? Os registros serão preservados.'))return;
+ if(!confirm(t.active===false?'Reativar este colaborador?':'Inativar este colaborador e bloquear seu acesso? A data de hoje será registrada como data de demissão. Os históricos serão preservados.'))return;
  try{await SE7.api('collaborator-state',{id,active:t.active===false});alert('Situação atualizada.');}catch(e){alert(e.message);}
 }
 
@@ -5334,7 +5334,7 @@ function escutarRegistrosPontoManual() {
 <script src="/assets/se7-account-menu.js?v=perfil-alternado-5"></script>
 <script src="/assets/se7-ambient.js"></script>
 <script src="/assets/se7-payroll-receipt.js"></script>
-<link rel="stylesheet" href="/assets/se7-annual-statements.css"><script src="/assets/se7-annual-statements.js"></script><link rel="stylesheet" href="/assets/se7-workforce-sheet.css?v=1"><script type="module" src="/assets/se7-workforce.js?v=sheet-3"></script>
+<link rel="stylesheet" href="/assets/se7-annual-statements.css"><script src="/assets/se7-annual-statements.js"></script><link rel="stylesheet" href="/assets/se7-workforce-sheet.css?v=1"><script type="module" src="/assets/se7-workforce.js?v=schedule-4"></script>
 <link rel="stylesheet" href="/assets/se7-internships.css?v=contracts-4"><script src="/assets/se7-internship-pdf.js?v=1"></script><script src="/assets/se7-preceptor-contract-pdf.js?v=1"></script><script src="/assets/se7-internships.js?v=internship-groups-5"></script>
 </body>
 </html>
