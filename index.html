@@ -438,6 +438,7 @@
 <button class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-slate-600" onclick="openTab(event, 'tab-history')"><i class="fa-solid fa-file-pdf mr-1.5"></i><span class="se7-nav-label">Emissão de Documentos</span></button>
 <button class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-slate-600" onclick="openTab(event, 'tab-controle-ponto-manual')"><i class="fa-solid fa-business-time mr-1.5"></i><span class="se7-nav-label">Ponto Manual</span></button>
 <button id="nav-btn-portal-admin" style="display:none" class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap" onclick="openTab(event,'tab-portal-admin')"><i class="fa-solid fa-mobile-screen-button mr-1.5" aria-hidden="true"></i><span class="se7-nav-label">Portal do Aluno</span></button>
+<button class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap" id="nav-btn-internships" style="display:none" onclick="openTab(event, 'tab-internships')"><i class="fa-solid fa-user-nurse mr-1.5"></i><span class="se7-nav-label">Gestão de Estágio</span></button>
 <button class="tab-button px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-slate-600" id="nav-btn-settings" onclick="openTab(event, 'tab-settings')"><i class="fa-solid fa-gear mr-1.5"></i><span class="se7-nav-label">Sistema</span></button>
 </nav>
         <div class="se7-product-signature"><img src="/assets/se7-brand-light.svg" alt="SE7 Gestão Acadêmica"></div>
@@ -885,6 +886,7 @@
         </div>
 
             <!-- SISTEMA (CONFIGURAÇÕES) -->
+        <div id="tab-internships" class="tab-content se7-internship" style="display:none"><h2 class="text-xl font-bold">Gestão de Estágio</h2><p class="se7-int-note">Disciplinas, locais, preceptores, relatórios e avaliações.</p><div id="se7-internship-host"></div></div>
         <div id="tab-settings" class="tab-content space-y-4" style="display: none;">
             <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-md p-6 border border-gray-200 dark:border-slate-700">
                 <div class="flex space-x-2 mb-6 border-b border-gray-200 dark:border-slate-700 pb-3 overflow-x-auto">
@@ -2162,7 +2164,7 @@ async function rejeitarSolicitacaoFirebase(id) {
 
         function aplicarPermissoesPorPerfil(perfil) {
     window.SE7Polos?.header(perfil);window.SE7MatrizFinance?.refresh();
-    window.SE7Exams?.apply(perfil);
+    window.SE7Exams?.apply(perfil);window.SE7Internships?.apply(perfil);
 
     const acessoMaster=perfil==='master'&&usuarioMasterAtivo()&&!sessionStorage.getItem('se7_matriz_perfil_visualizado');
     document.getElementById('btn-avisos-portal').style.display=acessoMaster?'inline-block':'none';
@@ -2379,6 +2381,7 @@ async function removerUsuarioSistemaFirebase(id){if(!confirm('Desativar esse fun
 
     // 5. Gatilhos de renderização específica para componentes que dependem do DOM visível
     if(tabId === 'tab-controle-ponto-manual'){carregarProfessoresPontoManual();escutarRegistrosPontoManual();}
+    if(tabId === 'tab-internships') window.SE7Internships?.open();
     if(tabId === 'tab-settings') setTimeout(renderizarCalendarioSemestralAdmin, 200);
     if(tabId === 'tab-portal-aluno') setTimeout(renderizarCalendarioSemestralPortalAluno, 200);
     if(tabId === 'tab-audit') setTimeout(renderizarLogsAuditoria, 200);
@@ -2540,7 +2543,7 @@ async function removerUsuarioSistemaFirebase(id){if(!confirm('Desativar esse fun
             });
         }
 
-let matrizClassesCarregadas=false,matrizCursosCarregados=false,matrizClassesFalhou=false;let dadosMatrizIniciados=false;async function iniciarDadosAutenticadosMatriz(){if(!await window.SE7Polos.init())return;window.iniciarAuditoriaMovimentacoes?.();const perfil=JSON.parse(sessionStorage.getItem('usuario_logado')||'{}').perfil;if(perfil==='professor'){window.SE7Exams?.apply(perfil);return;}if(dadosMatrizIniciados)return;dadosMatrizIniciados=true;db=SE7Reads.wrap(db);SE7Reads.start();carregarDadosDaNuvem();if(usuarioMasterAtivo()){renderizarSolicitacoesPendentes();}}
+let matrizClassesCarregadas=false,matrizCursosCarregados=false,matrizClassesFalhou=false;let dadosMatrizIniciados=false;async function iniciarDadosAutenticadosMatriz(){if(!await window.SE7Polos.init())return;window.iniciarAuditoriaMovimentacoes?.();const perfil=JSON.parse(sessionStorage.getItem('usuario_logado')||'{}').perfil;if(perfil==='professor'){window.SE7Exams?.apply(perfil);window.SE7Internships?.apply(perfil);return;}if(dadosMatrizIniciados)return;dadosMatrizIniciados=true;db=SE7Reads.wrap(db);SE7Reads.start();carregarDadosDaNuvem();if(usuarioMasterAtivo()){renderizarSolicitacoesPendentes();}}
         function carregarDadosDaNuvem() {
             db.collection("config").doc("institution").onSnapshot((doc) => {
                 if (doc.exists) {
@@ -5322,5 +5325,6 @@ function escutarRegistrosPontoManual() {
 <script src="/assets/se7-ambient.js"></script>
 <script src="/assets/se7-payroll-receipt.js"></script>
 <link rel="stylesheet" href="/assets/se7-annual-statements.css"><script src="/assets/se7-annual-statements.js"></script><script type="module" src="/assets/se7-workforce.js?v=2"></script>
+<link rel="stylesheet" href="/assets/se7-internships.css?v=1"><script src="/assets/se7-internship-pdf.js?v=1"></script><script src="/assets/se7-internships.js?v=1"></script>
 </body>
 </html>

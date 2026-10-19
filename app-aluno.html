@@ -571,6 +571,7 @@
                     </div>
                 </div>
 
+                <div id="se7-student-internship-card" hidden class="se7-int-card"></div>
                 <div id="container-btn-carteirinha">
                     <button onclick="abrirModalCarteirinha()" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-blue-500 text-slate-800 dark:text-slate-100 p-4 rounded-2xl shadow-sm flex items-center justify-between transition group active:scale-[0.99]">
                         <div class="flex items-center space-x-3">
@@ -1536,6 +1537,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
             if(window.SE7Preview?.active)await SE7Preview.refresh();
             if(!alunoLogado) return;
             if(alunoLogado.portalMustChangePassword){abrirTrocaObrigatoriaPortal();return;}
+            void window.SE7Internships?.studentCard();
 
             try {
                 // 1. Atualiza dados do aluno pontualmente
@@ -2283,5 +2285,6 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
 (()=>{const sections=[...document.querySelectorAll('.student-finance-sections > details')];for(const section of sections)section.addEventListener('toggle',()=>{if(section.open)for(const other of sections)if(other!==section)other.open=false;});})();
 </script>
 <script src="/assets/se7-renegotiation.js?v=portal-negociacao-4"></script>
+<link rel="stylesheet" href="/assets/se7-internships.css?v=1"><script src="/assets/vendor/pdf-lib.min.js"></script><script src="/assets/vendor/fontkit.umd.min.js"></script><script src="/assets/se7-internship-pdf.js?v=1"></script><script src="/assets/se7-internships.js?v=1"></script>
 </body>
 </html>
