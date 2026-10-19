@@ -162,9 +162,11 @@
 <link rel="stylesheet" href="/assets/se7-brand.css">
 <script defer src="/assets/se7-brand.js?v=internship-nav-2"></script>
 <link rel="stylesheet" href="/assets/se7-welcome.css">
-<link rel="stylesheet" href="/assets/se7-polos.css">
+<link rel="stylesheet" href="/assets/se7-polos.css?v=cadastro-3">
+<script type="module" src="/assets/se7-school-census.js?v=1"></script>
+<script type="module" src="/assets/se7-audit-ui.js?v=1"></script>
 <script src="/assets/se7-read-policy.js" defer></script>
-<script src="/assets/se7-polos.js?v=navegacao-2" defer></script>
+<script src="/assets/se7-polos.js?v=cadastro-3" defer></script>
 <link rel="stylesheet" href="assets/se7-eja.css?v=1"><script defer src="assets/se7-eja-admin.js?v=1"></script><link rel="stylesheet" href="/assets/se7-account-menu.css?v=menu-suave-3">
 <link rel="stylesheet" href="/assets/se7-ambient.css">
 <script src="/assets/se7-subject-kind.js?v=1"></script>
@@ -898,6 +900,7 @@
                     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200" onclick="openSubTab(event, 'subtab-teachers')">Colaboradores</button>
  <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200" onclick="openSubTab(event, 'subtab-docentes')">Cadastro docente</button>
                     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-institution')">Instituição</button>
+<button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event,'subtab-census');SE7Census.open()">Censo Escolar</button>
 		    <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-audit')">Auditoria</button>
     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event,'subtab-whatsapp');carregarPainelWhatsApp()"><i class="fa-brands fa-whatsapp mr-1"></i> WhatsApp</button>
 <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event,'subtab-email');SE7Email.history()"><i class="fa-solid fa-envelope mr-1"></i> E-mails acadêmicos</button>
@@ -1386,10 +1389,14 @@
 
 </div>
 
+<div id="subtab-census" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display:none">
+ <div class="flex flex-wrap items-center gap-3"><h3 class="font-bold text-base">Censo Escolar</h3><button id="se7-census-create" type="button" class="se7-primary-button">Registrar acompanhamento</button><button id="se7-census-refresh" type="button" class="se7-polo-button">Atualizar registros</button></div>
+ <p class="text-xs">Organize a conferência e o protocolo por ano, etapa e polo. A declaração oficial deve ser realizada no Educacenso. Os relatórios mostram o cadastro atual, sem reconstruir dados de anos anteriores.</p><a href="https://educacenso.inep.gov.br/" target="_blank" rel="noopener noreferrer" class="text-blue-600 underline text-xs">Abrir Educacenso</a><p id="se7-census-status" role="status"></p><div id="se7-census-list"></div>
+</div>
 <!-- AUDITORIA & LOGS -->
         <div id="subtab-audit" class="subtab-content space-y-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700" style="display: none;">
     <div class="flex justify-between items-center mb-4 pb-2 border-b border-gray-100 dark:border-slate-700">
-        <h3 class="font-bold text-base text-blue-600 dark:text-blue-400"><i class="fa-solid fa-clock-rotate-left mr-2"></i> Auditoria e Rastreabilidade</h3>
+        <h3 class="font-bold text-base text-blue-600 dark:text-blue-400"><i class="fa-solid fa-clock-rotate-left mr-2"></i> Auditoria e Rastreabilidade</h3><button type="button" class="se7-polo-button" style="background:#b91c1c" onclick="limparLogsAuditoria()">Limpar registros</button>
     </div>
     <div class="overflow-x-auto">
         <table class="w-full text-left text-xs">
@@ -1646,7 +1653,7 @@
             setInterval(atualizarHora, 1000);
         }
 
-        async function registrarLogAuditoria(acao,modulo){try{await SE7.api('audit-event',{acao:String(acao).slice(0,2000),modulo:String(modulo).slice(0,120)});}catch{console.warn('Não foi possível registrar a atividade na auditoria.');}}
+        async function registrarLogAuditoria(acao,modulo){if(window.SE7AuditPolicy&&!SE7AuditPolicy.browserMutation(acao))return;try{await SE7.api('audit-event',{acao:String(acao).slice(0,2000),modulo:String(modulo).slice(0,120)});}catch{console.warn('Não foi possível registrar a atividade na auditoria.');}}
 
 let cancelarEscutaAuditoria = null;
 
@@ -1655,10 +1662,10 @@ async function renderizarLogsAuditoria(mais=false){
  const tbody=document.getElementById('tabela-logs-auditoria');if(!tbody||auditoriaBusy)return;auditoriaBusy=true;
  let controls=document.getElementById('se7-audit-paging');if(!controls){controls=document.createElement('div');controls.id='se7-audit-paging';for(const [text,fn]of [['Atualizar histórico',()=>renderizarLogsAuditoria()],['Carregar registros anteriores',()=>renderizarLogsAuditoria(true)]]){const b=document.createElement('button');b.type='button';b.textContent=text;b.className='px-3 py-2 text-xs rounded border m-1';b.onclick=fn;controls.append(b);}tbody.closest('table').after(controls);}
  const buttons=[...controls.querySelectorAll('button')];buttons.forEach(b=>b.disabled=true);
- try{if(!mais){auditoriaCursor=null;tbody.replaceChildren();}let q=db.collection('systemLogs').orderBy('createdAt','desc').limit(50);if(mais&&auditoriaCursor)q=q.startAfter(auditoriaCursor);const snap=await q.get();for(const doc of snap.docs){const l=doc.data(),tr=document.createElement('tr');tr.className='border-b';for(const value of [l.dataHora,(l.usuario||'Sistema')+' ('+(l.perfil||'')+')',l.modulo,l.acao]){const td=document.createElement('td');td.className='p-3';td.textContent=value||'';tr.append(td);}tbody.append(tr);}auditoriaCursor=snap.docs.at(-1)||auditoriaCursor;buttons[1].hidden=snap.size<50;if(!tbody.children.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=4;td.textContent='Nenhum registro encontrado.';tr.append(td);tbody.append(tr);}}catch(e){alert('Não foi possível consultar a auditoria: '+e.message);}finally{auditoriaBusy=false;buttons.forEach(b=>b.disabled=false);}
+ try{if(!mais){auditoriaCursor=null;tbody.replaceChildren();}let q=db.collection('systemLogs').orderBy('createdAt','desc').limit(50);if(mais&&auditoriaCursor)q=q.startAfter(auditoriaCursor);const snap=await q.get();for(const doc of snap.docs){const l=doc.data();if(window.SE7AuditPolicy&&!SE7AuditPolicy.auditVisible(l))continue;const tr=document.createElement('tr');tr.className='border-b';for(const value of [l.dataHora,(l.usuario||'Sistema')+' ('+(l.perfil||'')+')',l.modulo,l.acao]){const td=document.createElement('td');td.className='p-3';td.textContent=value||'';tr.append(td);}tbody.append(tr);}auditoriaCursor=snap.docs.at(-1)||auditoriaCursor;buttons[1].hidden=snap.size<50;if(!tbody.children.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=4;td.textContent='Nenhum registro encontrado.';tr.append(td);tbody.append(tr);}}catch(e){alert('Não foi possível consultar a auditoria: '+e.message);}finally{auditoriaBusy=false;buttons.forEach(b=>b.disabled=false);}
 }
 
-async function limparLogsAuditoria(){alert('Os registros de auditoria são preservados e não podem ser apagados pela interface.');}
+
 
         function alternarSenhaAcesso(botao) {
             const campo = document.getElementById('login-pass');
@@ -1710,6 +1717,7 @@ async function limparLogsAuditoria(){alert('Os registros de auditoria são prese
             if (botao) {botao.disabled = true;botao.textContent = 'Verificando acesso…';}
             try {
                 const u = await SE7.staffLogin(email, senha);
+                if(u.perfil==='preceptor'){sessionStorage.removeItem('usuario_logado');location.replace('/app-preceptor.html');return;}
                 if (!['master','secretaria','professor','financeiro'].includes(u.perfil)) {
                     await firebase.auth().signOut();
                     throw new Error('Conta sem acesso ao Matriz.');
@@ -5291,7 +5299,7 @@ function escutarRegistrosPontoManual() {
 }
 
 	</script>
-<script src="/assets/se7-matriz.js?v=internship-nav-2"></script>
+<script src="/assets/se7-matriz.js?v=auditoria-4-internship-nav-2"></script>
 
     <style>
         #confirmar-saida-matriz { width: min(420px, calc(100vw - 40px)); margin: auto; padding: 28px; border: 1px solid #25455f; border-radius: 18px; background: #0b213a; color: #e8f1fa; box-shadow: 0 24px 80px #0008; }
@@ -5335,6 +5343,6 @@ function escutarRegistrosPontoManual() {
 <script src="/assets/se7-ambient.js"></script>
 <script src="/assets/se7-payroll-receipt.js"></script>
 <link rel="stylesheet" href="/assets/se7-annual-statements.css"><script src="/assets/se7-annual-statements.js"></script><link rel="stylesheet" href="/assets/se7-workforce-sheet.css?v=1"><script type="module" src="/assets/se7-workforce.js?v=schedule-4"></script>
-<link rel="stylesheet" href="/assets/se7-internships.css?v=contracts-4"><script src="/assets/se7-internship-pdf.js?v=1"></script><script src="/assets/se7-preceptor-contract-pdf.js?v=1"></script><script src="/assets/se7-internships.js?v=internship-groups-5"></script>
+<link rel="stylesheet" href="/assets/se7-internships.css?v=descriptive-5"><script src="/assets/se7-internship-pdf.js?v=descriptive-2"></script><script src="/assets/se7-preceptor-contract-pdf.js?v=1"></script><script src="/assets/se7-internships.js?v=convenios-8"></script>
 </body>
 </html>

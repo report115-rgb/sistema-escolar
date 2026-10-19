@@ -21,12 +21,11 @@ window.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('#main
 
 /* Auditoria de ações explícitas e gravações realizadas pelo Matriz. */
 (()=>{
- let installed=false,clickInstalled=false;
+ let installed=false;
  const modules={students:'Gestão de Alunos',courses:'Cursos / Disciplinas',classes:'Turmas',academicCalendars:'Calendário Acadêmico',teachers:'Colaboradores',teacherManualLogs:'Ponto Manual',teacherMonthlyPayments:'Pagamentos de Colaboradores',config:'Configurações',financeLogs:'Financeiro',attendanceRecords:'Frequência',attendance:'Frequência',attendanceLocks:'Frequência',employeeLogs:'Ponto de Colaboradores',teacherPaymentRates:'Valores de Hora-aula',pendingUsers:'Acessos',systemUsers:'Acessos'};
  const tracked=path=>Boolean(modules[String(path||'').split('/')[0]]);
  const log=(operation,path)=>{if(!tracked(path)||typeof registrarLogAuditoria!=='function')return;void registrarLogAuditoria(operation+' — registro '+path,modules[path.split('/')[0]]);};
  window.iniciarAuditoriaMovimentacoes=()=>{
-  if(!clickInstalled){clickInstalled=true;document.addEventListener('click',event=>{const b=event.target.closest('button');if(!b||b.disabled||b.closest('#login-modal'))return;let session;try{session=JSON.parse(sessionStorage.getItem('usuario_logado')||'{}');}catch{return;}if(!['master','secretaria','professor','financeiro'].includes(session.perfil))return;const label=(b.getAttribute('aria-label')||b.title||b.textContent||'').trim().replace(/\s+/g,' ').slice(0,160);if(label&&typeof registrarLogAuditoria==='function'){const title=document.getElementById('se7-page-title')?.textContent||'Sistema Matriz';void registrarLogAuditoria('Acionou: '+label,title);}},true);}
   if(installed||typeof db==='undefined'||!db)return;
   const ref=db.collection('teachers').doc('__audit_probe__'),collection=db.collection('teachers');
   function wrap(proto,method,operation,pathOf){const original=proto[method];if(typeof original!=='function'||original.se7AuditWrapped)return;const wrapped=async function(...args){const result=await original.apply(this,args);log(operation,pathOf(this,result));return result;};wrapped.se7AuditWrapped=true;proto[method]=wrapped;}

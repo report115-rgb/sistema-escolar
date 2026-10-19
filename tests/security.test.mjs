@@ -228,10 +228,10 @@ test('cadastro e foto do professor são exclusivos do master',async()=>{
  await assertFails(updateDoc(doc(p,'teachers/photo-teacher'),{profilePhoto:'troca-propria'}));
 });
 
-test('auditoria central registra consulta e tentativa negada da secretaria sem copiar senha ou gabarito',async()=>{
+test('auditoria central ignora consultas e operações não concluídas sem copiar senha ou gabarito',async()=>{
  const uid='audit-secretaria';await auth.createUser({uid,email:'audit-secretaria@example.test',password:'audit-secret-pass'});await db.collection('se7Staff').doc(uid).set({poloId:'colares',perfil:'secretaria',nome:'Secretária Auditoria',disabled:false});const token=await signIn('audit-secretaria@example.test','audit-secret-pass');
  await call(token,{action:'exam-catalog'});await assert.rejects(call(token,{action:'exam-save',password:'NUNCA-REGISTRAR',questions:[{correct:3,text:'GABARITO-PRIVADO'}]}));
- const records=(await db.collection('systemLogs').where('actorUid','==',uid).get()).docs.map(d=>d.data());assert(records.some(r=>r.usuario==='Secretária Auditoria'&&r.acao.includes('Concluído: Consultou')));assert(records.some(r=>r.acao.includes('Não concluído: Salvou avaliação')));assert(!JSON.stringify(records).includes('NUNCA-REGISTRAR'));assert(!JSON.stringify(records).includes('GABARITO-PRIVADO'));
+ const records=(await db.collection('systemLogs').where('actorUid','==',uid).get()).docs.map(d=>d.data());assert.equal(records.length,0);assert(!JSON.stringify(records).includes('NUNCA-REGISTRAR'));assert(!JSON.stringify(records).includes('GABARITO-PRIVADO'));
 });
 
 async function hardeningStudentToken(){const sid='hardening-student',uid=studentUid(sid);try{await auth.createUser({uid,email:aliasForHardening(uid),password:'hardening-test-password'});}catch(e){if(e.code!=='auth/uid-already-exists')throw e;}await db.collection('students').doc(sid).set({poloId:'colares',fullname:'Aluno de Segurança',cpf:'52998224725',status:'Ativo',classId:'hardening-class',courseId:'hardening-course',se7AuthUid:uid,portalSessionVersion:0,documentos:{}});return custom(await auth.createCustomToken(uid,{role:'aluno',studentId:sid,portalVersion:0}));}
@@ -241,8 +241,8 @@ test('auditoria não permite edição, exclusão nem autoria falsificada pelo na
  const m=env.authenticatedContext(MASTER).firestore(),s=env.authenticatedContext('audit-secretaria').firestore();
  await assertFails(setDoc(doc(m,'systemLogs/falso-master'),{usuario:'Outra pessoa',createdAt:'2000-01-01'}));
  await assertFails(setDoc(doc(s,'systemLogs/falso-sec'),{usuario:'Master',perfil:'MASTER',modulo:'x',acao:'x',createdAt:'2000-01-01',dataHora:'x'}));
- const token=await signIn('audit-secretaria@example.test','audit-secret-pass');await call(token,{action:'audit-event',acao:'Abriu uma aba',modulo:'Avaliações',usuario:'Master',perfil:'MASTER',createdAt:'2000-01-01'});
- const logs=(await db.collection('systemLogs').where('actorUid','==','audit-secretaria').get()).docs;const row=logs.find(d=>d.data().acao==='Abriu uma aba');assert(row);assert.equal(row.data().perfil,'SECRETARIA');assert.equal(row.data().usuario,'Secretária Auditoria');assert(!row.data().createdAt.startsWith('2000'));
+ const token=await signIn('audit-secretaria@example.test','audit-secret-pass');await call(token,{action:'audit-event',acao:'Atualizou dados — registro students/audit-test',modulo:'Avaliações',usuario:'Master',perfil:'MASTER',createdAt:'2000-01-01'});
+ const logs=(await db.collection('systemLogs').where('actorUid','==','audit-secretaria').get()).docs;const row=logs.find(d=>d.data().acao==='Atualizou dados — registro students/audit-test');assert(row);assert.equal(row.data().perfil,'SECRETARIA');assert.equal(row.data().usuario,'Secretária Auditoria');assert(!row.data().createdAt.startsWith('2000'));
  await assertFails(updateDoc(doc(m,'systemLogs/'+row.id),{acao:'Alterada'}));await assertFails(deleteDoc(doc(m,'systemLogs/'+row.id)));await assertSucceeds(getDocs(collection(m,'systemLogs')));await assertFails(getDocs(collection(s,'systemLogs')));
 });
 test('secretaria e financeiro não alteram configurações exclusivas do master diretamente',async()=>{
