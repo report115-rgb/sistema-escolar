@@ -1,3 +1,4 @@
+import {stepInternshipBilling,startInternshipBilling} from '../server/internship-billing.mjs';
 import {verifyPreceptorContract} from '../server/preceptor-contracts.mjs';
 import {studentTerms,verifyStudentTerm} from '../server/internship-student-terms.mjs';
 import {studentTermFiles} from '../server/internship-student-term-files.mjs';
@@ -154,6 +155,8 @@ async function dispatchOperation({auth,db},req,b,delegated=null){
  if(action.startsWith('renegotiation-')){await limits(db,req,'asaas-bulk:renegotiation:'+u.uid);return renegotiations(db,b,u);}
  if(action==='agreement-reject')return rejectAgreement(db,b,u);
  if(['internship-student-term-file-get','internship-student-term-file-upload'].includes(action))return studentTermFiles(db,b,u);
+ if(action==='internship-student-term-billing-step')return stepInternshipBilling(db,b.cycleId,u);
+ if(action==='internship-student-term-billing-start')return startInternshipBilling(db,b.id,u);
  if(action.startsWith('internship-student-term-'))return studentTerms(db,b,u);
  if(['internship-agreement-file-upload','internship-agreement-file-get'].includes(action))return agreementFiles(db,b,u);
  if(['internship-agreement-term-preview','internship-agreement-term-issue','internship-agreement-term-history'].includes(action))return agreementTerm(db,b,u);

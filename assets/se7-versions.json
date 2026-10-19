@@ -2,24 +2,24 @@
   "schema": 1,
   "apps": {
     "matriz": {
-      "version": "1.7.27",
-      "revision": "eb5241d21710d8ee2572886d57ada412e6b9537092f826e9f92d8f4fc9f0209e"
+      "version": "1.7.29",
+      "revision": "65fa6da5ff9d63a3c9cfb7b2b2677c3bf4897df4642e0c6393fb36b84bb6b6ef"
     },
     "aluno": {
-      "version": "1.7.23",
-      "revision": "52f2ae4fbf755f187458f1d4845a4f762e1231c3c58d380f102cc9e49c06116e"
+      "version": "1.7.25",
+      "revision": "5944dd3767f3f03f38b2d5f3af3494e1257e16696df09c0ecf0752b16b531825"
     },
     "financeiro": {
-      "version": "1.11.23",
-      "revision": "7eca2e404b7ad1777c4f32419f72daf3ca443e61859acdb8966433579534426e"
+      "version": "1.11.25",
+      "revision": "ffbae162ffe7603146c225ede6e4282eee838be1f15828aa87cbd5f802561521"
     },
     "totem": {
-      "version": "1.4.23",
-      "revision": "6aaf502a2111b4681606df4eb0abdf60a0d1594431026975d2a6a2378fe6c769"
+      "version": "1.4.25",
+      "revision": "58c9019231f1e0f773f5051f219199d3e2af6ea02231504f5ea60f7bcddff497"
     },
     "preceptor": {
-      "version": "1.0.3",
-      "revision": "6d42da2c29c03db1dd0b1d2b6711e295fa4801ba770fb700e1d87eef562b2033"
+      "version": "1.0.5",
+      "revision": "554a3e1995325eba316bdcd122f426be1980c9072f785ab25aa1518f2b8120c8"
     }
   }
 }

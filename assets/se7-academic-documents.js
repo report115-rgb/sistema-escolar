@@ -23,7 +23,7 @@
  }
  function eligibility(type,student={},course={}){
   if(!['declaracao','historico','contrato','transferencia'].includes(type))return {allowed:false,reason:'Documento não disponível.'};
-  if(type==='contrato'&&!String(course.contractTemplate||'').trim())return {allowed:false,reason:'O modelo de contrato ainda será configurado.'};
+  if(type==='contrato'&&!window.SE7EnrollmentContract?.supports(course)&&!String(course.contractTemplate||'').trim())return {allowed:false,reason:'O modelo de contrato ainda será configurado.'};
   const status=String(student.status||'').trim();
   if(type==='transferencia')return /^(transferido|transferida)$/i.test(status)?{allowed:true,reason:''}:{allowed:false,reason:'A guia de transferência somente pode ser emitida com a matrícula no status Transferido.'};
   return /^(ativo|ativa|matriculado|matriculada)$/i.test(status)?{allowed:true,reason:''}:{allowed:false,reason:'Para emitir este documento, o aluno precisa estar com matrícula ativa.'};
