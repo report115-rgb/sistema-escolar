@@ -14,3 +14,11 @@ export async function validateServerDependencies(root=process.cwd(),entries=['ap
  for(const file of entries)await visit(file);
  return [...visited].sort();
 }
+
+export async function validateDeploymentConfig(root=process.cwd()){
+ const config=JSON.parse(await readFile(resolve(root,'vercel.json'),'utf8'));
+ for(const [entry,options] of Object.entries(config.functions||{}))for(const key of ['includeFiles','excludeFiles']){
+  const pattern=options[key];if(pattern!==undefined&&(typeof pattern!=='string'||pattern.length>256))throw Error('Configuração Vercel inválida: '+entry+'.'+key+' deve ser um padrão de até 256 caracteres.');
+ }
+ return config;
+}

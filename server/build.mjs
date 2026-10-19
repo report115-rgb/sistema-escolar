@@ -1,4 +1,5 @@
-import {validateServerDependencies} from './deployment-files.mjs';
+import {validateServerDependencies,validateDeploymentConfig} from './deployment-files.mjs';
+await validateDeploymentConfig();
 await validateServerDependencies(process.cwd(),['api/se7.js','api/asaas-webhook.js','api/whatsapp-webhook.js','api/eja-maintenance.js','api/annual-statements.js']);
 import {buildSafeHandlers} from './security-handlers.mjs';
 await buildSafeHandlers();
