@@ -1,5 +1,5 @@
 import './se7-work-schedule.js?v=1';
-import {openWorkforceSheet} from './se7-workforce-sheet.js?v=2';
+import {openWorkforceSheet} from './se7-workforce-sheet.js?v=institucional-20261019';
 import {numericMoney} from './se7-remuneration-policy.js';
 import './se7-collaborators.js?v=schedule-3';
 import {employeeRoles,roleLabels,networkRole} from './se7-collaborator-policy.js?v=workforce-1';

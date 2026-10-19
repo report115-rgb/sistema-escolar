@@ -178,7 +178,7 @@
 <script src="/assets/vendor/qrcode.js"></script>
 <link rel="stylesheet" href="/assets/se7-navigation.css?v=1">
 <link rel="stylesheet" href="/assets/se7-renegotiation.css?v=1">
-</head>
+<script src="/assets/se7-document-skin.js?v=institucional-20261019"></script></head>
 <body class="se7-suite bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans antialiased h-screen overflow-hidden flex flex-col transition-colors duration-200">
 <div id="se7-welcome" hidden role="status" aria-live="polite" aria-atomic="true">
     <svg class="welcome-art" viewBox="0 0 390 844" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="welcome-mobile-relief" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#1d5889" stop-opacity=".23"/><stop offset="1" stop-color="#0c2d52" stop-opacity="0"/></linearGradient></defs><g class="welcome-relief" fill="url(#welcome-mobile-relief)"><path d="M170-50h68L386 151q25 33 0 67L192 483h-72l191-265q25-33 0-67Z"/><path d="m390 430-280 414h62l218-321Z"/><path d="M-60 638H42q35 0 55 28l135 190h-64L46 684H-60Z"/></g><g class="welcome-wire"><path d="M-55 126C61 122 113 64 178-30"/><path d="M-50 620C70 805 290 808 470 659"/></g><g class="welcome-bloom"><path d="M-55 126C61 122 113 64 178-30"/><path d="M-50 620C70 805 290 808 470 659"/></g></svg>
@@ -191,7 +191,7 @@
         <p class="welcome-tagline">Sua gestão acadêmica em um só lugar.</p>
         <div class="welcome-progress" aria-hidden="true"></div>
     </div>
-    <div class="welcome-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="financeiro">v1.10.1</span> • Setor Financeiro</div>
+    <div class="welcome-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="financeiro">v1.11.23</span> • Setor Financeiro</div>
 </div>
 
 
@@ -229,7 +229,7 @@
                 </form>
             </div>
         </div>
-        <div id="finance-login-developer-footer" class="finance-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="financeiro">v1.10.1</span> • Setor Financeiro</div>
+        <div id="finance-login-developer-footer" class="finance-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="financeiro">v1.11.23</span> • Setor Financeiro</div>
     </div>
 
 <dialog id="finance-recovery" aria-labelledby="finance-recovery-title"><form onsubmit="event.preventDefault();enviarRecuperacaoFinanceiro();"><h2 id="finance-recovery-title">Recuperar senha</h2><p>Informe o e-mail cadastrado para receber as instruções de recuperação.</p><label for="finance-recovery-email">E-mail</label><input id="finance-recovery-email" type="email" autocomplete="email" required><p id="finance-recovery-status" role="status"></p><div><button type="button" onclick="fecharRecuperacaoFinanceiro()">Fechar</button><button type="submit" id="finance-recovery-send" data-busy-managed>Enviar link</button></div></form></dialog>
@@ -1537,7 +1537,7 @@
                 </div>
             `;
 
-            document.getElementById('conteudo-declaracao-Dinamico').innerHTML = htmlDeclaracao;
+            document.getElementById('conteudo-declaracao-Dinamico').innerHTML = htmlDeclaracao;SE7DocumentSkin.apply(document.getElementById('conteudo-declaracao-Dinamico').firstElementChild,institutionData);
             document.getElementById('modal-visualizador-declaracao').style.display = 'flex';
         }
 
@@ -2084,13 +2084,13 @@
                     </div>
 
                     <h2 style="font-size: 14px; color: #1e3a8a; text-transform: uppercase; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 6px; margin-top: 25px; margin-bottom: 12px; font-weight: bold;">3. Opções de Acordo Disponíveis</h2>
-                    <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 14px; border-radius: 10px; margin-top: 10px; font-size: 12px;">
+                    <div class="se7-agreement-option" style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 14px; border-radius: 10px; margin-top: 10px; font-size: 12px;">
                         <strong style="color: #047857;">Opção A: Pagamento À Vista</strong><br>Valor Total: R$ ${opcoesGeradas.avista.valorFinal.toFixed(2)}
                     </div>
-                    <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 14px; border-radius: 10px; margin-top: 10px; font-size: 12px;">
+                    <div class="se7-agreement-option" style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 14px; border-radius: 10px; margin-top: 10px; font-size: 12px;">
                         <strong style="color: #047857;">Opção B: Parcelado (${opcoesGeradas.parcelado.infoExtra})</strong><br>Valor Total: R$ ${opcoesGeradas.parcelado.valorFinal.toFixed(2)}
                     </div>
-                    <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 14px; border-radius: 10px; margin-top: 10px; font-size: 12px;">
+                    <div class="se7-agreement-option" style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 14px; border-radius: 10px; margin-top: 10px; font-size: 12px;">
                         <strong style="color: #047857;">Opção C: Cartão de Crédito</strong><br>Valor Total: R$ ${opcoesGeradas.cartao.valorFinal.toFixed(2)}
                     </div>
 
@@ -2106,7 +2106,7 @@
                 </div>
             `;
 
-            document.getElementById('conteudo-termo-Dinamico').innerHTML = htmlCompletoTermo;
+            document.getElementById('conteudo-termo-Dinamico').innerHTML = htmlCompletoTermo;SE7DocumentSkin.apply(document.getElementById('conteudo-termo-Dinamico').firstElementChild,institutionData);
             document.getElementById('modal-visualizador-termo').style.display = 'flex';
             if(window.SE7Agreements?.isProposalOpen())SE7Agreements.refresh();else selecionarAlunoNegociacao(alunoNegociacaoId);
             renderizarNegociacoesAtivasGeral();
@@ -2742,7 +2742,7 @@
                         <h2 style="font-size: 14px; color: #1e3a8a; text-transform: uppercase; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 6px; margin-top: 25px; margin-bottom: 12px; font-weight: bold;">3. Resumo Financeiro</h2>
                         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; font-size: 12px; margin-bottom: 14px;">
                             <div style="background: #eff6ff; border: 1px solid #bfdbfe; padding: 14px; border-radius: 10px;"><strong style="color: #1e3a8a;">Carga Horária Total</strong><br><span style="font-size: 16px; font-weight: bold;">${freqFormatarHoras(horas)}</span></div>
-                            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 14px; border-radius: 10px;"><strong style="color: #047857;">Total a Receber</strong><br><span style="font-size: 16px; font-weight: bold;">${freqFormatarMoeda(total)}</span></div>
+                            <div class="se7-agreement-option" style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 14px; border-radius: 10px;"><strong style="color: #047857;">Total a Receber</strong><br><span style="font-size: 16px; font-weight: bold;">${freqFormatarMoeda(total)}</span></div>
                             <div style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 14px; border-radius: 10px;"><strong style="color: #475569;">Valor da Hora-Aula</strong><br><span style="font-size: 16px; font-weight: bold;">${taxaTexto}</span></div>
                         </div>
 
@@ -2841,7 +2841,7 @@
 <script src="/assets/se7-version.js"></script>
 <script src="/assets/vendor/pdf-lib.min.js"></script>
 <script src="/assets/vendor/fontkit.umd.min.js"></script>
-<script src="/assets/se7-receipt.js"></script>
+<script src="/assets/se7-receipt.js?v=institucional-20261019"></script>
 <script src="/assets/se7-cancellation.js"></script>
 <script src="/assets/se7-asaas.js?v=cartao-parcelado-2"></script>
 <script src="/assets/se7-enrollment-auto.js"></script>
@@ -2852,8 +2852,8 @@
 <script src="/assets/se7-expenses.js?v=preceptor-contracts-4"></script>
 <script type="module" src="/assets/se7-agreements.js?v=cartao-parcelado-3"></script>
 <script type="module" src="/assets/se7-payroll-finance.js"></script>
-<script type="module" src="/assets/se7-payroll-report.js?v=workforce-1"></script>
-<link rel="stylesheet" href="/assets/se7-annual-statements.css"><script src="/assets/se7-annual-statements.js"></script><script src="/assets/se7-renegotiation.js?v=portal-negociacao-4"></script>
+<script type="module" src="/assets/se7-payroll-report.js?v=institucional-20261019"></script>
+<link rel="stylesheet" href="/assets/se7-annual-statements.css"><script src="/assets/se7-annual-statements.js?v=institucional-20261019"></script><script src="/assets/se7-renegotiation.js?v=portal-negociacao-4"></script>
 <script type="module" src="/assets/se7-remuneration-ui.js?v=1"></script>
 </body>
 </html>

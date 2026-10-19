@@ -1,3 +1,6 @@
+import {verifyPreceptorContract} from '../server/preceptor-contracts.mjs';
+import {studentTerms,verifyStudentTerm} from '../server/internship-student-terms.mjs';
+import {studentTermFiles} from '../server/internship-student-term-files.mjs';
 import {agreementFiles} from '../server/internship-agreement-files.mjs';
 import {agreementTerm,verifyAgreementTerm} from '../server/internship-agreement-terms.mjs';
 import {internshipAgreements} from '../server/internship-agreements.mjs';
@@ -111,6 +114,8 @@ async function unlock(ref,lock){await ref.firestore.runTransaction(async tx=>{co
 async function publicInfo(db){const snap=await db.collection('config').doc('institution').get();const d=snap.data()||{};const fields=['name','razao','cnpj','email','tel','end','loginDesc','logo','logomarca','urlLogo','logoUrl','image','fileUrl'];return {institution:Object.fromEntries(fields.filter(k=>typeof d[k]==='string').map(k=>[k,d[k]]))};}
 async function dispatchOperation({auth,db},req,b,delegated=null){
  const action=b.action;
+ if(action==='internship-preceptor-contract-verify'){academicDocuments.publicLimit(req);return verifyPreceptorContract(db,b);}
+ if(action==='internship-student-term-verify'){academicDocuments.publicLimit(req);return verifyStudentTerm(db,b);}
  if(action==='internship-agreement-term-verify'){academicDocuments.publicLimit(req);return verifyAgreementTerm(db,b);}
  if(action==='annual-verify'){academicDocuments.publicLimit(req);return verifyAnnual(db,b.token);}
  if(action==='payroll-report-verify'){academicDocuments.publicLimit(req);return verifyPayrollReport(db,b);}
@@ -148,6 +153,8 @@ async function dispatchOperation({auth,db},req,b,delegated=null){
  if(action==='collaborator-save')return saveCollaborator(db,b,u,{auth});
  if(action.startsWith('renegotiation-')){await limits(db,req,'asaas-bulk:renegotiation:'+u.uid);return renegotiations(db,b,u);}
  if(action==='agreement-reject')return rejectAgreement(db,b,u);
+ if(['internship-student-term-file-get','internship-student-term-file-upload'].includes(action))return studentTermFiles(db,b,u);
+ if(action.startsWith('internship-student-term-'))return studentTerms(db,b,u);
  if(['internship-agreement-file-upload','internship-agreement-file-get'].includes(action))return agreementFiles(db,b,u);
  if(['internship-agreement-term-preview','internship-agreement-term-issue','internship-agreement-term-history'].includes(action))return agreementTerm(db,b,u);
  if(action.startsWith('internship-agreement-'))return internshipAgreements(db,b,u);
@@ -385,7 +392,7 @@ export default async function handler(req,res){
  res.setHeader('Cache-Control','no-store');res.setHeader('X-Content-Type-Options','nosniff');
  try {
   const native=scannerCors(req,res);if(req.method==='OPTIONS'&&native){res.status(204).end();return;}if(req.method!=='POST')fail(405,'Use POST.');const origin=req.headers.origin;if(origin!=='https://sistema-escolar-ten-mu.vercel.app'&&!native)fail(403,'Origem não autorizada.');
-  if(!String(req.headers['content-type']||'').startsWith('application/json'))fail(415,'Envie JSON.');let b;try{b=typeof req.body==='string'?JSON.parse(req.body):req.body;}catch{fail(400,'JSON inválido.');}if(!b||Array.isArray(b)||typeof b.action!=='string'||JSON.stringify(b).length>(b.action==='internship-agreement-file-upload'?2900000:(b.action==='internship-preceptor-document-upload'||b.action==='internship-document-upload'||b.action==='portal-admin'&&b.callAction==='internship-document-upload')?750000:b.action.startsWith('internship-payroll-')?750000:b.action==='materials-save'?2900000:b.action==='collaborator-save'?350000:b.action==='notices-save'||b.action==='exam-scan-preview'||b.action==='payroll-receipt-save'||b.action==='expenses-pay'||b.action==='expenses-receipt-save'||b.action==='attendance-justification-save'?750000:['internship-evaluate','internship-evaluation-draft-save','internship-criteria-save'].includes(b.action)?50000:b.action==='exam-save'?250000:(['profile-save','staff-profile-save','student-avatar-save'].includes(b.action)||(b.action==='portal-admin'&&b.callAction==='student-avatar-save'))?100000:12000))fail(400,'Requisição inválida.');
+  if(!String(req.headers['content-type']||'').startsWith('application/json'))fail(415,'Envie JSON.');let b;try{b=typeof req.body==='string'?JSON.parse(req.body):req.body;}catch{fail(400,'JSON inválido.');}if(!b||Array.isArray(b)||typeof b.action!=='string'||JSON.stringify(b).length>(['internship-agreement-file-upload','internship-student-term-file-upload'].includes(b.action)?2900000:(b.action==='internship-preceptor-document-upload'||b.action==='internship-document-upload'||b.action==='portal-admin'&&b.callAction==='internship-document-upload')?750000:b.action.startsWith('internship-payroll-')?750000:b.action==='materials-save'?2900000:b.action==='collaborator-save'?350000:b.action==='notices-save'||b.action==='exam-scan-preview'||b.action==='payroll-receipt-save'||b.action==='expenses-pay'||b.action==='expenses-receipt-save'||b.action==='attendance-justification-save'?750000:['internship-evaluate','internship-evaluation-draft-save','internship-criteria-save'].includes(b.action)?50000:b.action==='exam-save'?250000:(['profile-save','staff-profile-save','student-avatar-save'].includes(b.action)||(b.action==='portal-admin'&&b.callAction==='student-avatar-save'))?100000:12000))fail(400,'Requisição inválida.');
   requestedAction=b.action==='portal-admin'?String(b.callAction||''):b.action;
   if(!nativeRequestAllowed(req,b))fail(403,'Operação não permitida para o leitor de avaliações.');
   if(!process.env.SE7_MASTER_UID)throw new Error('Master não configurado.');const result=await dispatch(services(),req,b);res.status(200).json(result);

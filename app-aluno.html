@@ -233,7 +233,7 @@
 </style>
 <link rel="stylesheet" href="/assets/se7-renegotiation.css?v=1">
 <link rel="stylesheet" href="/assets/se7-calendar-state.css?v=1"><script src="/assets/se7-calendar-state.js?v=1"></script>
-</head>
+<script src="/assets/se7-document-skin.js?v=institucional-20261019"></script></head>
 <body class="se7-suite bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans antialiased h-screen overflow-hidden flex flex-col transition-colors duration-200">
 <div id="se7-welcome" hidden role="status" aria-live="polite" aria-atomic="true">
     <svg class="welcome-art" viewBox="0 0 390 844" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="welcome-mobile-relief" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#1d5889" stop-opacity=".23"/><stop offset="1" stop-color="#0c2d52" stop-opacity="0"/></linearGradient></defs><g class="welcome-relief" fill="url(#welcome-mobile-relief)"><path d="M170-50h68L386 151q25 33 0 67L192 483h-72l191-265q25-33 0-67Z"/><path d="m390 430-280 414h62l218-321Z"/><path d="M-60 638H42q35 0 55 28l135 190h-64L46 684H-60Z"/></g><g class="welcome-wire"><path d="M-55 126C61 122 113 64 178-30"/><path d="M-50 620C70 805 290 808 470 659"/></g><g class="welcome-bloom"><path d="M-55 126C61 122 113 64 178-30"/><path d="M-50 620C70 805 290 808 470 659"/></g></svg>
@@ -246,7 +246,7 @@
         <p class="welcome-tagline">Sua gestão acadêmica em um só lugar.</p>
         <div class="welcome-progress" aria-hidden="true"></div>
     </div>
-    <div class="welcome-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.6.1</span> • Portal do Aluno</div>
+    <div class="welcome-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.7.23</span> • Portal do Aluno</div>
 </div>
 
 
@@ -275,7 +275,7 @@
                 <button type="button" class="student-login-choice student-login-choice-secondary" onclick="irParaTelaMatriculaSuave()">Quero me matricular</button>
             </div>
         </div>
-        <div id="student-welcome-developer-footer" class="student-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.6.1</span> • Portal do Aluno</div>
+        <div id="student-welcome-developer-footer" class="student-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.7.23</span> • Portal do Aluno</div>
     </div>
 
     <!-- TELA DE LOGIN DO ALUNO -->
@@ -313,7 +313,7 @@
                 </form>
             </div>
         </div>
-        <div id="student-login-developer-footer" class="student-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.6.1</span> • Portal do Aluno</div>
+        <div id="student-login-developer-footer" class="student-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.7.23</span> • Portal do Aluno</div>
     </div>
 
     <!-- TELA DE AUTO-MATRÍCULA -->
@@ -2272,8 +2272,8 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
     </script>
 <script src="/assets/se7-version.js"></script>
 <script src="/assets/vendor/pdf-lib.min.js"></script>
-<script src="/assets/vendor/fontkit.umd.min.js"></script><script src="/assets/se7-material-pdf.js?v=1"></script><script src="/assets/se7-materials.js?v=navegacao-5"></script>
-<script src="/assets/se7-receipt.js"></script>
+<script src="/assets/vendor/fontkit.umd.min.js"></script><script src="/assets/se7-material-pdf.js?v=institucional-20261019"></script><script src="/assets/se7-materials.js?v=navegacao-5"></script>
+<script src="/assets/se7-receipt.js?v=institucional-20261019"></script>
 <script src="/assets/se7-cancellation.js"></script>
 <script src="/assets/se7-asaas.js?v=cartao-parcelado-2"></script>
 <link rel="stylesheet" href="/assets/se7-exams.css"><script src="/assets/se7-exam-student.js"></script><script type="module" src="/assets/se7-ingress-policy.js"></script>
@@ -2286,6 +2286,6 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
 (()=>{const sections=[...document.querySelectorAll('.student-finance-sections > details')];for(const section of sections)section.addEventListener('toggle',()=>{if(section.open)for(const other of sections)if(other!==section)other.open=false;});})();
 </script>
 <script src="/assets/se7-renegotiation.js?v=portal-negociacao-4"></script>
-<link rel="stylesheet" href="/assets/se7-internships.css?v=descriptive-5"><script src="/assets/vendor/pdf-lib.min.js"></script><script src="/assets/vendor/fontkit.umd.min.js"></script><script src="/assets/se7-internship-pdf.js?v=descriptive-2"></script><script src="/assets/se7-internships.js?v=convenios-8"></script>
+<link rel="stylesheet" href="/assets/se7-internships.css?v=institucional-20261019"><script src="/assets/vendor/pdf-lib.min.js"></script><script src="/assets/vendor/fontkit.umd.min.js"></script><script src="/assets/se7-internship-pdf.js?v=descriptive-2"></script><script src="/assets/se7-internships.js?v=institucional-20261019"></script>
 </body>
 </html>
