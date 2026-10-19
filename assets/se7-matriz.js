@@ -10,6 +10,7 @@ const se7ModulosMatriz={
  'tab-student-finance':['Financeiro','Acompanhe cobranças e informações financeiras dos alunos.'],
  'tab-history':['Emissão de Documentos','Emita declarações, contratos e históricos acadêmicos.'],
  'tab-controle-ponto-manual':['Ponto Manual','Registre e consulte os horários dos professores.'],
+ 'tab-internships':['Gestão de Estágio','Organize as fases de estágio, os preceptores e os relatórios dos alunos.'],
  'tab-settings':['Sistema','Gerencie cursos, turmas e configurações da instituição.']
 };
 function atualizarModuloMatriz(id){const [title,description]=se7ModulosMatriz[id]||['Sistema Matriz','Tudo conectado ao sistema Matriz'];document.getElementById('se7-page-title').textContent=title;document.getElementById('se7-page-description').textContent=description;atualizarCabecalhoMatriz(id);}
