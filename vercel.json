@@ -5,19 +5,19 @@
   "functions": {
     "api/se7.js": {
       "maxDuration": 60,
-      "includeFiles": "{server/**,assets/se7-exam-calendar.js,assets/se7-ingress-policy.js,assets/se7-tuition.js,assets/se7-class-format.js,assets/se7-manual-grades.js,assets/se7-payroll-policy.js,assets/se7-payroll-report-model.js,assets/se7-preceptor-contract-model.js}"
+      "includeFiles": "{server/**,assets/se7-exam-calendar.js,assets/se7-ingress-policy.js,assets/se7-tuition.js,assets/se7-class-format.js,assets/se7-manual-grades.js,assets/se7-payroll-policy.js,assets/se7-payroll-report-model.js,assets/se7-preceptor-contract-model.js,assets/se7-attendance-rules.js,assets/se7-ingress-policy.js}"
     },
     "api/whatsapp-webhook.js": {
       "maxDuration": 60,
-      "includeFiles": "{server/**,assets/se7-exam-calendar.js,assets/se7-ingress-policy.js,assets/se7-tuition.js,assets/se7-class-format.js,assets/se7-manual-grades.js,assets/se7-payroll-policy.js,assets/se7-payroll-report-model.js,assets/se7-preceptor-contract-model.js}"
+      "includeFiles": "{server/**,assets/se7-exam-calendar.js,assets/se7-ingress-policy.js,assets/se7-tuition.js,assets/se7-class-format.js,assets/se7-manual-grades.js,assets/se7-payroll-policy.js,assets/se7-payroll-report-model.js,assets/se7-preceptor-contract-model.js,assets/se7-attendance-rules.js,assets/se7-ingress-policy.js}"
     },
     "api/asaas-webhook.js": {
       "maxDuration": 60,
-      "includeFiles": "{server/**,assets/se7-exam-calendar.js,assets/se7-ingress-policy.js,assets/se7-tuition.js,assets/se7-class-format.js,assets/se7-manual-grades.js,assets/se7-payroll-policy.js,assets/se7-payroll-report-model.js,assets/se7-preceptor-contract-model.js}"
+      "includeFiles": "{server/**,assets/se7-exam-calendar.js,assets/se7-ingress-policy.js,assets/se7-tuition.js,assets/se7-class-format.js,assets/se7-manual-grades.js,assets/se7-payroll-policy.js,assets/se7-payroll-report-model.js,assets/se7-preceptor-contract-model.js,assets/se7-attendance-rules.js,assets/se7-ingress-policy.js}"
     },
     "api/eja-maintenance.js": {
       "maxDuration": 60,
-      "includeFiles": "{server/**,assets/se7-tuition.js,assets/se7-payroll-policy.js,assets/se7-payroll-report-model.js,assets/se7-preceptor-contract-model.js}"
+      "includeFiles": "{server/**,assets/se7-tuition.js,assets/se7-payroll-policy.js,assets/se7-payroll-report-model.js,assets/se7-preceptor-contract-model.js,assets/se7-attendance-rules.js,assets/se7-ingress-policy.js}"
     },
     "api/annual-statements.js": {
       "maxDuration": 60,
