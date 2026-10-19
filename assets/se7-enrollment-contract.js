@@ -1,6 +1,6 @@
 /* Contrato aprovado: composição pura compartilhada entre prévia e registro de emissão. */
 (()=>{
- const version='contrato-enfermagem-20261019-1';
+ const version='contrato-enfermagem-20261019-2';
  const str=v=>v===null||v===undefined?'':String(v).trim();
  const first=(...v)=>v.find(x=>str(x)!=='')??'';
  const esc=v=>str(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -8,13 +8,30 @@
  const supports=c=>/\benfermagem\b/.test(normalized(c?.name))&&['','tecnico','técnico'].includes(normalized(c?.nivel));
  const date=v=>/^\d{4}-\d{2}-\d{2}/.test(str(v))?str(v).slice(0,10).split('-').reverse().join('/'):str(v);
  const semester=v=>str(v).replace('.','/');
- const dateSemester=v=>/^\d{4}-\d{2}-\d{2}/.test(str(v))?str(v).slice(0,4)+'/'+(Number(str(v).slice(5,7))<=6?'1':'2'):'';
+ const semesterIndex=v=>{const m=/^(\d{4})[/.]([12])$/.exec(str(v));return m?Number(m[1])*2+Number(m[2])-1:null;};
+ const semesterLabel=n=>Math.floor(n/2)+'/'+(n%2+1);
+ const dateSemester=v=>{const d=str(v).slice(0,10);if(!/^\d{4}-\d{2}-\d{2}$/.test(d))return '';const parsed=new Date(d+'T12:00:00Z');return Number.isFinite(+parsed)&&parsed.toISOString().slice(0,10)===d?d.slice(0,4)+'/'+(Number(d.slice(5,7))<=6?'1':'2'):'';};
+ function entryInfo(s,g){
+  const plan=s.enrollmentContract||{},academic=s.academicEntry||{};
+  const blocks=[...(academic.planned||[]),...(academic.notTaken||[])].filter(b=>semesterIndex(b.semester)!==null);
+  const bases=blocks.map(b=>semesterIndex(b.semester));
+  const base=semesterIndex(g.entrySemester)??(bases.length?Math.min(...bases):null);
+  const explicit=first(plan.entrySemester,s.entrySemester,s.ingressSemester,academic.entrySemester);
+  const enrolled=str(first(s.enrollmentDate,academic.enrollmentDate)).slice(0,10);
+  const covering=blocks.filter(b=>b.firstDate&&b.lastDate&&b.firstDate<=enrolled&&enrolled<=b.lastDate);
+  const coveringSemesters=[...new Set(covering.map(b=>semesterIndex(b.semester)))];
+  let index=semesterIndex(explicit)??(coveringSemesters.length===1?coveringSemesters[0]:semesterIndex(dateSemester(enrolled)));
+  // Matrícula antecipada pertence ao primeiro semestre da turma, nunca à etapa zero.
+  if(index!==null&&base!==null&&index<base)index=base;
+  const savedStage=first(plan.entryStage,s.entryStage,s.ingressStage,academic.entryStage);
+  const stage=str(savedStage)?(/^\d+$/.test(str(savedStage))?str(savedStage)+'º semestre':str(savedStage)):(index!==null&&base!==null?String(index-base+1)+'º semestre':'');
+  return {semester:index!==null?semesterLabel(index):'',stage};
+ }
  const address=o=>[first(o.endereco,o.street,o.address,o.end),first(o.numero,o.number),first(o.bairro,o.neighborhood),first(o.cidade,o.city),first(o.estado,o.state),o.cep].filter(v=>str(v)).join(', ');
  const count=v=>Number.isInteger(Number(v))&&Number(v)>0?Number(v):null;
  function snapshot(s={},c={},g={},i={}){
   const plan=s.enrollmentContract||{}, finance={...c,...(g.financeConfig||{}),...(s.financeConfig||{}),...(plan.financeConfig||{})};
-  const entry=semester(first(plan.entrySemester,s.entrySemester,s.ingressSemester,s.academicEntry?.entrySemester,dateSemester(s.enrollmentDate)));
-  const entryStage=first(plan.entryStage,s.entryStage,s.ingressStage,s.academicEntry?.entryStage);
+  const ingress=entryInfo(s,g),entry=ingress.semester,entryStage=ingress.stage;
   const days=['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
   const amount=count(first(plan.formationInstallments,finance.qtdParcelas));
   let firstDue=first(plan.firstDueDate,s.firstDueDate);if(!firstDue&&/^\d{4}-\d{2}-\d{2}$/.test(s.enrollmentDate||'')){const d=new Date(s.enrollmentDate+'T12:00:00Z');if(Number.isFinite(+d)&&d.toISOString().slice(0,10)===s.enrollmentDate){d.setUTCDate(d.getUTCDate()+1);firstDue=d.toISOString().slice(0,10);}}

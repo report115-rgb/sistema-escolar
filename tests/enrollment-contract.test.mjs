@@ -20,3 +20,16 @@ test('emissão guarda versão e fotografia privada dos dados sem expor cadastro 
  const result=await issue(db,b,{role:'master',uid:'master'});const saved=data.get('se7AcademicDocuments/'+result.token);assert.equal(saved.contractVersion,M.version);assert.equal(saved.contractSnapshot.academic.classCode,'ENF-001');group.endTime='19:00';assert.equal(saved.contractSnapshot.academic.time,'08:00 às 17:00');group.endTime='17:00';
  db.collection=c=>({doc:id=>({get:async()=>({exists:true,data:()=>data.get(c+'/'+id)})})});const publicData=await verify(db,{token:result.token});assert(!('contractSnapshot' in publicData));assert(!('cpf' in publicData));
 });
+
+test('etapa de ingresso é calculada pela sequência da turma e pela data individual',()=>{
+ const g={...group,entrySemester:'2026/1'};
+ for(const [date,stage,semester]of [['2026-02-02','1º semestre','2026/1'],['2026-10-19','2º semestre','2026/2'],['2027-02-01','3º semestre','2027/1']]){const x=M.snapshot({enrollmentDate:date},course,g,{});assert.equal(x.academic.entryStage,stage);assert.equal(x.academic.studentEntrySemester,semester);}
+ assert.equal(M.snapshot({enrollmentDate:'2026-10-19'},course,{...g,entrySemester:'2025.2'},{}).academic.entryStage,'3º semestre');
+ assert.equal(M.snapshot({enrollmentDate:'2025-12-10'},course,g,{}).academic.entryStage,'1º semestre');
+ assert.equal(M.snapshot({enrollmentDate:'2026-02-31'},course,g,{}).academic.entryStage,'');
+});
+test('calendário acadêmico registrado fornece semestre letivo e início quando falta ingresso da turma',()=>{
+ const academicEntry={planned:[{semester:'2026/2',firstDate:'2026-06-20',lastDate:'2026-11-30'}],notTaken:[{semester:'2026/1',firstDate:'2026-01-10',lastDate:'2026-06-10'}]};
+ const x=M.snapshot({enrollmentDate:'2026-06-25',academicEntry},course,{},{});assert.equal(x.academic.studentEntrySemester,'2026/2');assert.equal(x.academic.entryStage,'2º semestre');
+ const y=M.snapshot({enrollmentDate:'2026-10-19',entryStage:2},course,group,{});assert.equal(y.academic.entryStage,'2º semestre');
+});
