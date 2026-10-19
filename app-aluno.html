@@ -232,6 +232,7 @@
 .student-finance-sections{display:grid;gap:10px}.student-finance-section{border:1px solid #cbddec;border-radius:14px;background:#fff;color:#17314c;overflow:hidden}.dark .student-finance-section{background:#0b213a;border-color:#254765;color:#e5f0fb}.student-finance-section summary{display:flex;align-items:center;justify-content:space-between;gap:12px;list-style:none;padding:15px 16px;font-size:13px;font-weight:700;cursor:pointer;transition:background-color .16s,color .16s}.student-finance-section summary::-webkit-details-marker{display:none}.student-finance-section summary span{font-size:20px;line-height:1;transition:transform .2s}.student-finance-section[open] summary span{transform:rotate(180deg)}.student-finance-section[open] summary{border-bottom:1px solid #7896b333}.student-finance-section summary:focus-visible{outline:2px solid #38bdf8;outline-offset:-3px}.student-finance-section-body{padding:14px 16px;min-height:34px}@media(hover:hover){.student-finance-section summary:hover{background:#0e2a49;color:#fff}}@media(prefers-reduced-motion:reduce){.student-finance-section summary,.student-finance-section summary span{transition:none}}
 </style>
 <link rel="stylesheet" href="/assets/se7-renegotiation.css?v=1">
+<link rel="stylesheet" href="/assets/se7-calendar-state.css?v=1"><script src="/assets/se7-calendar-state.js?v=1"></script>
 </head>
 <body class="se7-suite bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans antialiased h-screen overflow-hidden flex flex-col transition-colors duration-200">
 <div id="se7-welcome" hidden role="status" aria-live="polite" aria-atomic="true">
@@ -1923,7 +1924,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
                 let htmlItensDatas = '';
                 listaDatas.forEach(item => {
                     htmlItensDatas += `
-                        <div class="bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 flex justify-between items-center text-xs">
+                        <div ${SE7CalendarState.attributes(item.dataIso)} class="bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 flex justify-between items-center text-xs">
                             <div>
                                 <span class="font-bold text-blue-600 dark:text-blue-400 mr-2"><i class="fa-regular fa-calendar-check mr-1"></i> ${item.dataFormatada}</span>
                                 <span class="text-slate-700 dark:text-slate-200 font-semibold">${item.materia}</span>

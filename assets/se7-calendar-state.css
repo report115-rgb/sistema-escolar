@@ -1,0 +1,5 @@
+[data-se7-calendar-date]{transition:opacity .2s ease,filter .2s ease}
+[data-se7-calendar-date][data-se7-calendar-past="true"]{opacity:.68;filter:saturate(.45)}
+[data-se7-calendar-date][data-se7-calendar-past="true"]:focus-within{opacity:1;filter:none}
+@media(prefers-reduced-motion:reduce){[data-se7-calendar-date]{transition:none}}
+@media print{[data-se7-calendar-date]{opacity:1!important;filter:none!important}}

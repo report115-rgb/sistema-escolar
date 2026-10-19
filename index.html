@@ -172,7 +172,8 @@
 <script src="/assets/se7-attendance-proof.js?v=analise-3"></script>
 <script type="module" src="/assets/se7-attendance-rules.js?v=1"></script>
 <script src="/assets/se7-justification-review.js?v=zoom-e-carregamento-4"></script>
-<link rel="stylesheet" href="/assets/se7-navigation.css?v=internship-nav-2">
+<link rel="stylesheet" href="/assets/se7-navigation.css?v=nav-selection-3">
+<link rel="stylesheet" href="/assets/se7-calendar-state.css?v=1"><script src="/assets/se7-calendar-state.js?v=1"></script>
 </head>
 <body class="se7-suite se7-matriz bg-gray-100 dark:bg-slate-900 text-gray-800 dark:text-gray-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-300 pb-16">    
 
@@ -1881,7 +1882,7 @@ function renderizarCalendarioFlutuanteResultado() {
             if (parseInt(mesD) === m.num && anoD === anoStr) {
                 totalAulasEncontradas++;
                 htmlAulasDoMes += `
-                    <div class="bg-blue-50 dark:bg-slate-900 border-l-4 border-blue-600 p-2.5 rounded-lg text-xs space-y-1 mb-2 shadow-xs">
+                    <div ${SE7CalendarState.attributes(aula.dataIso)} class="bg-blue-50 dark:bg-slate-900 border-l-4 border-blue-600 p-2.5 rounded-lg text-xs space-y-1 mb-2 shadow-xs">
                         <div class="flex justify-between items-center font-bold text-blue-800 dark:text-blue-300">
                             <span><i class="fa-solid fa-calendar-day mr-1"></i> ${diaD}/${mesD}/${anoD}</span>
                             <span class="text-[10px] bg-blue-600 text-white px-1.5 py-0.2 rounded">Presencial</span>
@@ -2354,7 +2355,8 @@ async function removerUsuarioSistemaFirebase(id){if(!confirm('Desativar esse fun
     // Reseta o estado visual dos botões de subabas para o padrão inativo
     const todosBotoesSub = document.querySelectorAll('.subtab-button');
     todosBotoesSub.forEach(el => {
-        el.classList.remove("bg-blue-600", "text-white", "shadow");
+        el.classList.remove("active", "bg-blue-600", "text-white", "shadow");
+        el.setAttribute("aria-selected","false");
         el.classList.add("bg-gray-100", "dark:bg-slate-700", "text-gray-700", "dark:text-gray-300");
     });
     // ------------------------------------------------
@@ -2401,7 +2403,8 @@ async function removerUsuarioSistemaFirebase(id){if(!confirm('Desativar esse fun
     // 2. Remove o estilo ativo de todos os botões de subabas
     const todosBotoesSub = document.querySelectorAll('.subtab-button');
     todosBotoesSub.forEach(el => {
-        el.classList.remove('bg-blue-600', 'text-white', 'shadow');
+        el.classList.remove('active','bg-blue-600', 'text-white', 'shadow');
+        el.setAttribute('aria-selected','false');
         el.classList.add('bg-gray-100', 'dark:bg-slate-700', 'text-gray-700', 'dark:text-gray-300');
     });
 
@@ -2414,7 +2417,8 @@ async function removerUsuarioSistemaFirebase(id){if(!confirm('Desativar esse fun
     // 4. Ativa o estilo visual no botão clicado
     if (evt && evt.currentTarget) {
         evt.currentTarget.classList.remove('bg-gray-100', 'dark:bg-slate-700', 'text-gray-700', 'dark:text-gray-300');
-        evt.currentTarget.classList.add('bg-blue-600', 'text-white', 'shadow');
+        evt.currentTarget.classList.add('active','bg-blue-600', 'text-white', 'shadow');
+        evt.currentTarget.setAttribute('aria-selected','true');
     }
 
     if(subtabId==='subtab-avisos-portal')window.SE7Notices?.admin();
@@ -2432,13 +2436,15 @@ async function removerUsuarioSistemaFirebase(id){if(!confirm('Desativar esse fun
             if (parent) {
                 parent.querySelectorAll('.subsubtab-content').forEach(el => el.style.display = 'none');
                 parent.querySelectorAll('.subsubtab-button').forEach(el => {
-                    el.classList.remove('bg-blue-600', 'text-white', 'shadow');
+                    el.classList.remove('active','bg-blue-600', 'text-white', 'shadow');
+        el.setAttribute('aria-selected','false');
                     el.classList.add('bg-gray-200', 'dark:bg-slate-700', 'text-gray-700', 'dark:text-gray-300');
                 });
             }
             document.getElementById(subsubtabId).style.display = 'block';
             evt.currentTarget.classList.remove('bg-gray-200', 'dark:bg-slate-700', 'text-gray-700', 'dark:text-gray-300');
-            evt.currentTarget.classList.add('bg-blue-600', 'text-white', 'shadow');
+            evt.currentTarget.classList.add('active','bg-blue-600', 'text-white', 'shadow');
+        evt.currentTarget.setAttribute('aria-selected','true');
         }
 
         // FUNÇÃO PARA GERENCIAR AS SUB-SUBABAS DE DISCIPLINAS
@@ -2447,13 +2453,15 @@ async function removerUsuarioSistemaFirebase(id){if(!confirm('Desativar esse fun
             if (parent) {
                 parent.querySelectorAll('.subsubtab-subject-content').forEach(el => el.style.display = 'none');
                 parent.querySelectorAll('.subsubtab-subject-button').forEach(el => {
-                    el.classList.remove('bg-blue-600', 'text-white', 'shadow');
+                    el.classList.remove('active','bg-blue-600', 'text-white', 'shadow');
+        el.setAttribute('aria-selected','false');
                     el.classList.add('bg-gray-200', 'dark:bg-slate-700', 'text-gray-700', 'dark:text-gray-300');
                 });
             }
             document.getElementById(subsubtabId).style.display = 'block';
             evt.currentTarget.classList.remove('bg-gray-200', 'dark:bg-slate-700', 'text-gray-700', 'dark:text-gray-300');
-            evt.currentTarget.classList.add('bg-blue-600', 'text-white', 'shadow');
+            evt.currentTarget.classList.add('active','bg-blue-600', 'text-white', 'shadow');
+        evt.currentTarget.setAttribute('aria-selected','true');
         }
 
         // FUNÇÃO PARA GERENCIAR AS SUB-SUBABAS DE TURMAS
@@ -2462,13 +2470,15 @@ async function removerUsuarioSistemaFirebase(id){if(!confirm('Desativar esse fun
             if (parent) {
                 parent.querySelectorAll('.subsubtab-class-content').forEach(el => el.style.display = 'none');
                 parent.querySelectorAll('.subsubtab-class-button').forEach(el => {
-                    el.classList.remove('bg-blue-600', 'text-white', 'shadow');
+                    el.classList.remove('active','bg-blue-600', 'text-white', 'shadow');
+        el.setAttribute('aria-selected','false');
                     el.classList.add('bg-gray-200', 'dark:bg-slate-700', 'text-gray-700', 'dark:text-gray-300');
                 });
             }
             document.getElementById(subsubtabId).style.display = 'block';
             evt.currentTarget.classList.remove('bg-gray-200', 'dark:bg-slate-700', 'text-gray-700', 'dark:text-gray-300');
-            evt.currentTarget.classList.add('bg-blue-600', 'text-white', 'shadow');
+            evt.currentTarget.classList.add('active','bg-blue-600', 'text-white', 'shadow');
+        evt.currentTarget.setAttribute('aria-selected','true');
         }
 
         function openNewStudentModal() {
@@ -3167,7 +3177,7 @@ async function excluirColaborador(id) {
             tbody.innerHTML=filtered.length?'':'<tr><td colspan="5" class="p-3 text-center text-gray-400">Nenhum calendário cadastrado para esta seleção.</td></tr>';
             
             filtered.forEach(cal => {
-                const datasFormatadas = (cal.dates || []).map(d => d.split('-').reverse().join('/')+SE7LessonChange.badge(cal,d)).join(', ');
+                const datasFormatadas = (cal.dates || []).map(d => '<span '+SE7CalendarState.attributes(d)+' style="display:inline-block;margin:2px 6px 2px 0">'+d.split('-').reverse().join('/')+SE7LessonChange.badge(cal,d)+'</span>').join(' ');
                 tbody.innerHTML += `
                     <tr class="border-b border-gray-100 dark:border-slate-700">
                         <td class="p-2.5 font-semibold">${cal.className || '---'} <br><span class="text-[10px] text-gray-400">${cal.courseName || ''}</span></td>
@@ -3306,7 +3316,7 @@ async function excluirColaborador(id) {
                             const [anoD, mesD, diaD] = d.split('-');
                             if (parseInt(mesD) === m.num && anoD === anoStr) {
                                 htmlEventosDoMes += `
-                                    <div class="bg-blue-50 dark:bg-slate-900 border-l-4 border-blue-600 p-2 rounded text-xs space-y-1 mb-2 shadow-sm">
+                                    <div ${SE7CalendarState.attributes(d)} class="bg-blue-50 dark:bg-slate-900 border-l-4 border-blue-600 p-2 rounded text-xs space-y-1 mb-2 shadow-sm">
                                         <div class="flex justify-between items-center font-bold text-blue-800 dark:text-blue-300">
                                             <span>${diaD}/${mesD}/${anoD}</span>
                                             <span class="text-[10px] bg-blue-600 text-white px-1.5 py-0.2 rounded">${ev.className || ''}</span>
@@ -3375,7 +3385,7 @@ async function excluirColaborador(id) {
                             const [anoD, mesD, diaD] = d.split('-');
                             if (parseInt(mesD) === m.num && anoD === anoStr) {
                                 htmlEventosDoMes += `
-                                    <div class="bg-emerald-50 dark:bg-slate-900 border-l-4 border-emerald-600 p-2 rounded text-xs space-y-1 mb-2 shadow-sm">
+                                    <div ${SE7CalendarState.attributes(d)} class="bg-emerald-50 dark:bg-slate-900 border-l-4 border-emerald-600 p-2 rounded text-xs space-y-1 mb-2 shadow-sm">
                                         <div class="flex justify-between items-center font-bold text-emerald-800 dark:text-emerald-300">
                                             <span>${diaD}/${mesD}/${anoD}</span>
                                             <span class="text-[10px] bg-emerald-600 text-white px-1.5 py-0.2 rounded">${ev.eventType==='inaugural'?'Aula inaugural':ev.eventType==='holiday'?'Feriado':ev.eventType==='simulation'?'Simulado':ev.eventType==='exam'?'Prova':'Aula'}</span>
@@ -5307,10 +5317,10 @@ function escutarRegistrosPontoManual() {
 <script src="/assets/se7-staff-session.js?v=1"></script>
 <script src="/assets/se7-version.js"></script>
 <script src="/assets/se7-documents.js?v=drive-analise-2"></script>
-<link rel="stylesheet" href="/assets/se7-template-editor.css"><script src="/assets/se7-document-models.js"></script>
-<script src="/assets/se7-academic-documents.js?v=frequencia-2"></script><script src="/assets/se7-template-editor.js"></script>
+<link rel="stylesheet" href="/assets/se7-template-editor.css?v=document-polo-2"><script src="/assets/se7-document-models.js"></script>
+<script src="/assets/se7-academic-documents.js?v=frequencia-2"></script><script src="/assets/se7-template-editor.js?v=document-relief-3"></script>
 <link rel="stylesheet" href="/assets/se7-exams.css">
-<script src="/assets/vendor/pdf-lib.min.js"></script><script src="/assets/vendor/fontkit.umd.min.js"></script><script src="/assets/vendor/jsQR.js"></script><script src="/assets/vendor/qrcode.js"></script><script src="/assets/se7-exam-omr.js"></script><script src="/assets/se7-exam-pdf.js"></script><script src="/assets/se7-exam-calendar.js" type="module"></script><script src="/assets/se7-material-pdf.js?v=1"></script><script src="/assets/se7-materials.js?v=navegacao-5"></script><script src="/assets/se7-exams.js?v=apostilas-3"></script>
+<script src="/assets/vendor/pdf-lib.min.js"></script><script src="/assets/vendor/fontkit.umd.min.js"></script><script src="/assets/vendor/jsQR.js"></script><script src="/assets/vendor/qrcode.js"></script><script src="/assets/se7-exam-omr.js"></script><script src="/assets/se7-exam-pdf.js"></script><script src="/assets/se7-exam-calendar.js" type="module"></script><script src="/assets/se7-material-pdf.js?v=1"></script><script src="/assets/se7-materials.js?v=nav-selection-6"></script><script src="/assets/se7-exams.js?v=apostilas-3"></script>
 <link rel="stylesheet" href="/assets/se7-student-sheet.css?v=senha-laranja-2"><script src="/assets/se7-student-sheet.js?v=frequencia-regra-4"></script>
 <script src="/assets/se7-academic-entry.js"></script>
 <script src="/assets/se7-enrollment-auto.js"></script>
@@ -5324,7 +5334,7 @@ function escutarRegistrosPontoManual() {
 <script src="/assets/se7-account-menu.js?v=perfil-alternado-5"></script>
 <script src="/assets/se7-ambient.js"></script>
 <script src="/assets/se7-payroll-receipt.js"></script>
-<link rel="stylesheet" href="/assets/se7-annual-statements.css"><script src="/assets/se7-annual-statements.js"></script><script type="module" src="/assets/se7-workforce.js?v=2"></script>
+<link rel="stylesheet" href="/assets/se7-annual-statements.css"><script src="/assets/se7-annual-statements.js"></script><link rel="stylesheet" href="/assets/se7-workforce-sheet.css?v=1"><script type="module" src="/assets/se7-workforce.js?v=sheet-3"></script>
 <link rel="stylesheet" href="/assets/se7-internships.css?v=contracts-4"><script src="/assets/se7-internship-pdf.js?v=1"></script><script src="/assets/se7-preceptor-contract-pdf.js?v=1"></script><script src="/assets/se7-internships.js?v=internship-groups-5"></script>
 </body>
 </html>
