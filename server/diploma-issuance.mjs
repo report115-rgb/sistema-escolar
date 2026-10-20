@@ -23,20 +23,22 @@ function evaluate(c){
  let completedHours=0,totalHours=0;
  for(const sub of subjects){
   const name=sub.name||'Disciplina',hours=Number(sub.hours||0);if(!(hours>0)){issues.push(name+': carga horária não configurada.');continue;}totalHours+=hours;
-  const g=s.grades?.[sub.id]||{},n=grade(g.final),passed=Number.isFinite(n)&&n>=6&&n<=10||/^(aprovad[oa]|concluid[oa])$/.test(norm(g.status||g.situacao));
+  const g=s.grades?.[sub.id]||{},n=grade(g.final),isInternship=sub.teachingType==='internship';
+  const stageLinks=isInternship?c.assignments.filter(a=>String(a.subjectId)===String(sub.id)):[];
+  const approvals=isInternship?c.evaluations.filter(e=>stageLinks.some(a=>a.id===e.assignmentId)&&e.status==='final'&&norm(e.result)==='aprovado'&&Number(e.requiredMinutes)>0&&Number(e.validatedMinutes)>=Number(e.requiredMinutes)):[];
+  const passed=Number.isFinite(n)&&n>=6&&n<=10||/^(aprovad[oa]|concluid[oa])$/.test(norm(g.status||g.situacao))||isInternship&&approvals.length>0;
   if(!passed)issues.push(name+': nota final ou aprovação pendente.');
   else completedHours+=hours;
-  const rule=attendanceRule(s,name,calendar);
-  if(rule.failed)issues.push(name+': reprovação por frequência.');
-  if(rule.total===0)issues.push(name+': frequência sem calendário/aulas registradas para conferência.');
-  else if(rule.present+rule.absent===0)issues.push(name+': nenhum comparecimento ou falta registrado.');
-  if(sub.teachingType==='internship'){
-   if(!passed)issues.push(name+': estágio não aprovado.');
-   const stageLinks=c.assignments.filter(a=>String(a.subjectId)===String(sub.id));const approvals=c.evaluations.filter(e=>stageLinks.some(a=>a.id===e.assignmentId)&&e.status==='final'&&norm(e.result)==='aprovado'&&Number(e.requiredMinutes)>0&&Number(e.validatedMinutes)>=Number(e.requiredMinutes));
+  if(isInternship){
    if(!stageLinks.length)issues.push(name+': sem vínculo formal de estágio.');
    if(!approvals.length)issues.push(name+': avaliação final aprovada e carga horária integral ainda não comprovadas no módulo de estágios.');
+  }else{
+   const rule=attendanceRule(s,name,calendar),periods=rule.periods||[];
+   if(rule.failed||periods.some(p=>p.failed))issues.push(name+': reprovação por frequência.');
+   if(!periods.length||!periods.some(p=>p.total>0))issues.push(name+': frequência sem calendário/aulas registradas para conferência.');
+   else if(periods.some(p=>p.present+p.absent<p.total))issues.push(name+': faltam registros de presença ou falta em aulas previstas.');
   }
-  details.push({name,hours,grade:Number.isFinite(n)?n:null,frequency:rule.total?Math.round(100*rule.present/rule.total):null,passed});
+  details.push({name,hours,grade:Number.isFinite(n)?n:null,frequency:isInternship?null:(attendanceRule(s,name,calendar).total?Math.round(100*attendanceRule(s,name,calendar).present/attendanceRule(s,name,calendar).total):null),passed});
  }
  const planned=Number(course.hours||0);if(planned>0&&completedHours<planned)issues.push('Carga horária concluída menor que a prevista para o curso.');
  if(!planned)issues.push('Carga horária total do curso não configurada.');
