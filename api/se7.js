@@ -41,6 +41,7 @@ import * as polos from '../server/polos.mjs';
 import {scannerCors,nativeRequestAllowed} from '../server/scanner-access.mjs';
 import * as documentAuthorizations from '../server/academic-document-authorizations.mjs';
 import * as academicDocuments from '../server/academic-documents.mjs';
+import * as diplomaIssuance from '../server/diploma-issuance.mjs';
 import {saveCourse as saveCourseConfiguration} from '../server/course-configuration.mjs';
 import {saveClass} from '../server/class-registration.mjs';
 import * as academicIngress from '../server/academic-ingress.mjs';
@@ -196,6 +197,9 @@ async function dispatchOperation({auth,db},req,b,delegated=null){
  if(action==='transfer-authorization-list')return documentAuthorizations.list(db,b,u);
  if(action==='transfer-authorization-decide')return documentAuthorizations.decide(db,b,u);
  if(action==='academic-financial-statement')return academicDocuments.financialStatement(db,b,u);
+ if(action==='diploma-check')return diplomaIssuance.check(db,b,u);
+ if(action==='diploma-authorize')return diplomaIssuance.authorize(db,b,u,auth,authPassword);
+ if(action==='diploma-print-record')return diplomaIssuance.recordPrint(db,b,u);
  if(action==='academic-document-issue')return academicDocuments.issue(db,b,u);
  if(action==='academic-document-revoke')return academicDocuments.revoke(db,b,u);
  if(action==='course-save')return saveCourseConfiguration(db,b,u);
