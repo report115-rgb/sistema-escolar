@@ -42,7 +42,11 @@
    body='<p>Declaramos, conforme as datas informadas e conferidas pela Secretaria Acadêmica, que o(a) aluno(a) compareceu à instituição '+(dates.length===1?'na data de ':'nas datas de ')+'<strong>'+dates.map(d=>esc(dateText(d.date))+' às '+esc(d.time)).join('</strong>; <strong>')+'</strong>'+'.</p>';
  }else if(type==='declaracao_carga'){
    body='<p>Segundo as disciplinas concluídas e aprovadas, o(a) estudante cumpriu <strong>'+pct(hoursDone)+' horas</strong> de um total de <strong>'+pct(totalHours)+' horas</strong> previstas no curso.</p><p>Percentual concluído: <strong>'+(totalHours?pct(100*hoursDone/totalHours):'0')+'%</strong>.</p>'+table;
- }else if(type==='boletim'||type==='historico_completo')body=table;
+ }else if(type==='boletim'){
+   const note=value=>{if(value===null||value===undefined||String(value).trim()==='')return '—';const n=Number(String(value).replace(',','.'));return Number.isFinite(n)?n.toLocaleString('pt-BR',{maximumFractionDigits:2}):'—';};
+   body='<table class="academic-grid"><thead><tr><th>Disciplina</th><th>Carga horária</th><th>Nota de trabalho</th><th>Nota da prova</th></tr></thead><tbody>'+
+     (course.subjects||[]).map(subject=>{const g=student.grades?.[subject.id]||{};return '<tr><td>'+esc(subject.name||'Disciplina')+'</td><td>'+esc(subject.hours??'—')+'</td><td>'+esc(note(g.atividade))+'</td><td>'+esc(note(g.avaliacao))+'</td></tr>';}).join('')+'</tbody></table>';
+ }else if(type==='historico_completo')body=table;
  else {const texts={declaracao_vinculo:'Declaramos que o(a) estudante acima identificado(a) mantém o vínculo acadêmico indicado neste documento.',declaracao_estagio:'Este documento identifica o(a) estudante para procedimentos de estágio. Não substitui o termo de compromisso nem autoriza início de atividades.',ficha_estagio:'Ficha acadêmica de acompanhamento. Os registros específicos de estágio, supervisão, período e carga horária devem ser conferidos pela coordenação.',encaminhamento_estagio:'Encaminhamento acadêmico para avaliação da unidade concedente. A realização do estágio depende de autorização e documentação própria.'};body='<p class="academic-text">'+texts[type]+'</p>';}
  return D.shell('<h1>'+esc(labels[type])+'</h1>'+info+body+'<p class="academic-note">Secretaria Acadêmica — documento sujeito à verificação por QR Code.</p>');
 }
@@ -79,7 +83,7 @@
   {id:'transferencias',icon:'fa-arrow-right-arrow-left',label:'Transferências',note:'Guia e autorizações'},
   {id:'conclusao',icon:'fa-award',label:'Conclusão e Diplomas',note:'Documentos de conclusão'}
  ];
- const categoryTypes={declaracoes:['declaracao','declaracao_frequencia','declaracao_comparecimento','declaracao_vinculo','declaracao_carga'],historicos:['historico','boletim','historico_completo'],estagios:['declaracao_estagio','ficha_estagio','encaminhamento_estagio'],financeiro:['contrato','situacao_financeira'],transferencias:['transferencia'],conclusao:[]};
+ const categoryTypes={declaracoes:['declaracao','declaracao_frequencia','declaracao_comparecimento','declaracao_vinculo','declaracao_carga'],historicos:['boletim','historico_completo'],estagios:['declaracao_estagio','ficha_estagio','encaminhamento_estagio'],financeiro:['contrato','situacao_financeira'],transferencias:['transferencia'],conclusao:[]};
  const categoryDialog=el('dialog');categoryDialog.id='se7-document-category-dialog';categoryDialog.className='se7-doc-category-dialog';categoryDialog.setAttribute('aria-labelledby','se7-category-title');
  const categoryHeader=el('header'),categoryTitle=el('h2');categoryTitle.id='se7-category-title';categoryHeader.append(categoryTitle);button('Fechar',()=>categoryDialog.close(),categoryHeader);
  const categoryStudent=el('p');categoryStudent.className='se7-doc-category-student';categoryDialog.append(categoryHeader,categoryStudent,available);document.body.append(categoryDialog);
