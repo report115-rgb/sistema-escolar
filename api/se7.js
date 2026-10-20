@@ -198,6 +198,7 @@ async function dispatchOperation({auth,db},req,b,delegated=null){
  if(action==='transfer-authorization-decide')return documentAuthorizations.decide(db,b,u);
  if(action==='academic-financial-statement')return academicDocuments.financialStatement(db,b,u);
  if(action==='diploma-check')return diplomaIssuance.check(db,b,u);
+ if(action==='diploma-draft-save')return diplomaIssuance.saveDraft(db,b,u);
  if(action==='diploma-authorize')return diplomaIssuance.authorize(db,b,u,auth,authPassword);
  if(action==='diploma-print-record')return diplomaIssuance.recordPrint(db,b,u);
  if(action==='academic-document-issue')return academicDocuments.issue(db,b,u);
