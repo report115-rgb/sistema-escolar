@@ -58,7 +58,7 @@ export async function check(db,b,u){
  return {student:{id:c.student.id,name:c.student.fullname,code:c.student.code,course:c.course.name},result,reviewedAt:new Date().toISOString()};
 }
 export async function authorize(db,b,u,auth,reauth){
- if(u.role!=='master')fail(403,'Somente Master autoriza a emissão de diplomas.');
+ if(u.role!=='master'||!process.env.SE7_MASTER_UID||u.uid!==process.env.SE7_MASTER_UID)fail(403,'Somente a conta Master principal autoriza diplomas.');
  const password=b.password;if(typeof password!=='string'||password.length<8||password.length>128)fail(400,'Confirme sua senha.');
  const reg=registration(b);
  const c=await context(db,b.studentId,u),ev=evaluate(c);
@@ -78,9 +78,11 @@ export async function authorize(db,b,u,auth,reauth){
  });
 }
 export async function recordPrint(db,b,u){
- if(u.role!=='master')fail(403,'Somente Master registra a impressão.');
- const ref=db.collection('se7DiplomaRegistrations').doc(validId(b.studentId));
- return db.runTransaction(async tx=>{const snap=await tx.get(ref);if(!snap.exists||snap.data().state!=='authorized'||snap.data().authorizedBy!==u.uid||snap.data().token!==b.token)fail(409,'Diploma não autorizado para impressão.');
+ if(u.role!=='master'||!process.env.SE7_MASTER_UID||u.uid!==process.env.SE7_MASTER_UID)fail(403,'Somente a conta Master principal registra a emissão.');
+ const id=validId(b.studentId),c=await context(db,id,u),ev=evaluate(c);if(!ev.eligible)fail(409,'Os requisitos do aluno deixaram de estar atendidos. Faça nova conferência.');
+ const fp=dig({student:c.student,course:c.course,group:c.group,calendar:c.calendar,assignments:c.assignments,evaluations:c.evaluations});
+ const ref=db.collection('se7DiplomaRegistrations').doc(id);
+ return db.runTransaction(async tx=>{const [snap,student]=await Promise.all([tx.get(ref),tx.get(db.collection('students').doc(id))]);if(!student.exists||dig({...student.data(),id:student.id})!==dig(c.student))fail(409,'O cadastro mudou. Faça nova conferência.');if(!snap.exists||snap.data().fingerprint!==fp||snap.data().state!=='authorized'||snap.data().authorizedBy!==u.uid||snap.data().token!==b.token)fail(409,'Diploma não autorizado para impressão.');
   const printedAt=new Date().toISOString();tx.update(ref,{state:'issued',printedAt,printedBy:u.uid});return {ok:true,printedAt};
  });
 }
