@@ -55,19 +55,26 @@ function registration(b){
 export async function check(db,b,u){
  if(!['master','secretaria'].includes(u.role))fail(403,'Acesso restrito.');
  const c=await context(db,b.studentId,u),result=evaluate(c);
- return {student:{id:c.student.id,name:c.student.fullname,code:c.student.code,course:c.course.name},result,reviewedAt:new Date().toISOString()};
+ const draft=await db.collection('se7DiplomaDrafts').doc(c.student.id).get();return {student:{id:c.student.id,name:c.student.fullname,code:c.student.code,course:c.course.name},result,draft:draft.exists?draft.data().registration:null,reviewedAt:new Date().toISOString()};
+}
+export async function saveDraft(db,b,u){
+ if(!['master','secretaria'].includes(u.role))fail(403,'Acesso restrito à secretaria.');
+ const c=await context(db,b.studentId,u),reg=registration(b),now=new Date().toISOString();
+ const ref=db.collection('se7DiplomaDrafts').doc(c.student.id);
+ await ref.set({studentId:c.student.id,registration:reg,savedAt:now,savedBy:u.uid});
+ return {saved:true,registration:reg,savedAt:now};
 }
 export async function authorize(db,b,u,auth,reauth){
  if(u.role!=='master'||!process.env.SE7_MASTER_UID||u.uid!==process.env.SE7_MASTER_UID)fail(403,'Somente a conta Master principal autoriza diplomas.');
  const password=b.password;if(typeof password!=='string'||password.length<8||password.length>128)fail(400,'Confirme sua senha.');
  const reg=registration(b);
- const c=await context(db,b.studentId,u),ev=evaluate(c);
+ const c=await context(db,b.studentId,u),ev=evaluate(c);const draft=await db.collection('se7DiplomaDrafts').doc(c.student.id).get();if(!draft.exists||dig(draft.data().registration)!==dig(reg))fail(409,'Salve a escrituração antes de solicitar a autorização.');
  if(!ev.eligible)fail(409,'Pendências de conclusão: '+ev.issues.slice(0,5).join(' '));
  const account=await reauth(u.email,password);if(!account||account.localId!==u.uid)fail(403,'Senha do Master não confirmada.');
  const fingerprint=dig({student:c.student,course:c.course,group:c.group,calendar:c.calendar,assignments:c.assignments,evaluations:c.evaluations});
  const key=dig({id:c.student.id,reg,fingerprint}),ref=db.collection('se7DiplomaRegistrations').doc(c.student.id);
  return db.runTransaction(async tx=>{
-  const [studentSnap,old]=await Promise.all([tx.get(db.collection('students').doc(c.student.id)),tx.get(ref)]);
+  const [studentSnap,old,saved]=await Promise.all([tx.get(db.collection('students').doc(c.student.id)),tx.get(ref),tx.get(db.collection('se7DiplomaDrafts').doc(c.student.id))]);if(!saved.exists||dig(saved.data().registration)!==dig(reg))fail(409,'Escrituração alterada. Salve e confira novamente.');
   if(!studentSnap.exists||dig({...studentSnap.data(),id:studentSnap.id})!==dig(c.student))fail(409,'Dados do aluno mudaram. Faça nova conferência.');
   if(old.exists&&old.data().state==='issued')fail(409,'Diploma já emitido. Solicite procedimento de segunda via.');
   if(old.exists&&old.data().key===key&&old.data().state==='authorized')return {authorized:true,token:old.data().token,registration:old.data().registration,authorizedAt:old.data().authorizedAt};
