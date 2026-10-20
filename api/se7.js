@@ -195,6 +195,7 @@ async function dispatchOperation({auth,db},req,b,delegated=null){
  if(action==='transfer-authorization-request')return documentAuthorizations.request(db,b,u);
  if(action==='transfer-authorization-list')return documentAuthorizations.list(db,b,u);
  if(action==='transfer-authorization-decide')return documentAuthorizations.decide(db,b,u);
+ if(action==='academic-financial-statement')return academicDocuments.financialStatement(db,b,u);
  if(action==='academic-document-issue')return academicDocuments.issue(db,b,u);
  if(action==='academic-document-revoke')return academicDocuments.revoke(db,b,u);
  if(action==='course-save')return saveCourseConfiguration(db,b,u);
