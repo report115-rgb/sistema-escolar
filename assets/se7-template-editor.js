@@ -3,7 +3,7 @@
  const D=window.SE7AcademicDocuments,$=id=>document.getElementById(id),el=(tag,text)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;return n;};
  const extraLabels={"declaracao_frequencia":"Declaração de frequência","declaracao_comparecimento":"Declaração de comparecimento","declaracao_vinculo":"Declaração de vínculo acadêmico","declaracao_estagio":"Declaração para estágio","boletim":"Boletim de notas","historico_completo":"Histórico escolar completo","ficha_estagio":"Ficha de acompanhamento de estágio","encaminhamento_estagio":"Carta de encaminhamento para estágio","declaracao_carga":"Declaração de carga horária"};
  const fields={declaracao:'declaracaoHtmlTemplate',historico:'historicoHtmlTemplate',contrato:'contractTemplate'},labels={declaracao:'Declaração de matrícula',historico:'Histórico escolar simples',transferencia:'Guia de transferência',contrato:'Contrato'};
- Object.assign(labels,extraLabels,{situacao_financeira:'Demonstrativo de situação financeira'});
+ Object.assign(labels,extraLabels,{situacao_financeira:'Demonstrativo de situação financeira',diploma_tecnico_enfermagem:'Diploma de Técnico em Enfermagem'});
  const clean=s=>SE7Safe.document(String(s||'').replace(/\{\{tabela_disciplinas\}\}/g,'<tr data-se7-table-token="1"><td colspan="5">{{tabela_disciplinas}}</td></tr>'));
  const parse=s=>new DOMParser().parseFromString(clean(s),'text/html'),serialize=d=>'<!DOCTYPE html>\n'+d.documentElement.outerHTML.replace(/<tr\b[^>]*data-se7-table-token=["']1["'][^>]*>[\s\S]*?<\/tr>/g,'{{tabela_disciplinas}}');
  const master=()=>typeof masterAutenticadoMatriz==='function'&&masterAutenticadoMatriz(),staff=()=>['master','secretaria'].includes(JSON.parse(sessionStorage.getItem('usuario_logado')||'{}').perfil)||master();
@@ -90,7 +90,7 @@
   {id:'transferencias',icon:'fa-arrow-right-arrow-left',label:'Transferências',note:'Guia e autorizações'},
   {id:'conclusao',icon:'fa-award',label:'Conclusão e Diplomas',note:'Documentos de conclusão'}
  ];
- const categoryTypes={declaracoes:['declaracao','declaracao_frequencia','declaracao_comparecimento','declaracao_vinculo','declaracao_carga'],historicos:['boletim','historico_completo'],estagios:['declaracao_estagio','ficha_estagio','encaminhamento_estagio'],financeiro:['contrato','situacao_financeira'],transferencias:['transferencia'],conclusao:[]};
+ const categoryTypes={declaracoes:['declaracao','declaracao_frequencia','declaracao_comparecimento','declaracao_vinculo','declaracao_carga'],historicos:['boletim','historico_completo'],estagios:['declaracao_estagio','ficha_estagio','encaminhamento_estagio'],financeiro:['contrato','situacao_financeira'],transferencias:['transferencia'],conclusao:['diploma_tecnico_enfermagem']};
  const categoryDialog=el('dialog');categoryDialog.id='se7-document-category-dialog';categoryDialog.className='se7-doc-category-dialog';categoryDialog.setAttribute('aria-labelledby','se7-category-title');
  const categoryHeader=el('header'),categoryTitle=el('h2');categoryTitle.id='se7-category-title';categoryHeader.append(categoryTitle);button('Fechar',()=>categoryDialog.close(),categoryHeader);
  const categoryStudent=el('p');categoryStudent.className='se7-doc-category-student';categoryDialog.append(categoryHeader,categoryStudent,available);document.body.append(categoryDialog);
@@ -105,6 +105,13 @@
   if(!types.length){const note=el('p','Nenhum documento disponível nesta categoria para este aluno.');note.className='se7-doc-empty';available.append(note);return;}
   for(const type of types){
    const row=el('div');row.className='se7-document-item';row.append(el('strong',labels[type]));const actions=el('div');actions.className='se7-document-actions';
+   if(type==='diploma_tecnico_enfermagem'){
+     const group=classes.find(c=>c.id===student.classId);
+     button('Visualizar',()=>{if(selectedStudent()?.id===student.id)void window.SE7Diploma?.open('view',student,course,group);},actions);
+     const issue=button('Emitir',()=>{if(selectedStudent()?.id===student.id)void window.SE7Diploma?.open('issue',student,course,group);},actions);
+     issue.title='Exige conclusão acadêmica, documentação aprovada e senha do Master.';
+     row.append(actions);row.append(el('small','Emissão bloqueada até conferência completa e autorização do Master.'));available.append(row);continue;
+   }
    button('Ver documento',()=>{if(selectedStudent()?.id===student.id)void emit(type,student.id);},actions);
    const issue=button(type==='transferencia'&&!master()?'Solicitar / acompanhar autorização':'Emitir documento',()=>{if(selectedStudent()?.id===student.id)void emit(type,student.id);},actions),rule=D.eligibility(type,student,course);
    issue.disabled=!rule.allowed;issue.title=rule.reason;row.append(actions);if(!rule.allowed){const note=el('small',rule.reason);note.className='se7-document-rule';row.append(note);}available.append(row);
@@ -195,5 +202,8 @@
   let cached=attendanceCache.get(student.id);if(!cached||Date.now()-cached.at>60000){cached={at:Date.now(),promise:db.collection('attendance').where('studentId','==',student.id).get()};attendanceCache.set(student.id,cached);}let snap;try{snap=await cached.promise;}catch(e){attendanceCache.delete(student.id);throw e;}const records=new Map();for(const d of snap.docs){const r=d.data();if(r.data||r.date)records.set(r.data||r.date,r);}for(const [date,value]of Object.entries(student.attendance||{}))records.set(date,typeof value==='string'?{status:value}:value);
   const frequency=subject=>{let present=0,total=0;for(const [date,r]of records){if(!r)continue;const event=academicCalendars.find(c=>c.classId===student.classId&&(c.dates||[]).includes(date)&&!['holiday','exam','simulation'].includes(c.eventType));const name=r.subject||r.disciplina||event?.subject;if(name!==subject)continue;if(window.SE7AcademicPolicy&&!SE7AcademicPolicy.canAttend(student,date,academicCalendars,name))continue;const status=String(r.status||'').toLowerCase();if(['presente','present'].includes(status)){present++;total++;}else if(['falta','ausente','absent'].includes(status))total++;}return total?(100*present/total).toLocaleString('pt-BR',{maximumFractionDigits:1})+'%':'—';};
   frequency.records=[...records].map(([date,r])=>({date,subject:r.subject||r.disciplina||academicCalendars.find(c=>c.classId===student.classId&&(c.dates||[]).includes(date))?.subject||'',status:r.status||''})).filter(r=>r.date);return frequency;
- } window.SE7Templates={attendance,prepare,fill,basic,validatedHTML,renderPreview,source,refresh,emit,loadInbox};refresh();
+ } async function diplomaHistory(student,course,group){
+ const frequency=await attendance(student);
+ return prepare(additional('historico_completo',student,course,group,frequency),course,'historico_completo');
+} window.SE7Templates={attendance,prepare,fill,basic,validatedHTML,renderPreview,source,refresh,emit,loadInbox,diplomaHistory};refresh();
 })();
