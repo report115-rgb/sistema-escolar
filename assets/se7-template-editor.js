@@ -39,7 +39,7 @@
    body='<p>Declaramos que constam nos registros de frequência do(a) aluno(a) as seguintes presenças:</p><table class="academic-grid"><thead><tr><th>Data</th><th>Disciplina</th><th>Registro</th></tr></thead><tbody>'+attendanceRows.map(r=>'<tr><td>'+esc(dateText(r.date))+'</td><td>'+esc(r.subject||'Não identificada')+'</td><td>Presente</td></tr>').join('')+'</tbody></table><p><strong>Total de registros de presença: '+attendanceRows.length+'</strong></p>';
    if(!attendanceRows.length)body='<p>Não foram localizados registros de presença para esta matrícula. A emissão ficará indisponível até que haja registros.</p>';
  }else if(type==='declaracao_comparecimento'){
-   body='<p>Declaramos, conforme as datas informadas e conferidas pela Secretaria Acadêmica, que o(a) aluno(a) compareceu à instituição '+(dates.length===1?'na data de ':'nas datas de ')+'<strong>'+dates.map(d=>esc(dateText(d))).join('</strong>, <strong>')+'</strong>'+'.</p>';
+   body='<p>Declaramos, conforme as datas informadas e conferidas pela Secretaria Acadêmica, que o(a) aluno(a) compareceu à instituição '+(dates.length===1?'na data de ':'nas datas de ')+'<strong>'+dates.map(d=>esc(dateText(d.date))+' às '+esc(d.time)).join('</strong>; <strong>')+'</strong>'+'.</p>';
  }else if(type==='declaracao_carga'){
    body='<p>Segundo as disciplinas concluídas e aprovadas, o(a) estudante cumpriu <strong>'+pct(hoursDone)+' horas</strong> de um total de <strong>'+pct(totalHours)+' horas</strong> previstas no curso.</p><p>Percentual concluído: <strong>'+(totalHours?pct(100*hoursDone/totalHours):'0')+'%</strong>.</p>'+table;
  }else if(type==='boletim'||type==='historico_completo')body=table;
@@ -155,10 +155,27 @@
  if(type==='contrato'&&!source(course,type).trim()){display(prepare(D.shell('<h1>CONTRATO DE PRESTAÇÃO DE SERVIÇOS</h1>'+D.studentInfo(student,course,group)+'<p>Modelo de contrato pendente de configuração. As cláusulas serão preparadas pela instituição.</p>'),course,type),'Modelo de contrato ainda não configurado.',false);return;}if(type==='transferencia'){const destination=el('input'),observations=el('textarea');destination.placeholder='Instituição de destino (opcional)';destination.maxLength=200;destination.setAttribute('aria-label','Instituição de destino');observations.placeholder='Observações da transferência (opcional)';observations.maxLength=2000;observations.setAttribute('aria-label','Observações da transferência');destination.value=authorization?.destination||'';observations.value=authorization?.observation||'';options.append(destination,observations);const render=()=>{context.destination=destination.value.trim();context.observation=observations.value.trim();const r=D.transfer({student,course,group,institution:globalInstitutionData,frequency,destination:destination.value,observation:observations.value});display(prepare(r.html,course,type),r.missing.length?'Preencha a ementa das disciplinas cursadas antes de imprimir: '+r.missing.join(', '):'Confira a guia, o histórico e o ementário. A impressão não altera a matrícula do aluno.',!r.missing.length);};destination.oninput=observations.oninput=render;render();}else{
   let dates=[];
   if(type==='declaracao_comparecimento'){
-    const wrapper=el('div'),description=el('p','Informe as datas de comparecimento verificadas pela secretaria:'),list=el('div'),add=button('Adicionar data',()=>addDate(),wrapper);
-    options.append(wrapper);wrapper.prepend(description,list);
-    const addDate=()=>{if(list.children.length>=20)return;const line=el('div'),field=el('input'),remove=button('Remover',()=>{line.remove();updateDates();},line);field.type='date';field.setAttribute('aria-label','Data de comparecimento');field.max=new Date().toISOString().slice(0,10);field.oninput=updateDates;line.prepend(field);list.append(line);updateDates();};
-    function updateDates(){dates=[...list.querySelectorAll('input')].map(x=>x.value).filter(Boolean);const valid=dates.length>0&&new Set(dates).size===dates.length&&!dates.some(x=>x>new Date().toISOString().slice(0,10));const html=prepare(additional(type,student,course,group,frequency,dates),course,type);display(html,valid?'Confira as datas antes de emitir.':'Informe ao menos uma data válida, sem repetições e não futura.',valid);};
+    const wrapper=el('div'),description=el('p','Informe cada data e seu respectivo horário de comparecimento, conferidos pela secretaria:'),list=el('div');
+    options.append(wrapper);wrapper.append(description,list);
+    const add=button('Adicionar data e horário',()=>addDate(),wrapper);
+    const addDate=()=>{
+      if(list.children.length>=20)return;
+      const line=el('div'),field=el('input'),time=el('input');
+      line.style.cssText='display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0';
+      field.type='date';field.max=new Date().toISOString().slice(0,10);field.setAttribute('aria-label','Data de comparecimento');
+      time.type='time';time.setAttribute('aria-label','Horário de comparecimento');
+      field.oninput=time.oninput=updateDates;
+      line.append(field,time);
+      button('Remover',()=>{line.remove();updateDates();},line);
+      list.append(line);updateDates();
+    };
+    function updateDates(){
+      dates=[...list.children].map(line=>({date:line.querySelector('input[type="date"]').value,time:line.querySelector('input[type="time"]').value}));
+      const complete=dates.every(x=>x.date&&x.time);
+      const valid=dates.length>0&&complete&&dates.every(x=>/^\\d{4}-\\d{2}-\\d{2}$/.test(x.date)&&/^\\d{2}:\\d{2}$/.test(x.time)&&x.date<=new Date().toISOString().slice(0,10));
+      const html=prepare(additional(type,student,course,group,frequency,dates.filter(x=>x.date&&x.time)),course,type);
+      display(html,valid?'Confira as datas e os horários antes de emitir.':'Preencha a data e o horário de cada comparecimento. Datas futuras não são permitidas.',valid);
+    }
     addDate();
   }
   const model=extraLabels[type]?additional(type,student,course,group,frequency,dates):type==='contrato'&&window.SE7EnrollmentContract?.supports(course)?D.shell(SE7EnrollmentContract.render(student,course,group,globalInstitutionData||{})):source(course,type)||basic(type);if(type!=='declaracao_comparecimento')display(fill(prepare(model,course,type),student,course,group,frequency),'Confira o documento e use Imprimir / Salvar PDF. Os dados acadêmicos não são alterados.',type==='declaracao_frequencia'?frequency.records?.some(r=>/^(presente|present)$/i.test(String(r.status||''))):undefined);}}catch(e){if(request===generation)status.textContent='Não foi possível preparar o documento: '+e.message;}finally{previewBusy=false;}}
