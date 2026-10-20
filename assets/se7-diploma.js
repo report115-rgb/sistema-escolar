@@ -38,10 +38,31 @@
    if(mode==='view')return;
    const form=E('div');form.innerHTML='<h3>Escrituração institucional</h3><p>Preencha os campos que serão impressos no verso. A confirmação do Master é obrigatória.</p>';place.append(form);
    const fields=[['book','Registrado no livro','text'],['sheet','Folha nº','text'],['sistec','Número SISTEC','text'],['registrationDate','Data de registro','date'],['issueDate','Data de expedição','date'],['ceeAct','Ato / Processo Autorizativo CEE/PA','text']];
-   const values={};for(const [id,label,type]of fields){const wrap=E('div'),l=E('label',label),input=E('input');input.type=type;input.setAttribute('aria-label',label);input.maxLength=220;input.oninput=()=>{values[id]=input.value;frame.srcdoc=documentHTML(student,course,inst,values,'',true,historyHTML);};wrap.append(l,input);form.append(wrap);}
-   const pwWrap=E('div'),pwLab=E('label','Senha atual do Master'),password=E('input');password.type='password';password.autocomplete='current-password';pwWrap.append(pwLab,password);form.append(pwWrap);
-   const auth=E('button','Salvar, autorizar e emitir');auth.className='primary';auth.disabled=issues.length>0;form.append(auth);
-   auth.onclick=async()=>{if(!confirm('Conferiu todos os dados e deseja autorizar a emissão oficial deste diploma?'))return;const printWindow=window.open('','_blank','width=1050,height=840');if(!printWindow){status.textContent='Permita a abertura da janela de impressão e tente novamente.';return;}printWindow.opener=null;printWindow.document.write('<p>Confirmando emissão e autorização do Master...</p>');auth.disabled=true;status.textContent='Confirmando requisitos e autenticação do Master...';try{const result=await SE7.api('diploma-authorize',{studentId:student.id,...values,password:password.value});password.value='';if(!result.authorized)throw Error('Autorização não confirmada.');const printable=documentHTML(student,course,inst,result.registration,result.token,false,historyHTML.replace(/<div class="draft">PRÉVIA DE CONFERÊNCIA — SEM VALIDADE<\/div>/,'').replace(/PRÉVIA — o QR Code de validação será gerado ao emitir o documento\./g,''));const printRecord=await SE7.api('diploma-print-record',{studentId:student.id,token:result.token});if(!printRecord.ok)throw Error('O servidor não confirmou o registro de impressão.');printWindow.document.open();printWindow.document.write(printable);printWindow.document.close();status.textContent='Emissão registrada. Confira a janela de impressão.';printWindow.focus();const images=[...printWindow.document.images].map(img=>img.complete?Promise.resolve():new Promise(resolve=>{img.onload=img.onerror=resolve;setTimeout(resolve,9000);}));await Promise.all(images);if(!printWindow.closed)printWindow.print();}catch(e){if(!printWindow.closed)printWindow.close();status.textContent='A emissão não foi concluída: '+e.message;auth.disabled=false;}};
+   const values={},inputs={};let draftSaved=false;
+   for(const [id,label,type]of fields){
+     const wrap=E('div'),l=E('label',label),input=E('input');
+     input.type=type;input.setAttribute('aria-label',label);input.maxLength=220;inputs[id]=input;
+     input.value=check.draft?.[id]||'';values[id]=input.value;
+     input.oninput=()=>{values[id]=input.value;draftSaved=false;auth.disabled=true;pwWrap.hidden=true;frame.srcdoc=documentHTML(student,course,inst,values,'',true,historyHTML);};
+     wrap.append(l,input);form.append(wrap);
+   }
+   frame.srcdoc=documentHTML(student,course,inst,values,'',true,historyHTML);
+   const save=E('button','Salvar escrituração');save.className='primary';form.append(save);
+   const pwWrap=E('div'),pwLab=E('label','Senha atual do Master'),password=E('input');
+   pwWrap.hidden=true;password.type='password';password.autocomplete='current-password';pwWrap.append(pwLab,password);form.append(pwWrap);
+   const auth=E('button','Emitir diploma — autorização Master');auth.disabled=true;form.append(auth);
+   save.onclick=async()=>{
+     save.disabled=true;
+     status.textContent='Conferindo e salvando dados da escrituração...';
+     try{
+       const result=await SE7.api('diploma-draft-save',{studentId:student.id,...values});
+       if(!result.saved)throw Error('Salvamento não confirmado pelo servidor.');
+       draftSaved=true;pwWrap.hidden=false;auth.disabled=issues.length>0;
+       status.textContent=issues.length?'Escrituração salva. A emissão continua bloqueada pelas pendências acadêmicas.':'Escrituração salva no servidor. Para emitir, confirme a senha do Master.';
+     }catch(e){draftSaved=false;pwWrap.hidden=true;auth.disabled=true;status.textContent='Não foi possível salvar: '+e.message;}
+     finally{save.disabled=false;}
+   };
+   auth.onclick=async()=>{if(!draftSaved){status.textContent='Salve a escrituração antes de emitir.';return;}if(!confirm('Conferiu todos os dados e deseja autorizar a emissão oficial deste diploma?'))return;const printWindow=window.open('','_blank','width=1050,height=840');if(!printWindow){status.textContent='Permita a abertura da janela de impressão e tente novamente.';return;}printWindow.opener=null;printWindow.document.write('<p>Confirmando emissão e autorização do Master...</p>');auth.disabled=true;status.textContent='Confirmando requisitos e autenticação do Master...';try{const result=await SE7.api('diploma-authorize',{studentId:student.id,...values,password:password.value});password.value='';if(!result.authorized)throw Error('Autorização não confirmada.');const printable=documentHTML(student,course,inst,result.registration,result.token,false,historyHTML.replace(/<div class="draft">PRÉVIA DE CONFERÊNCIA — SEM VALIDADE<\/div>/,'').replace(/PRÉVIA — o QR Code de validação será gerado ao emitir o documento\./g,''));const printRecord=await SE7.api('diploma-print-record',{studentId:student.id,token:result.token});if(!printRecord.ok)throw Error('O servidor não confirmou o registro de impressão.');printWindow.document.open();printWindow.document.write(printable);printWindow.document.close();status.textContent='Emissão registrada. Confira a janela de impressão.';printWindow.focus();const images=[...printWindow.document.images].map(img=>img.complete?Promise.resolve():new Promise(resolve=>{img.onload=img.onerror=resolve;setTimeout(resolve,9000);}));await Promise.all(images);if(!printWindow.closed)printWindow.print();}catch(e){if(!printWindow.closed)printWindow.close();status.textContent='A emissão não foi concluída: '+e.message;auth.disabled=false;}};
  }
  window.SE7Diploma={open};
 })();
