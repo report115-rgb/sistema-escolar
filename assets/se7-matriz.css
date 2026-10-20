@@ -1,5 +1,5 @@
 /* Matriz desktop — proposta 1. Componentes de login e boas-vindas mantêm seus estilos próprios. */
-body.se7-matriz{--se7-sidebar-width:216px;--se7-bg:#f1f5fb;--se7-panel:#fff;--se7-panel-soft:#edf3fb;--se7-input:#fff;--se7-text:#172e4c;--se7-muted:#58718f;--se7-border:#cfdeee;--se7-table-head:#e7eff9;--se7-hover:#edf5ff;min-width:980px;background:var(--se7-bg);color:var(--se7-text);font-family:Arial,Helvetica,sans-serif;padding-bottom:48px;}
+body.se7-matriz{--se7-sidebar-width:216px;--se7-bg:#f1f5fb;--se7-panel:#fff;--se7-panel-soft:#edf3fb;--se7-input:#fff;--se7-text:#172e4c;--se7-muted:#58718f;--se7-border:#cfdeee;--se7-table-head:#e7eff9;--se7-hover:#edf5ff;min-width:0;background:var(--se7-bg);color:var(--se7-text);font-family:Arial,Helvetica,sans-serif;padding-bottom:48px;}
 html.dark body.se7-matriz{background:var(--se7-bg);color:var(--se7-text);--se7-bg:#06172d;--se7-panel:#0b213a;--se7-panel-soft:#081c33;--se7-input:#071b31;--se7-text:#edf5ff;--se7-muted:#a4bcd9;--se7-border:#193f64;--se7-table-head:#0b2744;--se7-hover:#102d4a;}
 .se7-matriz #se7-sidebar{position:fixed;inset:0 auto 38px 0;width:var(--se7-sidebar-width);z-index:60;display:flex;flex-direction:column;background:linear-gradient(160deg,#05172d,#031326);border-right:1px solid #153b5f;color:#c0d5ef;overflow:hidden;transition:width .2s ease;}
 .se7-matriz .se7-sidebar-brand{display:flex;align-items:center;justify-content:center;min-height:112px;padding:14px;flex:none;}
@@ -107,3 +107,7 @@ html:not(.dark) .se7-matriz #se7-workspace td button.bg-red-600{color:#ac2341;bo
 
 .se7-matriz #subsubtab-cadastrar-turma [hidden]{display:none!important;}
 
+
+/* SE7: impede rolagem horizontal da página principal sem afetar tabelas internas. */
+html:has(body.se7-matriz),body.se7-matriz{max-width:100%;overflow-x:clip;}
+.se7-matriz #se7-workspace{min-width:0;}
