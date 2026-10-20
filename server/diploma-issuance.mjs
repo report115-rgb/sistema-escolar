@@ -9,10 +9,10 @@ const grade=v=>v===null||v===undefined||String(v).trim()===''?NaN:Number(String(
 async function context(db,id,u){
  const sid=validId(id),ss=await db.collection('students').doc(sid).get();if(!ss.exists)fail(404,'Aluno não encontrado.');
  const student={...ss.data(),id:ss.id};assertStudent(u,student);
- const [cs,gs,cal]=await Promise.all([db.collection('courses').doc(validId(student.courseId)).get(),db.collection('classes').doc(validId(student.classId)).get(),db.collection('academicCalendars').where('classId','==',student.classId).get()]);
+ const [cs,gs,cal,links,evals]=await Promise.all([db.collection('courses').doc(validId(student.courseId)).get(),db.collection('classes').doc(validId(student.classId)).get(),db.collection('academicCalendars').where('classId','==',student.classId).get(),db.collection('se7InternshipAssignments').where('studentId','==',sid).limit(501).get(),db.collection('se7InternshipEvaluations').where('studentId','==',sid).limit(501).get()]);
  if(!cs.exists||!gs.exists||gs.data().courseId!==student.courseId)fail(409,'Curso ou turma inconsistentes.');
- if(cal.size>1500)fail(409,'Calendário acadêmico extenso. Solicite conferência manual.');
- return {student,course:cs.data(),group:gs.data(),calendar:cal.docs.map(x=>x.data())};
+ if(cal.size>1500||links.size>500||evals.size>500)fail(409,'Registros acadêmicos extensos. Solicite conferência manual.');
+ return {student,course:cs.data(),group:gs.data(),calendar:cal.docs.map(x=>x.data()),assignments:links.docs.map(d=>({...d.data(),id:d.id})),evaluations:evals.docs.map(d=>({...d.data(),id:d.id}))};
 }
 function evaluate(c){
  const {student:s,course,calendar}=c,issues=[],details=[];
@@ -32,8 +32,9 @@ function evaluate(c){
   else if(rule.present+rule.absent===0)issues.push(name+': nenhum comparecimento ou falta registrado.');
   if(sub.teachingType==='internship'){
    if(!passed)issues.push(name+': estágio não aprovado.');
-   const stage=s.internships?.[sub.id]||s.internshipProgress?.[sub.id];
-   if(!stage||!/^(concluid[oa]|aprovad[oa])$/.test(norm(stage.status||stage.situacao)))issues.push(name+': conclusão de estágio não comprovada no cadastro.');
+   const stageLinks=c.assignments.filter(a=>String(a.subjectId)===String(sub.id));const approvals=c.evaluations.filter(e=>stageLinks.some(a=>a.id===e.assignmentId)&&e.status==='final'&&norm(e.result)==='aprovado'&&Number(e.requiredMinutes)>0&&Number(e.validatedMinutes)>=Number(e.requiredMinutes));
+   if(!stageLinks.length)issues.push(name+': sem vínculo formal de estágio.');
+   if(!approvals.length)issues.push(name+': avaliação final aprovada e carga horária integral ainda não comprovadas no módulo de estágios.');
   }
   details.push({name,hours,grade:Number.isFinite(n)?n:null,frequency:rule.total?Math.round(100*rule.present/rule.total):null,passed});
  }
@@ -61,7 +62,7 @@ export async function authorize(db,b,u,auth,reauth){
  const c=await context(db,b.studentId,u),ev=evaluate(c);
  if(!ev.eligible)fail(409,'Pendências de conclusão: '+ev.issues.slice(0,5).join(' '));
  const account=await reauth(u.email,password);if(!account||account.localId!==u.uid)fail(403,'Senha do Master não confirmada.');
- const fingerprint=dig({student:c.student,course:c.course,group:c.group,calendar:c.calendar});
+ const fingerprint=dig({student:c.student,course:c.course,group:c.group,calendar:c.calendar,assignments:c.assignments,evaluations:c.evaluations});
  const key=dig({id:c.student.id,reg,fingerprint}),ref=db.collection('se7DiplomaRegistrations').doc(c.student.id);
  return db.runTransaction(async tx=>{
   const [studentSnap,old]=await Promise.all([tx.get(db.collection('students').doc(c.student.id)),tx.get(ref)]);
