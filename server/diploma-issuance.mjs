@@ -16,6 +16,7 @@ async function context(db,id,u){
 }
 function evaluate(c){
  const {student:s,course,calendar}=c,issues=[],details=[];
+ if(!norm(course.name).includes('tecnico')||!norm(course.name).includes('enfermagem'))issues.push('Este diploma é exclusivo do curso Técnico em Enfermagem.');
  if(!/^(concluid[oa]|formad[oa])$/.test(norm(s.status)))issues.push('A matrícula ainda não consta como concluída.');
  for(const key of docTypes){const d=s.documentos?.[key];if(norm(d?.status)!=='aprovado')issues.push('Documento obrigatório não aprovado: '+key.replaceAll('_',' ')+'.');}
  const subjects=course.subjects||[];
