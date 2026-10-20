@@ -30,8 +30,11 @@ function evaluate(c){
   if(!passed)issues.push(name+': nota final ou aprovação pendente.');
   else completedHours+=hours;
   if(isInternship){
-   if(!stageLinks.length)issues.push(name+': sem vínculo formal de estágio.');
-   if(!approvals.length)issues.push(name+': avaliação final aprovada e carga horária integral ainda não comprovadas no módulo de estágios.');
+   const activeLinks=stageLinks.filter(a=>a.active!==false);
+   if(!activeLinks.length)issues.push(name+': sem vínculo ativo de estágio.');
+   if(activeLinks.some(a=>!approvals.some(e=>e.assignmentId===a.id)))issues.push(name+': existe vínculo sem avaliação final aprovada e carga horária validada.');
+   const minutes=approvals.filter(e=>activeLinks.some(a=>a.id===e.assignmentId)).reduce((sum,e)=>sum+Number(e.validatedMinutes||0),0);
+   if(minutes<hours*60)issues.push(name+': carga horária de estágio validada inferior à carga curricular.');
   }else{
    const rule=attendanceRule(s,name,calendar),periods=rule.periods||[];
    if(rule.failed||periods.some(p=>p.failed))issues.push(name+': reprovação por frequência.');
