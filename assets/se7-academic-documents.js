@@ -22,7 +22,7 @@
   return {html:shell(guide+history+syllabi),missing:missing.map(r=>r.name),rows};
  }
  function eligibility(type,student={},course={}){
-  if(!['declaracao','historico','contrato','transferencia',...Object.keys({declaracao_frequencia:1,declaracao_comparecimento:1,declaracao_vinculo:1,declaracao_estagio:1,boletim:1,historico_completo:1,ficha_estagio:1,encaminhamento_estagio:1,declaracao_carga:1})].includes(type))return {allowed:false,reason:'Documento não disponível.'};
+  if(!['declaracao','historico','contrato','transferencia','situacao_financeira',...Object.keys({declaracao_frequencia:1,declaracao_comparecimento:1,declaracao_vinculo:1,declaracao_estagio:1,boletim:1,historico_completo:1,ficha_estagio:1,encaminhamento_estagio:1,declaracao_carga:1})].includes(type))return {allowed:false,reason:'Documento não disponível.'};
   if(type==='contrato'&&!window.SE7EnrollmentContract?.supports(course)&&!String(course.contractTemplate||'').trim())return {allowed:false,reason:'O modelo de contrato ainda será configurado.'};
   const status=String(student.status||'').trim();
   if(type==='transferencia')return /^(transferido|transferida)$/i.test(status)?{allowed:true,reason:''}:{allowed:false,reason:'A guia de transferência somente pode ser emitida com a matrícula no status Transferido.'};
