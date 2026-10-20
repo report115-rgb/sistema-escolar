@@ -107,8 +107,8 @@
    const row=el('div');row.className='se7-document-item';row.append(el('strong',labels[type]));const actions=el('div');actions.className='se7-document-actions';
    if(type==='diploma_tecnico_enfermagem'){
      const group=classes.find(c=>c.id===student.classId);
-     button('Visualizar',()=>{if(selectedStudent()?.id===student.id)void window.SE7Diploma?.open('view',student,course,group);},actions);
-     const issue=button('Emitir',()=>{if(selectedStudent()?.id===student.id)void window.SE7Diploma?.open('issue',student,course,group);},actions);
+     button('Visualizar',()=>{if(selectedStudent()?.id===student.id)void window.SE7Diploma?.open('view',student,course,group,globalInstitutionData||{});},actions);
+     const issue=button('Emitir',()=>{if(selectedStudent()?.id===student.id)void window.SE7Diploma?.open('issue',student,course,group,globalInstitutionData||{});},actions);
      issue.title='Exige conclusão acadêmica, documentação aprovada e senha do Master.';
      row.append(actions);row.append(el('small','Emissão bloqueada até conferência completa e autorização do Master.'));available.append(row);continue;
    }
