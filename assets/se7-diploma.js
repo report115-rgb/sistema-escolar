@@ -145,7 +145,7 @@
   edit.append(h('h3','Escrituração do verso do diploma'));
   edit.append(h('p','Preencha os dados, salve e depois solicite a emissão. A senha da conta Master é obrigatória para autorizar a impressão.'));
   const inputs=h('div');inputs.className='diploma-fields';edit.append(inputs);
-  const fields=[['book','Registrado no livro','text'],['sheet','Folha nº','text'],['recordNumber','Registro nº','text'],['sistec','Código de Autenticação SISTEC/MEC','text'],['registrationDate','Data de registro','date'],['issueDate','Data de expedição','date'],['ceeAct','Ato / Processo Autorizativo CEE/PA (instituição)','text']];
+  const fields=[['book','Registrado no livro','text'],['sheet','Folha nº','text'],['recordNumber','Registro nº','text'],['sistec','Código de Autenticação SISTEC/MEC','text'],['registrationDate','Data de registro','date'],['ceeAct','Ato / Processo Autorizativo CEE/PA (instituição)','text']];
   const actions=h('div');actions.className='diploma-actions';const save=h('button','Salvar escrituração');save.className='primary';const auth=h('button','Emitir diploma — autorização Master');auth.disabled=true;actions.append(save,auth);
   let saved=false;
   const passArea=h('div');passArea.hidden=true;const passLabel=h('label','Senha atual do Master');const password=h('input');password.type='password';password.autocomplete='current-password';passArea.append(passLabel,password);
