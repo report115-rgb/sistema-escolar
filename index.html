@@ -1372,7 +1372,7 @@
                         <input type="file" id="input-logo-file" accept="image/*" onchange="handleLogoUpload(event)" class="text-xs">
                         <div id="logo-preview" class="mt-2 w-32 h-16 border border-dashed rounded flex items-center justify-center text-xs text-gray-400 bg-gray-50 dark:bg-slate-900">Sem logo</div>
                         <button type="button" onclick="removeLogo()" class="mt-1 px-2 py-1 bg-red-600 text-white text-[10px] rounded">Remover Logo</button>
-                        <div class="mt-4"><label for="input-logo-size" class="block text-xs font-semibold mb-2">Tamanho da logomarca no cabeçalho: <output id="logo-size-value">100%</output></label><input id="input-logo-size" type="range" min="50" max="150" step="5" value="100" oninput="atualizarTamanhoLogoCabecalho(this.value)" class="w-full" aria-label="Ajustar tamanho da logomarca no cabeçalho"><div class="flex justify-between text-[10px] text-gray-500"><span>Menor</span><span>Maior</span></div></div>
+                        <div class="mt-4"><label for="input-logo-size" class="block text-xs font-semibold mb-2">Tamanho da logomarca no cabeçalho: <output id="logo-size-value">100%</output></label><input id="input-logo-size" type="range" min="50" max="150" step="5" value="100" oninput="atualizarTamanhoLogoCabecalho(this.value)" class="w-full" aria-label="Ajustar tamanho da logomarca no cabeçalho"><div class="flex justify-between text-[10px] text-gray-500"><span>Menor</span><span>Maior</span></div><label class="mt-3 flex items-center gap-2 text-xs font-semibold"><input type="checkbox" id="input-logo-outline" checked onchange="atualizarContornoLogoCabecalho(this.checked)" class="h-4 w-4"><span>Manter contorno branco</span></label><p class="text-[11px] text-gray-500">Desmarque para remover o contorno.</p></div>
                     </div>
                     <button onclick="salvarBrandingNaNuvem()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow">Salvar Configurações</button>
                 </div>
@@ -2607,6 +2607,7 @@ document.getElementById('input-inst-inep').value = data.inep || '';
                     currentLogoDataUrl = data.logo || "";
                     updateLogoPreview(currentLogoDataUrl);
                     atualizarTamanhoLogoCabecalho(data.headerLogoSize ?? 100);
+                    atualizarContornoLogoCabecalho(data.headerLogoOutline !== false);
                 }
             });
 
@@ -4417,6 +4418,13 @@ function renderFinanceStudentSelect(){const select=document.getElementById('fin-
     if(label)label.textContent=size+'%';
     if(img)img.style.setProperty('--se7-header-logo-scale',String(size/100));
 }
+function atualizarContornoLogoCabecalho(enabled) {
+    const keep=enabled!==false;
+    const toggle=document.getElementById('input-logo-outline');
+    const img=document.getElementById('header-logo-img');
+    if(toggle)toggle.checked=keep;
+    if(img)img.classList.toggle('se7-logo-sem-contorno',!keep);
+}
 function updateLogoPreview(src) {
     const box = document.getElementById('logo-preview');
     const header = document.getElementById('header-logo-img');
@@ -4457,7 +4465,8 @@ function updateLogoPreview(src) {
                 councilAuthorization: document.getElementById('input-inst-council-authorization').value.trim(),
                 inep: document.getElementById('input-inst-inep').value.trim(),
                 logo: currentLogoDataUrl,
-                headerLogoSize: Number(document.getElementById("input-logo-size").value) || 100
+                headerLogoSize: Number(document.getElementById("input-logo-size").value) || 100,
+                headerLogoOutline: document.getElementById("input-logo-outline").checked
             }, { merge: true });
             alert("Configurações salvas na nuvem!");
         }

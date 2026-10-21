@@ -115,3 +115,6 @@ html:has(body.se7-matriz),body.se7-matriz{max-width:100%;overflow-x:clip;}
 /* Identidade visual somente da logomarca do cabeçalho da Matriz: documentos não afetados. */
 .se7-matriz #header-logo-img{filter:drop-shadow(0 0 2px rgba(255,255,255,.98)) drop-shadow(0 0 6px rgba(255,255,255,.75));transform:scale(var(--se7-header-logo-scale,1));transform-origin:center center;transition:transform .18s ease;}
 @media(prefers-reduced-motion:reduce){.se7-matriz #header-logo-img{transition:none;}}
+
+/* Controle opcional do contorno: apenas a logomarca do cabeçalho da Matriz. */
+.se7-matriz #header-logo-img.se7-logo-sem-contorno{filter:none;}
