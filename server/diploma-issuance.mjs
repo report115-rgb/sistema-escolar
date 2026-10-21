@@ -50,7 +50,8 @@ function evaluate(c){
 }
 function registration(b){
  const val=(v,max=100)=>typeof v==='string'?v.trim().slice(0,max):'';
- const data={book:val(b.book,40),sheet:val(b.sheet,40),recordNumber:val(b.recordNumber,40),sistec:val(b.sistec,90),registrationDate:val(b.registrationDate,10),issueDate:val(b.issueDate,10),ceeAct:val(b.ceeAct,220)};
+ const issueDate=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Belem',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+ const data={book:val(b.book,40),sheet:val(b.sheet,40),recordNumber:val(b.recordNumber,40),sistec:val(b.sistec,90),registrationDate:val(b.registrationDate,10),issueDate,ceeAct:val(b.ceeAct,220)};
  if(!data.book||!data.sheet||!data.recordNumber||!data.sistec||!data.ceeAct)fail(400,'Preencha livro, folha, registro nº, SISTEC e ato/processo autorizativo CEE/PA.');
  for(const key of ['registrationDate','issueDate']){const v=data[key];if(!/^\d{4}-\d{2}-\d{2}$/.test(v)||Number.isNaN(Date.parse(v+'T12:00:00Z')))fail(400,'Data de registro ou expedição inválida.');}
  if(data.registrationDate>data.issueDate)fail(400,'A data de registro não pode ser posterior à expedição.');
