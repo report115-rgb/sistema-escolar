@@ -118,3 +118,32 @@ html:has(body.se7-matriz),body.se7-matriz{max-width:100%;overflow-x:clip;}
 
 /* Controle opcional do contorno: apenas a logomarca do cabeçalho da Matriz. */
 .se7-matriz #header-logo-img.se7-logo-sem-contorno{filter:none;}
+
+/* Tema Dia abrangente da Matriz; não altera login, aplicativos nem documentos. */
+html:not(.dark) body.se7-matriz #se7-sidebar{background:linear-gradient(165deg,#f8fbff,#e9f2fc);border-right-color:#c7d9ed;color:#24486c;}
+html:not(.dark) body.se7-matriz #main-tabs-nav .tab-button{color:#365a7b;}
+html:not(.dark) body.se7-matriz #main-tabs-nav .tab-button:hover{background:#dceaf9;color:#164773;}
+html:not(.dark) body.se7-matriz #main-tabs-nav .tab-button.active{background:linear-gradient(100deg,#d4e7fc,#e6f2ff);border-color:#a7cbee;color:#15508c;}
+html:not(.dark) body.se7-matriz .se7-sidebar-footer{color:#627e9e;border-top-color:#c7d9ed;}
+html:not(.dark) body.se7-matriz #se7-sidebar::-webkit-scrollbar-track,
+html:not(.dark) body.se7-matriz #main-tabs-nav::-webkit-scrollbar-track{background:#e9f2fc;}
+html:not(.dark) body.se7-matriz #app-header{background:#f8fbff;border-bottom-color:#c9ddef;color:#24486c;}
+html:not(.dark) body.se7-matriz #app-header::after{border-color:#7db5e955;}
+html:not(.dark) body.se7-matriz #se7-sidebar-toggle{color:#305d8b;}
+html:not(.dark) body.se7-matriz .se7-header-greeting,
+html:not(.dark) body.se7-matriz #header-user-display{color:#173e66;}
+html:not(.dark) body.se7-matriz .se7-header-caption,
+html:not(.dark) body.se7-matriz #header-live-clock{color:#607e9d;}
+html:not(.dark) body.se7-matriz .se7-role-badge{background:#e4f2ff;border-color:#b3d6f3;color:#165b96;}
+html:not(.dark) body.se7-matriz #app-header button[onclick="fazerLogout()"]{background:#f0f6fc;border-color:#bfd2e5;color:#24517d;}
+html:not(.dark) body.se7-matriz #app-header button[onclick="fazerLogout()"]:hover{background:#fce7e8;border-color:#e8a2ac;color:#a72d40;}
+html:not(.dark) body.se7-matriz .se7-primary-button{background:#087bf3;color:#fff;border-color:#168fff;}
+html:not(.dark) body.se7-matriz #se7-workspace :is(.subtab-button,.subsubtab-button,.subsubtab-subject-button).bg-blue-600,
+html:not(.dark) body.se7-matriz #se7-workspace .subtab-eja-btn.bg-emerald-600{background:#d7eafd;border-color:#9ac5f2;color:#17588f;}
+html:not(.dark) body.se7-matriz #se7-workspace td button.bg-blue-600{background:#e2f1ff;border:1px solid #a7d2f5;color:#14619b;}
+html:not(.dark) body.se7-matriz #se7-workspace td button.bg-red-600{background:#fff1f1;border:1px solid #f3b3bc;color:#ad3048;}
+html:not(.dark) body.se7-matriz #se7-workspace td button.bg-red-600:hover{background:#ffe1e6;}
+html:not(.dark) body.se7-matriz #se7-workspace :is(button.bg-blue-600,button.bg-indigo-600,button.bg-emerald-600,button.bg-green-600){color:#fff;}
+html.dark body.se7-matriz :is(#se7-workspace,.se7-modal-panel) :is(.bg-blue-600,.bg-indigo-600){background-color:#19477d;color:#e9f5ff;}
+html.dark body.se7-matriz :is(#se7-workspace,.se7-modal-panel) :is(.bg-emerald-600,.bg-green-600){background-color:#126653;color:#f0fff9;}
+html.dark body.se7-matriz :is(#se7-workspace,.se7-modal-panel) :is(.bg-red-600){background-color:#853047;color:#fff1f4;}
