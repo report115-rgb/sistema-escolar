@@ -39,7 +39,7 @@
  .se7-student-name{position:absolute;top:88mm;left:12mm;right:12mm;text-align:center;font-size:16pt;font-weight:750;margin:0}
  .se7-student-text{position:absolute;top:100mm;left:21mm;right:21mm;text-align:center;font-size:8.4pt;line-height:1.52;margin:0}
  .se7-hours{position:absolute;top:128mm;left:15mm;right:15mm;text-align:center;font-size:8.5pt;font-weight:750}
- .se7-front-copy{position:absolute;top:66mm;left:22mm;right:22mm;text-align:justify;font-size:10.5pt;line-height:1.6}.se7-front-copy p{margin:0;text-indent:7mm}.se7-front-copy p+p{margin-top:1.5em}.se7-inline-name{font-size:14pt;font-weight:800}.se7-date{position:absolute;top:140mm;right:27mm;text-align:right;font-size:9pt;font-weight:750}
+ .se7-front-copy{position:absolute;top:66mm;left:22mm;right:22mm;text-align:justify;font-size:10.5pt;line-height:1.6}.se7-front-copy p{margin:0;text-indent:7mm}.se7-front-copy p+p{margin-top:1.5em}.se7-inline-name{font-size:14pt;font-weight:800}.se7-front .se7-date{position:absolute;top:140mm;left:20mm;right:20mm;text-align:center;font-size:9pt;font-weight:750}
  .se7-signatures{position:absolute;left:19.4mm;right:19.4mm;bottom:26mm;display:flex;justify-content:space-between;gap:20mm}
  .se7-sign{width:42%;height:23.5mm;border:1px solid #a9bfd2;border-radius:3px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;text-align:center;padding:2mm 2mm 3mm;font-size:10pt;font-weight:750}
  .se7-sign small{font-size:6.8pt;color:#65798b;font-weight:400;margin-top:1.5mm}
