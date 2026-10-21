@@ -13,11 +13,11 @@
  const fmt=v=>!v?'':/^\d{4}-\d{2}-\d{2}$/.test(String(v))?v.split('-').reverse().join('/'):String(v);
  const field=(v,placeholder='________________')=>v===null||v===undefined||String(v).trim()===''||String(v)==='undefined'?placeholder:esc(v);
  const css=`
- @page{size:A4 landscape;margin:0}
+ @page se7-diploma-landscape{size:A4 landscape;margin:0}
  @page se7-history{size:A4 portrait;margin:0}
  *{box-sizing:border-box}
  html,body{margin:0;padding:0;background:#fff;color:#164272;font-family:Arial,Helvetica,sans-serif}
- .se7-sheet{width:297mm;height:210mm;position:relative;overflow:hidden;background:#fff;page-break-after:always;break-after:page;isolation:isolate}
+  .se7-sheet{page:se7-diploma-landscape;width:297mm;height:210mm;position:relative;overflow:hidden;background:#fff;page-break-after:always;break-after:page;isolation:isolate}
  .se7-sheet:last-child{page-break-after:auto;break-after:auto}
  .se7-relief{position:absolute;inset:0;pointer-events:none;z-index:0;overflow:hidden}
  .se7-relief svg{width:100%;height:100%;display:block}
@@ -58,8 +58,29 @@
  .se7-qr img,.se7-qr canvas{display:block;width:28mm;height:28mm;object-fit:contain;margin:auto}
  .se7-qr-placeholder{width:28mm;height:28mm;border:1px dashed #b4c9d7;display:flex;align-items:center;justify-content:center;margin:auto auto 2mm;font-size:7pt}
  .se7-back .se7-footer-note{bottom:17mm;left:90mm;right:19mm;text-align:right}
- .se7-history-frame{page:se7-history;width:210mm;min-height:297mm;height:auto;overflow:visible;position:relative;page-break-after:auto;break-after:auto;background:#fff}
- .se7-history-frame .se7-watermark{position:relative;left:auto;bottom:auto;margin:4mm}
+  .se7-history-frame{page:se7-history;width:210mm;max-width:210mm;min-height:297mm;height:auto;overflow:visible;position:relative;break-before:page;page-break-before:always;page-break-after:auto;break-after:auto;background:#fff;color:#1e293b;font:12px/1.6 Arial,Helvetica,sans-serif}
+ .se7-history-frame .academic-page{page:se7-history;width:210mm;min-height:297mm;padding:14mm;position:relative;background:#fff;break-before:auto;break-after:page;page-break-after:always;overflow:visible}
+ .se7-history-frame .academic-page:last-of-type{break-after:auto;page-break-after:auto}
+ .se7-history-frame h1{color:#1e3a8a;text-align:center;font-size:18px;line-height:1.3;margin:16px 0 18px}
+ .se7-history-frame h2{color:#1e3a8a;font-size:14px;margin:15px 0 10px}
+ .se7-history-frame .academic-student{background:#f1f5f9;border-radius:10px;padding:12px 15px;margin-bottom:18px;font-size:11px;line-height:1.7;break-inside:avoid}
+ .se7-history-frame .academic-grid{width:100%;border-collapse:collapse;font-size:10px;line-height:1.3;margin-top:14px}
+ .se7-history-frame .academic-grid th{background:#edf5fa;color:#123f75;text-align:left}
+ .se7-history-frame .academic-grid td,.se7-history-frame .academic-grid th{padding:5px;border:1px solid #cbd5e1;overflow-wrap:anywhere}
+ .se7-history-frame .academic-grid th:first-child{width:43%}
+ .se7-history-frame .academic-grid thead{display:table-header-group}
+ .se7-history-frame .academic-grid tr{break-inside:avoid}
+ .se7-history-frame .academic-note{font-size:10px;color:#475569;margin-top:12px}
+ .se7-history-frame .academic-syllabus{display:block;width:100%;max-width:none;margin-bottom:24px}
+ .se7-history-frame .academic-syllabus h2{break-after:avoid}
+ .se7-history-frame .academic-syllabus p{white-space:normal;overflow-wrap:anywhere}
+ .se7-history-frame .academic-syllabus .se7-syllabus-text{display:block;width:100%;text-align:justify;white-space:normal;line-height:1.6;hyphens:auto}
+ .se7-history-frame .academic-signatures{break-inside:avoid;margin-top:35px}
+ .se7-history-frame .se7-document-relief{position:absolute;inset:0;pointer-events:none;z-index:0}
+ .se7-history-frame .se7-document-relief svg{width:100%;height:100%}
+ .se7-history-frame .academic-page>*{position:relative;z-index:1}
+ .se7-history-frame .academic-page>.se7-document-relief{position:absolute;z-index:0}
+  .se7-history-frame .se7-watermark{position:relative;left:auto;bottom:auto;margin:4mm}
  @media screen{html,body{background:#e1e9ef;padding:12px}.se7-sheet,.se7-history-frame{margin:0 auto 18px;box-shadow:0 3px 13px #1e41602d}}
  @media print{html,body{padding:0!important;background:#fff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}.se7-sheet,.se7-history-frame{margin:0!important;box-shadow:none!important}}
  `;
