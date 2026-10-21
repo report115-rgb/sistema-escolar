@@ -126,13 +126,26 @@
   return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Diploma SE7</title><style>${css}</style></head><body>${front}${back}${historySection(history,preview)}</body></html>`;
  }
  function dialog(){let d=document.getElementById('se7-diploma-dialog');if(d)return d;d=h('dialog');d.id='se7-diploma-dialog';d.style.cssText='width:min(1000px,97vw);max-height:94vh;border:1px solid #bacfe0;border-radius:14px;padding:20px;background:#fff;color:#164272;overflow:auto;box-shadow:0 12px 45px #12375a55';document.body.append(d);return d;}
- if(!document.getElementById('se7-diploma-ui-style')){const st=h('style');st.id='se7-diploma-ui-style';st.textContent=`#se7-diploma-dialog label{display:block;font-size:13px;font-weight:650;margin:11px 0 5px}#se7-diploma-dialog input{width:100%;border:1px solid #b7c9da;padding:10px;border-radius:7px;outline-offset:2px;background:#fff!important;color:#152c44!important;caret-color:#152c44!important;color-scheme:light}#se7-diploma-dialog input::placeholder{color:#60748b!important}#se7-diploma-dialog button{border:1px solid #164d85;border-radius:7px;padding:9px 13px;cursor:pointer;background:white;color:#164272}#se7-diploma-dialog button.primary{background:#164d85;color:white}#se7-diploma-dialog button:disabled{opacity:.45;cursor:not-allowed}#se7-diploma-dialog details{border:1px solid #d7e2eb;border-radius:8px;margin:12px 0;padding:9px 12px}#se7-diploma-dialog summary{cursor:pointer;font-weight:650}#se7-diploma-dialog iframe{width:100%;height:min(52vh,520px);border:1px solid #b9cbd8;margin-top:9px;background:white}#se7-diploma-dialog .diploma-fields{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px}#se7-diploma-dialog .diploma-fields>div:last-child{grid-column:1/-1}#se7-diploma-dialog .diploma-actions{display:flex;flex-wrap:wrap;gap:9px;margin:12px 0}`;document.head.append(st);}
+ if(!document.getElementById('se7-diploma-ui-style')){const st=h('style');st.id='se7-diploma-ui-style';st.textContent=`#se7-diploma-dialog label{display:block;font-size:13px;font-weight:650;margin:11px 0 5px}#se7-diploma-dialog input{width:100%;border:1px solid #b7c9da;padding:10px;border-radius:7px;outline-offset:2px;background:#fff!important;color:#152c44!important;caret-color:#152c44!important;color-scheme:light}#se7-diploma-dialog input::placeholder{color:#60748b!important}#se7-diploma-dialog button{border:1px solid #164d85;border-radius:7px;padding:9px 13px;cursor:pointer;background:white;color:#164272}#se7-diploma-dialog button.primary{background:#164d85;color:white}#se7-diploma-dialog button:disabled{opacity:.45;cursor:not-allowed}#se7-diploma-dialog details{border:1px solid #d7e2eb;border-radius:8px;margin:12px 0;padding:9px 12px}#se7-diploma-dialog summary{cursor:pointer;font-weight:650}#se7-diploma-dialog iframe{width:100%;height:min(52vh,520px);border:1px solid #b9cbd8;margin-top:9px;background:white}#se7-diploma-dialog .se7-diploma-zoom{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px}#se7-diploma-dialog .se7-diploma-zoom span{min-width:45px;text-align:center;font-weight:700}#se7-diploma-dialog .se7-diploma-zoom button{min-width:36px} #se7-diploma-dialog .diploma-fields{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px}#se7-diploma-dialog .diploma-fields>div:last-child{grid-column:1/-1}#se7-diploma-dialog .diploma-actions{display:flex;flex-wrap:wrap;gap:9px;margin:12px 0}`;document.head.append(st);}
  async function open(mode,student,course,group,inst){
   const d=dialog();d.replaceChildren();
   const bar=h('div');bar.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:10px';bar.append(h('h2','Diploma de Técnico em Enfermagem — '+(student.fullname||'')));
   const close=h('button','Fechar');close.onclick=()=>d.close();bar.append(close);d.append(bar);
   const state=h('p','Conferindo requisitos de emissão...');state.setAttribute('role','status');d.append(state);
-  const preview=h('iframe');preview.title='Prévia do diploma e histórico escolar';d.append(preview);
+  const zoomBar=h('div');zoomBar.className='se7-diploma-zoom';zoomBar.setAttribute('aria-label','Zoom da prévia do diploma');
+  const minus=h('button','−'),plus=h('button','+'),reset=h('button','Restaurar 100%'),zoomLabel=h('span','100%');
+  minus.type=plus.type=reset.type='button';zoomLabel.setAttribute('aria-live','polite');
+  let zoom=100;
+  const preview=h('iframe');preview.title='Prévia do diploma e histórico escolar';
+  const applyZoom=()=>{
+    zoomLabel.textContent=zoom+'%';minus.disabled=zoom<=50;plus.disabled=zoom>=200;
+    try{const doc=preview.contentDocument;if(!doc||!doc.body)return;doc.documentElement.style.zoom=zoom+'%';}catch(_){}
+  };
+  minus.onclick=()=>{zoom=Math.max(50,zoom-10);applyZoom();};
+  plus.onclick=()=>{zoom=Math.min(200,zoom+10);applyZoom();};
+  reset.onclick=()=>{zoom=100;applyZoom();};
+  preview.addEventListener('load',applyZoom);
+  zoomBar.append(minus,zoomLabel,plus,reset);d.append(zoomBar,preview);
   const pending=h('details');pending.hidden=true;
   const summary=h('summary');pending.append(summary);const pendList=h('ul');pending.append(pendList);d.append(pending);
   const edit=h('section');d.append(edit);d.showModal();
