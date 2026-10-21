@@ -1372,6 +1372,7 @@
                         <input type="file" id="input-logo-file" accept="image/*" onchange="handleLogoUpload(event)" class="text-xs">
                         <div id="logo-preview" class="mt-2 w-32 h-16 border border-dashed rounded flex items-center justify-center text-xs text-gray-400 bg-gray-50 dark:bg-slate-900">Sem logo</div>
                         <button type="button" onclick="removeLogo()" class="mt-1 px-2 py-1 bg-red-600 text-white text-[10px] rounded">Remover Logo</button>
+                        <div class="mt-4"><label for="input-logo-size" class="block text-xs font-semibold mb-2">Tamanho da logomarca no cabeçalho: <output id="logo-size-value">100%</output></label><input id="input-logo-size" type="range" min="50" max="150" step="5" value="100" oninput="atualizarTamanhoLogoCabecalho(this.value)" class="w-full" aria-label="Ajustar tamanho da logomarca no cabeçalho"><div class="flex justify-between text-[10px] text-gray-500"><span>Menor</span><span>Maior</span></div></div>
                     </div>
                     <button onclick="salvarBrandingNaNuvem()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow">Salvar Configurações</button>
                 </div>
@@ -2605,6 +2606,7 @@ document.getElementById('input-inst-inep').value = data.inep || '';
                     if (data.loginDesc) document.getElementById('login-info-desc').textContent = data.loginDesc;
                     currentLogoDataUrl = data.logo || "";
                     updateLogoPreview(currentLogoDataUrl);
+                    atualizarTamanhoLogoCabecalho(data.headerLogoSize ?? 100);
                 }
             });
 
@@ -4405,7 +4407,17 @@ function renderFinanceStudentSelect(){const select=document.getElementById('fin-
 
         function removeLogo() { currentLogoDataUrl = ""; updateLogoPreview(""); }
 
-    function updateLogoPreview(src) {
+    function atualizarTamanhoLogoCabecalho(value) {
+    const n=Number(value);
+    const size=Number.isFinite(n)?Math.min(150,Math.max(50,n)):100;
+    const slider=document.getElementById('input-logo-size');
+    const label=document.getElementById('logo-size-value');
+    const img=document.getElementById('header-logo-img');
+    if(slider)slider.value=String(size);
+    if(label)label.textContent=size+'%';
+    if(img)img.style.setProperty('--se7-header-logo-scale',String(size/100));
+}
+function updateLogoPreview(src) {
     const box = document.getElementById('logo-preview');
     const header = document.getElementById('header-logo-img');
     const fallback = document.getElementById('header-logo-fallback');
@@ -4444,7 +4456,8 @@ function renderFinanceStudentSelect(){const select=document.getElementById('fin-
                 municipalRegistration: document.getElementById('input-inst-municipal-registration').value.trim(),
                 councilAuthorization: document.getElementById('input-inst-council-authorization').value.trim(),
                 inep: document.getElementById('input-inst-inep').value.trim(),
-                logo: currentLogoDataUrl
+                logo: currentLogoDataUrl,
+                headerLogoSize: Number(document.getElementById("input-logo-size").value) || 100
             }, { merge: true });
             alert("Configurações salvas na nuvem!");
         }

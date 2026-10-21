@@ -111,3 +111,7 @@ html:not(.dark) .se7-matriz #se7-workspace td button.bg-red-600{color:#ac2341;bo
 /* SE7: impede rolagem horizontal da página principal sem afetar tabelas internas. */
 html:has(body.se7-matriz),body.se7-matriz{max-width:100%;overflow-x:clip;}
 .se7-matriz #se7-workspace{min-width:0;}
+
+/* Identidade visual somente da logomarca do cabeçalho da Matriz: documentos não afetados. */
+.se7-matriz #header-logo-img{filter:drop-shadow(0 0 2px rgba(255,255,255,.98)) drop-shadow(0 0 6px rgba(255,255,255,.75));transform:scale(var(--se7-header-logo-scale,1));transform-origin:center center;transition:transform .18s ease;}
+@media(prefers-reduced-motion:reduce){.se7-matriz #header-logo-img{transition:none;}}
