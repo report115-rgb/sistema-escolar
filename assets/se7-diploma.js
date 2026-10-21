@@ -11,56 +11,59 @@
  const fmt=v=>!v?'':/^\d{4}-\d{2}-\d{2}$/.test(String(v))?v.split('-').reverse().join('/'):String(v);
  const field=(v,placeholder='________________')=>v===null||v===undefined||String(v).trim()===''||String(v)==='undefined'?placeholder:esc(v);
  const css=`
- @page {size:A4 landscape;margin:0}
- @page se7-history {size:A4 portrait;margin:0}
- *{box-sizing:border-box}html,body{margin:0;padding:0;color:#164272;font-family:Arial,'Helvetica Neue',sans-serif;background:#fff}
- .se7-sheet{position:relative;width:297mm;height:210mm;background:#fff;overflow:hidden;page-break-after:always;break-after:page;isolation:isolate}
- .se7-sheet:last-child{break-after:auto;page-break-after:auto}
- .se7-sheet .se7-relief{position:absolute;inset:0;pointer-events:none;z-index:0}
- .se7-sheet .se7-relief:before{content:'';position:absolute;top:-23%;left:22%;height:145%;width:14%;transform:rotate(-20deg);background:linear-gradient(90deg,transparent,#dfebf149 30%,#dfebf161 50%,#e2ecf340 80%,transparent)}
- .se7-sheet .se7-relief:after{content:'';position:absolute;top:0;bottom:0;right:5%;width:12%;background:repeating-linear-gradient(83deg,transparent 0px,transparent 12px,#e1edf466 13px,#e1edf466 14px,transparent 15px,transparent 21px);clip-path:polygon(80% 0,100% 0,100% 100%,94% 100%)}
- .se7-sheet>*:not(.se7-relief){position:relative;z-index:1}
- .se7-head{height:43mm;margin:0 15mm;border-bottom:1px solid #1a4d86;display:grid;grid-template-columns:32mm minmax(0,1fr) 32mm;gap:5mm;align-items:center}
- .se7-head-logo{display:block;width:29.5mm;height:17.3mm;object-fit:contain;justify-self:center}
- .se7-head-crest{display:block;width:17.1mm;height:21.4mm;object-fit:contain;justify-self:center}
- .se7-head-copy{text-align:center;line-height:1.28;min-width:0}
- .se7-head-copy .republic{font-size:12.1pt;letter-spacing:.18px;font-weight:750}
- .se7-head-copy .secretariat{font-size:10.3pt;margin-top:3.1mm}
- .se7-head-copy .school{font-size:13.1pt;font-weight:750;margin-top:3mm;overflow-wrap:anywhere}
- .se7-head-copy .details{font-size:8pt;margin-top:2mm;color:#65758a}
- .se7-title{text-align:center;margin:7mm 0 0;font-size:26pt;font-weight:760;letter-spacing:.45px}
- .se7-title-line{width:110mm;margin:3mm auto 1mm;border-top:1px solid #3675a4}
- .se7-subtitle{text-align:center;font-size:11.5pt;font-weight:750}
- .se7-intro{text-align:center;font-size:11pt;line-height:1.65;margin:5mm auto 0;width:88%}
- .se7-student-name{text-align:center;font-size:22pt;font-weight:760;margin:7mm 12mm 3mm;letter-spacing:.2px}
- .se7-student-text{text-align:center;font-size:10.8pt;line-height:1.8;width:87%;margin:0 auto}
- .se7-hours{text-align:center;font-size:11pt;font-weight:750;margin-top:10mm}
- .se7-date{text-align:right;font-size:10.4pt;font-weight:750;margin:9mm 19mm 0}
- .se7-signatures{position:absolute!important;bottom:23mm;left:21mm;right:21mm;display:flex;justify-content:space-between;align-items:flex-end;gap:12mm}
- .se7-sign{width:42%;height:27.5mm;border:1px solid #aec5d7;border-radius:3px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;text-align:center;padding:3mm 3mm 2.2mm;font-size:12pt;font-weight:750}
- .se7-sign small{font-size:7.2pt;font-weight:400;color:#617386;margin-top:1.5mm}
- .se7-footer-note{position:absolute!important;left:19mm;bottom:17mm;right:19mm;text-align:center;color:#6b7b89;font-size:7pt}
- .se7-watermark{position:absolute!important;bottom:9mm;left:16mm;color:#687c8d;font-size:8pt}
- .se7-back .se7-title{margin-top:7.4mm}
- .se7-back .se7-subtitle{margin-top:3mm}
- .se7-reg-grid{display:grid;grid-template-columns:60% 36%;gap:3%;margin:8mm 19mm 0}
- .se7-reg-card{border:1px solid #b1c7da;border-radius:3.5px;min-height:67mm;padding:6.4mm 5mm}
- .se7-reg-row{display:grid;grid-template-columns:48% 52%;gap:2mm;margin-bottom:4.1mm;align-items:start;font-size:10.1pt}
- .se7-reg-row b{font-weight:760}.se7-reg-row span{overflow-wrap:anywhere}
- .se7-reg-heading{text-align:center;font-size:10.8pt;font-weight:750;margin:0 0 6mm}
- .se7-reg-sign{border:1px solid #aec5d7;border-radius:3px;min-height:24mm;padding:4mm 3mm 2mm;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;font-size:11.5pt;font-weight:760;text-align:center}
- .se7-reg-sign small{font-size:7pt;color:#64778a;font-weight:400;margin-top:1.5mm}
- .se7-back .se7-reg-bottom{position:absolute!important;left:21mm;bottom:21mm;width:42%;height:31mm}
- .se7-back .se7-reg-bottom .se7-reg-sign{height:100%;min-height:0}
- .se7-qr{position:absolute!important;right:19mm;bottom:20mm;width:37mm;text-align:center;color:#164272;font-size:8pt;font-weight:700}
- .se7-qr img,.se7-qr canvas{width:32mm;height:32mm;object-fit:contain;display:block;margin:auto}
- .se7-qr-placeholder{width:32mm;height:32mm;border:1px dashed #b4c9d7;display:flex;align-items:center;justify-content:center;font-size:8pt;margin:auto auto 2mm}
- .se7-back .se7-watermark{bottom:9mm}
- .se7-history-frame{page:se7-history;width:210mm;min-height:297mm;height:auto;overflow:visible;position:relative;break-after:auto;page-break-after:auto}
- .se7-history-frame .se7-watermark{position:relative!important;left:auto;bottom:auto;margin:4mm;color:#687c8d}
- @media screen{html,body{background:#e1e9ef;padding:12px}.se7-sheet{margin:0 auto 18px;box-shadow:0 3px 13px #1e41602d}.se7-history-frame{background:white;margin:auto;box-shadow:0 3px 13px #1e41602d}}
- @media print{html,body{padding:0!important;background:white!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}.se7-sheet,.se7-history-frame{margin:0!important;box-shadow:none!important}}
+ @page{size:A4 landscape;margin:0}
+ @page se7-history{size:A4 portrait;margin:0}
+ *{box-sizing:border-box}
+ html,body{margin:0;padding:0;background:#fff;color:#164272;font-family:Arial,Helvetica,sans-serif}
+ .se7-sheet{width:297mm;height:210mm;position:relative;overflow:hidden;background:#fff;page-break-after:always;break-after:page;isolation:isolate}
+ .se7-sheet:last-child{page-break-after:auto;break-after:auto}
+ .se7-relief{position:absolute;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+ .se7-relief:before,.se7-relief:after{content:'';position:absolute;top:-20%;height:155%;width:12%;transform:rotate(-20deg);background:linear-gradient(90deg,transparent,#dfebf14b 28%,#e2ebf178 55%,transparent);border-radius:14px}
+ .se7-relief:before{left:22%}.se7-relief:after{left:56%}
+ .se7-sheet:before,.se7-sheet:after{content:'';position:absolute;width:5mm;top:20mm;bottom:12mm;border-radius:14mm;pointer-events:none}
+ .se7-sheet:before{left:3.5mm;border-left:1px solid #d4e1ec}.se7-sheet:after{right:3.5mm;border-right:1px solid #d4e1ec}
+ .se7-sheet>*:not(.se7-relief){z-index:1}
+ .se7-head{position:absolute;top:12.1mm;left:15.8mm;right:15.8mm;height:31mm;display:grid;grid-template-columns:50mm 1fr 50mm;align-items:start;gap:1mm;border-bottom:1px solid #b1c9db;padding-bottom:6mm}
+ .se7-head-logo{width:43mm;height:24mm;object-fit:contain;object-position:left top}
+ .se7-head-crest{width:32mm;height:24mm;object-fit:contain;object-position:right top;justify-self:end}
+ .se7-head-copy{text-align:center;line-height:1.2;min-width:0}
+ .se7-head-copy .republic{font-size:10.7pt;font-weight:750;white-space:nowrap}
+ .se7-head-copy .secretariat{font-size:9pt;margin-top:2mm}
+ .se7-head-copy .school{font-size:11.5pt;font-weight:750;margin-top:2.8mm}
+ .se7-head-copy .details{font-size:7.1pt;margin-top:2mm;color:#607488}
+ .se7-head-copy .details+.details{margin-top:1mm}
+ .se7-title{position:absolute;top:48.6mm;left:0;right:0;text-align:center;font-size:24pt;font-weight:750;letter-spacing:.1px;margin:0}
+ .se7-title-line{position:absolute;top:61.4mm;width:110mm;left:calc(50% - 55mm);border-top:1px solid #3675a4}
+ .se7-subtitle{position:absolute;top:64.2mm;left:0;right:0;text-align:center;font-size:10pt;font-weight:750}
+ .se7-intro{position:absolute;top:71.5mm;left:0;right:0;text-align:center;font-size:9.3pt;line-height:1.65;margin:0}
+ .se7-student-name{position:absolute;top:87mm;left:12mm;right:12mm;text-align:center;font-size:18pt;font-weight:750;margin:0}
+ .se7-student-text{position:absolute;top:98mm;left:25mm;right:25mm;text-align:center;font-size:9pt;line-height:1.8;margin:0}
+ .se7-hours{position:absolute;top:121.8mm;left:15mm;right:15mm;text-align:center;font-size:9.2pt;font-weight:750}
+ .se7-date{position:absolute;top:137.4mm;right:27mm;text-align:right;font-size:9pt;font-weight:750}
+ .se7-signatures{position:absolute;left:19.4mm;right:19.4mm;bottom:26mm;display:flex;justify-content:space-between;gap:20mm}
+ .se7-sign{width:42%;height:23.5mm;border:1px solid #a9bfd2;border-radius:3px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;text-align:center;padding:2mm 2mm 3mm;font-size:10pt;font-weight:750}
+ .se7-sign small{font-size:6.8pt;color:#65798b;font-weight:400;margin-top:1.5mm}
+ .se7-footer-note{position:absolute;bottom:17.7mm;left:0;right:0;text-align:center;font-size:7pt;color:#607488}
+ .se7-watermark{position:absolute;bottom:10mm;left:15.8mm;color:#607488;font-size:7.5pt}
+ .se7-reg-grid{position:absolute;top:75mm;left:20mm;right:20mm;display:grid;grid-template-columns:60% 37%;gap:3%}
+ .se7-reg-card{height:61mm;padding:6mm;border:1px solid #abc0d4;border-radius:3px}
+ .se7-reg-row{display:grid;grid-template-columns:43% 57%;gap:1mm;align-items:start;margin-bottom:4.8mm;font-size:9pt}
+ .se7-reg-row span{overflow-wrap:anywhere}
+ .se7-reg-heading{text-align:center;font-weight:750;font-size:9pt;margin:0 0 8mm}
+ .se7-reg-sign{height:24mm;border:1px solid #aac2d6;border-radius:3px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:2.4mm;font-size:9.5pt;font-weight:750}
+ .se7-reg-sign small{font-size:7pt;color:#637689;font-weight:400;margin-top:1mm}
+ .se7-reg-bottom{position:absolute;bottom:26mm;left:19.5mm;width:40%;height:30mm}
+ .se7-reg-bottom .se7-reg-sign{height:100%}
+ .se7-qr{position:absolute;bottom:21mm;right:19mm;width:37mm;text-align:center;font-size:8pt}
+ .se7-qr img,.se7-qr canvas{display:block;width:28mm;height:28mm;object-fit:contain;margin:auto}
+ .se7-qr-placeholder{width:28mm;height:28mm;border:1px dashed #b4c9d7;display:flex;align-items:center;justify-content:center;margin:auto auto 2mm;font-size:7pt}
+ .se7-back .se7-footer-note{bottom:17mm;left:90mm;right:19mm;text-align:right}
+ .se7-history-frame{page:se7-history;width:210mm;min-height:297mm;height:auto;overflow:visible;position:relative;page-break-after:auto;break-after:auto;background:#fff}
+ .se7-history-frame .se7-watermark{position:relative;left:auto;bottom:auto;margin:4mm}
+ @media screen{html,body{background:#e1e9ef;padding:12px}.se7-sheet,.se7-history-frame{margin:0 auto 18px;box-shadow:0 3px 13px #1e41602d}}
+ @media print{html,body{padding:0!important;background:#fff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}.se7-sheet,.se7-history-frame{margin:0!important;box-shadow:none!important}}
  `;
+
  function schoolHeader(inst){
   const name=inst?.razao||inst?.name||'INSTITUIÇÃO DE ENSINO';
   const address=inst?.endereco||inst?.end||'';
@@ -86,9 +89,9 @@
   const origin=student.birthplace||student.naturalidade||student.city||student.cidade||'—';
   const courseName=esc(course.name||'Técnico em Enfermagem');
   const hours=esc(course.hours||course.cargaHoraria||'—');
-  const mark=preview?'<div class="se7-watermark">PRÉVIA PARA CONFERÊNCIA — SEM VALIDADE</div>':'';
-  const front=`<section class="se7-sheet se7-front"><div class="se7-relief"></div>${head}<h1 class="se7-title">DIPLOMA</h1><div class="se7-title-line"></div><div class="se7-subtitle">HABILITAÇÃO PROFISSIONAL TÉCNICA DE NÍVEL MÉDIO</div><p class="se7-intro">A instituição, no exercício de suas atribuições e de acordo com as normas aplicáveis,<br>confere o presente Diploma de Técnico em Enfermagem a</p><div class="se7-student-name">${name}</div><p class="se7-student-text">Nascido(a) em ${esc(fmt(birth))}, em ${esc(origin)}, por ter concluído integralmente o Curso ${courseName},<br>do Eixo Tecnológico Ambiente e Saúde, conforme matriz curricular e requisitos acadêmicos da instituição.</p><div class="se7-hours">Carga horária: ${hours} h</div><div class="se7-date">Vigia / PA, ${esc(fmt(reg?.issueDate||new Date().toISOString().slice(0,10)))}</div><div class="se7-signatures"><div class="se7-sign">Direção da instituição<small>Assinatura digital / conferência</small></div><div class="se7-sign">Concluinte<small>Assinatura / identificação</small></div></div><div class="se7-footer-note">Logomarca SE7 à esquerda • Símbolo do Pará à direita • Assinaturas oficiais após autorização</div>${mark}</section>`;
-  const back=`<section class="se7-sheet se7-back"><div class="se7-relief"></div>${head}<h1 class="se7-title">REGISTRO DO DIPLOMA</h1><div class="se7-title-line"></div><div class="se7-subtitle">ESCRITURAÇÃO INSTITUCIONAL</div><div class="se7-reg-grid"><div class="se7-reg-card"><div class="se7-reg-row"><b>Registrado no livro:</b><span>${field(reg?.book)}</span></div><div class="se7-reg-row"><b>Folha nº:</b><span>${field(reg?.sheet)}</span></div><div class="se7-reg-row"><b>Número SISTEC:</b><span>${field(reg?.sistec)}</span></div><div class="se7-reg-row"><b>Data de registro:</b><span>${field(fmt(reg?.registrationDate))}</span></div><div class="se7-reg-row"><b>Data de expedição:</b><span>${field(fmt(reg?.issueDate))}</span></div><div class="se7-reg-row"><b>Ato / Processo Autorizativo CEE/PA:</b><span>${field(reg?.ceeAct)}</span></div></div><div class="se7-reg-card"><h2 class="se7-reg-heading">RESPONSÁVEIS PELO REGISTRO</h2><div class="se7-reg-sign">Secretaria Acadêmica<small>Assinatura digital / identificação</small></div></div></div><div class="se7-reg-bottom"><div class="se7-reg-sign">Direção / Responsável autorizado<small>Assinatura digital / identificação</small></div></div><div class="se7-qr">${qrHTML(token)}<div>${preview?'QR DEMONSTRATIVO':'VALIDAÇÃO DIGITAL'}</div></div>${mark}</section>`;
+  const mark=preview?'<div class="se7-watermark">DEMONSTRAÇÃO — PRÉVIA PARA CONFERÊNCIA — SEM VALIDADE</div>':'';
+  const front=`<section class="se7-sheet se7-front"><div class="se7-relief"></div>${head}<h1 class="se7-title">DIPLOMA</h1><div class="se7-title-line"></div><div class="se7-subtitle">HABILITAÇÃO PROFISSIONAL TÉCNICA DE NÍVEL MÉDIO</div><p class="se7-intro">A instituição, no exercício de suas atribuições e de acordo com as normas aplicáveis,<br>confere o presente Diploma de Técnico em Enfermagem a</p><div class="se7-student-name">${name}</div><p class="se7-student-text">Nascido(a) em ${esc(fmt(birth))}, em ${esc(origin)}, por ter concluído integralmente o Curso ${courseName},<br>do Eixo Tecnológico Ambiente e Saúde, conforme matriz curricular e requisitos acadêmicos da instituição.</p><div class="se7-hours">Carga horária: ${hours} h</div><div class="se7-date">Vigia / PA, ${esc(fmt(reg?.issueDate||new Date().toISOString().slice(0,10)))}</div><div class="se7-signatures"><div class="se7-sign">Direção da instituição<small>Assinatura digital / conferência</small></div><div class="se7-sign">Concluinte<small>Assinatura / identificação</small></div></div><div class="se7-footer-note">Logomarca SE7 à esquerda • Brasão do Pará à direita • Assinaturas oficiais após autorização</div>${mark}</section>`;
+  const back=`<section class="se7-sheet se7-back"><div class="se7-relief"></div>${head}<h1 class="se7-title">REGISTRO DO DIPLOMA</h1><div class="se7-title-line"></div><div class="se7-subtitle">ESCRITURAÇÃO INSTITUCIONAL</div><div class="se7-reg-grid"><div class="se7-reg-card"><div class="se7-reg-row"><b>Registrado no livro:</b><span>${field(reg?.book)}</span></div><div class="se7-reg-row"><b>Folha nº:</b><span>${field(reg?.sheet)}</span></div><div class="se7-reg-row"><b>Número SISTEC:</b><span>${field(reg?.sistec)}</span></div><div class="se7-reg-row"><b>Data de registro:</b><span>${field(fmt(reg?.registrationDate))}</span></div><div class="se7-reg-row"><b>Data de expedição:</b><span>${field(fmt(reg?.issueDate))}</span></div><div class="se7-reg-row"><b>Ato / Processo Autorizativo CEE/PA:</b><span>${field(reg?.ceeAct)}</span></div></div><div class="se7-reg-card"><h2 class="se7-reg-heading">RESPONSÁVEIS PELO REGISTRO</h2><div class="se7-reg-sign">Secretaria Acadêmica<small>Assinatura digital / identificação</small></div></div></div><div class="se7-reg-bottom"><div class="se7-reg-sign">Direção / Responsável autorizado<small>Assinatura digital / identificação</small></div></div><div class="se7-qr">${qrHTML(token)}<div>${preview?'QR DEMONSTRATIVO':'VALIDAÇÃO DIGITAL'}</div></div><div class="se7-footer-note">Registro oficial, SISTEC e assinaturas condicionados à conferência e autorização</div>${mark}</section>`;
   return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Diploma SE7</title><style>${css}</style></head><body>${front}${back}${historySection(history,preview)}</body></html>`;
  }
  function dialog(){let d=document.getElementById('se7-diploma-dialog');if(d)return d;d=h('dialog');d.id='se7-diploma-dialog';d.style.cssText='width:min(1000px,97vw);max-height:94vh;border:1px solid #bacfe0;border-radius:14px;padding:20px;background:#fff;color:#164272;overflow:auto;box-shadow:0 12px 45px #12375a55';document.body.append(d);return d;}
