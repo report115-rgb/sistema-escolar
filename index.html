@@ -1491,6 +1491,7 @@
                         </select>
                     </div>
                 </div>
+                <div class="mb-4"><label class="block text-xs font-semibold mb-1" for="nacionalidadeAluno">Nacionalidade</label><input type="text" id="nacionalidadeAluno" placeholder="Ex.: Brasileira" autocomplete="off" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-semibold mb-1">WhatsApp</label>
@@ -3524,7 +3525,8 @@ function carregarDatasCalendarioParaFrequencia(){const classId=document.getEleme
     const studentData = {
         ...SE7Polos.studentValue(),fullname, 
         dob: document.getElementById('dataNascimento').value,
-        sexo: document.getElementById('sexoAluno').value, 
+        sexo: document.getElementById('sexoAluno').value,
+        nacionalidade: document.getElementById('nacionalidadeAluno').value.trim(), 
         whatsapp: document.getElementById('whatsappAluno').value.trim(),
         email, 
         rg: document.getElementById('rgAluno').value.trim(), 
@@ -3637,6 +3639,7 @@ function carregarDatasCalendarioParaFrequencia(){const classId=document.getEleme
     document.getElementById('nomeAluno').value = aluno.fullname || '';
     document.getElementById('dataNascimento').value = aluno.dob || '';
     document.getElementById('sexoAluno').value = aluno.sexo || '';
+    document.getElementById('nacionalidadeAluno').value = aluno.nacionalidade || aluno.nationality || '';
     document.getElementById('whatsappAluno').value = aluno.whatsapp || '';
     document.getElementById('whatsapp-opt-in-aluno').checked = aluno.whatsappOptIn === true;
     document.getElementById('emailAluno').value = aluno.email || '';
