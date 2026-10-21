@@ -3,12 +3,13 @@
  */
 (()=>{
  'use strict';
+ // Logomarca fixa do diploma aprovado. NÃO consultar inst.logo, configuração da Instituição ou skin global.
  const LOGO='/assets/se7-diploma-approved-logo.png';
  const BRASAO='/assets/se7-diploma-para-emblem.png';
  const h=(tag,text)=>{const x=document.createElement(tag);if(text!==undefined)x.textContent=text;return x;};
  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&quot;'}[c]));
- const fmt=v=>/^\d{4}-\d{2}-\d{2}$/.test(String(v||''))?v.split('-').reverse().join('/'):String(v||'');
- const field=(v,placeholder='________________')=>v===null||v===undefined||String(v).trim()===''?placeholder:esc(v);
+ const fmt=v=>!v?'':/^\d{4}-\d{2}-\d{2}$/.test(String(v))?v.split('-').reverse().join('/'):String(v);
+ const field=(v,placeholder='________________')=>v===null||v===undefined||String(v).trim()===''||String(v)==='undefined'?placeholder:esc(v);
  const css=`
  @page {size:A4 landscape;margin:0}
  @page se7-history {size:A4 portrait;margin:0}
@@ -106,7 +107,7 @@
   state.textContent=issues.length?'Emissão bloqueada — '+issues.length+' pendência(s). Consulte em “Pendências”.':'Conferência acadêmica concluída: sem pendências identificadas.';
   if(issues.length){summary.textContent='Pendências ('+issues.length+') ▾';for(const msg of issues)pendList.append(h('li',msg));pending.hidden=false;}
   let historic='';try{historic=await window.SE7Templates.diplomaHistory(student,course,group);if(!historic||!String(historic).trim())throw Error('Histórico vazio');}catch(e){state.textContent='Não foi possível carregar o Histórico Escolar Completo: '+e.message;return;}
-  const values={...checked.draft};const repaint=()=>{preview.srcdoc=renderDoc(student,course,inst||{},values,'',true,historic)};repaint();
+  const values={...(checked.draft||{})};const repaint=()=>{preview.srcdoc=renderDoc(student,course,inst||{},values,'',true,historic)};repaint();
   if(mode==='view')return;
   edit.append(h('h3','Escrituração do verso do diploma'));
   edit.append(h('p','Preencha os dados, salve e depois solicite a emissão. A senha da conta Master é obrigatória para autorizar a impressão.'));
