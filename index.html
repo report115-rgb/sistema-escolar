@@ -972,7 +972,7 @@
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold mb-1">Carga Horária</label>
-                                <input type="text" id="input-course-hours" placeholder="3600 hrs" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+                                <input type="text" id="input-course-hours" placeholder="Ex.: 1600" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"><div class="mt-3 space-y-2"><label class="block text-xs font-semibold mb-1">Carga horária teórica (inclui teórico-prática)</label><input type="number" id="input-course-theoryHours" min="0" step="1" placeholder="Ex.: 1200" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"><label class="block text-xs font-semibold mb-1">Carga horária de estágio</label><input type="number" id="input-course-internshipHours" min="0" step="1" placeholder="Ex.: 400" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"><p class="text-xs text-slate-500">Esses valores são a referência oficial para o diploma.</p></div>
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold mb-1">Resolução / Conselho</label>
@@ -2782,7 +2782,7 @@ async function excluirColaborador(id) {
         function carregarModalidadeCurso(c={}){document.getElementById('course-eja-mode').value=c.ejaMode||'';document.getElementById('course-eja-stage').value=c.ejaStage||'';document.getElementById('course-eja-duration').value=c.ejaDurationMonths||'';atualizarModalidadeCurso();}
         document.getElementById('input-course-nivel').addEventListener('change',atualizarModalidadeCurso);document.getElementById('course-eja-mode').addEventListener('change',atualizarModalidadeCurso);
         let salvandoCurso=false;
-        async function saveCourse(){if(salvandoCurso)return;salvandoCurso=true;const button=document.getElementById('btn-save-course');button.disabled=true;const label=button.textContent;button.textContent='Aguarde…';try{const id=document.getElementById('edit-course-id').value,course={};for(const key of ['name','sigla','nivel','eixo','hours','conselho'])course[key]=document.getElementById('input-course-'+key).value.trim();if(course.nivel==='Supletivo'){course.ejaMode=document.getElementById('course-eja-mode').value;course.ejaStage=document.getElementById('course-eja-stage').value;if(course.ejaMode==='modular')course.ejaDurationMonths=Number(document.getElementById('course-eja-duration').value);}const result=await SE7.api('course-save',{...(id?{id}:{}),course});await SE7Reads.refresh('courses');const old=courses.find(c=>c.id===result.id);if(old)Object.assign(old,result.course);else courses.push({id:result.id,...result.course});void registrarLogAuditoria('Atualizou cadastro do curso '+course.name+'; valores das turmas e faturas preservados.','Configurações / Curso');renderCourses();cancelarEdicaoCurso();alert('Curso salvo com sucesso. As cobranças anteriores foram preservadas.');}catch(e){alert('Não foi possível salvar o curso: '+e.message);}finally{salvandoCurso=false;button.disabled=false;button.textContent=document.getElementById('edit-course-id').value?label:'Salvar Curso';}}
+        async function saveCourse(){if(salvandoCurso)return;salvandoCurso=true;const button=document.getElementById('btn-save-course');button.disabled=true;const label=button.textContent;button.textContent='Aguarde…';try{const id=document.getElementById('edit-course-id').value,course={};for(const key of ['name','sigla','nivel','eixo','hours','conselho'])course[key]=document.getElementById('input-course-'+key).value.trim();for(const key of ['theoryHours','internshipHours'])course[key]=document.getElementById('input-course-'+key).value.trim();if(course.nivel==='Supletivo'){course.ejaMode=document.getElementById('course-eja-mode').value;course.ejaStage=document.getElementById('course-eja-stage').value;if(course.ejaMode==='modular')course.ejaDurationMonths=Number(document.getElementById('course-eja-duration').value);}const result=await SE7.api('course-save',{...(id?{id}:{}),course});await SE7Reads.refresh('courses');const old=courses.find(c=>c.id===result.id);if(old)Object.assign(old,result.course);else courses.push({id:result.id,...result.course});void registrarLogAuditoria('Atualizou cadastro do curso '+course.name+'; valores das turmas e faturas preservados.','Configurações / Curso');renderCourses();cancelarEdicaoCurso();alert('Curso salvo com sucesso. As cobranças anteriores foram preservadas.');}catch(e){alert('Não foi possível salvar o curso: '+e.message);}finally{salvandoCurso=false;button.disabled=false;button.textContent=document.getElementById('edit-course-id').value?label:'Salvar Curso';}}
         function renderCourses() {
             const list = document.getElementById('courses-list');
             const counter = document.getElementById('total-courses-count');
@@ -2836,6 +2836,8 @@ async function excluirColaborador(id) {
             document.getElementById('input-course-nivel').value = c.nivel || '';            
             document.getElementById('input-course-eixo').value = c.eixo || '';
             document.getElementById('input-course-hours').value = c.hours || '';
+            document.getElementById('input-course-theoryHours').value=c.theoryHours??'';
+            document.getElementById('input-course-internshipHours').value=c.internshipHours??'';
             document.getElementById('input-course-conselho').value = c.conselho || '';carregarModalidadeCurso(c);
 
             document.getElementById('btn-save-course').textContent = "Atualizar Curso";
@@ -2852,6 +2854,8 @@ async function excluirColaborador(id) {
             document.getElementById('input-course-sigla').value = '';
             document.getElementById('input-course-eixo').value = '';
             document.getElementById('input-course-hours').value = '';
+            document.getElementById('input-course-theoryHours').value='';
+            document.getElementById('input-course-internshipHours').value='';
             document.getElementById('input-course-conselho').value = '';
             document.getElementById('btn-save-course').textContent = "Salvar Curso";
             document.getElementById('btn-cancel-edit-course').style.display = 'none';
@@ -5336,7 +5340,7 @@ function escutarRegistrosPontoManual() {
 <script src="/assets/se7-documents.js?v=drive-analise-2"></script>
 <link rel="stylesheet" href="/assets/se7-template-editor.css?v=document-polo-2"><script src="/assets/se7-document-models.js"></script>
 <script src="/assets/se7-enrollment-contract.js?v=20261019-2"></script>
-<script src="/assets/se7-academic-documents.js?v=documentos-20261020-7"></script><script src="/assets/se7-template-editor.js?v=diploma-se7-20261020-3"></script><script src="/assets/se7-diploma.js?v=expedicao-auto-20261021-1"></script>
+<script src="/assets/se7-academic-documents.js?v=documentos-20261020-7"></script><script src="/assets/se7-template-editor.js?v=diploma-se7-20261020-3"></script><script src="/assets/se7-diploma.js?v=horarios-curso-20261021-1"></script>
 <link rel="stylesheet" href="/assets/se7-exams.css">
 <script src="/assets/vendor/pdf-lib.min.js"></script><script src="/assets/vendor/fontkit.umd.min.js"></script><script src="/assets/vendor/jsQR.js"></script><script src="/assets/vendor/qrcode.js"></script><script src="/assets/se7-exam-omr.js"></script><script src="/assets/se7-exam-pdf.js?v=institucional-20261019"></script><script src="/assets/se7-exam-calendar.js" type="module"></script><script src="/assets/se7-material-pdf.js?v=institucional-20261019"></script><script src="/assets/se7-materials.js?v=nav-selection-6"></script><script src="/assets/se7-exams.js?v=icone-livro-20261020-2"></script>
 <link rel="stylesheet" href="/assets/se7-student-sheet.css?v=senha-laranja-2"><script src="/assets/se7-student-sheet.js?v=frequencia-regra-4"></script>
