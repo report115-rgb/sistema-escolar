@@ -1,12 +1,23 @@
 import {readFile,writeFile,readdir} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
+import {execFileSync} from 'node:child_process';
 import {resolve} from 'node:path';
 import {pathToFileURL} from 'node:url';
+const releaseBase='f5360a96ca55a645c92876585e6b87c29ef8e209';
+function deployRevision(){
+ const sha=process.env.VERCEL_GIT_COMMIT_SHA||'';
+ if(!/^[0-9a-f]{40}$/i.test(sha))return null;
+ try{
+  const count=Number(execFileSync('git',['rev-list','--count',releaseBase+'..'+sha],{encoding:'utf8',stdio:['ignore','pipe','ignore'],timeout:2000}).trim());
+  if(Number.isInteger(count)&&count>0)return {count,sha};
+ }catch{}
+ return {count:null,sha};
+}
 const appFiles={matriz:'index.html',aluno:'app-aluno.html',financeiro:'app-financeiro.html',totem:'totem.html',preceptor:'app-preceptor.html'};
 async function listFiles(root,path=''){let result=[];for(const e of await readdir(resolve(root,path),{withFileTypes:true})){if(e.name.startsWith('.'))continue;const name=path?path+'/'+e.name:e.name;if(e.isDirectory()){if(['assets','server','api'].includes(name)||path)result.push(...await listFiles(root,name));}else if((path||e.name.endsWith('.html')||['package.json','package-lock.json','vercel.json','firestore.rules'].includes(name))&&name!=='assets/se7-versions.json')result.push(name);}return result.sort();}
 export async function updateVersions(root=process.cwd(),kind='patch'){
- if(!['patch','minor','major'].includes(kind))throw Error('Tipo de versão inválido.');const file=resolve(root,'assets/se7-versions.json'),manifest=JSON.parse(await readFile(file,'utf8'));manifest.apps.preceptor??={version:'1.0.0',revision:''};const all=await listFiles(root),entries=new Set(Object.values(appFiles));let changed=false;
- for(const [name,html]of Object.entries(appFiles)){const hash=createHash('sha256');for(const path of all.filter(path=>!entries.has(path)||path===html)){hash.update(path);let content=await readFile(resolve(root,path));if(path.endsWith('.html'))content=content.toString().replace(/(<span\b[^>]*data-se7-version="[^"]+"[^>]*>)v\d+\.\d+\.\d+(<\/span>)/g,'$1vVERSION$2');hash.update(content);}const revision=hash.digest('hex'),entry=manifest.apps[name];if(!entry||!/^\d+\.\d+\.\d+$/.test(entry.version))throw Error('Versão inválida: '+name);if(entry.revision!==revision){if(entry.revision){let [major,minor,patch]=entry.version.split('.').map(Number);if(kind==='major'){major++;minor=patch=0;}else if(kind==='minor'){minor++;patch=0;}else patch++;entry.version=[major,minor,patch].join('.');}entry.revision=revision;changed=true;}}
- if(changed)await writeFile(file,JSON.stringify(manifest,null,2)+'\n');for(const [name,html]of Object.entries(appFiles)){const path=resolve(root,html),original=await readFile(path,'utf8'),next=original.replace(new RegExp('(<span\\b[^>]*data-se7-version="'+name+'"[^>]*>)v\\d+\\.\\d+\\.\\d+(<\\/span>)','g'),'$1v'+manifest.apps[name].version+'$2');if(next!==original)await writeFile(path,next);}return manifest;
+ if(!['patch','minor','major'].includes(kind))throw Error('Tipo de versão inválido.');const file=resolve(root,'assets/se7-versions.json'),manifest=JSON.parse(await readFile(file,'utf8'));manifest.apps.preceptor??={version:'1.0.0',revision:''};const all=await listFiles(root),entries=new Set(Object.values(appFiles));let changed=false;const deploy=deployRevision();
+ for(const [name,html]of Object.entries(appFiles)){const hash=createHash('sha256');for(const path of all.filter(path=>!entries.has(path)||path===html)){hash.update(path);let content=await readFile(resolve(root,path));if(path.endsWith('.html'))content=content.toString().replace(/(<span\b[^>]*data-se7-version="[^"]+"[^>]*>)v\d+\.\d+\.\d+(?:\+[a-f0-9]{8})?(<\/span>)/g,'$1vVERSION$2');hash.update(content);}const revision=hash.digest('hex'),entry=manifest.apps[name];if(!entry||!/^\d+\.\d+\.\d+$/.test(entry.version))throw Error('Versão inválida: '+name);if(entry.revision!==revision){if(entry.revision){let [major,minor,patch]=entry.version.split('.').map(Number);if(kind==='major'){major++;minor=patch=0;}else if(kind==='minor'){minor++;patch=0;}else patch++;entry.version=[major,minor,patch].join('.');}entry.revision=revision;changed=true;}if(deploy&&entry.revision===revision){const parts=entry.version.split('.').map(Number);if(parts.length===3&&parts.every(Number.isFinite)){const fallback=parts[2]+1;const patch=deploy.count===null?fallback:Math.max(fallback,parts[2]+deploy.count);entry.version=[parts[0],parts[1],patch].join('.')+(deploy.count===null?'+'+deploy.sha.slice(0,8):'');changed=true;}}}
+ if(changed)await writeFile(file,JSON.stringify(manifest,null,2)+'\n');for(const [name,html]of Object.entries(appFiles)){const path=resolve(root,html),original=await readFile(path,'utf8'),next=original.replace(new RegExp('(<span\\b[^>]*data-se7-version="'+name+'"[^>]*>)v\\d+\\.\\d+\\.\\d+(?:\\+[a-f0-9]{8})?(<\\/span>)','g'),'$1v'+manifest.apps[name].version+'$2');if(next!==original)await writeFile(path,next);}return manifest;
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(resolve(process.argv[1])).href){const result=await updateVersions(process.cwd(),process.argv[2]||'patch');console.log(Object.entries(result.apps).map(([app,v])=>app+': v'+v.version).join('\n'));}
