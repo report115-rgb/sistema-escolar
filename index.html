@@ -971,8 +971,18 @@
                                 <input type="text" id="input-course-eixo" placeholder="Ambiente e Saúde" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold mb-1">Carga Horária</label>
-                                <input type="text" id="input-course-hours" placeholder="Ex.: 1600" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"><div class="mt-3 space-y-2"><label class="block text-xs font-semibold mb-1">Carga horária teórica (inclui teórico-prática)</label><input type="number" id="input-course-theoryHours" min="0" step="1" placeholder="Ex.: 1200" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"><label class="block text-xs font-semibold mb-1">Carga horária de estágio</label><input type="number" id="input-course-internshipHours" min="0" step="1" placeholder="Ex.: 400" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"><p class="text-xs text-slate-500">Esses valores são a referência oficial para o diploma.</p></div>
+                                <label class="block text-xs font-semibold mb-1">Carga Horária Teórica</label>
+                                <input type="number" id="input-course-theoryHours" min="0" step="1" placeholder="Ex.: 1200" oninput="atualizarCargaHorariaTotalCurso()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold mb-1">Carga Horária de Estágio</label>
+                                <input type="number" id="input-course-internshipHours" min="0" step="1" placeholder="Ex.: 400" oninput="atualizarCargaHorariaTotalCurso()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold mb-1">Carga Horária Total (automática)</label>
+                                <input type="text" id="input-course-hours" readonly aria-readonly="true" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 bg-gray-100 dark:bg-slate-800" placeholder="Teórica + Estágio">
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold mb-1">Resolução / Conselho</label>
@@ -2778,9 +2788,18 @@ async function excluirColaborador(id) {
  try{await SE7.api('collaborator-state',{id,active:t.active===false});alert('Situação atualizada.');}catch(e){alert(e.message);}
 }
 
-        function atualizarModalidadeCurso(){const eja=document.getElementById('input-course-nivel').value==='Supletivo',mode=document.getElementById('course-eja-mode').value;document.getElementById('course-eja-options').hidden=!eja;document.getElementById('course-modular-options').hidden=!eja||mode!=='modular';document.getElementById('course-single-info').hidden=!eja||mode!=='prova-unica';for(const id of ['input-course-eixo','input-course-hours']){const input=document.getElementById(id);input.parentElement.hidden=eja&&['prova-unica','modular'].includes(mode);}document.getElementById('input-course-conselho').parentElement.hidden=eja&&mode==='modular';}
+        function atualizarModalidadeCurso(){const eja=document.getElementById('input-course-nivel').value==='Supletivo',mode=document.getElementById('course-eja-mode').value;document.getElementById('course-eja-options').hidden=!eja;document.getElementById('course-modular-options').hidden=!eja||mode!=='modular';document.getElementById('course-single-info').hidden=!eja||mode!=='prova-unica';for(const id of ['input-course-eixo','input-course-hours','input-course-theoryHours','input-course-internshipHours']){const input=document.getElementById(id);input.parentElement.hidden=eja&&['prova-unica','modular'].includes(mode);}document.getElementById('input-course-conselho').parentElement.hidden=eja&&mode==='modular';}
         function carregarModalidadeCurso(c={}){document.getElementById('course-eja-mode').value=c.ejaMode||'';document.getElementById('course-eja-stage').value=c.ejaStage||'';document.getElementById('course-eja-duration').value=c.ejaDurationMonths||'';atualizarModalidadeCurso();}
         document.getElementById('input-course-nivel').addEventListener('change',atualizarModalidadeCurso);document.getElementById('course-eja-mode').addEventListener('change',atualizarModalidadeCurso);
+        function atualizarCargaHorariaTotalCurso(){
+            const teoria=document.getElementById('input-course-theoryHours');
+            const estagio=document.getElementById('input-course-internshipHours');
+            const total=document.getElementById('input-course-hours');
+            if(!teoria||!estagio||!total)return;
+            if(teoria.value.trim()===''||estagio.value.trim()===''){total.value='';return;}
+            const t=Number(teoria.value),e=Number(estagio.value);
+            total.value=Number.isFinite(t)&&Number.isFinite(e)&&t>=0&&e>=0?String(t+e):'';
+        }
         let salvandoCurso=false;
         async function saveCourse(){if(salvandoCurso)return;salvandoCurso=true;const button=document.getElementById('btn-save-course');button.disabled=true;const label=button.textContent;button.textContent='Aguarde…';try{const id=document.getElementById('edit-course-id').value,course={};for(const key of ['name','sigla','nivel','eixo','hours','conselho'])course[key]=document.getElementById('input-course-'+key).value.trim();for(const key of ['theoryHours','internshipHours'])course[key]=document.getElementById('input-course-'+key).value.trim();if(course.nivel==='Supletivo'){course.ejaMode=document.getElementById('course-eja-mode').value;course.ejaStage=document.getElementById('course-eja-stage').value;if(course.ejaMode==='modular')course.ejaDurationMonths=Number(document.getElementById('course-eja-duration').value);}const result=await SE7.api('course-save',{...(id?{id}:{}),course});await SE7Reads.refresh('courses');const old=courses.find(c=>c.id===result.id);if(old)Object.assign(old,result.course);else courses.push({id:result.id,...result.course});void registrarLogAuditoria('Atualizou cadastro do curso '+course.name+'; valores das turmas e faturas preservados.','Configurações / Curso');renderCourses();cancelarEdicaoCurso();alert('Curso salvo com sucesso. As cobranças anteriores foram preservadas.');}catch(e){alert('Não foi possível salvar o curso: '+e.message);}finally{salvandoCurso=false;button.disabled=false;button.textContent=document.getElementById('edit-course-id').value?label:'Salvar Curso';}}
         function renderCourses() {
@@ -2838,6 +2857,7 @@ async function excluirColaborador(id) {
             document.getElementById('input-course-hours').value = c.hours || '';
             document.getElementById('input-course-theoryHours').value=c.theoryHours??'';
             document.getElementById('input-course-internshipHours').value=c.internshipHours??'';
+            if(c.theoryHours!==null&&c.theoryHours!==undefined&&c.internshipHours!==null&&c.internshipHours!==undefined)atualizarCargaHorariaTotalCurso();
             document.getElementById('input-course-conselho').value = c.conselho || '';carregarModalidadeCurso(c);
 
             document.getElementById('btn-save-course').textContent = "Atualizar Curso";
