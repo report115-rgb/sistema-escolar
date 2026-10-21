@@ -111,7 +111,7 @@
   const birth=student.birthDate||student.dob||student.dataNascimento||student.nascimento||'—';
   const origin=student.birthplace||student.naturalidade||student.city||student.cidade||'—';
   const courseName=esc(course.name||'—');
-  const completion=student.conclusionDate||student.completionDate||student.dataConclusao||student.finishedAt||'';
+  const completion=reg?.verifiedCompletionDate||student.conclusionDate||student.completionDate||student.dataConclusao||student.finishedAt||'';
   const nationality=esc(student.nacionalidade||student.nationality||'—');
   const rg=esc(student.rg||student.RG||'—');
   const cpf=esc(student.cpf||'—');
@@ -141,7 +141,7 @@
   state.textContent=issues.length?'Emissão bloqueada — '+issues.length+' pendência(s). Consulte em “Pendências”.':'Conferência acadêmica concluída: sem pendências identificadas.';
   if(issues.length){summary.textContent='Pendências ('+issues.length+') ▾';for(const msg of issues)pendList.append(h('li',msg));pending.hidden=false;}
   let historic='';try{historic=await window.SE7Templates.diplomaHistory(student,course,group);if(!historic||!String(historic).trim())throw Error('Histórico vazio');}catch(e){state.textContent='Não foi possível carregar o Histórico Escolar Completo: '+e.message;return;}
-  const values={...(checked.draft||{})};const repaint=()=>{preview.srcdoc=renderDoc(student,course,inst||{},values,'',true,historic)};repaint();
+  const values={...(checked.draft||{})};const repaint=()=>{preview.srcdoc=renderDoc(student,course,inst||{},{...values,verifiedCompletionDate:checked.completionDate||''},'',true,historic)};repaint();
   if(mode==='view')return;
   edit.append(h('h3','Escrituração do verso do diploma'));
   edit.append(h('p','Preencha os dados, salve e depois solicite a emissão. A senha da conta Master é obrigatória para autorizar a impressão.'));
@@ -163,7 +163,7 @@
     const r=await window.SE7.api('diploma-authorize',{studentId:student.id,...values,password:password.value});password.value='';
     if(!r.authorized)throw Error('Emissão não autorizada');
     const record=await window.SE7.api('diploma-print-record',{studentId:student.id,token:r.token});if(!record.ok)throw Error('O registro de emissão não foi confirmado');
-    const html=renderDoc(student,course,inst||{},r.registration,r.token,false,historic);
+    const html=renderDoc(student,course,inst||{},{...r.registration,verifiedCompletionDate:r.completionDate||''},r.token,false,historic);
     w.document.open();w.document.write(html);w.document.close();w.focus();
     await Promise.all([...w.document.images].map(im=>im.complete?Promise.resolve():new Promise(ok=>{im.onload=im.onerror=ok;setTimeout(ok,7000)})));
     if(!w.closed)w.print();state.textContent='Emissão registrada. Confira a janela de impressão.';

@@ -48,6 +48,18 @@ function evaluate(c){
  if(!planned)issues.push('Carga horária total do curso não configurada.');
  return {eligible:issues.length===0,issues,details,totalHours,completedHours,courseHours:planned};
 }
+function localDate(){return new Intl.DateTimeFormat('en-CA',{timeZone:'America/Belem',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());}
+async function verifiedCompletion(db,id,eligible){
+ const ref=db.collection('se7DiplomaCompletionChecks').doc(id);
+ return db.runTransaction(async tx=>{
+  const snap=await tx.get(ref),old=snap.exists?snap.data():{};
+  if(!eligible){if(old.eligible===true)tx.set(ref,{eligible:false,lastCheckedAt:new Date().toISOString()},{merge:true});return '';}
+  if(old.eligible===true&&/^\d{4}-\d{2}-\d{2}$/.test(old.completionDate||''))return old.completionDate;
+  const completionDate=localDate();
+  tx.set(ref,{eligible:true,completionDate,lastCheckedAt:new Date().toISOString()},{merge:true});
+  return completionDate;
+ });
+}
 function registration(b){
  const val=(v,max=100)=>typeof v==='string'?v.trim().slice(0,max):'';
  const issueDate=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Belem',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
@@ -60,7 +72,8 @@ function registration(b){
 export async function check(db,b,u){
  if(!['master','secretaria'].includes(u.role))fail(403,'Acesso restrito.');
  const c=await context(db,b.studentId,u),result=evaluate(c);
- const draft=await db.collection('se7DiplomaDrafts').doc(c.student.id).get();return {student:{id:c.student.id,name:c.student.fullname,code:c.student.code,course:c.course.name},result,draft:draft.exists?draft.data().registration:null,reviewedAt:new Date().toISOString()};
+ const completionDate=await verifiedCompletion(db,c.student.id,result.eligible);
+ const draft=await db.collection('se7DiplomaDrafts').doc(c.student.id).get();return {student:{id:c.student.id,name:c.student.fullname,code:c.student.code,course:c.course.name},result,completionDate,draft:draft.exists?draft.data().registration:null,reviewedAt:new Date().toISOString()};
 }
 export async function saveDraft(db,b,u){
  if(!['master','secretaria'].includes(u.role))fail(403,'Acesso restrito à secretaria.');
@@ -75,6 +88,7 @@ export async function authorize(db,b,u,auth,reauth){
  const reg=registration(b);
  const c=await context(db,b.studentId,u),ev=evaluate(c);const draft=await db.collection('se7DiplomaDrafts').doc(c.student.id).get();if(!draft.exists||dig(draft.data().registration)!==dig(reg))fail(409,'Salve a escrituração antes de solicitar a autorização.');
  if(!ev.eligible)fail(409,'Pendências de conclusão: '+ev.issues.slice(0,5).join(' '));
+ const completionDate=await verifiedCompletion(db,c.student.id,true);
  const account=await reauth(u.email,password);if(!account||account.localId!==u.uid)fail(403,'Senha do Master não confirmada.');
  const fingerprint=dig({student:c.student,course:c.course,group:c.group,calendar:c.calendar,assignments:c.assignments,evaluations:c.evaluations});
  const key=dig({id:c.student.id,reg,fingerprint}),ref=db.collection('se7DiplomaRegistrations').doc(c.student.id);
@@ -82,11 +96,11 @@ export async function authorize(db,b,u,auth,reauth){
   const [studentSnap,old,saved]=await Promise.all([tx.get(db.collection('students').doc(c.student.id)),tx.get(ref),tx.get(db.collection('se7DiplomaDrafts').doc(c.student.id))]);if(!saved.exists||dig(saved.data().registration)!==dig(reg))fail(409,'Escrituração alterada. Salve e confira novamente.');
   if(!studentSnap.exists||dig({...studentSnap.data(),id:studentSnap.id})!==dig(c.student))fail(409,'Dados do aluno mudaram. Faça nova conferência.');
   if(old.exists&&old.data().state==='issued')fail(409,'Diploma já emitido. Solicite procedimento de segunda via.');
-  if(old.exists&&old.data().key===key&&old.data().state==='authorized')return {authorized:true,token:old.data().token,registration:old.data().registration,authorizedAt:old.data().authorizedAt};
+  if(old.exists&&old.data().key===key&&old.data().state==='authorized')return {authorized:true,token:old.data().token,registration:old.data().registration,authorizedAt:old.data().authorizedAt,completionDate:old.data().completionDate||completionDate};
   const token=randomBytes(24).toString('hex'),authorizedAt=new Date().toISOString();
-  tx.set(ref,{studentId:c.student.id,studentName:c.student.fullname,studentCode:c.student.code,courseName:c.course.name,state:'authorized',registration:reg,key,fingerprint,authorizedAt,authorizedBy:u.uid,token});
+  tx.set(ref,{studentId:c.student.id,studentName:c.student.fullname,studentCode:c.student.code,courseName:c.course.name,state:'authorized',registration:reg,key,fingerprint,completionDate,authorizedAt,authorizedBy:u.uid,token});
   tx.set(db.collection('se7AcademicDocuments').doc(token),{token,type:'diploma_tecnico_enfermagem',title:'Diploma de Técnico em Enfermagem',studentId:c.student.id,studentName:c.student.fullname,studentCode:c.student.code,courseName:c.course.name,className:c.group.name||'',issuedAt:authorizedAt,department:'Secretaria Acadêmica',issuerUid:u.uid,issuerName:u.profile?.nome||u.email||u.uid,contentHash:key,revokedAt:null});
-  return {authorized:true,token,registration:reg,authorizedAt};
+  return {authorized:true,token,registration:reg,authorizedAt,completionDate};
  });
 }
 export async function recordPrint(db,b,u){
