@@ -3899,7 +3899,7 @@ async function renderAttendanceList() {
 
     alunosTurma.forEach(aluno => {
         let statusSalvo = registrosAnteriores[aluno.id]||aluno.attendance?.[dataAula]?.status;
-        let alunoBloqueado = jaLancado || statusSalvo !== undefined;const proofState=aluno.attendance?.[dataAula]?.justification?.state;const canEditProof=proofState!=='pending'&&(!['approved','rejected'].includes(proofState)||usuarioMasterAtivo());
+        let alunoBloqueado = jaLancado || statusSalvo !== undefined;const proofState=aluno.attendance?.[dataAula]?.justification?.state;const canEditProof=!aluno.attendance?.[dataAula]?.justification;
 
         let li = document.createElement('li');
         li.className = "py-3 flex items-center justify-between border-b border-gray-100 dark:border-slate-700";

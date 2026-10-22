@@ -6,14 +6,30 @@ async function fileData(file){if(file.type==='application/pdf'){if(file.size>512
  if(!['image/jpeg','image/png','image/webp'].includes(file.type))throw Error('Envie PDF ou foto JPG, PNG ou WebP.');if(file.size>15000000)throw Error('A foto deve ter até 15 MB antes do ajuste.');const bitmap=await createImageBitmap(file);try{const ratio=Math.min(1,1800/Math.max(bitmap.width,bitmap.height)),canvas=document.createElement('canvas');canvas.width=Math.round(bitmap.width*ratio);canvas.height=Math.round(bitmap.height*ratio);const ctx=canvas.getContext('2d');ctx.fillStyle='white';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(bitmap,0,0,canvas.width,canvas.height);let data;for(const quality of [.9,.8,.7,.6]){data=canvas.toDataURL('image/jpeg',quality).split(',')[1];if(data.length<=680000)break;}if(data.length>680000)throw Error('Foto muito grande. Envie uma imagem menor, mantendo a leitura visível.');return {name:file.name.replace(/\.[^.]+$/,'')+'.jpg',mime:'image/jpeg',base64:data};}finally{bitmap.close();}}
 async function view(s,date){const d=dialog('Documento da falta justificada'),status=text(d,'Aguarde…');d.append(button('Fechar',()=>d.close()));d.showModal();try{const r=await SE7.api('attendance-justification-get',{studentId:s.id,date}),bytes=Uint8Array.from(atob(r.base64),c=>c.charCodeAt(0)),url=URL.createObjectURL(new Blob([bytes],{type:r.mime}));d.addEventListener('close',()=>URL.revokeObjectURL(url));const frame=document.createElement(r.mime==='application/pdf'?'iframe':'img');frame.src=url;frame.style.cssText=r.mime==='application/pdf'?'width:100%;height:65vh;border:0':'max-width:100%;height:auto';status.textContent=r.name;d.append(frame);}catch(e){status.textContent=e.message;}}
 function form(s,date){const d=dialog('Justificar falta — '+s.fullname);text(d,'É obrigatório anexar um documento que comprove o motivo da falta, como atestado médico ou declaração de trabalho. Envie um PDF de até 500 KB ou uma foto bem legível.');text(d,'Ao salvar, esta aula ficará com justificativa pendente de análise. A Coordenação Acadêmica analisará o documento e decidirá entre presença ou falta. Enquanto estiver pendente, este registro não provoca reprovação automática.');const reason=document.createElement('select');for(const r of ['Atestado médico','Declaração de trabalho','Outro documento comprobatório'])reason.add(new Option(r,r));const file=document.createElement('input');file.type='file';file.accept='application/pdf,image/jpeg,image/png,image/webp';for(const c of [reason,file]){c.style.cssText='display:block;width:100%;padding:10px;margin:12px 0;background:#102c43;color:white';d.append(c);}const status=text(d,''),close=button('Cancelar',()=>d.close());let busy=false;const save=button('Enviar justificativa para análise',async()=>{if(busy)return;if(!file.files[0]){status.textContent='Anexe o documento comprobatório.';return;}busy=true;save.disabled=true;close.disabled=true;save.textContent='Aguarde…';try{const attachment=await fileData(file.files[0]);const result=await SE7.api('attendance-justification-save',{studentId:s.id,date,classId:s.classId,teacherId:document.getElementById('attendance-teacher-select').value,subject:document.getElementById('attendance-calendar-date-select').selectedOptions[0]?.dataset.subject||'',reason:reason.value,...attachment});s.attendance={...(s.attendance||{}),[date]:{...(s.attendance?.[date]||{}),status:'Pendente de justificativa',justified:false,justification:result.justification}};status.textContent='Justificativa enviada para análise da Coordenação Acadêmica.';void window.SE7JustificationReview?.refresh(true);save.hidden=true;close.disabled=false;close.textContent='Fechar';await renderAttendanceList();}catch(e){status.textContent=e.message;save.disabled=false;close.disabled=false;save.textContent='Enviar justificativa para análise';}finally{busy=false;}});d.addEventListener('cancel',e=>{if(busy)e.preventDefault();});d.append(save,close);d.showModal();}
-function decorate(li,s,date){const box=li.querySelector('div');if(!box)return;const subject=document.getElementById('attendance-calendar-date-select')?.selectedOptions[0]?.dataset.subject;const outcome=window.SE7AttendanceRules?.attendanceRule(s,subject,typeof academicCalendars==='undefined'?[]:academicCalendars);if(outcome?.failed){const notice=document.createElement('span');notice.textContent='Reprovado por falta';notice.style.cssText='font-size:11px;color:#f87171;font-weight:bold';box.append(notice);}box.style.flexWrap='wrap';box.style.gap='8px';const justification=s.attendance?.[date]?.justification;
- if(justification){
-  const badge=document.createElement('span');
-  badge.textContent=justification.state==='pending'?'Justificativa pendente de análise':justification.state==='approved'?'Falta justificada pela Coordenação':justification.state==='rejected'?'Falta mantida pela Coordenação':justification.state==='revised'?'Registro corrigido após análise':'Falta justificada';
-  badge.style.cssText='display:block;width:100%;font-size:11px;color:#fbbf24;font-weight:600;text-align:right;order:99';
-  box.append(button('Ver justificativa',()=>view(s,date)));
-  li.append(badge);
- }else{box.append(button('Justificar falta',()=>form(s,date)));}
+function decorate(li,s,date){
+ const box=li.querySelector('div');if(!box)return;
+ const subject=document.getElementById('attendance-calendar-date-select')?.selectedOptions[0]?.dataset.subject;
+ const outcome=window.SE7AttendanceRules?.attendanceRule(s,subject,typeof academicCalendars==='undefined'?[]:academicCalendars);
+ const justification=s.attendance?.[date]?.justification;
+ if(!justification){
+  if(outcome?.failed){const notice=document.createElement('span');notice.textContent='Reprovado por falta';notice.style.cssText='font-size:11px;color:#f87171;font-weight:bold';box.append(notice);}
+  box.append(button('Justificar falta',()=>form(s,date)));
+  return;
+ }
+ // Mantém os rádios e a ação na mesma linha, como nos demais alunos.
+ box.querySelectorAll('button').forEach(b=>{if(b.textContent.includes('Editar'))b.remove();});
+ const row=document.createElement('div');
+ row.style.cssText='display:flex;align-items:center;gap:12px;flex-wrap:nowrap;justify-content:flex-end;width:100%';
+ while(box.firstChild)row.append(box.firstChild);
+ row.append(button('Ver justificativa',()=>view(s,date)));
+ box.classList.remove('space-x-3');
+ box.style.cssText='display:flex;flex-direction:column;align-items:flex-end;gap:5px;min-width:0';
+ box.append(row);
+ const badge=document.createElement('span');
+ badge.textContent=justification.state==='pending'?'Justificativa pendente de análise':justification.state==='approved'?'Falta justificada pela Coordenação':justification.state==='rejected'?'Falta mantida pela Coordenação':justification.state==='revised'?'Registro corrigido após análise':'Falta justificada';
+ badge.style.cssText='display:block;font-size:11px;color:#fbbf24;font-weight:600;text-align:right;max-width:100%';
+ box.append(badge);
 }
+
 window.SE7AttendanceProof={decorate};
 })();
