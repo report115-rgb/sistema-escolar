@@ -223,7 +223,7 @@
 <script defer src="/assets/se7-brand.js"></script>
 <link rel="stylesheet" href="/assets/se7-mobile-access.css">
 <link rel="stylesheet" href="/assets/se7-welcome.css">
-<link rel="stylesheet" href="assets/se7-eja.css?v=1"><script defer src="assets/se7-eja-student.js?v=card-restaurado-20261022"></script><link rel="stylesheet" href="/assets/se7-ambient.css">
+<link rel="stylesheet" href="assets/se7-eja.css?v=buttons-azul-20261022"><script defer src="assets/se7-eja-student.js?v=card-restaurado-20261022"></script><link rel="stylesheet" href="/assets/se7-ambient.css">
 <script src="/assets/se7-subject-kind.js?v=1"></script>
 <script src="/assets/se7-lesson-realization.js?v=1"></script>
 <script type="module" src="/assets/se7-attendance-rules.js?v=1"></script>
@@ -246,7 +246,7 @@
         <p class="welcome-tagline">Sua gestão acadêmica em um só lugar.</p>
         <div class="welcome-progress" aria-hidden="true"></div>
     </div>
-    <div class="welcome-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.7.28</span> • Portal do Aluno</div>
+    <div class="welcome-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.7.29</span> • Portal do Aluno</div>
 </div>
 
 
@@ -275,7 +275,7 @@
                 <button type="button" class="student-login-choice student-login-choice-secondary" onclick="irParaTelaMatriculaSuave()">Quero me matricular</button>
             </div>
         </div>
-        <div id="student-welcome-developer-footer" class="student-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.7.28</span> • Portal do Aluno</div>
+        <div id="student-welcome-developer-footer" class="student-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.7.29</span> • Portal do Aluno</div>
     </div>
 
     <!-- TELA DE LOGIN DO ALUNO -->
@@ -313,7 +313,7 @@
                 </form>
             </div>
         </div>
-        <div id="student-login-developer-footer" class="student-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.7.28</span> • Portal do Aluno</div>
+        <div id="student-login-developer-footer" class="student-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.7.29</span> • Portal do Aluno</div>
     </div>
 
     <!-- TELA DE AUTO-MATRÍCULA -->
@@ -1110,10 +1110,10 @@ let cancelarIdentidadeAluno = null;
             guardarSessaoPortal(alunoLogado);
             
             const mainApp = document.getElementById('main-app');
-            mainApp.style.display = 'flex';
+            mainApp.style.visibility='hidden';mainApp.style.display = 'flex';
             mainApp.classList.add('screen-transition');
-            await carregarConfiguracaoAlunoAutenticado();await registrarEventoPortal('login');acompanharControlePortal();
-            await carregarDadosPainel();
+            try{await carregarConfiguracaoAlunoAutenticado();await registrarEventoPortal('login');acompanharControlePortal();await carregarDadosPainel();}
+            finally{mainApp.style.visibility='visible';}
         }
 
         let se7FinanceAlertCache=null,se7FinanceAlertStudent='';
@@ -1248,11 +1248,9 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('welcome-screen').style.display = 'none';
                 document.getElementById('login-pass').value = '';
-                document.getElementById('main-app').style.display = 'flex';
-                await carregarConfiguracaoAlunoAutenticado();
-                await registrarEventoPortal('login');
-                acompanharControlePortal();
-                await carregarDadosPainel();
+                const portal=document.getElementById('main-app');portal.style.visibility='hidden';portal.style.display = 'flex';
+                try{await carregarConfiguracaoAlunoAutenticado();await registrarEventoPortal('login');acompanharControlePortal();await carregarDadosPainel();}
+                finally{portal.style.visibility='visible';}
             } catch (e) {if (boasVindas) await boasVindas;alert(e.message);}
             finally {if (boasVindas) await boasVindas;clearInterval(animacaoLogin);if(btn){btn.disabled=false;btn.removeAttribute('aria-busy');btn.textContent=textoLogin;}}
         }
