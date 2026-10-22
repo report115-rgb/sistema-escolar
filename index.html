@@ -2950,18 +2950,18 @@ async function excluirColaborador(id) {
         function atualizarCamposTCCDisciplina(){
  const kind=document.getElementById('input-subject-type')?.value, name=document.getElementById('input-subject-name'),hours=document.getElementById('input-subject-hours');
  if(!name||!hours)return;
- if(kind==='tcc'){name.value='Trabalho de Conclusão de Curso';name.readOnly=true;hours.value='';hours.closest('div').hidden=true;}
+ if(kind==='tcc'){name.value='Trabalho de Conclusão de Curso';name.readOnly=true;hours.closest('div').hidden=false;}
  else {if(name.readOnly&&name.value==='Trabalho de Conclusão de Curso')name.value='';name.readOnly=false;hours.closest('div').hidden=false;}
 }
 async function addSubjectToCourse() {
             const editSubjectId = document.getElementById('edit-subject-id').value;
             const courseId = document.getElementById('input-subject-course-select').value;
             const name = document.getElementById('input-subject-type').value==='tcc'?'Trabalho de Conclusão de Curso':document.getElementById('input-subject-name').value.trim();
-            const hours = document.getElementById('input-subject-type').value==='tcc'?'':document.getElementById('input-subject-hours').value.trim();
+            const hours = document.getElementById('input-subject-hours').value.trim();
             const ementa = document.getElementById('input-subject-ementa').value.trim();
             const teachingType=document.getElementById('input-subject-type').value;
             if(!SE7SubjectKind.labels[teachingType])return alert('Selecione o tipo da disciplina.');
-            if (!courseId || !name) return alert("Preencha todos os campos obrigatórios!");
+            if (!courseId || !name || !hours || !Number.isFinite(Number(hours.replace(',','.'))) || Number(hours.replace(',','.'))<=0) return alert("Informe curso, disciplina e uma carga horária válida maior que zero.");
 
             const course = courses.find(c => c.id == courseId);
             if (!course) return;
