@@ -10,3 +10,8 @@
 #tabela-alunos-eja .se7-eja-schedule-actions{display:flex;align-items:center;justify-content:center;width:100%;margin:0 auto}
 #tabela-alunos-eja .se7-eja-schedule-actions button{display:inline-flex;justify-content:center;align-items:center;margin:0;max-width:100%;white-space:normal}
 #tabela-alunos-eja .se7-eja-legacy-note{display:block;margin-top:7px;font-size:10px;line-height:1.4;color:var(--se7-muted,#64748b);white-space:normal}
+
+/* Padrão único do card EJA: controles disponíveis azuis, indisponíveis apagados. */
+#bloco-acoes-eja .se7-eja-action-enabled,#bloco-acoes-eja .se7-eja-study-actions .se7-eja-button:not(:disabled){background-color:#1d4ed8!important;color:#fff!important;border-color:#1d4ed8!important}
+#bloco-acoes-eja .se7-eja-action-enabled:hover,#bloco-acoes-eja .se7-eja-study-actions .se7-eja-button:not(:disabled):hover{background-color:#1e40af!important;color:#fff!important}
+#bloco-acoes-eja .se7-eja-study-actions .se7-eja-button:disabled{background-color:#ffffff33!important;color:#ffffffb3!important;box-shadow:none!important}

@@ -223,7 +223,7 @@
 <script defer src="/assets/se7-brand.js"></script>
 <link rel="stylesheet" href="/assets/se7-mobile-access.css">
 <link rel="stylesheet" href="/assets/se7-welcome.css">
-<link rel="stylesheet" href="assets/se7-eja.css?v=buttons-azul-20261022"><script defer src="assets/se7-eja-student.js?v=card-restaurado-20261022"></script><link rel="stylesheet" href="/assets/se7-ambient.css">
+<link rel="stylesheet" href="assets/se7-eja.css?v=card-buttons-2-20261022"><script defer src="assets/se7-eja-student.js?v=card-restaurado-20261022"></script><link rel="stylesheet" href="/assets/se7-ambient.css">
 <script src="/assets/se7-subject-kind.js?v=1"></script>
 <script src="/assets/se7-lesson-realization.js?v=1"></script>
 <script type="module" src="/assets/se7-attendance-rules.js?v=1"></script>
@@ -246,7 +246,7 @@
         <p class="welcome-tagline">Sua gestão acadêmica em um só lugar.</p>
         <div class="welcome-progress" aria-hidden="true"></div>
     </div>
-    <div class="welcome-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.7.29</span> • Portal do Aluno</div>
+    <div class="welcome-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.7.30</span> • Portal do Aluno</div>
 </div>
 
 
@@ -275,7 +275,7 @@
                 <button type="button" class="student-login-choice student-login-choice-secondary" onclick="irParaTelaMatriculaSuave()">Quero me matricular</button>
             </div>
         </div>
-        <div id="student-welcome-developer-footer" class="student-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.7.29</span> • Portal do Aluno</div>
+        <div id="student-welcome-developer-footer" class="student-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.7.30</span> • Portal do Aluno</div>
     </div>
 
     <!-- TELA DE LOGIN DO ALUNO -->
@@ -313,7 +313,7 @@
                 </form>
             </div>
         </div>
-        <div id="student-login-developer-footer" class="student-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.7.29</span> • Portal do Aluno</div>
+        <div id="student-login-developer-footer" class="student-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.7.30</span> • Portal do Aluno</div>
     </div>
 
     <!-- TELA DE AUTO-MATRÍCULA -->
@@ -2000,7 +2000,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
 
                             <div class="grid grid-cols-2 gap-2 pt-1">
                                 ${controle.apostilaAtiva ? `
-                                    <button onclick="baixarMaterialEstudoEJA()" class="py-2.5 px-3 bg-white text-emerald-800 font-bold rounded-xl text-xs shadow hover:bg-emerald-50 transition active:scale-95 flex items-center justify-center space-x-1.5">
+                                    <button onclick="baixarMaterialEstudoEJA()" class="se7-eja-action-enabled py-2.5 px-3 font-bold rounded-xl text-xs shadow transition active:scale-95 flex items-center justify-center space-x-1.5">
                                         <i class="fa-solid fa-file-pdf"></i>
                                         <span>Baixar Apostila</span>
                                     </button>
@@ -2012,7 +2012,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
                                 `}
 
                                 ${controle.provaAtiva ? `
-                                    <button onclick="abrirTelaProvaOnlineEJA()" class="py-2.5 px-3 bg-emerald-800 hover:bg-emerald-900 text-white font-bold rounded-xl text-xs shadow transition active:scale-95 flex items-center justify-center space-x-1.5">
+                                    <button onclick="abrirTelaProvaOnlineEJA()" class="se7-eja-action-enabled py-2.5 px-3 font-bold rounded-xl text-xs shadow transition active:scale-95 flex items-center justify-center space-x-1.5">
                                         <i class="fa-solid fa-laptop-file"></i>
                                         <span>Fazer Prova Online</span>
                                     </button>
