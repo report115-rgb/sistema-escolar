@@ -9,8 +9,20 @@ export function contractFor(input,cfg,now=new Date()){
  const date=localDate(now),parts=input.paymentMode==='card'?Number(input.cardInstallments||2):input.paymentMode==='boleto'?2:1;if(![1,2].includes(parts))fail(400,'Escolha uma ou duas parcelas no cartão.');return {version:1,paymentMode:input.paymentMode,cardInstallments:input.paymentMode==='card'?parts:0,totalCents:input.paymentMode==='cash'?cfg.cashCents:cfg.installmentCents,firstCents:input.paymentMode==='boleto'?cfg.installmentCents/2:input.paymentMode==='cash'?cfg.cashCents:cfg.installmentCents,secondCents:input.paymentMode==='boleto'?cfg.installmentCents/2:0,enrollmentDate:date,enrollmentConfirmedAt:now.toISOString(),earliestExamDate:addDays(date,30),firstDueDate:addDays(date,2),paymentState:'pending',firstPaymentConfirmedAt:null,pricingRevision:cfg.revision};
 }
 export function windowFor(date){addDays(date,0);return {startAt:date+'T08:00:00-03:00',cutoffAt:date+'T20:00:00-03:00',deadlineAt:date+'T20:20:00-03:00'};}
-export function questionsFor(config){if(!config?.provaAtiva)fail(409,'A prova ainda não foi ativada pela secretaria.');if(!Array.isArray(config.questoes)||!config.questoes.length||config.questoes.length>100)fail(409,'Cadastre de uma a cem questões antes de liberar a prova.');return config.questoes.map(q=>{if(typeof q.enunciado!=='string'||!q.enunciado.trim()||q.enunciado.length>6000||!Array.isArray(q.opcoes)||q.opcoes.length<2||q.opcoes.length>5||q.opcoes.some(o=>typeof o!=='string'||!o.trim()||o.length>3000)||!Number.isInteger(Number(q.correta))||Number(q.correta)<0||Number(q.correta)>=q.opcoes.length)fail(409,'Há questões incompletas na prova. Solicite revisão à secretaria.');return {enunciado:q.enunciado,opcoes:q.opcoes,correta:Number(q.correta)};});}
-export function score(questions,answers){const correct=questions.reduce((s,q,i)=>s+(answers[String(i)]===q.correta?1:0),0),grade=Math.round(correct/questions.length*100)/10;return {correct,total:questions.length,grade,approved:grade>=7};}
+export function questionsFor(config){
+ if(!config?.provaAtiva)fail(409,'A prova ainda não foi ativada pela secretaria.');
+ const groups=Array.isArray(config.provasPorDisciplina)&&config.provasPorDisciplina.length?config.provasPorDisciplina:null;
+ const source=groups?groups.flatMap(g=>(g.questoes||[]).map(q=>({...q,disciplinaId:String(g.id),disciplinaNome:String(g.nome)}))):config.questoes;
+ if(!Array.isArray(source)||!source.length||source.length>100)fail(409,'Cadastre as questões antes de liberar a prova.');
+ if(groups&&groups.some(g=>!g.nome||!Array.isArray(g.questoes)||g.questoes.length!==5))fail(409,'Cada disciplina precisa conter cinco questões.');
+ return source.map(q=>{if(typeof q.enunciado!=='string'||!q.enunciado.trim()||q.enunciado.length>6000||!Array.isArray(q.opcoes)||q.opcoes.length!==5||q.opcoes.some(o=>typeof o!=='string'||!o.trim()||o.length>3000)||!Number.isInteger(Number(q.correta))||Number(q.correta)<0||Number(q.correta)>=5)fail(409,'Há questões incompletas.');return {enunciado:q.enunciado,opcoes:q.opcoes,correta:Number(q.correta),disciplinaId:q.disciplinaId||'legado',disciplinaNome:q.disciplinaNome||'Prova EJA'};});
+}
+export function score(questions,answers){
+ const correct=questions.reduce((sum,q,i)=>sum+(answers[String(i)]===q.correta?1:0),0),grade=Math.round(correct/questions.length*100)/10;
+ const map=new Map();questions.forEach((q,i)=>{const id=q.disciplinaId||'legado',g=map.get(id)||{id,nome:q.disciplinaNome||'Prova EJA',acertos:0,total:0};g.total++;if(answers[String(i)]===q.correta)g.acertos++;map.set(id,g);});
+ const disciplinas=[...map.values()],zeradas=disciplinas.filter(g=>g.acertos===0).map(g=>g.nome);
+ return {correct,total:questions.length,grade,approved:correct*2>=questions.length&&!zeradas.length,disciplinas,zeradas};
+}
 export function validAnswers(patch,questions){if(!patch||typeof patch!=='object'||Array.isArray(patch)||Object.keys(patch).length>questions.length)fail(400,'Respostas inválidas.');const out={};for(const [key,v]of Object.entries(patch)){if(!/^(0|[1-9]\d*)$/.test(key)||!questions[Number(key)]||!Number.isInteger(v)||v<0||v>=questions[Number(key)].opcoes.length)fail(400,'Alternativa inválida.');out[key]=v;}return out;}
 export function publicAttempt(a){if(!a)return null;const {questions,...rest}=a;return {...rest,questions:(questions||[]).map(({correta,...q})=>q)};}
 

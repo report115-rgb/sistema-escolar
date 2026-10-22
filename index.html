@@ -668,11 +668,11 @@
                             <hr class="border-gray-200 dark:border-slate-700 my-4">
                             <h5 class="font-bold text-sm text-gray-800 dark:text-white">Cadastrar Questões de Múltipla Escolha (5 Alternativas)</h5>
                             
-                            <div id="container-questoes-admin-eja" class="space-y-4"></div>
+                            <label class="block font-semibold mb-1">Disciplina da prova</label><input id="eja-prova-disciplina" type="text" placeholder="Ex.: Matemática" class="w-full px-3 py-2 rounded-lg border dark:bg-slate-800 dark:text-white"><div id="container-questoes-admin-eja" class="space-y-4"></div><h5 class="font-bold text-sm pt-4">Provas por disciplina</h5><div id="lista-provas-eja" class="space-y-2"></div>
 
                             <div class="flex gap-2 pt-2">
                                 <button type="button" onclick="adicionarQuestaoAdminEJA()" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-lg shadow">+ Adicionar Questão</button>
-                                <button type="button" onclick="salvarConfiguracaoProvaEJA()" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow">Salvar Todas as Questões e Status</button>
+                                <button type="button" onclick="salvarConfiguracaoProvaEJA()" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow">Salvar prova por disciplina</button>
                             </div>
                         </div>
                     </div>
@@ -1678,15 +1678,15 @@
         function iniciarCentralMaster(){
  const root=document.getElementById('se7-master-alerts'),button=document.getElementById('se7-master-alert-trigger'),panel=document.getElementById('se7-master-alert-panel'),list=document.getElementById('se7-master-alert-list'),count=document.getElementById('se7-master-alert-count');
  if(!root||!button||!panel||!list||!count)return;
- const accessible=()=>typeof usuarioMasterAtivo==='function'&&usuarioMasterAtivo();
+ const accessible=()=>typeof usuarioMasterAtivo==='function'&&usuarioMasterAtivo();let pagamentos=[];let pagamentoUnsub=null;const vistos=()=>{try{return new Set(JSON.parse(localStorage.getItem('se7-master-pagamentos-vistos')||'[]'));}catch{return new Set();}};
  const entries=[
  {id:'badge-documentos-pendentes',title:'Gestão de Alunos · Validar documentação',tab:'tab-gestion-students',sub:'subtab-validar-docs'},
  {id:'se7-review-justifications',title:'Notas e Frequências · Analisar justificativas',tab:'tab-attendance',action:'justification'}
  ];
  function isAlert(el){if(!el||el.hidden||el.style.display==='none')return false;if(el.id==='se7-review-justifications')return el.dataset.se7ReviewAlert==='pending';const v=getComputedStyle(el);return v.display!=='none'&&v.visibility!=='hidden'&&v.opacity!=='0';}
  function navigate(item){if(!accessible())return;const tabButton=document.querySelector('#main-tabs-nav button[onclick*="'+item.tab+'"]');if(tabButton&&typeof openTab==='function')openTab({currentTarget:tabButton},item.tab);if(item.sub&&typeof openSubTab==='function'){const subButton=document.querySelector('button[onclick*="'+item.sub+'"]');if(subButton)openSubTab({currentTarget:subButton},item.sub);}if(item.action==='justification')document.getElementById(item.id)?.click();panel.hidden=true;button.setAttribute('aria-expanded','false');}
- function update(){const allowed=accessible();root.hidden=!allowed;if(!allowed){panel.hidden=true;button.setAttribute('aria-expanded','false');list.replaceChildren();count.hidden=true;return;}const active=entries.filter(item=>isAlert(document.getElementById(item.id)));list.replaceChildren();if(!active.length){const empty=document.createElement('p');empty.textContent='Nenhuma pendência identificada nos avisos integrados.';list.append(empty);}for(const item of active){const link=document.createElement('button');link.type='button';link.className='se7-master-alert-item';link.textContent=item.title;link.addEventListener('click',()=>navigate(item));list.append(link);}count.hidden=!active.length;count.textContent=String(active.length);button.classList.toggle('se7-has-master-alerts',active.length>0);button.setAttribute('aria-label','Central de notificações Master'+(active.length?' · '+active.length+' pendência(s)':''));}
- button.addEventListener('click',()=>{if(!accessible())return;update();panel.hidden=!panel.hidden;button.setAttribute('aria-expanded',String(!panel.hidden));});
+ function update(){const allowed=accessible();root.hidden=!allowed;if(!allowed){panel.hidden=true;button.setAttribute('aria-expanded','false');list.replaceChildren();count.hidden=true;return;}const active=entries.filter(item=>isAlert(document.getElementById(item.id)));list.replaceChildren();const pendentes=pagamentos.filter(p=>!vistos().has(p.id));if(!active.length){const empty=document.createElement('p');empty.textContent='Nenhuma pendência identificada nos avisos integrados.';list.append(empty);}for(const item of active){const link=document.createElement('button');link.type='button';link.className='se7-master-alert-item';link.textContent=item.title;link.addEventListener('click',()=>navigate(item));list.append(link);}for(const p of pagamentos.slice(0,40)){const btn=document.createElement('button');btn.type='button';btn.className='se7-master-alert-item';btn.textContent='Pagamento confirmado · '+p.aluno+' · R$ '+p.valor;btn.onclick=()=>{const v=vistos();v.add(p.id);localStorage.setItem('se7-master-pagamentos-vistos',JSON.stringify([...v].slice(-300)));update();};list.append(btn);}count.hidden=!(active.length+pendentes.length);count.textContent=String(active.length+pendentes.length);button.classList.toggle('se7-has-master-alerts',active.length+pendentes.length>0);button.setAttribute('aria-label','Central de notificações Master'+(active.length?' · '+active.length+' pendência(s)':''));}
+ const carregarPagamentos=()=>{if(!accessible()||pagamentoUnsub||typeof db==='undefined')return;pagamentoUnsub=db.collection('financeLogs').where('status','==','PAGO').limit(100).onSnapshot(s=>{pagamentos=s.docs.map(doc=>{const x=doc.data();return {id:doc.id,aluno:x.studentName||x.alunoNome||x.nomeAluno||'Aluno',valor:Number(x.amount||x.valor||0).toFixed(2).replace('.',',')};});update();},e=>console.warn('Notificações financeiras:',e));};setInterval(carregarPagamentos,10000);carregarPagamentos();button.addEventListener('click',()=>{if(!accessible())return;update();panel.hidden=!panel.hidden;button.setAttribute('aria-expanded',String(!panel.hidden));});
  document.addEventListener('click',e=>{if(!root.contains(e.target)){panel.hidden=true;button.setAttribute('aria-expanded','false');}});
  window.addEventListener('se7:account-updated',update);
  const watcher=new MutationObserver(()=>{if(!root.hidden)update();});for(const item of entries){const el=document.getElementById(item.id);if(el)watcher.observe(el,{attributes:true,attributeFilter:['hidden','style','class','data-se7-review-alert']});}
@@ -4801,75 +4801,15 @@ async function alternarProvaIndividualAluno(studentId, novoStatus) {
             container.appendChild(div);
         }
 
-        async function carregarConfiguracaoProvaEJAAdmin() {
-            const doc = await db.collection("config").doc("ejaSettings").get();
-            const container = document.getElementById('container-questoes-admin-eja');
-            if(!container) return;
-            container.innerHTML = '';
-
-            if (doc.exists) {
-                const data = doc.data();
-                document.getElementById('input-eja-instrucoes').value = data.instrucoesProva || '';
-                const ativo = data.provaAtiva || false;
-                document.getElementById('switch-ativar-prova-eja').checked = ativo;
-                document.getElementById('lbl-status-prova').textContent = ativo ? "Status: Ativada" : "Status: Desativada";
-
-                const questoes = data.questoes || [];
-                if (questoes.length > 0) {
-                    questoes.forEach(q => adicionarQuestaoAdminEJA(q));
-                } else {
-                    adicionarQuestaoAdminEJA();
-                }
-            } else {
-                adicionarQuestaoAdminEJA();
-            }
-        }
-
-        async function salvarConfiguracaoProvaEJA() {
-    const instrucoes = document.getElementById('input-eja-instrucoes') ? document.getElementById('input-eja-instrucoes').value.trim() : '';
-    const provaAtiva = document.getElementById('switch-ativar-prova-eja') ? document.getElementById('switch-ativar-prova-eja').checked : true;
-    
-    // Coleta todas as questões cadastradas na interface
-    const blocosQuestoes = document.querySelectorAll('.questao-card');
-    const questoes = [];
-
-    blocosQuestoes.forEach((bloco) => {
-        const enunciadoInput = bloco.querySelector('.q-enunciado');
-        const corretaSelect = bloco.querySelector('.q-correta');
-
-        if (enunciadoInput && enunciadoInput.value.trim() !== '') {
-            const opcoes = [];
-            for (let i = 0; i < 5; i++) {
-                const optInput = bloco.querySelector(`.q-opt-${i}`);
-                if (optInput && optInput.value.trim() !== '') {
-                    opcoes.push(optInput.value.trim());
-                }
-            }
-
-            const corretaIndex = corretaSelect ? parseInt(corretaSelect.value) : 0;
-
-            questoes.push({
-                enunciado: enunciadoInput.value.trim(),
-                opcoes: opcoes,
-                correta: corretaIndex
-            });
-        }
-    });
-
-    try {
-        await db.collection("config").doc("ejaSettings").set({
-            provaAtiva: provaAtiva,
-            instrucoesProva: instrucoes,
-            questoes: questoes,
-            updatedAt: new Date().toISOString()
-        }, { merge: true });
-
-        alert("Configurações da Prova Online EJA salvas com sucesso no banco de dados!");
-    } catch (e) {
-        alert("Erro ao salvar prova EJA: " + e.message);
-    }
-}
-
+        let provasEjaAdmin=[];
+function ejaQuestaoLida(){return [...document.querySelectorAll('#container-questoes-admin-eja .questao-card')].map(card=>({enunciado:card.querySelector('.q-enunciado')?.value.trim()||'',opcoes:Array.from({length:5},(_,i)=>card.querySelector('.q-opt-'+i)?.value.trim()||''),correta:Number(card.querySelector('.q-correta')?.value||0)}));}
+function ejaValidaQuestoes(q){return q.length===5&&q.every(x=>x.enunciado&&x.opcoes.length===5&&x.opcoes.every(Boolean)&&Number.isInteger(x.correta)&&x.correta>=0&&x.correta<5);}
+function ejaNovoEditor(nome='',questoes=[]){document.getElementById('eja-prova-disciplina').value=nome;const box=document.getElementById('container-questoes-admin-eja');box.replaceChildren();(questoes.length?questoes:Array.from({length:5},()=>({}))).forEach(q=>adicionarQuestaoAdminEJA(q));}
+function ejaLista(){const el=document.getElementById('lista-provas-eja');if(!el)return;el.replaceChildren();provasEjaAdmin.forEach(p=>{const row=document.createElement('div');row.className='flex items-center justify-between bg-white dark:bg-slate-800 p-3 rounded border dark:border-slate-700';const title=document.createElement('span');title.textContent=p.nome+' — '+p.questoes.length+' questões';const btn=document.createElement('button');btn.textContent='Ver prova';btn.className='px-3 py-1.5 rounded bg-blue-600 text-white';btn.onclick=()=>ejaVerProva(p.id);row.append(title,btn);el.append(row);});}
+async function ejaGravar(){const doc=db.collection('config').doc('ejaSettings');await doc.set({provasPorDisciplina:provasEjaAdmin,updatedAt:new Date().toISOString()},{merge:true});ejaLista();}
+function ejaVerProva(id){const p=provasEjaAdmin.find(x=>x.id===id);if(!p)return;const d=document.createElement('dialog');d.style.cssText='width:95%;max-width:850px;max-height:90vh;overflow:auto;padding:20px;border-radius:14px;color:inherit;background:var(--bg-card,#fff)';d.className='dark:bg-slate-800';const title=document.createElement('h3');title.textContent=p.nome;title.className='text-lg font-bold mb-3';d.append(title);const body=document.createElement('div');d.append(body);const footer=document.createElement('div');footer.className='flex gap-2 justify-end pt-3';const close=document.createElement('button');close.textContent='Fechar';close.className='px-4 py-2 rounded bg-gray-200 text-gray-900';close.onclick=()=>d.close();const edit=document.createElement('button');edit.className='px-4 py-2 rounded bg-blue-600 text-white';footer.append(close,edit);d.append(footer);const draw=editing=>{body.replaceChildren();p.questoes.forEach((q,i)=>{const section=document.createElement('section');section.className='border-b py-2';const name=document.createElement('b');name.textContent='Questão '+(i+1);section.append(name);const field=(value,cls)=>{const el=document.createElement('input');el.className=cls+' w-full p-2 my-1 rounded border dark:bg-slate-900';el.value=value||'';el.disabled=!editing;section.append(el);};field(q.enunciado,'eja-enunciado');q.opcoes.forEach((opt,j)=>field(opt,'eja-opcao-'+j));const g=document.createElement('select');g.className='eja-gabarito p-2 border rounded dark:bg-slate-900';for(let j=0;j<5;j++)g.add(new Option('Gabarito '+String.fromCharCode(65+j),j));g.value=q.correta;g.disabled=!editing;section.append(g);body.append(section);});edit.textContent=editing?'Atualizar':'Editar';edit.onclick=async()=>{if(!editing){draw(true);return;}const next=[...body.querySelectorAll('section')].map(s=>({enunciado:s.querySelector('.eja-enunciado').value.trim(),opcoes:Array.from({length:5},(_,j)=>s.querySelector('.eja-opcao-'+j).value.trim()),correta:Number(s.querySelector('.eja-gabarito').value)}));if(!ejaValidaQuestoes(next))return alert('Cadastre cinco questões completas.');const before=p.questoes;p.questoes=next;try{await ejaGravar();draw(false);}catch(e){p.questoes=before;alert('Erro ao atualizar: '+e.message);}};};d.onclose=()=>d.remove();document.body.append(d);draw(false);d.showModal();}
+async function carregarConfiguracaoProvaEJAAdmin(){const snap=await db.collection('config').doc('ejaSettings').get(),data=snap.data()||{};document.getElementById('input-eja-instrucoes').value=data.instrucoesProva||'';document.getElementById('switch-ativar-prova-eja').checked=!!data.provaAtiva;document.getElementById('lbl-status-prova').textContent=data.provaAtiva?'Status: Ativada':'Status: Desativada';provasEjaAdmin=Array.isArray(data.provasPorDisciplina)&&data.provasPorDisciplina.length?data.provasPorDisciplina:(data.questoes?.length?[{id:'legado',nome:'Prova existente — definir disciplina',questoes:data.questoes}]:[]);ejaNovoEditor();ejaLista();}
+async function salvarConfiguracaoProvaEJA(){const nome=document.getElementById('eja-prova-disciplina').value.trim(),questoes=ejaQuestaoLida();if(!nome)return alert('Informe a disciplina.');if(!ejaValidaQuestoes(questoes))return alert('Cada disciplina precisa de cinco questões completas.');const id=nome.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-');const pos=provasEjaAdmin.findIndex(p=>p.id===id);const next={id,nome,questoes};if(pos>=0)provasEjaAdmin[pos]=next;else provasEjaAdmin.push(next);try{await ejaGravar();await db.collection('config').doc('ejaSettings').set({instrucoesProva:document.getElementById('input-eja-instrucoes').value.trim(),provaAtiva:document.getElementById('switch-ativar-prova-eja').checked},{merge:true});ejaNovoEditor();alert('Prova salva por disciplina.');}catch(e){alert('Erro ao salvar: '+e.message);}}
         // ==========================================
         // FUNÇÕES DE VALIDAÇÃO DE DOCUMENTOS - EJA
         // ==========================================
