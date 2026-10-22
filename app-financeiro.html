@@ -191,7 +191,7 @@
         <p class="welcome-tagline">Sua gestão acadêmica em um só lugar.</p>
         <div class="welcome-progress" aria-hidden="true"></div>
     </div>
-    <div class="welcome-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="financeiro">v1.11.26</span> • Setor Financeiro</div>
+    <div class="welcome-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="financeiro">v1.11.27</span> • Setor Financeiro</div>
 </div>
 
 
@@ -229,7 +229,7 @@
                 </form>
             </div>
         </div>
-        <div id="finance-login-developer-footer" class="finance-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="financeiro">v1.11.26</span> • Setor Financeiro</div>
+        <div id="finance-login-developer-footer" class="finance-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="financeiro">v1.11.27</span> • Setor Financeiro</div>
     </div>
 
 <dialog id="finance-recovery" aria-labelledby="finance-recovery-title"><form onsubmit="event.preventDefault();enviarRecuperacaoFinanceiro();"><h2 id="finance-recovery-title">Recuperar senha</h2><p>Informe o e-mail cadastrado para receber as instruções de recuperação.</p><label for="finance-recovery-email">E-mail</label><input id="finance-recovery-email" type="email" autocomplete="email" required><p id="finance-recovery-status" role="status"></p><div><button type="button" onclick="fecharRecuperacaoFinanceiro()">Fechar</button><button type="submit" id="finance-recovery-send" data-busy-managed>Enviar link</button></div></form></dialog>
@@ -2144,57 +2144,47 @@
         function fecharModalFecharAcordo() { document.getElementById('modal-fechar-acordo').style.display = 'none'; }
 
         async function executarFechamentoAcordoDefinitivo() {
-            const selected=financeLogs.find(f=>f.id===propostaAprovacaoId);if(!selected||window.SE7Agreements?.state(selected)!=='pending')return alert('A proposta não está aguardando aprovação. Atualize para conferir.');
-            const radioSelecionado = document.querySelector('input[name="opcao-escolhida-fechamento"]:checked');
-            if (!radioSelecionado) return alert("Selecione qual das opções o aluno escolheu.");
-            const escolhaKey = radioSelecionado.value;
-            const opEscolhida = opcoesGeradas[escolhaKey];
-            const aluno = studentsMap[alunoNegociacaoId];
-            const nome = aluno ? (aluno.fullname || aluno.name) : 'Aluno';
-
-            if (!confirm(`Deseja realmente aprovar o acordo na modalidade ${escolhaKey.toUpperCase()} no valor de R$ ${opEscolhida.valorFinal.toFixed(2)}?`)) return;
-
-            try {
-                for (let fatura of faturasAtrasadasGlobal) {
-                    await db.collection("financeLogs").doc(fatura.id).update({ status: "NEGOCIADO (ACORDO)", dataPagamento: new Date().toLocaleDateString('pt-BR'), formaPagamento: "Substituído por Acordo" });
+            const proposta=financeLogs.find(f=>f.id===propostaAprovacaoId);
+            if(!proposta||!proposta.id?.startsWith('proposta_')||!/PROPOSTA|AGUARDANDO/.test(String(proposta.status||'')))return alert('Proposta indisponível para aceite.');
+            const radio=document.querySelector('input[name="opcao-escolhida-fechamento"]:checked');
+            if(!radio)return alert('Escolha a modalidade aceita pelo aluno.');
+            const escolha=radio.value,op=proposta.opcoesSalvas?.[escolha],studentId=proposta.studentId||proposta.alunoId;
+            if(!op||!studentId)return alert('Proposta incompleta. Confira antes de aprovar.');
+            const valor=Math.round(Number(op.valorFinal)*100);
+            const parcelas=escolha==='parcelado'?Number.parseInt(op.infoExtra,10)||0:1;
+            if(!Number.isSafeInteger(valor)||valor<=0||!Number.isInteger(parcelas)||parcelas<1||parcelas>24)return alert('Valor ou número de parcelas inválido.');
+            if(!confirm('O aluno aceitou expressamente '+escolha+' no valor de R$ '+(valor/100).toFixed(2)+'? Ao confirmar, o Asaas cancelará apenas cobranças antigas elegíveis e emitirá as novas conforme o acordo.'))return;
+            const botao=document.getElementById('btn-confirmar-fechamento');if(botao?.disabled)return;
+            if(botao)botao.disabled=true;
+            let id='';
+            try{
+                const quote=await SE7.api('renegotiation-quote',{studentId});
+                const method=escolha==='cartao'?'card':'bank';
+                const option=quote.options.find(o=>o.method===method&&(escolha==='avista'?o.count===1:escolha==='parcelado'?o.count===parcelas:true));
+                if(!option)throw Error('A condição escolhida não é compatível com as modalidades do Asaas. Revise a proposta.');
+                if(valor>quote.total)throw Error('O valor da proposta ultrapassa a dívida atualizada. Refaça o cálculo antes do aceite.');
+                const body={studentId,quoteId:quote.quoteId,option:option.key};
+                if(valor!==option.total||parcelas!==option.count){
+                    body.customTotal=valor;body.count=parcelas;body.reason='Aceite expresso da proposta '+proposta.id+' na modalidade '+escolha;
                 }
-
-                if (escolhaKey === 'parcelado') {
-                    let qtdParcelas = parseInt(opEscolhida.infoExtra) || 2;
-                    let valorParcela = opEscolhida.valorFinal / qtdParcelas;
-                    let dataBase = new Date();
-                    for (let i = 1; i <= qtdParcelas; i++) {
-                        dataBase.setMonth(dataBase.getMonth() + 1);
-                        let dataVencStr = dataBase.toISOString().split('T')[0];
-                        let partesVenc = dataVencStr.split('-');
-                        let vencFormatado = `${partesVenc[2]}/${partesVenc[1]}/${partesVenc[0]}`;
-                        await db.collection("financeLogs").doc("parcela_acordo_" + alunoNegociacaoId + "_" + i + "_" + Date.now()).set({
-                            studentId: alunoNegociacaoId, alunoId: alunoNegociacaoId, nomeAluno: nome,
-                            description: `Parcela Acordo ${i}/${qtdParcelas}`, amount: valorParcela.toFixed(2),
-                            valor: valorParcela.toFixed(2), date: vencFormatado, vencimento: vencFormatado, status: "PENDENTE", criadoEm: new Date().toISOString()
-                        });
+                const response=await SE7.api('renegotiation-begin',body);
+                id=response.id;
+                await db.collection('financeLogs').doc(proposta.id).update({status:'ACORDO EM PROCESSAMENTO',renegotiationId:id,modalidadeAceita:escolha,valorAceitoCents:valor,aceitoEm:new Date().toISOString()});
+                proposta.status='ACORDO EM PROCESSAMENTO';proposta.renegotiationId=id;
+                for(let i=0;i<130;i++){
+                    const step=await SE7.api('renegotiation-step',{studentId,id});
+                    if(step.state==='done'){
+                        await db.collection('financeLogs').doc(proposta.id).update({status:'ACORDO ACEITO',efetivadoEm:new Date().toISOString()});
+                        proposta.status='ACORDO ACEITO';fecharModalFecharAcordo();
+                        alert('Acordo efetivado. O Asaas confirmou a substituição das cobranças.');
+                        window.SE7Agreements?.refresh();return;
                     }
-                } else {
-                    let dataVencUnica = new Date();
-                    dataVencUnica.setDate(dataVencUnica.getDate() + 5);
-                    let vencUnicaStr = dataVencUnica.toISOString().split('T')[0].split('-').reverse().join('/');
-                    await db.collection("financeLogs").doc("acordo_unico_" + alunoNegociacaoId + "_" + Date.now()).set({
-                        studentId: alunoNegociacaoId, alunoId: alunoNegociacaoId, nomeAluno: nome,
-                        description: `Acordo Consolidado - ${escolhaKey.toUpperCase()}`, amount: opEscolhida.valorFinal.toFixed(2),
-                        valor: opEscolhida.valorFinal.toFixed(2), date: vencUnicaStr, vencimento: vencUnicaStr, status: "PENDENTE", criadoEm: new Date().toISOString()
-                    });
                 }
-
-                const propostasPendentes = financeLogs.filter(f => f.id===propostaAprovacaoId && (f.studentId === alunoNegociacaoId || f.alunoId === alunoNegociacaoId) && !/REPROV|RECUS/i.test(f.status||'') && f.status && (f.status.includes("PROPOSTA") || f.status.includes("AGUARDANDO")));
-                for (let p of propostasPendentes) {
-                    await db.collection("financeLogs").doc(p.id).update({ status: "ACORDO ACEITO", description: `Acordo Aceito - ${escolhaKey.toUpperCase()}` });
-                }
-
-                fecharModalFecharAcordo();
-                alert(`🎉 Acordo aprovado com sucesso para ${nome}!`);
-                if(window.SE7Agreements?.isProposalOpen())SE7Agreements.refresh();else selecionarAlunoNegociacao(alunoNegociacaoId);
-                renderizarNegociacoesAtivasGeral();
-            } catch (e) { alert("Erro ao fechar acordo: " + e.message); }
+                throw Error('Processamento ainda pendente. Use Retomar efetivação para consultar o andamento.');
+            }catch(e){
+                alert('Não foi possível concluir a substituição: '+e.message+(id?' O processo permanece registrado; não repita o aceite. Use Retomar efetivação.':''));
+                window.SE7Agreements?.refresh();
+            }finally{if(botao)botao.disabled=false;}
         }
 
         function abrirModalEditarMensalidadeFinanceiro(financeLogId) {

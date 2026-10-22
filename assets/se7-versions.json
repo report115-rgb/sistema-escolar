@@ -2,15 +2,15 @@
   "schema": 1,
   "apps": {
     "matriz": {
-      "version": "1.7.50",
+      "version": "1.7.51",
       "revision": ""
     },
     "aluno": {
-      "version": "1.7.30",
+      "version": "1.7.31",
       "revision": "e356d8243b93b0370adf5b26ce18649deec1040a81adab387a887b9e94e9d91e"
     },
     "financeiro": {
-      "version": "1.11.26",
+      "version": "1.11.27",
       "revision": "1b7ffd1554940930f9e34ce4c78e3d3efd28358a1136273793bbe2c42e5ee1b1"
     },
     "totem": {

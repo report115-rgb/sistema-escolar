@@ -246,7 +246,7 @@
         <p class="welcome-tagline">Sua gestão acadêmica em um só lugar.</p>
         <div class="welcome-progress" aria-hidden="true"></div>
     </div>
-    <div class="welcome-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.7.30</span> • Portal do Aluno</div>
+    <div class="welcome-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.7.31</span> • Portal do Aluno</div>
 </div>
 
 
@@ -275,7 +275,7 @@
                 <button type="button" class="student-login-choice student-login-choice-secondary" onclick="irParaTelaMatriculaSuave()">Quero me matricular</button>
             </div>
         </div>
-        <div id="student-welcome-developer-footer" class="student-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.7.30</span> • Portal do Aluno</div>
+        <div id="student-welcome-developer-footer" class="student-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.7.31</span> • Portal do Aluno</div>
     </div>
 
     <!-- TELA DE LOGIN DO ALUNO -->
@@ -313,7 +313,7 @@
                 </form>
             </div>
         </div>
-        <div id="student-login-developer-footer" class="student-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.7.30</span> • Portal do Aluno</div>
+        <div id="student-login-developer-footer" class="student-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.7.31</span> • Portal do Aluno</div>
     </div>
 
     <!-- TELA DE AUTO-MATRÍCULA -->
@@ -1546,7 +1546,11 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
 
             try {
                 // 1. Atualiza dados do aluno pontualmente
-                const studentDoc = await db.collection("students").doc(alunoLogado.id).get({source:'server'});
+                const alunoIdentificadorInicial=alunoLogado.id;
+                const cursoIdInicial=alunoLogado.courseId;
+                const consultaCursoAntecipada=cursoIdInicial?db.collection("courses").doc(cursoIdInicial).get({source:'server'}):Promise.resolve(null);
+                const studentDoc = await db.collection("students").doc(alunoIdentificadorInicial).get({source:'server'});
+                if(alunoLogado?.id!==alunoIdentificadorInicial)return;
                 if (!studentDoc.exists || studentDoc.data().portalBlocked || (studentDoc.data().portalSessionVersion||0)!==(alunoLogado.portalSessionVersion||0)) {
                     alunoLogado=null;alert('Seu acesso foi alterado. Entre novamente.');await SE7.logout();return;
                 }
@@ -1578,18 +1582,19 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
                     document.getElementById('header-avatar-box').innerHTML = '<i class="fa-solid fa-user text-blue-200"></i>';
                 }
 
-                if(window.SE7AdminPortal?.active)void SE7Cancellation.local(alunoLogado.id).catch(()=>{});else await SE7Cancellation.local(alunoLogado.id);
+                void SE7Cancellation.local(alunoLogado.id).catch(e=>console.warn('Conferência de cancelamento pendente:',e));
                 renderizarFrequenciaAluno();
 
                 // 2. Carrega curso e notas pontualmente
                 if(alunoLogado.courseId) {
-                    const courseDoc = await db.collection("courses").doc(alunoLogado.courseId).get({source:'server'});
+                    const courseDoc=alunoLogado.courseId===cursoIdInicial?await consultaCursoAntecipada:await db.collection("courses").doc(alunoLogado.courseId).get({source:'server'});
+                    if(alunoLogado?.id!==alunoIdentificadorInicial)return;
                     if(courseDoc.exists) {
                         const curso = courseDoc.data();window.se7CalendarCourse=curso;
                         adaptarPainelPorModalidadeCurso(curso);
-                        
+                        document.getElementById('main-app').style.visibility='visible';
                         renderizarDocumentosObrigatorios();
-                        await verificarTodasPendencias();
+                        void verificarTodasPendencias().catch(e=>console.warn('Consulta de pendências pendente:',e));
 
                         document.getElementById('header-aluno-curso').textContent = curso.name;
                         document.getElementById('info-curso-completo').textContent = curso.name;
@@ -1688,7 +1693,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
                 finSnap.forEach(doc=>faturas.push({id:doc.id,...doc.data()}));
                 renderizarFaturasAluno(faturas);
 
-                await verificarTodasPendencias();
+                void verificarTodasPendencias().catch(e=>console.warn('Pendências não concluídas:',e));
                 void SE7Notices.refresh(alunoLogado.id);document.dispatchEvent(new Event('se7:portal-ready'));void window.SE7ExamsStudent?.refresh();
             } catch(e) {
                 console.error("Erro ao carregar dados do painel do aluno:", e);
