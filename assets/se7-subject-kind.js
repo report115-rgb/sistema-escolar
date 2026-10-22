@@ -1,5 +1,5 @@
 (function(root){
- const labels={theory:'Teórica',theory_practice:'Teórico-prática',internship:'Estágio curricular obrigatório'};
+ const labels={theory:'Teórica',theory_practice:'Teórico-prática',internship:'Estágio curricular obrigatório',tcc:'TCC'};
  const normalize=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toLowerCase();
  const supports=c=>!(/eja|supletivo/i.test(String(c?.nivel||'')+' '+String(c?.name||''))&&c?.ejaMode!=='modular');
  const moduleOf=event=>{const n=Number(event?.module)||Number(String(event?.description||'').match(/m[oó]dulo\s*0?([1-4])\b/i)?.[1]);return [1,2,3,4].includes(n)?String(n):'';};

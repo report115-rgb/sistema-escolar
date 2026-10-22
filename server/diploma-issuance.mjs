@@ -23,7 +23,7 @@ function evaluate(c){
  if(!subjects.length)issues.push('Matriz curricular não configurada.');
  let completedHours=0,totalHours=0;
  for(const sub of subjects){
-  const name=sub.name||'Disciplina',hours=Number(sub.hours||0);if(!(hours>0)){issues.push(name+': carga horária não configurada.');continue;}totalHours+=hours;
+  const name=sub.name||'Disciplina',hours=Number(sub.hours||0),isTCC=sub.teachingType==='tcc';if(isTCC){const g=s.grades?.[sub.id]||{},n=grade(g.final),passed=/^(aprovad[oa]|concluid[oa])$/.test(norm(g.status||g.situacao))||Number.isFinite(n)&&n>=6&&n<=10;if(!passed)issues.push(name+': TCC obrigatório ainda não concluído ou aprovado.');details.push({name,hours:0,grade:Number.isFinite(n)?n:null,frequency:null,passed});continue;}if(!(hours>0)){issues.push(name+': carga horária não configurada.');continue;}totalHours+=hours;
   const g=s.grades?.[sub.id]||{},n=grade(g.final),isInternship=sub.teachingType==='internship';
   const stageLinks=isInternship?c.assignments.filter(a=>String(a.subjectId)===String(sub.id)):[];
   const approvals=isInternship?c.evaluations.filter(e=>stageLinks.some(a=>a.id===e.assignmentId)&&e.status==='final'&&norm(e.result)==='aprovado'&&Number(e.requiredMinutes)>0&&Number(e.validatedMinutes)>=Number(e.requiredMinutes)):[];

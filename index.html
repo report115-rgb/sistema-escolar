@@ -64,7 +64,7 @@
                 display: none !important;
             }
         }
-#login-modal .matriz-login-footer {position:fixed;bottom:0;left:0;right:0;margin:0;padding:12px 24px;text-align:center;font-size:11px;line-height:1.65;color:#9fb5d4;background:linear-gradient(transparent,#020d20 45%);}
+#login-modal .matriz-login-footer {position:fixed;bottom:0;left:0;right:0;margin:0;padding:5px 24px 7px;text-align:center;font-size:11px;line-height:1.65;color:#9fb5d4;background:linear-gradient(transparent,#020d20 45%);}
 #login-modal .matriz-login-footer strong{font-weight:600;color:#c6d6eb;}
 #login-modal.se7-login{padding-bottom:80px;}
 @media(max-height:560px){body #login-modal.se7-login{align-items:flex-start;padding-top:20px;padding-bottom:80px;}}
@@ -97,7 +97,7 @@
 @keyframes login-loading-dot {0%,100%{opacity:0;}66.666%{opacity:1;}}
 @media(prefers-reduced-motion:reduce){#login-modal .login-connected{animation:none;text-shadow:0 0 12px #2995ff;}#login-modal .login-loading-dots span{animation:none;opacity:1;}}
 #login-modal .login-brand-subtitle {font-size:19px;letter-spacing:5px;color:#b6c9e9;margin:16px 0 0;line-height:1.4;}
-#login-modal .login-card {box-sizing:border-box;width:100%;padding:36px 38px 32px;border:1px solid #2a5c9f;border-radius:14px;background:linear-gradient(135deg,rgba(21,40,66,.86),rgba(8,21,37,.92));box-shadow:0 20px 70px #00000020,inset 0 1px 0 #ffffff08;}
+#login-modal .login-card {box-sizing:border-box;width:100%;padding:42px 42px 38px;border:1px solid #2a5c9f;border-radius:14px;background:linear-gradient(135deg,rgba(21,40,66,.86),rgba(8,21,37,.92));box-shadow:0 20px 70px #00000020,inset 0 1px 0 #ffffff08;}
 #login-modal #login-box-title {font-size:30px;line-height:1.2;font-weight:700;letter-spacing:-.8px;margin:0 0 10px;white-space:nowrap;color:#f6f8ff;}
 #login-modal #login-subtitle-text {font-size:14px;line-height:1.5;color:#9db2d2;margin:0 0 28px;}
 #login-modal .login-field {margin-bottom:22px;}
@@ -169,7 +169,7 @@
 <script src="/assets/se7-polos.js?v=cadastro-3" defer></script>
 <link rel="stylesheet" href="assets/se7-eja.css?v=1"><script defer src="assets/se7-eja-admin.js?v=1"></script><link rel="stylesheet" href="/assets/se7-account-menu.css?v=menu-suave-3">
 <link rel="stylesheet" href="/assets/se7-ambient.css">
-<script src="/assets/se7-subject-kind.js?v=1"></script>
+<script src="/assets/se7-subject-kind.js?v=tcc-20261022"></script>
 <script src="/assets/se7-lesson-realization.js?v=1"></script>
 <script src="/assets/se7-attendance-proof.js?v=observacao-decisao-20261021"></script>
 <script type="module" src="/assets/se7-attendance-rules.js?v=1"></script>
@@ -399,7 +399,7 @@
         <div class="se7-modal-panel bg-white dark:bg-slate-800 rounded-2xl max-w-lg w-full p-6 border border-gray-200 dark:border-slate-700 relative shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <button type="button" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 text-xl font-bold" onclick="fecharModalEditarCalendario()">&times;</button>
             <h3 class="text-lg font-bold text-gray-900 dark:text-white"><i class="fa-solid fa-calendar-pen text-blue-600 mr-2"></i> Editar Calendário Acadêmico</h3>
-            <label>Tipo de evento<select id="edit-cal-type" onchange="atualizarTipoEdicaoCalendario()" class="w-full px-3 py-2 dark:bg-slate-800"><option value="lesson">Aula</option><option value="inaugural">Aula inaugural</option><option value="holiday">Feriado / Sem aula</option><option value="exam">Prova única</option><option value="simulation">Simulado</option></select></label><input type="hidden" id="edit-cal-id" value="">
+            <label>Tipo de evento<select id="edit-cal-type" onchange="atualizarTipoEdicaoCalendario()" class="w-full px-3 py-2 dark:bg-slate-800"><option value="lesson">Aula</option><option value="inaugural">Aula inaugural</option><option value="holiday">Feriado / Sem aula</option><option value="exam">Prova única</option><option value="simulation">Simulado</option><option value="tcc">TCC</option></select></label><input type="hidden" id="edit-cal-id" value="">
             <div>
                 <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase mb-1">Disciplina</label>
                 <input type="text" id="edit-cal-subject" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900 dark:text-white">
@@ -923,8 +923,8 @@
                     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200" onclick="openSubTab(event, 'subtab-teachers')">Colaboradores</button>
  <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200" onclick="openSubTab(event, 'subtab-docentes')">Cadastro docente</button>
                     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-institution')">Instituição</button>
+<button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-audit')">Auditoria</button>
 <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event,'subtab-census');SE7Census.open()">Censo Escolar</button>
-		    <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event, 'subtab-audit')">Auditoria</button>
     <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event,'subtab-whatsapp');carregarPainelWhatsApp()"><i class="fa-brands fa-whatsapp mr-1"></i> WhatsApp</button>
 <button class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" onclick="openSubTab(event,'subtab-email');SE7Email.history()"><i class="fa-solid fa-envelope mr-1"></i> E-mails acadêmicos</button>
 <button id="btn-subtab-gestao-totem" class="subtab-button px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" style="display: none;" onclick="openSubTab(event, 'subtab-gestao-totem')"><i class="fa-solid fa-clock mr-1.5"></i> Registro de ponto</button>
@@ -1042,7 +1042,7 @@
                                 <label class="block text-xs font-semibold mb-1">Curso</label>
                                 <select id="input-subject-course-select" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900"></select>
                             </div>
-<div><label class="block text-xs font-semibold mb-1">Tipo da disciplina</label><select id="input-subject-type" class="w-full px-3 py-2 rounded-lg border dark:bg-slate-900"><option value="">Selecione o tipo...</option><option value="theory">Teórica</option><option value="theory_practice">Teórico-prática</option><option value="internship">Estágio curricular obrigatório</option></select></div>
+<div><label class="block text-xs font-semibold mb-1">Tipo da disciplina</label><select id="input-subject-type" onchange="atualizarCamposTCCDisciplina()" class="w-full px-3 py-2 rounded-lg border dark:bg-slate-900"><option value="">Selecione o tipo...</option><option value="theory">Teórica</option><option value="theory_practice">Teórico-prática</option><option value="internship">Estágio curricular obrigatório</option><option value="tcc">TCC</option></select></div>
                             <div>
                                 <label class="block text-xs font-semibold mb-1">Nome da Disciplina</label>
                                 <input type="text" id="input-subject-name" placeholder="Anatomia" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-900">
@@ -2947,11 +2947,17 @@ async function excluirColaborador(id) {
             }
         }
 
-        async function addSubjectToCourse() {
+        function atualizarCamposTCCDisciplina(){
+ const kind=document.getElementById('input-subject-type')?.value, name=document.getElementById('input-subject-name'),hours=document.getElementById('input-subject-hours');
+ if(!name||!hours)return;
+ if(kind==='tcc'){name.value='Trabalho de Conclusão de Curso';name.readOnly=true;hours.value='';hours.closest('div').hidden=true;}
+ else {if(name.readOnly&&name.value==='Trabalho de Conclusão de Curso')name.value='';name.readOnly=false;hours.closest('div').hidden=false;}
+}
+async function addSubjectToCourse() {
             const editSubjectId = document.getElementById('edit-subject-id').value;
             const courseId = document.getElementById('input-subject-course-select').value;
-            const name = document.getElementById('input-subject-name').value.trim();
-            const hours = document.getElementById('input-subject-hours').value.trim();
+            const name = document.getElementById('input-subject-type').value==='tcc'?'Trabalho de Conclusão de Curso':document.getElementById('input-subject-name').value.trim();
+            const hours = document.getElementById('input-subject-type').value==='tcc'?'':document.getElementById('input-subject-hours').value.trim();
             const ementa = document.getElementById('input-subject-ementa').value.trim();
             const teachingType=document.getElementById('input-subject-type').value;
             if(!SE7SubjectKind.labels[teachingType])return alert('Selecione o tipo da disciplina.');
@@ -2976,7 +2982,7 @@ async function excluirColaborador(id) {
                 await db.collection("courses").doc(courseId).update({ subjects: course.subjects });
                 document.getElementById('input-subject-name').value = '';
                 document.getElementById('input-subject-hours').value = '';
-                document.getElementById('input-subject-ementa').value = '';document.getElementById('input-subject-type').value='';
+                document.getElementById('input-subject-ementa').value = '';document.getElementById('input-subject-type').value='';atualizarCamposTCCDisciplina();
                 document.getElementById('subjects-list-course').value=courseId;cancelarEdicaoDisciplina();renderSubjectsManagement();alert("Disciplina adicionada com sucesso!");
             }
         }
@@ -3013,7 +3019,7 @@ async function excluirColaborador(id) {
             document.getElementById('input-subject-name').value = sub.name || '';
             document.getElementById('input-subject-hours').value = sub.hours || '';
             document.getElementById('input-subject-ementa').value = sub.ementa || '';
-            document.getElementById('input-subject-type').value=sub.teachingType||'';
+            document.getElementById('input-subject-type').value=sub.teachingType||'';atualizarCamposTCCDisciplina();
 
             document.getElementById('btn-save-subject').textContent = "Atualizar Disciplina";
             document.getElementById('btn-cancel-edit-subject').style.display = 'inline-block';
@@ -3161,8 +3167,8 @@ async function excluirColaborador(id) {
         }
         function atualizarDisciplinasPorTurmaCalendario() {
             const courseId=document.getElementById('cal-course-select').value,classId=document.getElementById('cal-class-select').value,subjectSelect=document.getElementById('cal-subject-select');if(!subjectSelect)return;
-            const old=subjectSelect.value,isLesson=document.getElementById('cal-event-type').value==='lesson',course=courses.find(c=>c.id===courseId);subjectSelect.replaceChildren(new Option('Selecione a disciplina...',''));
-            for(const subject of course?.subjects||[]){const done=disciplinaJaProgramadaNoCalendario(courseId,classId,subject.name),option=new Option(subject.name+(done?' — Já incluída no calendário desta turma':''),subject.name);option.disabled=isLesson&&done;subjectSelect.add(option);}
+            const old=subjectSelect.value,kind=document.getElementById('cal-event-type').value,isLesson=kind==='lesson',course=courses.find(c=>c.id===courseId);subjectSelect.replaceChildren(new Option('Selecione a disciplina...',''));
+            for(const subject of course?.subjects||[]){if(kind==='tcc'&&subject.teachingType!=='tcc'||kind==='lesson'&&subject.teachingType==='tcc')continue;const done=disciplinaJaProgramadaNoCalendario(courseId,classId,subject.name),option=new Option(subject.name+(done?' — Já incluída no calendário desta turma':''),subject.name);option.disabled=isLesson&&done;subjectSelect.add(option);}
             if([...subjectSelect.options].some(o=>o.value===old&&!o.disabled))subjectSelect.value=old;
         }
 
@@ -3194,13 +3200,13 @@ async function excluirColaborador(id) {
             const qtd = document.getElementById('cal-event-type').value==='inaugural'?1:(parseInt(document.getElementById('cal-qtd-datas').value) || 2);
             const module=eventType==='lesson'?document.getElementById('cal-event-desc').value:'';
             if(eventType==='lesson'&&!module)return alert('Selecione o módulo.');
-            const description=eventType==='lesson'?SE7SubjectKind.description({subject,module},courses.find(c=>c.id===courseId)):subject;
+            const description=eventType==='lesson'?SE7SubjectKind.description({subject,module},courses.find(c=>c.id===courseId)):eventType==='tcc'?'Trabalho de Conclusão de Curso':subject;
 
             if (!courseId || !classId || !subject || !description) {
                 return alert("Preencha todos os campos do calendário acadêmico.");
             }
 
-            if(eventType==='lesson'&&disciplinaJaProgramadaNoCalendario(courseId,classId,subject))return alert('Esta disciplina já está incluída no calendário desta turma, mesmo que as aulas ainda não tenham ocorrido. Para corrigir um registro anterior, use o gerenciamento dos calendários.');
+            if(['lesson','tcc'].includes(eventType)&&disciplinaJaProgramadaNoCalendario(courseId,classId,subject))return alert('Esta disciplina já está incluída no calendário desta turma, mesmo que as aulas ainda não tenham ocorrido. Para corrigir um registro anterior, use o gerenciamento dos calendários.');
             let datasSelecionadas = [];
             for (let i = 1; i <= qtd; i++) {
                 const val = document.getElementById(`cal-date-${i}`).value;
@@ -5451,7 +5457,7 @@ function escutarRegistrosPontoManual() {
 <script src="/assets/se7-enrollment.js"></script>
 <script type="module" src="/assets/se7-collaborators.js?v=workforce-2"></script>
 <script src="/assets/se7-staff-session.js?v=1"></script>
-<script src="/assets/se7-version.js?v=revision-automatica-20261021"></script>
+<script src="/assets/se7-version.js?v=versao-limpa-20261022"></script>
 <script src="/assets/se7-documents.js?v=drive-analise-2"></script>
 <link rel="stylesheet" href="/assets/se7-template-editor.css?v=document-polo-2"><script src="/assets/se7-document-models.js"></script>
 <script src="/assets/se7-enrollment-contract.js?v=20261019-2"></script>
