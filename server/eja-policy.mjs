@@ -15,7 +15,7 @@ export function questionsFor(config){
  const source=groups?groups.flatMap(g=>(g.questoes||[]).map(q=>({...q,disciplinaId:String(g.id),disciplinaNome:String(g.nome)}))):config.questoes;
  if(!Array.isArray(source)||!source.length||source.length>100)fail(409,'Cadastre as questões antes de liberar a prova.');
  if(groups&&groups.some(g=>!g.nome||!Array.isArray(g.questoes)||g.questoes.length!==5))fail(409,'Cada disciplina precisa conter cinco questões.');
- return source.map(q=>{if(typeof q.enunciado!=='string'||!q.enunciado.trim()||q.enunciado.length>6000||!Array.isArray(q.opcoes)||q.opcoes.length!==5||q.opcoes.some(o=>typeof o!=='string'||!o.trim()||o.length>3000)||!Number.isInteger(Number(q.correta))||Number(q.correta)<0||Number(q.correta)>=5)fail(409,'Há questões incompletas.');return {enunciado:q.enunciado,opcoes:q.opcoes,correta:Number(q.correta),disciplinaId:q.disciplinaId||'legado',disciplinaNome:q.disciplinaNome||'Prova EJA'};});
+ return source.map(q=>{if(typeof q.enunciado!=='string'||!q.enunciado.trim()||q.enunciado.length>6000||!Array.isArray(q.opcoes)||q.opcoes.length!==5||q.opcoes.some(o=>typeof o!=='string'||!o.trim()||o.length>3000)||!Number.isInteger(Number(q.correta))||Number(q.correta)<0||Number(q.correta)>=5)fail(409,'Há questões incompletas.');return {enunciado:q.enunciado,opcoes:q.opcoes,correta:Number(q.correta),disciplinaId:q.disciplinaId||'legado',disciplinaNome:q.disciplinaNome||'Prova EJA',imagem:typeof q.imagem==='string'&&/^data:image\/jpeg;base64,[A-Za-z0-9+/=]{1,55000}$/.test(q.imagem)?q.imagem:''};});
 }
 export function score(questions,answers){
  const correct=questions.reduce((sum,q,i)=>sum+(answers[String(i)]===q.correta?1:0),0),grade=Math.round(correct/questions.length*100)/10;
