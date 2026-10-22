@@ -2,11 +2,11 @@
   "schema": 1,
   "apps": {
     "matriz": {
-      "version": "1.7.46",
+      "version": "1.7.47",
       "revision": ""
     },
     "aluno": {
-      "version": "1.7.26",
+      "version": "1.7.27",
       "revision": "e356d8243b93b0370adf5b26ce18649deec1040a81adab387a887b9e94e9d91e"
     },
     "financeiro": {
