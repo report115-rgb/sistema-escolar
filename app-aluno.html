@@ -1972,7 +1972,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
                     if (!dataIso) return 'A definir';
                     const [data, hora] = dataIso.split('T');
                     const [ano, mes, dia] = data.split('-');
-                    return `${dia}/${mes}/${ano} às ${hora}`;
+                    return `${dia}/${mes}/${ano} às ${hora ? hora.slice(0, 5) : '00:00'}`;
                 };
 
                 const inicioStr = formatarDataBr(controle.dataInicio);
