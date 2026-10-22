@@ -529,11 +529,17 @@
           <span class="text-xs text-gray-500 font-semibold" id="total-alunos-count">Total da rede: 0 alunos</span>
           <div class="relative">
             <button type="button" id="btn-filtro-alunos" onclick="alternarFiltrosAlunos()" aria-expanded="false" aria-controls="painel-filtro-alunos" class="px-3 py-2 text-xs font-semibold rounded-lg border border-gray-300 dark:border-slate-600 bg-gray-100 dark:bg-slate-800"><i class="fa-solid fa-filter mr-1"></i> Filtrar</button>
-            <div id="painel-filtro-alunos" hidden class="absolute right-0 top-full mt-2 z-40 p-3 w-64 max-w-[88vw] rounded-lg shadow-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 space-y-3">
-              <label class="block text-xs font-semibold">Polo<select id="filtro-alunos-polo" onchange="atualizarFiltroTurmasAlunos();renderGestionStudentsTableGroup(false)" class="block mt-1 w-full p-2 border rounded-lg dark:bg-slate-800"><option value="">Todos os polos</option></select></label>
-              <label class="block text-xs font-semibold">Turma<select id="filtro-alunos-turma" onchange="renderGestionStudentsTableGroup(false)" class="block mt-1 w-full p-2 border rounded-lg dark:bg-slate-800"><option value="">Todas as turmas</option></select></label>
-              <button type="button" class="text-xs underline text-blue-600" onclick="limparFiltrosAlunos()">Limpar filtros</button>
-            </div>
+            <style id="se7-alunos-filtro-modal-style">
+#painel-filtro-alunos.se7-alunos-filtro-modal{position:fixed;inset:0;margin:auto;width:min(460px,calc(100vw - 32px));max-height:85vh;overflow:auto;border:1px solid var(--se7-border,#bccddb);border-radius:16px;padding:24px;background:var(--se7-panel,#fff);color:var(--se7-text,#172e4c);box-shadow:0 25px 75px #0006;z-index:5000}
+#painel-filtro-alunos.se7-alunos-filtro-modal::backdrop{background:rgba(1,12,29,.62);backdrop-filter:blur(2px)}
+</style><dialog id="painel-filtro-alunos" aria-labelledby="titulo-filtro-alunos" class="se7-alunos-filtro-modal">
+              <div class="flex justify-between items-center gap-3 mb-5"><h3 id="titulo-filtro-alunos" class="text-lg font-bold">Filtrar alunos</h3><button type="button" onclick="fecharFiltrosAlunos()" aria-label="Fechar filtros" class="text-xl px-2">&times;</button></div>
+              <div class="grid gap-4">
+                <label class="block text-sm font-semibold">Polo<select id="filtro-alunos-polo" onchange="atualizarFiltroTurmasAlunos()" class="block mt-2 w-full p-3 border rounded-lg dark:bg-slate-800"><option value="">Todos os polos</option></select></label>
+                <label class="block text-sm font-semibold">Turma<select id="filtro-alunos-turma" class="block mt-2 w-full p-3 border rounded-lg dark:bg-slate-800"><option value="">Todas as turmas</option></select></label>
+              </div>
+              <div class="flex flex-wrap justify-end gap-2 mt-6"><button type="button" onclick="limparFiltrosAlunos()" class="px-4 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm">Limpar filtros</button><button type="button" onclick="aplicarFiltrosAlunos()" class="px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold text-sm">Aplicar filtros</button></div>
+            </dialog>
           </div>
           <span id="total-alunos-filtrados" hidden class="text-xs text-blue-600 dark:text-blue-400 font-semibold"></span>
         </div>
@@ -3765,10 +3771,21 @@ function carregarDatasCalendarioParaFrequencia(){const classId=document.getEleme
             atualizarDisciplinasETurmasCalendario();
         }
 
-        function alternarFiltrosAlunos(){
+        let filtrosAlunosAplicados={polo:'',turma:''};
+function fecharFiltrosAlunos(){const panel=document.getElementById('painel-filtro-alunos');if(panel?.open)panel.close();document.getElementById('btn-filtro-alunos')?.setAttribute('aria-expanded','false');}
+function alternarFiltrosAlunos(){
  const panel=document.getElementById('painel-filtro-alunos'),trigger=document.getElementById('btn-filtro-alunos');if(!panel)return;
- panel.hidden=!panel.hidden;if(trigger)trigger.setAttribute('aria-expanded',String(!panel.hidden));
- if(!panel.hidden)atualizarFiltroTurmasAlunos();
+ if(panel.open){fecharFiltrosAlunos();return;}
+ atualizarOpcoesFiltroAlunos();
+ const polo=document.getElementById('filtro-alunos-polo'),turma=document.getElementById('filtro-alunos-turma');
+ if(polo)polo.value=filtrosAlunosAplicados.polo;
+ atualizarFiltroTurmasAlunos();
+ if(turma)turma.value=filtrosAlunosAplicados.turma;
+ panel.showModal();trigger?.setAttribute('aria-expanded','true');
+}
+function aplicarFiltrosAlunos(){
+ filtrosAlunosAplicados={polo:document.getElementById('filtro-alunos-polo')?.value||'',turma:document.getElementById('filtro-alunos-turma')?.value||''};
+ fecharFiltrosAlunos();renderGestionStudentsTableGroup(false);
 }
 function atualizarFiltroTurmasAlunos(){
  const polo=document.getElementById('filtro-alunos-polo'),turma=document.getElementById('filtro-alunos-turma');if(!polo||!turma)return;
@@ -3787,7 +3804,7 @@ function atualizarOpcoesFiltroAlunos(){
 }
 function limparFiltrosAlunos(){
  const polo=document.getElementById('filtro-alunos-polo'),turma=document.getElementById('filtro-alunos-turma');
- if(polo)polo.value='';atualizarFiltroTurmasAlunos();if(turma)turma.value='';renderGestionStudentsTableGroup(false);
+ if(polo)polo.value='';atualizarFiltroTurmasAlunos();if(turma)turma.value='';filtrosAlunosAplicados={polo:'',turma:''};fecharFiltrosAlunos();renderGestionStudentsTableGroup(false);
 }
 function renderGestionStudentsTable(){renderGestionStudentsTableGroup(false);renderGestionStudentsTableGroup(true);}
         function renderGestionStudentsTableGroup(inactive=false) {
@@ -3804,9 +3821,9 @@ function renderGestionStudentsTable(){renderGestionStudentsTableGroup(false);ren
         .sort((a, b) => String(a.fullname||'').localeCompare(String(b.fullname||''),'pt-BR'));
 
     // LÓGICA DE FILTRAGEM PELA LUPA (NOME, CPF OU MATRÍCULA)
-    if(!inactive)atualizarOpcoesFiltroAlunos();
+    if(!inactive&&!document.getElementById('painel-filtro-alunos')?.open)atualizarOpcoesFiltroAlunos();
     let alunosFiltrados = ativos;
-    if(!inactive){const p=document.getElementById('filtro-alunos-polo')?.value||'',t=document.getElementById('filtro-alunos-turma')?.value||'';alunosFiltrados=alunosFiltrados.filter(s=>(!p||String(s.poloId||classes.find(c=>c.id===s.classId)?.poloId||'')===p)&&(!t||String(s.classId||'')===t));}
+    if(!inactive){const p=filtrosAlunosAplicados.polo,t=filtrosAlunosAplicados.turma;alunosFiltrados=alunosFiltrados.filter(s=>(!p||String(s.poloId||classes.find(c=>c.id===s.classId)?.poloId||'')===p)&&(!t||String(s.classId||'')===t));}
     if (inputBusca && inputBusca.value.trim() !== "") {
         const termo = inputBusca.value.toLowerCase().trim();
         const termoLimpo = termo.replace(/[^\d]/g, '');
@@ -3825,7 +3842,7 @@ function renderGestionStudentsTable(){renderGestionStudentsTableGroup(false);ren
     }
 
     if(counter)counter.textContent=inactive?`Total: ${ativos.length} matrícula(s) inativa(s)`:`Total da rede: ${students.filter(s=>!!s.id).length} aluno(s)`;
-    if(!inactive){const label=document.getElementById('total-alunos-filtrados');const filtered=alunosFiltrados.length!==ativos.length||!!inputBusca?.value.trim()||!!document.getElementById('filtro-alunos-polo')?.value||!!document.getElementById('filtro-alunos-turma')?.value;if(label){label.hidden=!filtered;label.textContent=filtered?`${alunosFiltrados.length} aluno(s) exibido(s)`:'';}}
+    if(!inactive){const label=document.getElementById('total-alunos-filtrados');const filtered=alunosFiltrados.length!==ativos.length||!!inputBusca?.value.trim()||!!filtrosAlunosAplicados.polo||!!filtrosAlunosAplicados.turma;if(label){label.hidden=!filtered;label.textContent=filtered?`${alunosFiltrados.length} aluno(s) exibido(s)`:'';}}
     
     if(alunosFiltrados.length === 0) {
         tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400">Nenhum aluno encontrado com este termo.</td></tr>`;
