@@ -223,7 +223,7 @@
 <script defer src="/assets/se7-brand.js"></script>
 <link rel="stylesheet" href="/assets/se7-mobile-access.css">
 <link rel="stylesheet" href="/assets/se7-welcome.css">
-<link rel="stylesheet" href="assets/se7-eja.css?v=card-buttons-2-20261022"><script defer src="assets/se7-eja-student.js?v=card-restaurado-20261022"></script><link rel="stylesheet" href="/assets/se7-ambient.css">
+<link rel="stylesheet" href="assets/se7-eja.css?v=card-buttons-2-20261022"><script defer src="assets/se7-eja-student.js?v=prova-segura-20261022"></script><link rel="stylesheet" href="/assets/se7-ambient.css">
 <script src="/assets/se7-subject-kind.js?v=1"></script>
 <script src="/assets/se7-lesson-realization.js?v=1"></script>
 <script type="module" src="/assets/se7-attendance-rules.js?v=1"></script>
@@ -2140,75 +2140,13 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
         }
 
         async function abrirTelaProvaOnlineEJA() {
-            try {
-                const docSnap = await db.collection("config").doc("ejaSettings").get();
-                if (!docSnap.exists || !docSnap.data().provaAtiva) {
-                    return alert("A prova online ainda não está ativada pela secretaria acadêmica.");
-                }
-
-                const dadosProva = docSnap.data();
-                const instrucoes = dadosProva.instrucoesProva || "Leia com atenção todas as questões antes de enviar.";
-                const questoes = dadosProva.questoes || [];
-
-                if (questoes.length === 0) {
-                    return alert("Nenhuma questão cadastrada para esta prova no momento.");
-                }
-
-                let modalProva = document.getElementById('modal-prova-eja');
-                if (!modalProva) {
-                    modalProva = document.createElement('div');
-                    modalProva.id = 'modal-prova-eja';
-                    modalProva.className = 'fixed inset-0 z-[99] bg-black/80 flex items-center justify-center p-4';
-                    document.body.appendChild(modalProva);
-                }
-
-                let htmlQuestoes = '';
-                questoes.forEach((q, idx) => {
-                    htmlQuestoes += `
-                        <div class="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl space-y-2 border border-slate-200 dark:border-slate-700 questao-item" data-index="${idx}" data-correta="${q.correta}">
-                            <p class="font-bold text-slate-800 dark:text-slate-100">Questão ${idx + 1}: ${q.enunciado}</p>
-                            <div class="space-y-1.5 pl-2 text-xs">
-                    `;
-                    if (q.opcoes && Array.isArray(q.opcoes)) {
-                        q.opcoes.forEach((opt, optIdx) => {
-                            if (opt && opt.trim() !== "") {
-                                htmlQuestoes += `
-                                    <label class="block cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/50 p-1.5 rounded transition">
-                                        <input type="radio" name="pergunta_${idx}" value="${optIdx}" class="accent-emerald-600 mr-2"> 
-                                        <span><strong>${String.fromCharCode(65 + optIdx)})</strong> ${opt}</span>
-                                    </label>
-                                `;
-                            }
-                        });
-                    }
-                    htmlQuestoes += `</div></div>`;
-                });
-
-                modalProva.innerHTML = `
-                    <div class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-3xl max-w-xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
-                        <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-3">
-                            <h3 class="font-bold text-base text-emerald-600"><i class="fa-solid fa-laptop-file mr-2"></i> Avaliação Online - EJA (Supletivo)</h3>
-                            <button onclick="fecharProvaOnlineEJA()" class="text-slate-400 hover:text-red-500 text-xl font-bold">&times;</button>
-                        </div>
-                        <div class="space-y-4 text-xs">
-                            <div class="bg-blue-50 dark:bg-blue-950/40 p-3 rounded-xl border border-blue-200 dark:border-blue-800 text-blue-900 dark:text-blue-200">
-                                <strong>Instruções:</strong> ${instrucoes}
-                            </div>
-                            
-                            <div class="space-y-3" id="container-questoes-aluno">
-                                ${htmlQuestoes}
-                            </div>
-
-                            <button onclick="enviarProvaEJAAluno(${questoes.length})" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg transition active:scale-95 text-sm">
-                                Finalizar e Enviar Prova
-                            </button>
-                        </div>
-                    </div>
-                `;
-                modalProva.style.display = 'flex';
-            } catch (e) {
-                alert("Erro ao carregar a prova: " + e.message);
+            // Compatibilidade: o fluxo de prova é servido pela API autenticada da EJA.
+            // Não ler config/ejaSettings diretamente pelo SDK do aluno.
+            if (typeof window.SE7EjaStartWithRules !== 'function') {
+                alert('A avaliação está sendo preparada. Atualize o aplicativo e tente novamente.');
+                return;
             }
+            return window.SE7EjaStartWithRules();
         }
 
         function fecharProvaOnlineEJA() {
