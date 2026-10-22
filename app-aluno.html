@@ -1980,7 +1980,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
                 const inicioStr = formatarDataBr(controle.dataInicio);
                 const fimStr = formatarDataBr(controle.dataFim);
 
-                const bannerPadrao = document.getElementById('banner-padrao-home');
+                const bannerPadrao = document.getElementById('banner-padrao-home');const blocoEjaExistente=document.getElementById('bloco-acoes-eja');if(blocoEjaExistente){blocoEjaExistente.hidden=false;if(typeof window.SE7EjaRefresh==='function')queueMicrotask(()=>window.SE7EjaRefresh());}
                 if (bannerPadrao) {
                     bannerPadrao.outerHTML = `
                         <div id="bloco-acoes-eja" class="bg-gradient-to-br from-emerald-600 to-teal-700 text-white p-4 rounded-2xl shadow-lg space-y-3">
