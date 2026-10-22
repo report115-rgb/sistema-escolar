@@ -847,9 +847,9 @@
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('matricula-screen').style.display = 'none';
                 const mainApp = document.getElementById('main-app');
-                mainApp.style.display = 'flex';
-                if(window.SE7AdminPortal?.active) await mostrarBoasVindasApp(alunoLogado);
-                await carregarDadosPainel();
+                mainApp.style.visibility='hidden';mainApp.style.display = 'flex';
+                try {if(window.SE7AdminPortal?.active) await mostrarBoasVindasApp(alunoLogado);await carregarDadosPainel();}
+                finally {mainApp.style.visibility='visible';}
                 if(alunoLogado) {acompanharControlePortal();await carregarConfiguracaoAlunoAutenticado();await registrarEventoPortal('resume');}
             }
         });
@@ -862,10 +862,10 @@
             inicializacaoPortalAdministrativo=(async()=>{
                 SE7AdminPortal.seed(initialData);alunoLogado=profile;SE7AdminPortal.setProfile(profile);guardarSessaoPortal(profile);
                 for(const id of ['welcome-screen','login-screen','matricula-screen'])document.getElementById(id).style.display='none';
-                document.getElementById('main-app').style.display='flex';
+                document.getElementById('main-app').style.visibility='hidden';document.getElementById('main-app').style.display='flex';
                 const boasVindas=mostrarBoasVindasApp(profile);
                 try{await carregarConfiguracaoInstituicao();await carregarConfiguracaoAlunoAutenticado();await carregarDadosPainel({refreshAdmin:false});void registrarEventoPortal('resume').catch(()=>{});}
-                finally{await boasVindas;}
+                finally{document.getElementById('main-app').style.visibility='visible';await boasVindas;}
             })();return inicializacaoPortalAdministrativo;
         }
 
@@ -2069,7 +2069,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
 
         async function baixarMaterialEstudoEJA() {
             try {
-                const docSnap = await db.collection("config").doc("ejaSettings").get();
+                const respostaApostila = await SE7.api("eja-material",window.SE7AdminPortal?.active?{studentId:alunoLogado?.id}:{});const docSnap={exists:true,data:()=>({apostilaUrl:respostaApostila.url})};
                 if (docSnap.exists && docSnap.data().apostilaUrl) {
                     let urlOriginal = docSnap.data().apostilaUrl.trim();
                     let urlApostila = urlOriginal;
