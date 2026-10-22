@@ -1160,7 +1160,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-xs font-semibold mb-1">Disciplina da Turma</label>
-                                <label class="block text-xs font-semibold mb-1">Tipo de evento</label><select id="cal-event-type" onchange="atualizarTipoEventoCalendario()" class="w-full px-3 py-2 rounded-lg border dark:bg-slate-800"><option value="lesson">Aula</option><option value="inaugural">Aula inaugural</option><option value="holiday">Feriado / Sem aula</option><option value="exam">Prova única</option><option value="simulation">Simulado</option></select><select id="cal-subject-select" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800"></select>
+                                <label class="block text-xs font-semibold mb-1">Tipo de evento</label><select id="cal-event-type" onchange="atualizarTipoEventoCalendario()" class="w-full px-3 py-2 rounded-lg border dark:bg-slate-800"><option value="lesson">Aula</option><option value="inaugural">Aula inaugural</option><option value="holiday">Feriado / Sem aula</option><option value="exam">Prova única</option><option value="simulation">Simulado</option><option value="tcc">TCC - Trabalho de Conclusão de Curso</option></select><select id="cal-subject-select" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm dark:bg-slate-800"></select>
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold mb-1">Quantidade de Datas (1 a 6)</label>
@@ -2991,7 +2991,7 @@ async function addSubjectToCourse() {
         function verEmentaDisciplina(courseId,subjectId){
             const course=courses.find(c=>c.id===courseId),subject=course?.subjects?.find(s=>String(s.id)===String(subjectId));if(!subject)return;
             const dialog=document.createElement('dialog');dialog.className='se7-exam-dialog';dialog.setAttribute('aria-label','Ementa da disciplina');
-            const title=document.createElement('h3');title.textContent=subject.name;
+            const title=document.createElement('h3');title.textContent=SE7SubjectKind.displayName(subject);
             const info=document.createElement('p');info.textContent='Curso: '+course.name+' • Carga horária: '+cargaHorariaDisciplina(subject.hours);
             const heading=document.createElement('h4');heading.textContent='Ementa';
             const content=document.createElement('p');content.className='se7-subject-syllabus';content.textContent=subject.ementa||'Nenhuma ementa informada.';
@@ -3002,7 +3002,7 @@ async function addSubjectToCourse() {
             const list=document.getElementById('subjects-management-list'),counter=document.getElementById('total-subjects-count');let total=0;if(list)list.replaceChildren();
             const filter=document.getElementById('subjects-list-course'),selected=filter?.value||'';if(filter){filter.replaceChildren(new Option('Selecione o curso...',''));for(const c of courses)filter.add(new Option(c.name,c.id));filter.value=courses.some(c=>c.id===selected)?selected:'';}
             courses.filter(c=>c.id===filter?.value).forEach(course=>(course.subjects||[]).forEach(subject=>{total++;if(!list)return;const row=document.createElement('li');row.className='se7-subject-row';
-                const info=document.createElement('div'),name=document.createElement('strong'),hours=document.createElement('p');name.textContent=subject.name;hours.textContent='Carga horária: '+cargaHorariaDisciplina(subject.hours);info.append(name,hours);
+                const info=document.createElement('div'),name=document.createElement('strong'),hours=document.createElement('p');name.textContent=SE7SubjectKind.displayName(subject);hours.textContent='Carga horária: '+cargaHorariaDisciplina(subject.hours);info.append(name,hours);
                 const actions=document.createElement('div');actions.className='se7-subject-actions';for(const [text,icon,fn]of [['Ver ementa','fa-eye',()=>verEmentaDisciplina(course.id,subject.id)],['Editar','fa-pen',()=>editarDisciplina(course.id,subject.id)],['Excluir','fa-trash',()=>removerDisciplina(course.id,subject.id)]]){const button=document.createElement('button');button.type='button';button.className='se7-exam-button'+(text==='Excluir'?' se7-subject-delete':'');const i=document.createElement('i');i.className='fa-solid '+icon;i.setAttribute('aria-hidden','true');button.append(i,document.createTextNode(' '+text));button.onclick=fn;actions.append(button);}row.append(info,actions);list.append(row);
             }));if(list&&!total){const empty=document.createElement('li');empty.textContent=filter?.value?'Nenhuma disciplina cadastrada neste curso.':'Selecione o curso para visualizar as disciplinas.';list.append(empty);}if(counter)counter.textContent='Total: '+total+' disciplina(s)';
         }
@@ -3168,7 +3168,7 @@ async function addSubjectToCourse() {
         function atualizarDisciplinasPorTurmaCalendario() {
             const courseId=document.getElementById('cal-course-select').value,classId=document.getElementById('cal-class-select').value,subjectSelect=document.getElementById('cal-subject-select');if(!subjectSelect)return;
             const old=subjectSelect.value,kind=document.getElementById('cal-event-type').value,isLesson=kind==='lesson',course=courses.find(c=>c.id===courseId);subjectSelect.replaceChildren(new Option('Selecione a disciplina...',''));
-            for(const subject of course?.subjects||[]){if(kind==='tcc'&&subject.teachingType!=='tcc'||kind==='lesson'&&subject.teachingType==='tcc')continue;const done=disciplinaJaProgramadaNoCalendario(courseId,classId,subject.name),option=new Option(subject.name+(done?' — Já incluída no calendário desta turma':''),subject.name);option.disabled=isLesson&&done;subjectSelect.add(option);}
+            for(const subject of course?.subjects||[]){if(kind==='tcc'&&subject.teachingType!=='tcc'||kind==='lesson'&&subject.teachingType==='tcc')continue;const done=disciplinaJaProgramadaNoCalendario(courseId,classId,subject.name),option=new Option(SE7SubjectKind.displayName(subject)+(done?' — Já incluída no calendário desta turma':''),subject.name);option.disabled=isLesson&&done;subjectSelect.add(option);}
             if([...subjectSelect.options].some(o=>o.value===old&&!o.disabled))subjectSelect.value=old;
         }
 
@@ -3200,7 +3200,7 @@ async function addSubjectToCourse() {
             const qtd = document.getElementById('cal-event-type').value==='inaugural'?1:(parseInt(document.getElementById('cal-qtd-datas').value) || 2);
             const module=eventType==='lesson'?document.getElementById('cal-event-desc').value:'';
             if(eventType==='lesson'&&!module)return alert('Selecione o módulo.');
-            const description=eventType==='lesson'?SE7SubjectKind.description({subject,module},courses.find(c=>c.id===courseId)):eventType==='tcc'?'Trabalho de Conclusão de Curso':subject;
+            const description=eventType==='lesson'?SE7SubjectKind.description({subject,module},courses.find(c=>c.id===courseId)):eventType==='tcc'?'TCC - Trabalho de Conclusão de Curso':subject;
 
             if (!courseId || !classId || !subject || !description) {
                 return alert("Preencha todos os campos do calendário acadêmico.");
