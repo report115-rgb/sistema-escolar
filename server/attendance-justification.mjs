@@ -11,7 +11,7 @@ export async function justification(db,b,u){
  if(b.action==='attendance-justification-decide')return decide(db,b,u);
  if(!['master','secretaria'].includes(u.role))fail(403,'Comprovante restrito ao master e à secretaria.');
  const sr=db.collection('students').doc(validId(b.studentId)),snap=await sr.get();if(!snap.exists)fail(404,'Aluno não encontrado.');assertStudent(u,snap.data());
- if(b.action==='attendance-justification-get'){const id=snap.data().attendance?.[b.date]?.justification?.id;if(!id)fail(404,'Justificativa não encontrada.');const f=await db.collection('se7AttendanceProofs').doc(validId(id)).get();if(!f.exists||f.data().studentId!==snap.id||f.data().date!==b.date)fail(404,'Documento não encontrado.');return {name:f.data().name,mime:f.data().mime,base64:f.data().base64};}
+ if(b.action==='attendance-justification-get'){const id=snap.data().attendance?.[b.date]?.justification?.id;if(!id)fail(404,'Justificativa não encontrada.');const f=await db.collection('se7AttendanceProofs').doc(validId(id)).get();if(!f.exists||f.data().studentId!==snap.id||f.data().date!==b.date)fail(404,'Documento não encontrado.');return {name:f.data().name,mime:f.data().mime,base64:f.data().base64,decisionNote:f.data().decisionNote||snap.data().attendance?.[b.date]?.justification?.decisionNote||'',state:f.data().state||snap.data().attendance?.[b.date]?.justification?.state||''};}
  if(b.action!=='attendance-justification-save')fail(400,'Operação inválida.');
  const file=receiptFile(b);if(!['Atestado médico','Declaração de trabalho','Outro documento comprobatório'].includes(b.reason))fail(400,'Selecione o tipo de justificativa.');
  const poloId=await attendancePolo(db,{classId:b.classId,teacherId:b.teacherId},u);
