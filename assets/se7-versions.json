@@ -2,7 +2,7 @@
   "schema": 1,
   "apps": {
     "matriz": {
-      "version": "1.7.33",
+      "version": "1.7.43",
       "revision": ""
     },
     "aluno": {
