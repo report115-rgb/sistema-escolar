@@ -525,7 +525,18 @@
         </div>
         <!-- FIM DO BLOCO DA LUPA -->
 
-        <span class="text-xs text-gray-500 font-semibold" id="total-alunos-count">Total: 0 alunos</span>
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="text-xs text-gray-500 font-semibold" id="total-alunos-count">Total da rede: 0 alunos</span>
+          <div class="relative">
+            <button type="button" id="btn-filtro-alunos" onclick="alternarFiltrosAlunos()" aria-expanded="false" aria-controls="painel-filtro-alunos" class="px-3 py-2 text-xs font-semibold rounded-lg border border-gray-300 dark:border-slate-600 bg-gray-100 dark:bg-slate-800"><i class="fa-solid fa-filter mr-1"></i> Filtrar</button>
+            <div id="painel-filtro-alunos" hidden class="absolute right-0 top-full mt-2 z-40 p-3 w-64 max-w-[88vw] rounded-lg shadow-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 space-y-3">
+              <label class="block text-xs font-semibold">Polo<select id="filtro-alunos-polo" onchange="atualizarFiltroTurmasAlunos();renderGestionStudentsTableGroup(false)" class="block mt-1 w-full p-2 border rounded-lg dark:bg-slate-800"><option value="">Todos os polos</option></select></label>
+              <label class="block text-xs font-semibold">Turma<select id="filtro-alunos-turma" onchange="renderGestionStudentsTableGroup(false)" class="block mt-1 w-full p-2 border rounded-lg dark:bg-slate-800"><option value="">Todas as turmas</option></select></label>
+              <button type="button" class="text-xs underline text-blue-600" onclick="limparFiltrosAlunos()">Limpar filtros</button>
+            </div>
+          </div>
+          <span id="total-alunos-filtrados" hidden class="text-xs text-blue-600 dark:text-blue-400 font-semibold"></span>
+        </div>
     </div>
     <div class="overflow-x-auto">
                         <table class="w-full text-left text-xs">
@@ -3754,7 +3765,31 @@ function carregarDatasCalendarioParaFrequencia(){const classId=document.getEleme
             atualizarDisciplinasETurmasCalendario();
         }
 
-        function renderGestionStudentsTable(){renderGestionStudentsTableGroup(false);renderGestionStudentsTableGroup(true);}
+        function alternarFiltrosAlunos(){
+ const panel=document.getElementById('painel-filtro-alunos'),trigger=document.getElementById('btn-filtro-alunos');if(!panel)return;
+ panel.hidden=!panel.hidden;if(trigger)trigger.setAttribute('aria-expanded',String(!panel.hidden));
+ if(!panel.hidden)atualizarFiltroTurmasAlunos();
+}
+function atualizarFiltroTurmasAlunos(){
+ const polo=document.getElementById('filtro-alunos-polo'),turma=document.getElementById('filtro-alunos-turma');if(!polo||!turma)return;
+ const poloId=polo.value,old=turma.value;
+ const options=classes.filter(c=>!poloId||String(c.poloId||'')===poloId);
+ turma.replaceChildren(new Option('Todas as turmas',''));
+ for(const c of options)turma.add(new Option(c.name||c.nome||c.id,String(c.id)));
+ turma.value=[...turma.options].some(o=>o.value===old)?old:'';
+}
+function atualizarOpcoesFiltroAlunos(){
+ const polo=document.getElementById('filtro-alunos-polo');if(!polo)return;
+ const old=polo.value;const ids=[...new Set(students.map(s=>String(s.poloId||classes.find(c=>c.id===s.classId)?.poloId||'')).filter(Boolean))];
+ polo.replaceChildren(new Option('Todos os polos',''));
+ for(const id of ids){const item=(typeof polos!=='undefined'&&Array.isArray(polos)?polos:[]).find(p=>String(p.id)===id);polo.add(new Option(item?.name||item?.nome||classes.find(c=>String(c.poloId)===id)?.poloName||id,id));}
+ polo.value=ids.includes(old)?old:'';atualizarFiltroTurmasAlunos();
+}
+function limparFiltrosAlunos(){
+ const polo=document.getElementById('filtro-alunos-polo'),turma=document.getElementById('filtro-alunos-turma');
+ if(polo)polo.value='';atualizarFiltroTurmasAlunos();if(turma)turma.value='';renderGestionStudentsTableGroup(false);
+}
+function renderGestionStudentsTable(){renderGestionStudentsTableGroup(false);renderGestionStudentsTableGroup(true);}
         function renderGestionStudentsTableGroup(inactive=false) {
     const tbody = document.getElementById(inactive?'tabela-gestao-alunos-inativos':'tabela-gestao-alunos');
     const counter = document.getElementById(inactive?'total-alunos-inativos-count':'total-alunos-count');
@@ -3769,7 +3804,9 @@ function carregarDatasCalendarioParaFrequencia(){const classId=document.getEleme
         .sort((a, b) => String(a.fullname||'').localeCompare(String(b.fullname||''),'pt-BR'));
 
     // LÓGICA DE FILTRAGEM PELA LUPA (NOME, CPF OU MATRÍCULA)
+    if(!inactive)atualizarOpcoesFiltroAlunos();
     let alunosFiltrados = ativos;
+    if(!inactive){const p=document.getElementById('filtro-alunos-polo')?.value||'',t=document.getElementById('filtro-alunos-turma')?.value||'';alunosFiltrados=alunosFiltrados.filter(s=>(!p||String(s.poloId||classes.find(c=>c.id===s.classId)?.poloId||'')===p)&&(!t||String(s.classId||'')===t));}
     if (inputBusca && inputBusca.value.trim() !== "") {
         const termo = inputBusca.value.toLowerCase().trim();
         const termoLimpo = termo.replace(/[^\d]/g, '');
@@ -3787,7 +3824,8 @@ function carregarDatasCalendarioParaFrequencia(){const classId=document.getEleme
         });
     }
 
-    if(counter) counter.textContent = `Total: ${alunosFiltrados.length} aluno(s) (Filtrados de ${ativos.length})`;
+    if(counter)counter.textContent=inactive?`Total: ${ativos.length} matrícula(s) inativa(s)`:`Total da rede: ${students.filter(s=>!!s.id).length} aluno(s)`;
+    if(!inactive){const label=document.getElementById('total-alunos-filtrados');const filtered=alunosFiltrados.length!==ativos.length||!!inputBusca?.value.trim()||!!document.getElementById('filtro-alunos-polo')?.value||!!document.getElementById('filtro-alunos-turma')?.value;if(label){label.hidden=!filtered;label.textContent=filtered?`${alunosFiltrados.length} aluno(s) exibido(s)`:'';}}
     
     if(alunosFiltrados.length === 0) {
         tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400">Nenhum aluno encontrado com este termo.</td></tr>`;
@@ -5400,7 +5438,7 @@ function escutarRegistrosPontoManual() {
 <script src="/assets/se7-documents.js?v=drive-analise-2"></script>
 <link rel="stylesheet" href="/assets/se7-template-editor.css?v=document-polo-2"><script src="/assets/se7-document-models.js"></script>
 <script src="/assets/se7-enrollment-contract.js?v=20261019-2"></script>
-<script src="/assets/se7-academic-documents.js?v=documentos-20261020-7"></script><script src="/assets/se7-template-editor.js?v=falta-justificada-declaracao-20261021-1"></script><script src="/assets/se7-diploma.js?v=zoom-previa-20261021-1"></script>
+<script src="/assets/se7-academic-documents.js?v=documentos-20261020-7"></script><script src="/assets/se7-template-editor.js?v=filtro-alunos-20261021-1"></script><script src="/assets/se7-diploma.js?v=zoom-previa-20261021-1"></script>
 <link rel="stylesheet" href="/assets/se7-exams.css">
 <script src="/assets/vendor/pdf-lib.min.js"></script><script src="/assets/vendor/fontkit.umd.min.js"></script><script src="/assets/vendor/jsQR.js"></script><script src="/assets/vendor/qrcode.js"></script><script src="/assets/se7-exam-omr.js"></script><script src="/assets/se7-exam-pdf.js?v=institucional-20261019"></script><script src="/assets/se7-exam-calendar.js" type="module"></script><script src="/assets/se7-material-pdf.js?v=institucional-20261019"></script><script src="/assets/se7-materials.js?v=nav-selection-6"></script><script src="/assets/se7-exams.js?v=icone-livro-20261020-2"></script>
 <link rel="stylesheet" href="/assets/se7-student-sheet.css?v=senha-laranja-2"><script src="/assets/se7-student-sheet.js?v=frequencia-regra-4"></script>
