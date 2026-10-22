@@ -462,7 +462,7 @@
             </div>
 
             <div class="se7-account-header">
-                <div id="header-live-clock" class="se7-account-clock">Carregando relógio...</div><div class="se7-master-alerts" id="se7-master-alerts" hidden><button type="button" id="se7-master-alert-trigger" aria-label="Central de notificações Master" aria-expanded="false" aria-controls="se7-master-alert-panel"><i class="fa-solid fa-bell"></i><span id="se7-master-alert-count" hidden></span></button><div id="se7-master-alert-panel" hidden role="region" aria-label="Pendências do Master"><strong>Notificações e pendências</strong><div id="se7-master-alert-list">Nenhum aviso pendente.</div></div></div><span id="header-user-display" hidden></span><span id="se7-header-role" hidden></span>
+                <div id="header-live-clock" class="se7-account-clock">Carregando relógio...</div><div class="se7-master-alerts" id="se7-master-alerts" hidden><button type="button" id="se7-master-alert-trigger" aria-label="Central de notificações Master" aria-expanded="false" aria-controls="se7-master-alert-panel"><i class="fa-solid fa-bell"></i><span id="se7-master-alert-count" hidden></span></button><div id="se7-master-alert-panel" hidden role="region" aria-label="Pendências do Master"><div class="flex items-center justify-between gap-3 mb-2"><strong>Notificações e pendências</strong><button type="button" id="se7-master-alert-clear" class="text-xs font-semibold px-2 py-1 rounded-lg bg-slate-700 text-slate-100 hover:bg-slate-600">Limpar todas</button></div><div id="se7-master-alert-list">Nenhum aviso pendente.</div></div></div><span id="header-user-display" hidden></span><span id="se7-header-role" hidden></span>
                 <div class="se7-account-anchor"><button type="button" id="se7-account-trigger" aria-label="Abrir menu da minha conta" aria-expanded="false" aria-controls="se7-account-menu"><i class="fa-solid fa-user" aria-hidden="true"></i></button>
                 <div id="se7-account-menu" hidden><div id="se7-account-identity"></div>
                 <button type="button" data-account-action="profile"><i class="fa-solid fa-user-pen"></i> Editar cadastro</button>
@@ -1672,19 +1672,40 @@
         // ==========================================
 
         function iniciarCentralMaster(){
- const root=document.getElementById('se7-master-alerts'),button=document.getElementById('se7-master-alert-trigger'),panel=document.getElementById('se7-master-alert-panel'),list=document.getElementById('se7-master-alert-list'),count=document.getElementById('se7-master-alert-count');
- if(!root||!button||!panel||!list||!count)return;
- const accessible=()=>typeof usuarioMasterAtivo==='function'&&usuarioMasterAtivo();let pagamentos=[];let pagamentoUnsub=null;const vistos=()=>{try{return new Set(JSON.parse(localStorage.getItem('se7-master-pagamentos-vistos')||'[]'));}catch{return new Set();}};
+ const root=document.getElementById('se7-master-alerts'),button=document.getElementById('se7-master-alert-trigger'),panel=document.getElementById('se7-master-alert-panel'),list=document.getElementById('se7-master-alert-list'),count=document.getElementById('se7-master-alert-count'),clear=document.getElementById('se7-master-alert-clear');
+ if(!root||!button||!panel||!list||!count||!clear)return;
+ const accessible=()=>typeof usuarioMasterAtivo==='function'&&usuarioMasterAtivo();
+ const seenKey='se7-master-pagamentos-vistos',initialKey='se7-master-pagamentos-inicializados-20261022',dismissKey='se7-master-pendencias-dispensadas';
+ const readSet=key=>{try{return new Set(JSON.parse(localStorage.getItem(key)||'[]'));}catch{return new Set();}};
+ const storeSet=(key,set)=>{try{localStorage.setItem(key,JSON.stringify([...set]));}catch(e){console.warn('Não foi possível memorizar notificações.',e);}};
+ let pagamentos=[],pagamentoUnsub=null,initialized=!!localStorage.getItem(initialKey);
  const entries=[
  {id:'badge-documentos-pendentes',title:'Gestão de Alunos · Validar documentação',tab:'tab-gestion-students',sub:'subtab-validar-docs'},
  {id:'se7-review-justifications',title:'Notas e Frequências · Analisar justificativas',tab:'tab-attendance',action:'justification'}
  ];
  function isAlert(el){if(!el||el.hidden||el.style.display==='none')return false;if(el.id==='se7-review-justifications')return el.dataset.se7ReviewAlert==='pending';const v=getComputedStyle(el);return v.display!=='none'&&v.visibility!=='hidden'&&v.opacity!=='0';}
  function navigate(item){if(!accessible())return;const tabButton=document.querySelector('#main-tabs-nav button[onclick*="'+item.tab+'"]');if(tabButton&&typeof openTab==='function')openTab({currentTarget:tabButton},item.tab);if(item.sub&&typeof openSubTab==='function'){const subButton=document.querySelector('button[onclick*="'+item.sub+'"]');if(subButton)openSubTab({currentTarget:subButton},item.sub);}if(item.action==='justification')document.getElementById(item.id)?.click();panel.hidden=true;button.setAttribute('aria-expanded','false');}
- function update(){const allowed=accessible();root.hidden=!allowed;if(!allowed){panel.hidden=true;button.setAttribute('aria-expanded','false');list.replaceChildren();count.hidden=true;return;}const active=entries.filter(item=>isAlert(document.getElementById(item.id)));list.replaceChildren();const pendentes=pagamentos.filter(p=>!vistos().has(p.id));if(!active.length){const empty=document.createElement('p');empty.textContent='Nenhuma pendência identificada nos avisos integrados.';list.append(empty);}for(const item of active){const link=document.createElement('button');link.type='button';link.className='se7-master-alert-item';link.textContent=item.title;link.addEventListener('click',()=>navigate(item));list.append(link);}for(const p of pagamentos.slice(0,40)){const btn=document.createElement('button');btn.type='button';btn.className='se7-master-alert-item';btn.textContent='Pagamento confirmado · '+p.aluno+' · R$ '+p.valor;btn.onclick=()=>{const v=vistos();v.add(p.id);localStorage.setItem('se7-master-pagamentos-vistos',JSON.stringify([...v].slice(-300)));update();};list.append(btn);}count.hidden=!(active.length+pendentes.length);count.textContent=String(active.length+pendentes.length);button.classList.toggle('se7-has-master-alerts',active.length+pendentes.length>0);button.setAttribute('aria-label','Central de notificações Master'+(active.length?' · '+active.length+' pendência(s)':''));}
- const carregarPagamentos=()=>{if(!accessible()||pagamentoUnsub||typeof db==='undefined')return;pagamentoUnsub=db.collection('financeLogs').where('status','==','PAGO').limit(100).onSnapshot(s=>{pagamentos=s.docs.map(doc=>{const x=doc.data();return {id:doc.id,aluno:x.studentName||x.alunoNome||x.nomeAluno||'Aluno',valor:Number(x.amount||x.valor||0).toFixed(2).replace('.',',')};});update();},e=>console.warn('Notificações financeiras:',e));};setInterval(carregarPagamentos,10000);carregarPagamentos();button.addEventListener('click',()=>{if(!accessible())return;update();panel.hidden=!panel.hidden;button.setAttribute('aria-expanded',String(!panel.hidden));});
+ function update(){
+  const allowed=accessible();root.hidden=!allowed;if(!allowed){panel.hidden=true;button.setAttribute('aria-expanded','false');list.replaceChildren();count.hidden=true;return;}
+  const seen=readSet(seenKey),dismissed=readSet(dismissKey),pending=entries.filter(item=>isAlert(document.getElementById(item.id))&&!dismissed.has(item.id)),newPayments=pagamentos.filter(p=>!seen.has(p.id));
+  list.replaceChildren();
+  if(!pending.length&&!newPayments.length){const empty=document.createElement('p');empty.textContent='Nenhuma nova notificação.';list.append(empty);}
+  for(const item of pending){const link=document.createElement('button');link.type='button';link.className='se7-master-alert-item';link.textContent=item.title;link.addEventListener('click',()=>navigate(item));list.append(link);}
+  for(const p of newPayments){const btn=document.createElement('button');btn.type='button';btn.className='se7-master-alert-item';btn.textContent='Pagamento confirmado · '+p.aluno+' · R$ '+p.valor;btn.onclick=()=>{const v=readSet(seenKey);v.add(p.id);storeSet(seenKey,v);update();};list.append(btn);}
+  const qty=pending.length+newPayments.length;count.hidden=!qty;count.textContent=String(qty);button.classList.toggle('se7-has-master-alerts',qty>0);button.setAttribute('aria-label','Central de notificações Master'+(qty?' · '+qty+' nova(s) notificação(ões)':''));
+ }
+ clear.addEventListener('click',e=>{e.stopPropagation();const seen=readSet(seenKey),dismissed=readSet(dismissKey);for(const p of pagamentos)seen.add(p.id);for(const entry of entries)dismissed.add(entry.id);storeSet(seenKey,seen);storeSet(dismissKey,dismissed);update();});
+ function startPayments(){if(!accessible()||pagamentoUnsub||typeof db==='undefined')return;
+  pagamentoUnsub=db.collection('financeLogs').where('status','==','PAGO').limit(100).onSnapshot(snapshot=>{
+   pagamentos=snapshot.docs.map(doc=>{const data=doc.data();return {id:doc.id,aluno:data.studentName||data.alunoNome||data.nomeAluno||'Aluno',valor:Number(data.amount||data.valor||0).toFixed(2).replace('.',',')};});
+   if(!initialized){const seen=readSet(seenKey);for(const item of pagamentos)seen.add(item.id);storeSet(seenKey,seen);initialized=true;localStorage.setItem(initialKey,String(Date.now()));}
+   update();
+  },e=>console.warn('Não foi possível consultar notificações financeiras:',e));
+ }
+ setInterval(startPayments,10000);startPayments();
+ button.addEventListener('click',()=>{if(!accessible())return;update();panel.hidden=!panel.hidden;button.setAttribute('aria-expanded',String(!panel.hidden));});
  document.addEventListener('click',e=>{if(!root.contains(e.target)){panel.hidden=true;button.setAttribute('aria-expanded','false');}});
- window.addEventListener('se7:account-updated',update);
+ window.addEventListener('se7:account-updated',()=>{startPayments();update();});
  const watcher=new MutationObserver(()=>{if(!root.hidden)update();});for(const item of entries){const el=document.getElementById(item.id);if(el)watcher.observe(el,{attributes:true,attributeFilter:['hidden','style','class','data-se7-review-alert']});}
  update();setInterval(update,15000);
 }
