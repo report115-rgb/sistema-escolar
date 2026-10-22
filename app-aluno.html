@@ -1805,7 +1805,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
                             dataFormatada: `${dia}/${mes}/${ano}`,
                             materia: materia,
                             realizationHtml: SE7LessonChange.badge(ev,dataIso),
-                            status: status,justified:registroAluno?.justified===true
+                            status: status,justified:registroAluno?.justified===true,justificationState:registroAluno?.justification?.state||''
                         });
                     }
                 });
@@ -1838,7 +1838,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
                     if(stLower==='pendente de justificativa'){textoStatus='Justificativa pendente';iconeStatus='<i class="fa-solid fa-hourglass mr-1"></i>';}else if(stLower==='anterior ao ingresso'){textoStatus='Anterior ao ingresso';iconeStatus='<i class="fa-solid fa-calendar-minus mr-1"></i>';} else if (stLower === 'presente') {
                         badgeClass = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800';
                         iconeStatus = '<i class="fa-solid fa-circle-check mr-1"></i>';
-                        textoStatus = 'Presente';
+                        textoStatus = item.justificationState==='approved'?'Presente · Falta justificada pela Coordenação':'Presente';
                     } else if (stLower === 'falta' || stLower === 'ausente') {
                         badgeClass = 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300 border border-red-200 dark:border-red-800';
                         iconeStatus = '<i class="fa-solid fa-circle-xmark mr-1"></i>';

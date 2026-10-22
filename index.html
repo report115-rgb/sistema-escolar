@@ -171,7 +171,7 @@
 <link rel="stylesheet" href="/assets/se7-ambient.css">
 <script src="/assets/se7-subject-kind.js?v=1"></script>
 <script src="/assets/se7-lesson-realization.js?v=1"></script>
-<script src="/assets/se7-attendance-proof.js?v=analise-3"></script>
+<script src="/assets/se7-attendance-proof.js?v=falta-justificada-20261021"></script>
 <script type="module" src="/assets/se7-attendance-rules.js?v=1"></script>
 <script src="/assets/se7-justification-review.js?v=zoom-e-carregamento-4"></script>
 <link rel="stylesheet" href="/assets/se7-navigation.css?v=nav-selection-3">
@@ -1666,13 +1666,13 @@
  {id:'badge-documentos-pendentes',title:'Gestão de Alunos · Validar documentação',tab:'tab-gestion-students',sub:'subtab-validar-docs'},
  {id:'se7-review-justifications',title:'Notas e Frequências · Analisar justificativas',tab:'tab-attendance',action:'justification'}
  ];
- function isAlert(el){if(!el||el.hidden||el.style.display==='none')return false;const v=getComputedStyle(el);return v.display!=='none'&&v.visibility!=='hidden'&&v.opacity!=='0';}
+ function isAlert(el){if(!el||el.hidden||el.style.display==='none')return false;if(el.id==='se7-review-justifications')return el.dataset.se7ReviewAlert==='pending';const v=getComputedStyle(el);return v.display!=='none'&&v.visibility!=='hidden'&&v.opacity!=='0';}
  function navigate(item){if(!accessible())return;const tabButton=document.querySelector('#main-tabs-nav button[onclick*="'+item.tab+'"]');if(tabButton&&typeof openTab==='function')openTab({currentTarget:tabButton},item.tab);if(item.sub&&typeof openSubTab==='function'){const subButton=document.querySelector('button[onclick*="'+item.sub+'"]');if(subButton)openSubTab({currentTarget:subButton},item.sub);}if(item.action==='justification')document.getElementById(item.id)?.click();panel.hidden=true;button.setAttribute('aria-expanded','false');}
  function update(){const allowed=accessible();root.hidden=!allowed;if(!allowed){panel.hidden=true;button.setAttribute('aria-expanded','false');list.replaceChildren();count.hidden=true;return;}const active=entries.filter(item=>isAlert(document.getElementById(item.id)));list.replaceChildren();if(!active.length){const empty=document.createElement('p');empty.textContent='Nenhuma pendência identificada nos avisos integrados.';list.append(empty);}for(const item of active){const link=document.createElement('button');link.type='button';link.className='se7-master-alert-item';link.textContent=item.title;link.addEventListener('click',()=>navigate(item));list.append(link);}count.hidden=!active.length;count.textContent=String(active.length);button.classList.toggle('se7-has-master-alerts',active.length>0);button.setAttribute('aria-label','Central de notificações Master'+(active.length?' · '+active.length+' pendência(s)':''));}
  button.addEventListener('click',()=>{if(!accessible())return;update();panel.hidden=!panel.hidden;button.setAttribute('aria-expanded',String(!panel.hidden));});
  document.addEventListener('click',e=>{if(!root.contains(e.target)){panel.hidden=true;button.setAttribute('aria-expanded','false');}});
  window.addEventListener('se7:account-updated',update);
- const watcher=new MutationObserver(()=>{if(!root.hidden)update();});for(const item of entries){const el=document.getElementById(item.id);if(el)watcher.observe(el,{attributes:true,attributeFilter:['hidden','style','class']});}
+ const watcher=new MutationObserver(()=>{if(!root.hidden)update();});for(const item of entries){const el=document.getElementById(item.id);if(el)watcher.observe(el,{attributes:true,attributeFilter:['hidden','style','class','data-se7-review-alert']});}
  update();setInterval(update,15000);
 }
 function iniciarRelogioAoVivo() {
