@@ -462,7 +462,7 @@
             </div>
 
             <div class="se7-account-header">
-                <div id="header-live-clock" class="se7-account-clock">Carregando relógio...</div><span id="header-user-display" hidden></span><span id="se7-header-role" hidden></span>
+                <div id="header-live-clock" class="se7-account-clock">Carregando relógio...</div><div class="se7-master-alerts" id="se7-master-alerts" hidden><button type="button" id="se7-master-alert-trigger" aria-label="Central de notificações Master" aria-expanded="false" aria-controls="se7-master-alert-panel"><i class="fa-solid fa-bell"></i><span id="se7-master-alert-count" hidden></span></button><div id="se7-master-alert-panel" hidden role="region" aria-label="Pendências do Master"><strong>Notificações e pendências</strong><div id="se7-master-alert-list">Nenhum aviso pendente.</div></div></div><span id="header-user-display" hidden></span><span id="se7-header-role" hidden></span>
                 <div class="se7-account-anchor"><button type="button" id="se7-account-trigger" aria-label="Abrir menu da minha conta" aria-expanded="false" aria-controls="se7-account-menu"><i class="fa-solid fa-user" aria-hidden="true"></i></button>
                 <div id="se7-account-menu" hidden><div id="se7-account-identity"></div>
                 <button type="button" data-account-action="profile"><i class="fa-solid fa-user-pen"></i> Editar cadastro</button>
@@ -1658,14 +1658,31 @@
         });
         // ==========================================
 
-        function iniciarRelogioAoVivo() {
+        function iniciarCentralMaster(){
+ const root=document.getElementById('se7-master-alerts'),button=document.getElementById('se7-master-alert-trigger'),panel=document.getElementById('se7-master-alert-panel'),list=document.getElementById('se7-master-alert-list'),count=document.getElementById('se7-master-alert-count');
+ if(!root||!button||!panel||!list||!count)return;
+ const accessible=()=>typeof usuarioMasterAtivo==='function'&&usuarioMasterAtivo();
+ const entries=[
+ {id:'badge-documentos-pendentes',title:'Gestão de Alunos · Validar documentação',tab:'tab-gestion-students',sub:'subtab-validar-docs'},
+ {id:'se7-review-justifications',title:'Notas e Frequências · Analisar justificativas',tab:'tab-attendance',action:'justification'}
+ ];
+ function isAlert(el){if(!el||el.hidden||el.style.display==='none')return false;const v=getComputedStyle(el);return v.display!=='none'&&v.visibility!=='hidden'&&v.opacity!=='0';}
+ function navigate(item){if(!accessible())return;const tabButton=document.querySelector('#main-tabs-nav button[onclick*="'+item.tab+'"]');if(tabButton&&typeof openTab==='function')openTab({currentTarget:tabButton},item.tab);if(item.sub&&typeof openSubTab==='function'){const subButton=document.querySelector('button[onclick*="'+item.sub+'"]');if(subButton)openSubTab({currentTarget:subButton},item.sub);}if(item.action==='justification')document.getElementById(item.id)?.click();panel.hidden=true;button.setAttribute('aria-expanded','false');}
+ function update(){const allowed=accessible();root.hidden=!allowed;if(!allowed){panel.hidden=true;button.setAttribute('aria-expanded','false');list.replaceChildren();count.hidden=true;return;}const active=entries.filter(item=>isAlert(document.getElementById(item.id)));list.replaceChildren();if(!active.length){const empty=document.createElement('p');empty.textContent='Nenhuma pendência identificada nos avisos integrados.';list.append(empty);}for(const item of active){const link=document.createElement('button');link.type='button';link.className='se7-master-alert-item';link.textContent=item.title;link.addEventListener('click',()=>navigate(item));list.append(link);}count.hidden=!active.length;count.textContent=String(active.length);button.classList.toggle('se7-has-master-alerts',active.length>0);button.setAttribute('aria-label','Central de notificações Master'+(active.length?' · '+active.length+' pendência(s)':''));}
+ button.addEventListener('click',()=>{if(!accessible())return;update();panel.hidden=!panel.hidden;button.setAttribute('aria-expanded',String(!panel.hidden));});
+ document.addEventListener('click',e=>{if(!root.contains(e.target)){panel.hidden=true;button.setAttribute('aria-expanded','false');}});
+ window.addEventListener('se7:account-updated',update);
+ const watcher=new MutationObserver(()=>{if(!root.hidden)update();});for(const item of entries){const el=document.getElementById(item.id);if(el)watcher.observe(el,{attributes:true,attributeFilter:['hidden','style','class']});}
+ update();setInterval(update,15000);
+}
+function iniciarRelogioAoVivo() {
             const relogioEl = document.getElementById('header-live-clock');
             if (!relogioEl) return;
             function atualizarHora() {
                 const agora = new Date();
                 let diaSemana = agora.toLocaleDateString('pt-BR', { weekday: 'long' });
                 diaSemana = diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1);
-                relogioEl.textContent = `${diaSemana}, ${agora.toLocaleDateString('pt-BR')} - ${agora.toLocaleTimeString('pt-BR')}`;
+                const fmt=(opts)=>new Intl.DateTimeFormat('pt-BR',{...opts,timeZone:'America/Belem'}).format(agora); const weekday=fmt({weekday:'long'});const weekdayName=weekday.charAt(0).toUpperCase()+weekday.slice(1);relogioEl.replaceChildren();const place=document.createElement('strong');place.textContent='Vigia – Pará · '+weekdayName;const details=document.createElement('span');details.textContent=fmt({day:'2-digit',month:'2-digit',year:'numeric'})+' · '+fmt({hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});relogioEl.append(place,details);
             }
             atualizarHora();
             setInterval(atualizarHora, 1000);
@@ -2283,6 +2300,7 @@ async function rejeitarSolicitacaoFirebase(id) {
 
         window.addEventListener('DOMContentLoaded', async () => {
             iniciarRelogioAoVivo();
+            iniciarCentralMaster();
             const marca=await SE7.info().catch(()=>({}));if(marca.logo)updateLogoPreview(marca.logo);if(marca.name)document.getElementById('login-info-title').textContent=marca.name;
 	    const inputDataPonto = document.getElementById('manual-ponto-data');
             if (inputDataPonto) inputDataPonto.valueAsDate = new Date();

@@ -147,3 +147,23 @@ html:not(.dark) body.se7-matriz #se7-workspace :is(button.bg-blue-600,button.bg-
 html.dark body.se7-matriz :is(#se7-workspace,.se7-modal-panel) :is(.bg-blue-600,.bg-indigo-600){background-color:#19477d;color:#e9f5ff;}
 html.dark body.se7-matriz :is(#se7-workspace,.se7-modal-panel) :is(.bg-emerald-600,.bg-green-600){background-color:#126653;color:#f0fff9;}
 html.dark body.se7-matriz :is(#se7-workspace,.se7-modal-panel) :is(.bg-red-600){background-color:#853047;color:#fff1f4;}
+
+/* Central do Master e relógio institucional: somente cabeçalho Matriz */
+.se7-matriz #header-live-clock{display:flex;flex-direction:column;gap:4px;white-space:nowrap;line-height:1.25;text-align:right}
+.se7-matriz #header-live-clock strong{font-size:11px;font-weight:700;color:inherit}
+.se7-matriz #header-live-clock span{font-size:10px;color:inherit;opacity:.85}
+.se7-matriz .se7-account-header{display:flex;align-items:center;gap:12px}
+.se7-matriz .se7-master-alerts{position:relative;flex:none}
+.se7-matriz .se7-master-alerts[hidden],.se7-matriz #se7-master-alert-panel[hidden]{display:none!important}
+.se7-matriz #se7-master-alert-trigger{width:40px;height:40px;display:grid;place-items:center;border:1px solid var(--se7-border);border-radius:12px;background:var(--se7-panel-soft);color:var(--se7-text);position:relative;cursor:pointer}
+.se7-matriz #se7-master-alert-trigger i{font-size:17px}
+.se7-matriz #se7-master-alert-count{position:absolute;right:-5px;top:-6px;min-width:19px;height:19px;display:grid;place-items:center;border-radius:50%;background:#db303f;color:white;font-size:10px;font-weight:800;padding:0 3px}
+.se7-matriz #se7-master-alert-count[hidden]{display:none}
+.se7-matriz #se7-master-alert-trigger.se7-has-master-alerts i{animation:se7-master-bell 1.6s infinite}
+@keyframes se7-master-bell{0%,45%,100%{transform:rotate(0)}10%,30%{transform:rotate(13deg)}20%,40%{transform:rotate(-13deg)}}
+.se7-matriz #se7-master-alert-panel{position:absolute;right:0;top:calc(100% + 9px);z-index:150;width:min(345px,90vw);padding:16px;border:1px solid var(--se7-border);background:var(--se7-panel);color:var(--se7-text);box-shadow:0 18px 50px #0003;border-radius:12px;white-space:normal}
+.se7-matriz #se7-master-alert-list{display:grid;gap:9px;margin-top:13px;font-size:12px;color:var(--se7-muted)}
+.se7-matriz #se7-master-alert-list .se7-master-alert-item{display:block;text-align:left;border:1px solid var(--se7-border);background:var(--se7-panel-soft);color:var(--se7-text);border-radius:8px;padding:11px;width:100%;cursor:pointer}
+.se7-matriz #se7-master-alert-list .se7-master-alert-item:hover{border-color:#278bca}
+@media(prefers-reduced-motion:reduce){.se7-matriz #se7-master-alert-trigger i{animation:none!important}}
+@media(max-width:700px){.se7-matriz #header-live-clock strong{font-size:9px}.se7-matriz #header-live-clock span{font-size:9px}}
