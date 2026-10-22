@@ -6,7 +6,7 @@ export function scheduleView(c,s,m={},attempt=null,now=new Date()){
  let exam=c?.exam||m.exam||null;if(!exam&&s.controleEJA?.dataInicio){const date=s.controleEJA.dataInicio.slice(0,10);try{exam={date,...windowFor(date)};}catch{}}
  const missed=!!exam&&!attempt&&now>=new Date(exam.cutoffAt),key=exam?.date||'',entry=Object.entries(m.fees||{}).find(([,f])=>f.examKey===key&&!f.consumedAt),fee=entry?{term:entry[0],...entry[1]}:null;
  const earliest=c?.earliestExamDate||(s.enrollmentDate?addDays(s.enrollmentDate,30):null),tomorrow=addDays(localDate(now),1),minDate=missed?(earliest&&earliest>tomorrow?earliest:tomorrow):earliest;
- return {exam,missed,fee:fee?{term:fee.term,state:fee.state,amountCents:fee.amountCents,dueDate:fee.dueDate}:null,minDate,feeCents:3000,proposal:m.proposal?.forExamKey===key?m.proposal:null};
+ return {exam,missed,fee:fee?{term:fee.term,state:fee.state,amountCents:fee.amountCents,dueDate:fee.dueDate}:null,minDate,feeCents:3000,hasRescheduleBilling:Object.keys(m.fees||{}).length>0,proposal:m.proposal?.forExamKey===key?m.proposal:null};
 }
 export function feeContract(meta,term,student){const f=meta?.fees?.[term];if(!feeTerm(term)||!f)fail(404,'Taxa não solicitada.');return {paymentMode:'boleto',studentName:student.fullname,firstCents:f.amountCents,secondCents:f.amountCents,firstDueDate:f.dueDate,secondDueDate:f.dueDate,cardInstallments:0};}
 export async function schedulingAction(db,b,u,sid,student){const cr=db.collection('se7EjaContracts').doc(sid),mr=db.collection('se7EjaReschedules').doc(sid),ar=db.collection('se7EjaAttempts').doc(sid),sr=db.collection('students').doc(sid);let result;const now=new Date();
@@ -17,7 +17,7 @@ export async function schedulingAction(db,b,u,sid,student){const cr=db.collectio
   if(typeof b.date!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(b.date))fail(400,'Selecione uma data válida.');
   const exam=windowFor(b.date);
   if(b.date<=localDate(now))fail(409,'Escolha uma data futura.');
-  if(Object.values(m.fees||{}).some(f=>f.state!=='confirmed'&&!f.consumedAt))fail(409,'Existe cobrança de reagendamento em aberto. Regularize ou cancele pelo Financeiro antes de conceder isenção.');
+  if(Object.keys(m.fees||{}).length>0)fail(409,'Não é possível habilitar o agendamento: já foi gerado um boleto de reagendamento para este aluno. Consulte o Financeiro.');
   const stamp=now.toISOString(),next={date:b.date,...exam};
   const inboxes=await readInbox(tx,db,s.poloId);
   tx.set(mr,{exam:next,proposal:null,adminWaiver:{date:b.date,previousDate:v.exam?.date||null,grantedBy:u.uid,grantedAt:stamp,amountCents:3000,reason:'Liberação administrativa sem cobrança'}},{merge:true});

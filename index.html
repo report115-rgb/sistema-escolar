@@ -4690,22 +4690,6 @@ function renderizarAlunosEJAAdmin() {
     });
 }
 
-async function ejaLiberarReagendamentoMaster(studentId,button){
- const input=document.getElementById('dt_inicio_'+studentId),date=input?.value?.slice(0,10);
- if(!date||!/^\d{4}-\d{2}-\d{2}$/.test(date))return alert('Escolha a nova data no campo Início da Prova. A janela será das 08h às 20h, com tolerância até 20h20.');
- const aluno=students.find(x=>x.id===studentId);
- if(!aluno)return alert('Aluno não encontrado.');
- if(!confirm('Autorizar a prova EJA de '+aluno.fullname+' para '+date.split('-').reverse().join('/')+' com isenção da taxa de reagendamento de R$ 30,00?'))return;
- button.disabled=true;const label=button.innerHTML;button.textContent='Salvando liberação…';
- try{
-  await SE7.api('eja-admin-rebook',{studentId,date});
-  aluno.controleEJA={...(aluno.controleEJA||{}),dataInicio:date+'T08:00:00-03:00',dataFim:date+'T20:00:00-03:00',provaAtiva:true};
-  document.getElementById('dt_inicio_'+studentId).value=date+'T08:00';
-  document.getElementById('dt_fim_'+studentId).value=date+'T20:00';
-  alert('Nova data autorizada e taxa isenta. Nenhum boleto de reagendamento foi gerado.');
- }catch(e){alert('A liberação não foi concluída: '+e.message);}finally{button.disabled=false;button.innerHTML=label;}
-}
-
 // 2. Salva o agendamento individual do aluno no Firebase e dispara a notificação no WhatsApp
 async function salvarAgendamentoProvaAluno(studentId) {
     const dtInicioInput = document.getElementById(`dt_inicio_${studentId}`).value;
