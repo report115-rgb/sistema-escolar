@@ -1612,14 +1612,14 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
                                 let badgeStatus = `<span class="px-2 py-0.5 bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 font-bold rounded text-[10px]">Cursando</span>`;
                                 if (notaFinal !== null) {
                                     const numFinal = parseFloat(notaFinal);
-                                    const corNota = numFinal >= 6.0 ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300';
+                                    const corNota = numFinal >= 7.0 ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300';
                                     badgeStatus = `<span class="px-2.5 py-1 ${corNota} font-bold rounded-lg text-xs">Final: ${notaFinal}</span>`;
                                 }
 
                                 gradesList.innerHTML += `
                                     <div data-attendance-subject="${sub.id}" class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-2 text-xs">
                                         <div class="flex justify-between items-center">
-                                            <strong class="text-slate-800 dark:text-slate-100 text-sm">${sub.name}</strong>
+                                            <strong class="text-slate-800 dark:text-slate-100 text-sm">${sub.teachingType === 'tcc' && !/^TCC\s*[-–—]/i.test(sub.name || '') ? 'TCC - ' + sub.name : sub.name}</strong>
                                             <div>${badgeStatus}</div>
                                         </div>
                                         <div class="grid grid-cols-2 gap-2 pt-1 border-t border-slate-100 dark:border-slate-800 text-[11px] text-slate-500 dark:text-slate-400">
