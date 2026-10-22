@@ -37,7 +37,7 @@ async function issuePreceptorDeclaration(db,b,u){
  const record={preceptorId:id,preceptorName:preceptor.name,registration:preceptor.registration||'',courseId,courseName:course.name,site,start,end,issuedAt:new Date().toISOString(),issuedBy:u.uid,issuerName:u.profile?.nome||u.email||'',type:'declaracao_atuacao_preceptor',historic:preceptor.actingHistory==='previous'};
  const ref=db.collection('se7PreceptorDeclarations').doc();
  await ref.set(record);
- return {id:ref.id,...record,institution:{name:institution.name||'',razao:institution.razao||'',cnpj:institution.cnpj||'',end:institution.end||''}};
+ return {id:ref.id,...record,institution:{name:institution.name||'',razao:institution.razao||'',cnpj:institution.cnpj||'',end:institution.end||'',stateRegistration:institution.stateRegistration||'',municipalRegistration:institution.municipalRegistration||''}};
 }
 
 export async function internships(db,b,u,{auth}={}){
