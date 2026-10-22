@@ -24,6 +24,22 @@ export function evaluateInternship(criteria,scores,validatedMinutes,requiredMinu
 const defaultCriteria={scale:10,pass:7,items:[{id:'ethics',name:'Ética e responsabilidade',weight:1},{id:'technique',name:'Desempenho técnico',weight:1},{id:'team',name:'Relacionamento e trabalho em equipe',weight:1},{id:'initiative',name:'Organização e iniciativa',weight:1}]};
 async function criteria(db){return readEvaluationCriteria(db);}
 async function visibleAssignments(db,u){if(u.role==='aluno')return internshipRows(db,collections.assignment,'studentId',u.studentId);if(u.role==='preceptor')return internshipRows(db,collections.assignment,'preceptorId',u.preceptorId);management(u);return internshipRows(db,collections.assignment,...(u.role==='secretaria'?['poloId',u.profile.poloId]:[]));}
+
+async function issuePreceptorDeclaration(db,b,u){
+ if(u.role!=='master')fail(403,'Emissão exclusiva da conta Master.');
+ const id=validId(b.preceptorId),courseId=validId(b.courseId);
+ const [p,c,inst]=await Promise.all([db.collection('se7Preceptors').doc(id).get(),db.collection('courses').doc(courseId).get(),db.collection('config').doc('institution').get()]);
+ if(!p.exists||!c.exists)fail(404,'Preceptor ou curso não encontrado.');
+ const start=String(b.start||''),end=String(b.end||''),site=String(b.site||'').trim();
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(start)||!/^\d{4}-\d{2}-\d{2}$/.test(end)||start>end||!Number.isFinite(Date.parse(start))||!Number.isFinite(Date.parse(end)))fail(400,'Informe um período de atuação válido.');
+ if(!site||site.length>200||/[<>\x00-\x1f]/.test(site))fail(400,'Informe o local de atuação (até 200 caracteres).');
+ const preceptor=p.data(),course=c.data(),institution=inst.data()||{};
+ const record={preceptorId:id,preceptorName:preceptor.name,registration:preceptor.registration||'',courseId,courseName:course.name,site,start,end,issuedAt:new Date().toISOString(),issuedBy:u.uid,issuerName:u.profile?.nome||u.email||'',type:'declaracao_atuacao_preceptor',historic:preceptor.actingHistory==='previous'};
+ const ref=db.collection('se7PreceptorDeclarations').doc();
+ await ref.set(record);
+ return {id:ref.id,...record,institution:{name:institution.name||'',razao:institution.razao||'',cnpj:institution.cnpj||'',end:institution.end||''}};
+}
+
 export async function internships(db,b,u,{auth}={}){
  const action=b.action;
  if(['internship-preceptor-state','internship-preceptor-delete'].includes(action))return preceptorLifecycle(db,b,u);
@@ -36,6 +52,7 @@ export async function internships(db,b,u,{auth}={}){
  if(action==='internship-catalog'){management(u);const names=['courses','classes','students','polos',collections.site,collections.preceptor];const [courses,classes,students,polos,sites,preceptors]=await Promise.all(names.map(c=>internshipRows(db,c)));return {courses:courses.map(c=>({...c,subjects:(c.subjects||[]).filter(s=>s.teachingType==='internship')})).filter(c=>c.subjects.length),classes:classes.filter(c=>u.role==='master'||c.poloId===u.profile.poloId),students:students.filter(s=>u.role==='master'||s.poloId===u.profile.poloId).map(s=>({id:s.id,name:s.fullname,code:s.code||'',courseId:s.courseId||'',classId:s.classId||'',poloId:s.poloId||''})),groups:u.role==='master'?await internshipRows(db,'se7InternshipGroups'):[],polos,sites,preceptors:preceptors.filter(p=>!p.deletedAt).map(p=>u.role==='master'?p:{id:p.id,name:p.name,code:p.code||'',active:p.active===true})};}
  if(action==='internship-criteria-save'){master(u);if(b.criteria?.mode==='descriptive-v1'){const c=normalizeRubric(b.criteria);await db.collection('config').doc('internshipEvaluation').set({...c,updatedAt:stamp(),by:actor(u)});return {ok:true};}const c=b.criteria;if(!c||!Number.isFinite(c.scale)||c.scale<=0||c.scale>100||!Number.isFinite(c.pass)||c.pass<0||c.pass>c.scale||!Array.isArray(c.items)||!c.items.length||c.items.length>20)fail(400,'Critérios inválidos.');const items=c.items.map(i=>({id:validId(i.id),name:clean(i.name,120),weight:Number(i.weight)}));if(new Set(items.map(i=>i.id)).size!==items.length||items.some(i=>!Number.isFinite(i.weight)||i.weight<=0||i.weight>100))fail(400,'Pesos ou identificadores inválidos.');await db.collection('config').doc('internshipEvaluation').set({scale:c.scale,pass:c.pass,items,updatedAt:stamp(),by:actor(u)});return {ok:true};}
  if(action==='internship-preceptor-save')return savePreceptor(db,b,u);
+ if(action==='internship-preceptor-declaration')return issuePreceptorDeclaration(db,b,u);
  if(action==='internship-site-save')return saveInternshipSite(db,b,u);
  if(action==='internship-preceptor-access'){master(u);if(!auth)fail(503,'Autenticação indisponível.');const p=await get(db,collections.preceptor,b.id);if(!p.active||!p.email)fail(400,'Ative o preceptor e informe seu e-mail.');let uid=p.authUid;const password=randomBytes(12).toString('base64url')+'9a!';if(!uid){try{await auth.getUserByEmail(p.email);fail(409,'E-mail já utilizado. Use um e-mail exclusivo para o acesso do preceptor.');}catch(e){if(e.status===409)throw e;if(e.code!=='auth/user-not-found')throw e;}uid='preceptor_'+p.id;await auth.createUser({uid,email:p.email,password,displayName:p.name});}else await auth.updateUser(uid,{password,disabled:false});await db.collection('se7PreceptorAccounts').doc(uid).set({preceptorId:p.id,mustChangePassword:true,temporaryExpiresAt:new Date(Date.now()+86400000).toISOString()});await db.collection(collections.preceptor).doc(p.id).update({authUid:uid});await auth.revokeRefreshTokens(uid);return {email:p.email,password,url:'/app-preceptor.html'};}
  if(action==='internship-preceptor-password'){if(u.role!=='preceptor'||typeof b.password!=='string'||b.password.length<10||b.password.length>128)fail(400,'Use uma nova senha com pelo menos 10 caracteres.');await auth.updateUser(u.uid,{password:b.password});await db.collection('se7PreceptorAccounts').doc(u.uid).update({mustChangePassword:false});return {ok:true};}
