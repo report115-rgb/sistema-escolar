@@ -893,8 +893,8 @@
                 cnpj: dados.cnpj || institutionData.cnpj,
                 address: dados.endereço || dados.address || dados.endereco || dados.end || institutionData.address,
                 logo: dados.logo || dados.logoUrl || dados.logomarca || '',
-                inscricaoEstadual: dados.inscricaoEstadual || dados.inscriçãoEstadual || dados.inscricao_estadual || dados.ie || dados.IE || '',
-                inscricaoMunicipal: dados.inscricaoMunicipal || dados.inscriçãoMunicipal || dados.inscricao_municipal || dados.im || dados.IM || ''
+                inscricaoEstadual: dados.stateRegistration || dados.inscricaoEstadual || dados.inscriçãoEstadual || dados.inscricao_estadual || dados.ie || dados.IE || '',
+                inscricaoMunicipal: dados.municipalRegistration || dados.inscricaoMunicipal || dados.inscriçãoMunicipal || dados.inscricao_municipal || dados.im || dados.IM || ''
             };
             const logo = document.getElementById('finance-login-logo');
             const fallback = document.getElementById('finance-login-logo-fallback');
