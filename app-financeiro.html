@@ -191,7 +191,7 @@
         <p class="welcome-tagline">Sua gestão acadêmica em um só lugar.</p>
         <div class="welcome-progress" aria-hidden="true"></div>
     </div>
-    <div class="welcome-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="financeiro">v1.11.27</span> • Setor Financeiro</div>
+    <div class="welcome-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="financeiro">v1.11.28</span> • Setor Financeiro</div>
 </div>
 
 
@@ -229,7 +229,7 @@
                 </form>
             </div>
         </div>
-        <div id="finance-login-developer-footer" class="finance-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="financeiro">v1.11.27</span> • Setor Financeiro</div>
+        <div id="finance-login-developer-footer" class="finance-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="financeiro">v1.11.28</span> • Setor Financeiro</div>
     </div>
 
 <dialog id="finance-recovery" aria-labelledby="finance-recovery-title"><form onsubmit="event.preventDefault();enviarRecuperacaoFinanceiro();"><h2 id="finance-recovery-title">Recuperar senha</h2><p>Informe o e-mail cadastrado para receber as instruções de recuperação.</p><label for="finance-recovery-email">E-mail</label><input id="finance-recovery-email" type="email" autocomplete="email" required><p id="finance-recovery-status" role="status"></p><div><button type="button" onclick="fecharRecuperacaoFinanceiro()">Fechar</button><button type="submit" id="finance-recovery-send" data-busy-managed>Enviar link</button></div></form></dialog>
@@ -892,7 +892,9 @@
                 razaoSocial: dados.razao || dados.razão || dados.razaoSocial || dados.name || institutionData.razaoSocial,
                 cnpj: dados.cnpj || institutionData.cnpj,
                 address: dados.endereço || dados.address || dados.endereco || dados.end || institutionData.address,
-                logo: dados.logo || dados.logoUrl || dados.logomarca || ''
+                logo: dados.logo || dados.logoUrl || dados.logomarca || '',
+                inscricaoEstadual: dados.inscricaoEstadual || dados.inscriçãoEstadual || dados.inscricao_estadual || dados.ie || dados.IE || '',
+                inscricaoMunicipal: dados.inscricaoMunicipal || dados.inscriçãoMunicipal || dados.inscricao_municipal || dados.im || dados.IM || ''
             };
             const logo = document.getElementById('finance-login-logo');
             const fallback = document.getElementById('finance-login-logo-fallback');
@@ -1961,12 +1963,15 @@
                         opcoesSalvas: opcoesGeradas, observacoes: observacoesTexto, obs: observacoesTexto, criadoEm: new Date().toISOString()
                     });
                 }
-            } catch (e) { console.warn("Erro ao salvar proposta:", e); }
+            } catch (e) { console.error("Erro ao salvar proposta:",e);alert("Não foi possível registrar a proposta. Tente novamente antes de emitir o documento.");return; }
+            window.SE7Agreements?.refresh();
 
             const razaoSocial = institutionData.razaoSocial || "JS & SS SERVIÇOS EDUCACIONAIS E CIA LTDA";
             const cnpjInst = institutionData.cnpj || "31.535.516/0001-64";
             const logoUrl = institutionData.logo || "";
             const enderecoInst = institutionData.address || "Travessa Magalhães Barata, 692, Centro, Vigia – PA, CEP 68.780-000";
+            const inscricaoEstadualInst=SE7Cadastro.escape(String(institutionData.inscricaoEstadual||'Não informada'));
+            const inscricaoMunicipalInst=SE7Cadastro.escape(String(institutionData.inscricaoMunicipal||'Não informada'));
             const nomeCompleto = aluno.fullname || aluno.name || '---';
             const codigoMatricula = aluno.code || aluno.matricula || 'S/N';
             const cpf = SE7Cadastro.escape(SE7Cadastro.cpf(aluno.cpf));
@@ -1990,7 +1995,12 @@
             let htmlTabelaDebitos = '';
             let somaOriginalGeral = 0, somaMultaGeral = 0, somaJurosGeral = 0, somaTotalGeral = 0;
 
-            faturasAtrasadasGlobal.forEach(f => {
+            [...faturasAtrasadasGlobal].sort((a,b)=>{
+                const da=parseDataParaOrdem(a.date||a.vencimento||''),db=parseDataParaOrdem(b.date||b.vencimento||'');
+                const ta=da instanceof Date&&Number.isFinite(da.getTime())?da.getTime():Infinity;
+                const tb=db instanceof Date&&Number.isFinite(db.getTime())?db.getTime():Infinity;
+                return ta-tb||String(a.description||'').localeCompare(String(b.description||''),'pt-BR');
+            }).forEach(f => {
                 const valorOriginal = parseFloat(String(f.amount || f.valor || '0').replace(',', '.')) || 0;
                 somaOriginalGeral += valorOriginal;
                 const vencimentoStr = f.date || f.vencimento || '';
@@ -2037,7 +2047,7 @@
                             </div>
                             <div>
                                 <h1 style="font-size: 16px; margin: 0 0 6px 0; font-weight: bold; color: #ffffff;">${razaoSocial}</h1>
-                                <p style="font-size: 12px; color: #cbd5e1; margin: 0; line-height: 1.4;"><strong>CNPJ:</strong> ${cnpjInst}<br><strong>Endereço:</strong> ${enderecoInst}</p>
+                                <p style="font-size: 12px; color: #cbd5e1; margin: 0; line-height: 1.4;"><strong>CNPJ:</strong> ${cnpjInst}<br><strong>Inscrição Estadual:</strong> ${inscricaoEstadualInst}<br><strong>Inscrição Municipal:</strong> ${inscricaoMunicipalInst}<br><strong>Endereço:</strong> ${enderecoInst}</p>
                             </div>
                         </div>
                         <div style="text-align: right; border-left: 1px solid rgba(255, 255, 255, 0.2); padding-left: 20px;">
