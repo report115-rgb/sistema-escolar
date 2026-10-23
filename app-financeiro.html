@@ -1950,7 +1950,7 @@
                     await db.collection("financeLogs").doc(propostaIdExistente).update({
                         amount: valorTotalNegociadoParaRegistro, valor: valorTotalNegociadoParaRegistro,
                         nomeAluno: nomeAlunoSalvar, date: new Date().toLocaleDateString('pt-BR'),
-                        status: "PROPOSTA DE ACORDO EM ANDAMENTO", opcoesSalvas: opcoesGeradas,
+                        status: "AGUARDANDO ACEITE", opcoesSalvas: opcoesGeradas,
                         observacoes: observacoesTexto, obs: observacoesTexto, atualizadoEm: new Date().toISOString()
                     });
                 } else {
@@ -1959,7 +1959,7 @@
                         studentId: alunoNegociacaoId, alunoId: alunoNegociacaoId, nomeAluno: nomeAlunoSalvar,
                         description: `Proposta de Acordo Consolidado`, amount: valorTotalNegociadoParaRegistro,
                         valor: valorTotalNegociadoParaRegistro, date: new Date().toLocaleDateString('pt-BR'),
-                        vencimento: new Date().toISOString().split('T')[0], status: "PROPOSTA DE ACORDO EM ANDAMENTO",
+                        vencimento: new Date().toISOString().split('T')[0], status: "AGUARDANDO ACEITE",
                         opcoesSalvas: opcoesGeradas, observacoes: observacoesTexto, obs: observacoesTexto, criadoEm: new Date().toISOString()
                     });
                 }
