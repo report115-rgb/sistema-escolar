@@ -1973,6 +1973,14 @@
                 }
             } catch (e) { console.error("Erro ao salvar proposta:",e);alert("Não foi possível registrar a proposta. Tente novamente antes de emitir o documento.");return; }
             if (!previewId) window.SE7Agreements?.refresh();
+            if (previewId) {
+                try {
+                    const cadastroAtual = await db.collection("config").doc("institution").get();
+                    if (cadastroAtual.exists) aplicarIdentidadeFinanceiro(cadastroAtual.data());
+                } catch (e) {
+                    console.warn("Dados institucionais não atualizados na prévia:", e);
+                }
+            }
 
             const razaoSocial = institutionData.razaoSocial || "JS & SS SERVIÇOS EDUCACIONAIS E CIA LTDA";
             const cnpjInst = institutionData.cnpj || "31.535.516/0001-64";
@@ -2054,7 +2062,8 @@
                                 ${logoUrl ? `<img src="${logoUrl}" alt="Logo" style="max-width:100%; max-height:100%; object-fit:contain;">` : 'SE7'}
                             </div>
                             <div>
-                                <h1 style="font-size: 16px; margin: 0 0 6px 0; font-weight: bold; color: #ffffff;">${razaoSocial}</h1>
+                                <h1 style="font-size: 16px; margin: 0 0 6px 0; font-weight: bold; color: #ffffff;">${SE7Cadastro.escape(String(institutionData.name||''))}</h1>
+                                <p style="font-size: 12px; color: #cbd5e1; margin: 0 0 5px 0; line-height: 1.4;">${SE7Cadastro.escape(String(razaoSocial))}</p>
                                 <p style="font-size: 12px; color: #cbd5e1; margin: 0; line-height: 1.4;"><strong>CNPJ:</strong> ${cnpjInst} • <strong>Inscrição estadual:</strong> ${inscricaoEstadualInst}<br><strong>Inscrição municipal:</strong> ${inscricaoMunicipalInst} • ${enderecoInst}</p>
                             </div>
                         </div>
