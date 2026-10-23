@@ -1685,6 +1685,7 @@
  const readSet=key=>{try{return new Set(JSON.parse(localStorage.getItem(key)||'[]'));}catch{return new Set();}};
  const storeSet=(key,set)=>{try{localStorage.setItem(key,JSON.stringify([...set]));}catch(e){console.warn('Não foi possível memorizar notificações.',e);}};
  let pagamentos=[],pagamentoUnsub=null,initialized=!!localStorage.getItem(initialKey);
+ let ejaNotifications=[];const ejaDismissKey='se7-master-eja-dispensados';
  const entries=[
  {id:'badge-documentos-pendentes',title:'Gestão de Alunos · Validar documentação',tab:'tab-gestion-students',sub:'subtab-validar-docs'},
  {id:'se7-review-justifications',title:'Notas e Frequências · Analisar justificativas',tab:'tab-attendance',action:'justification'}
@@ -1693,14 +1694,15 @@
  function navigate(item){if(!accessible())return;const tabButton=document.querySelector('#main-tabs-nav button[onclick*="'+item.tab+'"]');if(tabButton&&typeof openTab==='function')openTab({currentTarget:tabButton},item.tab);if(item.sub&&typeof openSubTab==='function'){const subButton=document.querySelector('button[onclick*="'+item.sub+'"]');if(subButton)openSubTab({currentTarget:subButton},item.sub);}if(item.action==='justification')document.getElementById(item.id)?.click();panel.hidden=true;button.setAttribute('aria-expanded','false');}
  function update(){
   const allowed=accessible();root.hidden=!allowed;if(!allowed){panel.hidden=true;button.setAttribute('aria-expanded','false');list.replaceChildren();count.hidden=true;return;}
-  const seen=readSet(seenKey),dismissed=readSet(dismissKey),pending=entries.filter(item=>isAlert(document.getElementById(item.id))&&!dismissed.has(item.id)),newPayments=pagamentos.filter(p=>!seen.has(p.id));
+  const seen=readSet(seenKey),dismissed=readSet(dismissKey),pending=entries.filter(item=>isAlert(document.getElementById(item.id))&&!dismissed.has(item.id)),newPayments=pagamentos.filter(p=>!seen.has(p.id)),ejaSeen=readSet(ejaDismissKey),ejaPending=ejaNotifications.filter(n=>!ejaSeen.has(String(n.id||n.type+':'+n.studentId+':'+n.at)));
   list.replaceChildren();
-  if(!pending.length&&!newPayments.length){const empty=document.createElement('p');empty.textContent='Nenhuma nova notificação.';list.append(empty);}
+  if(!pending.length&&!newPayments.length&&!ejaPending.length){const empty=document.createElement('p');empty.textContent='Nenhuma nova notificação.';list.append(empty);}
   for(const item of pending){const link=document.createElement('button');link.type='button';link.className='se7-master-alert-item';link.textContent=item.title;link.addEventListener('click',()=>navigate(item));list.append(link);}
   for(const p of newPayments){const btn=document.createElement('button');btn.type='button';btn.className='se7-master-alert-item';btn.textContent='Pagamento confirmado · '+p.aluno+' · R$ '+p.valor;btn.onclick=()=>{const v=readSet(seenKey);v.add(p.id);storeSet(seenKey,v);update();};list.append(btn);}
-  const qty=pending.length+newPayments.length;count.hidden=!qty;count.textContent=String(qty);button.classList.toggle('se7-has-master-alerts',qty>0);button.setAttribute('aria-label','Central de notificações Master'+(qty?' · '+qty+' nova(s) notificação(ões)':''));
+  for(const n of ejaPending){const btn=document.createElement('button');btn.type='button';btn.className='se7-master-alert-item';btn.textContent='EJA · '+(n.studentName||'Aluno')+' · '+(n.message||'Novo aviso');btn.onclick=()=>{const seen=readSet(ejaDismissKey);seen.add(String(n.id||n.type+':'+n.studentId+':'+n.at));storeSet(ejaDismissKey,seen);update();};list.append(btn);}
+  const qty=pending.length+newPayments.length+ejaPending.length;count.hidden=!qty;count.textContent=String(qty);button.classList.toggle('se7-has-master-alerts',qty>0);button.setAttribute('aria-label','Central de notificações Master'+(qty?' · '+qty+' nova(s) notificação(ões)':''));
  }
- clear.addEventListener('click',e=>{e.stopPropagation();const seen=readSet(seenKey),dismissed=readSet(dismissKey);for(const p of pagamentos)seen.add(p.id);for(const entry of entries)dismissed.add(entry.id);storeSet(seenKey,seen);storeSet(dismissKey,dismissed);update();});
+ clear.addEventListener('click',e=>{e.stopPropagation();const seen=readSet(seenKey),dismissed=readSet(dismissKey);for(const p of pagamentos)seen.add(p.id);for(const entry of entries)dismissed.add(entry.id);storeSet(seenKey,seen);storeSet(dismissKey,dismissed);const ejaSeen=readSet(ejaDismissKey);for(const n of ejaNotifications)ejaSeen.add(String(n.id||n.type+':'+n.studentId+':'+n.at));storeSet(ejaDismissKey,ejaSeen);update();});
  function startPayments(){if(!accessible()||pagamentoUnsub||typeof db==='undefined')return;
   pagamentoUnsub=db.collection('financeLogs').where('status','==','PAGO').limit(100).onSnapshot(snapshot=>{
    pagamentos=snapshot.docs.map(doc=>{const data=doc.data();return {id:doc.id,aluno:data.studentName||data.alunoNome||data.nomeAluno||'Aluno',valor:Number(data.amount||data.valor||0).toFixed(2).replace('.',',')};});
@@ -1708,6 +1710,7 @@
    update();
   },e=>console.warn('Não foi possível consultar notificações financeiras:',e));
  }
+ window.addEventListener('se7:eja-notifications',e=>{ejaNotifications=Array.isArray(e.detail?.notifications)?e.detail.notifications:[];update();});
  setInterval(startPayments,10000);startPayments();
  button.addEventListener('click',()=>{if(!accessible())return;update();panel.hidden=!panel.hidden;button.setAttribute('aria-expanded',String(!panel.hidden));});
  document.addEventListener('click',e=>{if(!root.contains(e.target)){panel.hidden=true;button.setAttribute('aria-expanded','false');}});
