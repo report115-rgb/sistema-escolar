@@ -1933,20 +1933,28 @@
             atualizarListaOpcoesGeradasModal();
         }
 
-        async function gerarPropostaPDF() {
+        async function gerarPropostaPDF(previewId = null) {
+            if (previewId) {
+                const saved = financeLogs.find(f => f.id === previewId && f.opcoesSalvas);
+                if (!saved) return alert('Proposta não encontrada no histórico.');
+                selecionarAlunoNegociacao(saved.studentId || saved.alunoId, true);
+                opcoesGeradas = saved.opcoesSalvas;
+            }
             if (!alunoNegociacaoId) return;
             const aluno = studentsMap[alunoNegociacaoId];
             if (!aluno) return;
             if (!opcoesGeradas.avista || !opcoesGeradas.parcelado || !opcoesGeradas.cartao) return alert("Configure as 3 opções antes de gerar a proposta.");
 
-            fecharModalRealizarAcordo();
+            if (!previewId) fecharModalRealizarAcordo();
             const propostaIdExistente = document.getElementById('edit-proposta-id-ativo').value;
             const valorTotalNegociadoParaRegistro = valorAtualNegociacaoGlobal.toFixed(2);
             const nomeAlunoSalvar = aluno.fullname || aluno.name || 'Aluno';
-            const observacoesTexto = document.getElementById('obs-proposta-acordo').value.trim();
+            const observacoesTexto = previewId ? String(financeLogs.find(f=>f.id===previewId)?.observacoes || financeLogs.find(f=>f.id===previewId)?.obs || '') : document.getElementById('obs-proposta-acordo').value.trim();
 
             try {
-                if (propostaIdExistente) {
+                if (previewId) {
+                    // Apenas visualização: nenhuma escrita no Firestore ou operação no Asaas.
+                } else if (propostaIdExistente) {
                     await db.collection("financeLogs").doc(propostaIdExistente).update({
                         amount: valorTotalNegociadoParaRegistro, valor: valorTotalNegociadoParaRegistro,
                         nomeAluno: nomeAlunoSalvar, date: new Date().toLocaleDateString('pt-BR'),
@@ -1964,7 +1972,7 @@
                     });
                 }
             } catch (e) { console.error("Erro ao salvar proposta:",e);alert("Não foi possível registrar a proposta. Tente novamente antes de emitir o documento.");return; }
-            window.SE7Agreements?.refresh();
+            if (!previewId) window.SE7Agreements?.refresh();
 
             const razaoSocial = institutionData.razaoSocial || "JS & SS SERVIÇOS EDUCACIONAIS E CIA LTDA";
             const cnpjInst = institutionData.cnpj || "31.535.516/0001-64";
@@ -2118,8 +2126,11 @@
 
             document.getElementById('conteudo-termo-Dinamico').innerHTML = htmlCompletoTermo;SE7DocumentSkin.apply(document.getElementById('conteudo-termo-Dinamico').firstElementChild,institutionData);
             document.getElementById('modal-visualizador-termo').style.display = 'flex';
-            if(window.SE7Agreements?.isProposalOpen())SE7Agreements.refresh();else selecionarAlunoNegociacao(alunoNegociacaoId);
-            renderizarNegociacoesAtivasGeral();
+            if (!previewId) {
+                const panel = document.getElementById('painel-negociacao-aluno');
+                if (panel) panel.style.display = 'none';
+                renderizarNegociacoesAtivasGeral();
+            }
         }
 
         function fecharVisualizadorTermo() {document.body.classList.remove('se7-payroll-print'); document.getElementById('modal-visualizador-termo').style.display = 'none'; }

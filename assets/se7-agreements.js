@@ -4,40 +4,69 @@ const isOverdue=f=>!f.asaasReview&&!f.renegotiationLock&&!f.ejaManaged&&overdueI
 function debtors(){const {students,logs}=model(),map=new Map();for(const f of logs.filter(isOverdue)){const sid=f.studentId||f.alunoId,s=students.find(s=>s.id===sid);if(!s)continue;if(!map.has(sid))map.set(sid,{student:s,rows:[]});map.get(sid).rows.push(f);}return [...map.values()].sort((a,b)=>(a.student.fullname||'').localeCompare(b.student.fullname||'','pt-BR'));}
 function button(text,fn){const b=E('button',text);b.type='button';b.className='se7-ren-button';b.onclick=async()=>{if(b.disabled)return;b.disabled=true;const old=b.textContent;b.textContent='Aguarde…';try{await fn();}catch(e){const d=document.createElement('dialog');d.className='se7-ren-dialog';d.append(E('p',e.message),button('Fechar',()=>d.close()));document.body.append(d);d.addEventListener('close',()=>d.remove());d.showModal();}finally{b.disabled=false;b.textContent=old;}};return b;}
 function names(s){const course=typeof coursesMap!=='undefined'?coursesMap[s.courseId]:null,group=typeof classesMap!=='undefined'?classesMap[s.classId]:null;return {course:typeof course==='string'?course:course?.name||s.courseName||s.course||s.curso||'Curso não informado',group:typeof group==='string'?group:group?.name||s.className||s.turma||'Turma não informada'};}
+
+const statusOf=f=>String(f.status||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();
+const proposal=f=>!!f.opcoesSalvas && ((f.id||'').startsWith('proposta_')||/PROPOSTA DE ACORDO/i.test(f.description||''));
+const rejected=f=>/REPROV|RECUS|NEGAD/.test(statusOf(f));
+const approved=f=>/ACORDO ACEITO|ACORDO EFETIVADO|EFETIVADO/.test(statusOf(f));
+const processing=f=>/PROCESSAMENTO/.test(statusOf(f));
+const pending=f=>proposal(f)&&!rejected(f)&&!approved(f)&&!processing(f);
+const hasAsaasLink=(s,rows)=>!!(s.asaasCustomerId||s.asaasCustomer||s.asaasId||rows.some(f=>f.asaasPaymentId||f.asaasInvoiceId||f.asaasStatus||f.asaasCustomerId));
+function eligibleDebtors(){
+ const {logs}=model(),pendingIds=new Set(logs.filter(pending).map(f=>f.studentId||f.alunoId));
+ return debtors().filter(r=>r.rows.length>=6&&!pendingIds.has(r.student.id)&&hasAsaasLink(r.student,r.rows));
+}
+function titleRow(text){const h=E('h3',text);h.className='font-bold text-xs uppercase text-emerald-600 dark:text-emerald-400 tracking-wider';return h;}
+function proposalCard(f){
+ const {students}=model(),s=students.find(s=>s.id===(f.studentId||f.alunoId))||{};
+ const card=E('div');card.className='bg-white dark:bg-slate-900 p-3.5 rounded-2xl shadow-sm border border-emerald-500/50 space-y-2 text-xs mb-2';
+ const identity=E('div');identity.className='mb-2';
+ const name=E('strong',s.fullname||s.name||f.nomeAluno||'Aluno');name.className='block text-sm text-slate-900 dark:text-white';
+ const course=E('p','Curso: '+names(s).course);course.className='text-[10px] text-slate-500';
+ identity.append(name,course);card.append(identity);
+ const top=E('div');top.className='flex justify-between items-center gap-2 flex-wrap';
+ const desc=E('span',f.description||'Proposta de Acordo Consolidado');desc.className='font-bold text-slate-900 dark:text-white';
+ const status=rejected(f)?'Proposta reprovada':approved(f)?'Acordo aceito':processing(f)?'Acordo em processamento':'Aguardando aprovação do aluno';
+ const pill=E('span',status);pill.className='px-2 py-0.5 rounded-full text-[10px] font-bold '+(rejected(f)?'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300':approved(f)?'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300':'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300');
+ top.append(desc,pill);card.append(top);
+ const value=E('div');value.className='text-[10px] text-slate-400';value.textContent='Valor Negociado Total: R$ '+(f.amount||f.valor||'0.00')+' • Data: '+SE7Finance.dateBR(f.date||f.vencimento);card.append(value);
+ const actions=E('div');actions.className='flex flex-wrap gap-1.5 pt-2 border-t border-slate-100 dark:border-slate-800';
+ const action=(label,css,fn)=>{const b=E('button',label);b.type='button';b.className='px-2.5 py-1 rounded-lg font-semibold text-[10px] text-white shadow '+css;b.onclick=async()=>{if(b.disabled)return;b.disabled=true;try{await fn();}catch(e){alert(e.message||'Não foi possível concluir.');}finally{b.disabled=false;}};actions.append(b);};
+ action('Ver proposta','bg-slate-600 hover:bg-slate-700',()=>gerarPropostaPDF(f.id));
+ if(pending(f)){
+  action('Editar','bg-blue-600 hover:bg-blue-700',()=>{selecionarAlunoNegociacao(f.studentId||f.alunoId,true);abrirModalEditarProposta(f.id);});
+  action('Excluir','bg-red-600 hover:bg-red-700',()=>excluirPropostaRegistro(f.id));
+  action('Aprovar','bg-emerald-600 hover:bg-emerald-700',()=>{selecionarAlunoNegociacao(f.studentId||f.alunoId,true);abrirModalFecharAcordoParaProposta(f.id);});
+  action('Reprovar','bg-amber-600 hover:bg-amber-700',async()=>{if(!confirm('Confirmar que o aluno recusou esta proposta?'))return;await db.collection('financeLogs').doc(f.id).update({status:'PROPOSTA RECUSADA',negadaEm:new Date().toISOString()});});
+ }else if(processing(f)&&f.renegotiationId){
+  action('Retomar efetivação','bg-emerald-600',()=>SE7Renegotiation.resume(f.renegotiationId,f.studentId||f.alunoId));
+ }
+ card.append(actions);return card;
+}
 function refresh(){
  const host=document.getElementById('se7-negotiation-dashboard');if(!host)return;
- host.replaceChildren();const {students,logs}=model(),rows=debtors();
- const proposals=logs.filter(f=>f.opcoesSalvas&&((f.id||'').startsWith('proposta_')||/PROPOSTA DE ACORDO/i.test(f.description||'')));
- const heading=E('h3','Propostas de acordo — acompanhamento');host.append(heading);
- if(!proposals.length)host.append(E('p','Nenhuma proposta registrada.'));
- for(const f of proposals){
-  const row=E('section');row.className='se7-negotiation-row';
-  const p=students.find(s=>s.id===(f.studentId||f.alunoId))||{};
-  const status=String(f.status||'').toUpperCase();
-  const refused=/RECUS|REPROV|NEGAD/.test(status),accepted=/ACEITO|EFETIVADO/.test(status),processing=/PROCESSAMENTO/.test(status);
-  const label=refused?'Negada':accepted?'Aceita':processing?'Efetivação em andamento':f.atualizadoEm?'Editada — aguardando aceite':'Aguardando escolha e aceite do aluno';
-  row.append(E('h3',p.fullname||p.name||f.nomeAluno||'Aluno'),E('p','Situação: '+label));
-  const descriptions=[['avista','À vista'],['parcelado','Boleto parcelado'],['cartao','Cartão de crédito']];
-  const offered=descriptions.filter(([k])=>f.opcoesSalvas?.[k]).map(([k,n])=>n+': '+SE7Finance.amountBR(f.opcoesSalvas[k].valorFinal));
-  if(offered.length)row.append(E('p','Condições oferecidas: '+offered.join(' • ')));
-  if(f.modalidadeAceita){const selected=descriptions.find(([k])=>k===f.modalidadeAceita);row.append(E('p','Modalidade escolhida: '+(selected?.[1]||f.modalidadeAceita)));}
-  if(!refused&&!accepted&&!processing){
-   row.append(button('Editar',()=>{selecionarAlunoNegociacao(f.studentId||f.alunoId,true);abrirModalEditarProposta(f.id);}),
-    button('Aprovar — escolher modalidade',()=>{selecionarAlunoNegociacao(f.studentId||f.alunoId,true);abrirModalFecharAcordoParaProposta(f.id);}),
-    button('Negar proposta',async()=>{if(!confirm('Confirmar que o aluno recusou esta proposta?'))return;await db.collection('financeLogs').doc(f.id).update({status:'PROPOSTA RECUSADA',negadaEm:new Date().toISOString()});f.status='PROPOSTA RECUSADA';refresh();}));
-  }else if(processing&&f.renegotiationId){row.append(button('Retomar efetivação',()=>SE7Renegotiation.resume(f.renegotiationId,f.studentId||f.alunoId)));}
-  host.append(row);
+ host.replaceChildren();
+ const {logs}=model(),all=logs.filter(proposal),waiting=all.filter(f=>pending(f)||processing(f)),history=all.filter(f=>rejected(f)||approved(f));
+ const first=E('section');first.className='space-y-2';first.append(titleRow('Propostas aguardando aprovação'));
+ if(!waiting.length)first.append(E('p','Nenhuma proposta aguardando aprovação.'));
+ for(const f of waiting)first.append(proposalCard(f));host.append(first);
+ const archive=E('details'),archiveTitle=E('summary','Histórico de propostas ('+history.length+')');archive.className='bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-3 space-y-2';archiveTitle.className='cursor-pointer font-bold text-xs text-slate-900 dark:text-white';archive.append(archiveTitle);
+ if(!history.length)archive.append(E('p','Nenhuma proposta concluída.'));
+ for(const f of history)archive.append(proposalCard(f));host.append(archive);
+ const rows=eligibleDebtors(),overdue=E('details'),summary=E('summary','Alunos em atraso ('+rows.length+')');
+ overdue.className='bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-3 space-y-2';
+ summary.className='cursor-pointer font-bold text-xs text-slate-900 dark:text-white';overdue.append(summary);
+ if(!rows.length)overdue.append(E('p','Nenhum aluno elegível para negociação.'));
+ for(const r of rows){
+  const s=r.student,n=names(s),card=E('div');card.className='bg-white dark:bg-slate-900 p-3.5 rounded-2xl shadow-sm border border-emerald-500/50 space-y-2 text-xs mb-2';
+  const name=E('strong',s.fullname||s.name||'Aluno');name.className='block text-sm text-slate-900 dark:text-white';
+  const details=E('p','Curso: '+n.course+' • '+r.rows.length+' mensalidades vencidas');details.className='text-[10px] text-slate-500';
+  const b=E('button','Gerar proposta de acordo');b.type='button';b.className='px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold text-[10px] shadow';
+  b.onclick=()=>{selecionarAlunoNegociacao(s.id,true);abrirModalRealizarAcordo();};
+  card.append(name,details,b);overdue.append(card);
  }
- const active=logs.filter(f=>(f.renegotiationId&&f.id===f.renegotiationId)||(!f.renegotiationId&&proposalState(f)==='approved'));
- host.append(E('h3','Acompanhamento das negociações'));
- const pending=proposals.filter(f=>!/RECUS|REPROV|NEGAD|ACEITO|EFETIVADO|PROCESSAMENTO/.test(String(f.status||'').toUpperCase()));
- if(!active.length&&!pending.length)host.append(E('p','Nenhuma negociação registrada.'));
- for(const f of pending){const row=E('section');row.className='se7-negotiation-row';const s=students.find(s=>s.id===(f.studentId||f.alunoId))||{};row.append(E('h3',s.fullname||s.name||f.nomeAluno||'Aluno'),E('p','Proposta aguardando resposta — disponível acima para editar, aprovar ou negar.'));host.append(row);}
- for(const f of active){const s=students.find(s=>s.id===(f.studentId||f.alunoId))||{},row=E('section');row.className='se7-negotiation-row';const n=names(s),parts=logs.filter(p=>p.renegotiationId===f.id&&p.id!==f.id&&!/CANCELADO/.test(p.status||'')),paid=parts.filter(p=>/PAGO|QUITAD/.test(p.status||'')),paidAmount=paid.reduce((v,p)=>v+(Number.isSafeInteger(p.asaasPaidValueCents)?p.asaasPaidValueCents:Math.round(Number(p.amount||0)*100))-Number(p.cardInstallmentFeeCents||0),0);row.append(E('h3',s.fullname||s.name||'Aluno'),E('p',n.course+' • '+n.group),E('p',(f.agreementSource==='aluno'?'Pelo aplicativo do aluno':'Pelo financeiro')+' • '+(f.agreementState==='done'?'Registrada':f.renegotiationId?'Em processamento':f.status)),E('p','Total: '+SE7Finance.amountBR(f.amount)+' • '+paid.length+' de '+(f.agreementCount||parts.length)+' pagamento(s) confirmado(s) • Pago: '+SE7Finance.money(paidAmount)));if(f.renegotiationId)row.append(button('Ver negociação',()=>SE7Renegotiation.resume(f.renegotiationId,f.studentId||f.alunoId)));else row.append(E('p','Registro de acordo anterior preservado.'));host.append(row);}
- const overdue=E('details'),summary=E('summary','Alunos em atraso ('+rows.length+') — clique para expandir');summary.style.cursor='pointer';summary.style.fontWeight='700';summary.style.padding='12px 0';overdue.append(summary);
- if(!rows.length)overdue.append(E('p','Nenhum aluno em atraso.'));
- for(const r of rows){const s=r.student,n=names(s),row=E('section');row.className='se7-negotiation-row';row.append(E('h3',s.fullname||s.name||'Aluno'),E('p',n.course+' • '+n.group),E('p',r.rows.length+' mensalidade(s) em atraso'));if(r.rows.length>=6){row.append(button('Ver / negociar',()=>{selecionarAlunoNegociacao(s.id,true);abrirModalRealizarAcordo();}),button('Gerar proposta de acordo',()=>{selecionarAlunoNegociacao(s.id,true);abrirModalRealizarAcordo();}));}else row.append(E('p','Acordo manual disponível a partir de seis mensalidades vencidas.'));overdue.append(row);}
  host.append(overdue);
- const badge=document.getElementById('se7-overdue-nav-badge');if(badge){badge.hidden=rows.length===0;badge.setAttribute('aria-label',rows.length+' aluno(s) em atraso');}
+ const badge=document.getElementById('se7-overdue-nav-badge');if(badge){badge.hidden=rows.length===0;badge.setAttribute('aria-label',rows.length+' aluno(s) elegível(is)');}
 }
-window.SE7Agreements={refresh,isOverdue,state:proposalState,hasOverdue:id=>debtors().some(r=>r.student.id===id),isProposalOpen:()=>false,openOverdue:refresh,openProposal:()=>refresh()};refresh();let day=today();setInterval(()=>{if(day!==today()){day=today();refresh();}},60000);
+
+window.SE7Agreements={refresh,isOverdue,state:proposalState,hasOverdue:id=>eligibleDebtors().some(r=>r.student.id===id),isProposalOpen:()=>false,openOverdue:refresh,openProposal:id=>{const f=model().logs.find(f=>f.id===id);if(f&&proposal(f))gerarPropostaPDF(id);else refresh();}};refresh();let day=today();setInterval(()=>{if(day!==today()){day=today();refresh();}},60000);
