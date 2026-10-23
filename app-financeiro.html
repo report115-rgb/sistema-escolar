@@ -2142,6 +2142,11 @@
             const termoHost=document.getElementById('conteudo-termo-Dinamico');
             // Declaração é anexada apenas à visualização de uma proposta efetivada.
             const aceitaComRegistro=!!(previewId&&propostaVisualizada&&opcaoAceita&&propostaVisualizada.renegotiationId);
+            let qrVerification=null;
+            if(aceitaComRegistro){
+              try {qrVerification=await SE7.api('financial-agreement-document-issue',{proposalId:previewId});}
+              catch(e){alert('Não foi possível registrar a validação oficial do documento: '+e.message+'. A declaração não será emitida sem QR Code válido.');return;}
+            }
             if(aceitaComRegistro){
                 const esc=v=>SE7Cadastro.escape(String(v??''));
                 const poloAluno=aluno.poloName||aluno.nomePolo||aluno.polo||aluno.poloId||'não informado';
@@ -2171,6 +2176,11 @@
                 termoHost.innerHTML=documentoDeclaracao+htmlCompletoTermo;
                 const declaracao=termoHost.firstElementChild;
                 SE7DocumentSkin.apply(declaracao,institutionData);
+                const validation=document.createElement('div');validation.style.cssText='display:flex;align-items:center;gap:14px;margin-top:12px;font:10px Arial;color:#123f75;border-top:1px solid #cbd5e1;padding-top:10px;';
+                const qrNode=document.createElement('div');qrNode.style.cssText='width:84px;height:84px;flex:none;';
+                new QRCode(qrNode,{text:qrVerification.url,width:84,height:84,correctLevel:QRCode.CorrectLevel.M});
+                const label=document.createElement('div');label.textContent='VALIDAÇÃO INSTITUCIONAL — Escaneie o QR Code para conferir o registro oficial da emissão. Código: '+qrVerification.token;
+                validation.append(qrNode,label);declaracao.append(validation);
                 declaracao.style.marginBottom='0';
                 const termo=declaracao.nextElementSibling;
                 if(termo)SE7DocumentSkin.apply(termo,institutionData);
