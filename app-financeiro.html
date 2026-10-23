@@ -2193,18 +2193,18 @@
                 const option=quote.options.find(o=>o.method===method&&(escolha==='avista'?o.count===1:escolha==='parcelado'?o.count===parcelas:true)) || (escolha==='parcelado'?quote.options.find(o=>o.method==='bank'&&o.count===1):null);
                 if(!option)throw Error('A condição escolhida não é compatível com as modalidades do Asaas. Revise a proposta.');
                 if(valor>quote.total)throw Error('O valor da proposta ultrapassa a dívida atualizada. Refaça o cálculo antes do aceite.');
-                const body={studentId,quoteId:quote.quoteId,option:option.key};
+                const body={studentId,quoteId:quote.quoteId,option:option.key,proposalId:proposta.id};
                 if(valor!==option.total||parcelas!==option.count){
                     body.customTotal=valor;body.count=parcelas;body.reason='Aceite expresso da proposta '+proposta.id+' na modalidade '+escolha;
                 }
                 const response=await SE7.api('renegotiation-begin',body);
                 id=response.id;
-                await db.collection('financeLogs').doc(proposta.id).update({status:'ACORDO EM PROCESSAMENTO',renegotiationId:id,modalidadeAceita:escolha,valorAceitoCents:valor,aceitoEm:new Date().toISOString()});
+                // Atualização protegida realizada no servidor.
                 proposta.status='ACORDO EM PROCESSAMENTO';proposta.renegotiationId=id;
                 for(let i=0;i<130;i++){
                     const step=await SE7.api('renegotiation-step',{studentId,id});
                     if(step.state==='done'){
-                        await db.collection('financeLogs').doc(proposta.id).update({status:'ACORDO ACEITO',efetivadoEm:new Date().toISOString()});
+                        // Conclusão registrada no servidor.
                         proposta.status='ACORDO ACEITO';fecharModalFecharAcordo();
                         alert('Acordo efetivado. O Asaas confirmou a substituição das cobranças.');
                         window.SE7Agreements?.refresh();return;

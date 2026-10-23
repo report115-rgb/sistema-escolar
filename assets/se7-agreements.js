@@ -35,6 +35,7 @@ function proposalCard(f){
  action('Ver proposta','bg-slate-600 hover:bg-slate-700',()=>gerarPropostaPDF(f.id));
  if(rejected(f)) action('Excluir','bg-red-600 hover:bg-red-700',async()=>{if(!confirm('Excluir definitivamente esta proposta reprovada do histórico? Esta ação não pode ser desfeita.'))return;await db.collection('financeLogs').doc(f.id).delete();});
  if(pending(f)){
+  action('Consultar acordo em andamento','bg-cyan-700',async()=>{const sid=f.studentId||f.alunoId;const result=await SE7.api('renegotiation-catalog',{studentId:sid});if(!result.active){alert('Nenhuma renegociação ativa localizada para este aluno.');return;}if(result.active.proposalId!==f.id)throw Error('A renegociação ativa não está vinculada a esta proposta. Solicite conferência antes de continuar.');await SE7Renegotiation.resume(result.active.id,sid);});
   action('Editar','bg-blue-600 hover:bg-blue-700',()=>{selecionarAlunoNegociacao(f.studentId||f.alunoId,true);abrirModalEditarProposta(f.id);});
   action('Excluir','bg-red-600 hover:bg-red-700',()=>excluirPropostaRegistro(f.id));
   action('Aprovar','bg-emerald-600 hover:bg-emerald-700',()=>{selecionarAlunoNegociacao(f.studentId||f.alunoId,true);abrirModalFecharAcordoParaProposta(f.id);});
