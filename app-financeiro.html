@@ -2190,7 +2190,7 @@
             try{
                 const quote=await SE7.api('renegotiation-quote',{studentId});
                 const method=escolha==='cartao'?'card':'bank';
-                const option=quote.options.find(o=>o.method===method&&(escolha==='avista'?o.count===1:escolha==='parcelado'?o.count===parcelas:true));
+                const option=quote.options.find(o=>o.method===method&&(escolha==='avista'?o.count===1:escolha==='parcelado'?o.count===parcelas:true)) || (escolha==='parcelado'?quote.options.find(o=>o.method==='bank'&&o.count===1):null);
                 if(!option)throw Error('A condição escolhida não é compatível com as modalidades do Asaas. Revise a proposta.');
                 if(valor>quote.total)throw Error('O valor da proposta ultrapassa a dívida atualizada. Refaça o cálculo antes do aceite.');
                 const body={studentId,quoteId:quote.quoteId,option:option.key};
