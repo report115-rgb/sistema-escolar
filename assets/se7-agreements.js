@@ -46,6 +46,7 @@ function proposalCard(f){
  }
  card.append(actions);return card;
 }
+let historyExpanded=false,overdueExpanded=false;
 function refresh(){
  const host=document.getElementById('se7-negotiation-dashboard');if(!host)return;
  host.replaceChildren();
@@ -53,12 +54,12 @@ function refresh(){
  const first=E('section');first.className='space-y-2';first.append(titleRow('Propostas aguardando aprovação'));
  if(!waiting.length)first.append(E('p','Nenhuma proposta aguardando aprovação.'));
  for(const f of waiting)first.append(proposalCard(f));host.append(first);
- const archive=E('details'),archiveTitle=E('summary','Histórico de propostas ('+history.length+')');archive.className='bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-3 space-y-2';archiveTitle.className='cursor-pointer font-bold text-xs text-slate-900 dark:text-white';archive.append(archiveTitle);
+ const archive=E('details'),archiveTitle=E('summary','Histórico de propostas ('+history.length+')');archive.className='bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-3 space-y-2';archiveTitle.className='cursor-pointer font-bold text-xs text-slate-900 dark:text-white';archive.open=historyExpanded;archive.addEventListener('toggle',()=>{if(archive.isConnected)historyExpanded=archive.open;});archive.append(archiveTitle);
  if(!history.length)archive.append(E('p','Nenhuma proposta concluída.'));
  for(const f of history)archive.append(proposalCard(f));host.append(archive);
  const rows=eligibleDebtors(),overdue=E('details'),summary=E('summary','Alunos em atraso ('+rows.length+')');
  overdue.className='bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-3 space-y-2';
- summary.className='cursor-pointer font-bold text-xs text-slate-900 dark:text-white';overdue.append(summary);
+ summary.className='cursor-pointer font-bold text-xs text-slate-900 dark:text-white';overdue.open=overdueExpanded;overdue.addEventListener('toggle',()=>{if(overdue.isConnected)overdueExpanded=overdue.open;});overdue.append(summary);
  if(!rows.length)overdue.append(E('p','Nenhum aluno elegível para negociação.'));
  for(const r of rows){
   const s=r.student,n=names(s),card=E('div');card.className='bg-white dark:bg-slate-900 p-3.5 rounded-2xl shadow-sm border border-emerald-500/50 space-y-2 text-xs mb-2';

@@ -1945,6 +1945,12 @@
             if (!aluno) return;
             if (!opcoesGeradas.avista || !opcoesGeradas.parcelado || !opcoesGeradas.cartao) return alert("Configure as 3 opções antes de gerar a proposta.");
 
+            const propostaVisualizada = previewId ? financeLogs.find(f=>f.id===previewId) : null;
+            const opcaoAceita = propostaVisualizada && /ACORDO ACEITO|ACORDO EFETIVADO|EFETIVADO/i.test(String(propostaVisualizada.status||'')) ? String(propostaVisualizada.modalidadeAceita||'').toLowerCase() : '';
+            const dataAceiteOriginal = propostaVisualizada?.aceitoEm || propostaVisualizada?.efetivadoEm || '';
+            const dataAceiteValida = dataAceiteOriginal && !Number.isNaN(Date.parse(dataAceiteOriginal)) ? new Date(dataAceiteOriginal).toLocaleDateString('pt-BR',{timeZone:'America/Belem'}) : 'data não informada';
+            const comprovacaoBoletos = propostaVisualizada?.renegotiationId && financeLogs.some(f=>f.renegotiationId===propostaVisualizada.renegotiationId && f.renegotiationPart && f.asaasPaymentId);
+            const seloOpcao = tipo => opcaoAceita===tipo ? `<span style="float:right;text-align:right;font-weight:bold;color:#065f46;background:#dcfce7;border:1px solid #86efac;border-radius:8px;padding:7px 10px;margin-left:12px;line-height:1.5;">ACORDO ACEITO<br>Proposta aceita em ${SE7Cadastro.escape(dataAceiteValida)}<br>${comprovacaoBoletos?'Boletos gerados':'Boletos: verificar emissão'}</span>` : '';
             if (!previewId) fecharModalRealizarAcordo();
             const propostaIdExistente = document.getElementById('edit-proposta-id-ativo').value;
             const valorTotalNegociadoParaRegistro = valorAtualNegociacaoGlobal.toFixed(2);
@@ -2112,13 +2118,13 @@
 
                     <h2 style="font-size: 14px; color: #1e3a8a; text-transform: uppercase; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 6px; margin-top: 25px; margin-bottom: 12px; font-weight: bold;">3. Opções de Acordo Disponíveis</h2>
                     <div class="se7-agreement-option" style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 14px; border-radius: 10px; margin-top: 10px; font-size: 12px;">
-                        <strong style="color: #047857;">Opção A: Pagamento À Vista</strong><br>Valor Total: R$ ${opcoesGeradas.avista.valorFinal.toFixed(2)}
+                        ${seloOpcao("avista")}<strong style="color: #047857;">Opção A: Pagamento À Vista</strong><br>Valor Total: R$ ${opcoesGeradas.avista.valorFinal.toFixed(2)}
                     </div>
                     <div class="se7-agreement-option" style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 14px; border-radius: 10px; margin-top: 10px; font-size: 12px;">
-                        <strong style="color: #047857;">Opção B: Parcelado (${opcoesGeradas.parcelado.infoExtra})</strong><br>Valor Total: R$ ${opcoesGeradas.parcelado.valorFinal.toFixed(2)}
+                        ${seloOpcao("parcelado")}<strong style="color: #047857;">Opção B: Parcelado (${opcoesGeradas.parcelado.infoExtra})</strong><br>Valor Total: R$ ${opcoesGeradas.parcelado.valorFinal.toFixed(2)}
                     </div>
                     <div class="se7-agreement-option" style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 14px; border-radius: 10px; margin-top: 10px; font-size: 12px;">
-                        <strong style="color: #047857;">Opção C: Cartão de Crédito</strong><br>Valor Total: R$ ${opcoesGeradas.cartao.valorFinal.toFixed(2)}
+                        ${seloOpcao("cartao")}<strong style="color: #047857;">Opção C: Cartão de Crédito</strong><br>Valor Total: R$ ${opcoesGeradas.cartao.valorFinal.toFixed(2)}
                     </div>
 
                     ${observacoesTexto ? `
@@ -2871,7 +2877,7 @@
 <script src="/assets/se7-ambient.js"></script>
 <script src="/assets/se7-payroll-receipt.js"></script>
 <script src="/assets/se7-expenses.js?v=preceptor-contracts-4"></script>
-<script type="module" src="/assets/se7-agreements.js?v=recuperacao-acordo-20261023"></script>
+<script type="module" src="/assets/se7-agreements.js?v=historico-persistente-20261023"></script>
 <script type="module" src="/assets/se7-payroll-finance.js"></script>
 <script type="module" src="/assets/se7-payroll-report.js?v=institucional-20261019"></script>
 <link rel="stylesheet" href="/assets/se7-annual-statements.css"><script src="/assets/se7-annual-statements.js?v=institucional-20261019"></script><script src="/assets/se7-renegotiation.js?v=recuperacao-acordo-20261023"></script>
