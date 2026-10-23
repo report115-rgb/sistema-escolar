@@ -33,6 +33,7 @@ function proposalCard(f){
  const actions=E('div');actions.className='flex flex-wrap gap-1.5 pt-2 border-t border-slate-100 dark:border-slate-800';
  const action=(label,css,fn)=>{const b=E('button',label);b.type='button';b.className='px-2.5 py-1 rounded-lg font-semibold text-[10px] text-white shadow '+css;b.onclick=async()=>{if(b.disabled)return;b.disabled=true;try{await fn();}catch(e){alert(e.message||'Não foi possível concluir.');}finally{b.disabled=false;}};actions.append(b);};
  action('Ver proposta','bg-slate-600 hover:bg-slate-700',()=>gerarPropostaPDF(f.id));
+ if(rejected(f)) action('Excluir','bg-red-600 hover:bg-red-700',async()=>{if(!confirm('Excluir definitivamente esta proposta reprovada do histórico? Esta ação não pode ser desfeita.'))return;await db.collection('financeLogs').doc(f.id).delete();});
  if(pending(f)){
   action('Editar','bg-blue-600 hover:bg-blue-700',()=>{selecionarAlunoNegociacao(f.studentId||f.alunoId,true);abrirModalEditarProposta(f.id);});
   action('Excluir','bg-red-600 hover:bg-red-700',()=>excluirPropostaRegistro(f.id));
