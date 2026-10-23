@@ -2139,7 +2139,45 @@
                 </div>
             `;
 
-            document.getElementById('conteudo-termo-Dinamico').innerHTML = htmlCompletoTermo;SE7DocumentSkin.apply(document.getElementById('conteudo-termo-Dinamico').firstElementChild,institutionData);
+            const termoHost=document.getElementById('conteudo-termo-Dinamico');
+            // Declaração é anexada apenas à visualização de uma proposta efetivada.
+            const aceitaComRegistro=!!(previewId&&propostaVisualizada&&opcaoAceita&&propostaVisualizada.renegotiationId);
+            if(aceitaComRegistro){
+                const esc=v=>SE7Cadastro.escape(String(v??''));
+                const poloAluno=aluno.poloName||aluno.nomePolo||aluno.polo||aluno.poloId||'não informado';
+                const modalidadeNome={avista:'pagamento à vista',parcelado:'pagamento parcelado',cartao:'cartão de crédito'}[opcaoAceita]||opcaoAceita;
+                const acordoValor=Number(propostaVisualizada.valorAceitoCents);
+                const valorDocumento=Number.isFinite(acordoValor)&&acordoValor>0?(acordoValor/100):Number(opcoesGeradas[opcaoAceita]?.valorFinal||0);
+                const parcelasConfirmadas=financeLogs.filter(f=>f.renegotiationId===propostaVisualizada.renegotiationId&&Number.isInteger(Number(f.renegotiationPart))&&f.renegotiationPart);
+                const quantidade=parcelasConfirmadas.length|| (opcaoAceita==='parcelado' ? parseInt(opcoesGeradas.parcelado?.infoExtra,10)||0 : 1);
+                const documentoDeclaracao=`
+                  <div class="se7-aceite-page" style="box-sizing:border-box;min-height:265mm;padding:10px 12px 18px;display:flex;flex-direction:column;break-after:page;page-break-after:always;">
+                    <div style="flex:1">
+                      <h1 style="text-align:center;font-size:19px;line-height:1.35;margin:34px 0 32px;text-transform:uppercase;color:#123f75;font-weight:800;">DECLARAÇÃO DE ACEITE DE ACORDO FINANCEIRO</h1>
+                      <div style="font-size:13px;line-height:1.95;text-align:justify;">
+                        <p style="margin-bottom:22px;">Eu, <strong>${esc(nomeCompleto)}</strong>, aluno(a) do curso <strong>${esc(cursoExibir)}</strong>, vinculado(a) ao polo <strong>${esc(poloAluno)}</strong>, inscrito(a) no CPF sob o nº <strong>${cpf}</strong>, declaro, para os devidos fins, que tive ciência e que foi registrado meu aceite das condições constantes no <strong>Termo de Proposta de Acordo Financeiro</strong> apresentado pela instituição <strong>${esc(institutionData.name||razaoSocial)}</strong>, razão social <strong>${esc(razaoSocial)}</strong>, CNPJ <strong>${esc(cnpjInst)}</strong>, inscrição estadual <strong>${inscricaoEstadualInst}</strong>, inscrição municipal <strong>${inscricaoMunicipalInst}</strong>, com endereço em <strong>${esc(enderecoInst)}</strong>.</p>
+                        <p style="margin-bottom:22px;">Declaro ciência e concordância com a opção de <strong>${esc(modalidadeNome)}</strong>, no valor total negociado de <strong>R$ ${valorDocumento.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</strong>${quantidade>1?', distribuído em <strong>'+quantidade+' pagamentos</strong>':''}, incluindo os descontos, prazos, vencimentos e demais condições constantes do termo anexo.</p>
+                        <p style="margin-bottom:22px;">Reconheço que o acordo trata da regularização das obrigações financeiras descritas no Termo de Proposta de Acordo Financeiro e comprometo-me a cumprir as condições de pagamento pactuadas, observadas as disposições do referido termo e a legislação aplicável.</p>
+                        <p>Esta declaração integra o termo de proposta aceito e deve ser considerada em conjunto com ele, sem substituir o conteúdo ou as condições originais da negociação.</p>
+                      </div>
+                      <p style="text-align:right;margin-top:35px;font-size:12px;">${esc(cidade&&cidade!=='---'?cidade:'Vigia')}, Pará, ${esc(dataAceiteValida)}.</p>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:25px;text-align:center;margin-top:48px;font-size:11px;">
+                      <div style="border-top:1px solid #123f75;padding-top:7px;"><strong>${esc(nomeCompleto)}</strong><div>Assinatura do(a) aluno(a)</div></div>
+                      <div style="border-top:1px solid #123f75;padding-top:7px;"><strong>${esc(institutionData.name||razaoSocial)}</strong><div>Representante da instituição</div></div>
+                    </div>
+                    <p style="font-size:9px;color:#64748b;margin-top:26px;border-top:1px solid #cbd5e1;padding-top:9px;">Aceite registrado no Sistema SE7 de Gestão Acadêmica em ${esc(dataAceiteValida)}. As linhas de assinatura destinam-se à formalização documental e não representam assinaturas já realizadas.</p>
+                  </div>`;
+                termoHost.innerHTML=documentoDeclaracao+htmlCompletoTermo;
+                const declaracao=termoHost.firstElementChild;
+                SE7DocumentSkin.apply(declaracao,institutionData);
+                declaracao.style.marginBottom='0';
+                const termo=declaracao.nextElementSibling;
+                if(termo)SE7DocumentSkin.apply(termo,institutionData);
+            }else{
+                termoHost.innerHTML=htmlCompletoTermo;
+                SE7DocumentSkin.apply(termoHost.firstElementChild,institutionData);
+            }
             document.getElementById('modal-visualizador-termo').style.display = 'flex';
             if (!previewId) {
                 const panel = document.getElementById('painel-negociacao-aluno');
