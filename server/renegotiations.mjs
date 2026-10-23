@@ -29,7 +29,63 @@ export async function step(db,b,u){const {ref,c}=await ownAgreement(db,b,u),toke
  return {id:ref.id,state:'done',invoiceId:g.installments[0],method:g.offer.method};
  }catch(e){await db.runTransaction(async tx=>{const s=await tx.get(ref);if(s.data()?.leaseToken===token)tx.update(ref,{leaseUntil:0,lastError:String(e.message).slice(0,500)});});throw e;}}
 export async function status(db,b,u){const {g,ref}=await ownAgreement(db,b,u);const all=await logs(db,g.studentId),installments=g.installments.map((id,i)=>({id,...g.offer.schedule[i],status:all.find(f=>f.id===id)?.status||'EM PROCESSAMENTO'}));return {installments,id:ref.id,state:g.state,progress:g.canceled.length+g.created.length,total:g.rows.length+g.installments.length,lastError:g.lastError||'',offer:g.offer};}
-export async function dispatch(db,b,u){if(b.action==='renegotiation-catalog')return catalog(db,b,u);if(b.action==='renegotiation-quote')return quote(db,b,u);if(b.action==='renegotiation-begin')return begin(db,b,u);if(b.action==='renegotiation-step')return step(db,b,u);if(b.action==='renegotiation-status')return status(db,b,u);fail(400,'Operação desconhecida.');}
+
+async function recoveryContext(db,b,u){
+ if(!staff(u))fail(403,'Recuperação restrita ao Master e Financeiro.');
+ const c=await context(db,b,u),ref=db.collection('se7Renegotiations').doc(validId(b.id)),snap=await ref.get();
+ if(!snap.exists||snap.data().studentId!==c.sid||snap.data().state!=='done')fail(409,'Acordo não concluído ou não pertence ao aluno.');
+ const g=snap.data();if(g.offer.method!=='bank')fail(409,'Recuperação exclusiva de boletos bancários.');
+ return {c,g,ref};
+}
+async function recoveryInspect(db,g,index){
+ if(!Number.isInteger(index)||index<0||index>=g.installments.length)fail(400,'Parcela inválida.');
+ const invoiceId=g.installments[index],part=g.offer.schedule[index],fr=db.collection('financeLogs').doc(invoiceId),mr=db.collection('se7AsaasInvoices').doc(invoiceId);
+ const [f,m]=await Promise.all([fr.get(),mr.get()]);
+ if(!f.exists||!m.exists||m.data().studentId!==g.studentId||!m.data().paymentId)fail(409,'Vínculo original indisponível. Conferência manual necessária.');
+ const link=m.data(),row=f.data();
+ if(row.renegotiationId!==g.id||link.renegotiationId!==g.id)fail(409,'Parcela não pertence ao acordo.');
+ if(cents(row.amount??row.valor)!==part.amount||dueDate(row.date||row.vencimento)!==part.date||link.amountCents!==part.amount||link.dueDate!==part.date)fail(409,'Valor ou vencimento divergente.');
+ let previous;try{previous=await api('/payments/'+validId(link.paymentId));}catch{fail(409,'Pagamento original não pôde ser consultado na API. Conferência manual necessária.');}
+ if(previous.customer!==link.customerId||cents(previous.value)!==part.amount||previous.dueDate!==part.date)fail(409,'Pagamento original diverge do acordo.');
+ if(paymentIsPaid(previous))return {invoiceId,index,status:'paid',amount:part.amount,date:part.date};
+ if(!previous.deleted)return {invoiceId,index,status:'active',amount:part.amount,date:part.date};
+ return {invoiceId,index,status:'deleted',amount:part.amount,date:part.date,customerId:link.customerId,oldPaymentId:previous.id};
+}
+export async function recoveryCheck(db,b,u){
+ const {g,c,ref}=await recoveryContext(db,b,u),agreement={...g,id:ref.id},items=[];
+ for(let i=0;i<g.installments.length;i++){try{items.push(await recoveryInspect(db,agreement,i));}catch(e){items.push({index:i,invoiceId:g.installments[i],status:'review',reason:String(e.message)});}}
+ return {id:ref.id,studentId:c.sid,items,total:g.offer.total,count:g.installments.length};
+}
+export async function recoveryIssue(db,b,u){
+ const {g,c,ref}=await recoveryContext(db,b,u),agreement={...g,id:ref.id},index=Number(b.index);
+ if(!Number.isInteger(index))fail(400,'Parcela inválida.');
+ const initial=await recoveryInspect(db,agreement,index);
+ if(initial.status!=='deleted')return {issued:false,...initial};
+ if(b.confirm!==true)fail(400,'Confirme a recuperação da parcela excluída.');
+ const invoiceId=initial.invoiceId,job=db.collection('se7RenegotiationRecoveries').doc(invoiceId),external='se7:recovery:'+invoiceId;
+ await db.runTransaction(async tx=>{
+  const [j,m]=await Promise.all([tx.get(job),tx.get(db.collection('se7AsaasInvoices').doc(invoiceId))]);
+  if(m.data()?.paymentId!==initial.oldPaymentId)fail(409,'Vínculo alterado.');
+  if(j.exists)fail(409,'Recuperação já iniciada. Confira o Asaas antes de repetir.');
+  tx.create(job,{invoiceId,agreementId:ref.id,studentId:c.sid,oldPaymentId:initial.oldPaymentId,externalReference:external,state:'reserved',createdAt:new Date().toISOString(),actor:u.uid});
+ });
+ // A reserva é definitiva até uma conferência: falha de rede nunca repete POST automaticamente.
+ const found=await api('/payments?externalReference='+encodeURIComponent(external)+'&limit=100');
+ if(found.hasMore||!Array.isArray(found.data)||found.data.length)fail(409,'Referência de recuperação já utilizada ou consulta ambígua. Verificação manual obrigatória.');
+ const payment=await api('/payments','POST',{customer:initial.customerId,billingType:'BOLETO',value:initial.amount/100,dueDate:initial.date,description:'Parcela renegociada recuperada '+(index+1)+' de '+g.installments.length,externalReference:external,interest:{value:0},fine:{value:0}});
+ if(payment.deleted||payment.customer!==initial.customerId||cents(payment.value)!==initial.amount||payment.dueDate!==initial.date||payment.externalReference!==external)fail(409,'Retorno da emissão divergente. Conferência manual obrigatória.');
+ await db.runTransaction(async tx=>{
+  const fr=db.collection('financeLogs').doc(invoiceId),mr=db.collection('se7AsaasInvoices').doc(invoiceId),pr=db.collection('se7AsaasPayments').doc(validId(payment.id));
+  const [j,f,m,p]=await Promise.all([tx.get(job),tx.get(fr),tx.get(mr),tx.get(pr)]);
+  if(j.data()?.state!=='reserved'||m.data()?.paymentId!==initial.oldPaymentId||p.exists||f.data()?.renegotiationId!==ref.id)fail(409,'Vínculo modificado. Conciliação manual necessária.');
+  tx.set(pr,{invoiceId,studentId:c.sid});
+  tx.update(mr,{paymentId:payment.id,externalReference:external,state:'linked',recoveredAt:new Date().toISOString(),previousPaymentId:initial.oldPaymentId});
+  tx.update(fr,{asaasPaymentId:payment.id,status:'PENDENTE',enrollmentCancellationDate:'',enrollmentCancellationReason:'',enrollmentAsaasUnlinked:false,renegotiationRecoveryAt:new Date().toISOString(),previousAsaasPaymentId:initial.oldPaymentId});
+  tx.update(job,{state:'done',newPaymentId:payment.id,completedAt:new Date().toISOString()});
+ });
+ return {issued:true,invoiceId,amount:initial.amount,date:initial.date};
+}
+export async function dispatch(db,b,u){if(b.action==='renegotiation-recovery-check')return recoveryCheck(db,b,u);if(b.action==='renegotiation-recovery-issue')return recoveryIssue(db,b,u);if(b.action==='renegotiation-catalog')return catalog(db,b,u);if(b.action==='renegotiation-quote')return quote(db,b,u);if(b.action==='renegotiation-begin')return begin(db,b,u);if(b.action==='renegotiation-step')return step(db,b,u);if(b.action==='renegotiation-status')return status(db,b,u);fail(400,'Operação desconhecida.');}
 
 // Do not confuse an unavailable database with a student's ineligibility.
 export function consultationFailure(error){
