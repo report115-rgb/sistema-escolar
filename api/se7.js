@@ -121,7 +121,6 @@ async function dispatchOperation({auth,db},req,b,delegated=null){
  if(action==='internship-agreement-term-verify'){academicDocuments.publicLimit(req);return verifyAgreementTerm(db,b);}
  if(action==='annual-verify'){academicDocuments.publicLimit(req);return verifyAnnual(db,b.token);}
  if(action==='payroll-report-verify'){academicDocuments.publicLimit(req);return verifyPayrollReport(db,b);}
- if(action==='financial-agreement-verify'){academicDocuments.publicLimit(req);const {verify}=await import('../server/financial-document-validation.mjs');return verify(db,b);}
  if(action==='academic-document-verify'){academicDocuments.publicLimit(req);return academicDocuments.verify(db,b);}
  if(action==='public-info')return publicInfo(db);
  if(action==='catalog'){const [snap,ps]=await Promise.all([db.collection('courses').get(),db.collection('polos').where('active','==',true).get()]);return {ejaConditions:await eja.publicConditions(db),courses:snap.docs.map(d=>({id:d.id,name:d.data().name||'Curso',isEja:isSingleExam(d.data())})),polos:ps.docs.map(d=>({id:d.id,name:d.data().name,city:d.data().city,state:d.data().state}))};}
@@ -202,7 +201,6 @@ async function dispatchOperation({auth,db},req,b,delegated=null){
  if(action==='diploma-draft-save')return diplomaIssuance.saveDraft(db,b,u);
  if(action==='diploma-authorize')return diplomaIssuance.authorize(db,b,u,auth,authPassword);
  if(action==='diploma-print-record')return diplomaIssuance.recordPrint(db,b,u);
- if(action==='financial-agreement-document-issue'){const {issue}=await import('../server/financial-document-validation.mjs');return issue(db,b,u);}
  if(action==='academic-document-issue')return academicDocuments.issue(db,b,u);
  if(action==='academic-document-revoke')return academicDocuments.revoke(db,b,u);
  if(action==='course-save')return saveCourseConfiguration(db,b,u);
