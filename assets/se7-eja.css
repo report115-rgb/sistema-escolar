@@ -61,3 +61,7 @@
 .se7-monitor-card-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;color:#b5cee2;font-size:12px}
 .se7-monitor-card-foot button{font-size:11px;padding:7px 10px}
 @media(max-width:600px){#se7-eja-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}#subeja-monitor .se7-eja-monitor-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.se7-monitor-status{font-size:11px}}
+
+/* Gestão EJA: nomes compactos, sem quebra no desktop */
+@media(min-width:1200px){#se7-eja-tabs .subtab-eja-btn{white-space:nowrap!important;font-size:clamp(9px,.83vw,12px)!important;letter-spacing:-.01em;padding:9px 3px!important}}
+@media(min-width:1200px){#se7-eja-tabs{grid-template-columns:.9fr .9fr .9fr 1.12fr 1.2fr 1.5fr!important;gap:5px!important}}
