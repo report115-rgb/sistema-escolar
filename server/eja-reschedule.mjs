@@ -14,7 +14,7 @@ export async function schedulingAction(db,b,u,sid,student){const cr=db.collectio
 
  if(b.action==='eja-admin-rebook'){
   if(u.role!=='master')fail(403,'Somente o Master pode autorizar isenção de reagendamento.');
-  if(!v.missed)fail(409,'A liberação administrativa só é permitida após a data agendada ter passado sem o aluno iniciar a prova.');
+  // Ação Master permanente: a proteção contra tentativas existentes é aplicada acima.
   if(typeof b.date!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(b.date))fail(400,'Selecione uma data válida.');
   const exam=windowFor(b.date);
   if(b.date<=localDate(now))fail(409,'Escolha uma data futura.');
