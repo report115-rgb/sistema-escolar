@@ -98,7 +98,7 @@ function draw(key=null){
   const tile=E('div');tile.className='se7-eja-dashboard-stat';tile.append(E('strong',value),E('span',title));stats.append(tile);
  }
  summary.append(stats);
- const progressHead=E('div');progressHead.className='se7-eja-dashboard-progress-head';progressHead.append(E('strong','Progresso geral'),E('span',completed+' de '+groups.length));
+ const progressHead=E('div');progressHead.className='se7-eja-dashboard-progress-head';progressHead.append(E('strong','Percentual concluído'),E('span',percentage+'%'));
  const track=E('div');track.className='se7-eja-dashboard-track';track.setAttribute('role','progressbar');track.setAttribute('aria-label','Progresso das disciplinas');track.setAttribute('aria-valuemin','0');track.setAttribute('aria-valuemax','100');track.setAttribute('aria-valuenow',String(percentage));
  const fill=E('span');fill.style.width=percentage+'%';track.append(fill);summary.append(progressHead,track);body.append(summary);
  const heading=E('h3','Disciplinas da avaliação');heading.className='se7-eja-dashboard-section-title';body.append(heading);
