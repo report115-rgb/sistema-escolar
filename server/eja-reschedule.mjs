@@ -10,23 +10,25 @@ export function scheduleView(c,s,m={},attempt=null,now=new Date()){
 }
 export function feeContract(meta,term,student){const f=meta?.fees?.[term];if(!feeTerm(term)||!f)fail(404,'Taxa não solicitada.');return {paymentMode:'boleto',studentName:student.fullname,firstCents:f.amountCents,secondCents:f.amountCents,firstDueDate:f.dueDate,secondDueDate:f.dueDate,cardInstallments:0};}
 export async function schedulingAction(db,b,u,sid,student){const cr=db.collection('se7EjaContracts').doc(sid),mr=db.collection('se7EjaReschedules').doc(sid),ar=db.collection('se7EjaAttempts').doc(sid),sr=db.collection('students').doc(sid);let result;const now=new Date();
- await db.runTransaction(async tx=>{const [cs,ms,a,ss]=await Promise.all([tx.get(cr),tx.get(mr),tx.get(ar),tx.get(sr)]);const c=cs.data(),m=ms.data()||{},s=ss.data(),v=scheduleView(c,s,m,a.exists?a.data():null,now);if(!['Ativo','Ativa'].includes(s.status))fail(403,'Matrícula indisponível.');if(a.exists)fail(409,'Uma prova já iniciada ou concluída não pode ser reagendada.');if(c&&c.paymentState!=='confirmed')fail(403,'Aguarde a confirmação do primeiro pagamento.');
+ await db.runTransaction(async tx=>{const [cs,ms,a,ss]=await Promise.all([tx.get(cr),tx.get(mr),tx.get(ar),tx.get(sr)]);const c=cs.data(),m=ms.data()||{},s=ss.data(),v=scheduleView(c,s,m,a.exists?a.data():null,now);if(!['Ativo','Ativa'].includes(s.status))fail(403,'Matrícula indisponível.');if(a.exists&&!(b.action==='eja-admin-rebook'&&a.data()?.state==='finished'))fail(409,'Uma prova em andamento não pode ser substituída.');if(c&&c.paymentState!=='confirmed')fail(403,'Aguarde a confirmação do primeiro pagamento.');
 
  if(b.action==='eja-admin-rebook'){
   if(u.role!=='master')fail(403,'Somente o Master pode autorizar isenção de reagendamento.');
-  // Ação Master permanente: a proteção contra tentativas existentes é aplicada acima.
+  // A tentativa concluída será arquivada integralmente, antes de liberar outra.
   if(typeof b.date!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(b.date))fail(400,'Selecione uma data válida.');
   const exam=windowFor(b.date);
   if(b.date<=localDate(now))fail(409,'Escolha uma data futura.');
   if(Object.keys(m.fees||{}).length>0)fail(409,'Não é possível habilitar o agendamento: já foi gerado um boleto de reagendamento para este aluno. Consulte o Financeiro.');
   const stamp=now.toISOString(),next={date:b.date,...exam};
+  if(a.exists){const previous=a.data();const archive=db.collection('se7EjaAttemptHistory').doc(sid+'_'+String(previous.startedAt||previous.finishedAt||stamp).replace(/[^0-9]/g,''));tx.create(archive,{...previous,studentId:sid,archivedAt:stamp,archivedBy:u.uid,archiveReason:String(b.reason||'Teste administrativo').slice(0,180)});tx.delete(ar);}
+
   const inboxes=await readInbox(tx,db,s.poloId);
   tx.set(mr,{exam:next,proposal:null,adminWaiver:{date:b.date,previousDate:v.exam?.date||null,grantedBy:u.uid,grantedAt:stamp,amountCents:3000,reason:'Liberação administrativa sem cobrança'}},{merge:true});
   if(cs.exists)tx.update(cr,{exam:next,scheduledAt:stamp,scheduledBy:u.uid});
   tx.set(sr,{controleEJA:{...(s.controleEJA||{}),dataInicio:next.startAt,dataFim:next.cutoffAt,provaAtiva:true}},{merge:true});
   tx.set(db.collection('systemLogs').doc(),{createdAt:stamp,actorUid:u.uid,usuario:u.name||u.uid,modulo:'EJA',acao:'Master autorizou novo agendamento isento de R$ 30,00',studentId:sid,previousDate:v.exam?.date||null,newDate:b.date});
   writeInbox(tx,inboxes,{type:'exam_scheduled',studentId:sid,studentName:s.fullname,poloId:s.poloId||'',at:stamp,message:'Master liberou reagendamento da prova EJA para '+b.date+' com isenção da taxa.'});
-  result={scheduled:true,waived:true,date:b.date};return;
+  result={scheduled:true,waived:true,date:b.date,previousArchived:a.exists};return;
  }
  if(b.action==='eja-reschedule-request'){
  if(u.role!=='aluno'||b.acceptFee!==true)fail(403,'O aluno deve confirmar a taxa de R$ 30,00.');if(!v.missed)fail(409,'A taxa só é necessária após perder a data sem iniciar a prova.');if(v.fee){result={term:v.fee.term};return;}const cycle=Math.max(0,...Object.keys(m.fees||{}).map(t=>Number(t.slice(1))||0))+1;if(cycle>9999)fail(409,'Solicite revisão do cadastro.');const term='r'+cycle,due=addDays(localDate(now),2),fee={amountCents:3000,dueDate:due,examKey:v.exam.date,state:'pending',requestedAt:now.toISOString()};tx.set(mr,{fees:{[term]:fee}},{merge:true});const id='eja_'+sid+'_'+term;tx.create(db.collection('se7EjaBillingJobs').doc(id),{studentId:sid,term,state:'pending',phase:'customer',createdAt:now.toISOString()});tx.create(db.collection('financeLogs').doc(id),{studentId:sid,studentName:s.fullname,description:'EJA — taxa de reagendamento da prova',amount:30,date:due,status:'PENDENTE',ejaManaged:true,ejaTerm:term});result={term};return;

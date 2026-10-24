@@ -8,22 +8,23 @@ if(r.attempt?.state==='finished')body.append(E('p','Resultado: '+r.attempt.grade
 if(profile()?.perfil==='master'){
  const waiver=E('section');waiver.className='se7-eja-panel';waiver.style.cssText='margin-top:14px;padding:16px;background:#102a3a;border:1px solid #26746e;border-radius:12px;color:#e2e8f0';
  const caption=E('h3','Liberação administrativa da prova EJA');caption.style.cssText='font-weight:700;margin-bottom:8px;color:#a7f3d0';
- const desc=E('p','Exclusivo Master: agendar, reagendar ou ativar uma prova ainda não iniciada, sem taxa. Tentativas iniciadas/concluídas e cobranças existentes permanecem protegidas.');
+ const desc=E('p','Exclusivo Master: agendar, reagendar ou ativar uma prova ainda não iniciada, sem taxa. Tentativas concluídas são arquivadas para preservar respostas, notas e datas. Provas em andamento e cobranças existentes permanecem protegidas.');
  const label=E('label','Nova data para realizar a prova');label.style.cssText='display:block;margin:12px 0 6px;font-weight:600';
  const input=E('input');input.type='date';input.required=true;const tomorrow=new Date(Date.now()+86400000);const yyyy=tomorrow.getFullYear(),mm=String(tomorrow.getMonth()+1).padStart(2,'0'),dd=String(tomorrow.getDate()).padStart(2,'0');input.min=yyyy+'-'+mm+'-'+dd;input.value=r.scheduling?.missed?'':(exam?.date&&exam.date>=input.min?exam.date:'');input.style.cssText='display:block;width:100%;padding:10px;background:#0f172a;color:#fff;border:1px solid #64748b;border-radius:8px';
  const showMessage=(title,message)=>{const notice=modal(title);notice.style.cssText='background:#0f172a;color:#f8fafc;border:1px solid #334155;border-radius:14px;padding:18px;max-width:min(92vw,480px)';const p=E('p',message);p.style.cssText='line-height:1.6;white-space:pre-wrap;margin:14px 0';const ok=E('button','Entendi');ok.type='button';ok.className='se7-eja-button';ok.onclick=()=>notice.close();notice.append(p,ok);};
  const confirmBtn=button('Agendar / Reagendar / Ativar prova · Sem taxa',async()=>{
   if(!input.value){showMessage('Data obrigatória','Selecione uma nova data antes de habilitar a prova.');return;}
-  if(r.attempt){showMessage('Prova já iniciada','Esta ação não pode reiniciar ou apagar uma tentativa já iniciada ou concluída.');return;}
+  if(r.attempt&&r.attempt.state!=='finished'){showMessage('Prova em andamento','Uma tentativa em andamento não pode ser reiniciada.');return;}
   if(r.scheduling?.fee||r.scheduling?.hasRescheduleBilling){showMessage('Agendamento não autorizado','Não é possível habilitar o agendamento: já foi gerado um boleto de reagendamento para este aluno. Consulte o Financeiro.');return;}
   const confirmation=modal('Confirmar liberação administrativa');
   confirmation.style.cssText='background:#0f172a;color:#f8fafc;border:1px solid #334155;border-radius:14px;padding:18px;max-width:min(92vw,480px)';
-  confirmation.append(E('p','Liberar a avaliação em '+input.value.split('-').reverse().join('/')+' com isenção de R$ 30,00? A liberação será registrada no histórico administrativo.'));
+  confirmation.append(E('p','Liberar a avaliação em '+input.value.split('-').reverse().join('/')+' sem taxa? '+(r.attempt?.state==='finished'?'A tentativa concluída será preservada no histórico, e uma nova tentativa ficará disponível.':'A liberação será registrada no histórico administrativo.')));
+  const reason=E('select');for(const v of ['Teste administrativo','Recuperação','Nova oportunidade','Correção de ocorrência']){const o=E('option',v);o.value=v;reason.append(o);}reason.style.cssText='width:100%;padding:10px;margin-top:10px;background:#0f172a;color:white';confirmation.append(E('label','Motivo da autorização'),reason);
   const actions=E('div');actions.style.cssText='display:flex;gap:10px;justify-content:flex-end;margin-top:16px';
   const cancel=E('button','Cancelar');cancel.className='se7-eja-button';cancel.onclick=()=>confirmation.close();
   const approve=E('button','Confirmar liberação');approve.className='se7-eja-button';approve.onclick=async()=>{
    approve.disabled=true;approve.textContent='Verificando cobranças…';
-   try{await SE7.api('eja-admin-rebook',{studentId,date:input.value});confirmation.close();showMessage('Agendamento habilitado','A nova data foi autorizada e a taxa de R$ 30,00 foi isenta. Nenhum boleto foi gerado.');await draw();}
+   try{await SE7.api('eja-admin-rebook',{studentId,date:input.value,reason:reason.value});confirmation.close();showMessage('Agendamento habilitado','A nova data foi autorizada e a taxa de R$ 30,00 foi isenta. Nenhum boleto foi gerado.');await draw();}
    catch(e){confirmation.close();showMessage('Não foi possível habilitar',e.message||'Consulte a situação financeira do aluno.');}
    finally{approve.disabled=false;approve.textContent='Confirmar liberação';}
   };
