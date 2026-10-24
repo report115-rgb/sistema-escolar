@@ -65,3 +65,8 @@
 /* Gestão EJA: nomes compactos, sem quebra no desktop */
 @media(min-width:1200px){#se7-eja-tabs .subtab-eja-btn{white-space:nowrap!important;font-size:clamp(9px,.83vw,12px)!important;letter-spacing:-.01em;padding:9px 3px!important}}
 @media(min-width:1200px){#se7-eja-tabs{grid-template-columns:.9fr .9fr .9fr 1.12fr 1.2fr 1.5fr!important;gap:5px!important}}
+
+/* Faixas animadas nas barras de avaliação, preservando a porcentagem. */
+@keyframes se7-eja-stripes{to{background-position:40px 0}}
+#subeja-monitor .se7-eja-monitor-bar>span{background-color:#38bdf8;background-image:repeating-linear-gradient(115deg,rgba(255,255,255,.32) 0px,rgba(255,255,255,.32) 9px,rgba(255,255,255,.04) 9px,rgba(255,255,255,.04) 18px);background-size:40px 40px;animation:se7-eja-stripes 1.3s linear infinite;border-radius:10px}
+@media(prefers-reduced-motion:reduce){#subeja-monitor .se7-eja-monitor-bar>span{animation:none}}

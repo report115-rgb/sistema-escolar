@@ -49,7 +49,9 @@ async function openExam(){if(preview())return;const r=await api('eja-exam-start'
 #se7-eja-attempt .se7-eja-dashboard-progress-head{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:#e4f2ff}
 #se7-eja-attempt .se7-eja-dashboard-progress-head span{color:#7dd3fc;font-weight:700}
 #se7-eja-attempt .se7-eja-dashboard-track{height:9px;background:#294b68;border-radius:20px;overflow:hidden}
-#se7-eja-attempt .se7-eja-dashboard-track span{display:block;height:100%;background:#38bdf8;border-radius:20px;transition:width .2s}
+#se7-eja-attempt .se7-eja-dashboard-track span{display:block;height:100%;background-color:#38bdf8;background-image:repeating-linear-gradient(115deg,rgba(255,255,255,.32) 0px,rgba(255,255,255,.32) 9px,rgba(255,255,255,.04) 9px,rgba(255,255,255,.04) 18px);background-size:40px 40px;animation:se7-eja-stripes 1.3s linear infinite;border-radius:20px;transition:width .2s}
+@keyframes se7-eja-stripes{to{background-position:40px 0}}
+@media(prefers-reduced-motion:reduce){#se7-eja-attempt .se7-eja-dashboard-track span{animation:none}}
 #se7-eja-attempt .se7-eja-dashboard-section-title{font-size:16px;font-weight:800;margin:14px 0 8px;color:white}
 #se7-eja-attempt .se7-eja-dashboard-subject{background:linear-gradient(100deg,#152f4e,#132945);border-color:#2a5374;padding:12px 14px;gap:12px}
 #se7-eja-attempt .se7-eja-dashboard-subject-icon{display:grid;place-items:center;flex:none;width:43px;height:43px;border:1px solid;border-radius:11px;font-size:25px}
