@@ -1,3 +1,4 @@
+import {randomInt} from 'node:crypto';
 const fail=(status,message)=>{throw Object.assign(Error(message),{status});};
 export const isEja=c=>/^(eja|supletivo)$/i.test(String(c?.nivel||'').trim())||/^eja$/i.test(String(c?.sigla||'').trim())||/eja|supletivo/i.test(c?.name||'');
 export const localDate=(now=new Date())=>new Intl.DateTimeFormat('en-CA',{timeZone:'America/Fortaleza',year:'numeric',month:'2-digit',day:'2-digit'}).format(now);
@@ -16,6 +17,16 @@ export function questionsFor(config){
  if(!Array.isArray(source)||!source.length||source.length>100)fail(409,'Cadastre as questões antes de liberar a prova.');
  if(groups&&groups.some(g=>!g.nome||!Array.isArray(g.questoes)||g.questoes.length!==5))fail(409,'Cada disciplina precisa conter cinco questões.');
  return source.map(q=>{if(typeof q.enunciado!=='string'||!q.enunciado.trim()||q.enunciado.length>6000||!Array.isArray(q.opcoes)||q.opcoes.length!==5||q.opcoes.some(o=>typeof o!=='string'||!o.trim()||o.length>3000)||!Number.isInteger(Number(q.correta))||Number(q.correta)<0||Number(q.correta)>=5)fail(409,'Há questões incompletas.');return {enunciado:q.enunciado,opcoes:q.opcoes,correta:Number(q.correta),disciplinaId:q.disciplinaId||'legado',disciplinaNome:q.disciplinaNome||'Prova EJA',imagem:typeof q.imagem==='string'&&/^data:image\/jpeg;base64,[A-Za-z0-9+/=]{1,55000}$/.test(q.imagem)?q.imagem:''};});
+}
+// Persist this permutation with the attempt so resuming never changes the answer key.
+export function randomizedQuestions(questions,randomIndex){
+ const pick=randomIndex||((n)=>randomInt(n));
+ const shuffle=items=>{const out=[...items];for(let i=out.length-1;i>0;i--){const j=pick(i+1);if(!Number.isInteger(j)||j<0||j>i)throw Error('Índice aleatório inválido');[out[i],out[j]]=[out[j],out[i]];}return out;};
+ const groups=new Map();for(const q of questions){const id=q.disciplinaId||'legado';if(!groups.has(id))groups.set(id,[]);groups.get(id).push(q);}
+ return shuffle([...groups.values()]).flatMap(group=>shuffle(group).map(q=>{
+  const indexed=shuffle(q.opcoes.map((value,index)=>({value,index})));
+  return {...q,opcoes:indexed.map(o=>o.value),correta:indexed.findIndex(o=>o.index===q.correta)};
+ }));
 }
 export function score(questions,answers){
  const correct=questions.reduce((sum,q,i)=>sum+(answers[String(i)]===q.correta?1:0),0),grade=Math.round(correct/questions.length*100)/10;
