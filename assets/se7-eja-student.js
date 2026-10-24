@@ -39,6 +39,7 @@ async function openExam(){if(preview())return;const r=await api('eja-exam-start'
 #se7-eja-attempt .se7-eja-subject-row:hover,#se7-eja-attempt .se7-eja-subject-row.se7-eja-active{background:linear-gradient(90deg,#0876bc,#075389);border-color:#2dd1ff}
 #se7-eja-attempt .se7-eja-subject-row:disabled{opacity:1;cursor:default}
 #se7-eja-attempt .se7-eja-subject-row .se7-eja-subject-label{flex:1}
+#se7-eja-attempt .se7-eja-progress[hidden]{display:none!important}
 #se7-eja-attempt .se7-eja-progress{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:#fcd38b;white-space:nowrap}
 #se7-eja-attempt .se7-eja-hourglass{display:inline-block;animation:se7-eja-turn 4s steps(1,end) infinite;transform-origin:center}
 @keyframes se7-eja-turn{0%,49.9%{transform:rotate(0deg)}50%,99.9%{transform:rotate(180deg)}100%{transform:rotate(360deg)}}
@@ -54,7 +55,7 @@ async function openExam(){if(preview())return;const r=await api('eja-exam-start'
 #se7-eja-attempt #eja-save-status{font-size:12px;color:#a5dff6}
 @media(max-width:600px){#se7-eja-attempt{width:97vw;padding:13px;max-height:96dvh}#se7-eja-attempt .se7-eja-question-panel{padding:10px}#se7-eja-attempt .se7-eja-clock{padding:12px}}
 `;d.append(style,timer,saveStatus,body);const groups=[...new Set(attempt.questions.map(q=>q.disciplinaId||'legado'))];
-function started(id){return attempt.questions.some((q,i)=>(q.disciplinaId||'legado')===id&&Number.isInteger(answers[String(i)]));}
+function started(id){return attempt.questions.some((q,i)=>(q.disciplinaId||'legado')===id&&Number.isInteger(answers[String(i)])&&answers[String(i)]>=0&&answers[String(i)]<q.opcoes.length);}
 function updateProgress(){for(const id of groups){const badge=[...body.querySelectorAll('[data-eja-progress]')].find(n=>n.dataset.ejaProgress===id);if(badge&&!((attempt.enviadas||[]).includes(id))){badge.hidden=!started(id);}}}
 function draw(key=null){body.replaceChildren();body.append(E('h3','▤  Disciplinas da avaliação'));for(const id of groups){const q=attempt.questions.find(q=>(q.disciplinaId||'legado')===id),done=(attempt.enviadas||[]).includes(id),active=key===id;const names={biologia:'🧬',física:'⚛',fisica:'⚛',química:'⚗',quimica:'⚗',história:'▣',historia:'▣',geografia:'◎',filosofia:'◈'};const name=q.disciplinaNome||'Prova EJA';const btn=E('button');btn.type='button';btn.className='se7-eja-subject-row'+(active?' se7-eja-active':'');btn.append(E('span',done?'✓':(names[name.toLowerCase()]||'▤')));const label=E('span',name);label.className='se7-eja-subject-label';btn.append(label);if(done){const state=E('span','Concluída ✓');state.className='se7-eja-subject-state';btn.append(state);}else{const progress=E('span');progress.className='se7-eja-progress';progress.dataset.ejaProgress=id;progress.hidden=!started(id);const hourglass=E('span','⌛');hourglass.className='se7-eja-hourglass';hourglass.setAttribute('aria-hidden','true');progress.append(hourglass,E('span','Já iniciada'));btn.append(progress);}const chevron=E('span',active?'⌃':'⌄');chevron.className='se7-eja-subject-chevron';btn.append(chevron);btn.disabled=done;btn.onclick=()=>draw(active?null:id);body.append(btn);if(active&&!done){const panel=E('div');panel.className='se7-eja-question-panel';body.append(panel);drawQuestions(id,panel);}}}
 function drawQuestions(key,panel){const body=panel;
