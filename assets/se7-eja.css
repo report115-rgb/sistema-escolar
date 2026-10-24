@@ -15,3 +15,24 @@
 #bloco-acoes-eja .se7-eja-action-enabled,#bloco-acoes-eja .se7-eja-study-actions .se7-eja-button:not(:disabled){background-color:#1d4ed8!important;color:#fff!important;border-color:#1d4ed8!important}
 #bloco-acoes-eja .se7-eja-action-enabled:hover,#bloco-acoes-eja .se7-eja-study-actions .se7-eja-button:not(:disabled):hover{background-color:#1e40af!important;color:#fff!important}
 #bloco-acoes-eja .se7-eja-study-actions .se7-eja-button:disabled{background-color:#ffffff33!important;color:#ffffffb3!important;box-shadow:none!important}
+
+.se7-eja-monitor{background:#0b1b32;color:#e2e8f0;border-radius:16px;border:1px solid #204769;padding:20px}
+.se7-eja-monitor h3{font-weight:800;font-size:21px;color:white}
+.se7-eja-monitor>p{color:#b2cfe5;margin:9px 0}
+.se7-eja-monitor-filters{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0}
+.se7-eja-monitor-filters input,.se7-eja-monitor-filters select{min-width:140px;flex:1;background:#142c48;color:white;border:1px solid #335a76;border-radius:10px;padding:10px}
+.se7-eja-monitor-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:10px;margin:16px 0}
+.se7-eja-monitor-stats article,.se7-eja-monitor-card{background:#142c48;border:1px solid #2e526d;border-radius:12px;padding:15px}
+.se7-eja-monitor-stats strong{display:block;font-size:28px;color:#7dd3fc}
+.se7-eja-monitor-stats span{font-size:12px;color:#c7dbed}
+.se7-eja-monitor-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:11px}
+.se7-eja-monitor-card{display:grid;gap:9px}.se7-eja-monitor-card strong{color:white}.se7-eja-monitor-card small{color:#b7cee2}
+.se7-eja-monitor-card>span{color:#7dd3fc;font-size:12px}
+.se7-eja-monitor-bar{height:8px;border-radius:10px;background:#294863;overflow:hidden}.se7-eja-monitor-bar span{display:block;height:100%;background:#38bdf8}
+.se7-eja-monitor-subject{padding:11px;border:1px solid #43617b;border-radius:10px;margin:8px 0;display:grid;gap:4px}
+#se7-eja-attempt .se7-eja-attempt-summary{padding:14px;background:#112e4d;border:1px solid #2d6f9a;border-radius:13px;margin-bottom:12px;display:grid;gap:9px}
+#se7-eja-attempt .se7-eja-attempt-summary h3{font-size:20px;font-weight:800;color:white}
+#se7-eja-attempt .se7-eja-attempt-summary strong{font-size:13px;color:#83d8ff}
+#se7-eja-attempt .se7-eja-attempt-summary small{color:#b4d1e6}
+#se7-eja-attempt .se7-eja-attempt-track{height:9px;background:#294763;border-radius:20px;overflow:hidden}
+#se7-eja-attempt .se7-eja-attempt-track span{height:100%;display:block;background:#38bdf8}

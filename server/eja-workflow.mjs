@@ -37,6 +37,17 @@ export async function dispatch(db,b,u){const action=b.action;
  if(action==='eja-jobs'){
  if(!['master','financeiro'].includes(u.role))fail(403,'Acesso restrito.');const r=await db.collection('se7EjaBillingJobs').where('state','in',['pending','review']).limit(30).get();return {jobs:r.docs.map(d=>({id:d.id,...d.data()}))};
  }
+
+ if(action==='eja-monitor'){
+  if(!['master','secretaria'].includes(u.role))fail(403,'Acesso restrito.');
+  const ids=[...new Set((Array.isArray(b.studentIds)?b.studentIds:[]).filter(id=>typeof id==='string'&&/^[-A-Za-z0-9_:]{1,128}$/.test(id)))].slice(0,30);
+  if(!ids.length)return {students:[]};
+  const students=await db.getAll(...ids.map(id=>db.collection('students').doc(id)));
+  const allowed=[];for(const d of students){if(!d.exists)continue;try{assertStudent(u,d.data());}catch{continue;}const s=d.data();allowed.push({id:d.id,name:String(s.fullname||''),code:String(s.code||''),poloId:s.poloId||'',turmaId:s.classId||s.turmaId||''});}
+  if(!allowed.length)return {students:[]};
+  const attempts=await db.getAll(...allowed.map(s=>db.collection('se7EjaAttempts').doc(s.id)));
+  return {students:allowed.map((s,i)=>{const a=attempts[i].data();if(!a)return {...s,state:'not_started',subjects:[],completed:0,total:0};const groups=new Map();(a.questions||[]).forEach((q,j)=>{const id=String(q.disciplinaId||'legado');if(!groups.has(id))groups.set(id,{id,name:String(q.disciplinaNome||'Prova EJA'),answered:0,total:0});const g=groups.get(id);g.total++;if(Number.isInteger(a.answers?.[String(j)]))g.answered++;});const subjects=[...groups.values()].map(g=>({...g,state:a.state==='finished'||(a.enviadas||[]).includes(g.id)?'finished':g.answered?'in_progress':'not_started'}));return {...s,state:a.state==='finished'?'finished':'in_progress',total:subjects.length,completed:subjects.filter(g=>g.state==='finished').length,subjects,savedAt:a.savedAt||null,grade:a.state==='finished'?a.grade:null,approved:a.state==='finished'?a.approved:null};})};
+ }
  const sid=sidFor(b,u),student=await authorized(db,sid,u);
  if(action==='eja-status')return status(db,sid,student);
  if(action==='eja-billing-process'){if(u.role==='aluno'&&b.term===2){const a=await db.collection('se7EjaAttempts').doc(sid).get();if(a.data()?.state!=='finished')fail(403,'Conclua a prova antes da segunda cobrança.');}return processJob(db,sid,Number(b.term||1));}
