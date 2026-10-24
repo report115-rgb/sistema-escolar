@@ -46,7 +46,21 @@ export async function dispatch(db,b,u){const action=b.action;
  if(action==='eja-reschedule-process'||action==='eja-reschedule-sync'){const state=await status(db,sid,student),term=state.scheduling?.fee?.term;if(!term)fail(409,'Solicite a taxa de reagendamento primeiro.');if(action==='eja-reschedule-process')return processJob(db,sid,term);const links=await db.collection('se7EjaPaymentLinks').where('studentId','==',sid).where('term','==',term).limit(1).get();for(const l of links.docs)await syncPayment(db,l.id);return status(db,sid,student);}
  if(action==='eja-exam-start'){
  if(u.role!=='aluno')fail(403,'Somente o aluno inicia sua prova.');let result;const ref=db.collection('se7EjaAttempts').doc(sid),now=new Date();
- await db.runTransaction(async tx=>{const [a,c,config,rs]=await Promise.all([tx.get(ref),tx.get(db.collection('se7EjaContracts').doc(sid)),tx.get(db.collection('config').doc('ejaSettings')),tx.get(db.collection('se7EjaReschedules').doc(sid))]);if(a.exists){const existing=a.data();if(existing.state==='in_progress'&&now<new Date(existing.deadlineAt)){result=publicAttempt(existing);return;}fail(409,'Esta tentativa foi encerrada. Consulte seu resultado.');}if(!['Ativo','Ativa'].includes(student.status))fail(403,'Matrícula indisponível.');let exam;
+ await db.runTransaction(async tx=>{const [a,c,config,rs]=await Promise.all([tx.get(ref),tx.get(db.collection('se7EjaContracts').doc(sid)),tx.get(db.collection('config').doc('ejaSettings')),tx.get(db.collection('se7EjaReschedules').doc(sid))]);if(a.exists){const existing=a.data();if(existing.state==='in_progress'&&now<new Date(existing.deadlineAt)){
+  // Uma disciplina criada após o início não pode desaparecer da tentativa.
+  // Acrescentar somente disciplinas inéditas no fim mantém os índices, o gabarito
+  // embaralhado, os envios concluídos e as respostas já salvas intactos.
+  const configured=questionsFor(config.data());
+  const present=new Set((existing.questions||[]).map(q=>String(q.disciplinaId||'legado')));
+  const additions=configured.filter(q=>!present.has(String(q.disciplinaId||'legado')));
+  if(additions.length){
+   const extra=randomizedQuestions(additions);
+   const updated={...existing,questions:[...(existing.questions||[]),...extra]};
+   tx.update(ref,{questions:updated.questions});
+   result=publicAttempt(updated);
+  }else result=publicAttempt(existing);
+  return;
+ }fail(409,'Esta tentativa foi encerrada. Consulte seu resultado.');}if(!['Ativo','Ativa'].includes(student.status))fail(403,'Matrícula indisponível.');let exam;
  if(c.exists){if(c.data().paymentState!=='confirmed')fail(403,'Aguarde a confirmação do primeiro pagamento.');exam=c.data().exam;}else{const course=await tx.get(db.collection('courses').doc(student.courseId));if(!isSingleExam(course.data()))fail(403,'Prova não liberada.');const start=student.controleEJA?.dataInicio,end=student.controleEJA?.dataFim;if(!start||!end)fail(409,'Solicite o agendamento à secretaria.');const parse=v=>/[Zz]|[+-]\d\d:\d\d$/.test(v)?v:v+'-03:00';exam={startAt:parse(start),cutoffAt:parse(end),deadlineAt:new Date(new Date(parse(end)).getTime()+20*60000).toISOString()};}
  if(Object.values(rs.data()?.fees||{}).some(f=>f.consumedAt&&f.newDate===(exam?.date||exam?.startAt?.slice(0,10))&&f.state!=='confirmed'))fail(403,'O pagamento da taxa de reagendamento precisa estar confirmado.');if(!exam||now<new Date(exam.startAt)||now>=new Date(exam.cutoffAt))fail(403,'A prova só pode ser iniciada na data agendada, das 08h até antes das 20h.');const questions=randomizedQuestions(questionsFor(config.data())),attempt={studentId:sid,state:'in_progress',questions,answers:{},enviadas:[],sequence:0,startAt:exam.startAt,cutoffAt:exam.cutoffAt,deadlineAt:exam.deadlineAt,startedAt:now.toISOString(),instructions:String(config.data().instrucoesProva||'Leia as questões e marque uma alternativa.').slice(0,6000)};tx.create(ref,attempt);tx.create(db.collection('se7EjaOpenAttempts').doc(sid),{studentId:sid,deadlineAt:new Date(exam.deadlineAt).toISOString()});result=publicAttempt(attempt);
  });return {attempt:result,serverNow:now.toISOString()};
