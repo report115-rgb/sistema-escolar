@@ -20,10 +20,10 @@ export async function schedulingAction(db,b,u,sid,student){const cr=db.collectio
   if(b.date<localDate(now))fail(409,'Escolha hoje ou uma data futura.');
   if(b.date===localDate(now)&&now>=new Date(exam.cutoffAt))fail(409,'O horário de início da prova de hoje já terminou (20h). Escolha outra data.');
   if(Object.keys(m.fees||{}).length>0)fail(409,'Não é possível habilitar o agendamento: já foi gerado um boleto de reagendamento para este aluno. Consulte o Financeiro.');
+  const inboxes=await readInbox(tx,db,s.poloId);
   const stamp=now.toISOString(),next={date:b.date,...exam};
   if(a.exists){const previous=a.data();const archive=db.collection('se7EjaAttemptHistory').doc(sid+'_'+String(previous.startedAt||previous.finishedAt||stamp).replace(/[^0-9]/g,''));tx.create(archive,{...previous,studentId:sid,archivedAt:stamp,archivedBy:u.uid,archiveReason:String(b.reason||'Teste administrativo').slice(0,180)});tx.delete(ar);}
 
-  const inboxes=await readInbox(tx,db,s.poloId);
   tx.set(mr,{exam:next,proposal:null,adminWaiver:{date:b.date,previousDate:v.exam?.date||null,grantedBy:u.uid,grantedAt:stamp,amountCents:3000,reason:'Liberação administrativa sem cobrança'}},{merge:true});
   if(cs.exists)tx.update(cr,{exam:next,scheduledAt:stamp,scheduledBy:u.uid});
   tx.set(sr,{controleEJA:{...(s.controleEJA||{}),dataInicio:next.startAt,dataFim:next.cutoffAt,provaAtiva:true}},{merge:true});
