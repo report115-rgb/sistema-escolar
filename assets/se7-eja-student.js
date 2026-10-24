@@ -36,6 +36,30 @@ async function openExam(){if(preview())return;const r=await api('eja-exam-start'
 #se7-eja-attempt .se7-eja-clock.se7-eja-warning{border-color:#f5a524;background:#47311d}
 #se7-eja-attempt .se7-eja-clock.se7-eja-warning .se7-eja-digits{color:#ffcc67}
 #se7-eja-attempt .se7-eja-question-list>h3{color:#eff8ff;border-bottom:1px solid #1c567d;padding:7px 0 12px;margin:12px 0}
+#se7-eja-attempt .se7-eja-dashboard{background:linear-gradient(145deg,#112b49,#10243d);border:1px solid #2d5879;border-radius:16px;padding:17px;margin-bottom:18px;display:grid;gap:15px}
+#se7-eja-attempt .se7-eja-dashboard-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+#se7-eja-attempt .se7-eja-dashboard-eyebrow{font-size:10px;letter-spacing:.08em;color:#7dd3fc;font-weight:700}
+#se7-eja-attempt .se7-eja-dashboard-top h3{font-size:clamp(19px,3.6vw,25px);font-weight:800;color:white;margin:5px 0}
+#se7-eja-attempt .se7-eja-dashboard-top p{font-size:12px;color:#bfd5e7}
+#se7-eja-attempt .se7-eja-dashboard-cap{flex:none;display:grid;place-items:center;width:48px;height:48px;border-radius:12px;background:#193e5d;font-size:28px}
+#se7-eja-attempt .se7-eja-dashboard-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+#se7-eja-attempt .se7-eja-dashboard-stat{background:#183654;border:1px solid #294968;padding:14px 5px;border-radius:11px;text-align:center;display:grid;gap:4px;min-width:0}
+#se7-eja-attempt .se7-eja-dashboard-stat strong{font-size:clamp(20px,4vw,28px);line-height:1.2;color:white;font-weight:800;font-variant-numeric:tabular-nums}
+#se7-eja-attempt .se7-eja-dashboard-stat span{font-size:11px;color:#c9dcec}
+#se7-eja-attempt .se7-eja-dashboard-progress-head{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:#e4f2ff}
+#se7-eja-attempt .se7-eja-dashboard-progress-head span{color:#7dd3fc;font-weight:700}
+#se7-eja-attempt .se7-eja-dashboard-track{height:9px;background:#294b68;border-radius:20px;overflow:hidden}
+#se7-eja-attempt .se7-eja-dashboard-track span{display:block;height:100%;background:#38bdf8;border-radius:20px;transition:width .2s}
+#se7-eja-attempt .se7-eja-dashboard-section-title{font-size:16px;font-weight:800;margin:14px 0 8px;color:white}
+#se7-eja-attempt .se7-eja-dashboard-subject{background:linear-gradient(100deg,#152f4e,#132945);border-color:#2a5374;padding:12px 14px;gap:12px}
+#se7-eja-attempt .se7-eja-dashboard-subject-icon{display:grid;place-items:center;flex:none;width:43px;height:43px;border:1px solid;border-radius:11px;font-size:25px}
+#se7-eja-attempt .se7-eja-dashboard-subject-info{display:grid;align-content:center;justify-items:start;min-width:0;flex:1;gap:5px}
+#se7-eja-attempt .se7-eja-dashboard-subject-info .se7-eja-subject-label{font-size:14px;color:#f4faff;overflow-wrap:anywhere}
+#se7-eja-attempt .se7-eja-dashboard-subject-status{font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:6px}
+#se7-eja-attempt .se7-eja-dashboard-complete{color:#6ee7b7}
+#se7-eja-attempt .se7-eja-dashboard-complete>span:first-child{font-size:11px;display:grid;place-items:center;width:15px;height:15px;border:1px solid #34d399;border-radius:50%}
+#se7-eja-attempt .se7-eja-dashboard-hint{color:#b9d5e8;background:#133451;border-radius:10px;padding:12px;font-size:12px;line-height:1.5;margin:14px 0 5px}
+@media(max-width:480px){#se7-eja-attempt .se7-eja-dashboard{padding:12px;gap:12px}#se7-eja-attempt .se7-eja-dashboard-stat{padding:11px 2px}#se7-eja-attempt .se7-eja-dashboard-stat span{font-size:10px}#se7-eja-attempt .se7-eja-dashboard-subject{padding:11px 9px}#se7-eja-attempt .se7-eja-dashboard-subject-icon{width:38px;height:38px}}
 #se7-eja-attempt .se7-eja-subject-row{display:flex;align-items:center;gap:13px;width:100%;padding:14px 17px;margin:7px 0;background:linear-gradient(90deg,#084579,#0d355a);border:1px solid #1975af;border-radius:12px;color:white;text-align:left;font-size:15px;font-weight:700;cursor:pointer}
 #se7-eja-attempt .se7-eja-subject-row:hover,#se7-eja-attempt .se7-eja-subject-row.se7-eja-active{background:linear-gradient(90deg,#0876bc,#075389);border-color:#2dd1ff}
 #se7-eja-attempt .se7-eja-subject-row:disabled{opacity:1;cursor:default}
@@ -61,7 +85,45 @@ async function openExam(){if(preview())return;const r=await api('eja-exam-start'
 `;d.append(style,timer,saveStatus,body);const groups=[...new Set(attempt.questions.map(q=>q.disciplinaId||'legado'))];
 function started(id){return attempt.questions.some((q,i)=>(q.disciplinaId||'legado')===id&&Number.isInteger(answers[String(i)])&&answers[String(i)]>=0&&answers[String(i)]<q.opcoes.length);}
 function updateProgress(){for(const id of groups){const badge=[...body.querySelectorAll('[data-eja-progress]')].find(n=>n.dataset.ejaProgress===id),idle=[...body.querySelectorAll('[data-eja-idle]')].find(n=>n.dataset.ejaIdle===id);if(!((attempt.enviadas||[]).includes(id))){const hasAnswer=started(id);if(badge)badge.hidden=!hasAnswer;if(idle)idle.hidden=hasAnswer;}}}
-function draw(key=null){body.replaceChildren();const done=(attempt.enviadas||[]).length;const sum=E('section');sum.className='se7-eja-attempt-summary';const track=E('div');track.className='se7-eja-attempt-track';const fill=E('span');fill.style.width=Math.round(done/Math.max(1,groups.length)*100)+'%';track.append(fill);sum.append(E('h3','Minhas Avaliações'),E('strong',done+' de '+groups.length+' disciplinas concluídas'),track,E('small','Respostas sincronizadas com o Firebase.'));body.append(sum);body.append(E('h3','▤  Disciplinas da avaliação'));for(const id of groups){const q=attempt.questions.find(q=>(q.disciplinaId||'legado')===id),done=(attempt.enviadas||[]).includes(id),active=key===id;const name=q.disciplinaNome||'Prova EJA',visual=se7EjaVisual(name);const btn=E('button');btn.type='button';btn.className='se7-eja-subject-row'+(active?' se7-eja-active':'');const visualIcon=E('span',visual.icon);visualIcon.style.cssText='display:inline-grid;place-items:center;flex:none;width:40px;height:40px;border:1px solid '+visual.color+';border-radius:11px;font-size:25px;background:'+visual.background;visualIcon.setAttribute('aria-hidden','true');btn.append(visualIcon);const label=E('span',name);label.className='se7-eja-subject-label';const area=E('small',visual.area);area.style.cssText='display:block;font-size:11px;color:'+visual.color+';margin-top:3px';label.append(area);btn.append(label);if(done){const state=E('span','Concluída ✓');state.className='se7-eja-subject-state';btn.append(state);}else{const progress=E('span');progress.className='se7-eja-progress';progress.dataset.ejaProgress=id;progress.hidden=!started(id);const hourglass=E('span','⌛');hourglass.className='se7-eja-hourglass';hourglass.setAttribute('aria-hidden','true');progress.append(hourglass,E('span','Já iniciada'));btn.append(progress);const idle=E('span');idle.className='se7-eja-not-started';idle.dataset.ejaIdle=id;idle.hidden=started(id);const dot=E('span');dot.className='se7-eja-not-started-dot';dot.setAttribute('aria-hidden','true');idle.append(dot,E('span','Não iniciada'));btn.append(idle);}const chevron=E('span',active?'⌃':'⌄');chevron.className='se7-eja-subject-chevron';btn.append(chevron);btn.disabled=done;btn.onclick=()=>draw(active?null:id);body.append(btn);if(active&&!done){const panel=E('div');panel.className='se7-eja-question-panel';body.append(panel);drawQuestions(id,panel);}}}
+function draw(key=null){
+ body.replaceChildren();
+ const completed=(attempt.enviadas||[]).length,percentage=Math.round(completed/Math.max(1,groups.length)*100);
+ const summary=E('section');summary.className='se7-eja-dashboard';
+ const top=E('div');top.className='se7-eja-dashboard-top';const intro=E('div');
+ const eyebrow=E('small','PORTAL DO ALUNO · SE7');eyebrow.className='se7-eja-dashboard-eyebrow';
+ intro.append(eyebrow,E('h3','Minhas Avaliações'),E('p','Acompanhe seu progresso por disciplina'));
+ const cap=E('span','🎓');cap.className='se7-eja-dashboard-cap';cap.setAttribute('aria-hidden','true');top.append(intro,cap);summary.append(top);
+ const stats=E('div');stats.className='se7-eja-dashboard-stats';
+ for(const [value,title] of [[String(groups.length).padStart(2,'0'),'Disciplinas'],[String(completed).padStart(2,'0'),'Concluídas'],[percentage+'%','Progresso']]){
+  const tile=E('div');tile.className='se7-eja-dashboard-stat';tile.append(E('strong',value),E('span',title));stats.append(tile);
+ }
+ summary.append(stats);
+ const progressHead=E('div');progressHead.className='se7-eja-dashboard-progress-head';progressHead.append(E('strong','Progresso geral'),E('span',completed+' de '+groups.length));
+ const track=E('div');track.className='se7-eja-dashboard-track';track.setAttribute('role','progressbar');track.setAttribute('aria-label','Progresso das disciplinas');track.setAttribute('aria-valuemin','0');track.setAttribute('aria-valuemax','100');track.setAttribute('aria-valuenow',String(percentage));
+ const fill=E('span');fill.style.width=percentage+'%';track.append(fill);summary.append(progressHead,track);body.append(summary);
+ const heading=E('h3','Disciplinas da avaliação');heading.className='se7-eja-dashboard-section-title';body.append(heading);
+ for(const id of groups){
+  const q=attempt.questions.find(q=>(q.disciplinaId||'legado')===id),done=(attempt.enviadas||[]).includes(id),active=key===id;
+  const name=q.disciplinaNome||'Prova EJA',visual=se7EjaVisual(name),startedHere=started(id);
+  const btn=E('button');btn.type='button';btn.className='se7-eja-subject-row se7-eja-dashboard-subject'+(active?' se7-eja-active':'');
+  const visualIcon=E('span',visual.icon);visualIcon.className='se7-eja-dashboard-subject-icon';visualIcon.style.borderColor=visual.color;visualIcon.style.background=visual.background;visualIcon.setAttribute('aria-hidden','true');btn.append(visualIcon);
+  const content=E('span');content.className='se7-eja-dashboard-subject-info';
+  const label=E('span',name);label.className='se7-eja-subject-label';content.append(label);
+  if(done){
+   const state=E('span');state.className='se7-eja-dashboard-subject-status se7-eja-dashboard-complete';
+   const mark=E('span','✓');mark.setAttribute('aria-hidden','true');state.append(mark,E('span','Concluída'));content.append(state);
+  }else{
+   const progress=E('span');progress.className='se7-eja-progress se7-eja-dashboard-subject-status';progress.dataset.ejaProgress=id;progress.hidden=!startedHere;
+   const hourglass=E('span','⌛');hourglass.className='se7-eja-hourglass';hourglass.setAttribute('aria-hidden','true');progress.append(hourglass,E('span','Já iniciada'));content.append(progress);
+   const idle=E('span');idle.className='se7-eja-not-started se7-eja-dashboard-subject-status';idle.dataset.ejaIdle=id;idle.hidden=startedHere;
+   const dot=E('span');dot.className='se7-eja-not-started-dot';dot.setAttribute('aria-hidden','true');idle.append(dot,E('span','Não iniciada'));content.append(idle);
+  }
+  btn.append(content);const chevron=E('span',done?'✓':active?'⌃':'⌄');chevron.className='se7-eja-subject-chevron';chevron.setAttribute('aria-hidden','true');btn.append(chevron);
+  btn.disabled=done;btn.setAttribute('aria-expanded',String(active&&!done));btn.onclick=()=>draw(active?null:id);body.append(btn);
+  if(active&&!done){const panel=E('div');panel.className='se7-eja-question-panel';body.append(panel);drawQuestions(id,panel);}
+ }
+ const hint=E('p','Novas disciplinas liberadas pela instituição são incluídas automaticamente na sua avaliação.');hint.className='se7-eja-dashboard-hint';body.append(hint);
+}
 function drawQuestions(key,panel){const body=panel;
 const indices=attempt.questions.flatMap((q,i)=>(q.disciplinaId||'legado')===key?[i]:[]);body.append(E('h3',attempt.questions[indices[0]].disciplinaNome||'Prova EJA'));for(const i of indices){const q=attempt.questions[i],card=E('fieldset');const header=E('div');header.className='se7-eja-question-header';header.style.cssText='display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap';const sentence=E('div',(indices.indexOf(i)+1)+'. '+q.enunciado);sentence.style.cssText='flex:1 1 180px;min-width:0;font-weight:600;white-space:pre-wrap;overflow-wrap:anywhere;text-align:justify;text-justify:inter-word;line-height:1.6';header.append(sentence);if(q.imagem&&/^data:image\/jpeg;base64,/.test(q.imagem)){const picture=E('img');picture.src=q.imagem;picture.alt='Imagem ilustrativa da questão';picture.style.cssText='width:36%;max-width:200px;max-height:160px;object-fit:contain;border-radius:8px';picture.onclick=()=>{const pop=modal('Imagem ilustrativa');const big=E('img');big.src=q.imagem;big.alt=picture.alt;big.style.cssText='width:100%;height:auto;max-height:70vh;object-fit:contain';pop.append(big);};header.append(picture);}card.append(header);q.opcoes.forEach((o,j)=>{const label=E('label'),radio=E('input');radio.type='radio';radio.name='eja-question-'+i;radio.value=j;radio.checked=answers[String(i)]===j;radio.onchange=()=>{answers[String(i)]=j;dirty=true;remember();updateProgress();saveStatus.textContent='Salvando respostas…';clearTimeout(saveTimer);saveTimer=setTimeout(()=>flush().catch(()=>{}),350);};label.className='se7-eja-payment-option';label.append(radio,E('span',String.fromCharCode(65+j)+') '+o));card.append(label);});body.append(card);}
 body.append(buttons('Enviar disciplina',async()=>{if(indices.some(i=>!Number.isInteger(answers[String(i)])))throw Error('Responda todas as questões desta disciplina.');await flush();const patch=Object.fromEntries(indices.map(i=>[String(i),answers[String(i)]]));if(!window.confirm('Enviar esta disciplina? Depois de enviar, as respostas não poderão ser alteradas.'))return;const result=await api('eja-exam-submit-subject',{disciplinaId:key,answers:patch});if(result.complete){clearInterval(clock);document.getElementById('se7-eja-attempt')?.close();attempt=result.attempt;await load();const out=modal('Resultado da avaliação EJA');out.append(E('h3',attempt.approved?'✓ Parabéns! Você foi aprovado!':'✕ Infelizmente você foi reprovado.'),E('p','Nota final: '+attempt.grade.toFixed(1)),E('p',attempt.approved?'Em breve, seu diploma será emitido.':'Motivo: '+(attempt.grade<5?'Abaixo de 50% dos acertos. ':'')+(attempt.zeradas?.length?'Zerou: '+attempt.zeradas.join(', '):'')+'. Em breve você poderá remarcar uma recuperação.'));return;}attempt.enviadas=result.enviadas;sequence++;remember();draw();}),buttons('Voltar',async()=>{await flush();draw();}));}draw();clearInterval(clock);const updateClock=()=>{const now=Date.now()+offset,remaining=Math.max(0,Date.parse(attempt.deadlineAt)-now),grace=now>=Date.parse(attempt.cutoffAt);const duration=grace?remaining:Math.max(0,Date.parse(attempt.cutoffAt)-now);const hh=String(Math.floor(duration/3600000)).padStart(2,'0'),mm=String(Math.floor(duration/60000)%60).padStart(2,'0'),ss=String(Math.floor(duration/1000)%60).padStart(2,'0');timer.replaceChildren(E('span',grace?'⌛':'◷'));timer.firstChild.className='se7-eja-clock-icon';const caption=E('strong',grace?'Tempo de tolerância:':'Tempo restante:');timer.append(caption);const digits=E('span',hh+':'+mm+':'+ss);digits.className='se7-eja-digits';timer.append(digits);const tip=E('span',grace?'Encerramento às 20h20':'Tolerância após 20h • até 20h20');tip.className='se7-eja-grace-label';timer.append(tip);timer.classList.toggle('se7-eja-warning',grace);if(!remaining)void finishExam(true);};updateClock();clock=setInterval(updateClock,1000);}
