@@ -34,7 +34,12 @@ export async function prepareContext({auth,db},req,body){
  await db.runTransaction(async tx=>{const config=scoped.collection('config').doc('institution');const a=await tx.get(config);if(account.company)tx.set(db.collection('academicPlatformOwners').doc(user.uid),{active:true});if(!a.exists)tx.set(config,{name:institution.name,razao:institution.legalName||'',cnpj:institution.cnpj||'',email:institution.contactEmail||'',platformInstitutionId:institutionId});});
  return {result:{institution:{id:institutionId,name:institution.name},profile}};
  }
- if(!pilotAllowed.has(body.action))fail(409,'Esta operação ainda não está habilitada nesta etapa de testes. Integrações externas e criação de outros perfis continuam desativadas.');
+ // Leitura acadêmica do Portal do Aluno, restrita ao Master institucional.
+ // Snapshot e recibos ficam bloqueados até a homologação financeira e de privacidade.
+ if(body.action==='portal-preview'){
+  const readOnly=new Set(['list','exam-results','exam-result','notices-feed','notices-open']);
+  if(!readOnly.has(body.operation))fail(403,'Operação de visualização não habilitada para testes.');
+ }else if(!pilotAllowed.has(body.action))fail(409,'Esta operação ainda não está habilitada nesta etapa de testes. Integrações externas e criação de outros perfis continuam desativadas.');
  // Tenant admins use only their institution database. No global Auth claims are set.
  req.se7PlatformIdentity={...user,role:'master',profile};return {services:{auth,db:scoped}};
 }
