@@ -8,7 +8,7 @@
 
 .se7-collaborator-dialog{width:min(760px,94vw)}.se7-collaborator-actions{display:flex;align-items:center;gap:8px;padding-top:10px}.se7-collaborator-actions button{flex:none;width:auto;min-height:0;margin:0;padding:8px 14px;font-size:12px}.se7-collaborator-dialog #teacher-photo-master{margin:12px 0}
 
-.se7-subject-row{display:flex;justify-content:space-between;align-items:center;gap:18px;padding:14px 0;border-bottom:1px solid #294866}.se7-subject-row strong{display:block;font-size:14px}.se7-subject-row p{font-size:12px;margin:5px 0 0;color:#93acc9}.se7-subject-actions{display:flex;gap:5px;flex-shrink:0}.se7-subject-actions button{padding:7px 10px;font-size:12px;margin:0}.se7-subject-actions .se7-subject-delete{background:#9e2941;border-color:#bc435c}.se7-subject-syllabus{white-space:pre-wrap;line-height:1.7;overflow-wrap:anywhere}
+.se7-subject-row{display:flex;justify-content:space-between;align-items:center;gap:18px;padding:14px 0;border-bottom:1px solid #294866}.se7-subject-row strong{display:block;font-size:14px}.se7-subject-row p{font-size:12px;margin:5px 0 0;color:#93acc9}.se7-subject-actions{display:flex;gap:5px;flex-shrink:0}.se7-subject-actions button{padding:7px 10px;font-size:12px;margin:0}.se7-subject-actions .se7-subject-delete{background:#9e2941;border-color:#bc435c}.se7-subject-syllabus{white-space:pre-line;line-height:1.7;overflow-wrap:anywhere;text-align:justify}
 
 .se7-config-edit-dialog{width:min(900px,94vw)}.se7-config-edit-dialog .subsubtab-content,.se7-config-edit-dialog .subsubtab-subject-content,.se7-config-edit-dialog .subsubtab-class-content{padding-top:12px}.se7-config-edit-dialog :is(input,select,textarea){width:100%}.se7-config-edit-dialog button{width:auto}
 

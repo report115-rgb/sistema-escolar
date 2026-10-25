@@ -1,0 +1,19 @@
+/* Navigation feedback: hover/focus only, without loading or layout movement. */
+:is(.tab-button,.subtab-button,.subtab-eja-btn,.subsubtab-button,.subsubtab-subject-button,.subsubtab-class-button,[role="tab"],#se7-material-tabs > button,button[onclick*="mudarAba("],button[onclick*="mudarAbaApp("]){transition:background-color .16s ease,color .16s ease,box-shadow .16s ease,filter .16s ease;}
+@media(hover:hover) and (pointer:fine){
+:is(.tab-button,.subtab-button,.subtab-eja-btn,.subsubtab-button,.subsubtab-subject-button,.subsubtab-class-button,[role="tab"],#se7-material-tabs > button,button[onclick*="mudarAba("],button[onclick*="mudarAbaApp("]):not(:disabled):hover{background-color:#0e2a49!important;color:#fff!important;box-shadow:inset 0 0 0 1px #38bdf85c;filter:brightness(1.06);}
+}
+:is(.tab-button,.subtab-button,.subtab-eja-btn,.subsubtab-button,.subsubtab-subject-button,.subsubtab-class-button,[role="tab"],#se7-material-tabs > button,button[onclick*="mudarAba("],button[onclick*="mudarAbaApp("]):focus-visible{outline:2px solid #38bdf8;outline-offset:2px;}
+@media(prefers-reduced-motion:reduce){:is(.tab-button,.subtab-button,.subtab-eja-btn,.subsubtab-button,.subsubtab-subject-button,.subsubtab-class-button,[role="tab"],#se7-material-tabs > button,button[onclick*="mudarAba("],button[onclick*="mudarAbaApp("]){transition:none;}}
+
+/* Matriz: padrão visual único para navegação interna, inclusive abas dinâmicas. */
+.se7-matriz #se7-workspace :is(.subtab-button,.subtab-eja-btn,.subsubtab-button,.subsubtab-subject-button,.subsubtab-class-button,[role="tab"],#se7-material-tabs>button,.se7-section-tab){
+ min-height:40px;padding:11px 16px;border:1px solid transparent;border-radius:9px 9px 0 0;background:transparent;color:var(--se7-muted,#64748b);font-family:inherit;font-size:12px;font-weight:600;line-height:1.4;margin:0;box-shadow:none;transform:none;cursor:pointer;
+ transition:background-color .18s ease,color .18s ease,border-color .18s ease,box-shadow .18s ease;
+}
+.se7-matriz #se7-workspace :is(.subtab-button,.subtab-eja-btn,.subsubtab-button,.subsubtab-subject-button,.subsubtab-class-button,[role="tab"],#se7-material-tabs>button,.se7-section-tab):is(.active,.bg-blue-600,.bg-emerald-600,[aria-selected="true"],[aria-pressed="true"]){background:var(--se7-panel,#f1f5f9);border-bottom:3px solid #13bff0;color:var(--se7-text,#0f172a);box-shadow:none;}
+@media(hover:hover) and (pointer:fine){
+ .se7-matriz #se7-workspace :is(.subtab-button,.subtab-eja-btn,.subsubtab-button,.subsubtab-subject-button,.subsubtab-class-button,[role="tab"],#se7-material-tabs>button,.se7-section-tab):not(:disabled):hover{background:color-mix(in srgb,var(--se7-panel-soft,#e2e8f0) 85%,#13bff0 15%)!important;color:var(--se7-text,#0f172a)!important;box-shadow:inset 0 0 0 1px #38bdf85c;filter:none;transform:none;}
+}
+.se7-matriz #se7-workspace .se7-section-tab:focus-visible{outline:2px solid #38bdf8;outline-offset:2px;}
+@media(prefers-reduced-motion:reduce){.se7-matriz #se7-workspace :is(.subtab-button,.subtab-eja-btn,.subsubtab-button,.subsubtab-subject-button,.subsubtab-class-button,[role="tab"],#se7-material-tabs>button,.se7-section-tab){transition:none;}}
