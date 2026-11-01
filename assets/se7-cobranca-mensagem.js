@@ -39,11 +39,11 @@ async function refreshOverdue(){
  const request=++latestRequest;
  const node=el('se7-cobranca-list');if(node)node.textContent='Carregando mensalidades vencidas...';
  try{
-  const rows=await window.SE7Polos.overdueFinance();
+  const response=await SE7.api('finance-overdue-list',{});const rows=response.rows;
   if(request!==latestRequest)return;
   faturas=rows;list();if(selected)open(selected);
  }catch(e){if(request!==latestRequest)return;console.warn('SE7: inadimplência',e);if(node)node.textContent='Não foi possível carregar mensalidades vencidas. Verifique as permissões de acesso ao Firebase.';}
 }
-window.SE7Cobranca={refresh(a,b){students=Array.isArray(a)?a:[];if(!window.SE7Polos?.overdueFinance)faturas=Array.isArray(b)?b:[];list();if(selected)open(selected);attach()},show:on=>{show(on);if(on&&window.SE7Polos?.overdueFinance)void refreshOverdue()},list,generate};
+window.SE7Cobranca={refresh(a,b){students=Array.isArray(a)?a:[];if(!window.SE7Polos?.overdueFinance)faturas=Array.isArray(b)?b:[];list();if(selected)open(selected);attach()},show:on=>{show(on);if(on)void refreshOverdue()},list,generate};
 document.addEventListener('DOMContentLoaded',attach,{once:true});const observer=new MutationObserver(()=>{if(!overdueButton?.isConnected)attach()});observer.observe(document.documentElement,{childList:true,subtree:true});attach();
 })();
