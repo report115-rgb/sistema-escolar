@@ -26,19 +26,21 @@
  async function bindUser(user){const d=E('dialog');d.className='se7-polo-dialog';d.append(E('h2','Editar acesso — '+user.nome),E('p',user.perfil==='professor'?'Selecione os polos em que este professor atua.':'Escolha o polo de atendimento da secretaria.'));const boxes=[];for(const p of rows.filter(p=>p.active!==false)){const c=E('input');c.type=user.perfil==='professor'?'checkbox':'radio';c.name='polo-access';c.value=p.id;c.checked=(user.poloIds||[user.poloId]).includes(p.id);boxes.push(c);d.append(label(p.name,c));}d.append(button('Salvar vínculo',async()=>{await SE7.api('polo-bind',{uid:user.id,poloIds:boxes.filter(c=>c.checked).map(c=>c.value)});d.close();alert('Vínculo salvo. O usuário deve sair e entrar novamente.');await renderizarUsuariosSistemaFirebase();}),button('Fechar',()=>d.close()));document.body.append(d);d.addEventListener('close',()=>d.remove());d.showModal();}
  async function finance(id,force=false){if(!['master','secretaria'].includes(profile.perfil))return;const cached=financeCache.get(id);if(!force&&cached&&Date.now()-cached.at<30000)return cached.promise;const promise=(async()=>{const all=await Promise.all(['studentId','alunoId'].map(k=>raw.collection('financeLogs').where(k,'==',id).get()));const values=[...new Map(all.flatMap(s=>s.docs.map(d=>({id:d.id,...d.data()}))).map(f=>[f.id,f])).values()];financeLogs=financeLogs.filter(f=>(f.studentId||f.alunoId)!==id).concat(values);})();financeCache.set(id,{promise,at:Date.now()});try{await promise;}catch(e){financeCache.delete(id);throw e;}}
  async function overdueFinance(){
- if(!['master','secretaria'].includes(profile.perfil))return [];
+ if(!['master','secretaria'].includes(profile.perfil))throw Error('Perfil sem acesso à consulta financeira.');
  if(!raw)throw Error('Firebase não inicializado.');
- const found=new Map();
- for(const status of ['VENCIDO','ATRASADO','OVERDUE']){
+ const found=new Map();const today=window.SE7Finance?.dateISO(new Date());
+ if(!today)throw Error('Data financeira indisponível.');
+ // Consultar vencimentos, não apenas status: parcelas vencidas podem permanecer PENDENTE.
+ for(const key of ['date','vencimento','dueDate']){
   let last=null;
   for(let page=0;page<20;page++){
-   let q=raw.collection('financeLogs').where('status','==',status).orderBy('__name__').limit(100);
+   let q=raw.collection('financeLogs').where(key,'<',today).orderBy(key).limit(100);
    if(last)q=q.startAfter(last);
    const snap=await q.get();
    for(const d of snap.docs)found.set(d.id,{id:d.id,...d.data()});
    if(snap.size<100)break;
    last=snap.docs[snap.docs.length-1];
-   if(page===19)throw Error('Quantidade excede o limite de consulta.');
+   if(page===19)throw Error('Limite de paginação atingido.');
   }
  }
  return [...found.values()];
