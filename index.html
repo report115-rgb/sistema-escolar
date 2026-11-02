@@ -900,7 +900,7 @@
             <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-md p-6 border border-gray-200 dark:border-slate-700 space-y-4">
 
                 
-                <div id="se7-finance-roster"></div><section hidden id="se7-cobranca-panel"><h2 class="font-bold mb-2">Alunos em atraso</h2><p class="text-xs mb-3">Mensagens para revisão e envio manual via WhatsApp.</p><div id="se7-cobranca-list"></div><div id="se7-cobranca-details" class="mt-3 border rounded-xl p-3 dark:border-slate-700 text-sm">Selecione um aluno.</div></section>
+                <div id="se7-finance-roster"></div>
                 <div hidden><select id="fin-student-select"><option value="">Selecione o aluno...</option></select><div id="container-cobrancas-aluno-financeiro" class="space-y-2"></div></div>
 
             </div>
@@ -2709,7 +2709,7 @@ document.getElementById('input-inst-inep').value = data.inep || '';
     void window.SE7Ingress?.migrate();
     popularSelectAlunosPortalMaster();
     popularSelectAlunosValidacaoGestao();
-    window.SE7Cobranca?.refresh(students,financeLogs);
+
                 renderFinanceStudentSelect(); // <--- ADICIONADO AQUI
     if (alunoLogadoCache) {
         const atualizado = students.find(s => s.id === alunoLogadoCache.id);
@@ -2728,7 +2728,7 @@ document.getElementById('input-inst-inep').value = data.inep || '';
                 financeLogs = [];
                 snapshot.forEach(doc => financeLogs.push({ id: doc.id, ...doc.data() }));
                 SE7Finance.sort(financeLogs);
-                window.SE7Cobranca?.refresh(students,financeLogs);
+
                 renderFinanceStudentSelect();
                 const selFin = document.getElementById('fin-student-select');
                 if (selFin && selFin.value) {
@@ -5460,7 +5460,7 @@ function escutarRegistrosPontoManual() {
 <script type="module" src="/assets/se7-class-format.js"></script>
 <script type="module" src="/assets/se7-manual-grades.js"></script>
 <script src="/assets/se7-busy.js?v=feedback-3"></script>
-<script src="/assets/se7-matriz-finance.js"></script><script src="/assets/se7-cobranca-mensagem.js?v=finance-api-20261031"></script>
+<script src="/assets/se7-matriz-finance.js"></script>
 <script type="module" src="/assets/se7-tuition.js"></script>
 <script src="/assets/se7-account-menu.js?v=perfil-alternado-5"></script>
 <script src="/assets/se7-ambient.js"></script>

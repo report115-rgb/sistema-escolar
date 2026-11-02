@@ -240,30 +240,6 @@ async function dispatchOperation({auth,db},req,b,delegated=null){
   fail(400,'Operação de e-mail desconhecida.');
  }
  if(action==='enrollment-finance-local'){if(!['master','secretaria','financeiro','aluno'].includes(u.role))fail(403,'Acesso restrito.');const studentId=u.role==='aluno'?u.studentId:validId(b.studentId);await limits(db,req,'asaas-bulk:history:'+u.uid);const history=await asaas.syncPaidHistory(db,studentId,u);if(!history.safe)return {cancelled:0,warning:history.warning,paymentReview:history};return {...await reviewLocal(db,studentId,u),paymentReview:history};}
- if(action==='finance-overdue-list'){
-  if(!['master','secretaria','financeiro'].includes(u.role))fail(403,'Acesso restrito ao financeiro.');
-  const today=new Date().toISOString().slice(0,10);
-  const found=new Map();
-  for(const field of ['date','vencimento','dueDate']){
-   let last=null;
-   for(let page=0;page<15;page++){
-    let q=db.collection('financeLogs').where(field,'<',today).orderBy(field).limit(100);
-    if(last)q=q.startAfter(last);
-    const snap=await q.get();
-    for(const doc of snap.docs)found.set(doc.id,{id:doc.id,...doc.data()});
-    if(snap.size<100)break;
-    last=snap.docs[snap.docs.length-1];
-    if(page===14)fail(409,'Consulta excede o limite de segurança.');
-   }
-  }
-  const rows=[...found.values()].filter(f=>{
-   const status=String(f.status||'').toUpperCase();
-   if(f.asaasReview||f.renegotiationLock||f.ejaManaged||f.dataPagamento||f.paymentDate)return false;
-   if(/PAGO|PAGA|QUITAD|RECEIVED|CONFIRMED|CANCELAD|NEGOCIAD|ESTORNAD|CONTESTAD|PROPOSTA|AGUARDANDO|ACORDO|REFUND/.test(status))return false;
-   const amount=Number(f.amount??f.valor??0);return Number.isFinite(amount)&&amount>0;
-  }).map(f=>({id:f.id,studentId:f.studentId||f.alunoId||'',date:f.date||f.vencimento||f.dueDate||'',amount:f.amount??f.valor,status:f.status||'',description:f.description||f.descricao||''}));
-  return {rows,source:'financeLogs',checkedAt:new Date().toISOString()};
- }
  if(action==='enrollment-finance-list'||action==='enrollment-finance-cancel'){if(!['master','secretaria','financeiro'].includes(u.role))fail(403,'Acesso restrito.');await limits(db,req,'asaas-bulk:'+u.uid);return action==='enrollment-finance-list'?asaas.cancellationInvoices(db,validId(b.studentId),u):asaas.cancelEnrollmentInvoice(db,validId(b.invoiceId),u);}
  if(typeof action==='string'&&action.startsWith('asaas-')){
   const finance=['master','financeiro'].includes(u.role);

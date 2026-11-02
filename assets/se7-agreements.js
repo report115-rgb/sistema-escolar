@@ -16,6 +16,24 @@ function eligibleDebtors(){
  const {logs}=model(),pendingIds=new Set(logs.filter(pending).map(f=>f.studentId||f.alunoId));
  return debtors().filter(r=>r.rows.length>=6&&!pendingIds.has(r.student.id)&&hasAsaasLink(r.student,r.rows));
 }
+function openMessage(student,rows){
+ const modal=E('dialog');modal.className='se7-ren-dialog';const heading=E('h3','Mensagem de cobrança — '+(student.fullname||student.name||'Aluno'));heading.className='font-bold text-base mb-3';modal.append(heading);
+ const tone=E('select');tone.className='w-full rounded-lg border p-2 mb-3 bg-white text-slate-900';
+ for(const [value,label] of [['amigavel','Cobrança amigável'],['formal','Cobrança formal'],['negociacao','Proposta de negociação']])tone.add(new Option(label,value));
+ const area=E('textarea');area.className='w-full rounded-lg border p-3 bg-white text-slate-900 text-sm';area.rows=11;
+ const money=n=>SE7Finance.amountBR(n);
+ const make=()=>{
+  const intro=tone.value==='formal'?'Solicitamos a regularização das mensalidades em atraso.':tone.value==='negociacao'?'Gostaríamos de conversar sobre as possibilidades de regularização das mensalidades pendentes.':'Tudo bem? Aqui é do Setor Financeiro do SE7. Identificamos mensalidades pendentes e estamos à disposição para ajudar.';
+  const details=[...rows].sort((a,b)=>SE7Finance.dateISO(a.date||a.vencimento).localeCompare(SE7Finance.dateISO(b.date||b.vencimento))).map(f=>'- Vencimento '+SE7Finance.dateBR(f.date||f.vencimento)+' — '+money(f.amount??f.valor??0)).join('\n');
+  const sum=rows.reduce((acc,f)=>acc+Number(f.amount??f.valor??0),0);
+  area.value='Olá, '+(student.fullname||student.name||'aluno(a)')+'!\n\n'+intro+'\n\nMensalidades vencidas:\n'+details+'\nTotal: '+money(sum)+'\n\nCaso já tenha realizado o pagamento, encaminhe o comprovante para conferência.\n\nSetor Financeiro — SE7';
+ };
+ tone.onchange=make;make();modal.append(tone,area);
+ const actions=E('div');actions.className='flex flex-wrap gap-2 mt-3';
+ actions.append(button('Copiar mensagem',async()=>{await navigator.clipboard.writeText(area.value);}));
+ actions.append(button('Abrir WhatsApp',()=>{let number=String(student.whatsapp||student.whatsappNumber||student.celular||student.phone||student.telefone||'').replace(/\D/g,'');if(number.length===10||number.length===11)number='55'+number;if(!/^55\d{10,11}$/.test(number))throw Error('WhatsApp do aluno não cadastrado ou inválido.');window.open('https://wa.me/'+number+'?text='+encodeURIComponent(area.value),'_blank','noopener,noreferrer');}));
+ actions.append(button('Fechar',()=>modal.close()));modal.append(actions);document.body.append(modal);modal.addEventListener('close',()=>modal.remove());modal.showModal();
+}
 function titleRow(text){const h=E('h3',text);h.className='font-bold text-xs uppercase text-emerald-600 dark:text-emerald-400 tracking-wider';return h;}
 function proposalCard(f){
  const {students}=model(),s=students.find(s=>s.id===(f.studentId||f.alunoId))||{};
@@ -57,17 +75,21 @@ function refresh(){
  const archive=E('details'),archiveTitle=E('summary','Histórico de propostas ('+history.length+')');archive.className='bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-3 space-y-2';archiveTitle.className='cursor-pointer font-bold text-xs text-slate-900 dark:text-white';archive.open=historyExpanded;archive.addEventListener('toggle',()=>{if(archive.isConnected)historyExpanded=archive.open;});archive.append(archiveTitle);
  if(!history.length)archive.append(E('p','Nenhuma proposta concluída.'));
  for(const f of history)archive.append(proposalCard(f));host.append(archive);
- const rows=eligibleDebtors(),overdue=E('details'),summary=E('summary','Alunos em atraso ('+rows.length+')');
+ const rows=debtors(),eligibleIds=new Set(eligibleDebtors().map(r=>r.student.id)),overdue=E('details'),summary=E('summary','Alunos em atraso ('+rows.length+')');
  overdue.className='bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-3 space-y-2';
  summary.className='cursor-pointer font-bold text-xs text-slate-900 dark:text-white';overdue.open=overdueExpanded;overdue.addEventListener('toggle',()=>{if(overdue.isConnected)overdueExpanded=overdue.open;});overdue.append(summary);
- if(!rows.length)overdue.append(E('p','Nenhum aluno elegível para negociação.'));
+ if(!rows.length)overdue.append(E('p','Nenhum aluno com mensalidades vencidas.'));
  for(const r of rows){
   const s=r.student,n=names(s),card=E('div');card.className='bg-white dark:bg-slate-900 p-3.5 rounded-2xl shadow-sm border border-emerald-500/50 space-y-2 text-xs mb-2';
   const name=E('strong',s.fullname||s.name||'Aluno');name.className='block text-sm text-slate-900 dark:text-white';
   const details=E('p','Curso: '+n.course+' • '+r.rows.length+' mensalidades vencidas');details.className='text-[10px] text-slate-500';
-  const b=E('button','Gerar proposta de acordo');b.type='button';b.className='px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold text-[10px] shadow';
-  b.onclick=()=>{selecionarAlunoNegociacao(s.id,true);abrirModalRealizarAcordo();};
-  card.append(name,details,b);overdue.append(card);
+  card.append(name,details);
+  const total=r.rows.reduce((sum,f)=>sum+Number(f.amount??f.valor??0),0);
+  const amount=E('p','Total em atraso: '+SE7Finance.amountBR(total));amount.className='text-xs font-semibold text-amber-700 dark:text-amber-300';card.append(amount);
+  const actions=E('div');actions.className='flex flex-wrap gap-2';
+  actions.append(button('Gerar mensagem de cobrança',()=>openMessage(s,r.rows)));
+  if(eligibleIds.has(s.id)){const b=E('button','Gerar proposta de acordo');b.type='button';b.className='px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold text-[10px] shadow';b.onclick=()=>{selecionarAlunoNegociacao(s.id,true);abrirModalRealizarAcordo();};actions.append(b);}
+  card.append(actions);overdue.append(card);
  }
  host.append(overdue);
  const badge=document.getElementById('se7-overdue-nav-badge');if(badge){badge.hidden=rows.length===0;badge.setAttribute('aria-label',rows.length+' aluno(s) elegível(is)');}
