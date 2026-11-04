@@ -1573,7 +1573,14 @@
                     </div>
                 </div>
 
-                <h4 class="font-bold text-xs text-blue-600 dark:text-blue-400 uppercase pt-2">3. Vínculo Acadêmico</h4><label class="block text-xs font-semibold">Polo do aluno<select id="input-student-polo" class="se7-polo-select" required></select></label>
+                <div class="rounded-xl border border-cyan-300 dark:border-cyan-800 bg-cyan-50 dark:bg-slate-900 p-3 space-y-2">
+<label for="student-legacy-profile" class="flex items-start gap-3 cursor-pointer text-sm font-semibold text-slate-800 dark:text-slate-100">
+<input id="student-legacy-profile" type="checkbox" class="mt-1 w-4 h-4 accent-cyan-600">
+<span>Aluno antigo — matrícula anterior a 2026/1</span>
+</label>
+<p class="text-xs text-slate-600 dark:text-slate-400">Ative somente para estudantes vinculados ao sistema anterior. O App do Aluno mostrará Início, Financeiro e Documentos. Não modifica histórico financeiro, boletos ou documentos.</p>
+</div>
+<h4 class="font-bold text-xs text-blue-600 dark:text-blue-400 uppercase pt-2">3. Vínculo Acadêmico</h4><label class="block text-xs font-semibold">Polo do aluno<select id="input-student-polo" class="se7-polo-select" required></select></label>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-semibold mb-1">Curso</label>
@@ -2572,7 +2579,7 @@ async function removerUsuarioSistemaFirebase(id){if(!confirm('Desativar esse fun
             redefinirFotoCadastroAluno();
             document.getElementById('edit-student-id').value = "";
             document.getElementById('modal-student-title').textContent = "Nova Matrícula";
-            document.getElementById('formFichaMatricula').reset();SE7Polos.studentForm();
+            document.getElementById('formFichaMatricula').reset();document.getElementById('student-legacy-profile').checked=false;SE7Polos.studentForm();
             document.getElementById('new-student-modal').style.display = 'flex';
             window.SE7Ingress?.preview();
         }
@@ -3619,7 +3626,7 @@ function carregarDatasCalendarioParaFrequencia(){const classId=document.getEleme
 
     // Monta os dados básicos do aluno (sem a foto fixa aqui para tratar separadamente)
     const studentData = {
-        ...SE7Polos.studentValue(),fullname, 
+        ...SE7Polos.studentValue(),fullname, legacyStudent:document.getElementById('student-legacy-profile').checked, 
         dob: document.getElementById('dataNascimento').value,
         sexo: document.getElementById('sexoAluno').value,
         nacionalidade: document.getElementById('nacionalidadeAluno').value==='__outra__'?document.getElementById('nacionalidadeOutraAluno').value.trim():document.getElementById('nacionalidadeAluno').value, 
@@ -3646,12 +3653,12 @@ function carregarDatasCalendarioParaFrequencia(){const classId=document.getEleme
 
         const beforeEnrollment = await db.collection('students').doc(editId).get();
         const hadClass = !!beforeEnrollment.data()?.classId;
-        const enrollmentDate=document.getElementById('student-enrollment-date').value;const oldDate=beforeEnrollment.data()?.enrollmentDate||'';if(oldDate&&!enrollmentDate)return alert('Informe a data da matrícula; a data registrada não pode ser apagada.');if(enrollmentDate&&enrollmentDate>SE7AcademicPolicy.today())return alert('A data da matrícula não pode ser futura.');const dateChanged=enrollmentDate!==oldDate;const recalculateEntry=!!enrollmentDate&&(dateChanged||beforeEnrollment.data().classId!==classId||beforeEnrollment.data().courseId!==courseId);
+        const enrollmentDate=document.getElementById('student-enrollment-date').value;const oldDate=beforeEnrollment.data()?.enrollmentDate||'';if(oldDate&&!enrollmentDate)return alert('Informe a data da matrícula; a data registrada não pode ser apagada.');if(enrollmentDate&&enrollmentDate>SE7AcademicPolicy.today())return alert('A data da matrícula não pode ser futura.');const dateChanged=enrollmentDate!==oldDate;const recalculateEntry=!studentData.legacyStudent&&!!enrollmentDate&&(dateChanged||beforeEnrollment.data().classId!==classId||beforeEnrollment.data().courseId!==courseId);
         if(!usuarioMasterAtivo()){delete studentData.poloId;delete studentData.poloName;}await db.collection("students").doc(editId).update(studentData);
         if(recalculateEntry){const entry=await SE7.api('academic-entry-plan',{studentId:editId,...(dateChanged?{enrollmentDate}:{})});Object.assign(studentData,{enrollmentDate,academicEntry:entry});}
-        if(!hadClass && studentData.classId){void SE7EnrollmentAuto.start(editId);}
+        if(!studentData.legacyStudent&&!hadClass && studentData.classId){void SE7EnrollmentAuto.start(editId);}
         const cadastroAindaEmPreparo=!beforeEnrollment.data()?.enrollmentRegisteredAt&&!beforeEnrollment.data()?.se7AuthUid;const escolhaRetomada=cadastroAindaEmPreparo?await window.SE7EjaAdmin?.newEnrollmentChoice(cursoObj):null;await SE7.api('prepare-student',{id:editId,...(cadastroAindaEmPreparo?{newEnrollment:true,...(escolhaRetomada?{ejaChoice:escolhaRetomada}:{})}:{})});
-        if(cadastroAindaEmPreparo||!hadClass&&studentData.classId)await SE7Email.notify('email-enrollment',{studentId:editId});if(cadastroAindaEmPreparo){if(escolhaRetomada)void SE7EjaAdmin.process(editId,1).catch(()=>{});else void SE7EnrollmentAuto.start(editId);}
+        if(!studentData.legacyStudent&&(cadastroAindaEmPreparo||!hadClass&&studentData.classId))await SE7Email.notify('email-enrollment',{studentId:editId});if(!studentData.legacyStudent&&cadastroAindaEmPreparo){if(escolhaRetomada)void SE7EjaAdmin.process(editId,1).catch(()=>{});else void SE7EnrollmentAuto.start(editId);}
         await SE7.api('whatsapp-consent',{id:editId,optIn:document.getElementById('whatsapp-opt-in-aluno').checked});
         const alunoLocal = students.find(a => a.id === editId);
         if (alunoLocal) Object.assign(alunoLocal, studentData);
@@ -3730,7 +3737,7 @@ function carregarDatasCalendarioParaFrequencia(){const classId=document.getEleme
     const aluno = students.find(s => s.id === id);
     if (!aluno) return;
 
-    document.getElementById('edit-student-id').value = aluno.id;SE7Polos.studentForm(aluno.poloId||'');
+    document.getElementById('edit-student-id').value = aluno.id;document.getElementById('student-legacy-profile').checked=aluno.legacyStudent===true;SE7Polos.studentForm(aluno.poloId||'');
     document.getElementById('modal-student-title').textContent = `Editar Aluno: ${aluno.fullname}`;
     document.getElementById('nomeAluno').value = aluno.fullname || '';
     document.getElementById('dataNascimento').value = aluno.dob || '';
