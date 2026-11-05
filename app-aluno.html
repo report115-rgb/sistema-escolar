@@ -47,7 +47,7 @@
             animation: fadeOutScale 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
-        .tab-pane { animation: fadeInScale 0.25s ease-out forwards; }
+        .tab-pane { animation: none; }
         #main-app .tab-pane:not(.se7-tab-ativa) { display:none !important; }
 
         @keyframes piscarAlerta {
@@ -834,7 +834,7 @@ body.se7-legacy-portal #se7-student-internship-card{display:none!important}
             // Somente a indicação de semestre é substituída para o modo legado.
             const semester=document.getElementById('info-etapa-curso');
             if(legacy&&semester)semester.textContent='Concluído';
-            if(legacy&&!['home','financeiro','documentos'].includes(abaPortalAtual||'home')){
+            if(legacy&&!['home','financeiro','documentos','diploma-eja'].includes(abaPortalAtual||'home')){
                 abaPortalAtual='home';
                 for(const tab of ['home','financeiro','notas','frequencia','documentos','calendario']){
                     const node=document.getElementById('tab-'+tab);
@@ -1530,7 +1530,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
 
         async function mudarAba(aba) {
             const targetTab = document.getElementById(`tab-${aba}`);
-            if (!targetTab || (aba==='diploma-eja'&&!isAlunoEJA) || alunoLogado?.portalMustChangePassword || (legadoAtivo()&&!['home','financeiro','documentos'].includes(aba))) return;
+            if (!targetTab || (aba==='diploma-eja'&&!isAlunoEJA) || alunoLogado?.portalMustChangePassword || (legadoAtivo()&&!['home','financeiro','documentos','diploma-eja'].includes(aba))) return;
             if(abaPortalAtual!==aba){abaPortalAtual=aba;void registrarEventoPortal('tab',aba);}
             window.SE7FinanceNotices?.navigation(aba);
 
