@@ -198,6 +198,22 @@ async function dispatchOperation({auth,db},req,b,delegated=null){
  if(action==='transfer-authorization-list')return documentAuthorizations.list(db,b,u);
  if(action==='transfer-authorization-decide')return documentAuthorizations.decide(db,b,u);
  if(action==='academic-financial-statement')return academicDocuments.financialStatement(db,b,u);
+ if(action==='eja-certificate-readiness'){
+  if(!['master','secretaria'].includes(u.role))fail(403,'Consulta restrita à Secretaria e ao Master.');
+  const id=validId(b.studentId);
+  const snap=await db.collection('students').doc(id).get();
+  if(!snap.exists)fail(404,'Aluno não encontrado.');
+  const student=snap.data();
+  polos.assertStudent(u,student);
+  const courseSnap=await db.collection('courses').doc(validId(student.courseId)).get();
+  if(!courseSnap.exists)fail(409,'Curso não encontrado.');
+  const course=courseSnap.data();
+  if(!isSingleExam(course)&&!/eja|supletivo/i.test(String(course.name||'')))fail(400,'Este fluxo é exclusivo da EJA.');
+  const documents=student.documentos||{};
+  const mandatory=docTypes.filter(type=>Object.prototype.hasOwnProperty.call(documents,type));
+  const pending=mandatory.filter(type=>documents[type]?.status!=='Aprovado');
+  return {studentId:id,academicStatus:String(student.status||'Não informado'),academicConclusionConfirmed:/conclu[ií]d|formad/i.test(String(student.status||'')),documentsObserved:mandatory.length,documentsPending:pending,documentReviewComplete:false,financialReviewComplete:false,uploadEnabled:false,authorizationEnabled:false,reason:'A emissão depende da integração segura dos PDFs e das verificações acadêmicas, documentais e financeiras.'};
+ }
  if(action==='diploma-check')return diplomaIssuance.check(db,b,u);
  if(action==='diploma-draft-save')return diplomaIssuance.saveDraft(db,b,u);
  if(action==='diploma-authorize')return diplomaIssuance.authorize(db,b,u,auth,authPassword);
