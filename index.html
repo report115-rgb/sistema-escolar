@@ -705,7 +705,7 @@
 #se7-eja-ficha .eja-ficha-tabs{display:flex;gap:8px;padding:12px 18px;overflow-x:auto;border-bottom:1px solid #334155}
 #se7-eja-ficha .eja-ficha-tabs button{padding:9px 13px;background:#1e293b;border-radius:9px;white-space:nowrap;font-size:12px;font-weight:600}
 #se7-eja-ficha .eja-ficha-tabs button[aria-selected=true]{background:#2563eb}
-#se7-eja-ficha-corpo{padding:20px;overflow-y:auto;max-height:calc(100dvh - 180px)}
+#se7-eja-ficha-corpo{padding:20px;overflow-y:auto;height:min(440px,calc(100dvh - 180px));min-height:0;box-sizing:border-box}
 </style>
 <dialog id="se7-eja-ficha" aria-labelledby="se7-eja-ficha-titulo">
 <div class="flex justify-between items-center gap-3 p-5 border-b border-slate-700">
