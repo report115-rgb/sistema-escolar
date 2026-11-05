@@ -759,7 +759,26 @@ corpo.innerHTML='<dl class="se7-eja-campos">'+campo('Polo',polo||aluno.poloName|
 }
 else if(aba==='prova'){corpo.innerHTML='<p class="text-xs text-slate-400 mb-4">Agendamento e liberação individual da prova EJA.</p>';const origem=document.getElementById('se7-eja-agendamento-'+alunoId);const painel=origem&&origem.firstElementChild;if(painel){painel.setAttribute('data-se7-eja-controles','1');painel.classList.remove('max-w-md');corpo.appendChild(painel);}else corpo.innerHTML+='<p>Controles indisponíveis. Reabra a lista de alunos EJA.</p>';}
 else if(aba==='monitoramento')corpo.textContent='O monitoramento individual detalhado será conectado aos registros das avaliações na próxima etapa.';
-else if(aba==='financeiro')corpo.textContent='As informações financeiras continuam disponíveis no módulo financeiro existente.';
+else if(aba==='financeiro'){
+corpo.innerHTML='<p class="text-xs text-slate-400 mb-3">Mensalidades registradas para este aluno</p><p id="se7-eja-fin-status" class="text-sm text-slate-300">Consultando informações financeiras…</p>';
+const idConsulta=alunoId;
+(async function(){
+try{
+if(window.SE7Polos&&typeof window.SE7Polos.finance==='function')await window.SE7Polos.finance(idConsulta,true);
+if(alunoId!==idConsulta||document.querySelector('[data-ficha-aba="financeiro"]')?.getAttribute('aria-selected')!=='true')return;
+const logs=(typeof financeLogs==='undefined'?[]:financeLogs).filter(function(f){return String(f.studentId||f.alunoId)===String(idConsulta);});
+logs.sort(function(a,b){const da=String(a.date||a.vencimento||a.dueDate||'');const db=String(b.date||b.vencimento||b.dueDate||'');return da.localeCompare(db);});
+const status=document.getElementById('se7-eja-fin-status');
+if(!status)return;
+if(!logs.length){status.textContent='Nenhuma mensalidade registrada.';return;}
+const tabela=document.createElement('table');tabela.className='w-full text-left text-xs';
+const head=document.createElement('thead');head.innerHTML='<tr class="border-b border-slate-600"><th class="p-3">Mensalidade</th><th class="p-3">Vencimento</th><th class="p-3">Situação</th></tr>';tabela.appendChild(head);
+const body=document.createElement('tbody');
+logs.forEach(function(f){const tr=document.createElement('tr');tr.className='border-b border-slate-700';const data=f.date||f.vencimento||f.dueDate||'';const dataBR=/^\\d{4}-\\d{2}-\\d{2}/.test(String(data))?String(data).slice(0,10).split('-').reverse().join('/'):data;const situacao=/pago|quitad|paid|confirmed|received/i.test(String(f.status||''))?'Pago':f.status||'Pendente';[f.description||f.descricao||'Mensalidade',dataBR,situacao].forEach(function(v){const td=document.createElement('td');td.className='p-3';td.textContent=String(v||'—');tr.appendChild(td);});body.appendChild(tr);});
+tabela.appendChild(body);status.replaceWith(tabela);
+}catch(e){const status=document.getElementById('se7-eja-fin-status');if(status&&alunoId===idConsulta)status.textContent='Não foi possível consultar as mensalidades. Tente novamente.';}
+})();
+}
 else if(aba==='documentos')corpo.textContent='A validação documental continua disponível na Gestão EJA.';
 else if(aba==='diploma')corpo.textContent='A inserção e liberação de diploma e histórico serão habilitadas após a integração segura dos documentos.';
 };
