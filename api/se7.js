@@ -275,7 +275,29 @@ async function dispatchOperation({auth,db},req,b,delegated=null){
   const contract=(await db.collection('se7EjaContracts').doc(id).get()).data();
   const installments=await Promise.all([1,2].map(n=>db.collection('financeLogs').doc('eja_'+id+'_'+n).get()));
   const settled=record=>record.exists&&record.data().ejaManaged===true&&!!record.data().asaasPaymentId&&['RECEIVED','CONFIRMED','RECEIVED_IN_CASH'].includes(String(record.data().asaasStatus||''));
-  const financialReviewComplete=!!contract&&contract.paymentState==='confirmed'&&settled(installments[0])&&(!contract.secondCents||settled(installments[1]));
+  // Legado anterior ao Asaas: considerar exclusivamente cobrancas existentes, todas
+  // quitadas com baixa manual registrada. Nao confundir ausencia de boletos com quitacao.
+  let legacyManualFinancialComplete=false;
+  if(!contract){
+   const [byStudent,byAluno]=await Promise.all([
+    db.collection('financeLogs').where('studentId','==',id).get(),
+    db.collection('financeLogs').where('alunoId','==',id).get()
+   ]);
+   const records=[...new Map([...byStudent.docs,...byAluno.docs].map(doc=>[doc.id,doc])).values()];
+   const charges=records.filter(doc=>{
+    const v=doc.data();
+    return !v.renegotiationId&&!/PROPOSTA|ACORDO|TERMO/i.test(String(v.description||v.descricao||''))&&
+     !/CANCELADO|ESTORNADO|NEGOCIADO/i.test(String(v.status||''))&&
+     (v.date||v.vencimento||v.dueDate)&&
+     (v.valor!==undefined||v.value!==undefined||v.amount!==undefined||v.total!==undefined);
+   });
+   legacyManualFinancialComplete=charges.length>0&&charges.length<=300&&charges.every(doc=>{
+    const v=doc.data();
+    return /^PAGO \(Baixa Manual\)$/i.test(String(v.status||'').trim())&&
+      /^\d{2}\/\d{2}\/\d{4}$/.test(String(v.dataPagamento||''));
+   });
+  }
+  const financialReviewComplete=(!!contract&&contract.paymentState==='confirmed'&&settled(installments[0])&&(!contract.secondCents||settled(installments[1])))||legacyManualFinancialComplete;
   // Conclusao da matricula EJA: tres verificacoes independentes, sem exigir PDFs.
   // Somente uma matricula ativa pode ser promovida; nao reabrir/corrigir status cancelados.
   const graduationEligible=examReviewComplete&&pending.length===0&&financialReviewComplete;
