@@ -222,13 +222,22 @@ async function dispatchOperation({auth,db},req,b,delegated=null){
    if(bytes.length<5||bytes.length>2097152||bytes.subarray(0,5).toString()!=='%PDF-')fail(400,'Envie um PDF de até 2 MB.');
    const digest=createHash('sha256').update(bytes).digest('hex');
    const path='eja-private/'+id+'/'+kind+'/'+digest+'.pdf';
-   await bucket.file(path).save(bytes,{resumable:false,contentType:'application/pdf',metadata:{cacheControl:'private, no-store'}});
+   const object=bucket.file(path);
+   await object.save(bytes,{resumable:false,contentType:'application/pdf',metadata:{cacheControl:'private, no-store',metadata:{sha256:digest,studentId:id,documentKind:kind}}});
+   const [stored]=await object.getMetadata();
+   if(Number(stored.size)!==bytes.length||stored.contentType!=='application/pdf')fail(503,'O armazenamento não confirmou a integridade do PDF.');
    const metadata={path,sha256:digest,size:bytes.length,uploadedAt:new Date().toISOString(),uploadedBy:u.uid};
-   await ref.set({studentId:id,[kind]:metadata,updatedAt:new Date().toISOString()},{merge:true});
+   const previous=(await ref.get()).data()?.[kind]||null;
+   if(previous?.sha256===digest)return {ok:true,duplicate:true,kind,sha256:digest,size:bytes.length,availableToStudent:false};
+   const now=new Date().toISOString();
+   const batch=db.batch();
+   batch.set(ref,{studentId:id,[kind]:metadata,updatedAt:now},{merge:true});
+   batch.set(ref.collection('history').doc(),{action:'upload',kind,at:now,by:u.uid,sha256:digest,size:bytes.length,previousSha256:previous?.sha256||null});
+   await batch.commit();
    return {ok:true,kind,sha256:digest,size:bytes.length,availableToStudent:false};
   }
   const record=(await ref.get()).data()||{},file=record[kind];
-  if(!file?.path||!file.path.startsWith('eja-private/'+id+'/'+kind+'/'))fail(404,'Documento não publicado.');
+  if(!file?.sha256||!/^[a-f0-9]{64}$/.test(file.sha256)||file.path!=='eja-private/'+id+'/'+kind+'/'+file.sha256+'.pdf')fail(404,'Documento não publicado.');
   if(u.role==='aluno')fail(403,'A liberação automática aguarda validação acadêmica e financeira integral.');
   const [bytes]=await bucket.file(file.path).download();
   if(bytes.length>2097152||createHash('sha256').update(bytes).digest('hex')!==file.sha256)fail(409,'Integridade do documento não confirmada.');
@@ -254,8 +263,20 @@ async function dispatchOperation({auth,db},req,b,delegated=null){
   const financialReviewComplete=false;
   const examReviewComplete=false;
   const certificate=(await db.collection('se7EjaCertificates').doc(id).get()).data()||{};
-  const filesVerified=!!(certificate.diploma?.sha256&&certificate.historico?.sha256);
   const documentsUploaded={diploma:!!certificate.diploma?.sha256,historico:!!certificate.historico?.sha256};
+  let filesVerified=false;
+  if(documentsUploaded.diploma&&documentsUploaded.historico&&process.env.SE7_EJA_PRIVATE_STORAGE_BUCKET){
+   try{
+    const bucket=getStorage().bucket(process.env.SE7_EJA_PRIVATE_STORAGE_BUCKET);
+    const checks=await Promise.all(['diploma','historico'].map(async kind=>{
+     const file=certificate[kind],expected='eja-private/'+id+'/'+kind+'/'+file.sha256+'.pdf';
+     if(!/^[a-f0-9]{64}$/.test(file.sha256)||file.path!==expected)return false;
+     const [metadata]=await bucket.file(expected).getMetadata();
+     return Number(metadata.size)===file.size&&metadata.contentType==='application/pdf'&&metadata.metadata?.sha256===file.sha256;
+    }));
+    filesVerified=checks.every(Boolean);
+   }catch{filesVerified=false;}
+  }
   const blockers=[];
   if(!concluded)blockers.push('Conclusão acadêmica não confirmada');
   if(pending.length)blockers.push('Documentação obrigatória incompleta');
