@@ -694,6 +694,13 @@ body.se7-legacy-portal #se7-student-internship-card{display:none!important}
                 </div>
             </div>
 
+            <div id="tab-diploma-eja" class="space-y-3 tab-pane" style="display:none">
+                <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200 dark:border-slate-700">
+                    <h2 class="font-bold text-lg">Meu Diploma</h2>
+                    <p class="text-sm mt-3" role="status">Aguardando conclusão e publicação do Diploma e Histórico Escolar pela instituição.</p>
+                    <p class="text-xs mt-3 text-slate-500">Os documentos somente serão disponibilizados após validação automática dos requisitos acadêmicos, documentais e financeiros.</p>
+                </div>
+            </div>
             <!-- ABA 5: DOCUMENTOS OBRIGATÓRIOS -->
             <div id="tab-documentos" class="space-y-3 tab-pane" style="display: none;">
                 <div id="docs-banner-msg">
@@ -770,6 +777,9 @@ body.se7-legacy-portal #se7-student-internship-card{display:none!important}
                     <span id="badge-alerta-docs" class="absolute -top-1 -right-2 w-4 h-4 bg-red-500 text-white rounded-full text-[9px] font-black flex items-center justify-center animacao-piscar-alerta shadow-md" style="display: none;">!</span>
                 </div>
                 Docs
+            </button>
+            <button onclick="mudarAba('diploma-eja')" id="nav-diploma-eja" style="display:none" class="flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition">
+                <i class="fa-solid fa-graduation-cap text-base mb-0.5"></i>Meu Diploma
             </button>
             <button onclick="mudarAba('calendario')" id="nav-calendario" class="flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition">
                 <i class="fa-solid fa-calendar-days text-base mb-0.5"></i> Aulas
@@ -1519,11 +1529,11 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
 
         async function mudarAba(aba) {
             const targetTab = document.getElementById(`tab-${aba}`);
-            if (!targetTab || alunoLogado?.portalMustChangePassword || (legadoAtivo()&&!['home','financeiro','documentos'].includes(aba))) return;
+            if (!targetTab || (aba==='diploma-eja'&&!isAlunoEJA) || alunoLogado?.portalMustChangePassword || (legadoAtivo()&&!['home','financeiro','documentos'].includes(aba))) return;
             if(abaPortalAtual!==aba){abaPortalAtual=aba;void registrarEventoPortal('tab',aba);}
             window.SE7FinanceNotices?.navigation(aba);
 
-            ['home', 'financeiro', 'notas', 'frequencia', 'documentos', 'calendario'].forEach(a => {
+            ['home', 'financeiro', 'notas', 'frequencia', 'documentos', 'calendario', 'diploma-eja'].forEach(a => {
                 const elTab = document.getElementById(`tab-${a}`);
                 const elNav = document.getElementById(`nav-${a}`);
                 if (elTab) elTab.style.display = (a === aba) ? 'block' : 'none';
@@ -1993,6 +2003,8 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
             isAlunoEJA = cursoObj && (/^(eja|supletivo)$/i.test(String(cursoObj.nivel||'').trim()) || /^eja$/i.test(String(cursoObj.sigla||'').trim()) || /eja|supletivo/i.test(cursoObj.name||''));
             
             window.cursoAtualEJA = isAlunoEJA;
+            const navDiploma=document.getElementById('nav-diploma-eja');
+            if(navDiploma)navDiploma.style.display=isAlunoEJA?'flex':'none';
             if(cursoObj?.ejaMode==='modular'){
                 const banner=document.getElementById('banner-padrao-home')||document.getElementById('bloco-acoes-eja');
                 if(banner){banner.replaceChildren();const title=document.createElement('h3'),message=document.createElement('p');title.textContent='Supletivo modular — '+(cursoObj.ejaStage==='medio'?'Ensino Médio':'Ensino Fundamental');message.textContent='As orientações do ambiente modular serão disponibilizadas pela instituição.';banner.append(title,message);banner.removeAttribute('id');}
