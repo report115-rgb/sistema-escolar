@@ -262,7 +262,10 @@ async function dispatchOperation({auth,db},req,b,delegated=null){
   const attempt=(await db.collection('se7EjaAttempts').doc(id).get()).data()||{};
   const examReviewComplete=attempt.state==='finished'&&attempt.approved===true&&Number(attempt.grade)>=5&&Array.isArray(attempt.zeradas)&&attempt.zeradas.length===0;
   const academicReviewComplete=concluded&&examReviewComplete;
-  const financialReviewComplete=false;
+  const contract=(await db.collection('se7EjaContracts').doc(id).get()).data();
+  const installments=await Promise.all([1,2].map(n=>db.collection('financeLogs').doc('eja_'+id+'_'+n).get()));
+  const settled=record=>record.exists&&!!record.data().asaasPaymentId&&['RECEIVED','CONFIRMED','RECEIVED_IN_CASH'].includes(String(record.data().asaasStatus||''));
+  const financialReviewComplete=!!contract&&contract.paymentState==='confirmed'&&settled(installments[0])&&(!contract.secondCents||settled(installments[1]));
   const certificate=(await db.collection('se7EjaCertificates').doc(id).get()).data()||{};
   const documentsUploaded={diploma:!!certificate.diploma?.sha256,historico:!!certificate.historico?.sha256};
   let filesVerified=false;
