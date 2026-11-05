@@ -48,6 +48,7 @@
         }
 
         .tab-pane { animation: fadeInScale 0.25s ease-out forwards; }
+        #main-app .tab-pane:not(.se7-tab-ativa) { display:none !important; }
 
         @keyframes piscarAlerta {
             0% { background-color: #ef4444; opacity: 1; transform: scale(1); }
@@ -1536,7 +1537,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
             ['home', 'financeiro', 'notas', 'frequencia', 'documentos', 'calendario', 'diploma-eja'].forEach(a => {
                 const elTab = document.getElementById(`tab-${a}`);
                 const elNav = document.getElementById(`nav-${a}`);
-                if (elTab) elTab.style.display = (a === aba) ? 'block' : 'none';
+                if (elTab) { elTab.classList.toggle('se7-tab-ativa',a===aba); elTab.style.display=(a===aba)?'block':'none'; }
                 if (elNav) {
                     elNav.className = (a === aba) 
                         ? 'flex flex-col items-center text-blue-600 dark:text-blue-400 text-[10px] font-bold transition' 
@@ -1708,6 +1709,22 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
                                         </div>
                                     </div>
                                 `;
+                            });
+                        } else if(isAlunoEJA&&alunoLogado.ejaResult) {
+                            const resultado=alunoLogado.ejaResult;
+                            const materias=Array.isArray(resultado.disciplinas)?resultado.disciplinas:[];
+                            document.getElementById('total-disciplinas-num').textContent=materias.length;
+                            const resumo=document.createElement('div');
+                            resumo.className='bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 text-sm';
+                            resumo.textContent='Prova EJA: '+(resultado.approved?'Aprovada':'Não aprovada')+' — Nota geral: '+(resultado.grade??'Não informada');
+                            gradesList.appendChild(resumo);
+                            materias.forEach(m=>{
+                                const card=document.createElement('div');
+                                card.className='bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 text-sm';
+                                const titulo=document.createElement('strong');titulo.textContent=m.nome||m.name||m.disciplinaNome||'Disciplina';
+                                const nota=document.createElement('p');nota.className='text-xs mt-2 text-slate-500 dark:text-slate-400';
+                                nota.textContent='Acertos: '+(m.acertos??m.correct??'---')+' de '+(m.total??'---')+(m.nota!=null?' — Nota: '+m.nota:'');
+                                card.append(titulo,nota);gradesList.appendChild(card);
                             });
                         } else {
                             gradesList.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">Nenhuma disciplina cadastrada na matriz para este curso.</p>`;
