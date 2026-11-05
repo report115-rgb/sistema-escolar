@@ -729,6 +729,7 @@ window.se7AbrirFichaEJA=function(button,aba){
 const id=button.dataset.alunoId;
 const aluno=(typeof students==='undefined'?[]:students).find(function(s){return String(s.id)===String(id);});
 if(!aluno)return;
+if(alunoId!==null&&alunoId!==id)restaurarControles();
 alunoId=id;
 document.getElementById('se7-eja-ficha-titulo').textContent=aluno.fullname||'Aluno EJA';
 document.getElementById('se7-eja-ficha-subtitulo').textContent='Ficha de consulta — somente visualização';
