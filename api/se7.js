@@ -210,9 +210,17 @@ async function dispatchOperation({auth,db},req,b,delegated=null){
   const course=courseSnap.data();
   if(!isSingleExam(course)&&!/eja|supletivo/i.test(String(course.name||'')))fail(400,'Este fluxo é exclusivo da EJA.');
   const documents=student.documentos||{};
-  const mandatory=docTypes.filter(type=>Object.prototype.hasOwnProperty.call(documents,type));
+  const mandatory=['rg_cnh','cpf','comprovante_residencia','certidao_nasc_cas'];
   const pending=mandatory.filter(type=>documents[type]?.status!=='Aprovado');
-  return {studentId:id,academicStatus:String(student.status||'Não informado'),academicConclusionConfirmed:/conclu[ií]d|formad/i.test(String(student.status||'')),documentsObserved:mandatory.length,documentsPending:pending,documentReviewComplete:false,financialReviewComplete:false,uploadEnabled:false,authorizationEnabled:false,reason:'A emissão depende da integração segura dos PDFs e das verificações acadêmicas, documentais e financeiras.'};
+  const academicConclusionConfirmed=/conclu[ií]d|formad/i.test(String(student.status||''));
+  const documentReviewComplete=pending.length===0;
+  const blockers=[];
+  if(!academicConclusionConfirmed)blockers.push('Conclusão acadêmica ainda não confirmada');
+  if(!documentReviewComplete)blockers.push('Documentos obrigatórios pendentes: '+pending.join(', '));
+  blockers.push('Verificação financeira automatizada ainda não integrada');
+  blockers.push('Resultados de todas as avaliações ainda não validados');
+  blockers.push('Armazenamento e publicação dos PDFs ainda não integrados');
+  return {studentId:id,academicStatus:String(student.status||'Não informado'),academicConclusionConfirmed,documentsRequired:mandatory.length,documentsObserved:mandatory.filter(type=>!!documents[type]).length,documentsPending:pending,documentReviewComplete,financialReviewComplete:false,examReviewComplete:false,uploadEnabled:false,authorizationEnabled:false,automaticReleaseEnabled:false,blockers,reason:'A liberação automática exige a confirmação integral dos critérios pelo servidor.'};
  }
  if(action==='diploma-check')return diplomaIssuance.check(db,b,u);
  if(action==='diploma-draft-save')return diplomaIssuance.saveDraft(db,b,u);
