@@ -745,8 +745,18 @@ const aluno=(typeof students==='undefined'?[]:students).find(function(s){return 
 if(!aluno)return;
 document.querySelectorAll('[data-ficha-aba]').forEach(function(btn){btn.setAttribute('aria-selected',String(btn.dataset.fichaAba===aba));});
 const corpo=document.getElementById('se7-eja-ficha-corpo');
-if(aba==='dados')corpo.innerHTML='<div class="se7-eja-campos">'+campo('Nome',aluno.fullname)+campo('CPF',aluno.cpf)+campo('WhatsApp',aluno.whatsapp)+campo('E-mail',aluno.email)+'</div>';
-else if(aba==='academico'){const curso=(typeof courses==='undefined'?[]:courses).find(function(c){return String(c.id)===String(aluno.courseId);});corpo.innerHTML='<div class="se7-eja-campos">'+campo('Matrícula',aluno.code)+campo('Curso',curso&&curso.name)+campo('Situação',aluno.status)+campo('Polo',aluno.polo||aluno.poloId)+'</div>';}
+if(aba==='dados'){
+const endereco=[aluno.endereco||aluno.street||aluno.address,aluno.numero||aluno.number,aluno.bairro||aluno.neighborhood,aluno.cidade||aluno.city,aluno.estado||aluno.state].filter(Boolean).join(', ');
+const nascimento=aluno.dob||aluno.birthDate;
+const dataBR=nascimento&&/^\\d{4}-\\d{2}-\\d{2}/.test(String(nascimento))?String(nascimento).slice(0,10).split('-').reverse().join('/'):nascimento;
+corpo.innerHTML='<dl class="se7-eja-campos">'+campo('Nome completo',aluno.fullname)+campo('Matrícula',aluno.code)+campo('CPF',aluno.cpf)+campo('RG',aluno.rg)+campo('Nascimento',dataBR)+campo('Sexo',aluno.sexo||aluno.gender)+campo('Nacionalidade',aluno.nacionalidade||aluno.nationality)+campo('WhatsApp',aluno.whatsapp)+campo('E-mail',aluno.email)+campo('Endereço',endereco)+campo('CEP',aluno.cep)+campo('Situação da matrícula',aluno.status||'Ativo')+'</dl>';
+}
+else if(aba==='academico'){
+const curso=(typeof courses==='undefined'?[]:courses).find(function(c){return String(c.id)===String(aluno.courseId);});
+const turma=(typeof classes==='undefined'?[]:classes).find(function(c){return String(c.id)===String(aluno.classId);});
+const polo=window.SE7Polos&&typeof window.SE7Polos.name==='function'?window.SE7Polos.name(aluno.poloId):null;
+corpo.innerHTML='<dl class="se7-eja-campos">'+campo('Polo',polo||aluno.poloName||aluno.polo||aluno.poloId)+campo('Curso',curso&&curso.name)+campo('Turma',turma&&turma.name)+campo('Semestre',aluno.semestre||aluno.semester||(turma&&turma.semestre))+campo('Matrícula',aluno.code)+campo('Situação',aluno.status||'Ativo')+campo('Data da matrícula',aluno.enrollmentDate)+campo('Início previsto',aluno.academicEntry&&aluno.academicEntry.startDate)+campo('Disciplina de início',aluno.academicEntry&&aluno.academicEntry.startSubject)+'</dl>';
+}
 else if(aba==='prova'){corpo.innerHTML='<p class="text-xs text-slate-400 mb-4">Agendamento e liberação individual da prova EJA.</p>';const origem=document.getElementById('se7-eja-agendamento-'+alunoId);const painel=origem&&origem.firstElementChild;if(painel){painel.setAttribute('data-se7-eja-controles','1');painel.classList.remove('max-w-md');corpo.appendChild(painel);}else corpo.innerHTML+='<p>Controles indisponíveis. Reabra a lista de alunos EJA.</p>';}
 else if(aba==='monitoramento')corpo.textContent='O monitoramento individual detalhado será conectado aos registros das avaliações na próxima etapa.';
 else if(aba==='financeiro')corpo.textContent='As informações financeiras continuam disponíveis no módulo financeiro existente.';
