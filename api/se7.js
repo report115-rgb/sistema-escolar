@@ -209,6 +209,7 @@ async function dispatchOperation({auth,db},req,b,delegated=null){
   if(u.role!=='aluno')polos.assertStudent(u,snap.data());
   const course=await db.collection('courses').doc(validId(snap.data().courseId)).get();
   if(!course.exists||!isSingleExam(course.data())&&!/eja|supletivo/i.test(String(course.data().name||'')))fail(403,'Disponível somente para a EJA.');
+  if(u.role==='aluno'&&snap.data().portalMustChangePassword)fail(403,'Atualize sua senha antes de consultar documentos.');
   const kind=String(b.kind||'');
   if(!['diploma','historico'].includes(kind))fail(400,'Tipo de documento inválido.');
   const bucketName=process.env.SE7_EJA_PRIVATE_STORAGE_BUCKET;
@@ -219,16 +220,18 @@ async function dispatchOperation({auth,db},req,b,delegated=null){
    const base64=b.base64;
    if(typeof base64!=='string'||base64.length>2800000||! /^[A-Za-z0-9+/]+={0,2}$/.test(base64))fail(400,'Arquivo PDF inválido.');
    const bytes=Buffer.from(base64,'base64');
+   if(bytes.toString('base64')!==base64)fail(400,'Codificação do PDF inválida.');
    if(bytes.length<5||bytes.length>2097152||bytes.subarray(0,5).toString()!=='%PDF-')fail(400,'Envie um PDF de até 2 MB.');
+   if(!/%%EOF\s*$/.test(bytes.subarray(Math.max(0,bytes.length-2048)).toString('latin1')))fail(400,'PDF incompleto ou inválido.');
    const digest=createHash('sha256').update(bytes).digest('hex');
    const path='eja-private/'+id+'/'+kind+'/'+digest+'.pdf';
    const object=bucket.file(path);
    await object.save(bytes,{resumable:false,contentType:'application/pdf',metadata:{cacheControl:'private, no-store',metadata:{sha256:digest,studentId:id,documentKind:kind}}});
    const [stored]=await object.getMetadata();
-   if(Number(stored.size)!==bytes.length||stored.contentType!=='application/pdf')fail(503,'O armazenamento não confirmou a integridade do PDF.');
+   if(Number(stored.size)!==bytes.length||stored.contentType!=='application/pdf'||stored.metadata?.sha256!==digest)fail(503,'O armazenamento não confirmou a integridade do PDF.');
    const metadata={path,sha256:digest,size:bytes.length,uploadedAt:new Date().toISOString(),uploadedBy:u.uid};
    const previous=(await ref.get()).data()?.[kind]||null;
-   if(previous?.sha256===digest)return {ok:true,duplicate:true,kind,sha256:digest,size:bytes.length,availableToStudent:false};
+   if(previous?.sha256===digest&&previous?.path===path)return {ok:true,duplicate:true,kind,sha256:digest,size:bytes.length,availableToStudent:false};
    const now=new Date().toISOString();
    const batch=db.batch();
    batch.set(ref,{studentId:id,[kind]:metadata,updatedAt:now},{merge:true});
@@ -242,8 +245,10 @@ async function dispatchOperation({auth,db},req,b,delegated=null){
    const eligibility=await dispatchOperation({auth,db},req,{action:'eja-certificate-status'},u);
    if(!eligibility.diplomaAvailable||!eligibility.historyAvailable)fail(403,'Documento bloqueado até a confirmação de todos os requisitos.');
   }
+  const [fileMeta]=await bucket.file(file.path).getMetadata();
+  if(Number(fileMeta.size)!==file.size||fileMeta.contentType!=='application/pdf'||fileMeta.metadata?.sha256!==file.sha256)fail(409,'Metadados do documento não conferem.');
   const [bytes]=await bucket.file(file.path).download();
-  if(bytes.length>2097152||createHash('sha256').update(bytes).digest('hex')!==file.sha256)fail(409,'Integridade do documento não confirmada.');
+  if(bytes.length<5||bytes.length>2097152||bytes.subarray(0,5).toString()!=='%PDF-'||bytes.length!==file.size||createHash('sha256').update(bytes).digest('hex')!==file.sha256)fail(409,'Integridade do documento não confirmada.');
   return {kind,mime:'application/pdf',base64:bytes.toString('base64'),sha256:file.sha256};
  }
  if(action==='eja-certificate-status'||action==='eja-certificate-readiness'){
@@ -261,13 +266,13 @@ async function dispatchOperation({auth,db},req,b,delegated=null){
   const mandatory=['rg_cnh','cpf','comprovante_residencia','certidao_nasc_cas'];
   const documents=student.documentos||{};
   const pending=mandatory.filter(type=>documents[type]?.status!=='Aprovado');
-  const concluded=/conclu[ií]d|formad/i.test(String(student.status||''));
+  const concluded=/^(conclu[ií]do|conclu[ií]da|formado|formada)$/i.test(String(student.status||'').trim());
   const attempt=(await db.collection('se7EjaAttempts').doc(id).get()).data()||{};
-  const examReviewComplete=attempt.state==='finished'&&attempt.approved===true&&Number(attempt.grade)>=5&&Array.isArray(attempt.zeradas)&&attempt.zeradas.length===0;
+  const examReviewComplete=attempt.state==='finished'&&attempt.approved===true&&Number(attempt.grade)>=5&&Number.isInteger(attempt.total)&&attempt.total>0&&Number.isInteger(attempt.correct)&&attempt.correct*2>=attempt.total&&Array.isArray(attempt.zeradas)&&attempt.zeradas.length===0;
   const academicReviewComplete=concluded&&examReviewComplete;
   const contract=(await db.collection('se7EjaContracts').doc(id).get()).data();
   const installments=await Promise.all([1,2].map(n=>db.collection('financeLogs').doc('eja_'+id+'_'+n).get()));
-  const settled=record=>record.exists&&!!record.data().asaasPaymentId&&['RECEIVED','CONFIRMED','RECEIVED_IN_CASH'].includes(String(record.data().asaasStatus||''));
+  const settled=record=>record.exists&&record.data().ejaManaged===true&&!!record.data().asaasPaymentId&&['RECEIVED','CONFIRMED','RECEIVED_IN_CASH'].includes(String(record.data().asaasStatus||''));
   const financialReviewComplete=!!contract&&contract.paymentState==='confirmed'&&settled(installments[0])&&(!contract.secondCents||settled(installments[1]));
   const certificate=(await db.collection('se7EjaCertificates').doc(id).get()).data()||{};
   const documentsUploaded={diploma:!!certificate.diploma?.sha256,historico:!!certificate.historico?.sha256};
