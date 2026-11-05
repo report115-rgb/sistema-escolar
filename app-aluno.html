@@ -568,7 +568,7 @@ body.se7-legacy-portal #se7-student-internship-card{display:none!important}
         <div class="flex-1 overflow-y-auto p-4 space-y-4 pb-24">
             
             <!-- ABA 1: INÍCIO -->
-            <div id="tab-home" class="space-y-4 tab-pane"><div id="se7-legacy-home-intro" class="hidden bg-gradient-to-r from-indigo-600 to-blue-600 text-white p-4 rounded-2xl shadow-lg flex items-center justify-between gap-3"><div><span class="text-[10px] uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-full font-bold">Portal do Aluno</span><h3 class="font-bold text-base mt-1">Meu Portal</h3><p class="text-xs text-blue-100 mt-0.5">Consulte seus dados cadastrais, informações financeiras e documentos.</p></div><div class="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center text-2xl shrink-0"><i class="fa-solid fa-user-graduate" aria-hidden="true"></i></div></div>
+            <div id="tab-home" class="space-y-4 tab-pane se7-tab-ativa"><div id="se7-legacy-home-intro" class="hidden bg-gradient-to-r from-indigo-600 to-blue-600 text-white p-4 rounded-2xl shadow-lg flex items-center justify-between gap-3"><div><span class="text-[10px] uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-full font-bold">Portal do Aluno</span><h3 class="font-bold text-base mt-1">Meu Portal</h3><p class="text-xs text-blue-100 mt-0.5">Consulte seus dados cadastrais, informações financeiras e documentos.</p></div><div class="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center text-2xl shrink-0"><i class="fa-solid fa-user-graduate" aria-hidden="true"></i></div></div>
                 <div id="banner-padrao-home" class="bg-gradient-to-r from-indigo-600 to-blue-600 text-white p-4 rounded-2xl shadow-lg flex items-center justify-between">
                     <div>
                         <span class="text-[10px] uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-full font-bold">Semestre Letivo</span>
@@ -1714,16 +1714,23 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
                             const resultado=alunoLogado.ejaResult;
                             const materias=Array.isArray(resultado.disciplinas)?resultado.disciplinas:[];
                             document.getElementById('total-disciplinas-num').textContent=materias.length;
-                            const resumo=document.createElement('div');
-                            resumo.className='bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 text-sm';
-                            resumo.textContent='Prova EJA: '+(resultado.approved?'Aprovada':'Não aprovada')+' — Nota geral: '+(resultado.grade??'Não informada');
-                            gradesList.appendChild(resumo);
+                            const aprovado=resultado.approved===true;
+                            const situacao=aprovado?'Aprovado':'Não aprovado';
+                            const notaGeral=Number(resultado.grade);
+                            const formatarNotaEJA=n=>Number(n).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1});
+                            const situacaoEl=document.getElementById('situacao-geral-txt');
+                            if(situacaoEl){situacaoEl.textContent=situacao;situacaoEl.className='font-bold text-sm '+(aprovado?'text-emerald-300':'text-amber-300');}
+                            const statusEl=document.getElementById('status-geral-badge');
+                            if(statusEl){statusEl.textContent=Number.isFinite(notaGeral)?'Nota geral: '+formatarNotaEJA(notaGeral):'Nota geral indisponível';}
+
                             materias.forEach(m=>{
                                 const card=document.createElement('div');
                                 card.className='bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 text-sm';
                                 const titulo=document.createElement('strong');titulo.textContent=m.nome||m.name||m.disciplinaNome||'Disciplina';
                                 const nota=document.createElement('p');nota.className='text-xs mt-2 text-slate-500 dark:text-slate-400';
-                                nota.textContent='Acertos: '+(m.acertos??m.correct??'---')+' de '+(m.total??'---')+(m.nota!=null?' — Nota: '+m.nota:'');
+                                const acertos=Number(m.acertos??m.correct),total=Number(m.total);
+                                const notaDisciplina=Number.isFinite(acertos)&&Number.isFinite(total)&&total>0?acertos/total*10:null;
+                                nota.textContent='Acertos: '+(m.acertos??m.correct??'---')+' de '+(m.total??'---')+' — Nota: '+(notaDisciplina===null?'Não disponível':formatarNotaEJA(notaDisciplina));
                                 card.append(titulo,nota);gradesList.appendChild(card);
                             });
                         } else {
