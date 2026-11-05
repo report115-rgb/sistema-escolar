@@ -837,6 +837,9 @@ const itens=[
 const lista=document.createElement('div');lista.className='space-y-3';
 itens.forEach(function(item){const box=document.createElement('div');box.className='rounded-lg border border-slate-700 p-3';const label=document.createElement('strong');label.className='text-xs block text-cyan-300';label.textContent=item[0];const valor=document.createElement('p');valor.className='text-sm mt-1';valor.textContent=item[1];box.append(label,valor);lista.appendChild(box);});corpo.appendChild(lista);
 const aviso=document.createElement('p');aviso.className='mt-5 text-xs text-amber-200';aviso.textContent='Esta tela é apenas uma conferência preliminar. Não emite, autoriza ou libera documentos. A aprovação acadêmica e financeira precisa ser validada antes da futura publicação no Portal do Aluno.';corpo.appendChild(aviso);
+const consulta=document.createElement('p');consulta.className='mt-3 text-xs text-slate-300';consulta.textContent='Consultando pré-requisitos no servidor…';corpo.appendChild(consulta);
+const idConsulta=alunoId;
+(async function(){try{const result=await SE7.api('eja-certificate-readiness',{studentId:idConsulta});if(alunoId!==idConsulta||document.querySelector('[data-ficha-aba="diploma"]')?.getAttribute('aria-selected')!=='true')return;consulta.textContent='Verificação no servidor: '+(result.academicConclusionConfirmed?'conclusão indicada no cadastro; ':'conclusão não confirmada; ')+result.documentsPending.length+' documentos enviados ainda não aprovados. Emissão e autorização permanecem bloqueadas até a validação integral.';}catch(e){if(alunoId===idConsulta)consulta.textContent='Não foi possível confirmar os pré-requisitos no servidor. A emissão permanece indisponível.';}})();
 }
 };
 })();
