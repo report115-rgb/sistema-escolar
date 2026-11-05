@@ -779,7 +779,27 @@ tabela.appendChild(body);status.replaceWith(tabela);
 }catch(e){const status=document.getElementById('se7-eja-fin-status');if(status&&alunoId===idConsulta)status.textContent='Não foi possível consultar as mensalidades. Tente novamente.';}
 })();
 }
-else if(aba==='documentos')corpo.textContent='A validação documental continua disponível na Gestão EJA.';
+else if(aba==='documentos'){
+const docs=aluno.documentos||{};
+const tipos=typeof documentosObrigatoriosDoAluno==='function'?documentosObrigatoriosDoAluno(aluno):[];
+corpo.innerHTML='<p class="text-xs text-slate-400 mb-4">Situação dos documentos enviados pelo aluno. A aprovação e reprovação permanecem na área de validação da Gestão EJA.</p>';
+if(!tipos.length){corpo.innerHTML+='<p>Nenhum documento obrigatório encontrado para esta matrícula.</p>';}
+else {
+const lista=document.createElement('div');lista.className='space-y-3';
+tipos.forEach(function(tipo){
+const doc=docs[tipo.id]||{};const status=doc.status||'Pendente';
+const item=document.createElement('div');item.className='rounded-xl border border-slate-700 p-4 flex flex-col gap-2';
+const titulo=document.createElement('div');titulo.className='flex flex-wrap items-center justify-between gap-2';
+const nome=document.createElement('strong');nome.className='text-sm';nome.textContent=tipo.label;
+const situacao=document.createElement('span');situacao.className='text-xs font-bold '+(status==='Aprovado'?'text-emerald-400':status==='Reprovado'?'text-red-400':'text-amber-300');situacao.textContent=status;
+titulo.append(nome,situacao);item.appendChild(titulo);
+if(doc.driveUrl&&/^https:\/\//i.test(doc.driveUrl)){const link=document.createElement('a');link.href=doc.driveUrl;link.target='_blank';link.rel='noopener noreferrer';link.className='text-xs text-cyan-300 underline';link.textContent='Abrir documento enviado';item.appendChild(link);}
+else{const info=document.createElement('p');info.className='text-xs text-slate-400';info.textContent='Documento não enviado';item.appendChild(info);}
+if(status==='Reprovado'&&(doc.analysisPending?.reason||doc.motivoReprovacao)){const motivo=document.createElement('p');motivo.className='text-xs text-red-300';motivo.textContent='Motivo: '+(doc.analysisPending?.reason||doc.motivoReprovacao);item.appendChild(motivo);}
+lista.appendChild(item);
+});corpo.appendChild(lista);
+}
+}
 else if(aba==='diploma')corpo.textContent='A inserção e liberação de diploma e histórico serão habilitadas após a integração segura dos documentos.';
 };
 })();
