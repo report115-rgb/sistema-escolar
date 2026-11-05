@@ -724,6 +724,8 @@
 (function(){
 let alunoId=null;
 function escapeHtml(value){return String(value==null?'---':value).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function dataEjaBR(valor){if(!valor)return '---';const t=String(valor).trim();if(/^\\d{2}\\/\\d{2}\\/\\d{4}$/.test(t))return t;const m=t.match(/^(\\d{4})-(\\d{2})-(\\d{2})/);return m?m[3]+'/'+m[2]+'/'+m[1]:t;}
+function dataHoraEjaBR(valor){if(!valor)return '---';const d=new Date(valor);return Number.isNaN(d.getTime())?dataEjaBR(valor):d.toLocaleString('pt-BR',{timeZone:'America/Fortaleza',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});}
 function campo(nome,valor){return '<div class="se7-eja-campo"><dt>'+escapeHtml(nome)+'</dt><dd>'+escapeHtml(valor)+'</dd></div>';}
 window.se7AbrirFichaEJA=function(button,aba){
 const id=button.dataset.alunoId;
@@ -739,6 +741,38 @@ window.se7AbaFichaEJA(aba||'dados');
 };
 function restaurarControles(){const moved=document.querySelector('#se7-eja-ficha-corpo [data-se7-eja-controles]');if(moved){const original=document.getElementById('se7-eja-agendamento-'+alunoId);if(original)original.appendChild(moved);}}
 document.getElementById('se7-eja-ficha').addEventListener('close',restaurarControles);
+async function se7FichaResultadoEJA(id,elementId){
+ const area=document.getElementById(elementId);
+ if(!area)return;
+ try{
+  const result=await SE7.api('eja-status',{studentId:id});
+  if(alunoId!==id||!area.isConnected)return;
+  const attempt=result.attempt||{},exam=result.exam||{},scheduling=result.scheduling||{};
+  const subjects=Array.isArray(attempt.disciplinas)?attempt.disciplinas:[];
+  const state=attempt.state==='finished'?'Concluída':attempt.state==='in_progress'?'Em andamento':'Não iniciada';
+  const fields=[
+   ['Situação da prova',state],
+   ['Resultado',attempt.state==='finished'?(attempt.approved?'Aprovada':'Não aprovada'):'Aguardando conclusão'],
+   ['Nota final',attempt.grade??'---'],
+   ['Acertos',attempt.correct??'---'],
+   ['Total de questões',attempt.total??'---'],
+   ['Data de avaliação',dataEjaBR(exam.date||exam.data||scheduling.date||scheduling.examDate)],
+   ['Início da avaliação',dataHoraEjaBR(attempt.startAt)],
+   ['Fim da avaliação',dataHoraEjaBR(attempt.finishedAt||attempt.deadlineAt)],
+   ['Último salvamento',dataHoraEjaBR(attempt.savedAt)],
+   ['Disciplinas concluídas',subjects.length?subjects.length:'---']
+  ];
+  area.innerHTML='<dl class="se7-eja-campos">'+fields.map(([name,value])=>campo(name,value)).join('')+'</dl>';
+  if(subjects.length){
+   const title=document.createElement('h4');title.className='font-bold mt-5 mb-2';title.textContent='Resultado por disciplina';area.appendChild(title);
+   const table=document.createElement('table');table.className='w-full text-xs text-left';
+   const header=document.createElement('thead');header.innerHTML='<tr><th class="p-2">Disciplina</th><th class="p-2">Acertos</th><th class="p-2">Questões</th></tr>';table.appendChild(header);
+   const body=document.createElement('tbody');
+   subjects.forEach(x=>{const tr=document.createElement('tr');tr.className='border-t border-slate-700';[x.nome||x.name||'Disciplina',x.acertos??'---',x.total??'---'].forEach(value=>{const td=document.createElement('td');td.className='p-2';td.textContent=String(value);tr.appendChild(td)});body.appendChild(tr)});
+   table.appendChild(body);area.appendChild(table);
+  }
+ }catch(error){if(area.isConnected)area.textContent='Não foi possível consultar o resultado oficial da prova. Tente novamente.';}
+}
 window.se7AbaFichaEJA=function(aba){
 restaurarControles();
 const aluno=(typeof students==='undefined'?[]:students).find(function(s){return String(s.id)===String(alunoId);});
@@ -746,36 +780,26 @@ if(!aluno)return;
 document.querySelectorAll('[data-ficha-aba]').forEach(function(btn){btn.setAttribute('aria-selected',String(btn.dataset.fichaAba===aba));});
 const corpo=document.getElementById('se7-eja-ficha-corpo');
 if(aba==='dados'){
-const endereco=[aluno.endereco||aluno.street||aluno.address,aluno.numero||aluno.number,aluno.bairro||aluno.neighborhood,aluno.cidade||aluno.city,aluno.estado||aluno.state].filter(Boolean).join(', ');
+const logradouro=aluno.logradouro||aluno.endereco||aluno.street||aluno.address||'';
+const numero=aluno.numero||aluno.number||'';
+const bairro=aluno.bairro||aluno.neighborhood||'';
+const cidade=aluno.cidade||aluno.city||'';
+const estado=aluno.estado||aluno.state||'';
+const endereco=[logradouro,numero?('nº '+numero):'',bairro,cidade,estado].filter(Boolean).join(', ');
 const nascimento=aluno.dob||aluno.birthDate;
-const dataBR=nascimento&&/^\\d{4}-\\d{2}-\\d{2}/.test(String(nascimento))?String(nascimento).slice(0,10).split('-').reverse().join('/'):nascimento;
-corpo.innerHTML='<dl class="se7-eja-campos">'+campo('Nome completo',aluno.fullname)+campo('Matrícula',aluno.code)+campo('CPF',aluno.cpf)+campo('RG',aluno.rg)+campo('Nascimento',dataBR)+campo('Sexo',aluno.sexo||aluno.gender)+campo('Nacionalidade',aluno.nacionalidade||aluno.nationality)+campo('WhatsApp',aluno.whatsapp)+campo('E-mail',aluno.email)+campo('Endereço',endereco)+campo('CEP',aluno.cep)+campo('Situação da matrícula',aluno.status||'Ativo')+'</dl>';
+const dataBR=dataEjaBR(nascimento);
+corpo.innerHTML='<dl class="se7-eja-campos">'+campo('Nome completo',aluno.fullname)+campo('Matrícula',aluno.code)+campo('CPF',aluno.cpf)+campo('RG',aluno.rg)+campo('Nascimento',dataBR)+campo('Sexo',aluno.sexo||aluno.gender)+campo('Nacionalidade',aluno.nacionalidade||aluno.nationality)+campo('WhatsApp',aluno.whatsapp)+campo('E-mail',aluno.email)+campo('Logradouro',logradouro)+campo('Número',numero)+campo('Bairro',bairro)+campo('Cidade',cidade)+campo('Estado',estado)+campo('Endereço completo',endereco)+campo('CEP',aluno.cep)+campo('Situação da matrícula',aluno.status||'Ativo')+'</dl>';
 }
 else if(aba==='academico'){
 const curso=(typeof courses==='undefined'?[]:courses).find(function(c){return String(c.id)===String(aluno.courseId);});
 const turma=(typeof classes==='undefined'?[]:classes).find(function(c){return String(c.id)===String(aluno.classId);});
 const polo=window.SE7Polos&&typeof window.SE7Polos.name==='function'?window.SE7Polos.name(aluno.poloId):null;
-corpo.innerHTML='<dl class="se7-eja-campos">'+campo('Polo',polo||aluno.poloName||aluno.polo||aluno.poloId)+campo('Curso',curso&&curso.name)+campo('Turma',turma&&turma.name)+campo('Semestre',aluno.semestre||aluno.semester||(turma&&turma.semestre))+campo('Matrícula',aluno.code)+campo('Situação',aluno.status||'Ativo')+campo('Data da matrícula',aluno.enrollmentDate)+campo('Início previsto',aluno.academicEntry&&aluno.academicEntry.startDate)+campo('Disciplina de início',aluno.academicEntry&&aluno.academicEntry.startSubject)+'</dl>';
+corpo.innerHTML='<dl class="se7-eja-campos">'+campo('Polo',polo||aluno.poloName||aluno.polo||aluno.poloId)+campo('Curso',curso&&curso.name)+campo('Turma',turma&&turma.name)+campo('Semestre',aluno.semestre||aluno.semester||(turma&&turma.semestre))+campo('Matrícula',aluno.code)+campo('Situação',aluno.status||'Ativo')+campo('Data da matrícula',dataEjaBR(aluno.enrollmentDate||aluno.enrollment?.date||aluno.enrolledAt||aluno.createdAt))+'</dl>';
 }
-else if(aba==='prova'){corpo.innerHTML='<p class="text-xs text-slate-400 mb-4">Agendamento e liberação individual da prova EJA.</p>';const origem=document.getElementById('se7-eja-agendamento-'+alunoId);const painel=origem&&origem.firstElementChild;if(painel){painel.setAttribute('data-se7-eja-controles','1');painel.classList.remove('max-w-md');corpo.appendChild(painel);}else corpo.innerHTML+='<p>Controles indisponíveis. Reabra a lista de alunos EJA.</p>';}
+else if(aba==='prova'){corpo.innerHTML='<p class="text-xs text-slate-400 mb-4">Agendamento e liberação individual da prova EJA.</p><div id="se7-eja-prova-resumo" class="text-sm mb-4">Consultando resultado oficial…</div>';se7FichaResultadoEJA(alunoId,'se7-eja-prova-resumo');const origem=document.getElementById('se7-eja-agendamento-'+alunoId);const painel=origem&&origem.firstElementChild;if(painel){painel.setAttribute('data-se7-eja-controles','1');painel.classList.remove('max-w-md');corpo.appendChild(painel);}else corpo.innerHTML+='<p>Controles indisponíveis. Reabra a lista de alunos EJA.</p>';}
 else if(aba==='monitoramento'){
-const controle=aluno.controleEJA||{};
-const inicio=controle.dataInicio||'';
-const fim=controle.dataFim||'';
-const notas=Object.entries(aluno.grades||{}).filter(function(entry){return entry[1]&&typeof entry[1]==='object';});
-corpo.innerHTML='<dl class="se7-eja-campos">'+campo('Início da avaliação',inicio)+campo('Fim da avaliação',fim)+campo('Liberação manual',controle.provaAtiva?'Liberada':'Não liberada')+campo('Disciplinas com notas registradas',notas.length)+'</dl>';
-const subtitulo=document.createElement('h4');subtitulo.className='font-bold text-sm mt-6 mb-3';subtitulo.textContent='Notas acadêmicas registradas';corpo.appendChild(subtitulo);
-if(!notas.length){const vazio=document.createElement('p');vazio.className='text-xs text-slate-400';vazio.textContent='Ainda não há notas acadêmicas registradas neste cadastro.';corpo.appendChild(vazio);}
-else{
-const curso=(typeof courses==='undefined'?[]:courses).find(function(c){return String(c.id)===String(aluno.courseId);});
-const materias=curso&&Array.isArray(curso.subjects)?curso.subjects:[];
-const tabela=document.createElement('table');tabela.className='w-full text-left text-xs';
-tabela.innerHTML='<thead><tr class="border-b border-slate-600"><th class="p-3">Disciplina</th><th class="p-3">Nota registrada</th></tr></thead>';
-const body=document.createElement('tbody');
-notas.forEach(function(entry){const id=entry[0],g=entry[1];const materia=materias.find(function(m){return String(m.id)===String(id);});const nota=g.final??g.avaliacao??g.atividade??'Não informada';const tr=document.createElement('tr');tr.className='border-b border-slate-700';[materia?.name||g.subject||g.disciplina||('Disciplina '+id),nota].forEach(function(value){const td=document.createElement('td');td.className='p-3';td.textContent=String(value);tr.appendChild(td);});body.appendChild(tr);});
-tabela.appendChild(body);corpo.appendChild(tabela);
-}
-const aviso=document.createElement('p');aviso.className='mt-5 text-xs text-amber-200';aviso.textContent='As notas acima são registros acadêmicos. A apuração de questões respondidas, acertos, erros e gabaritos da prova online exige integração específica com os resultados da avaliação e não é exibida aqui.';corpo.appendChild(aviso);
+corpo.innerHTML='<h4 class="font-bold mb-3">Monitoramento oficial da avaliação EJA</h4><div id="se7-eja-monitor-resumo" class="text-sm">Consultando avaliação…</div>';
+se7FichaResultadoEJA(alunoId,'se7-eja-monitor-resumo');
 }
 else if(aba==='financeiro'){
 corpo.innerHTML='<p class="text-xs text-slate-400 mb-3">Mensalidades registradas para este aluno</p><p id="se7-eja-fin-status" class="text-sm text-slate-300">Consultando informações financeiras…</p>';
