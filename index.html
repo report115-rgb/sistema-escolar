@@ -892,7 +892,24 @@ const uploadStatus=document.createElement('p');uploadStatus.className='text-xs t
 });
 corpo.appendChild(uploadArea);
 const idConsulta=alunoId;
-(async function(){try{const result=await SE7.api('eja-certificate-readiness',{studentId:idConsulta});if(alunoId!==idConsulta||document.querySelector('[data-ficha-aba="diploma"]')?.getAttribute('aria-selected')!=='true')return;consulta.textContent='Verificação no servidor: '+(result.academicConclusionConfirmed?'conclusão acadêmica confirmada; ':'conclusão acadêmica pendente; ')+result.documentsPending.length+' de '+result.documentsRequired+' documentos obrigatórios pendentes. '+(result.blockers?.length?result.blockers.join(' • '):'Todos os requisitos confirmados.');
+(async function(){
+let timeoutId;
+const falha=function(message){
+ if(alunoId!==idConsulta||!consulta.isConnected)return;
+ consulta.textContent=message;
+ const pares=resumo.querySelectorAll('dd');
+ if(pares[3])pares[3].textContent='Não foi possível verificar';
+ const valores=lista.querySelectorAll('p');
+ if(valores[2])valores[2].textContent='Verificação financeira indisponível';
+ if(valores[3])valores[3].textContent='Verificação dos PDFs indisponível';
+};
+try{
+ const result=await Promise.race([
+  SE7.api('eja-certificate-readiness',{studentId:idConsulta}),
+  new Promise((_,reject)=>{timeoutId=setTimeout(()=>reject(new Error('Tempo limite de consulta excedido')),15000);})
+ ]);
+ if(!result||!Array.isArray(result.documentsPending))throw new Error('Resposta incompleta do servidor');
+ if(alunoId!==idConsulta||document.querySelector('[data-ficha-aba="diploma"]')?.getAttribute('aria-selected')!=='true')return;consulta.textContent='Verificação no servidor: '+(result.academicConclusionConfirmed?'conclusão acadêmica confirmada; ':'conclusão acadêmica pendente; ')+result.documentsPending.length+' de '+result.documentsRequired+' documentos obrigatórios pendentes. '+(result.blockers?.length?result.blockers.join(' • '):'Todos os requisitos confirmados.');
 const pares=resumo.querySelectorAll('dd');
 if(pares[0])pares[0].textContent=result.academicStatus||aluno.status||'Não informada';
 if(result.academicStatus&&result.academicStatus!==aluno.status)aluno.status=result.academicStatus;
@@ -902,7 +919,11 @@ const valores=lista.querySelectorAll('p');
 if(valores[0])valores[0].textContent=result.academicConclusionConfirmed?'Prova EJA aprovada; conclusão reconhecida automaticamente':'Prova EJA ainda não aprovada ou concluída';
 if(valores[1])valores[1].textContent=result.documentReviewComplete?'Documentos aprovados':'Documentos pendentes: '+result.documentsPending.join(', ');
 if(valores[2])valores[2].textContent=result.financialReviewComplete?'Quitação confirmada pelo servidor':'Quitação ainda não confirmada pelo servidor';
-if(valores[3])valores[3].textContent=result.filesVerified?'Diploma e Histórico Escolar verificados':'Aguardando envio e validação dos dois PDFs';}catch(e){if(alunoId===idConsulta)consulta.textContent='Não foi possível confirmar os pré-requisitos no servidor. A emissão permanece indisponível.';}})();
+if(valores[3])valores[3].textContent=result.filesVerified?'Diploma e Histórico Escolar verificados':'Aguardando envio e validação dos dois PDFs';}catch(e){
+ const detalhe=String(e?.message||'Erro de comunicação').slice(0,180);
+ falha('Não foi possível concluir a consulta: '+detalhe+'. Nenhum documento foi liberado.');
+ console.warn('Consulta EJA diploma:',e);
+}finally{if(timeoutId)clearTimeout(timeoutId);}})();
 }
 };
 })();
