@@ -725,7 +725,7 @@
 let alunoId=null;
 function escapeHtml(value){return String(value==null?'---':value).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function campo(nome,valor){return '<div class="se7-eja-campo"><dt>'+escapeHtml(nome)+'</dt><dd>'+escapeHtml(valor)+'</dd></div>';}
-window.se7AbrirFichaEJA=function(button){
+window.se7AbrirFichaEJA=function(button,aba){
 const id=button.dataset.alunoId;
 const aluno=(typeof students==='undefined'?[]:students).find(function(s){return String(s.id)===String(id);});
 if(!aluno)return;
@@ -734,16 +734,19 @@ document.getElementById('se7-eja-ficha-titulo').textContent=aluno.fullname||'Alu
 document.getElementById('se7-eja-ficha-subtitulo').textContent='Ficha de consulta — somente visualização';
 const dialog=document.getElementById('se7-eja-ficha');
 if(!dialog.open)dialog.showModal();
-window.se7AbaFichaEJA('dados');
+window.se7AbaFichaEJA(aba||'dados');
 };
+function restaurarControles(){const moved=document.querySelector('#se7-eja-ficha-corpo [data-se7-eja-controles]');if(moved){const original=document.getElementById('se7-eja-agendamento-'+alunoId);if(original)original.appendChild(moved);}}
+document.getElementById('se7-eja-ficha').addEventListener('close',restaurarControles);
 window.se7AbaFichaEJA=function(aba){
+restaurarControles();
 const aluno=(typeof students==='undefined'?[]:students).find(function(s){return String(s.id)===String(alunoId);});
 if(!aluno)return;
 document.querySelectorAll('[data-ficha-aba]').forEach(function(btn){btn.setAttribute('aria-selected',String(btn.dataset.fichaAba===aba));});
 const corpo=document.getElementById('se7-eja-ficha-corpo');
 if(aba==='dados')corpo.innerHTML='<div class="se7-eja-campos">'+campo('Nome',aluno.fullname)+campo('CPF',aluno.cpf)+campo('WhatsApp',aluno.whatsapp)+campo('E-mail',aluno.email)+'</div>';
 else if(aba==='academico'){const curso=(typeof courses==='undefined'?[]:courses).find(function(c){return String(c.id)===String(aluno.courseId);});corpo.innerHTML='<div class="se7-eja-campos">'+campo('Matrícula',aluno.code)+campo('Curso',curso&&curso.name)+campo('Situação',aluno.status)+campo('Polo',aluno.polo||aluno.poloId)+'</div>';}
-else if(aba==='prova')corpo.innerHTML='<div class="se7-eja-campos">'+campo('Início agendado',aluno.controleEJA&&aluno.controleEJA.dataInicio)+campo('Término agendado',aluno.controleEJA&&aluno.controleEJA.dataFim)+campo('Liberação manual',aluno.controleEJA&&aluno.controleEJA.provaAtiva?'Liberada':'Não liberada')+'</div><p class="mt-4 text-xs text-slate-400">Os controles de agendamento permanecem na lista até a migração segura.</p>';
+else if(aba==='prova'){corpo.innerHTML='<p class="text-xs text-slate-400 mb-4">Agendamento e liberação individual da prova EJA.</p>';const origem=document.getElementById('se7-eja-agendamento-'+alunoId);const painel=origem&&origem.firstElementChild;if(painel){painel.setAttribute('data-se7-eja-controles','1');painel.classList.remove('max-w-md');corpo.appendChild(painel);}else corpo.innerHTML+='<p>Controles indisponíveis. Reabra a lista de alunos EJA.</p>';}
 else if(aba==='monitoramento')corpo.textContent='O monitoramento individual detalhado será conectado aos registros das avaliações na próxima etapa.';
 else if(aba==='financeiro')corpo.textContent='As informações financeiras continuam disponíveis no módulo financeiro existente.';
 else if(aba==='documentos')corpo.textContent='A validação documental continua disponível na Gestão EJA.';
@@ -4722,7 +4725,7 @@ function renderizarAlunosEJAAdmin() {
 
                 <!-- Coluna Prova Online com Botão Redondo Original e Agendamento -->
                 <td class="p-3">
-                    <div class="bg-gray-50 dark:bg-slate-900 p-3 rounded-xl border border-gray-200 dark:border-slate-700 space-y-2 max-w-md">
+                    <div id="se7-eja-agendamento-${s.id}" hidden><div class="bg-gray-50 dark:bg-slate-900 p-3 rounded-xl border border-gray-200 dark:border-slate-700 space-y-2 max-w-md">
                         <div class="flex items-center justify-between">
                             <span class="text-xs font-bold text-blue-600 dark:text-blue-400">Status Geral:</span>
                             <div class="inline-flex items-center gap-2">
@@ -4750,7 +4753,10 @@ function renderizarAlunosEJAAdmin() {
                         </button>
                         <button type="button" onclick="ejaLiberarReagendamentoMaster('${s.id}',this)" class="w-full py-2 mt-2 bg-emerald-700 hover:bg-emerald-600 text-white rounded-lg text-xs font-semibold shadow transition"><i class="fa-solid fa-unlock mr-1"></i> Habilitar nova data · Isentar R$ 30,00</button>
                         <p class="text-[10px] text-gray-500 dark:text-slate-400">Exclusivo Master. Não cancela boletos existentes nem reinicia provas já realizadas.</p>
-                    </div>
+                    </div></div>
+                    <div class="text-xs font-semibold text-blue-600 dark:text-cyan-300">${dataInicio ? dataInicio.replace('T',' ') : 'Não agendada'}</div>
+                    <div class="text-[11px] text-gray-500">${provaLiberada ? 'Prova liberada' : (dataInicio ? 'Aguardando liberação' : 'Sem agendamento')}</div>
+                    <button type="button" data-aluno-id="${s.id}" onclick="se7AbrirFichaEJA(this,'prova')" class="mt-2 text-xs font-semibold text-blue-600 dark:text-cyan-300 hover:underline">Gerenciar agendamento</button>
                 </td>
             </tr>
         `;
