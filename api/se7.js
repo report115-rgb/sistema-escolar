@@ -259,9 +259,10 @@ async function dispatchOperation({auth,db},req,b,delegated=null){
   const documents=student.documentos||{};
   const pending=mandatory.filter(type=>documents[type]?.status!=='Aprovado');
   const concluded=/conclu[ií]d|formad/i.test(String(student.status||''));
-  const academicReviewComplete=false;
+  const attempt=(await db.collection('se7EjaAttempts').doc(id).get()).data()||{};
+  const examReviewComplete=attempt.state==='finished'&&attempt.approved===true&&Number(attempt.grade)>=5&&Array.isArray(attempt.zeradas)&&attempt.zeradas.length===0;
+  const academicReviewComplete=concluded&&examReviewComplete;
   const financialReviewComplete=false;
-  const examReviewComplete=false;
   const certificate=(await db.collection('se7EjaCertificates').doc(id).get()).data()||{};
   const documentsUploaded={diploma:!!certificate.diploma?.sha256,historico:!!certificate.historico?.sha256};
   let filesVerified=false;
