@@ -877,7 +877,7 @@ const uploadStatus=document.createElement('p');uploadStatus.className='text-xs t
  const button=document.createElement('button');button.type='button';button.className='px-3 py-2 rounded-lg bg-cyan-700 text-white text-xs font-bold';button.textContent='Enviar PDF';
  button.addEventListener('click',async function(){
   const selected=file.files?.[0];if(!selected){uploadStatus.textContent='Selecione um arquivo PDF.';return;}
-  if(selected.size>2097152||selected.size<5||!/\\.pdf$/i.test(selected.name)){uploadStatus.textContent='Selecione um PDF válido de até 2 MB.';return;}
+  if(selected.size>2097152||selected.size<5||!/\.pdf$/i.test(selected.name)){uploadStatus.textContent='Selecione um PDF válido de até 2 MB.';return;}
   button.disabled=true;uploadStatus.textContent='Enviando '+item[1]+'…';
   try{
    const bytes=new Uint8Array(await selected.arrayBuffer());
