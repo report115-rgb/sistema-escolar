@@ -818,7 +818,26 @@ lista.appendChild(item);
 });corpo.appendChild(lista);
 }
 }
-else if(aba==='diploma')corpo.textContent='A inserção e liberação de diploma e histórico serão habilitadas após a integração segura dos documentos.';
+else if(aba==='diploma'){
+const docs=aluno.documentos||{};
+const tipos=typeof documentosObrigatoriosDoAluno==='function'?documentosObrigatoriosDoAluno(aluno):[];
+const pendentes=tipos.filter(function(tipo){return docs[tipo.id]?.status!=='Aprovado';});
+const concluido=/conclu[ií]d|formad/i.test(String(aluno.status||''));
+corpo.innerHTML='<h4 class="font-bold text-base mb-3">Diploma e Histórico Escolar — EJA</h4>';
+const resumo=document.createElement('dl');resumo.className='se7-eja-campos';
+resumo.innerHTML=campo('Situação acadêmica',aluno.status||'Não informada')+campo('Documentos obrigatórios aprovados',tipos.length-pendentes.length+' de '+tipos.length)+campo('Conclusão registrada',concluido?'Sim':'Não confirmada')+campo('Liberação para o aluno','Não disponível nesta etapa');
+corpo.appendChild(resumo);
+const titulo=document.createElement('h5');titulo.className='font-semibold mt-6 mb-3';titulo.textContent='Verificações antes da emissão';corpo.appendChild(titulo);
+const itens=[
+['Conclusão acadêmica',concluido?'Indicada no cadastro':'Aguardando confirmação de conclusão'],
+['Documentação obrigatória',tipos.length===0?'Não foi possível verificar documentos obrigatórios':pendentes.length?'Pendências: '+pendentes.map(function(t){return t.label;}).join(', '):'Documentos aprovados'],
+['Situação financeira','Conferir na aba Financeiro antes da autorização'],
+['Diploma e Histórico em PDF','Envio e autorização ainda não habilitados']
+];
+const lista=document.createElement('div');lista.className='space-y-3';
+itens.forEach(function(item){const box=document.createElement('div');box.className='rounded-lg border border-slate-700 p-3';const label=document.createElement('strong');label.className='text-xs block text-cyan-300';label.textContent=item[0];const valor=document.createElement('p');valor.className='text-sm mt-1';valor.textContent=item[1];box.append(label,valor);lista.appendChild(box);});corpo.appendChild(lista);
+const aviso=document.createElement('p');aviso.className='mt-5 text-xs text-amber-200';aviso.textContent='Esta tela é apenas uma conferência preliminar. Não emite, autoriza ou libera documentos. A aprovação acadêmica e financeira precisa ser validada antes da futura publicação no Portal do Aluno.';corpo.appendChild(aviso);
+}
 };
 })();
 </script>
