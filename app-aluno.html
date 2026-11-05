@@ -1544,6 +1544,14 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
                 }
             });
 
+            if(aba==='diploma-eja'&&alunoLogado){
+                const estado=document.getElementById('eja-diploma-estado');
+                if(estado){estado.textContent='Consultando situação dos documentos…';try{
+                    const r=await SE7.api('eja-certificate-status');
+                    estado.textContent=r.diplomaAvailable&&r.historyAvailable?'Documentos disponíveis para consulta.':'Aguardando conclusão, publicação e validação integral pela instituição.';
+                }catch(e){estado.textContent='Não foi possível consultar a situação dos documentos. Tente novamente.';}
+                }
+            }
             if (aba === 'documentos' && alunoLogado) {
                 renderizarDocumentosObrigatorios();
                 if (verificarStatusCompletoDocumentos()) {
