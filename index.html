@@ -838,6 +838,32 @@ const lista=document.createElement('div');lista.className='space-y-3';
 itens.forEach(function(item){const box=document.createElement('div');box.className='rounded-lg border border-slate-700 p-3';const label=document.createElement('strong');label.className='text-xs block text-cyan-300';label.textContent=item[0];const valor=document.createElement('p');valor.className='text-sm mt-1';valor.textContent=item[1];box.append(label,valor);lista.appendChild(box);});corpo.appendChild(lista);
 const aviso=document.createElement('p');aviso.className='mt-5 text-xs text-amber-200';aviso.textContent='Esta tela é apenas uma conferência preliminar. Não emite, autoriza ou libera documentos. A aprovação acadêmica e financeira precisa ser validada antes da futura publicação no Portal do Aluno.';corpo.appendChild(aviso);
 const consulta=document.createElement('p');consulta.className='mt-3 text-xs text-slate-300';consulta.textContent='Consultando pré-requisitos no servidor…';corpo.appendChild(consulta);
+const uploadArea=document.createElement('section');
+uploadArea.className='mt-5 rounded-xl border border-cyan-700 p-4 space-y-3';
+const uploadTitle=document.createElement('h5');uploadTitle.className='font-semibold text-cyan-300';uploadTitle.textContent='Anexar documentos oficiais (PDF)';uploadArea.appendChild(uploadTitle);
+const uploadHelp=document.createElement('p');uploadHelp.className='text-xs text-slate-300';uploadHelp.textContent='A Secretaria pode guardar os arquivos antes da conclusão. O aluno não terá acesso até a validação integral automática. Máximo: 2 MB por arquivo.';uploadArea.appendChild(uploadHelp);
+const uploadStatus=document.createElement('p');uploadStatus.className='text-xs text-slate-300';uploadStatus.setAttribute('role','status');uploadArea.appendChild(uploadStatus);
+[['diploma','Diploma'],['historico','Histórico Escolar']].forEach(function(item){
+ const row=document.createElement('div');row.className='flex flex-wrap gap-2 items-center';
+ const label=document.createElement('label');label.className='text-sm w-36';label.textContent=item[1];
+ const file=document.createElement('input');file.type='file';file.accept='application/pdf,.pdf';file.className='text-xs max-w-56';
+ const button=document.createElement('button');button.type='button';button.className='px-3 py-2 rounded-lg bg-cyan-700 text-white text-xs font-bold';button.textContent='Enviar PDF';
+ button.addEventListener('click',async function(){
+  const selected=file.files?.[0];if(!selected){uploadStatus.textContent='Selecione um arquivo PDF.';return;}
+  if(selected.size>2097152||selected.size<5||!/\\.pdf$/i.test(selected.name)){uploadStatus.textContent='Selecione um PDF válido de até 2 MB.';return;}
+  button.disabled=true;uploadStatus.textContent='Enviando '+item[1]+'…';
+  try{
+   const bytes=new Uint8Array(await selected.arrayBuffer());
+   if(String.fromCharCode(...bytes.slice(0,5))!=='%PDF-')throw Error('O arquivo não é um PDF válido.');
+   let binary='';for(let j=0;j<bytes.length;j+=8192)binary+=String.fromCharCode(...bytes.subarray(j,j+8192));
+   const result=await SE7.api('eja-certificate-upload',{studentId:alunoId,kind:item[0],base64:btoa(binary)});
+   uploadStatus.textContent=result.ok?item[1]+' armazenado com segurança. Liberação ao aluno ainda bloqueada.':'Envio não confirmado.';
+  }catch(error){uploadStatus.textContent='Falha no envio: '+String(error.message||'Tente novamente.');}
+  finally{button.disabled=false;}
+ });
+ row.append(label,file,button);uploadArea.appendChild(row);
+});
+corpo.appendChild(uploadArea);
 const idConsulta=alunoId;
 (async function(){try{const result=await SE7.api('eja-certificate-readiness',{studentId:idConsulta});if(alunoId!==idConsulta||document.querySelector('[data-ficha-aba="diploma"]')?.getAttribute('aria-selected')!=='true')return;consulta.textContent='Verificação no servidor: '+(result.academicConclusionConfirmed?'conclusão indicada; ':'conclusão não confirmada; ')+result.documentsPending.length+' de '+result.documentsRequired+' documentos obrigatórios pendentes. '+(result.blockers||[]).join(' • ')+'. Publicação e liberação automática permanecem indisponíveis até a validação integral.';}catch(e){if(alunoId===idConsulta)consulta.textContent='Não foi possível confirmar os pré-requisitos no servidor. A emissão permanece indisponível.';}})();
 }
