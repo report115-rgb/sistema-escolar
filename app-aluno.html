@@ -6,7 +6,15 @@
 <script src="/assets/se7-security-handlers.js"></script>
 <script src="/assets/se7-security.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SE7 - Portal do Aluno</title>
+    <title>Matriz - Portal do Aluno</title>
+    <meta name="theme-color" content="#071b35">
+    <meta name="application-name" content="Matriz Aluno">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Matriz Aluno">
+    <link rel="manifest" href="/app-aluno.webmanifest">
+    <link rel="icon" type="image/svg+xml" href="/assets/se7-brand-icon.svg">
+    <link rel="apple-touch-icon" href="/assets/se7-logo-document.png">
     <!-- Tailwind CSS CDN -->
     <link rel="stylesheet" href="/assets/vendor/tailwind.min.css">
     
@@ -2342,5 +2350,14 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
 </script>
 <script src="/assets/se7-renegotiation.js?v=portal-negociacao-4"></script>
 <link rel="stylesheet" href="/assets/se7-internships.css?v=institucional-20261019"><script src="/assets/vendor/pdf-lib.min.js"></script><script src="/assets/vendor/fontkit.umd.min.js"></script><script src="/assets/se7-internship-pdf.js?v=descriptive-2"></script><script src="/assets/se7-internships.js?v=institucional-20261019"></script>
+<script>
+    // Instalacao independente do Portal do Aluno, sem interferir nas rotas do Matriz.
+    if ('serviceWorker' in navigator && window.isSecureContext) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/app-aluno-sw.js', {scope:'/app-aluno.html'})
+                .catch(error => console.warn('Instalacao do aplicativo indisponivel:',error));
+        }, {once:true});
+    }
+</script>
 </body>
 </html>
