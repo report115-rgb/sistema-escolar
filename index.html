@@ -894,6 +894,8 @@ corpo.appendChild(uploadArea);
 const idConsulta=alunoId;
 (async function(){try{const result=await SE7.api('eja-certificate-readiness',{studentId:idConsulta});if(alunoId!==idConsulta||document.querySelector('[data-ficha-aba="diploma"]')?.getAttribute('aria-selected')!=='true')return;consulta.textContent='Verificação no servidor: '+(result.academicConclusionConfirmed?'conclusão acadêmica confirmada; ':'conclusão acadêmica pendente; ')+result.documentsPending.length+' de '+result.documentsRequired+' documentos obrigatórios pendentes. '+(result.blockers?.length?result.blockers.join(' • '):'Todos os requisitos confirmados.');
 const pares=resumo.querySelectorAll('dd');
+if(pares[0])pares[0].textContent=result.academicStatus||aluno.status||'Não informada';
+if(result.academicStatus&&result.academicStatus!==aluno.status)aluno.status=result.academicStatus;
 if(pares[2])pares[2].textContent=result.academicConclusionConfirmed?'Sim, automaticamente':'Não confirmada';
 if(pares[3])pares[3].textContent=result.automaticReleaseEnabled?'Disponível':'Aguardando requisitos';
 const valores=lista.querySelectorAll('p');

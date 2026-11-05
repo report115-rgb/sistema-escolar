@@ -276,6 +276,29 @@ async function dispatchOperation({auth,db},req,b,delegated=null){
   const installments=await Promise.all([1,2].map(n=>db.collection('financeLogs').doc('eja_'+id+'_'+n).get()));
   const settled=record=>record.exists&&record.data().ejaManaged===true&&!!record.data().asaasPaymentId&&['RECEIVED','CONFIRMED','RECEIVED_IN_CASH'].includes(String(record.data().asaasStatus||''));
   const financialReviewComplete=!!contract&&contract.paymentState==='confirmed'&&settled(installments[0])&&(!contract.secondCents||settled(installments[1]));
+  // Conclusao da matricula EJA: tres verificacoes independentes, sem exigir PDFs.
+  // Somente uma matricula ativa pode ser promovida; nao reabrir/corrigir status cancelados.
+  const graduationEligible=examReviewComplete&&pending.length===0&&financialReviewComplete;
+  let academicStatus=String(student.status||'');
+  let automaticallyConcluded=false;
+  if(graduationEligible&&/^ativ[oa]$/i.test(academicStatus.trim())){
+   await db.runTransaction(async tx=>{
+    const current=await tx.get(db.collection('students').doc(id));
+    if(!current.exists)return;
+    const data=current.data()||{};
+    if(!/^ativ[oa]$/i.test(String(data.status||'').trim()))return;
+    // Nao promover caso documentos tenham mudado entre a leitura e a transacao.
+    if(mandatory.some(type=>data.documentos?.[type]?.status!=='Aprovado'))return;
+    tx.update(db.collection('students').doc(id),{
+     status:'Concluído',
+     ejaConcludedAt:new Date().toISOString(),
+     ejaConclusionSource:'automatic_eja_validation'
+    });
+    automaticallyConcluded=true;
+   });
+   if(automaticallyConcluded)academicStatus='Concluído';
+  }
+
   const certificate=(await db.collection('se7EjaCertificates').doc(id).get()).data()||{};
   const documentsUploaded={diploma:!!certificate.diploma?.sha256,historico:!!certificate.historico?.sha256};
   let filesVerified=false;
@@ -301,7 +324,7 @@ async function dispatchOperation({auth,db},req,b,delegated=null){
   const state=ready?'disponivel':!examReviewComplete?'pendencia_avaliacao':pending.length?'pendencia_documental':!financialReviewComplete?'pendencia_financeira':'aguardando_publicacao';
   const message=state==='aguardando_conclusao'?'Aguardando conclusão acadêmica.':state==='pendencia_documental'?'Aguardando regularização dos documentos obrigatórios.':state==='pendencia_avaliacao'?'Aguardando aprovação na prova EJA.':state==='pendencia_financeira'?'Aguardando quitação das mensalidades EJA.':'Aguardando publicação e validação final pela instituição.';
   if(!staff)return {state,message:ready?'Diploma e Histórico Escolar disponíveis.':message,diplomaAvailable:ready,historyAvailable:ready,documentsUploaded};
-  return {studentId:id,state,message,academicStatus:String(student.status||'Não informado'),academicConclusionConfirmed:academicReviewComplete,documentsRequired:mandatory.length,documentsObserved:mandatory.filter(type=>!!documents[type]).length,documentsPending:pending,documentReviewComplete:pending.length===0,academicReviewComplete,financialReviewComplete,examReviewComplete,filesVerified,documentsUploaded,uploadEnabled:true,authorizationEnabled:false,automaticReleaseEnabled:ready,blockers,reason:'A liberação automática exige a confirmação integral dos critérios pelo servidor.'};
+  return {studentId:id,state,message,academicStatus:academicStatus||'Não informado',automaticallyConcluded,graduationEligible,academicConclusionConfirmed:academicReviewComplete,documentsRequired:mandatory.length,documentsObserved:mandatory.filter(type=>!!documents[type]).length,documentsPending:pending,documentReviewComplete:pending.length===0,academicReviewComplete,financialReviewComplete,examReviewComplete,filesVerified,documentsUploaded,uploadEnabled:true,authorizationEnabled:false,automaticReleaseEnabled:ready,blockers,reason:'A liberação automática exige a confirmação integral dos critérios pelo servidor.'};
  }
  if(action==='diploma-check')return diplomaIssuance.check(db,b,u);
  if(action==='diploma-draft-save')return diplomaIssuance.saveDraft(db,b,u);
