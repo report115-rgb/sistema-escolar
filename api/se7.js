@@ -204,7 +204,12 @@ async function dispatchOperation({auth,db},req,b,delegated=null){
   if(!student.exists)fail(404,'Aluno não encontrado.');
   const course=await db.collection('courses').doc(validId(student.data().courseId)).get();
   if(!course.exists||!isSingleExam(course.data())&&!/eja|supletivo/i.test(String(course.data().name||'')))fail(403,'Acesso exclusivo da EJA.');
-  return {state:'aguardando',diplomaAvailable:false,historyAvailable:false};
+  const status=String(student.data().status||'');
+  const concluded=/conclu[ií]d|formad/i.test(status);
+  const required=['rg_cnh','cpf','comprovante_residencia','certidao_nasc_cas'];
+  const missing=required.filter(type=>student.data().documentos?.[type]?.status!=='Aprovado');
+  const state=!concluded?'aguardando_conclusao':missing.length?'pendencia_documental':'aguardando_publicacao';
+  return {state,diplomaAvailable:false,historyAvailable:false,message:state==='aguardando_conclusao'?'Aguardando conclusão acadêmica.':state==='pendencia_documental'?'Aguardando regularização dos documentos obrigatórios.':'Aguardando publicação e verificação final pela instituição.'};
  }
  if(action==='eja-certificate-readiness'){
   if(!['master','secretaria'].includes(u.role))fail(403,'Consulta restrita à Secretaria e ao Master.');
