@@ -198,42 +198,36 @@ async function dispatchOperation({auth,db},req,b,delegated=null){
  if(action==='transfer-authorization-list')return documentAuthorizations.list(db,b,u);
  if(action==='transfer-authorization-decide')return documentAuthorizations.decide(db,b,u);
  if(action==='academic-financial-statement')return academicDocuments.financialStatement(db,b,u);
- if(action==='eja-certificate-status'){
-  if(u.role!=='aluno')fail(403,'Acesso exclusivo do aluno.');
-  const student=await db.collection('students').doc(validId(u.studentId)).get();
-  if(!student.exists)fail(404,'Aluno não encontrado.');
-  const course=await db.collection('courses').doc(validId(student.data().courseId)).get();
-  if(!course.exists||!isSingleExam(course.data())&&!/eja|supletivo/i.test(String(course.data().name||'')))fail(403,'Acesso exclusivo da EJA.');
-  const status=String(student.data().status||'');
-  const concluded=/conclu[ií]d|formad/i.test(status);
-  const required=['rg_cnh','cpf','comprovante_residencia','certidao_nasc_cas'];
-  const missing=required.filter(type=>student.data().documentos?.[type]?.status!=='Aprovado');
-  const state=!concluded?'aguardando_conclusao':missing.length?'pendencia_documental':'aguardando_publicacao';
-  return {state,diplomaAvailable:false,historyAvailable:false,message:state==='aguardando_conclusao'?'Aguardando conclusão acadêmica.':state==='pendencia_documental'?'Aguardando regularização dos documentos obrigatórios.':'Aguardando publicação e verificação final pela instituição.'};
- }
- if(action==='eja-certificate-readiness'){
-  if(!['master','secretaria'].includes(u.role))fail(403,'Consulta restrita à Secretaria e ao Master.');
-  const id=validId(b.studentId);
+ if(action==='eja-certificate-status'||action==='eja-certificate-readiness'){
+  const staff=action==='eja-certificate-readiness';
+  if(staff?!['master','secretaria'].includes(u.role):u.role!=='aluno')fail(403,'Acesso não autorizado.');
+  const id=validId(staff?b.studentId:u.studentId);
   const snap=await db.collection('students').doc(id).get();
   if(!snap.exists)fail(404,'Aluno não encontrado.');
   const student=snap.data();
-  polos.assertStudent(u,student);
+  if(staff)polos.assertStudent(u,student);
   const courseSnap=await db.collection('courses').doc(validId(student.courseId)).get();
   if(!courseSnap.exists)fail(409,'Curso não encontrado.');
   const course=courseSnap.data();
-  if(!isSingleExam(course)&&!/eja|supletivo/i.test(String(course.name||'')))fail(400,'Este fluxo é exclusivo da EJA.');
-  const documents=student.documentos||{};
+  if(!isSingleExam(course)&&!/eja|supletivo/i.test(String(course.name||'')))fail(403,'Disponível somente para a EJA.');
   const mandatory=['rg_cnh','cpf','comprovante_residencia','certidao_nasc_cas'];
+  const documents=student.documentos||{};
   const pending=mandatory.filter(type=>documents[type]?.status!=='Aprovado');
-  const academicConclusionConfirmed=/conclu[ií]d|formad/i.test(String(student.status||''));
-  const documentReviewComplete=pending.length===0;
+  const concluded=/conclu[ií]d|formad/i.test(String(student.status||''));
+  const academicReviewComplete=false;
+  const financialReviewComplete=false;
+  const examReviewComplete=false;
+  const filesVerified=false;
   const blockers=[];
-  if(!academicConclusionConfirmed)blockers.push('Conclusão acadêmica ainda não confirmada');
-  if(!documentReviewComplete)blockers.push('Documentos obrigatórios pendentes: '+pending.join(', '));
-  blockers.push('Verificação financeira automatizada ainda não integrada');
-  blockers.push('Resultados de todas as avaliações ainda não validados');
-  blockers.push('Armazenamento e publicação dos PDFs ainda não integrados');
-  return {studentId:id,academicStatus:String(student.status||'Não informado'),academicConclusionConfirmed,documentsRequired:mandatory.length,documentsObserved:mandatory.filter(type=>!!documents[type]).length,documentsPending:pending,documentReviewComplete,financialReviewComplete:false,examReviewComplete:false,uploadEnabled:false,authorizationEnabled:false,automaticReleaseEnabled:false,blockers,reason:'A liberação automática exige a confirmação integral dos critérios pelo servidor.'};
+  if(!concluded)blockers.push('Conclusão acadêmica não confirmada');
+  if(pending.length)blockers.push('Documentação obrigatória incompleta');
+  if(!academicReviewComplete||!examReviewComplete)blockers.push('Avaliações e conclusão aguardam validação acadêmica integral');
+  if(!financialReviewComplete)blockers.push('Situação financeira aguardando validação');
+  if(!filesVerified)blockers.push('Diploma e Histórico Escolar ainda não verificados no armazenamento seguro');
+  const state=!concluded?'aguardando_conclusao':pending.length?'pendencia_documental':'aguardando_publicacao';
+  const message=state==='aguardando_conclusao'?'Aguardando conclusão acadêmica.':state==='pendencia_documental'?'Aguardando regularização dos documentos obrigatórios.':'Aguardando publicação e validação final pela instituição.';
+  if(!staff)return {state,message,diplomaAvailable:false,historyAvailable:false};
+  return {studentId:id,state,message,academicStatus:String(student.status||'Não informado'),academicConclusionConfirmed:concluded,documentsRequired:mandatory.length,documentsObserved:mandatory.filter(type=>!!documents[type]).length,documentsPending:pending,documentReviewComplete:pending.length===0,academicReviewComplete,financialReviewComplete,examReviewComplete,filesVerified,uploadEnabled:false,authorizationEnabled:false,automaticReleaseEnabled:false,blockers,reason:'A liberação automática exige a confirmação integral dos critérios pelo servidor.'};
  }
  if(action==='diploma-check')return diplomaIssuance.check(db,b,u);
  if(action==='diploma-draft-save')return diplomaIssuance.saveDraft(db,b,u);
