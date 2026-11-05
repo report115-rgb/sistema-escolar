@@ -7,9 +7,6 @@
   "start_url": "/app-aluno.html",
   "scope": "/app-aluno.html",
   "display": "standalone",
-  "display_override": [
-    "standalone"
-  ],
   "orientation": "portrait",
   "background_color": "#071b35",
   "theme_color": "#071b35",
@@ -17,18 +14,6 @@
     {
       "src": "/assets/se7-brand-icon.svg",
       "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/assets/se7-brand-icon.svg",
-      "sizes": "192x192",
-      "type": "image/svg+xml",
-      "purpose": "any"
-    },
-    {
-      "src": "/assets/se7-brand-icon.svg",
-      "sizes": "512x512",
       "type": "image/svg+xml",
       "purpose": "any"
     }
