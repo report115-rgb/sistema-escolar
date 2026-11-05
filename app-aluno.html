@@ -697,7 +697,7 @@ body.se7-legacy-portal #se7-student-internship-card{display:none!important}
             <div id="tab-diploma-eja" class="space-y-3 tab-pane" style="display:none">
                 <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200 dark:border-slate-700">
                     <h2 class="font-bold text-lg">Meu Diploma</h2>
-                    <p class="text-sm mt-3" role="status">Aguardando conclusão e publicação do Diploma e Histórico Escolar pela instituição.</p>
+                    <p id="eja-diploma-estado" class="text-sm mt-3" role="status">Aguardando consulta dos documentos.</p><div id="eja-diploma-arquivos" class="mt-4 flex flex-wrap gap-3"></div>
                     <p class="text-xs mt-3 text-slate-500">Os documentos somente serão disponibilizados após validação automática dos requisitos acadêmicos, documentais e financeiros.</p>
                 </div>
             </div>
@@ -1548,7 +1548,36 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
                 const estado=document.getElementById('eja-diploma-estado');
                 if(estado){estado.textContent='Consultando situação dos documentos…';try{
                     const r=await SE7.api('eja-certificate-status');
-                    estado.textContent=r.diplomaAvailable&&r.historyAvailable?'Documentos disponíveis para consulta.':'Aguardando conclusão, publicação e validação integral pela instituição.';
+                    estado.textContent=r.message||'Aguardando verificação dos documentos.';
+                    const area=document.getElementById('eja-diploma-arquivos');
+                    if(area){
+                        area.replaceChildren();
+                        if(r.diplomaAvailable&&r.historyAvailable){
+                            [['diploma','Diploma'],['historico','Histórico Escolar']].forEach(([kind,label])=>{
+                                const btn=document.createElement('button');
+                                btn.type='button';
+                                btn.className='px-4 py-3 rounded-xl bg-blue-700 text-white text-sm font-semibold';
+                                btn.textContent='Baixar '+label;
+                                btn.onclick=async()=>{
+                                    btn.disabled=true;estado.textContent='Preparando '+label+'…';
+                                    try{
+                                        const file=await SE7.api('eja-certificate-file-get',{kind});
+                                        if(file.mime!=='application/pdf'||!file.base64)throw Error('Documento indisponível.');
+                                        const binary=atob(file.base64),bytes=new Uint8Array(binary.length);
+                                        for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+                                        const url=URL.createObjectURL(new Blob([bytes],{type:'application/pdf'}));
+                                        const link=document.createElement('a');
+                                        link.href=url;link.download=kind==='diploma'?'Diploma-EJA.pdf':'Historico-Escolar-EJA.pdf';
+                                        document.body.appendChild(link);link.click();link.remove();
+                                        setTimeout(()=>URL.revokeObjectURL(url),60000);
+                                        estado.textContent='Documento preparado com sucesso.';
+                                    }catch(error){estado.textContent='Não foi possível obter o documento. Atualize a situação e tente novamente.';}
+                                    finally{btn.disabled=false;}
+                                };
+                                area.appendChild(btn);
+                            });
+                        }
+                    }
                 }catch(e){estado.textContent='Não foi possível consultar a situação dos documentos. Tente novamente.';}
                 }
             }
