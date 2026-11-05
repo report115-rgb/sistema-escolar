@@ -293,7 +293,7 @@ async function dispatchOperation({auth,db},req,b,delegated=null){
    });
    legacyManualFinancialComplete=charges.length>0&&charges.length<=300&&charges.every(doc=>{
     const v=doc.data();
-    return /^PAGO \(Baixa Manual\)$/i.test(String(v.status||'').trim())&&
+    return /^PAGO(?:\s*\((?:Baixa Manual|Cart[aã]o)\))?$/i.test(String(v.status||'').trim())&&
       /^\d{2}\/\d{2}\/\d{4}$/.test(String(v.dataPagamento||''));
    });
   }
