@@ -198,6 +198,14 @@ async function dispatchOperation({auth,db},req,b,delegated=null){
  if(action==='transfer-authorization-list')return documentAuthorizations.list(db,b,u);
  if(action==='transfer-authorization-decide')return documentAuthorizations.decide(db,b,u);
  if(action==='academic-financial-statement')return academicDocuments.financialStatement(db,b,u);
+ if(action==='eja-certificate-status'){
+  if(u.role!=='aluno')fail(403,'Acesso exclusivo do aluno.');
+  const student=await db.collection('students').doc(validId(u.studentId)).get();
+  if(!student.exists)fail(404,'Aluno não encontrado.');
+  const course=await db.collection('courses').doc(validId(student.data().courseId)).get();
+  if(!course.exists||!isSingleExam(course.data())&&!/eja|supletivo/i.test(String(course.data().name||'')))fail(403,'Acesso exclusivo da EJA.');
+  return {state:'aguardando',diplomaAvailable:false,historyAvailable:false};
+ }
  if(action==='eja-certificate-readiness'){
   if(!['master','secretaria'].includes(u.role))fail(403,'Consulta restrita à Secretaria e ao Master.');
   const id=validId(b.studentId);
