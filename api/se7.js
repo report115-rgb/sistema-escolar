@@ -1,3 +1,5 @@
+import {getStorage} from 'firebase-admin/storage';
+import {createHash} from 'node:crypto';
 import {stepInternshipBilling,startInternshipBilling} from '../server/internship-billing.mjs';
 import {verifyPreceptorContract} from '../server/preceptor-contracts.mjs';
 import {studentTerms,verifyStudentTerm} from '../server/internship-student-terms.mjs';
@@ -198,6 +200,40 @@ async function dispatchOperation({auth,db},req,b,delegated=null){
  if(action==='transfer-authorization-list')return documentAuthorizations.list(db,b,u);
  if(action==='transfer-authorization-decide')return documentAuthorizations.decide(db,b,u);
  if(action==='academic-financial-statement')return academicDocuments.financialStatement(db,b,u);
+ if(action==='eja-certificate-upload'||action==='eja-certificate-file-get'){
+  const upload=action==='eja-certificate-upload';
+  if(upload?!['master','secretaria'].includes(u.role):!['master','secretaria','aluno'].includes(u.role))fail(403,'Acesso não autorizado.');
+  const id=validId(u.role==='aluno'?u.studentId:b.studentId);
+  const snap=await db.collection('students').doc(id).get();
+  if(!snap.exists)fail(404,'Aluno não encontrado.');
+  if(u.role!=='aluno')polos.assertStudent(u,snap.data());
+  const course=await db.collection('courses').doc(validId(snap.data().courseId)).get();
+  if(!course.exists||!isSingleExam(course.data())&&!/eja|supletivo/i.test(String(course.data().name||'')))fail(403,'Disponível somente para a EJA.');
+  const kind=String(b.kind||'');
+  if(!['diploma','historico'].includes(kind))fail(400,'Tipo de documento inválido.');
+  const bucketName=process.env.SE7_EJA_PRIVATE_STORAGE_BUCKET;
+  if(!bucketName||!/^[a-z0-9][a-z0-9._-]{2,220}$/.test(bucketName))fail(503,'Armazenamento privado EJA não configurado.');
+  const bucket=getStorage().bucket(bucketName);
+  const ref=db.collection('se7EjaCertificates').doc(id);
+  if(upload){
+   const base64=b.base64;
+   if(typeof base64!=='string'||base64.length>2800000||! /^[A-Za-z0-9+/]+={0,2}$/.test(base64))fail(400,'Arquivo PDF inválido.');
+   const bytes=Buffer.from(base64,'base64');
+   if(bytes.length<5||bytes.length>2097152||bytes.subarray(0,5).toString()!=='%PDF-')fail(400,'Envie um PDF de até 2 MB.');
+   const digest=createHash('sha256').update(bytes).digest('hex');
+   const path='eja-private/'+id+'/'+kind+'/'+digest+'.pdf';
+   await bucket.file(path).save(bytes,{resumable:false,contentType:'application/pdf',metadata:{cacheControl:'private, no-store'}});
+   const metadata={path,sha256:digest,size:bytes.length,uploadedAt:new Date().toISOString(),uploadedBy:u.uid};
+   await ref.set({studentId:id,[kind]:metadata,updatedAt:new Date().toISOString()},{merge:true});
+   return {ok:true,kind,sha256:digest,size:bytes.length,availableToStudent:false};
+  }
+  const record=(await ref.get()).data()||{},file=record[kind];
+  if(!file?.path||!file.path.startsWith('eja-private/'+id+'/'+kind+'/'))fail(404,'Documento não publicado.');
+  if(u.role==='aluno')fail(403,'A liberação automática aguarda validação acadêmica e financeira integral.');
+  const [bytes]=await bucket.file(file.path).download();
+  if(bytes.length>2097152||createHash('sha256').update(bytes).digest('hex')!==file.sha256)fail(409,'Integridade do documento não confirmada.');
+  return {kind,mime:'application/pdf',base64:bytes.toString('base64'),sha256:file.sha256};
+ }
  if(action==='eja-certificate-status'||action==='eja-certificate-readiness'){
   const staff=action==='eja-certificate-readiness';
   if(staff?!['master','secretaria'].includes(u.role):u.role!=='aluno')fail(403,'Acesso não autorizado.');
@@ -217,7 +253,9 @@ async function dispatchOperation({auth,db},req,b,delegated=null){
   const academicReviewComplete=false;
   const financialReviewComplete=false;
   const examReviewComplete=false;
-  const filesVerified=false;
+  const certificate=(await db.collection('se7EjaCertificates').doc(id).get()).data()||{};
+  const filesVerified=!!(certificate.diploma?.sha256&&certificate.historico?.sha256);
+  const documentsUploaded={diploma:!!certificate.diploma?.sha256,historico:!!certificate.historico?.sha256};
   const blockers=[];
   if(!concluded)blockers.push('Conclusão acadêmica não confirmada');
   if(pending.length)blockers.push('Documentação obrigatória incompleta');
@@ -226,8 +264,8 @@ async function dispatchOperation({auth,db},req,b,delegated=null){
   if(!filesVerified)blockers.push('Diploma e Histórico Escolar ainda não verificados no armazenamento seguro');
   const state=!concluded?'aguardando_conclusao':pending.length?'pendencia_documental':'aguardando_publicacao';
   const message=state==='aguardando_conclusao'?'Aguardando conclusão acadêmica.':state==='pendencia_documental'?'Aguardando regularização dos documentos obrigatórios.':'Aguardando publicação e validação final pela instituição.';
-  if(!staff)return {state,message,diplomaAvailable:false,historyAvailable:false};
-  return {studentId:id,state,message,academicStatus:String(student.status||'Não informado'),academicConclusionConfirmed:concluded,documentsRequired:mandatory.length,documentsObserved:mandatory.filter(type=>!!documents[type]).length,documentsPending:pending,documentReviewComplete:pending.length===0,academicReviewComplete,financialReviewComplete,examReviewComplete,filesVerified,uploadEnabled:false,authorizationEnabled:false,automaticReleaseEnabled:false,blockers,reason:'A liberação automática exige a confirmação integral dos critérios pelo servidor.'};
+  if(!staff)return {state,message,diplomaAvailable:false,historyAvailable:false,documentsUploaded};
+  return {studentId:id,state,message,academicStatus:String(student.status||'Não informado'),academicConclusionConfirmed:concluded,documentsRequired:mandatory.length,documentsObserved:mandatory.filter(type=>!!documents[type]).length,documentsPending:pending,documentReviewComplete:pending.length===0,academicReviewComplete,financialReviewComplete,examReviewComplete,filesVerified,documentsUploaded,uploadEnabled:true,authorizationEnabled:false,automaticReleaseEnabled:false,blockers,reason:'A liberação automática exige a confirmação integral dos critérios pelo servidor.'};
  }
  if(action==='diploma-check')return diplomaIssuance.check(db,b,u);
  if(action==='diploma-draft-save')return diplomaIssuance.saveDraft(db,b,u);
@@ -434,7 +472,7 @@ export default async function handler(req,res){
  res.setHeader('Cache-Control','no-store');res.setHeader('X-Content-Type-Options','nosniff');
  try {
   const native=scannerCors(req,res);if(req.method==='OPTIONS'&&native){res.status(204).end();return;}if(req.method!=='POST')fail(405,'Use POST.');const origin=req.headers.origin;if(origin!=='https://sistema-escolar-ten-mu.vercel.app'&&!native)fail(403,'Origem não autorizada.');
-  if(!String(req.headers['content-type']||'').startsWith('application/json'))fail(415,'Envie JSON.');let b;try{b=typeof req.body==='string'?JSON.parse(req.body):req.body;}catch{fail(400,'JSON inválido.');}if(!b||Array.isArray(b)||typeof b.action!=='string'||JSON.stringify(b).length>(['internship-agreement-file-upload','internship-student-term-file-upload'].includes(b.action)?2900000:(b.action==='internship-preceptor-document-upload'||b.action==='internship-document-upload'||b.action==='portal-admin'&&b.callAction==='internship-document-upload')?750000:b.action.startsWith('internship-payroll-')?750000:b.action==='materials-save'?2900000:b.action==='collaborator-save'?350000:b.action==='notices-save'||b.action==='exam-scan-preview'||b.action==='payroll-receipt-save'||b.action==='expenses-pay'||b.action==='expenses-receipt-save'||b.action==='attendance-justification-save'?750000:['internship-evaluate','internship-evaluation-draft-save','internship-criteria-save'].includes(b.action)?50000:b.action==='exam-save'?250000:(['profile-save','staff-profile-save','student-avatar-save'].includes(b.action)||(b.action==='portal-admin'&&b.callAction==='student-avatar-save'))?100000:12000))fail(400,'Requisição inválida.');
+  if(!String(req.headers['content-type']||'').startsWith('application/json'))fail(415,'Envie JSON.');let b;try{b=typeof req.body==='string'?JSON.parse(req.body):req.body;}catch{fail(400,'JSON inválido.');}if(!b||Array.isArray(b)||typeof b.action!=='string'||JSON.stringify(b).length>(['internship-agreement-file-upload','internship-student-term-file-upload','eja-certificate-upload'].includes(b.action)?2900000:(b.action==='internship-preceptor-document-upload'||b.action==='internship-document-upload'||b.action==='portal-admin'&&b.callAction==='internship-document-upload')?750000:b.action.startsWith('internship-payroll-')?750000:b.action==='materials-save'?2900000:b.action==='collaborator-save'?350000:b.action==='notices-save'||b.action==='exam-scan-preview'||b.action==='payroll-receipt-save'||b.action==='expenses-pay'||b.action==='expenses-receipt-save'||b.action==='attendance-justification-save'?750000:['internship-evaluate','internship-evaluation-draft-save','internship-criteria-save'].includes(b.action)?50000:b.action==='exam-save'?250000:(['profile-save','staff-profile-save','student-avatar-save'].includes(b.action)||(b.action==='portal-admin'&&b.callAction==='student-avatar-save'))?100000:12000))fail(400,'Requisição inválida.');
   requestedAction=b.action==='portal-admin'?String(b.callAction||''):b.action;
   if(!nativeRequestAllowed(req,b))fail(403,'Operação não permitida para o leitor de avaliações.');
   if(!process.env.SE7_MASTER_UID)throw new Error('Master não configurado.');const result=await dispatch(services(),req,b);res.status(200).json(result);
