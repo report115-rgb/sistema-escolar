@@ -714,7 +714,6 @@
 <div class="eja-ficha-tabs" role="tablist" aria-label="Ficha individual EJA">
 <button type="button" data-ficha-aba="dados" onclick="se7AbaFichaEJA('dados')">Dados pessoais</button>
 <button type="button" data-ficha-aba="academico" onclick="se7AbaFichaEJA('academico')">Acadêmico</button>
-<button type="button" data-ficha-aba="prova" onclick="se7AbaFichaEJA('prova')">Prova online</button>
 <button type="button" data-ficha-aba="monitoramento" onclick="se7AbaFichaEJA('monitoramento')">Monitoramento</button>
 <button type="button" data-ficha-aba="financeiro" onclick="se7AbaFichaEJA('financeiro')">Financeiro</button>
 <button type="button" data-ficha-aba="documentos" onclick="se7AbaFichaEJA('documentos')">Documentação</button>
@@ -796,10 +795,14 @@ const turma=(typeof classes==='undefined'?[]:classes).find(function(c){return St
 const polo=window.SE7Polos&&typeof window.SE7Polos.name==='function'?window.SE7Polos.name(aluno.poloId):null;
 corpo.innerHTML='<dl class="se7-eja-campos">'+campo('Polo',polo||aluno.poloName||aluno.polo||aluno.poloId)+campo('Curso',curso&&curso.name)+campo('Turma',turma&&turma.name)+campo('Semestre',aluno.semestre||aluno.semester||(turma&&turma.semestre))+campo('Matrícula',aluno.code)+campo('Situação',aluno.status||'Ativo')+campo('Data da matrícula',dataEjaBR(aluno.enrollmentDate||aluno.enrollment?.date||aluno.enrolledAt||aluno.createdAt))+'</dl>';
 }
-else if(aba==='prova'){corpo.innerHTML='<p class="text-xs text-slate-400 mb-4">Agendamento e liberação individual da prova EJA.</p><div id="se7-eja-prova-resumo" class="text-sm mb-4">Consultando resultado oficial…</div>';se7FichaResultadoEJA(alunoId,'se7-eja-prova-resumo');const origem=document.getElementById('se7-eja-agendamento-'+alunoId);const painel=origem&&origem.firstElementChild;if(painel){painel.setAttribute('data-se7-eja-controles','1');painel.classList.remove('max-w-md');corpo.appendChild(painel);}else corpo.innerHTML+='<p>Controles indisponíveis. Reabra a lista de alunos EJA.</p>';}
 else if(aba==='monitoramento'){
-corpo.innerHTML='<h4 class="font-bold mb-3">Monitoramento oficial da avaliação EJA</h4><div id="se7-eja-monitor-resumo" class="text-sm">Consultando avaliação…</div>';
+corpo.innerHTML='<h4 class="font-bold mb-3">Monitoramento oficial da avaliação EJA</h4><div id="se7-eja-monitor-resumo" class="text-sm">Consultando avaliação…</div><div class="mt-5"><h5 class="font-semibold mb-3">Agendamento e liberação da prova</h5><div id="se7-eja-monitor-controles"></div></div>';
 se7FichaResultadoEJA(alunoId,'se7-eja-monitor-resumo');
+const origem=document.getElementById('se7-eja-agendamento-'+alunoId);
+const painel=origem&&origem.firstElementChild;
+const destino=document.getElementById('se7-eja-monitor-controles');
+if(painel&&destino){painel.setAttribute('data-se7-eja-controles','1');painel.classList.remove('max-w-md');destino.appendChild(painel);}
+else if(destino)destino.textContent='Controles indisponíveis. Reabra a lista de alunos EJA.';
 }
 else if(aba==='financeiro'){
 corpo.innerHTML='<p class="text-xs text-slate-400 mb-3">Mensalidades registradas para este aluno</p><p id="se7-eja-fin-status" class="text-sm text-slate-300">Consultando informações financeiras…</p>';
@@ -846,21 +849,21 @@ else if(aba==='diploma'){
 const docs=aluno.documentos||{};
 const tipos=typeof documentosObrigatoriosDoAluno==='function'?documentosObrigatoriosDoAluno(aluno):[];
 const pendentes=tipos.filter(function(tipo){return docs[tipo.id]?.status!=='Aprovado';});
-const concluido=/conclu[ií]d|formad/i.test(String(aluno.status||''));
+const concluido=aluno.ejaResult?.approved===true;
 corpo.innerHTML='<h4 class="font-bold text-base mb-3">Diploma e Histórico Escolar — EJA</h4>';
 const resumo=document.createElement('dl');resumo.className='se7-eja-campos';
-resumo.innerHTML=campo('Situação acadêmica',aluno.status||'Não informada')+campo('Documentos obrigatórios aprovados',tipos.length-pendentes.length+' de '+tipos.length)+campo('Conclusão registrada',concluido?'Sim':'Não confirmada')+campo('Liberação para o aluno','Não disponível nesta etapa');
+resumo.innerHTML=campo('Situação acadêmica',aluno.status||'Não informada')+campo('Documentos obrigatórios aprovados',tipos.length-pendentes.length+' de '+tipos.length)+campo('Conclusão registrada',concluido?'Sim':'Não confirmada')+campo('Liberação para o aluno','Consultando servidor…');
 corpo.appendChild(resumo);
 const titulo=document.createElement('h5');titulo.className='font-semibold mt-6 mb-3';titulo.textContent='Verificações antes da emissão';corpo.appendChild(titulo);
 const itens=[
 ['Conclusão acadêmica',concluido?'Indicada no cadastro':'Aguardando confirmação de conclusão'],
 ['Documentação obrigatória',tipos.length===0?'Não foi possível verificar documentos obrigatórios':pendentes.length?'Pendências: '+pendentes.map(function(t){return t.label;}).join(', '):'Documentos aprovados'],
-['Situação financeira','Conferir na aba Financeiro antes da autorização'],
-['Diploma e Histórico em PDF','Envio e autorização ainda não habilitados']
+['Situação financeira','Consultando quitação no servidor…'],
+['Diploma e Histórico em PDF','Consultando arquivos publicados…']
 ];
 const lista=document.createElement('div');lista.className='space-y-3';
 itens.forEach(function(item){const box=document.createElement('div');box.className='rounded-lg border border-slate-700 p-3';const label=document.createElement('strong');label.className='text-xs block text-cyan-300';label.textContent=item[0];const valor=document.createElement('p');valor.className='text-sm mt-1';valor.textContent=item[1];box.append(label,valor);lista.appendChild(box);});corpo.appendChild(lista);
-const aviso=document.createElement('p');aviso.className='mt-5 text-xs text-amber-200';aviso.textContent='Esta tela é apenas uma conferência preliminar. Não emite, autoriza ou libera documentos. A aprovação acadêmica e financeira precisa ser validada antes da futura publicação no Portal do Aluno.';corpo.appendChild(aviso);
+const aviso=document.createElement('p');aviso.className='mt-5 text-xs text-amber-200';aviso.textContent='A situação é validada automaticamente pelo servidor. Os documentos ficam disponíveis ao aluno somente após aprovação acadêmica, documentação, quitação financeira e publicação dos dois PDFs oficiais.';corpo.appendChild(aviso);
 const consulta=document.createElement('p');consulta.className='mt-3 text-xs text-slate-300';consulta.textContent='Consultando pré-requisitos no servidor…';corpo.appendChild(consulta);
 const uploadArea=document.createElement('section');
 uploadArea.className='mt-5 rounded-xl border border-cyan-700 p-4 space-y-3';
@@ -889,7 +892,15 @@ const uploadStatus=document.createElement('p');uploadStatus.className='text-xs t
 });
 corpo.appendChild(uploadArea);
 const idConsulta=alunoId;
-(async function(){try{const result=await SE7.api('eja-certificate-readiness',{studentId:idConsulta});if(alunoId!==idConsulta||document.querySelector('[data-ficha-aba="diploma"]')?.getAttribute('aria-selected')!=='true')return;consulta.textContent='Verificação no servidor: '+(result.academicConclusionConfirmed?'conclusão indicada; ':'conclusão não confirmada; ')+result.documentsPending.length+' de '+result.documentsRequired+' documentos obrigatórios pendentes. '+(result.blockers||[]).join(' • ')+'. Publicação e liberação automática permanecem indisponíveis até a validação integral.';}catch(e){if(alunoId===idConsulta)consulta.textContent='Não foi possível confirmar os pré-requisitos no servidor. A emissão permanece indisponível.';}})();
+(async function(){try{const result=await SE7.api('eja-certificate-readiness',{studentId:idConsulta});if(alunoId!==idConsulta||document.querySelector('[data-ficha-aba="diploma"]')?.getAttribute('aria-selected')!=='true')return;consulta.textContent='Verificação no servidor: '+(result.academicConclusionConfirmed?'conclusão acadêmica confirmada; ':'conclusão acadêmica pendente; ')+result.documentsPending.length+' de '+result.documentsRequired+' documentos obrigatórios pendentes. '+(result.blockers?.length?result.blockers.join(' • '):'Todos os requisitos confirmados.');
+const pares=resumo.querySelectorAll('dd');
+if(pares[2])pares[2].textContent=result.academicConclusionConfirmed?'Sim, automaticamente':'Não confirmada';
+if(pares[3])pares[3].textContent=result.automaticReleaseEnabled?'Disponível':'Aguardando requisitos';
+const valores=lista.querySelectorAll('p');
+if(valores[0])valores[0].textContent=result.academicConclusionConfirmed?'Prova EJA aprovada; conclusão reconhecida automaticamente':'Prova EJA ainda não aprovada ou concluída';
+if(valores[1])valores[1].textContent=result.documentReviewComplete?'Documentos aprovados':'Documentos pendentes: '+result.documentsPending.join(', ');
+if(valores[2])valores[2].textContent=result.financialReviewComplete?'Quitação confirmada pelo servidor':'Quitação ainda não confirmada pelo servidor';
+if(valores[3])valores[3].textContent=result.filesVerified?'Diploma e Histórico Escolar verificados':'Aguardando envio e validação dos dois PDFs';}catch(e){if(alunoId===idConsulta)consulta.textContent='Não foi possível confirmar os pré-requisitos no servidor. A emissão permanece indisponível.';}})();
 }
 };
 })();
