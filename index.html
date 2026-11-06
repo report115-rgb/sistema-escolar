@@ -884,7 +884,8 @@ const uploadStatus=document.createElement('p');uploadStatus.className='text-xs t
    if(String.fromCharCode(...bytes.slice(0,5))!=='%PDF-')throw Error('O arquivo não é um PDF válido.');
    let binary='';for(let j=0;j<bytes.length;j+=8192)binary+=String.fromCharCode(...bytes.subarray(j,j+8192));
    const result=await SE7.api('eja-certificate-upload',{studentId:alunoId,kind:item[0],base64:btoa(binary)});
-   uploadStatus.textContent=result.ok?item[1]+' armazenado com segurança. Liberação ao aluno ainda bloqueada.':'Envio não confirmado.';
+   uploadStatus.textContent=result.ok?item[1]+' armazenado com segurança. Atualizando a validação dos documentos…':'Envio não confirmado.';
+   if(result.ok){await atualizarSituacaoDiplomaEJA();uploadStatus.textContent=item[1]+' armazenado com segurança. Consulte a situação atualizada acima.';}
   }catch(error){uploadStatus.textContent='Falha no envio: '+String(error.message||'Tente novamente.');}
   finally{button.disabled=false;}
  });
@@ -892,7 +893,7 @@ const uploadStatus=document.createElement('p');uploadStatus.className='text-xs t
 });
 corpo.appendChild(uploadArea);
 const idConsulta=alunoId;
-(async function(){
+async function atualizarSituacaoDiplomaEJA(){
 let timeoutId;
 const falha=function(message){
  if(alunoId!==idConsulta||!consulta.isConnected)return;
@@ -923,7 +924,8 @@ if(valores[3])valores[3].textContent=result.filesVerified?'Diploma e Histórico 
  const detalhe=String(e?.message||'Erro de comunicação').slice(0,180);
  falha('Não foi possível concluir a consulta: '+detalhe+'. Nenhum documento foi liberado.');
  console.warn('Consulta EJA diploma:',e);
-}finally{if(timeoutId)clearTimeout(timeoutId);}})();
+}finally{if(timeoutId)clearTimeout(timeoutId);}}
+atualizarSituacaoDiplomaEJA();
 }
 };
 })();
