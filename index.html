@@ -792,10 +792,10 @@ const numero=aluno.numero||aluno.number||'';
 const bairro=aluno.bairro||aluno.neighborhood||'';
 const cidade=aluno.cidade||aluno.city||'';
 const estado=aluno.estado||aluno.state||'';
-const endereco=[logradouro,numero?('nº '+numero):'',bairro,cidade,estado].filter(Boolean).join(', ');
+
 const nascimento=aluno.dob||aluno.birthDate;
 const dataBR=dataEjaBR(nascimento);
-corpo.innerHTML='<dl class="se7-eja-campos">'+campo('Nome completo',aluno.fullname)+campo('Matrícula',aluno.code)+campo('CPF',aluno.cpf)+campo('RG',aluno.rg)+campo('Nascimento',dataBR)+campo('Sexo',aluno.sexo||aluno.gender)+campo('Nacionalidade',aluno.nacionalidade||aluno.nationality)+campo('WhatsApp',aluno.whatsapp)+campo('E-mail',aluno.email)+campo('Logradouro',logradouro)+campo('Número',numero)+campo('Bairro',bairro)+campo('Cidade',cidade)+campo('Estado',estado)+campo('Endereço completo',endereco)+campo('CEP',aluno.cep)+campo('Situação da matrícula',aluno.status||'Ativo')+'</dl>';
+corpo.innerHTML='<dl class="se7-eja-campos">'+campo('Nome completo',aluno.fullname)+campo('Matrícula',aluno.code)+campo('CPF',aluno.cpf)+campo('RG',aluno.rg)+campo('Nascimento',dataBR)+campo('Sexo',aluno.sexo||aluno.gender)+campo('Nacionalidade',aluno.nacionalidade||aluno.nationality)+campo('WhatsApp',aluno.whatsapp)+campo('E-mail',aluno.email)+campo('Logradouro',logradouro)+campo('Número',numero)+campo('Bairro',bairro)+campo('Cidade',cidade)+campo('Estado',estado)+campo('CEP',aluno.cep)+campo('Situação',aluno.status||'Ativo')+'</dl>';
 }
 else if(aba==='academico'){
 const curso=(typeof courses==='undefined'?[]:courses).find(function(c){return String(c.id)===String(aluno.courseId);});
@@ -4902,8 +4902,8 @@ function renderizarAlunosEJAAdmin() {
   const matricula=document.createElement('td');matricula.className='p-3 font-bold text-sky-400';matricula.textContent=s.code||'---';
   const dados=document.createElement('td');dados.className='p-3';
   const nome=document.createElement('button');nome.type='button';nome.className='font-semibold text-left text-slate-100 hover:underline focus-visible:outline-2 focus-visible:outline-cyan-400';nome.dataset.alunoId=s.id;nome.textContent=s.fullname||'Aluno';nome.title='Abrir ficha do aluno';nome.onclick=()=>se7AbrirFichaEJA(nome);
-  const info=document.createElement('div');info.className='text-xs text-slate-400 mt-1';info.textContent='CPF: '+(s.cpf||'---')+' • Tel: '+(s.whatsapp||'---');
-  const controls=document.createElement('div');
+  
+  const controls=document.createElement('div');controls.style.display='none';
   controls.innerHTML=`<div id="se7-eja-agendamento-${s.id}" hidden><div class="bg-gray-50 dark:bg-slate-900 p-3 rounded-xl border border-gray-200 dark:border-slate-700 space-y-2 max-w-md">
                         <div class="flex items-center justify-between">
                             <span class="text-xs font-bold text-blue-600 dark:text-blue-400">Status Geral:</span>
@@ -4940,8 +4940,8 @@ function renderizarAlunosEJAAdmin() {
   const cursoNome=document.createElement('div');cursoNome.className='text-xs text-slate-400 mt-1';cursoNome.textContent=curso?.name||'';turmaTd.appendChild(cursoNome);
   const situacao=document.createElement('td');situacao.className='p-3';const status=document.createElement('span');status.className='px-2 py-1 rounded-lg text-xs font-bold '+classeStatusMatricula(s.status);status.textContent=rotuloStatusMatricula(s.status);situacao.appendChild(status);
   const actions=document.createElement('td');actions.className='p-3 text-right';
-  const edit=document.createElement('button');edit.type='button';edit.className='px-3 py-2 rounded-lg bg-blue-700 hover:bg-blue-600 text-white text-xs';edit.textContent='Editar';edit.title='Editar dados do aluno EJA';edit.onclick=()=>editarAluno(s.id);actions.appendChild(edit);
-  dados.append(nome,info,controls);tr.append(matricula,dados,turmaTd,situacao,actions);tbody.appendChild(tr);
+  const edit=document.createElement('button');edit.type='button';edit.className='se7-edit-student px-2.5 py-1 bg-blue-600 text-white rounded text-xs';edit.innerHTML='<i class="fa-solid fa-pen" aria-hidden="true"></i>';edit.title='Editar aluno';edit.setAttribute('aria-label','Editar aluno');edit.onclick=()=>editarAluno(s.id);actions.appendChild(edit);
+  dados.append(nome,controls);tr.append(matricula,dados,turmaTd,situacao,actions);tbody.appendChild(tr);
  });
 }
 
