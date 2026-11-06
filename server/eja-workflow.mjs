@@ -49,6 +49,27 @@ export async function dispatch(db,b,u){const action=b.action;
   return {students:allowed.map((s,i)=>{const a=attempts[i].data();if(!a)return {...s,state:'not_started',subjects:[],completed:0,total:0};const groups=new Map();(a.questions||[]).forEach((q,j)=>{const id=String(q.disciplinaId||'legado');if(!groups.has(id))groups.set(id,{id,name:String(q.disciplinaNome||'Prova EJA'),answered:0,total:0});const g=groups.get(id);g.total++;if(Number.isInteger(a.answers?.[String(j)]))g.answered++;});const subjects=[...groups.values()].map(g=>({...g,state:a.state==='finished'||(a.enviadas||[]).includes(g.id)?'finished':g.answered?'in_progress':'not_started'}));return {...s,state:a.state==='finished'?'finished':'in_progress',total:subjects.length,completed:subjects.filter(g=>g.state==='finished').length,subjects,savedAt:a.savedAt||null,grade:a.state==='finished'?a.grade:null,approved:a.state==='finished'?a.approved:null};})};
  }
  const sid=sidFor(b,u),student=await authorized(db,sid,u);
+ if(action==='eja-admin-legacy-control'){
+  if(u.role!=='master')fail(403,'Somente o Master pode alterar controles administrativos da prova.');
+  if(!['schedule','toggle'].includes(b.mode))fail(400,'Operação inválida.');
+  const ref=db.collection('students').doc(sid),attemptRef=db.collection('se7EjaAttempts').doc(sid);
+  await db.runTransaction(async tx=>{
+   const [ss,aa]=await Promise.all([tx.get(ref),tx.get(attemptRef)]);
+   if(!ss.exists)fail(404,'Aluno não encontrado.');
+   if(aa.exists&&aa.data()?.state==='finished'&&aa.data()?.approved===true)fail(409,'Prova concluída e aprovada: alterações bloqueadas.');
+   if(aa.exists&&aa.data()?.state==='in_progress')fail(409,'Prova em andamento: alterações bloqueadas.');
+   const current=ss.data()?.controleEJA||{};
+   let patch;
+   if(b.mode==='toggle'){if(typeof b.active!=='boolean')fail(400,'Situação inválida.');patch={provaAtiva:b.active};}
+   else{
+    const start=String(b.start||''),end=String(b.end||'');
+    if(!/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}$/.test(start)||!/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}$/.test(end)||end<=start)fail(400,'Período de prova inválido.');
+    patch={dataInicio:start,dataFim:end};
+   }
+   tx.set(ref,{controleEJA:{...current,...patch}},{merge:true});
+  });
+  return {ok:true};
+ }
  if(action==='eja-status')return status(db,sid,student);
  if(action==='eja-billing-process'){if(u.role==='aluno'&&b.term===2){const a=await db.collection('se7EjaAttempts').doc(sid).get();if(a.data()?.state!=='finished')fail(403,'Conclua a prova antes da segunda cobrança.');}return processJob(db,sid,Number(b.term||1));}
  if(action==='eja-payment-sync'){const links=await db.collection('se7EjaPaymentLinks').where('studentId','==',sid).where('term','==',1).limit(2).get();for(const l of links.docs)if(l.data().position===1)await syncPayment(db,l.id);return status(db,sid,student);}

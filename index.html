@@ -4965,9 +4965,7 @@ async function salvarAgendamentoProvaAluno(studentId) {
         aluno.controleEJA.dataFim = dtFimInput;
 
         // Salva na nuvem (Firebase)
-        await db.collection("students").doc(studentId).set({
-            controleEJA: aluno.controleEJA
-        }, { merge: true });
+        await SE7.api('eja-admin-legacy-control',{studentId,mode:'schedule',start:dtInicioInput,end:dtFimInput});
 
         // Formata as datas para o padrão brasileiro (DD/MM/AAAA às HH:MM) para a mensagem ficar bonita
         const formatarDataBr = (dataIso) => {
@@ -5007,11 +5005,7 @@ async function alternarApostilaIndividualAluno(studentId, novoStatus) {
 
 async function alternarProvaIndividualAluno(studentId, novoStatus) {
     try {
-        await db.collection("students").doc(studentId).set({
-            controleEJA: {
-                provaAtiva: novoStatus
-            }
-        }, { merge: true });
+        await SE7.api('eja-admin-legacy-control',{studentId,mode:'toggle',active:novoStatus});
         console.log(`Prova ${novoStatus ? 'liberada' : 'bloqueada'} para o aluno ${studentId}`);
     } catch (e) {
         alert("Erro ao atualizar permissão da prova: " + e.message);
