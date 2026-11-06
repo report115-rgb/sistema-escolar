@@ -889,7 +889,28 @@ const uploadStatus=document.createElement('p');uploadStatus.className='text-xs t
   }catch(error){uploadStatus.textContent='Falha no envio: '+String(error.message||'Tente novamente.');}
   finally{button.disabled=false;}
  });
- const savedState=document.createElement('span');savedState.dataset.ejaFileState='1';savedState.className='text-xs text-slate-300';savedState.textContent='Verificando arquivo…';row.append(label,savedState,file,button);uploadArea.appendChild(row);
+ const view=document.createElement('button');view.type='button';view.className='px-3 py-2 rounded-lg bg-blue-700 text-white text-xs font-bold';view.textContent='Ver documento';view.hidden=true;
+ view.addEventListener('click',async function(){
+  // A janela e aberta diretamente pelo clique para evitar bloqueio de pop-ups.
+  const preview=window.open('about:blank','_blank');
+  view.disabled=true;uploadStatus.textContent='Abrindo '+item[1]+'…';
+  try{
+   const response=await SE7.api('eja-certificate-file-get',{studentId:alunoId,kind:item[0]});
+   if(response.mime!=='application/pdf'||!response.base64)throw Error('PDF indisponível.');
+   const raw=atob(response.base64),bytes=new Uint8Array(raw.length);
+   for(let i=0;i<raw.length;i++)bytes[i]=raw.charCodeAt(i);
+   if(bytes.length<5||String.fromCharCode(...bytes.slice(0,5))!=='%PDF-')throw Error('PDF inválido.');
+   const url=URL.createObjectURL(new Blob([bytes],{type:'application/pdf'}));
+   if(preview&&!preview.closed){preview.location.href=url;uploadStatus.textContent=item[1]+' aberto para consulta.';}
+   else{
+    const a=document.createElement('a');a.href=url;a.download=item[0]==='diploma'?'Diploma-EJA.pdf':'Historico-Escolar-EJA.pdf';document.body.appendChild(a);a.click();a.remove();
+    uploadStatus.textContent='Visualização bloqueada pelo navegador. PDF enviado para download.';
+   }
+   setTimeout(()=>URL.revokeObjectURL(url),120000);
+  }catch(error){if(preview&&!preview.closed)preview.close();uploadStatus.textContent='Não foi possível abrir '+item[1]+': '+String(error?.message||'Erro de consulta.');}
+  finally{view.disabled=false;}
+ });
+ const savedState=document.createElement('span');savedState.dataset.ejaFileState='1';savedState.className='text-xs text-slate-300';savedState.textContent='Verificando arquivo…';row.append(label,savedState,view,file,button);uploadArea.appendChild(row);
 });
 corpo.appendChild(uploadArea);
 const idConsulta=alunoId;
@@ -929,6 +950,8 @@ const saved=result.documentsUploaded||{};
 uploadArea.querySelectorAll('[data-eja-kind]').forEach(row=>{
  const kind=row.dataset.ejaKind,uploaded=!!saved[kind],state=row.querySelector('[data-eja-file-state]'),button=row.querySelector('button');
  if(state)state.textContent=uploaded?'PDF armazenado no sistema':'PDF ainda não enviado';
+ const view=row.querySelector('button:nth-of-type(1)');
+ if(view)view.hidden=!uploaded;
  if(button)button.textContent=uploaded?'Substituir PDF':'Enviar PDF';
 });}catch(e){
  const detalhe=String(e?.message||'Erro de comunicação').slice(0,180);
