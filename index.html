@@ -615,7 +615,7 @@
                     <button class="subtab-eja-btn active px-4 py-2 rounded-xl text-xs font-semibold bg-emerald-600 text-white shadow" role="tab" aria-controls="subeja-alunos" aria-selected="true" onclick="openSubTabEJA(event, 'subeja-alunos')"><i class="fa-solid fa-users mr-1"></i> Alunos EJA</button>
                     <button class="subtab-eja-btn px-4 py-2 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" role="tab" aria-controls="subeja-apostila" aria-selected="false" onclick="openSubTabEJA(event, 'subeja-apostila')"><i class="fa-solid fa-file-pdf mr-1"></i> Apostila PDF</button>
                     <button class="subtab-eja-btn px-4 py-2 rounded-xl text-xs font-semibold bg-gray-100 dark:text-gray-300" role="tab" aria-controls="subeja-prova" aria-selected="false" onclick="openSubTabEJA(event, 'subeja-prova')"><i class="fa-solid fa-laptop-file mr-1"></i> Prova Online</button>
-                    <button class="subtab-eja-btn px-4 py-2 rounded-xl text-xs font-semibold bg-gray-100 dark:text-gray-300" role="tab" aria-controls="subeja-validar-docs" aria-selected="false" onclick="openSubTabEJA(event, 'subeja-validar-docs')"><i class="fa-solid fa-folder-open mr-1"></i> Validar Documentação</button>
+
                 </div>
 
                 <div id="subeja-alunos" class="subeja-content space-y-3">
@@ -717,6 +717,7 @@
 <button type="button" data-ficha-aba="monitoramento" onclick="se7AbaFichaEJA('monitoramento')">Monitoramento</button>
 <button type="button" data-ficha-aba="financeiro" onclick="se7AbaFichaEJA('financeiro')">Financeiro</button>
 <button type="button" data-ficha-aba="documentos" onclick="se7AbaFichaEJA('documentos')">Documentação</button>
+<button type="button" data-ficha-aba="validar" onclick="se7AbaFichaEJA('validar')">Validar Documentação <span id="se7-eja-ficha-doc-badge" class="se7-docs-badge" hidden>!</span></button>
 <button type="button" data-ficha-aba="diploma" onclick="se7AbaFichaEJA('diploma')">Diploma / Histórico</button>
 </div><div id="se7-eja-ficha-corpo"></div></dialog>
 <script>
@@ -738,7 +739,11 @@ const dialog=document.getElementById('se7-eja-ficha');
 if(!dialog.open)dialog.showModal();
 window.se7AbaFichaEJA(aba||'dados');
 };
-function restaurarControles(){const moved=document.querySelector('#se7-eja-ficha-corpo [data-se7-eja-controles]');if(moved){const original=document.getElementById('se7-eja-agendamento-'+alunoId);if(original)original.appendChild(moved);}}
+function restaurarControles(){
+ const moved=document.querySelector('#se7-eja-ficha-corpo [data-se7-eja-controles]');if(moved){const original=document.getElementById('se7-eja-agendamento-'+alunoId);if(original)original.appendChild(moved);}
+ const docs=document.querySelector('#se7-eja-ficha-corpo #container-validacao-docs-eja');
+ const home=document.getElementById('subeja-validar-docs');if(docs&&home)home.appendChild(docs);
+}
 document.getElementById('se7-eja-ficha').addEventListener('close',restaurarControles);
 async function se7FichaResultadoEJA(id,elementId){
  const area=document.getElementById(elementId);
@@ -831,6 +836,12 @@ logs.forEach(function(f){const tr=document.createElement('tr');tr.className='bor
 tabela.appendChild(body);status.replaceWith(tabela);
 }catch(e){const status=document.getElementById('se7-eja-fin-status');if(status&&alunoId===idConsulta)status.textContent='Não foi possível consultar as mensalidades. Tente novamente.';}
 })();
+}
+else if(aba==='validar'){
+  corpo.innerHTML='<p class="text-sm text-slate-300 mb-4">Confira os documentos enviados e aprove ou reprove cada arquivo. Novos envios continuam sujeitos à análise.</p><div id="se7-eja-validacao-individual" class="space-y-4"></div>';
+  const original=document.getElementById('container-validacao-docs-eja');
+  const destino=document.getElementById('se7-eja-validacao-individual');
+  if(original&&destino){destino.appendChild(original);renderizarDocumentosEJagestao(alunoId);}
 }
 else if(aba==='documentos'){
 const docs=aluno.documentos||{};
@@ -4942,7 +4953,14 @@ function renderizarAlunosEJAAdmin() {
   const curso=courses.find(c=>String(c.id)===String(s.courseId));
   const turmaTd=document.createElement('td');turmaTd.className='p-3';turmaTd.textContent=turma?.name||'Sem turma';
   const cursoNome=document.createElement('div');cursoNome.className='text-xs text-slate-400 mt-1';cursoNome.textContent=curso?.name||'';turmaTd.appendChild(cursoNome);
-  const situacao=document.createElement('td');situacao.className='p-3';const status=document.createElement('span');status.className='px-2 py-1 rounded-lg text-xs font-bold '+classeStatusMatricula(s.status);status.textContent=rotuloStatusMatricula(s.status);situacao.appendChild(status);
+  const situacao=document.createElement('td');situacao.className='p-3';
+  const status=document.createElement('span');
+  const situacaoMatricula=String(s.status||'Ativo').trim();
+  const normalizado=situacaoMatricula.normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase();
+  const rotulos={ativo:'Ativo',ativa:'Ativo',cancelado:'Cancelado',cancelada:'Cancelado',transferido:'Transferido',transferida:'Transferido',concluido:'Concluído',concluida:'Concluído',inativo:'Inativo',inativa:'Inativo'};
+  status.className='inline-flex px-2.5 py-1 rounded-lg text-xs font-bold '+(normalizado.startsWith('ativ')?'bg-emerald-100 text-emerald-800':normalizado.startsWith('concluid')?'bg-blue-100 text-blue-800':normalizado.startsWith('cancelad')?'bg-red-100 text-red-800':'bg-slate-200 text-slate-800');
+  status.textContent=rotulos[normalizado]||situacaoMatricula;
+  situacao.replaceChildren(status);
   const actions=document.createElement('td');actions.className='p-3 text-right';
   const edit=document.createElement('button');edit.type='button';edit.className='se7-edit-student px-2.5 py-1 bg-blue-600 text-white rounded text-xs';edit.innerHTML='<i class="fa-solid fa-pen" aria-hidden="true"></i>';edit.title='Editar aluno';edit.setAttribute('aria-label','Editar aluno');edit.onclick=()=>editarAluno(s.id);actions.appendChild(edit);
   dados.append(nome,controls);tr.append(matricula,dados,turmaTd,situacao,actions);tbody.appendChild(tr);
