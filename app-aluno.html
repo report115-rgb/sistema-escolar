@@ -1561,7 +1561,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
                     const area=document.getElementById('eja-diploma-arquivos');
                     if(area){
                         area.replaceChildren();
-                        if(!window.SE7AdminPortal?.active&&r.diplomaAvailable&&r.historyAvailable){
+                        if(r.diplomaAvailable&&r.historyAvailable){
                             [['diploma','Diploma'],['historico','Histórico Escolar']].forEach(([kind,label])=>{
                                 const btn=document.createElement('button');
                                 btn.type='button';
@@ -1570,7 +1570,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
                                 btn.onclick=async()=>{
                                     btn.disabled=true;estado.textContent='Preparando '+label+'…';
                                     try{
-                                        const file=await SE7.api('eja-certificate-file-get',{kind});
+                                        const file=await SE7.api('eja-certificate-file-get',window.SE7AdminPortal?.active?{studentId:alunoLogado.id,kind}:{kind});
                                         if(file.mime!=='application/pdf'||!file.base64)throw Error('Documento indisponível.');
                                         const binary=atob(file.base64),bytes=new Uint8Array(binary.length);
                                         for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);

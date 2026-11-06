@@ -854,7 +854,7 @@ corpo.innerHTML='<h4 class="font-bold text-base mb-3">Diploma e Histórico Escol
 const resumo=document.createElement('dl');resumo.className='se7-eja-campos';
 resumo.innerHTML=campo('Situação acadêmica',aluno.status||'Não informada')+campo('Documentos obrigatórios aprovados',tipos.length-pendentes.length+' de '+tipos.length)+campo('Conclusão registrada',concluido?'Sim':'Não confirmada')+campo('Liberação para o aluno','Consultando servidor…');
 corpo.appendChild(resumo);
-const titulo=document.createElement('h5');titulo.className='font-semibold mt-6 mb-3';titulo.textContent='Verificações antes da emissão';corpo.appendChild(titulo);
+const titulo=document.createElement('h5');titulo.className='font-semibold mt-6 mb-3';titulo.textContent='Pendências para liberação';corpo.appendChild(titulo);
 const itens=[
 ['Conclusão acadêmica',concluido?'Indicada no cadastro':'Aguardando confirmação de conclusão'],
 ['Documentação obrigatória',tipos.length===0?'Não foi possível verificar documentos obrigatórios':pendentes.length?'Pendências: '+pendentes.map(function(t){return t.label;}).join(', '):'Documentos aprovados'],
@@ -871,7 +871,7 @@ const uploadTitle=document.createElement('h5');uploadTitle.className='font-semib
 const uploadHelp=document.createElement('p');uploadHelp.className='text-xs text-slate-300';uploadHelp.textContent='A Secretaria pode guardar os arquivos antes da conclusão. O aluno não terá acesso até a validação integral automática. Máximo: 2 MB por arquivo.';uploadArea.appendChild(uploadHelp);
 const uploadStatus=document.createElement('p');uploadStatus.className='text-xs text-slate-300';uploadStatus.setAttribute('role','status');uploadArea.appendChild(uploadStatus);
 [['diploma','Diploma'],['historico','Histórico Escolar']].forEach(function(item){
- const row=document.createElement('div');row.className='flex flex-wrap gap-2 items-center';
+ const row=document.createElement('div');row.className='flex flex-wrap gap-2 items-center';row.dataset.ejaKind=item[0];
  const label=document.createElement('label');label.className='text-sm w-36';label.textContent=item[1];
  const file=document.createElement('input');file.type='file';file.accept='application/pdf,.pdf';file.className='text-xs max-w-56';
  const button=document.createElement('button');button.type='button';button.className='px-3 py-2 rounded-lg bg-cyan-700 text-white text-xs font-bold';button.textContent='Enviar PDF';
@@ -889,7 +889,7 @@ const uploadStatus=document.createElement('p');uploadStatus.className='text-xs t
   }catch(error){uploadStatus.textContent='Falha no envio: '+String(error.message||'Tente novamente.');}
   finally{button.disabled=false;}
  });
- row.append(label,file,button);uploadArea.appendChild(row);
+ const savedState=document.createElement('span');savedState.dataset.ejaFileState='1';savedState.className='text-xs text-slate-300';savedState.textContent='Verificando arquivo…';row.append(label,savedState,file,button);uploadArea.appendChild(row);
 });
 corpo.appendChild(uploadArea);
 const idConsulta=alunoId;
@@ -920,7 +920,17 @@ const valores=lista.querySelectorAll('p');
 if(valores[0])valores[0].textContent=result.academicConclusionConfirmed?'Prova EJA aprovada; conclusão reconhecida automaticamente':'Prova EJA ainda não aprovada ou concluída';
 if(valores[1])valores[1].textContent=result.documentReviewComplete?'Documentos aprovados':'Documentos pendentes: '+result.documentsPending.join(', ');
 if(valores[2])valores[2].textContent=result.financialReviewComplete?'Quitação confirmada pelo servidor':'Quitação ainda não confirmada pelo servidor';
-if(valores[3])valores[3].textContent=result.filesVerified?'Diploma e Histórico Escolar verificados':'Aguardando envio e validação dos dois PDFs';}catch(e){
+if(valores[3])valores[3].textContent=result.filesVerified?'Diploma e Histórico Escolar verificados':'Aguardando envio e validação dos dois PDFs';
+const checks=[result.academicConclusionConfirmed,result.documentReviewComplete,result.financialReviewComplete,result.filesVerified];
+[...lista.children].forEach((el,i)=>{el.style.display=checks[i]?'none':'';});
+titulo.textContent=checks.every(Boolean)?'Todas as verificações concluídas':'Pendências para liberação';
+if(checks.every(Boolean))consulta.textContent='Todos os requisitos confirmados pelo servidor. Documentos disponíveis para o aluno.';
+const saved=result.documentsUploaded||{};
+uploadArea.querySelectorAll('[data-eja-kind]').forEach(row=>{
+ const kind=row.dataset.ejaKind,uploaded=!!saved[kind],state=row.querySelector('[data-eja-file-state]'),button=row.querySelector('button');
+ if(state)state.textContent=uploaded?'PDF armazenado no sistema':'PDF ainda não enviado';
+ if(button)button.textContent=uploaded?'Substituir PDF':'Enviar PDF';
+});}catch(e){
  const detalhe=String(e?.message||'Erro de comunicação').slice(0,180);
  falha('Não foi possível concluir a consulta: '+detalhe+'. Nenhum documento foi liberado.');
  console.warn('Consulta EJA diploma:',e);
