@@ -749,6 +749,14 @@ async function se7FichaResultadoEJA(id,elementId){
   const attempt=result.attempt||{},exam=result.exam||{},scheduling=result.scheduling||{};
   const subjects=Array.isArray(attempt.disciplinas)?attempt.disciplinas:[];
   const state=attempt.state==='finished'?'Concluída':attempt.state==='in_progress'?'Em andamento':'Não iniciada';
+  const locked=attempt.state==='finished'&&attempt.approved===true;
+  const controls=document.getElementById('se7-eja-monitor-controles');
+  if(controls&&alunoId===id){
+   controls.querySelectorAll('input,button,select').forEach(el=>{el.disabled=locked;el.classList.toggle('opacity-50',locked);el.classList.toggle('cursor-not-allowed',locked);});
+   let notice=document.getElementById('se7-eja-prova-lock-notice');
+   if(locked){if(!notice){notice=document.createElement('p');notice.id='se7-eja-prova-lock-notice';notice.className='mb-3 text-sm text-emerald-300 font-semibold';controls.prepend(notice);}notice.textContent='Prova concluída e aprovada. Agendamento e liberação bloqueados.';}
+   else if(notice)notice.remove();
+  }
   const fields=[
    ['Situação da prova',state],
    ['Resultado',attempt.state==='finished'?(attempt.approved?'Aprovada':'Não aprovada'):'Aguardando conclusão'],
@@ -4118,6 +4126,7 @@ function limparFiltrosAlunos(){
  const polo=document.getElementById('filtro-alunos-polo'),turma=document.getElementById('filtro-alunos-turma');
  if(polo)polo.value='';atualizarFiltroTurmasAlunos();if(turma)turma.value='';filtrosAlunosAplicados={polo:'',turma:''};fecharFiltrosAlunos();renderGestionStudentsTableGroup(false);
 }
+function se7EhAlunoEJA(s){const c=(typeof courses==='undefined'?[]:courses).find(c=>String(c.id)===String(s.courseId));return !!c&&(c.nivel==='Supletivo'||c.sigla==='EJA'||/EJA|SUPLETIVO/i.test(c.name||''));}
 function renderGestionStudentsTable(){renderGestionStudentsTableGroup(false);renderGestionStudentsTableGroup(true);}
         function renderGestionStudentsTableGroup(inactive=false) {
     const tbody = document.getElementById(inactive?'tabela-gestao-alunos-inativos':'tabela-gestao-alunos');
@@ -4129,7 +4138,7 @@ function renderGestionStudentsTable(){renderGestionStudentsTableGroup(false);ren
     const isFinanceiro = sessaoAtual.perfil === 'financeiro';
     
     const ativos = students
-        .filter(s => !!s.id && (inactive?!/^ativ[oa]$/i.test(String(s.status||'Ativo').trim()):/^ativ[oa]$/i.test(String(s.status||'Ativo').trim())))
+        .filter(s => !!s.id && !se7EhAlunoEJA(s) && (inactive?!/^ativ[oa]$/i.test(String(s.status||'Ativo').trim()):/^ativ[oa]$/i.test(String(s.status||'Ativo').trim())))
         .sort((a, b) => String(a.fullname||'').localeCompare(String(b.fullname||''),'pt-BR'));
 
     // LÓGICA DE FILTRAGEM PELA LUPA (NOME, CPF OU MATRÍCULA)
@@ -4153,7 +4162,7 @@ function renderGestionStudentsTable(){renderGestionStudentsTableGroup(false);ren
         });
     }
 
-    if(counter)counter.textContent=inactive?`Total: ${ativos.length} matrícula(s) inativa(s)`:`Total da rede: ${students.filter(s=>!!s.id).length} aluno(s)`;
+    if(counter)counter.textContent=inactive?`Total: ${ativos.length} matrícula(s) inativa(s)`:`Total de alunos técnicos: ${students.filter(s=>!!s.id&&!se7EhAlunoEJA(s)).length} aluno(s)`;
     if(!inactive){const label=document.getElementById('total-alunos-filtrados');const filtered=alunosFiltrados.length!==ativos.length||!!inputBusca?.value.trim()||!!filtrosAlunosAplicados.polo||!!filtrosAlunosAplicados.turma;if(label){label.hidden=!filtered;label.textContent=filtered?`${alunosFiltrados.length} aluno(s) exibido(s)`:'';}}
     
     if(alunosFiltrados.length === 0) {
@@ -4882,10 +4891,10 @@ function updateLogoPreview(src) {
 function renderizarAlunosEJAAdmin() {
  const tbody=document.getElementById('tabela-alunos-eja');if(!tbody)return;
  const thead=tbody.closest('table')?.querySelector('thead');
- if(thead)thead.innerHTML='<tr class="border-b border-slate-700 text-slate-400"><th class="p-3">Matrícula</th><th class="p-3">Aluno</th></tr>';
- const alunos=students.filter(s=>{const c=courses.find(c=>c.id===s.courseId);return c&&(c.nivel==='Supletivo'||c.sigla==='EJA'||/EJA/i.test(c.name||''));});
+ if(thead)thead.innerHTML='<tr class="border-b border-slate-700 text-slate-400"><th class="p-3">Matrícula</th><th class="p-3">Aluno</th><th class="p-3">Turma</th><th class="p-3">Situação</th><th class="p-3 text-right">Ações</th></tr>';
+ const alunos=students.filter(se7EhAlunoEJA).sort((a,b)=>String(a.fullname||'').localeCompare(String(b.fullname||''),'pt-BR'));
  tbody.replaceChildren();
- if(!alunos.length){tbody.innerHTML='<tr><td colspan="2" class="p-4 text-center text-slate-400">Nenhum aluno EJA matriculado.</td></tr>';return;}
+ if(!alunos.length){tbody.innerHTML='<tr><td colspan="5" class="p-4 text-center text-slate-400">Nenhum aluno EJA matriculado.</td></tr>';return;}
  alunos.forEach(s=>{
   if(!s.controleEJA)s.controleEJA={apostilaAtiva:true,provaAtiva:false,dataInicio:'',dataFim:''};
   const provaLiberada=s.controleEJA.provaAtiva,dataInicio=s.controleEJA.dataInicio||'',dataFim=s.controleEJA.dataFim||'';
@@ -4925,7 +4934,14 @@ function renderizarAlunosEJAAdmin() {
                         <p class="text-[10px] text-gray-500 dark:text-slate-400">Exclusivo Master. Não cancela boletos existentes nem reinicia provas já realizadas.</p>
                     </div></div>
 `;
-  dados.append(nome,info,controls);tr.append(matricula,dados);tbody.appendChild(tr);
+  const turma=classes.find(c=>String(c.id)===String(s.classId));
+  const curso=courses.find(c=>String(c.id)===String(s.courseId));
+  const turmaTd=document.createElement('td');turmaTd.className='p-3';turmaTd.textContent=turma?.name||'Sem turma';
+  const cursoNome=document.createElement('div');cursoNome.className='text-xs text-slate-400 mt-1';cursoNome.textContent=curso?.name||'';turmaTd.appendChild(cursoNome);
+  const situacao=document.createElement('td');situacao.className='p-3';const status=document.createElement('span');status.className='px-2 py-1 rounded-lg text-xs font-bold '+classeStatusMatricula(s.status);status.textContent=rotuloStatusMatricula(s.status);situacao.appendChild(status);
+  const actions=document.createElement('td');actions.className='p-3 text-right';
+  const edit=document.createElement('button');edit.type='button';edit.className='px-3 py-2 rounded-lg bg-blue-700 hover:bg-blue-600 text-white text-xs';edit.textContent='Editar';edit.title='Editar dados do aluno EJA';edit.onclick=()=>editarAluno(s.id);actions.appendChild(edit);
+  dados.append(nome,info,controls);tr.append(matricula,dados,turmaTd,situacao,actions);tbody.appendChild(tr);
  });
 }
 
