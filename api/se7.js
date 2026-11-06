@@ -212,9 +212,9 @@ async function dispatchOperation({auth,db},req,b,delegated=null){
   if(u.role==='aluno'&&snap.data().portalMustChangePassword)fail(403,'Atualize sua senha antes de consultar documentos.');
   const kind=String(b.kind||'');
   if(!['diploma','historico'].includes(kind))fail(400,'Tipo de documento inválido.');
-  const bucketName=process.env.SE7_EJA_PRIVATE_STORAGE_BUCKET;
-  if(!bucketName||!/^[a-z0-9][a-z0-9._-]{2,220}$/.test(bucketName))fail(503,'Armazenamento privado EJA não configurado.');
-  const bucket=getStorage().bucket(bucketName);
+  // Firestore privado: os chunks nao sao acessiveis pelo SDK do navegador.
+  // Tamanho abaixo de 1 MiB/documento; armazenamento sem Firebase Storage.
+  const CHUNK_SIZE=192*1024;
   const ref=db.collection('se7EjaCertificates').doc(id);
   if(upload){
    const base64=b.base64;
@@ -224,30 +224,35 @@ async function dispatchOperation({auth,db},req,b,delegated=null){
    if(bytes.length<5||bytes.length>2097152||bytes.subarray(0,5).toString()!=='%PDF-')fail(400,'Envie um PDF de até 2 MB.');
    if(!/%%EOF\s*$/.test(bytes.subarray(Math.max(0,bytes.length-2048)).toString('latin1')))fail(400,'PDF incompleto ou inválido.');
    const digest=createHash('sha256').update(bytes).digest('hex');
-   const path='eja-private/'+id+'/'+kind+'/'+digest+'.pdf';
-   const object=bucket.file(path);
-   await object.save(bytes,{resumable:false,contentType:'application/pdf',metadata:{cacheControl:'private, no-store',metadata:{sha256:digest,studentId:id,documentKind:kind}}});
-   const [stored]=await object.getMetadata();
-   if(Number(stored.size)!==bytes.length||stored.contentType!=='application/pdf'||stored.metadata?.sha256!==digest)fail(503,'O armazenamento não confirmou a integridade do PDF.');
-   const metadata={path,sha256:digest,size:bytes.length,uploadedAt:new Date().toISOString(),uploadedBy:u.uid};
+   const chunks=[];
+   for(let offset=0;offset<bytes.length;offset+=CHUNK_SIZE)chunks.push(bytes.subarray(offset,offset+CHUNK_SIZE));
+   if(chunks.length<1||chunks.length>11)fail(400,'Arquivo PDF excede o limite.');
    const previous=(await ref.get()).data()?.[kind]||null;
-   if(previous?.sha256===digest&&previous?.path===path)return {ok:true,duplicate:true,kind,sha256:digest,size:bytes.length,availableToStudent:false};
+   if(previous?.sha256===digest&&previous?.storage==='firestore-chunks')
+    return {ok:true,duplicate:true,kind,sha256:digest,size:bytes.length,availableToStudent:false};
    const now=new Date().toISOString();
+   // Caminho imutavel por hash: uploads concorrentes nunca alteram os bytes publicados.
+   const chunkRef=ref.collection('privatePdf').doc(kind+'_'+digest);
    const batch=db.batch();
-   batch.set(ref,{studentId:id,[kind]:metadata,updatedAt:now},{merge:true});
+   chunks.forEach((chunk,index)=>batch.set(chunkRef.collection('chunks').doc(String(index).padStart(3,'0')),{data:chunk.toString('base64'),index,size:chunk.length}));
+   batch.set(chunkRef,{kind,sha256:digest,size:bytes.length,count:chunks.length,createdAt:now});
+   batch.set(ref,{studentId:id,[kind]:{storage:'firestore-chunks',sha256:digest,size:bytes.length,count:chunks.length,uploadedAt:now,uploadedBy:u.uid},updatedAt:now},{merge:true});
    batch.set(ref.collection('history').doc(),{action:'upload',kind,at:now,by:u.uid,sha256:digest,size:bytes.length,previousSha256:previous?.sha256||null});
    await batch.commit();
    return {ok:true,kind,sha256:digest,size:bytes.length,availableToStudent:false};
   }
   const record=(await ref.get()).data()||{},file=record[kind];
-  if(!file?.sha256||!/^[a-f0-9]{64}$/.test(file.sha256)||file.path!=='eja-private/'+id+'/'+kind+'/'+file.sha256+'.pdf')fail(404,'Documento não publicado.');
+  if(!file?.sha256||!/^[a-f0-9]{64}$/.test(file.sha256)||file.storage!=='firestore-chunks'||!Number.isInteger(file.count)||file.count<1||file.count>11)fail(404,'Documento não publicado.');
   if(u.role==='aluno'){
    const eligibility=await dispatchOperation({auth,db},req,{action:'eja-certificate-status'},u);
    if(!eligibility.diplomaAvailable||!eligibility.historyAvailable)fail(403,'Documento bloqueado até a confirmação de todos os requisitos.');
   }
-  const [fileMeta]=await bucket.file(file.path).getMetadata();
-  if(Number(fileMeta.size)!==file.size||fileMeta.contentType!=='application/pdf'||fileMeta.metadata?.sha256!==file.sha256)fail(409,'Metadados do documento não conferem.');
-  const [bytes]=await bucket.file(file.path).download();
+  const chunkRef=ref.collection('privatePdf').doc(kind+'_'+file.sha256);
+  const metadata=(await chunkRef.get()).data();
+  if(!metadata||metadata.sha256!==file.sha256||metadata.size!==file.size||metadata.count!==file.count)fail(409,'Metadados do documento não conferem.');
+  const parts=await Promise.all(Array.from({length:file.count},(_,i)=>chunkRef.collection('chunks').doc(String(i).padStart(3,'0')).get()));
+  if(parts.some((doc,i)=>!doc.exists||doc.data().index!==i||typeof doc.data().data!=='string'))fail(409,'Arquivo incompleto.');
+  const bytes=Buffer.concat(parts.map(doc=>Buffer.from(doc.data().data,'base64')));
   if(bytes.length<5||bytes.length>2097152||bytes.subarray(0,5).toString()!=='%PDF-'||bytes.length!==file.size||createHash('sha256').update(bytes).digest('hex')!==file.sha256)fail(409,'Integridade do documento não confirmada.');
   return {kind,mime:'application/pdf',base64:bytes.toString('base64'),sha256:file.sha256};
  }
@@ -324,14 +329,16 @@ async function dispatchOperation({auth,db},req,b,delegated=null){
   const certificate=(await db.collection('se7EjaCertificates').doc(id).get()).data()||{};
   const documentsUploaded={diploma:!!certificate.diploma?.sha256,historico:!!certificate.historico?.sha256};
   let filesVerified=false;
-  if(documentsUploaded.diploma&&documentsUploaded.historico&&process.env.SE7_EJA_PRIVATE_STORAGE_BUCKET){
+  if(documentsUploaded.diploma&&documentsUploaded.historico){
    try{
-    const bucket=getStorage().bucket(process.env.SE7_EJA_PRIVATE_STORAGE_BUCKET);
     const checks=await Promise.all(['diploma','historico'].map(async kind=>{
-     const file=certificate[kind],expected='eja-private/'+id+'/'+kind+'/'+file.sha256+'.pdf';
-     if(!/^[a-f0-9]{64}$/.test(file.sha256)||file.path!==expected)return false;
-     const [metadata]=await bucket.file(expected).getMetadata();
-     return Number(metadata.size)===file.size&&metadata.contentType==='application/pdf'&&metadata.metadata?.sha256===file.sha256;
+     const file=certificate[kind];
+     if(file?.storage!=='firestore-chunks'||!/^[a-f0-9]{64}$/.test(String(file.sha256||''))||!Number.isInteger(file.count)||file.count<1||file.count>11||file.size>2097152)return false;
+     const pdfRef=db.collection('se7EjaCertificates').doc(id).collection('privatePdf').doc(kind+'_'+file.sha256);
+     const [metadata,...chunks]=await Promise.all([pdfRef.get(),...Array.from({length:file.count},(_,i)=>pdfRef.collection('chunks').doc(String(i).padStart(3,'0')).get())]);
+     if(!metadata.exists||metadata.data().sha256!==file.sha256||metadata.data().size!==file.size||metadata.data().count!==file.count||chunks.some((doc,i)=>!doc.exists||doc.data().index!==i))return false;
+     const bytes=Buffer.concat(chunks.map(doc=>Buffer.from(doc.data().data||'','base64')));
+     return bytes.length===file.size&&bytes.subarray(0,5).toString()==='%PDF-'&&createHash('sha256').update(bytes).digest('hex')===file.sha256;
     }));
     filesVerified=checks.every(Boolean);
    }catch{filesVerified=false;}
