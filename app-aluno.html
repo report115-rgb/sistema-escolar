@@ -1556,7 +1556,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
             if(aba==='diploma-eja'&&alunoLogado){
                 const estado=document.getElementById('eja-diploma-estado');
                 if(estado){estado.textContent='Consultando situação dos documentos…';try{
-                    const r=window.SE7AdminPortal?.active ? await SE7.api('eja-certificate-readiness',{studentId:alunoLogado.id}) : await SE7.api('eja-certificate-status');
+                    const r=await SE7.api('eja-certificate-status');
                     estado.textContent=r.message||(r.diplomaAvailable&&r.historyAvailable?'Documentos disponíveis para o aluno.':'Aguardando verificação dos documentos.');
                     const area=document.getElementById('eja-diploma-arquivos');
                     if(area){

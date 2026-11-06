@@ -885,7 +885,7 @@ const uploadStatus=document.createElement('p');uploadStatus.className='text-xs t
    let binary='';for(let j=0;j<bytes.length;j+=8192)binary+=String.fromCharCode(...bytes.subarray(j,j+8192));
    const result=await SE7.api('eja-certificate-upload',{studentId:alunoId,kind:item[0],base64:btoa(binary)});
    uploadStatus.textContent=result.ok?item[1]+' armazenado com segurança. Atualizando a validação dos documentos…':'Envio não confirmado.';
-   if(result.ok){await atualizarSituacaoDiplomaEJA();uploadStatus.textContent=item[1]+' armazenado com segurança. Consulte a situação atualizada acima.';}
+   if(result.ok){file.value='';await atualizarSituacaoDiplomaEJA();uploadStatus.textContent=item[1]+' armazenado com segurança. Consulte a situação atualizada acima.';}
   }catch(error){uploadStatus.textContent='Falha no envio: '+String(error.message||'Tente novamente.');}
   finally{button.disabled=false;}
  });
@@ -948,11 +948,12 @@ titulo.textContent=checks.every(Boolean)?'Todas as verificações concluídas':'
 if(checks.every(Boolean))consulta.textContent='Todos os requisitos confirmados pelo servidor. Documentos disponíveis para o aluno.';
 const saved=result.documentsUploaded||{};
 uploadArea.querySelectorAll('[data-eja-kind]').forEach(row=>{
- const kind=row.dataset.ejaKind,uploaded=!!saved[kind],state=row.querySelector('[data-eja-file-state]'),button=row.querySelector('button');
+ const kind=row.dataset.ejaKind,uploaded=!!saved[kind],state=row.querySelector('[data-eja-file-state]');
+ const buttons=row.querySelectorAll('button'),view=buttons[0],send=buttons[1],file=row.querySelector('input[type="file"]');
  if(state)state.textContent=uploaded?'PDF armazenado no sistema':'PDF ainda não enviado';
- const view=row.querySelector('button:nth-of-type(1)');
- if(view)view.hidden=!uploaded;
- if(button)button.textContent=uploaded?'Substituir PDF':'Enviar PDF';
+ if(view){view.hidden=!uploaded;view.textContent='Ver documento';}
+ if(file)file.hidden=uploaded;
+ if(send)send.hidden=uploaded;
 });}catch(e){
  const detalhe=String(e?.message||'Erro de comunicação').slice(0,180);
  falha('Não foi possível concluir a consulta: '+detalhe+'. Nenhum documento foi liberado.');
