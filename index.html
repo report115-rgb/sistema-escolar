@@ -796,7 +796,7 @@ const polo=window.SE7Polos&&typeof window.SE7Polos.name==='function'?window.SE7P
 corpo.innerHTML='<dl class="se7-eja-campos">'+campo('Polo',polo||aluno.poloName||aluno.polo||aluno.poloId)+campo('Curso',curso&&curso.name)+campo('Turma',turma&&turma.name)+campo('Semestre',aluno.semestre||aluno.semester||(turma&&turma.semestre))+campo('Matrícula',aluno.code)+campo('Situação',aluno.status||'Ativo')+campo('Data da matrícula',dataEjaBR(aluno.enrollmentDate||aluno.enrollment?.date||aluno.enrolledAt||aluno.createdAt))+'</dl>';
 }
 else if(aba==='monitoramento'){
-corpo.innerHTML='<h4 class="font-bold mb-3">Monitoramento oficial da avaliação EJA</h4><div id="se7-eja-monitor-resumo" class="text-sm">Consultando avaliação…</div><div class="mt-5"><h5 class="font-semibold mb-3">Agendamento e liberação da prova</h5><div id="se7-eja-monitor-controles"></div></div>';
+corpo.innerHTML='<section class="mb-6"><h4 class="font-bold mb-3">Agendamento e Liberação de Provas</h4><div id="se7-eja-monitor-controles"></div></section><section><h4 class="font-bold mb-3">Monitoramento Oficial da Avaliação EJA</h4><div id="se7-eja-monitor-resumo" class="text-sm">Consultando avaliação…</div></section>';
 se7FichaResultadoEJA(alunoId,'se7-eja-monitor-resumo');
 const origem=document.getElementById('se7-eja-agendamento-'+alunoId);
 const painel=origem&&origem.firstElementChild;
@@ -891,23 +891,26 @@ const uploadStatus=document.createElement('p');uploadStatus.className='text-xs t
  });
  const view=document.createElement('button');view.type='button';view.className='px-3 py-2 rounded-lg bg-blue-700 text-white text-xs font-bold';view.textContent='Ver documento';view.hidden=true;
  view.addEventListener('click',async function(){
-  // A janela e aberta diretamente pelo clique para evitar bloqueio de pop-ups.
-  const preview=window.open('about:blank','_blank');
   view.disabled=true;uploadStatus.textContent='Abrindo '+item[1]+'…';
+  let pdfUrl=null;
   try{
    const response=await SE7.api('eja-certificate-file-get',{studentId:alunoId,kind:item[0]});
    if(response.mime!=='application/pdf'||!response.base64)throw Error('PDF indisponível.');
    const raw=atob(response.base64),bytes=new Uint8Array(raw.length);
    for(let i=0;i<raw.length;i++)bytes[i]=raw.charCodeAt(i);
    if(bytes.length<5||String.fromCharCode(...bytes.slice(0,5))!=='%PDF-')throw Error('PDF inválido.');
-   const url=URL.createObjectURL(new Blob([bytes],{type:'application/pdf'}));
-   if(preview&&!preview.closed){preview.location.href=url;uploadStatus.textContent=item[1]+' aberto para consulta.';}
-   else{
-    const a=document.createElement('a');a.href=url;a.download=item[0]==='diploma'?'Diploma-EJA.pdf':'Historico-Escolar-EJA.pdf';document.body.appendChild(a);a.click();a.remove();
-    uploadStatus.textContent='Visualização bloqueada pelo navegador. PDF enviado para download.';
-   }
-   setTimeout(()=>URL.revokeObjectURL(url),120000);
-  }catch(error){if(preview&&!preview.closed)preview.close();uploadStatus.textContent='Não foi possível abrir '+item[1]+': '+String(error?.message||'Erro de consulta.');}
+   pdfUrl=URL.createObjectURL(new Blob([bytes],{type:'application/pdf'}));
+   const dialog=document.createElement('dialog');
+   dialog.className='rounded-2xl border border-slate-600 bg-slate-900 text-white p-0 shadow-2xl backdrop:bg-black/75';
+   dialog.style.cssText='width:min(96vw,1100px);height:min(92vh,900px);max-width:none;max-height:none;';
+   const header=document.createElement('div');header.className='flex items-center justify-between gap-4 p-4 border-b border-slate-700';
+   const title=document.createElement('h3');title.className='font-bold text-base';title.textContent=item[1]+' — PDF oficial';
+   const close=document.createElement('button');close.type='button';close.className='px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-sm font-semibold';close.textContent='Fechar';close.onclick=()=>dialog.close();
+   const frame=document.createElement('iframe');frame.title='Visualização do '+item[1];frame.src=pdfUrl;frame.style.cssText='width:100%;height:calc(100% - 65px);border:0;background:white;';
+   header.append(title,close);dialog.append(header,frame);document.body.appendChild(dialog);
+   dialog.addEventListener('close',()=>{frame.src='about:blank';URL.revokeObjectURL(pdfUrl);dialog.remove();},{once:true});
+   dialog.showModal();uploadStatus.textContent=item[1]+' aberto para consulta.';
+  }catch(error){if(pdfUrl)URL.revokeObjectURL(pdfUrl);uploadStatus.textContent='Não foi possível abrir '+item[1]+': '+String(error?.message||'Erro de consulta.');}
   finally{view.disabled=false;}
  });
  const savedState=document.createElement('span');savedState.dataset.ejaFileState='1';savedState.className='text-xs text-slate-300';savedState.textContent='Verificando arquivo…';row.append(label,savedState,view,file,button);uploadArea.appendChild(row);
@@ -4877,65 +4880,22 @@ function updateLogoPreview(src) {
 
         // 1. Renderização atualizada da tabela de Alunos EJA com os botões redondos originais e agendamento
 function renderizarAlunosEJAAdmin() {
-    const tbody = document.getElementById('tabela-alunos-eja');
-    if (!tbody) return;
-
-    const thead = tbody.closest('table') ? tbody.closest('table').querySelector('thead') : null;
-    if (thead) {
-        thead.innerHTML = `
-            <tr class="border-b border-gray-200 dark:border-slate-700 text-gray-500">
-                <th class="p-3">Matrícula</th>
-                <th class="p-3">Nome / CPF</th>
-                <th class="p-3 text-center">Apostila PDF</th>
-                <th class="p-3 text-center">Agendamento & Prova Online (Individual)</th>
-            </tr>
-        `;
-    }
-
-    tbody.innerHTML = '';
-    
-    const alunosEJA = students.filter(s => {
-        const curso = courses.find(c => c.id === s.courseId);
-        return curso && (curso.nivel === 'Supletivo' || curso.sigla === 'EJA' || (curso.name && curso.name.toUpperCase().includes('EJA')));
-    });
-
-    if (alunosEJA.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-400">Nenhum aluno EJA matriculado.</td></tr>`;
-        return;
-    }
-
-    alunosEJA.forEach(s => {
-        if (!s.controleEJA) {
-            s.controleEJA = { apostilaAtiva: true, provaAtiva: false, dataInicio: '', dataFim: '' };
-        }
-
-        const apostilaLiberada = s.controleEJA.apostilaAtiva;
-        const provaLiberada = s.controleEJA.provaAtiva;
-        const dataInicio = s.controleEJA.dataInicio || '';
-        const dataFim = s.controleEJA.dataFim || '';
-
-        tbody.innerHTML += `
-            <tr class="border-b border-gray-100 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-900/40 transition">
-                <td class="p-3 font-bold text-emerald-600 dark:text-emerald-400">${s.code || '---'}</td>
-                <td class="p-3">
-                    <button type="button" class="font-bold text-left text-blue-700 dark:text-cyan-300 hover:underline focus-visible:outline-2 focus-visible:outline-cyan-400" onclick="se7AbrirFichaEJA(this)" data-aluno-id="${s.id}" title="Abrir ficha do aluno">${s.fullname} <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i></button><br>
-                    <span class="text-[11px] text-gray-400">CPF: ${s.cpf || '---'} &bull; Tel: ${s.whatsapp || '---'}</span>
-                </td>
-                
-                <!-- Coluna Apostila com Botão Redondo Original -->
-                <td class="p-3 text-center">
-                    <div class="inline-flex items-center gap-2 bg-gray-100 dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-gray-200 dark:border-slate-700">
-                        <label class="relative inline-flex items-center cursor-pointer shrink-0">
-                            <input type="checkbox" ${apostilaLiberada ? 'checked' : ''} onchange="alternarApostilaIndividualAluno('${s.id}', this.checked)" class="sr-only peer">
-                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-emerald-600"></div>
-                        </label>
-                        <span class="text-[11px] font-bold ${apostilaLiberada ? 'text-emerald-600' : 'text-gray-400'}">${apostilaLiberada ? 'Liberada' : 'Bloqueada'}</span>
-                    </div>
-                </td>
-
-                <!-- Coluna Prova Online com Botão Redondo Original e Agendamento -->
-                <td class="p-3">
-                    <div id="se7-eja-agendamento-${s.id}" hidden><div class="bg-gray-50 dark:bg-slate-900 p-3 rounded-xl border border-gray-200 dark:border-slate-700 space-y-2 max-w-md">
+ const tbody=document.getElementById('tabela-alunos-eja');if(!tbody)return;
+ const thead=tbody.closest('table')?.querySelector('thead');
+ if(thead)thead.innerHTML='<tr class="border-b border-slate-700 text-slate-400"><th class="p-3">Matrícula</th><th class="p-3">Aluno</th></tr>';
+ const alunos=students.filter(s=>{const c=courses.find(c=>c.id===s.courseId);return c&&(c.nivel==='Supletivo'||c.sigla==='EJA'||/EJA/i.test(c.name||''));});
+ tbody.replaceChildren();
+ if(!alunos.length){tbody.innerHTML='<tr><td colspan="2" class="p-4 text-center text-slate-400">Nenhum aluno EJA matriculado.</td></tr>';return;}
+ alunos.forEach(s=>{
+  if(!s.controleEJA)s.controleEJA={apostilaAtiva:true,provaAtiva:false,dataInicio:'',dataFim:''};
+  const provaLiberada=s.controleEJA.provaAtiva,dataInicio=s.controleEJA.dataInicio||'',dataFim=s.controleEJA.dataFim||'';
+  const tr=document.createElement('tr');tr.className='border-b border-slate-700 hover:bg-slate-800/60 transition';
+  const matricula=document.createElement('td');matricula.className='p-3 font-bold text-sky-400';matricula.textContent=s.code||'---';
+  const dados=document.createElement('td');dados.className='p-3';
+  const nome=document.createElement('button');nome.type='button';nome.className='font-semibold text-left text-slate-100 hover:underline focus-visible:outline-2 focus-visible:outline-cyan-400';nome.dataset.alunoId=s.id;nome.textContent=s.fullname||'Aluno';nome.title='Abrir ficha do aluno';nome.onclick=()=>se7AbrirFichaEJA(nome);
+  const info=document.createElement('div');info.className='text-xs text-slate-400 mt-1';info.textContent='CPF: '+(s.cpf||'---')+' • Tel: '+(s.whatsapp||'---');
+  const controls=document.createElement('div');
+  controls.innerHTML=`<div id="se7-eja-agendamento-${s.id}" hidden><div class="bg-gray-50 dark:bg-slate-900 p-3 rounded-xl border border-gray-200 dark:border-slate-700 space-y-2 max-w-md">
                         <div class="flex items-center justify-between">
                             <span class="text-xs font-bold text-blue-600 dark:text-blue-400">Status Geral:</span>
                             <div class="inline-flex items-center gap-2">
@@ -4964,13 +4924,9 @@ function renderizarAlunosEJAAdmin() {
                         <button type="button" onclick="ejaLiberarReagendamentoMaster('${s.id}',this)" class="w-full py-2 mt-2 bg-emerald-700 hover:bg-emerald-600 text-white rounded-lg text-xs font-semibold shadow transition"><i class="fa-solid fa-unlock mr-1"></i> Habilitar nova data · Isentar R$ 30,00</button>
                         <p class="text-[10px] text-gray-500 dark:text-slate-400">Exclusivo Master. Não cancela boletos existentes nem reinicia provas já realizadas.</p>
                     </div></div>
-                    <div class="text-xs font-semibold text-blue-600 dark:text-cyan-300">${dataInicio ? dataInicio.replace('T',' ') : 'Não agendada'}</div>
-                    <div class="text-[11px] text-gray-500">${provaLiberada ? 'Prova liberada' : (dataInicio ? 'Aguardando liberação' : 'Sem agendamento')}</div>
-                    <button type="button" data-aluno-id="${s.id}" onclick="se7AbrirFichaEJA(this,'prova')" class="mt-2 text-xs font-semibold text-blue-600 dark:text-cyan-300 hover:underline">Gerenciar agendamento</button>
-                </td>
-            </tr>
-        `;
-    });
+`;
+  dados.append(nome,info,controls);tr.append(matricula,dados);tbody.appendChild(tr);
+ });
 }
 
 // 2. Salva o agendamento individual do aluno no Firebase e dispara a notificação no WhatsApp
