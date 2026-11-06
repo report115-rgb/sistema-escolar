@@ -2753,6 +2753,10 @@ async function removerUsuarioSistemaFirebase(id){if(!confirm('Desativar esse fun
     const subabaId = primeiraSubaba?.dataset.subtab || primeiraSubaba?.getAttribute('onclick')?.match(/openSubTab\(event,\s*['"]([^'"]+)['"]\)/)?.[1];
     if (subabaId) openSubTab({currentTarget:primeiraSubaba}, subabaId);
     if (typeof atualizarModuloMatriz === 'function') atualizarModuloMatriz(tabId);
+    if(tabId === 'tab-gestao-eja'){
+        const botao=document.querySelector('#se7-eja-tabs .subtab-eja-btn');
+        if(botao && typeof openSubTabEJA==='function')openSubTabEJA({currentTarget:botao},'subeja-alunos');
+    }
 
     // 5. Gatilhos de renderização específica para componentes que dependem do DOM visível
     if(tabId === 'tab-controle-ponto-manual'){carregarProfessoresPontoManual();escutarRegistrosPontoManual();}
