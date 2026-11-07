@@ -21,11 +21,11 @@ import * as asaas from '../server/asaas.mjs';
 import * as replacement from '../server/asaas-replacement.mjs';
 import * as asaasBulk from '../server/asaas-bulk.mjs';
 import {roles,tabs,docTypes,digest,cpfKey,studentUid,alias,validId,password,hashPassword,verifyPassword,publicStudent,validCPF} from '../server/security.mjs';
-const PROJECT='sistema-escolar-nuvem';
-const APIKEY='AIzaSyBeJ-fqzwiQt0PZEKQ6e8zAPSuh7WRuaHo';
+const PROJECT=process.env.COMMERCIAL_FIREBASE_PROJECT_ID||'unconfigured';
+const APIKEY=process.env.COMMERCIAL_FIREBASE_API_KEY;
 const fail=(status,message)=>{throw Object.assign(new Error(message),{status});};
 const at=()=>F.serverTimestamp();
-async function authPassword(email,senha){const r=await fetch(`${process.env.NODE_ENV==='test'&&process.env.FIREBASE_AUTH_EMULATOR_HOST?'http://'+process.env.FIREBASE_AUTH_EMULATOR_HOST+'/identitytoolkit.googleapis.com/v1':'https://identitytoolkit.googleapis.com/v1'}/accounts:signInWithPassword?key=${APIKEY}`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({email,password:senha,returnSecureToken:true}),signal:AbortSignal.timeout(10000)});const d=await r.json();return r.ok?d:null;}
+async function authPassword(email,senha){if(process.env.SE7_PLATFORM_PILOT==='1')fail(409,'Autenticação legada indisponível na Matriz Teste.');if(!APIKEY)fail(503,'Autenticação não configurada.');const r=await fetch(`${process.env.NODE_ENV==='test'&&process.env.FIREBASE_AUTH_EMULATOR_HOST?'http://'+process.env.FIREBASE_AUTH_EMULATOR_HOST+'/identitytoolkit.googleapis.com/v1':'https://identitytoolkit.googleapis.com/v1'}/accounts:signInWithPassword?key=${APIKEY}`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({email,password:senha,returnSecureToken:true}),signal:AbortSignal.timeout(10000)});const d=await r.json();return r.ok?d:null;}
 async function limits(db,req,action,account=''){
  const ip=req.headers['x-vercel-forwarded-for']||req.headers['x-forwarded-for']||req.socket?.remoteAddress||'unknown';const bucket=Math.floor(Date.now()/900000);
  for(const [key,max] of [[`ip:${ip}`,action.startsWith('audit:')?300:action.startsWith('gateway:')?600:action.startsWith('email-send:')?2000:action.startsWith('asaas-bulk:')?180:action==='signup'?8:40],...(account?[[`account:${account}`,12]]:[])]){
