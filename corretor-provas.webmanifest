@@ -8,7 +8,7 @@
   "theme_color": "#071c39",
   "icons": [
     {
-      "src": "/corretor-provas-icon.svg",
+      "src": "/assets/se7-brand-icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
