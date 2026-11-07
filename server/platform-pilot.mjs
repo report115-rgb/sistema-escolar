@@ -28,9 +28,20 @@ export async function platformDiagnostic(db,account,body){
    collections[name]={queryOk:true,hasDocuments:!sample.empty&&sample.docs.length>0};
   }
   const config=await scoped.collection('config').doc('institution').get();
-  checks.push({institutionId:id,scopedPrefix:'academicInstitutions/'+id+'/',configExists:config.exists,collections});
+  const institution=institutions.find(i=>i?.id===id);
+  const plans=Array.isArray(catalog.data()?.plans)?catalog.data().plans:[];
+  const plan=plans.find(x=>x?.id===institution?.plan);
+  const usage=await db.collection('academicUsage').doc(id).get();
+  const activeStudents=await scoped.collection('students').where('status','==','Ativo').get();
+  const actualActive=activeStudents.size??activeStudents.docs.length;
+  const registered=usage.exists?usage.data()?.activeStudents:null;
+  const validPlan=!!plan&&Number.isInteger(plan.maxStudents)&&plan.maxStudents>0;
+  const additional=Number.isInteger(institution?.additionalStudents)&&institution.additionalStudents>=0?institution.additionalStudents:0;
+  const limit=validPlan?plan.maxStudents+additional:null;
+  const capacity={planConfigured:validPlan,limit,registeredActiveStudents:Number.isInteger(registered)?registered:null,actualActiveStudents:actualActive,counterConsistent:Number.isInteger(registered)?registered===actualActive:null,withinLimit:limit===null?null:institution?.own===true||actualActive<=limit,usageExists:usage.exists};
+  checks.push({institutionId:id,scopedPrefix:'academicInstitutions/'+id+'/',configExists:config.exists,collections,capacity});
  }
- return {readOnly:true,projectMatchesConfiguration:projectId==='não informado pelo SDK'?null:projectId===process.env.COMMERCIAL_FIREBASE_PROJECT_ID,projectId:process.env.COMMERCIAL_FIREBASE_PROJECT_ID,checks,scopeDistinct:checks[0].scopedPrefix!==checks[1].scopedPrefix,executedAt:new Date().toISOString(),limitations:['Não testa regras do SDK cliente: Admin SDK ignora regras Firestore.','Não testa gravação, matrícula ou limite de alunos.','Não comprova isolamento de permissões do Firebase Auth sem usuários de teste.']};
+ return {readOnly:true,projectMatchesConfiguration:projectId==='não informado pelo SDK'?null:projectId===process.env.COMMERCIAL_FIREBASE_PROJECT_ID,projectId:process.env.COMMERCIAL_FIREBASE_PROJECT_ID,checks,scopeDistinct:checks[0].scopedPrefix!==checks[1].scopedPrefix,executedAt:new Date().toISOString(),limitations:['Não testa regras do SDK cliente: Admin SDK ignora regras Firestore.','Confere o limite e o contador de alunos ativos, mas não testa criação, cancelamento ou reativação.','Não comprova isolamento de permissões do Firebase Auth sem usuários de teste.']};
 }
 
 export async function prepareContext({auth,db},req,body){
