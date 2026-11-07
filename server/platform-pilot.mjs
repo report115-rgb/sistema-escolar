@@ -6,11 +6,39 @@ export const pilotAllowed=new Set(['session','audit-event','audit-list','staff-l
 export async function platformOwner(auth,req){const token=String(req.headers.authorization||'').match(/^Bearer (.+)$/)?.[1];if(!token)fail(401,'Entre no Matriz.');let user;try{user=await auth.verifyIdToken(token,true);}catch{fail(401,'Sessão inválida.');}return user;}
 async function accountAccess(db,user){if(user.uid===process.env.COMMERCIAL_OWNER_UID)return {company:true};const s=await db.collection('academicUsers').doc(user.uid).get();const a=s.data();if(!s.exists||!a||a.enabled!==true||a.role!=='master')fail(403,'Conta sem acesso Master institucional.');safePart(a.institutionId);return {...a,company:false};}
 export async function choices(db,user,account){const c=await db.collection('commercialPrivate').doc('catalog').get();if(!c.exists)fail(409,'Prepare primeiro o cadastro das instituições no comercial.');return {institutions:(Array.isArray(c.data().institutions)?c.data().institutions:[]).filter(i=>i&&typeof i.id==='string'&&(account.company||i.id===account.institutionId)).map(i=>({id:i.id,name:i.name})),mustChangePassword:!!account.mustChangePassword};}
+
+// Diagnóstico de homologação: somente leitura, exclusivamente para o proprietário comercial.
+// Não cria documentos, não lista alunos e não devolve dados pessoais ou credenciais.
+export async function platformDiagnostic(db,account,body){
+ if(!account.company)fail(403,'Diagnóstico exclusivo do proprietário comercial.');
+ const catalog=await db.collection('commercialPrivate').doc('catalog').get();
+ const institutions=Array.isArray(catalog.data()?.institutions)?catalog.data().institutions:[];
+ const requested=body.institutionIds;
+ if(!Array.isArray(requested)||requested.length!==2||requested[0]===requested[1])fail(400,'Informe duas instituições distintas para homologação.');
+ const ids=requested.map(safePart);
+ if(ids.some(id=>!institutions.some(i=>i?.id===id)))fail(403,'Instituição não cadastrada no catálogo comercial.');
+ const projectId=db.projectId||db._settings?.projectId||'não informado pelo SDK';
+ if(process.env.COMMERCIAL_FIREBASE_PROJECT_ID==='sistema-escolar-nuvem'||process.env.SE7_PLATFORM_PILOT!=='1')fail(503,'Diagnóstico indisponível fora do Firebase comercial.');
+ const checks=[];
+ for(const id of ids){
+  const scoped=institutionDatabase(db,id);
+  const collections={};
+  for(const name of ['students','courses','classes','academicCalendars','polos']){
+   const sample=await scoped.collection(name).limit(1).get();
+   collections[name]={queryOk:true,hasDocuments:!sample.empty&&sample.docs.length>0};
+  }
+  const config=await scoped.collection('config').doc('institution').get();
+  checks.push({institutionId:id,scopedPrefix:'academicInstitutions/'+id+'/',configExists:config.exists,collections});
+ }
+ return {readOnly:true,projectMatchesConfiguration:projectId==='não informado pelo SDK'?null:projectId===process.env.COMMERCIAL_FIREBASE_PROJECT_ID,projectId:process.env.COMMERCIAL_FIREBASE_PROJECT_ID,checks,scopeDistinct:checks[0].scopedPrefix!==checks[1].scopedPrefix,executedAt:new Date().toISOString(),limitations:['Não testa regras do SDK cliente: Admin SDK ignora regras Firestore.','Não testa gravação, matrícula ou limite de alunos.','Não comprova isolamento de permissões do Firebase Auth sem usuários de teste.']};
+}
+
 export async function prepareContext({auth,db},req,body){
  if(process.env.SE7_PLATFORM_PILOT!=='1')fail(503,'Esta versão é exclusiva da cópia de testes.');
  if(body.action==='public-info')return {result:{institution:{name:'SE7 • Matriz de testes'}}};
  const user=await platformOwner(auth,req),account=await accountAccess(db,user);
  if(body.action==='platform-access')return {result:await choices(db,user,account)};
+ if(body.action==='platform-diagnostic')return {result:await platformDiagnostic(db,account,body)};
  if(body.action==='platform-password'){
  if(account.company||!account.mustChangePassword)fail(409,'Sua conta não tem troca inicial pendente.');
  const password=body.password;if(typeof password!=='string'||password.length<12||password.length>128||!/[A-Za-z]/.test(password)||!/[0-9]/.test(password))fail(400,'Use de 12 a 128 caracteres, incluindo letras e números.');
