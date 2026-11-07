@@ -8,7 +8,7 @@ export async function studentCapacity(raw,institutionId,user,b){
  const studentRef=scoped.collection('students').doc(id),usage=raw.collection('academicUsage').doc(institutionId),catalog=raw.collection('commercialPrivate').doc('catalog'),inbox=raw.collection('commercialPrivate').doc('notifications');
  const result=await raw.runTransaction(async tx=>{
  const [c,u,s,n]=await Promise.all([tx.get(catalog),tx.get(usage),tx.get(studentRef),tx.get(inbox)]);
- const institution=c.data()?.institutions?.find(i=>i.id===institutionId),plan=c.data()?.plans?.find(p=>p.id===institution?.plan);
+ const institutions=c.data()?.institutions,plans=c.data()?.plans;const institution=Array.isArray(institutions)?institutions.find(i=>i?.id===institutionId):null,plan=Array.isArray(plans)?plans.find(p=>p?.id===institution?.plan):null;
  if(!institution||!plan||!Number.isInteger(plan.maxStudents)||plan.maxStudents<1)fail(409,'A instituição precisa de um plano com limite válido.');
  const limit=plan.maxStudents+(Number.isInteger(institution.additionalStudents)&&institution.additionalStudents>=0?institution.additionalStudents:0);
  let count;if(u.exists)count=u.data().activeStudents;else{const active=await tx.get(scoped.collection('students').where('status','==','Ativo'));count=active.size??active.docs.length;}
