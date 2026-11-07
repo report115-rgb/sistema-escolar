@@ -4145,11 +4145,11 @@ function se7EhAlunoEJA(s){const c=(typeof courses==='undefined'?[]:courses).find
 function renderGestionStudentsTable(){renderGestionStudentsTableGroup(false);renderGestionStudentsTableGroup(true);}
         function se7CorPontoMatricula(status){
  const n=String(status||'Ativo').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toLowerCase();
- if(/^ativ[oa]$/.test(n))return 'bg-blue-500';
- if(/^cancelad[oa]$/.test(n))return 'bg-red-500';
- if(/^transferid[oa]$/.test(n))return 'bg-orange-500';
- if(/^concluid[oa]$/.test(n))return 'bg-emerald-500';
- return 'bg-slate-400';
+ if(n.startsWith('ativ'))return '#3b82f6';
+ if(n.includes('cancel'))return '#ef4444';
+ if(n.includes('transfer'))return '#f97316';
+ if(n.includes('conclu'))return '#10b981';
+ return '#94a3b8';
 }
 function renderGestionStudentsTableGroup(inactive=false) {
     const tbody = document.getElementById(inactive?'tabela-gestao-alunos-inativos':'tabela-gestao-alunos');
@@ -4208,7 +4208,7 @@ function renderGestionStudentsTableGroup(inactive=false) {
                 <td class="p-3 font-bold text-blue-600 dark:text-blue-400">${SE7Safe.escape(s.code || '---')}</td>
                 <td class="p-3 font-semibold"><button type="button" class="se7-student-name" data-student-sheet="${SE7Safe.escape(s.id)}" title="Consultar ficha do aluno">${SE7Safe.escape(s.fullname)}</button></td>
                 <td class="p-3">${SE7Safe.escape(turma?turma.name:s.classId?(matrizClassesFalhou?'Falha ao carregar turma':matrizClassesCarregadas?'Turma não encontrada':'Carregando turma…'):'Sem turma')}<br><span class="text-[10px] text-gray-400">${SE7Safe.escape(curso?curso.name:s.courseId?(matrizCursosCarregados?'Curso não encontrado':'Carregando curso…'):'Sem curso')}</span></td>
-                <td class="p-3"><span class="px-2 py-0.5 ${classeStatusMatricula(s.status)} rounded text-[10px] font-bold"><span aria-hidden="true" class="inline-block w-2 h-2 rounded-full mr-1.5 align-middle ${se7CorPontoMatricula(s.status)}"></span>${rotuloStatusMatricula(s.status)}</span>${s.enrollmentRequest ? '<div class="text-[10px] text-amber-500 mt-1">Solicitação pendente</div>' : ''}</td>
+                <td class="p-3"><span class="inline-flex items-center gap-2 px-3 py-1.5 ${classeStatusMatricula(s.status)} rounded-lg text-sm font-semibold"><span aria-hidden="true" style="display:inline-block;width:8px;height:8px;min-width:8px;border-radius:50%;background-color:${se7CorPontoMatricula(s.status)}"></span>${rotuloStatusMatricula(s.status)}</span>${s.enrollmentRequest ? '<div class="text-[10px] text-amber-500 mt-1">Solicitação pendente</div>' : ''}</td>
                 <td class="p-3 text-right space-x-1">
                     <button onclick="editarAluno('${s.id}')" title="Editar aluno" aria-label="Editar aluno" class="se7-edit-student px-2.5 py-1 bg-blue-600 text-white rounded text-xs"><i class="fa-solid fa-pen" aria-hidden="true"></i></button>
                     ${window.SE7PortalPreview?.allowed()?`<button type="button" data-preview-student="${SE7Safe.escape(s.id)}" class="px-2.5 py-1 bg-indigo-600 text-white rounded text-xs shadow"><i class="fa-solid fa-mobile-screen-button mr-1" aria-hidden="true"></i> Ver portal</button>`:''}
@@ -4964,15 +4964,15 @@ function renderizarAlunosEJAAdmin() {
   const situacao=document.createElement('td');situacao.className='p-3';
   const status=document.createElement('span');
   const situacaoMatricula=String(s.status||'Ativo').trim();
-  const normalizado=situacaoMatricula.normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase();
+  const normalizado=situacaoMatricula.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
   const rotulos={ativo:'Ativo',ativa:'Ativo',cancelado:'Cancelado',cancelada:'Cancelado',transferido:'Transferido',transferida:'Transferido',concluido:'Concluído',concluida:'Concluído',inativo:'Inativo',inativa:'Inativo'};
   status.className='inline-flex px-2.5 py-1 rounded-lg text-xs font-bold '+(normalizado.startsWith('ativ')?'bg-emerald-100 text-emerald-800':normalizado.startsWith('concluid')?'bg-blue-100 text-blue-800':normalizado.startsWith('cancelad')?'bg-red-100 text-red-800':'bg-slate-200 text-slate-800');
-  const ponto=document.createElement('span');ponto.className='inline-block w-2 h-2 rounded-full mr-1.5 '+se7CorPontoMatricula(s.status);ponto.setAttribute('aria-hidden','true');
+  const ponto=document.createElement('span');ponto.className='inline-block w-2 h-2 rounded-full mr-1.5';ponto.style.backgroundColor=se7CorPontoMatricula(s.status);ponto.style.minWidth='8px';ponto.setAttribute('aria-hidden','true');
   status.append(ponto,document.createTextNode(rotulos[normalizado]||situacaoMatricula));
   situacao.replaceChildren(status);
   const actions=document.createElement('td');actions.className='p-3 text-right';
   if(window.SE7PortalPreview?.allowed()){
-   const portal=document.createElement('button');portal.type='button';portal.className='px-2.5 py-1 bg-indigo-600 text-white rounded text-xs shadow mr-2';portal.dataset.previewStudent=String(s.id);portal.innerHTML='<i class="fa-solid fa-mobile-screen-button mr-1" aria-hidden="true"></i> Ver portal';portal.title='Visualizar o Portal do Aluno';actions.appendChild(portal);
+   const portal=document.createElement('button');portal.type='button';portal.className='px-2.5 py-1 bg-indigo-600 text-white rounded text-xs shadow mr-2';portal.dataset.previewStudent=String(s.id);portal.innerHTML='<i class="fa-solid fa-arrow-up-right-from-square mr-1" aria-hidden="true"></i> Ver portal';portal.title='Visualizar o Portal do Aluno';actions.appendChild(portal);
   }
   const edit=document.createElement('button');edit.type='button';edit.className='se7-edit-student px-2.5 py-1 bg-blue-600 text-white rounded text-xs';edit.innerHTML='<i class="fa-solid fa-pen" aria-hidden="true"></i>';edit.title='Editar aluno';edit.setAttribute('aria-label','Editar aluno');edit.onclick=()=>editarAluno(s.id);actions.appendChild(edit);
   dados.append(nome,controls);tr.append(matricula,dados,turmaTd,situacao,actions);tbody.appendChild(tr);
