@@ -1,0 +1,17 @@
+{
+  "name": "Corretor de Provas — SE7",
+  "short_name": "Corretor SE7",
+  "start_url": "/corretor-provas.html",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#071c39",
+  "theme_color": "#071c39",
+  "icons": [
+    {
+      "src": "/corretor-provas-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
