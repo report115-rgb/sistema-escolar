@@ -19,3 +19,14 @@
 .se7-teacher-profile .se7-exam-grid>div{min-width:0}
 .se7-teacher-profile .se7-exam-grid>div>strong{display:block;font-size:14px;line-height:1.5;font-weight:600;overflow-wrap:anywhere}
 .se7-teacher-profile .se7-exam-grid>div>small{font-size:12px;line-height:1.5}
+
+/* Modal de questões: cabeçalho fixo e rolagem única no formulário */
+.se7-exam-subject-modal{display:flex;flex-direction:column;overflow:hidden;max-height:90dvh;padding:14px 18px;width:min(960px,96vw)}
+.se7-exam-subject-modal:not([open]){display:none}
+.se7-exam-subject-header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0}
+.se7-exam-subject-header h3{margin:0;min-width:0;font-size:18px}
+.se7-exam-subject-actions{display:flex;gap:6px;flex-shrink:0;align-items:center}
+.se7-exam-subject-scroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;margin-top:8px;padding-right:5px}
+.se7-exam-subject-scroll .se7-exam-questions{max-height:none;overflow:visible}
+.se7-exam-autosave-status{display:block;color:#9ad7f5;margin:6px 0;font-size:12px}
+@media(max-width:600px){.se7-exam-subject-header{align-items:flex-start}.se7-exam-subject-header h3{font-size:15px}.se7-exam-subject-actions button{font-size:11px;padding:7px 8px;margin:0}}
