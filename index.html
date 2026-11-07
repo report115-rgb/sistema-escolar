@@ -4971,6 +4971,9 @@ function renderizarAlunosEJAAdmin() {
   status.append(ponto,document.createTextNode(rotulos[normalizado]||situacaoMatricula));
   situacao.replaceChildren(status);
   const actions=document.createElement('td');actions.className='p-3 text-right';
+  if(window.SE7PortalPreview?.allowed()){
+   const portal=document.createElement('button');portal.type='button';portal.className='px-2.5 py-1 bg-indigo-600 text-white rounded text-xs shadow mr-2';portal.dataset.previewStudent=String(s.id);portal.innerHTML='<i class="fa-solid fa-mobile-screen-button mr-1" aria-hidden="true"></i> Ver portal';portal.title='Visualizar o Portal do Aluno';actions.appendChild(portal);
+  }
   const edit=document.createElement('button');edit.type='button';edit.className='se7-edit-student px-2.5 py-1 bg-blue-600 text-white rounded text-xs';edit.innerHTML='<i class="fa-solid fa-pen" aria-hidden="true"></i>';edit.title='Editar aluno';edit.setAttribute('aria-label','Editar aluno');edit.onclick=()=>editarAluno(s.id);actions.appendChild(edit);
   dados.append(nome,controls);tr.append(matricula,dados,turmaTd,situacao,actions);tbody.appendChild(tr);
  });
