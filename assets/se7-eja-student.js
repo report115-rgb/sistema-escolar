@@ -68,8 +68,8 @@ async function openExam(){if(preview())return;const r=await api('eja-exam-start'
 #se7-eja-attempt .se7-eja-subject-row .se7-eja-subject-label{flex:1}
 #se7-eja-attempt .se7-eja-progress[hidden],#se7-eja-attempt .se7-eja-not-started[hidden]{display:none!important}
 #se7-eja-attempt .se7-eja-progress{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:#fcd38b;white-space:nowrap}
-#se7-eja-attempt .se7-eja-hourglass{display:inline-block;animation:se7-eja-turn 2s linear infinite;transform-origin:center}
-@keyframes se7-eja-turn{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+#se7-eja-attempt .se7-eja-hourglass{display:inline-block;animation:se7-eja-turn 4s ease-in-out infinite;transform-origin:center}
+@keyframes se7-eja-turn{0%,49.9%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
 #se7-eja-attempt .se7-eja-not-started{display:inline-flex;align-items:center;gap:7px;color:#cbd5e1;font-size:12px;font-weight:700;white-space:nowrap}
 #se7-eja-attempt .se7-eja-not-started-dot{width:9px;height:9px;border-radius:50%;background:#ef4444;animation:se7-eja-idle 4s steps(1,end) infinite}
 @keyframes se7-eja-idle{0%,49.9%{background:#ef4444}50%,100%{background:#3b82f6}}
