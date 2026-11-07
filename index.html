@@ -182,6 +182,7 @@
     content: "\f518" !important;
 }
 </style>
+<style>.se7-status-unico::before,.se7-status-unico::after{content:none!important;display:none!important}.se7-status-unico>span[aria-hidden="true"]{flex-shrink:0}</style>
 </head>
 <body class="se7-suite se7-matriz bg-gray-100 dark:bg-slate-900 text-gray-800 dark:text-gray-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-300 pb-16">    
 
@@ -4143,7 +4144,9 @@ function limparFiltrosAlunos(){
 }
 function se7EhAlunoEJA(s){const c=(typeof courses==='undefined'?[]:courses).find(c=>String(c.id)===String(s.courseId));return !!c&&(c.nivel==='Supletivo'||c.sigla==='EJA'||/EJA|SUPLETIVO/i.test(c.name||''));}
 function renderGestionStudentsTable(){renderGestionStudentsTableGroup(false);renderGestionStudentsTableGroup(true);}
-        function se7CorPontoMatricula(status){
+        // Evita o ponto decorativo legado dos badges: somente o ponto explícito permanece.
+function se7CorTextoMatricula(status){return se7CorPontoMatricula(status);}
+function se7CorPontoMatricula(status){
  const n=String(status||'Ativo').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toLowerCase();
  if(n.startsWith('ativ'))return '#3b82f6';
  if(n.includes('cancel'))return '#ef4444';
@@ -4208,7 +4211,7 @@ function renderGestionStudentsTableGroup(inactive=false) {
                 <td class="p-3 font-bold text-blue-600 dark:text-blue-400">${SE7Safe.escape(s.code || '---')}</td>
                 <td class="p-3 font-semibold"><button type="button" class="se7-student-name" data-student-sheet="${SE7Safe.escape(s.id)}" title="Consultar ficha do aluno">${SE7Safe.escape(s.fullname)}</button></td>
                 <td class="p-3">${SE7Safe.escape(turma?turma.name:s.classId?(matrizClassesFalhou?'Falha ao carregar turma':matrizClassesCarregadas?'Turma não encontrada':'Carregando turma…'):'Sem turma')}<br><span class="text-[10px] text-gray-400">${SE7Safe.escape(curso?curso.name:s.courseId?(matrizCursosCarregados?'Curso não encontrado':'Carregando curso…'):'Sem curso')}</span></td>
-                <td class="p-3"><span class="inline-flex items-center gap-2 px-3 py-1.5 ${classeStatusMatricula(s.status)} rounded-lg text-sm font-semibold"><span aria-hidden="true" style="display:inline-block;width:8px;height:8px;min-width:8px;border-radius:50%;background-color:${se7CorPontoMatricula(s.status)}"></span>${rotuloStatusMatricula(s.status)}</span>${s.enrollmentRequest ? '<div class="text-[10px] text-amber-500 mt-1">Solicitação pendente</div>' : ''}</td>
+                <td class="p-3"><span class="se7-status-unico inline-flex items-center gap-2 px-3 py-1.5 ${classeStatusMatricula(s.status)} rounded-lg text-sm font-semibold" style="color:${se7CorTextoMatricula(s.status)}"><span aria-hidden="true" style="display:inline-block;width:8px;height:8px;min-width:8px;border-radius:50%;background-color:${se7CorPontoMatricula(s.status)}"></span>${rotuloStatusMatricula(s.status)}</span>${s.enrollmentRequest ? '<div class="text-[10px] text-amber-500 mt-1">Solicitação pendente</div>' : ''}</td>
                 <td class="p-3 text-right space-x-1">
                     <button onclick="editarAluno('${s.id}')" title="Editar aluno" aria-label="Editar aluno" class="se7-edit-student px-2.5 py-1 bg-blue-600 text-white rounded text-xs"><i class="fa-solid fa-pen" aria-hidden="true"></i></button>
                     ${window.SE7PortalPreview?.allowed()?`<button type="button" data-preview-student="${SE7Safe.escape(s.id)}" class="px-2.5 py-1 bg-indigo-600 text-white rounded text-xs shadow"><i class="fa-solid fa-mobile-screen-button mr-1" aria-hidden="true"></i> Ver portal</button>`:''}
@@ -4966,8 +4969,8 @@ function renderizarAlunosEJAAdmin() {
   const situacaoMatricula=String(s.status||'Ativo').trim();
   const normalizado=situacaoMatricula.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
   const rotulos={ativo:'Ativo',ativa:'Ativo',cancelado:'Cancelado',cancelada:'Cancelado',transferido:'Transferido',transferida:'Transferido',concluido:'Concluído',concluida:'Concluído',inativo:'Inativo',inativa:'Inativo'};
-  status.className='inline-flex px-2.5 py-1 rounded-lg text-xs font-bold '+(normalizado.startsWith('ativ')?'bg-emerald-100 text-emerald-800':normalizado.startsWith('concluid')?'bg-blue-100 text-blue-800':normalizado.startsWith('cancelad')?'bg-red-100 text-red-800':'bg-slate-200 text-slate-800');
-  const ponto=document.createElement('span');ponto.className='inline-block w-2 h-2 rounded-full mr-1.5';ponto.style.backgroundColor=se7CorPontoMatricula(s.status);ponto.style.minWidth='8px';ponto.setAttribute('aria-hidden','true');
+  status.className='se7-status-unico inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold '+(normalizado.startsWith('ativ')?'bg-emerald-100 text-emerald-800':normalizado.startsWith('concluid')?'bg-blue-100 text-blue-800':normalizado.startsWith('cancelad')?'bg-red-100 text-red-800':'bg-slate-200 text-slate-800');
+  const ponto=document.createElement('span');ponto.className='inline-block w-2 h-2 rounded-full mr-1.5';ponto.style.backgroundColor=se7CorPontoMatricula(s.status);ponto.style.minWidth='8px';ponto.setAttribute('aria-hidden','true');status.style.color=se7CorTextoMatricula(s.status);
   status.append(ponto,document.createTextNode(rotulos[normalizado]||situacaoMatricula));
   situacao.replaceChildren(status);
   const actions=document.createElement('td');actions.className='p-3 text-right';
