@@ -2120,6 +2120,8 @@ async function renderizarLogsAuditoria(mais=false){
 // FUNÇÕES DO CALENDÁRIO ACADÊMICO FLUTUANTE
 // ==========================================
 
+function poloCalendarioFlutuante(){const usuario=perfilVisualizadoMatriz||JSON.parse(sessionStorage.getItem('usuario_logado')||'{}');if(usuario.perfil==='master'&&!perfilVisualizadoMatriz)return '';return usuario.poloId||usuario.poloIds?.[0]||'';}
+function turmasCalendarioFlutuante(){const polo=poloCalendarioFlutuante();const usuario=perfilVisualizadoMatriz||JSON.parse(sessionStorage.getItem('usuario_logado')||'{}');if(usuario.perfil!=='master'&&!polo)return [];return (typeof classes==='undefined'?[]:classes).filter(t=>!polo||String(t.poloId)===String(polo));}
 function abrirModalCalendarioFlutuante() {
     const modal = document.getElementById('modal-calendario-flutuante');
     if (!modal) return;
@@ -2129,7 +2131,7 @@ function abrirModalCalendarioFlutuante() {
     if (selectCurso) {
         selectCurso.innerHTML = '<option value="">Selecione o curso...</option>';
         if (typeof courses !== 'undefined' && courses.length > 0) {
-            courses.forEach(c => {
+            courses.filter(c=>turmasCalendarioFlutuante().some(t=>String(t.courseId)===String(c.id))).forEach(c => {
                 selectCurso.insertAdjacentHTML('beforeend', `<option value="${c.id}">${c.name} (${c.sigla || ''})</option>`);
             });
         }
@@ -2167,7 +2169,7 @@ function atualizarTurmasCalendarioFlutuante() {
     }
 
     if (typeof classes !== 'undefined') {
-        const turmasFiltradas = classes.filter(t => t.courseId === cursoId);
+        const turmasFiltradas = turmasCalendarioFlutuante().filter(t => String(t.courseId) === String(cursoId));
         if (turmasFiltradas.length === 0) {
             selectTurma.innerHTML = '<option value="">Nenhuma turma cadastrada para este curso</option>';
         } else {
@@ -2191,7 +2193,7 @@ function renderizarCalendarioFlutuanteResultado() {
 
     if (!container) return;
 
-    if (!turmaId) {
+    if (!turmaId || !turmasCalendarioFlutuante().some(t=>String(t.id)===String(turmaId))) {
         container.innerHTML = `<p class="text-xs text-gray-400 text-center py-8">Selecione uma turma para carregar o calendário acadêmico.</p>`;
         return;
     }
