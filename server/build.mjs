@@ -9,4 +9,4 @@ import {mkdir,copyFile,cp,rm} from 'node:fs/promises';
 await rm('public',{recursive:true,force:true});await mkdir('public',{recursive:true});
 for(const f of ['index.html','app-aluno.html','app-preceptor.html','app-financeiro.html','totem.html','administracao-auth.html','validar-relatorio.html','validar-acordo.html','validar-convenio.html','validar-estagio.html'])await copyFile(f,'public/'+f);
 await cp('assets','public/assets',{recursive:true});
-for(const f of ['app-aluno.webmanifest','app-aluno-sw.js'])await copyFile(f,'public/'+f);
+for(const f of ['app-aluno.webmanifest','app-aluno-sw.js','corretor-provas.html','corretor-provas.webmanifest','corretor-provas-icon.svg','corretor-provas-sw.js'])await copyFile(f,'public/'+f);
