@@ -18,7 +18,7 @@ export function modularCyclePlan({subjects,months,firstPaymentConfirmedDate}){
   if(!subjectId||seen.has(subjectId))fail('Disciplina sem identificador ou duplicada.');
   seen.add(subjectId);
   const cycle=Math.floor(i*months/subjects.length);
-  return {subjectId,cycle:cycle+1,contentReleaseDate:date(start+cycle*30),examEarliestDate:date(start+cycle*30+27)};
+  return {subjectId,cycle:cycle+1,contentReleaseDate:date(start+cycle*30),lessons:[0,7,14].map((offset,index)=>({number:index+1,releaseDate:date(start+cycle*30+offset)})),examEarliestDate:date(start+cycle*30+27)};
  });
 }
 export function modularDisciplineState({discipline,today,materialAccessed=false,videoCompleted=false,examCompleted=false}){
