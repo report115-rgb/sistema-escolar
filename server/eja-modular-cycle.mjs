@@ -20,6 +20,7 @@ export function modularCyclePlan({subjects,months,firstPaymentConfirmedDate}){
   const cycle=Math.floor(i*months/subjects.length);
   return {subjectId,cycle:cycle+1,contentReleaseDate:date(start+cycle*30),lessons:[0,7,14].map((offset,index)=>({number:index+1,releaseDate:date(start+cycle*30+offset)})),examEarliestDate:date(start+cycle*30+27)};
  });
+ return plan.map(p=>{const next=plan.find(x=>x.examEarliestDate>p.examEarliestDate);return {...p,examOpenAt:p.examEarliestDate+'T08:00:00',examCloseAt:next?date(day(next.examEarliestDate)-1)+'T23:59:59.999':null,examTimeZone:'America/Belem'};});
 }
 export function modularDisciplineState({discipline,today,materialAccessed=false,videoCompleted=false,examCompleted=false}){
  const now=day(today),content=day(discipline.contentReleaseDate),exam=day(discipline.examEarliestDate);
