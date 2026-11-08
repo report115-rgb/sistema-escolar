@@ -49,7 +49,7 @@ import {modularExamAction} from '../server/eja-modular-exam-admin.mjs';
 import {modularStudentExamAction} from '../server/eja-modular-attempt.mjs';
 import {modularMaterialsAction} from '../server/eja-modular-materials.mjs';
 import {modularReadinessAction} from '../server/eja-modular-readiness.mjs';
-import {modularStudentSnapshotAction,modularStudentMaterialsAction} from '../server/eja-modular-student.mjs';
+import {modularStudentSnapshotAction,modularStudentMaterialsAction,modularStudentActivityAction} from '../server/eja-modular-student.mjs';
 import {modularTuitionAction} from '../server/eja-modular-tuition.mjs';
 import {modularBindFirstPayment} from '../server/eja-modular-finance-link.mjs';
 import {modularFinancePlanAction} from '../server/eja-modular-finance-plan.mjs';
@@ -378,6 +378,7 @@ async function dispatchOperation({auth,db},req,b,delegated=null){
  if(action==='eja-modular-finance-plan')return modularFinancePlanAction(db,b,u);
  if(action==='eja-modular-student-snapshot')return modularStudentSnapshotAction(db,b,u);
  if(action==='eja-modular-student-materials')return modularStudentMaterialsAction(db,b,u);
+ if(action==='eja-modular-student-activity')return modularStudentActivityAction(db,b,u);
  if(action==='eja-modular-student-exam')return modularStudentExamAction(db,b,u);
  if(action==='course-save')return saveCourseConfiguration(db,b,u);
  if(action==='class-save')return saveClass(db,{...b,id:b.id?validId(b.id):undefined,courseId:validId(b.courseId)},u);
