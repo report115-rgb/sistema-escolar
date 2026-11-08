@@ -19,11 +19,11 @@ export async function modularBindFirstPayment(db,b,u){
  if(!tuition.exists)fail(409,'Configure o valor total do curso antes de vincular pagamentos.');
  if(!planDoc.exists)fail(409,'Salve o plano financeiro do aluno antes de vincular a primeira cobrança.');
  const plan=planDoc.data();
- if(plan.courseId!==courseId||plan.months!==months||plan.totalCents!==tuition.data().totalCents||plan.firstPaymentLinked)fail(409,'Plano financeiro divergente ou já vinculado.');
+ if(plan.studentId!==studentId||plan.courseId!==courseId||plan.months!==months||plan.totalCents!==tuition.data().totalCents||plan.firstPaymentLinked)fail(409,'Plano financeiro divergente ou já vinculado.');
  const installments=modularInstallments(plan.totalCents,months);
- if(plan.firstInstallmentCents!==installments[0]||plan.installments?.length!==months)fail(409,'Plano financeiro inconsistente.');
- if(!invoice.exists||invoice.data().studentId!==studentId||invoice.data().state!=='linked'||!invoice.data().paymentId)fail(409,'Fatura não vinculada ao Asaas para este aluno.');
- if(invoice.data().amountCents!==installments[0])fail(409,'Primeira parcela não corresponde ao valor configurado para o prazo escolhido.');
+ if(plan.firstInstallmentCents!==installments[0]||plan.installments?.length!==months||plan.installments.some((p,i)=>p.number!==i+1||p.amountCents!==installments[i]))fail(409,'Plano financeiro inconsistente.');
+ if(!invoice.exists||invoice.data().studentId!==studentId||invoice.data().state!=='linked'||invoice.data().superseded||invoice.data().partialRefund||!invoice.data().paymentId)fail(409,'Fatura não vinculada ao Asaas para este aluno.');
+ if(invoice.data().amountCents!==installments[0]||invoice.data().dueDate!==plan.firstDueDate)fail(409,'Primeira parcela não corresponde ao valor configurado para o prazo escolhido.');
  if(!reverse.exists||(reverse.data().studentId||reverse.data().alunoId)!==studentId)fail(409,'Registro financeiro divergente.');
  const paymentId=validId(invoice.data().paymentId),linkRef=db.collection('se7EjaModularPaymentLinks').doc(paymentId);
  const paymentReverse=await db.collection('se7AsaasPayments').doc(paymentId).get();
@@ -33,9 +33,9 @@ export async function modularBindFirstPayment(db,b,u){
   const planRef=db.collection('se7EjaModularFinancePlans').doc(studentId);
   const [old,s,p,inv,paymentMap]=await Promise.all([tx.get(linkRef),tx.get(studentRef),tx.get(planRef),tx.get(db.collection('se7AsaasInvoices').doc(invoiceId)),tx.get(db.collection('se7AsaasPayments').doc(paymentId))]);
   if(!s.exists||s.data().courseId!==courseId||s.data().ejaModularActivation?.confirmed)fail(409,'Matrícula alterada ou já ativada.');
-  if(!inv.exists||inv.data().paymentId!==paymentId||inv.data().state!=='linked'||inv.data().studentId!==studentId||inv.data().amountCents!==installments[0]||!paymentMap.exists||paymentMap.data().invoiceId!==invoiceId||paymentMap.data().studentId!==studentId)fail(409,'Vínculo Asaas alterado durante a operação.');
-  if(!p.exists||p.data().version!==plan.version||p.data().firstPaymentLinked)fail(409,'Plano alterado ou cobrança já vinculada.');
-  if(old.exists){const v=old.data();if(v.studentId!==studentId||v.invoiceId!==invoiceId||v.months!==months)fail(409,'Pagamento já vinculado a outro contrato.');return;}
+  if(!inv.exists||inv.data().paymentId!==paymentId||inv.data().state!=='linked'||inv.data().superseded||inv.data().partialRefund||inv.data().studentId!==studentId||inv.data().amountCents!==installments[0]||inv.data().dueDate!==plan.firstDueDate||!paymentMap.exists||paymentMap.data().invoiceId!==invoiceId||paymentMap.data().studentId!==studentId)fail(409,'Vínculo Asaas alterado durante a operação.');
+  if(!p.exists||p.data().version!==plan.version||p.data().firstPaymentLinked||p.data().firstPaymentId||p.data().firstInvoiceId)fail(409,'Plano alterado ou cobrança já vinculada.');
+  if(old.exists)fail(409,'Pagamento já possui vínculo modular. Consulte o plano financeiro.');
   tx.create(linkRef,record);
   tx.update(planRef,{firstPaymentLinked:true,firstPaymentId:paymentId,firstInvoiceId:invoiceId,linkedAt:new Date().toISOString()});
  });

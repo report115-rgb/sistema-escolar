@@ -22,12 +22,12 @@ export async function modularPaymentWebhook(db,payload){
  if(!studentDoc.exists||!courseDoc.exists||!invoiceDoc.exists||!reverseDoc.exists||!planDoc.exists||reverseDoc.data().studentId!==sid||reverseDoc.data().invoiceId!==invoiceId||reverseDoc.data().superseded)return false;
  const student={...studentDoc.data(),id:sid},course={...courseDoc.data(),id:courseId},invoice={...invoiceDoc.data(),id:invoiceId};
  if(student.courseId!==courseId||invoice.studentId!==sid||invoice.amountCents!==link.firstInstallmentCents||invoice.superseded)return false;
- const plan=planDoc.data();if(!plan.firstPaymentLinked||plan.firstPaymentId!==paymentId||plan.firstInvoiceId!==invoiceId||plan.version!==link.planVersion||plan.months!==link.months||plan.totalCents!==link.totalCents||plan.firstInstallmentCents!==link.firstInstallmentCents)return false;
+ const plan=planDoc.data();if(plan.studentId!==sid||plan.courseId!==courseId||!plan.firstPaymentLinked||plan.firstPaymentId!==paymentId||plan.firstInvoiceId!==invoiceId||plan.version!==link.planVersion||plan.months!==link.months||plan.totalCents!==link.totalCents||plan.firstInstallmentCents!==link.firstInstallmentCents||plan.firstDueDate!==link.firstDueDate||invoice.dueDate!==link.firstDueDate)return false;
  const candidate=modularActivationCandidate({payment:payload.payment,invoice,link,student,course});
  if(!candidate)return false;
  await db.runTransaction(async tx=>{
   const ref=db.collection('students').doc(sid),[fresh,currentPlan,currentInvoice]=await Promise.all([tx.get(ref),tx.get(db.collection('se7EjaModularFinancePlans').doc(sid)),tx.get(db.collection('se7AsaasInvoices').doc(invoiceId))]);
-  if(!fresh.exists||fresh.data().courseId!==courseId||!currentPlan.exists||currentPlan.data().firstPaymentId!==paymentId||currentPlan.data().version!==link.planVersion||!currentInvoice.exists||currentInvoice.data().state!=='linked'||currentInvoice.data().payment?.status!==payload.payment.status)return;
+  if(!fresh.exists||fresh.data().courseId!==courseId||!currentPlan.exists||currentPlan.data().firstPaymentId!==paymentId||currentPlan.data().version!==link.planVersion||currentPlan.data().firstInvoiceId!==invoiceId||!currentInvoice.exists||currentInvoice.data().state!=='linked'||currentInvoice.data().payment?.status!==payload.payment.status)return;
   if(fresh.data().ejaModularActivation?.confirmed)return; // Idempotência: não reinicia cronograma.
   tx.update(ref,{ejaModularActivation:candidate});
  });

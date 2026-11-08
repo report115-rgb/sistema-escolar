@@ -8,6 +8,8 @@ export function buildModularFinanceSchedule({totalCents,months,firstDueDate}){
  duration(months);total(totalCents);
  const amounts=modularInstallments(totalCents,months);
  const dueDates=amounts.map((_,i)=>modularReleaseDate(firstDueDate,i));
+ if(amounts.some(v=>!Number.isSafeInteger(v)||v<=0))fail(409,'Cada mensalidade deve ter valor positivo.');
+ if(new Set(dueDates).size!==months)fail(409,'Vencimentos duplicados no plano.');
  const installments=amounts.map((amountCents,i)=>({number:i+1,amountCents,dueDate:dueDates[i],status:'planned'}));
  if(installments.reduce((n,p)=>n+p.amountCents,0)!==totalCents)fail(500,'Parcelamento inconsistente.');
  return {months,totalCents,firstDueDate,installments,installmentCount:months,firstInstallmentCents:amounts[0],lastDueDate:dueDates.at(-1),billingCreated:false};
@@ -25,7 +27,7 @@ export async function modularFinancePlanAction(db,b,u){
   ref.get()
  ]);
  if(!course.exists||course.data().nivel!=='Supletivo'||course.data().ejaMode!=='modular'||course.data().ejaStage!=='medio')fail(409,'Aluno não pertence ao EJA Modular do Ensino Médio.');
- if(b.operation==='read')return {studentId,courseId,configuredTotalCents:tuition.exists?tuition.data().totalCents:null,plan:existing.exists?existing.data():null,activated:!!s.ejaModularActivation?.confirmed};
+ if(b.operation==='read')return {studentId,courseId,configuredTotalCents:tuition.exists?tuition.data().totalCents:null,plan:existing.exists?existing.data():null,activated:!!s.ejaModularActivation?.confirmed,editable:!s.ejaModularActivation?.confirmed&&!existing.data()?.firstPaymentLinked};
  if(!tuition.exists)fail(409,'Cadastre primeiro o valor total do curso.');
  const totalCents=total(tuition.data().totalCents);
  if(b.operation==='preview')return {studentId,courseId,plan:buildModularFinanceSchedule({totalCents,months:b.months,firstDueDate:b.firstDueDate}),saved:false};
@@ -41,7 +43,7 @@ export async function modularFinancePlanAction(db,b,u){
   if(!config.exists||config.data().totalCents!==totalCents)fail(409,'Valor total alterado. Refaça a prévia.');
   const version=old.exists?(old.data().version||0):0;
   if(version!==expectedVersion)fail(409,'Plano modificado por outro usuário. Atualize antes de salvar.');
-  if(old.exists&&old.data().firstPaymentLinked)fail(409,'Primeira cobrança já vinculada. O plano está bloqueado.');
+  if(old.exists&&(old.data().firstPaymentLinked||old.data().firstPaymentId||old.data().firstInvoiceId))fail(409,'Primeira cobrança já vinculada. O plano está bloqueado.');
   saved={...proposed,studentId,courseId,version:version+1,createdAt:old.exists?old.data().createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),updatedBy:u.uid,firstPaymentLinked:false};
   tx.set(ref,saved);
  });
