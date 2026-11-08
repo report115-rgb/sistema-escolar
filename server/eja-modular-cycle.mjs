@@ -20,7 +20,7 @@ export function modularCyclePlan({subjects,months,firstPaymentConfirmedDate}){
   const cycle=Math.floor(i*months/subjects.length);
   return {subjectId,cycle:cycle+1,contentReleaseDate:date(start+cycle*30),lessons:[0,7,14].map((offset,index)=>({number:index+1,releaseDate:date(start+cycle*30+offset)})),examEarliestDate:date(start+cycle*30+27)};
  });
- return plan.map(p=>{const next=plan.find(x=>x.examEarliestDate>p.examEarliestDate);return {...p,examOpenAt:p.examEarliestDate+'T08:00:00',examCloseAt:next?date(day(next.examEarliestDate)-1)+'T23:59:59.999':null,examTimeZone:'America/Belem'};});
+ return plan.map(p=>{const next=plan.find(x=>x.examEarliestDate>p.examEarliestDate);return {...p,examOpenAt:p.examEarliestDate+'T08:00:00',examCloseAt:next?date(day(next.examEarliestDate)-1)+'T23:59:59.999':date(day(p.examEarliestDate)+27)+'T23:59:59.999',examTimeZone:'America/Belem'};});
 }
 export function modularDisciplineState({discipline,today,materialAccessed=false,videoCompleted=false,examCompleted=false}){
  const now=day(today),content=day(discipline.contentReleaseDate),exam=day(discipline.examEarliestDate);
@@ -36,8 +36,8 @@ export function modularExamWindow(discipline,now=new Date()){
  if(Number.isNaN(instant.getTime()))fail('Horário inválido.');
  const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Belem',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).formatToParts(instant);
  const v=Object.fromEntries(parts.map(p=>[p.type,p.value]));
- const local=v.year+'-'+v.month+'-'+v.day+'T'+v.hour+':'+v.minute+':'+v.second;
- const opens=discipline.examOpenAt||discipline.examEarliestDate+'T08:00:00';
+ const local=v.year+'-'+v.month+'-'+v.day+'T'+v.hour+':'+v.minute+':'+v.second+'.'+String(instant.getMilliseconds()).padStart(3,'0');
+ const opens=(discipline.examOpenAt||discipline.examEarliestDate+'T08:00:00')+'.000';
  const closes=discipline.examCloseAt;
  return {open:local>=opens&&(!closes||local<=closes),notYetOpen:local<opens,expired:!!closes&&local>closes,opens,closes,timeZone:'America/Belem'};
 }
