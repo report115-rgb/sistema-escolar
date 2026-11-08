@@ -41,5 +41,5 @@ export async function modularReadinessAction(db,b,u){
  const issues=rows.reduce((n,s)=>n+s.issues.length,0);
  const auditPassed=rows.reduce((n,s)=>n+s.audit.filter(x=>x.ok).length,0);
  const auditTotal=rows.reduce((n,s)=>n+s.audit.length,0);
- return {courseId,subjects:rows,auditPassed,auditTotal,readyCount:rows.filter(x=>x.ready).length,total:rows.length,issueCount:issues,allReady:rows.length>0&&rows.every(x=>x.ready),enrollmentEnabled:false,note:'Diagnóstico administrativo, sem liberação de matrículas ou atividades. A integração financeira e acadêmica permanece pendente.'};
+ return {courseId,subjects:rows,auditPassed,auditTotal,readyCount:rows.filter(x=>x.ready).length,total:rows.length,issueCount:issues,allReady:rows.length>0&&rows.every(x=>x.ready),enrollmentEnabled:rows.some(x=>x.ready),note:rows.some(x=>x.ready)?'Pré-requisito pedagógico de matrícula atendido: ao menos uma disciplina possui ementa, apostila, três videoaulas e prova publicada. A ativação do aluno continua condicionada ao pagamento confirmado pelo Asaas.':'Matrículas aguardando ao menos uma disciplina completa, com ementa, apostila, três videoaulas e avaliação publicada.'};
 }

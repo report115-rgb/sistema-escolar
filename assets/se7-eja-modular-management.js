@@ -7,7 +7,7 @@ window.se7GestaoModularDiagnostico=async function(courseId){
  try{const data=await SE7.api('eja-modular-readiness',{courseId});if(document.getElementById('se7-gestao-modular-curso')?.value!==courseId)return;area.replaceChildren();
  const title=document.createElement('strong');title.textContent='Preparação: '+data.readyCount+'/'+data.total+' disciplinas • '+data.issueCount+' pendências';area.append(title);
  const audit=document.createElement('p');audit.className='text-sm font-semibold my-2';audit.textContent='Checklist pedagógico: '+data.auditPassed+' de '+data.auditTotal+' verificações atendidas';area.append(audit);
- const note=document.createElement('p');note.textContent=data.note;note.className='my-2';area.append(note);
+ const note=document.createElement('p');note.textContent=(data.enrollmentEnabled?'Pré-requisito de matrícula LIBERADO. ':'Pré-requisito de matrícula BLOQUEADO. ')+data.note;note.className='my-2 font-semibold';area.append(note);
  const toolbar=document.createElement('div');toolbar.className='flex flex-wrap gap-2 my-3';
  const filter=document.createElement('select');filter.className='p-2 rounded border dark:bg-slate-800';[['all','Todas'],['pending','Com pendências'],['ready','Completas']].forEach(([value,label])=>filter.add(new Option(label,value)));toolbar.append(filter);
  const copy=document.createElement('button');copy.type='button';copy.textContent='Copiar relatório';copy.className='px-3 py-2 rounded bg-slate-700 text-white';toolbar.append(copy);
