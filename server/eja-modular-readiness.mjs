@@ -43,3 +43,18 @@ export async function modularReadinessAction(db,b,u){
  const auditTotal=rows.reduce((n,s)=>n+s.audit.length,0);
  return {courseId,subjects:rows,auditPassed,auditTotal,readyCount:rows.filter(x=>x.ready).length,total:rows.length,issueCount:issues,allReady:rows.length>0&&rows.every(x=>x.ready),enrollmentEnabled:rows.some(x=>x.ready),note:rows.some(x=>x.ready)?'Pré-requisito pedagógico de matrícula atendido: ao menos uma disciplina possui ementa, apostila, três videoaulas e prova publicada. A ativação do aluno continua condicionada ao pagamento confirmado pelo Asaas.':'Matrículas aguardando ao menos uma disciplina completa, com ementa, apostila, três videoaulas e avaliação publicada.'};
 }
+
+// Same server-side gate used by public signup; no client-side flag can bypass it.
+export async function modularEnrollmentGate(db,courseId,course){
+ if(course?.nivel!=='Supletivo'||course?.ejaMode!=='modular'||course?.ejaStage!=='medio')return {enrollmentEnabled:false,readyCount:0};
+ const subjects=course.subjects;
+ if(!Array.isArray(subjects)||subjects.length<1||subjects.length>200)return {enrollmentEnabled:false,readyCount:0};
+ const ids=new Set();let readyCount=0;
+ for(const subject of subjects){
+  const id=validId(subject.id);if(ids.has(id))return {enrollmentEnabled:false,readyCount:0};ids.add(id);
+  const key=courseId+'_'+id;
+  const [m,e]=await Promise.all([db.collection('se7EjaModularMaterials').doc(key).get(),db.collection('se7EjaModularExams').doc(key).get()]);
+  if(inspectModularSubject(subject,m.exists?m.data():null,e.exists?e.data():null).ready)readyCount++;
+ }
+ return {enrollmentEnabled:readyCount>0,readyCount};
+}
