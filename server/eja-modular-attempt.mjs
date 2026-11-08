@@ -26,7 +26,6 @@ export async function modularStudentExamAction(db,b,u){
  await db.runTransaction(async tx=>{
   const old=await tx.get(ref),current=old.exists?old.data():null;
   const window=modularExamWindow(discipline,new Date());
-  if(operation==='read'&&!current&&!window.open)return result={window,status:window.expired?'expired':'scheduled',questions:[],answers:{},submittedCount:0};
   if(!current&&!window.open)return result={window,status:window.expired?'expired':'scheduled',questions:[],answers:{},submittedCount:0};
   const questions=current?.questions||prepared.questions;
   const answers=current?.answers||{};

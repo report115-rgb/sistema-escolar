@@ -23,7 +23,7 @@ export async function modularStudentSnapshotAction(db,b,u){
  const course={...courseDoc.data(),id:courseId},access=studentModularAccess(student,course);
  if(!access.active)return {active:false,reason:access.reason,subjects:[],progress:0};
  const plan=modularCyclePlan({subjects:course.subjects,months:access.activation.months,firstPaymentConfirmedDate:access.activation.firstPaymentConfirmedDate});
- const today=new Date().toISOString().slice(0,10);
+ const today=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Belem',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
  const subjects=plan.map(p=>({subjectId:p.subjectId,cycle:p.cycle,releaseDate:p.contentReleaseDate,lessons:p.lessons.map(l=>({...l,scheduled:today>=l.releaseDate})),examEarliestDate:p.examEarliestDate,examOpenAt:p.examOpenAt,examCloseAt:p.examCloseAt,examTimeZone:p.examTimeZone,examWindow:modularExamWindow(p),available:today>=p.contentReleaseDate,examDateReached:modularExamWindow(p).open,status:today<p.contentReleaseDate?'scheduled':modularExamWindow(p).expired?'exam_expired':modularExamWindow(p).notYetOpen?'studying':'requirements_pending'}));
  // Não retornar materiais, gabaritos ou resultados sem validação individual de liberação.
  return {active:true,months:access.activation.months,firstPaymentConfirmedDate:access.activation.firstPaymentConfirmedDate,subjects,progress:0,progressVerified:false,activitiesEnabled:false};
@@ -42,7 +42,7 @@ export async function modularStudentMaterialsAction(db,b,u){
  const plan=modularCyclePlan({subjects:course.subjects,months:access.activation.months,firstPaymentConfirmedDate:access.activation.firstPaymentConfirmedDate});
  const subject=plan.find(p=>p.subjectId===subjectId);
  if(!subject)fail(404,'Disciplina não pertence ao curso.');
- const today=new Date().toISOString().slice(0,10);
+ const today=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Belem',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
  if(today<subject.contentReleaseDate)fail(403,'Disciplina ainda não liberada.');
  const doc=await db.collection('se7EjaModularMaterials').doc(courseId+'_'+subjectId).get();
  if(!doc.exists||doc.data().complete!==true)fail(409,'Materiais ainda não publicados.');
