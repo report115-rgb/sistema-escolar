@@ -615,9 +615,9 @@
                 <div id="se7-eja-tabs" class="se7-eja-tabs" role="tablist" aria-label="Opções da Gestão EJA">
                     <button class="subtab-eja-btn active px-4 py-2 rounded-xl text-xs font-semibold bg-emerald-600 text-white shadow" role="tab" aria-controls="subeja-alunos" aria-selected="true" onclick="openSubTabEJA(event, 'subeja-alunos')"><i class="fa-solid fa-users mr-1"></i> Alunos EJA</button>
                     <button class="subtab-eja-btn px-4 py-2 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" role="tab" aria-controls="subeja-apostila" aria-selected="false" onclick="openSubTabEJA(event, 'subeja-apostila')"><i class="fa-solid fa-file-pdf mr-1"></i> Apostila PDF</button>
-                    <button class="subtab-eja-btn px-4 py-2 rounded-xl text-xs font-semibold bg-gray-100 dark:text-gray-300" role="tab" aria-controls="subeja-prova" aria-selected="false" onclick="openSubTabEJA(event, 'subeja-prova')"><i class="fa-solid fa-laptop-file mr-1"></i> Prova Online</button>
+                    <button class="subtab-eja-btn px-4 py-2 rounded-xl text-xs font-semibold bg-gray-100 dark:text-gray-300" role="tab" aria-controls="subeja-prova" aria-selected="false" onclick="openSubTabEJA(event, 'subeja-prova')"><i class="fa-solid fa-laptop-file mr-1"></i> Prova Única — Avaliações</button>
 
-                </div>
+                <button class="subtab-eja-btn px-4 py-2 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" role="tab" aria-controls="subeja-modular" aria-selected="false" onclick="openSubTabEJA(event, 'subeja-modular');se7GestaoModularAtualizar()">EJA Modular</button></div>
 
                 <div id="subeja-alunos" class="subeja-content space-y-3">
                     <h4 class="font-bold text-sm text-gray-800 dark:text-white">Estudantes da Modalidade EJA</h4>
@@ -648,7 +648,13 @@
                     </div>
                 </div>
 
-                <div id="subeja-prova" class="subeja-content space-y-4" style="display:none">
+                <div id="subeja-modular" class="subeja-content space-y-4" style="display:none">
+<section class="bg-gray-50 dark:bg-slate-900 p-5 rounded-xl border border-gray-200 dark:border-slate-700 space-y-4">
+<h4 class="font-bold text-base text-blue-600 dark:text-blue-400">Gestão EJA Modular — Ensino Médio</h4>
+<p class="text-xs text-gray-500">Cursos e disciplinas continuam cadastrados na aba Cursos. Apostilas, videoaulas, avaliações e simulação ficam centralizadas aqui.</p>
+<label class="block text-xs font-semibold">Curso EJA Modular<select id="se7-gestao-modular-curso" class="w-full mt-2 px-3 py-2 rounded-lg border dark:bg-slate-800" onchange="se7GestaoModularAtualizar()"><option value="">Selecione o curso</option></select></label>
+<div class="flex flex-wrap gap-2"><button type="button" onclick="se7GestaoModularAbrir('materiais')" class="px-4 py-2 rounded-lg bg-teal-700 text-white">Apostilas e videoaulas</button><button type="button" onclick="se7GestaoModularAbrir('avaliacoes')" class="px-4 py-2 rounded-lg bg-indigo-700 text-white">Avaliações modulares</button><button type="button" onclick="se7GestaoModularAbrir('simulador')" class="px-4 py-2 rounded-lg bg-blue-700 text-white">Simular AVA</button></div>
+<p id="se7-gestao-modular-aviso" class="text-xs text-gray-500">Selecione um curso para começar.</p></section></div><div id="subeja-prova" class="subeja-content space-y-4" style="display:none">
  <section class="bg-gray-50 dark:bg-slate-900 p-5 rounded-xl border border-gray-200 dark:border-slate-700 space-y-4">
  <div class="flex flex-wrap justify-between gap-3 items-center border-b border-gray-200 dark:border-slate-700 pb-4">
  <div><h4 class="font-bold text-base text-blue-600 dark:text-blue-400">Prova Online &amp; Status</h4><p class="text-xs text-gray-500 dark:text-slate-400 mt-1">Gerencie as disciplinas e os gabaritos da avaliação EJA.</p></div>
@@ -5756,5 +5762,6 @@ function escutarRegistrosPontoManual() {
 <link rel="stylesheet" href="/assets/se7-internships.css?v=institucional-20261019"><script src="/assets/se7-internship-pdf.js?v=inscricoes-organizadas-20261022"></script><script src="/assets/se7-preceptor-contract-pdf.js?v=institucional-20261019"></script><script src="/assets/se7-internships.js?v=declaracao-preceptor-20261022-1"></script>
 <script src="/assets/se7-eja-modular-editor.js?v=1"></script>
 <script src="/assets/se7-eja-modular-materials.js?v=1"></script>
+<script src="/assets/se7-eja-modular-management.js?v=1"></script>
 </body>
 </html>
