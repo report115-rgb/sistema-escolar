@@ -24,7 +24,7 @@ service cloud.firestore {
     && get(/databases/$(database)/documents/students/$(studentId())).data.get('se7AuthLock',null) == null
     && get(/databases/$(database)/documents/students/$(studentId())).data.get('portalSessionVersion',0) == request.auth.token.get('portalVersion',0);
   }
-  function schoolCollection(c){return c in ['students','courses','classes','academicCalendars','config','teachers','teacherManualLogs','attendance','attendanceRecords','attendanceLocks','employeeLogs','pendingUsers','systemUsers'];}
+  function schoolCollection(c){return c in ['courses','classes','academicCalendars','config','teachers','teacherManualLogs','attendance','attendanceRecords','attendanceLocks','employeeLogs','pendingUsers','systemUsers'];}
   // Master can manage existing school data, but credentials, identities and permission assignments are server-only.
   match /{c}/{doc}/{rest=**} {allow read,write: if master() && schoolCollection(c);}
   match /students/{id} {
