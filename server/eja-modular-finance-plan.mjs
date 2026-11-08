@@ -11,8 +11,19 @@ export function buildModularFinanceSchedule({totalCents,months,firstDueDate}){
  if(amounts.some(v=>!Number.isSafeInteger(v)||v<=0))fail(409,'Cada mensalidade deve ter valor positivo.');
  if(new Set(dueDates).size!==months)fail(409,'Vencimentos duplicados no plano.');
  const installments=amounts.map((amountCents,i)=>({number:i+1,amountCents,dueDate:dueDates[i],status:'planned'}));
+ if(installments.some((p,i)=>i>0&&p.dueDate<=installments[i-1].dueDate))fail(409,'Vencimentos fora da ordem cronológica.');
  if(installments.reduce((n,p)=>n+p.amountCents,0)!==totalCents)fail(500,'Parcelamento inconsistente.');
  return {months,totalCents,firstDueDate,installments,installmentCount:months,firstInstallmentCents:amounts[0],lastDueDate:dueDates.at(-1),billingCreated:false};
+}
+export function validateModularFinancePlan(plan){
+ if(!plan||typeof plan!=='object')fail(409,'Plano financeiro inexistente.');
+ const expected=buildModularFinanceSchedule({totalCents:plan.totalCents,months:plan.months,firstDueDate:plan.firstDueDate});
+ if(plan.installmentCount!==expected.installmentCount||plan.firstInstallmentCents!==expected.firstInstallmentCents||plan.lastDueDate!==expected.lastDueDate||!Array.isArray(plan.installments)||plan.installments.length!==expected.installments.length)fail(409,'Plano financeiro inconsistente.');
+ for(let i=0;i<expected.installments.length;i++){
+  const a=plan.installments[i],b=expected.installments[i];
+  if(!a||a.number!==b.number||a.amountCents!==b.amountCents||a.dueDate!==b.dueDate||!['planned','linked','paid'].includes(a.status))fail(409,'Parcela divergente do contrato.');
+ }
+ return expected;
 }
 export async function modularFinancePlanAction(db,b,u){
  if(u.role!=='master')fail(403,'Acesso restrito ao Master.');
@@ -27,12 +38,13 @@ export async function modularFinancePlanAction(db,b,u){
   ref.get()
  ]);
  if(!course.exists||course.data().nivel!=='Supletivo'||course.data().ejaMode!=='modular'||course.data().ejaStage!=='medio')fail(409,'Aluno não pertence ao EJA Modular do Ensino Médio.');
- if(b.operation==='read')return {studentId,courseId,configuredTotalCents:tuition.exists?tuition.data().totalCents:null,plan:existing.exists?existing.data():null,activated:!!s.ejaModularActivation?.confirmed,editable:!s.ejaModularActivation?.confirmed&&!existing.data()?.firstPaymentLinked};
+ if(b.operation==='read')return {studentId,courseId,configuredTotalCents:tuition.exists?tuition.data().totalCents:null,plan:existing.exists?existing.data():null,activated:!!s.ejaModularActivation?.confirmed,editable:!s.ejaModularActivation?.confirmed&&!existing.data()?.firstPaymentLinked&&!existing.data()?.firstPaymentId&&!existing.data()?.firstInvoiceId};
  if(!tuition.exists)fail(409,'Cadastre primeiro o valor total do curso.');
  const totalCents=total(tuition.data().totalCents);
  if(b.operation==='preview')return {studentId,courseId,plan:buildModularFinanceSchedule({totalCents,months:b.months,firstDueDate:b.firstDueDate}),saved:false};
  if(b.operation!=='save')fail(400,'Operação inválida.');
  if(s.ejaModularActivation?.confirmed)fail(409,'Curso já ativado. Não altere o plano contratado.');
+ if(existing.exists&&(existing.data().firstPaymentLinked||existing.data().firstPaymentId||existing.data().firstInvoiceId))fail(409,'Plano já vinculado a uma cobrança.');
  const expectedVersion=b.expectedVersion;
  if(!Number.isSafeInteger(expectedVersion)||expectedVersion<0)fail(400,'Atualize a consulta antes de salvar.');
  const proposed=buildModularFinanceSchedule({totalCents,months:b.months,firstDueDate:b.firstDueDate});

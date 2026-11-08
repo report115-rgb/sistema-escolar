@@ -5,3 +5,10 @@ test('duração, valor e data inválidos são rejeitados',()=>{for(const months 
 
 test('valor total menor que a quantidade de parcelas é rejeitado',()=>{for(const months of [3,6,9])assert.throws(()=>buildModularFinanceSchedule({months,totalCents:months-1,firstDueDate:'2026-11-08'}));});
 test('vencimentos são distintos e mantêm ordem mensal',()=>{for(const months of [3,6,9]){const p=buildModularFinanceSchedule({months,totalCents:10000,firstDueDate:'2026-01-31'});assert.equal(new Set(p.installments.map(x=>x.dueDate)).size,months);assert.equal(p.installments.at(-1).dueDate,p.lastDueDate);assert.ok(p.installments.every((x,i)=>x.number===i+1&&x.amountCents>0));}});
+
+import {validateModularFinancePlan} from '../server/eja-modular-finance-plan.mjs';
+test('contrato íntegro passa por validação',()=>{const p=buildModularFinanceSchedule({months:6,totalCents:120001,firstDueDate:'2026-11-30'});assert.equal(validateModularFinancePlan(p).totalCents,120001);});
+test('alteração de valor de parcela é rejeitada',()=>{const p=buildModularFinanceSchedule({months:6,totalCents:120001,firstDueDate:'2026-11-30'});p.installments[2].amountCents++;assert.throws(()=>validateModularFinancePlan(p));});
+test('alteração de vencimento é rejeitada',()=>{const p=buildModularFinanceSchedule({months:3,totalCents:30000,firstDueDate:'2026-01-31'});p.installments[1].dueDate='2026-02-27';assert.throws(()=>validateModularFinancePlan(p));});
+test('parcela ausente é rejeitada',()=>{const p=buildModularFinanceSchedule({months:3,totalCents:30000,firstDueDate:'2026-11-08'});p.installments.pop();assert.throws(()=>validateModularFinancePlan(p));});
+test('numeração adulterada é rejeitada',()=>{const p=buildModularFinanceSchedule({months:3,totalCents:30000,firstDueDate:'2026-11-08'});p.installments[0].number=2;assert.throws(()=>validateModularFinancePlan(p));});
