@@ -5,15 +5,17 @@ function render(course,student){
  const home=document.getElementById('tab-home');if(!home)return;
  let root=document.getElementById('se7-modular-ava');if(!root){root=el('section');root.id='se7-modular-ava';root.className='space-y-3 my-4';home.prepend(root);}
  root.replaceChildren();
+ const snapshotRequest=SE7.api('eja-modular-student-snapshot',{courseId:course.id});
  root.append(el('h2','Minhas disciplinas — EJA Modular'));
  const note=el('p','As aulas e avaliações serão liberadas após a confirmação do pagamento inicial e a ativação do cronograma acadêmico.');note.className=styles.muted;root.append(note);
  const subjects=Array.isArray(course?.subjects)?course.subjects:[];
+ snapshotRequest.then(data=>{if(!root.isConnected)return;if(!data.active){note.textContent=data.reason||'Aguardando ativação acadêmica.';return;}note.textContent='Cronograma acadêmico confirmado. Materiais e avaliações permanecem bloqueados até a integração das atividades.';const byId=new Map(data.subjects.map(s=>[String(s.subjectId),s]));root.querySelectorAll('[data-modular-subject-id]').forEach(card=>{const plan=byId.get(card.dataset.modularSubjectId);if(!plan)return;const status=card.querySelector('[data-modular-status]');if(status)status.textContent=plan.available?'Cronograma iniciado — atividades em integração':'Liberação em '+plan.releaseDate;});}).catch(()=>{if(root.isConnected)note.textContent='Não foi possível consultar o cronograma. Nenhuma atividade foi liberada.';});
  if(!subjects.length){root.append(el('p','Nenhuma disciplina cadastrada.'));return;}
  const overall=el('p','Progresso geral: aguardando início do curso');overall.className=styles.muted;root.append(overall);
  subjects.forEach((subject,index)=>{
-  const card=el('article');card.className=styles.card;
+  const card=el('article');card.className=styles.card;card.dataset.modularSubjectId=String(subject.id||'');
   const head=el('div');head.className=styles.row;
-  const title=el('strong',(subject.name||subject.nome||'Disciplina '+(index+1)));const status=el('span','Aguardando liberação');status.className=styles.muted;head.append(title,status);card.append(head);
+  const title=el('strong',(subject.name||subject.nome||'Disciplina '+(index+1)));const status=el('span','Aguardando liberação');status.className=styles.muted;status.dataset.modularStatus='true';head.append(title,status);card.append(head);
   const progress=el('p','Progresso: não iniciado');progress.className=styles.muted;card.append(progress);
   const button=el('button','Abrir disciplina');button.type='button';button.className=styles.button;button.setAttribute('aria-expanded','false');
   const detail=el('div');detail.hidden=true;detail.className='space-y-3 pt-3 border-t border-slate-200 dark:border-slate-700';
