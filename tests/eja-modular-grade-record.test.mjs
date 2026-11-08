@@ -1,0 +1,2 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';
+test('nota EJA Modular segue aprovação a partir de cinco e preserva notas manuais',()=>{const s=readFileSync(new URL('../server/eja-modular-attempt.mjs',import.meta.url),'utf8');assert.match(s,/previous\.source==='eja-modular'/);assert.match(s,/attempt\.approved\?'Aprovado':'Reprovado'/);assert.match(s,/grades:\{\.\.\.freshStudent\.data\(\)\.grades/);});

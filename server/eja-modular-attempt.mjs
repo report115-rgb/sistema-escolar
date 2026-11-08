@@ -26,7 +26,9 @@ export async function modularStudentExamAction(db,b,u){
  if(!['read','submit','finish'].includes(operation))fail(400,'Operação inválida.');
  let result;
  await db.runTransaction(async tx=>{
-  const old=await tx.get(ref),current=old.exists?old.data():null;
+  const [old,freshStudent]=await Promise.all([tx.get(ref),tx.get(studentDoc.ref||db.collection('students').doc(sid))]);
+  if(!freshStudent.exists||freshStudent.data().se7AuthUid!==u.uid||freshStudent.data().courseId!==courseId)fail(403,'Matrícula alterada durante a avaliação.');
+  const current=old.exists?old.data():null;
   const window=modularExamWindow(discipline,new Date());
   if(!current&&!window.open)return result={window,status:window.expired?'expired':'scheduled',questions:[],answers:{},submittedCount:0};
   const questions=current?.questions||shuffleExamQuestions(prepared.questions);
@@ -37,6 +39,8 @@ export async function modularStudentExamAction(db,b,u){
    const grade=gradeModularExam(questions,answers);
    const closed={...current,status:'expired',...grade,closedAt:new Date().toISOString()};
    tx.set(ref,closed);
+   const previous=freshStudent.data().grades?.[subjectId];
+   if(!previous||previous.source==='eja-modular')tx.set(db.collection('students').doc(sid),{grades:{...freshStudent.data().grades,[subjectId]:{final:closed.grade,status:closed.approved?'Aprovado':'Reprovado',source:'eja-modular',attemptId:ref.id,recordedAt:closed.closedAt}}},{merge:true});
    return result={window,...publicAttempt(closed),questions:[]};
   }
   const attempt=current||{studentId:sid,courseId,subjectId,questions,answers:{},status:'in_progress',startedAt:new Date().toISOString()};
@@ -46,6 +50,8 @@ export async function modularStudentExamAction(db,b,u){
    const grade=gradeModularExam(questions,attempt.answers);
    const expired={...attempt,...grade,status:'expired',closedAt:new Date().toISOString()};
    tx.set(ref,expired);
+   const previous=freshStudent.data().grades?.[subjectId];
+   if(!previous||previous.source==='eja-modular')tx.set(db.collection('students').doc(sid),{grades:{...freshStudent.data().grades,[subjectId]:{final:expired.grade,status:expired.approved?'Aprovado':'Reprovado',source:'eja-modular',attemptId:ref.id,recordedAt:expired.closedAt}}},{merge:true});
    result={window:latest,...publicAttempt(expired),questions:[]};
    return true;
   };
@@ -62,6 +68,10 @@ export async function modularStudentExamAction(db,b,u){
    if(Object.keys(attempt.answers).length!==10)fail(409,'Envie as dez respostas antes de finalizar.');
    const grade=gradeModularExam(questions,attempt.answers);
    Object.assign(attempt,grade,{status:'completed',closedAt:new Date().toISOString()});
+  }
+  if(attempt.status==='completed'){
+   const previous=freshStudent.data().grades?.[subjectId];
+   if(!previous||previous.source==='eja-modular')tx.set(db.collection('students').doc(sid),{grades:{...freshStudent.data().grades,[subjectId]:{final:attempt.grade,status:attempt.approved?'Aprovado':'Reprovado',source:'eja-modular',attemptId:ref.id,recordedAt:attempt.closedAt}}},{merge:true});
   }
   if(!current||operation!=='read')tx.set(ref,attempt);
   result={window,...publicAttempt(attempt),questions:attempt.status==='in_progress'?questions.map(({correta,...q})=>q):[]};
