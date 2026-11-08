@@ -1107,7 +1107,7 @@ let cancelarIdentidadeAluno = null;
             if (!whatsapp) return alert("Por favor, informe o número do seu WhatsApp.");
             if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return alert("Informe um e-mail válido ou deixe o campo em branco.");
             if (!cep || !rua || !numero || !bairro || !cidade) return alert("Por favor, preencha o endereço completo (CEP, número, etc.).");
-            if(!document.getElementById('mat-polo-select').value)return alert('Selecione o polo de atendimento.');if (!courseId) return alert("ATENÇÃO: Você deve obrigatoriamente escolher um Curso para realizar a matrícula.");
+            if(!document.getElementById('mat-polo-select').value)return alert('Selecione o polo de atendimento.');if (!courseId) return alert("ATENÇÃO: Você deve obrigatoriamente escolher um Curso para realizar a matrícula.");const isModular=document.getElementById('mat-curso-select').selectedOptions[0]?.dataset.ejaMode==='modular';const ejaDurationMonths=isModular?Number(document.getElementById('mat-eja-modular-duration').value):null;if(isModular&&![3,6,9].includes(ejaDurationMonths))return alert('Selecione a duração do EJA Modular: 3, 6 ou 9 meses.');
             if (!senha || senha.length < 8) return alert("Por favor, crie uma senha de acesso com no mínimo 8 caracteres.");
 
             const nascimento = `${anoNasc}-${mesNasc}-${diaNasc}`;
@@ -1138,6 +1138,7 @@ let cancelarIdentidadeAluno = null;
                     city: cidade,
                     state: estado,
                     poloId:document.getElementById('mat-polo-select').value,courseId: courseId,
+                    ...(isModular?{ejaDurationMonths}:{}),
                     classId: "",
                     status: "Ativo",
                     

@@ -1,6 +1,7 @@
 // Projeção somente leitura: reaproveita curso, turma e matrícula da Matriz.
 // Não persiste cronograma, altera notas, libera provas nem emite cobranças.
-import {MODULAR_DURATIONS,planModularSubjects,modularInstallments} from './eja-modular-plan.mjs';
+import {MODULAR_DURATIONS,modularInstallments} from './eja-modular-plan.mjs';
+import {modularCyclePlan} from './eja-modular-cycle.mjs';
 const fail=(message,status=400)=>{throw Object.assign(Error(message),{status});};
 const id=v=>String(v||'').trim();
 export function modularStudentSnapshot({course,courseId,classroom,classId,student,startDate,totalCents}){
@@ -16,7 +17,7 @@ export function modularStudentSnapshot({course,courseId,classroom,classId,studen
  const normalized=subjects.map((subject,index)=>({
   id:id(subject?.id),name:id(subject?.name||subject?.nome)||'Disciplina '+(index+1)
  }));
- const plan=planModularSubjects({subjects:normalized,months,startDate});
+ const plan=modularCyclePlan({subjects:normalized,months,firstPaymentConfirmedDate:startDate});
  const installments=totalCents===undefined?null:modularInstallments(totalCents,months);
  return {
   courseId:id(courseId),classId:id(classId),studentId:id(student.id),
