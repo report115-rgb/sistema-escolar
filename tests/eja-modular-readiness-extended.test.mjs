@@ -1,0 +1,7 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';import vm from 'node:vm';
+import {inspectModularSubject} from '../server/eja-modular-readiness.mjs';
+const sub={id:'bio',name:'Biologia'};
+const materials={ementa:'Ementa',apostilaUrl:'https://drive.google.com/file/d/1',lessons:[1,2,3].map(n=>({number:n,title:'Aula '+n,url:'https://example.com/'+n}))};
+const exam={published:true,subjectId:'bio',subjectName:'Biologia',questions:Array.from({length:10},(_,i)=>({enunciado:'Questão '+i,opcoes:['A','B','C','D','E'],correta:0}))};
+test('diagnóstico identifica dez requisitos e não expõe gabaritos',()=>{const ready=inspectModularSubject(sub,materials,exam);assert.equal(ready.ready,true);assert.equal(ready.issues.length,0);assert.equal('questions' in ready,false);assert.equal(inspectModularSubject(sub,null,null).ready,false);assert.ok(inspectModularSubject(sub,null,null).issues.length>=7);assert.equal(inspectModularSubject(sub,materials,{...exam,published:false}).examReady,false);assert.equal(inspectModularSubject(sub,{...materials,apostilaUrl:'http://inseguro'},exam).materialsReady,false);});
+test('interface inclui filtros, relatório, atualização e ações',()=>{const ui=readFileSync(new URL('../assets/se7-eja-modular-management.js',import.meta.url),'utf8');new vm.Script(ui);for(const x of ['Copiar relatório','Com pendências','Completas','Atualizar','Abrir materiais','Abrir avaliação'])assert.ok(ui.includes(x));});
