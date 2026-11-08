@@ -126,7 +126,7 @@ async function dispatchOperation({auth,db},req,b,delegated=null){
  if(action==='financial-agreement-verify'){academicDocuments.publicLimit(req);const {verify}=await import('../server/financial-document-validation.mjs');return verify(db,b);}
  if(action==='academic-document-verify'){academicDocuments.publicLimit(req);return academicDocuments.verify(db,b);}
  if(action==='public-info')return publicInfo(db);
- if(action==='catalog'){const [snap,ps]=await Promise.all([db.collection('courses').get(),db.collection('polos').where('active','==',true).get()]);return {ejaConditions:await eja.publicConditions(db),courses:snap.docs.map(d=>({id:d.id,name:d.data().name||'Curso',isEja:isSingleExam(d.data())})),polos:ps.docs.map(d=>({id:d.id,name:d.data().name,city:d.data().city,state:d.data().state}))};}
+ if(action==='catalog'){const [snap,ps]=await Promise.all([db.collection('courses').get(),db.collection('polos').where('active','==',true).get()]);return {ejaConditions:await eja.publicConditions(db),courses:snap.docs.map(d=>({id:d.id,name:d.data().name||'Curso',isEja:isSingleExam(d.data()),ejaMode:d.data().nivel==='Supletivo'&&d.data().ejaMode==='modular'?'modular':null})),polos:ps.docs.map(d=>({id:d.id,name:d.data().name,city:d.data().city,state:d.data().state}))};}
  if(action==='student-login')return loginStudent(auth,db,req,b);
  if(action==='signup'){
   await limits(db,req,'signup');password(b.password);const data=b.student||{};if(!validCPF(data.cpf))fail(400,'CPF inválido.');for(const k of ['fullname','birthDate','gender','rg','whatsapp','cep','street','number','neighborhood','city','state','courseId'])if(typeof data[k]!=='string'||!data[k].trim()||data[k].length>200)fail(400,`Preencha ${k}.`);
