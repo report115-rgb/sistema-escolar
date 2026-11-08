@@ -28,3 +28,24 @@ export async function modularStudentSnapshotAction(db,b,u){
  // Não retornar materiais, gabaritos ou resultados sem validação individual de liberação.
  return {active:true,months:access.activation.months,firstPaymentConfirmedDate:access.activation.firstPaymentConfirmedDate,subjects,progress:0,progressVerified:false,activitiesEnabled:false};
 }
+
+export async function modularStudentMaterialsAction(db,b,u){
+ if(u.role!=='aluno'||!u.studentId)fail(403,'Acesso exclusivo do aluno autenticado.');
+ const studentId=validId(u.studentId),subjectId=validId(b.subjectId);
+ const studentDoc=await db.collection('students').doc(studentId).get();
+ if(!studentDoc.exists||studentDoc.data().se7AuthUid!==u.uid)fail(403,'Matrícula não autorizada.');
+ const student=studentDoc.data(),courseId=validId(student.courseId);
+ const courseDoc=await db.collection('courses').doc(courseId).get();
+ if(!courseDoc.exists)fail(404,'Curso não encontrado.');
+ const course={...courseDoc.data(),id:courseId},access=studentModularAccess(student,course);
+ if(!access.active)fail(403,'Aguardando confirmação financeira.');
+ const plan=modularCyclePlan({subjects:course.subjects,months:access.activation.months,firstPaymentConfirmedDate:access.activation.firstPaymentConfirmedDate});
+ const subject=plan.find(p=>p.subjectId===subjectId);
+ if(!subject)fail(404,'Disciplina não pertence ao curso.');
+ const today=new Date().toISOString().slice(0,10);
+ if(today<subject.contentReleaseDate)fail(403,'Disciplina ainda não liberada.');
+ const doc=await db.collection('se7EjaModularMaterials').doc(courseId+'_'+subjectId).get();
+ if(!doc.exists||doc.data().complete!==true)fail(409,'Materiais ainda não publicados.');
+ const materials=doc.data();
+ return {subjectId,apostilaUrl:materials.apostilaUrl,ementa:materials.ementa,lessons:subject.lessons.map((l,i)=>({number:l.number,title:materials.lessons?.[i]?.title||'',url:today>=l.releaseDate?materials.lessons?.[i]?.url||'':null,releaseDate:l.releaseDate,available:today>=l.releaseDate}))};
+}
