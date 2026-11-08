@@ -2086,7 +2086,8 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
             if(navDiploma)navDiploma.style.display=isAlunoEJA?'flex':'none';
             if(cursoObj?.ejaMode==='modular'){
                 const banner=document.getElementById('banner-padrao-home')||document.getElementById('bloco-acoes-eja');
-                if(banner){banner.replaceChildren();const title=document.createElement('h3'),message=document.createElement('p');title.textContent='Supletivo modular — '+(cursoObj.ejaStage==='medio'?'Ensino Médio':'Ensino Fundamental');message.textContent='As orientações do ambiente modular serão disponibilizadas pela instituição.';banner.append(title,message);banner.removeAttribute('id');}
+                if(banner){banner.replaceChildren();banner.hidden=true;}
+                window.SE7ModularAVA?.render(cursoObj,alunoLogado);
                 return;
             }
 
@@ -2369,5 +2370,6 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
         }, {once:true});
     }
 </script>
+<script src="/assets/se7-eja-modular-ava.js?v=1"></script>
 </body>
 </html>

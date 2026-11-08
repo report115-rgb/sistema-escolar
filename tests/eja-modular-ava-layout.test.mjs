@@ -1,0 +1,2 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';import vm from 'node:vm';
+test('AVA modular usa painel expansível sem liberar provas ou inventar progresso',()=>{const src=readFileSync(new URL('../assets/se7-eja-modular-ava.js',import.meta.url),'utf8');new vm.Script(src);assert.match(src,/aria-expanded/);assert.match(src,/Aguardando liberação/);assert.doesNotMatch(src,/SE7\.api\('eja-modular-exam'/);});
