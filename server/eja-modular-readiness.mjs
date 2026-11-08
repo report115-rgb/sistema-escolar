@@ -1,3 +1,4 @@
+import {auditModularSubject} from './eja-modular-audit.mjs';
 import {validId} from './security.mjs';
 import {validateModularMaterials} from './eja-modular-materials.mjs';
 import {prepareModularExam} from './eja-modular-exams.mjs';
@@ -19,7 +20,7 @@ export function inspectModularSubject(subject,materials,exam){
  }
  const materialsReady=!!materials&&!issues.some(x=>/Ementa|Apostila|videoaula|Materiais/.test(x));
  const examReady=!!exam&&!issues.some(x=>/Avaliação|Questões/.test(x));
- return {subjectId:String(subject.id),subjectName:String(subject.name||subject.nome||subject.id),materialsReady,examReady,ready:issues.length===0,issues,materialsUpdatedAt:materials?.updatedAt||null,examPublishedAt:exam?.publishedAt||null};
+ return {audit:auditModularSubject(subject,materials,exam),subjectId:String(subject.id),subjectName:String(subject.name||subject.nome||subject.id),materialsReady,examReady,ready:issues.length===0,issues,materialsUpdatedAt:materials?.updatedAt||null,examPublishedAt:exam?.publishedAt||null};
 }
 export async function modularReadinessAction(db,b,u){
  if(u.role!=='master')fail(403,'Acesso exclusivo ao Master.');
@@ -38,5 +39,7 @@ export async function modularReadinessAction(db,b,u){
   return inspectModularSubject(subject,m.exists?m.data():null,e.exists?e.data():null);
  }));
  const issues=rows.reduce((n,s)=>n+s.issues.length,0);
- return {courseId,subjects:rows,readyCount:rows.filter(x=>x.ready).length,total:rows.length,issueCount:issues,allReady:rows.length>0&&rows.every(x=>x.ready),enrollmentEnabled:false,note:'Diagnóstico administrativo, sem liberação de matrículas ou atividades. A integração financeira e acadêmica permanece pendente.'};
+ const auditPassed=rows.reduce((n,s)=>n+s.audit.filter(x=>x.ok).length,0);
+ const auditTotal=rows.reduce((n,s)=>n+s.audit.length,0);
+ return {courseId,subjects:rows,auditPassed,auditTotal,readyCount:rows.filter(x=>x.ready).length,total:rows.length,issueCount:issues,allReady:rows.length>0&&rows.every(x=>x.ready),enrollmentEnabled:false,note:'Diagnóstico administrativo, sem liberação de matrículas ou atividades. A integração financeira e acadêmica permanece pendente.'};
 }

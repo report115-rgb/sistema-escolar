@@ -1,0 +1,6 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {MODULAR_AUDIT_RULES,auditModularSubject} from '../server/eja-modular-audit.mjs';
+test('20 verificações únicas e independentes',()=>{assert.equal(MODULAR_AUDIT_RULES.length,20);assert.equal(new Set(MODULAR_AUDIT_RULES.map(x=>x[0])).size,20);});
+test('ausência de material e prova gera pendências sem exceção',()=>{const result=auditModularSubject({id:'a',name:'Biologia'},null,null);assert.equal(result.length,20);assert.equal(result.filter(x=>x.ok).length,2);});
+test('material e avaliação completos passam em 20 verificações',()=>{const materials={ementa:'Ementa',apostilaUrl:'https://drive.google.com/arquivo',lessons:[1,2,3].map(n=>({title:'Aula '+n,url:'https://example.org/'+n}))};const exam={published:true,questions:Array.from({length:10},(_,i)=>({enunciado:'Questão '+i,opcoes:['A','B','C','D','E'],correta:0}))};assert.equal(auditModularSubject({id:'a',name:'Biologia'},materials,exam).filter(x=>x.ok).length,20);});
+test('HTTP é rejeitado no checklist',()=>{const a=auditModularSubject({id:'a',name:'Bio'},{apostilaUrl:'http://example.com',lessons:[{url:'http://example.com'}]},null);assert.equal(a.find(x=>x.id==='pdf-https').ok,false);assert.equal(a.find(x=>x.id==='lesson-1-link').ok,false);});
