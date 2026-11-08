@@ -10,18 +10,18 @@ function examPanel(detail,subject,info){
  const call=(operation,extra={})=>SE7.api('eja-modular-student-exam',{subjectId:String(subject.id),operation,...extra});
  const stop=()=>{if(timer){clearInterval(timer);timer=null;}};
  const expiry=()=>{if(!attempt?.window?.closes)return null;return new Date(attempt.window.closes.slice(0,10)+'T'+attempt.window.closes.slice(11,19)+'-03:00').getTime()+999;};
- const lock=async()=>{if(closed)return;closed=true;stop();state.textContent='Prazo encerrado. Apenas as respostas enviadas até o horário limite serão consideradas.';area.querySelectorAll('input,button').forEach(x=>x.disabled=true);try{const latest=await call('read');state.textContent=latest.status==='expired'?'Prazo encerrado. Respostas registradas: '+(latest.submittedCount||0)+'/10.':latest.status==='completed'?'Avaliação concluída. Nota: '+latest.grade:'Prazo encerrado. Nenhuma resposta adicional será aceita.';}catch{}};
+ const lock=async()=>{if(closed)return;closed=true;stop();state.textContent='Prazo encerrado. Apenas as respostas enviadas até o horário limite serão consideradas.';area.querySelectorAll('input,button').forEach(x=>x.disabled=true);try{const latest=await call('read');if(latest.status==='expired'||latest.status==='completed'){attempt=latest;area.querySelectorAll('[data-exam-content]').forEach(x=>x.remove());state.textContent=(latest.status==='expired'?'Prazo encerrado. ':'Avaliação concluída. ')+'Respostas enviadas: '+(latest.submittedCount||0)+'/10. Nota: '+(latest.grade??'não disponível')+'.';}else state.textContent='Prazo encerrado. Nenhuma resposta adicional será aceita.';}catch{}};
  const renderAttempt=data=>{
   attempt=data;area.querySelectorAll('[data-exam-content]').forEach(x=>x.remove());closed=false;stop();
   const content=el('div');content.dataset.examContent='true';content.className='space-y-3';area.append(content);
   const status=String(data.status||'');
   if(status==='completed'||status==='expired'){state.textContent=(status==='completed'?'Avaliação concluída. ':'Prazo encerrado. ')+'Respostas enviadas: '+(data.submittedCount||0)+'/10. Nota: '+(data.grade??'não disponível')+'.';start.disabled=true;return;}
-  if(status==='scheduled'){state.textContent='Avaliação ainda não liberada. Abertura: '+(data.window?.opens||'a confirmar')+' (Belém/PA).';return;}
+  if(status==='scheduled'){start.hidden=false;state.textContent='Avaliação ainda não liberada. Abertura: '+(data.window?.opens||'a confirmar')+' (Belém/PA).';return;}
   if(!Array.isArray(data.questions)||data.questions.length!==10){state.textContent='Avaliação indisponível. Consulte a secretaria.';return;}
   start.hidden=true;
   const counter=el('p');counter.className=styles.muted;content.append(counter);
   const deadline=expiry();
-  const refresh=()=>{if(deadline!==null&&Date.now()>deadline){lock();return;}const remaining=deadline===null?0:Math.max(0,Math.ceil((deadline-Date.now())/1000));const h=Math.floor(remaining/3600),m=Math.floor(remaining%3600/60),s=remaining%60;counter.textContent='Enviadas: '+Object.keys(attempt.answers||{}).length+'/10 · Prazo: '+(data.window?.closes||'')+' · Tempo restante: '+h+'h '+String(m).padStart(2,'0')+'m '+String(s).padStart(2,'0')+'s';};
+  const refresh=()=>{if(!area.isConnected){stop();return;}if(deadline!==null&&Date.now()>deadline){lock();return;}const remaining=deadline===null?0:Math.max(0,Math.ceil((deadline-Date.now())/1000));const h=Math.floor(remaining/3600),m=Math.floor(remaining%3600/60),s=remaining%60;counter.textContent='Enviadas: '+Object.keys(attempt.answers||{}).length+'/10 · Prazo: '+(data.window?.closes||'')+' · Tempo restante: '+h+'h '+String(m).padStart(2,'0')+'m '+String(s).padStart(2,'0')+'s';};
   data.questions.forEach((q,index)=>{
    const card=el('div');card.className='p-3 rounded-lg border border-slate-200 dark:border-slate-700 space-y-2';
    const heading=el('strong',(index+1)+'. '+String(q.enunciado||''));card.append(heading);
@@ -38,7 +38,7 @@ function examPanel(detail,subject,info){
   finish.onclick=async()=>{if(busy||closed)return;if(Object.keys(attempt.answers||{}).length!==10){state.textContent='Envie todas as dez respostas para finalizar. O prazo continua correndo.';return;}if(!confirm('Finalizar definitivamente esta avaliação?'))return;busy=true;finish.disabled=true;state.textContent='Aguarde, salvando avaliação...';try{renderAttempt(await call('finish'));}catch(e){state.textContent=e?.message||'Falha ao finalizar. Confira o prazo e tente novamente.';finish.disabled=false;}finally{busy=false;}};
   refresh();timer=setInterval(refresh,1000);
  };
- start.onclick=async()=>{start.disabled=true;state.textContent='Consultando avaliação...';try{renderAttempt(await call('read'));}catch(e){state.textContent=e?.message||'Não foi possível abrir a avaliação.';}finally{start.disabled=false;}};
+ start.onclick=async()=>{start.disabled=true;state.textContent='Consultando avaliação...';try{renderAttempt(await call('read'));}catch(e){state.textContent=e?.message||'Não foi possível abrir a avaliação.';}finally{if(!closed&&attempt?.status!=='completed'&&attempt?.status!=='expired')start.disabled=false;}};
  return {stop};
 }
 

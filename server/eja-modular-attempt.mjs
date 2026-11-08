@@ -1,8 +1,10 @@
+import {randomInt} from 'node:crypto';
 import {validId} from './security.mjs';
 import {modularCyclePlan,modularExamWindow} from './eja-modular-cycle.mjs';
 import {studentModularAccess} from './eja-modular-student.mjs';
 import {prepareModularExam,gradeModularExam} from './eja-modular-exams.mjs';
 const fail=(status,message)=>{throw Object.assign(Error(message),{status});};
+export function shuffleExamQuestions(source){const questions=source.map(q=>({...q,opcoes:[...q.opcoes]}));for(let i=questions.length-1;i>0;i--){const j=randomInt(i+1);[questions[i],questions[j]]=[questions[j],questions[i]];}for(const q of questions){const options=q.opcoes.map((text,i)=>({text,correct:i===q.correta}));for(let i=options.length-1;i>0;i--){const j=randomInt(i+1);[options[i],options[j]]=[options[j],options[i]];}q.opcoes=options.map(x=>x.text);q.correta=options.findIndex(x=>x.correct);}return questions;}
 export const publicAttempt=a=>({status:a.status,answers:a.answers||{},submittedCount:Object.keys(a.answers||{}).length,grade:a.status==='completed'||a.status==='expired'?a.grade:null,approved:a.status==='completed'||a.status==='expired'?a.approved:null,correct:a.status==='completed'||a.status==='expired'?a.correct:null});
 export async function modularStudentExamAction(db,b,u){
  if(u.role!=='aluno'||!u.studentId)fail(403,'Acesso exclusivo do aluno.');
@@ -27,7 +29,7 @@ export async function modularStudentExamAction(db,b,u){
   const old=await tx.get(ref),current=old.exists?old.data():null;
   const window=modularExamWindow(discipline,new Date());
   if(!current&&!window.open)return result={window,status:window.expired?'expired':'scheduled',questions:[],answers:{},submittedCount:0};
-  const questions=current?.questions||prepared.questions;
+  const questions=current?.questions||shuffleExamQuestions(prepared.questions);
   const answers=current?.answers||{};
   if(current&&(current.studentId!==sid||current.courseId!==courseId||current.subjectId!==subjectId))fail(409,'Tentativa inconsistente.');
   if(current?.status==='completed'||current?.status==='expired')return result={window,...publicAttempt(current),questions:[]};
