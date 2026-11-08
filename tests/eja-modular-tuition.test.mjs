@@ -1,0 +1,3 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {modularTuitionPreview} from '../server/eja-modular-tuition.mjs';
+test('total preservado em 3, 6 e 9 parcelas',()=>{for(const total of [100,10001,180000,999999])for(const plan of modularTuitionPreview(total)){assert.equal(plan.installmentsCents.length,plan.months);assert.equal(plan.installmentsCents.reduce((a,b)=>a+b,0),total);assert.ok(Math.max(...plan.installmentsCents)-Math.min(...plan.installmentsCents)<=1);}});
+test('valores inválidos são recusados',()=>{for(const x of [0,-1,1.5,'100',Infinity,100000001])assert.throws(()=>modularTuitionPreview(x));});
