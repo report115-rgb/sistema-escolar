@@ -1258,7 +1258,7 @@ atualizarSituacaoDiplomaEJA();
 <div id="course-eja-options" hidden class="space-y-3">
 <label class="block text-xs font-semibold">Modalidade do supletivo<select id="course-eja-mode" class="w-full px-3 py-2 rounded-lg border dark:bg-slate-900"><option value="">Selecione a modalidade...</option><option value="modular">Modular</option><option value="prova-unica">Prova única</option></select></label>
 <div id="course-modular-options" hidden class="grid grid-cols-1 md:grid-cols-2 gap-4">
-<label class="text-xs font-semibold">Etapa<select id="course-eja-stage" class="w-full px-3 py-2 rounded-lg border dark:bg-slate-900"><option value="">Selecione...</option><option value="fundamental">Ensino Fundamental</option><option value="medio">Ensino Médio</option></select></label>
+<label class="text-xs font-semibold">Etapa<select id="course-eja-stage" class="w-full px-3 py-2 rounded-lg border dark:bg-slate-900"><option value="">Selecione...</option><option value="medio">Ensino Médio</option></select></label>
 <label class="text-xs font-semibold">Duração do curso<select id="course-eja-duration" class="w-full px-3 py-2 rounded-lg border dark:bg-slate-900"><option value="">Selecione a duração...</option><option value="3">3 meses</option><option value="6">6 meses</option><option value="9">9 meses</option></select></label>
 
 
@@ -1883,7 +1883,7 @@ atualizarSituacaoDiplomaEJA();
                     </div>
                 </div>
 
-<div class="p-3 rounded-xl border border-blue-300 dark:border-slate-600"><label class="block text-xs font-semibold">Data da matrícula<input id="student-enrollment-date" type="date" readonly class="block mt-1 p-2 rounded border dark:bg-slate-900"></label><p id="student-ingress-preview" class="text-xs mt-2" role="status">Selecione o curso e a turma.</p></div>
+<div id="student-eja-modular-duration-box" hidden class="p-3 rounded-xl border border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-slate-900 space-y-2"><label for="student-eja-modular-duration" class="block text-xs font-bold text-blue-700 dark:text-blue-300">Duração do EJA Modular</label><select id="student-eja-modular-duration" class="w-full px-3 py-2 rounded-lg border dark:bg-slate-900"><option value="">Selecione a duração...</option><option value="3">3 meses</option><option value="6">6 meses</option><option value="9">9 meses</option></select><p class="text-xs">Seleção em preparação: a duração será registrada quando a matrícula modular estiver habilitada.</p></div>  <div class="p-3 rounded-xl border border-blue-300 dark:border-slate-600"><label class="block text-xs font-semibold">Data da matrícula<input id="student-enrollment-date" type="date" readonly class="block mt-1 p-2 rounded border dark:bg-slate-900"></label><p id="student-ingress-preview" class="text-xs mt-2" role="status">Selecione o curso e a turma.</p></div>
 
 <!-- ADICIONE ESTE BLOCO DENTRO DA FICHA DE MATRÍCULA (modal) -->
 <h4 class="font-bold text-xs text-blue-600 dark:text-blue-400 uppercase pt-2">Biometria Facial (Foto de Rosto para o Totem)</h4>
@@ -3831,7 +3831,9 @@ async function addSubjectToCourse() {
         }
 
         let tempUploadedHistoryPdf = "";
+        function atualizarDuracaoEjaMatriculaInterna(){const courseId=document.getElementById('input-student-course')?.value,course=(typeof courses!=='undefined'?courses:[]).find(c=>String(c.id)===String(courseId)),box=document.getElementById('student-eja-modular-duration-box'),select=document.getElementById('student-eja-modular-duration');if(!box||!select)return;const modular=course?.nivel==='Supletivo'&&course?.ejaMode==='modular';box.hidden=!modular;if(!modular)select.value='';}
         function filterTurmasByCourse() {
+            atualizarDuracaoEjaMatriculaInterna();
             const courseId=document.getElementById('input-student-course').value,poloId=document.getElementById('input-student-polo')?.value,select=document.getElementById('input-student-class');if(!select)return;
             const editing=students.find(s=>s.id===document.getElementById('edit-student-id').value),previous=select.value;
             select.replaceChildren(new Option('Selecione a turma...',''));
