@@ -13,7 +13,7 @@ export function modularCyclePlan({subjects,months,firstPaymentConfirmedDate}){
  if(!MODULAR_DURATIONS.includes(months))fail('Duração modular inválida.');
  if(!Array.isArray(subjects)||!subjects.length||subjects.length>200)fail('Disciplinas inválidas.');
  const start=day(firstPaymentConfirmedDate),seen=new Set();
- return subjects.map((s,i)=>{
+ const plan=subjects.map((s,i)=>{
   const subjectId=String(s?.id||'').trim();
   if(!subjectId||seen.has(subjectId))fail('Disciplina sem identificador ou duplicada.');
   seen.add(subjectId);
@@ -27,4 +27,16 @@ export function modularDisciplineState({discipline,today,materialAccessed=false,
  if(now<content)return 'scheduled';
  if(now<exam)return 'studying';
  return materialAccessed&&videoCompleted?'exam_eligible':'requirements_pending';
+}
+
+// Prazo inclusivo: abre às 08h; encerra às 23h59min59s999ms do dia anterior à próxima prova.
+export function modularExamWindow(discipline,now=new Date()){
+ const instant=now instanceof Date?now:new Date(now);
+ if(Number.isNaN(instant.getTime()))fail('Horário inválido.');
+ const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Belem',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).formatToParts(instant);
+ const v=Object.fromEntries(parts.map(p=>[p.type,p.value]));
+ const local=v.year+'-'+v.month+'-'+v.day+'T'+v.hour+':'+v.minute+':'+v.second;
+ const opens=discipline.examOpenAt||discipline.examEarliestDate+'T08:00:00';
+ const closes=discipline.examCloseAt;
+ return {open:local>=opens&&(!closes||local<=closes),notYetOpen:local<opens,expired:!!closes&&local>closes,opens,closes,timeZone:'America/Belem'};
 }
