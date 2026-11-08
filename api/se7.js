@@ -46,6 +46,7 @@ import * as academicDocuments from '../server/academic-documents.mjs';
 import * as diplomaIssuance from '../server/diploma-issuance.mjs';
 import {saveCourse as saveCourseConfiguration} from '../server/course-configuration.mjs';
 import {modularExamAction} from '../server/eja-modular-exam-admin.mjs';
+import {modularAcademicMonitorAction} from '../server/eja-modular-monitor.mjs';
 import {modularStudentExamAction} from '../server/eja-modular-attempt.mjs';
 import {modularMaterialsAction} from '../server/eja-modular-materials.mjs';
 import {modularReadinessAction,modularEnrollmentGate} from '../server/eja-modular-readiness.mjs';
@@ -373,6 +374,7 @@ async function dispatchOperation({auth,db},req,b,delegated=null){
  if(action==='eja-modular-exam')return modularExamAction(db,b,u);
  if(action==='eja-modular-materials')return modularMaterialsAction(db,b,u);
  if(action==='eja-modular-readiness')return modularReadinessAction(db,b,u);
+ if(action==='eja-modular-academic-monitor')return modularAcademicMonitorAction(db,b,u);
  if(action==='eja-modular-tuition')return modularTuitionAction(db,b,u);
  if(action==='eja-modular-bind-first-payment')return modularBindFirstPayment(db,b,u);
  if(action==='eja-modular-finance-plan')return modularFinancePlanAction(db,b,u);
