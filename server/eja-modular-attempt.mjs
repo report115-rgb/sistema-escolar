@@ -3,7 +3,7 @@ import {modularCyclePlan,modularExamWindow} from './eja-modular-cycle.mjs';
 import {studentModularAccess} from './eja-modular-student.mjs';
 import {prepareModularExam,gradeModularExam} from './eja-modular-exams.mjs';
 const fail=(status,message)=>{throw Object.assign(Error(message),{status});};
-const publicAttempt=a=>({status:a.status,answers:a.answers||{},submittedCount:Object.keys(a.answers||{}).length,grade:a.status==='completed'||a.status==='expired'?a.grade:null,approved:a.status==='completed'||a.status==='expired'?a.approved:null});
+export const publicAttempt=a=>({status:a.status,answers:a.answers||{},submittedCount:Object.keys(a.answers||{}).length,grade:a.status==='completed'||a.status==='expired'?a.grade:null,approved:a.status==='completed'||a.status==='expired'?a.approved:null,correct:a.status==='completed'||a.status==='expired'?a.correct:null});
 export async function modularStudentExamAction(db,b,u){
  if(u.role!=='aluno'||!u.studentId)fail(403,'Acesso exclusivo do aluno.');
  const sid=validId(u.studentId),subjectId=validId(b.subjectId);
@@ -26,8 +26,8 @@ export async function modularStudentExamAction(db,b,u){
  await db.runTransaction(async tx=>{
   const old=await tx.get(ref),current=old.exists?old.data():null;
   const window=modularExamWindow(discipline,new Date());
-  if(operation==='read'&&!current&&!window.open)return result={window,status:window.expired?'expired':'scheduled',questions:[]};
-  if(!current&&!window.open)fail(409,'Avaliação fora do prazo.');
+  if(operation==='read'&&!current&&!window.open)return result={window,status:window.expired?'expired':'scheduled',questions:[],answers:{},submittedCount:0};
+  if(!current&&!window.open)return result={window,status:window.expired?'expired':'scheduled',questions:[],answers:{},submittedCount:0};
   const questions=current?.questions||prepared.questions;
   const answers=current?.answers||{};
   if(current&&(current.studentId!==sid||current.courseId!==courseId||current.subjectId!==subjectId))fail(409,'Tentativa inconsistente.');
@@ -41,14 +41,16 @@ export async function modularStudentExamAction(db,b,u){
   const attempt=current||{studentId:sid,courseId,subjectId,questions,answers:{},status:'in_progress',startedAt:new Date().toISOString()};
   if(operation==='submit'){
    if(!Number.isInteger(b.index)||b.index<0||b.index>=10||!Number.isInteger(b.answer)||b.answer<0||b.answer>4)fail(400,'Resposta inválida.');
+   if(Object.prototype.hasOwnProperty.call(answers,String(b.index)))fail(409,'Questão já enviada. Não é permitido alterar a resposta registrada.');
    attempt.answers={...answers,[String(b.index)]:b.answer};
    attempt.updatedAt=new Date().toISOString();
   }
   if(operation==='finish'){
+   if(Object.keys(attempt.answers).length!==10)fail(409,'Envie as dez respostas antes de finalizar.');
    const grade=gradeModularExam(questions,attempt.answers);
    Object.assign(attempt,grade,{status:'completed',closedAt:new Date().toISOString()});
   }
-  tx.set(ref,attempt);
+  if(!current||operation!=='read')tx.set(ref,attempt);
   result={window,...publicAttempt(attempt),questions:attempt.status==='in_progress'?questions.map(({correta,...q})=>q):[]};
  });
  return result;
