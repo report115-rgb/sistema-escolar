@@ -1,7 +1,16 @@
 (function(){
 const modularCourses=()=>typeof courses==='undefined'?[]:courses.filter(c=>c.nivel==='Supletivo'&&c.ejaMode==='modular');
 window.se7GestaoModularAtualizar=function(){const select=document.getElementById('se7-gestao-modular-curso');if(!select)return;const previous=select.value;select.replaceChildren(new Option('Selecione o curso',''));modularCourses().forEach(c=>select.add(new Option(c.name||'EJA Modular',c.id)));if(modularCourses().some(c=>c.id===previous))select.value=previous;const note=document.getElementById('se7-gestao-modular-aviso');if(note)note.textContent=select.value?'Escolha a operação acima.':'Selecione um curso EJA Modular cadastrado em Cursos.';};
-window.se7GestaoModularAbrir=function(type){const id=document.getElementById('se7-gestao-modular-curso')?.value;const course=modularCourses().find(c=>c.id===id);if(!course){alert('Selecione um curso EJA Modular.');return;}if(type==='materiais')return window.se7AbrirMateriaisModulares(id);if(type==='avaliacoes')return window.se7AbrirAvaliacaoModular(id);if(type!=='simulador')return;
+window.se7GestaoModularDiagnostico=async function(courseId){
+ const area=document.getElementById('se7-gestao-modular-aviso');if(!area)return;area.replaceChildren();
+ const loading=document.createElement('p');loading.textContent='Verificando apostilas, videoaulas e avaliações publicadas...';area.append(loading);
+ try{const data=await SE7.api('eja-modular-readiness',{courseId});area.replaceChildren();
+ const title=document.createElement('strong');title.textContent='Preparação: '+data.readyCount+' de '+data.total+' disciplinas completas';area.append(title);
+ const note=document.createElement('p');note.textContent=data.note;note.className='my-2';area.append(note);
+ data.subjects.forEach(s=>{const row=document.createElement('p');row.className='border-b border-slate-600 py-2';row.textContent=s.subjectName+' — Materiais: '+(s.materialsReady?'OK':'Pendente')+' | Avaliação: '+(s.examReady?'Publicada':'Pendente');area.append(row);});
+ }catch(error){area.replaceChildren();const p=document.createElement('p');p.textContent='Não foi possível verificar: '+error.message;area.append(p);}
+};
+window.se7GestaoModularAbrir=function(type){const id=document.getElementById('se7-gestao-modular-curso')?.value;const course=modularCourses().find(c=>c.id===id);if(!course){alert('Selecione um curso EJA Modular.');return;}if(type==='materiais')return window.se7AbrirMateriaisModulares(id);if(type==='avaliacoes')return window.se7AbrirAvaliacaoModular(id);if(type==='diagnostico')return window.se7GestaoModularDiagnostico(id);if(type!=='simulador')return;
 const dialog=document.createElement('dialog');dialog.className='eja-modal-prova';dialog.style.cssText='padding:20px;overflow:auto;max-height:90dvh;width:min(95vw,950px)';
 const title=document.createElement('h3');title.textContent='Simulador do AVA — '+course.name;title.className='font-bold text-lg mb-2';dialog.append(title);
 const notice=document.createElement('p');notice.textContent='Ambiente exclusivamente ilustrativo. Nenhuma ação altera notas, pagamentos, matrículas ou documentos de alunos.';notice.className='text-xs text-slate-300 mb-4';dialog.append(notice);

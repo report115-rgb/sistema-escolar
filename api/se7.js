@@ -47,6 +47,7 @@ import * as diplomaIssuance from '../server/diploma-issuance.mjs';
 import {saveCourse as saveCourseConfiguration} from '../server/course-configuration.mjs';
 import {modularExamAction} from '../server/eja-modular-exam-admin.mjs';
 import {modularMaterialsAction} from '../server/eja-modular-materials.mjs';
+import {modularReadinessAction} from '../server/eja-modular-readiness.mjs';
 import {saveClass} from '../server/class-registration.mjs';
 import * as academicIngress from '../server/academic-ingress.mjs';
 import {today as enrollmentToday,planEntry,canAttend} from '../assets/se7-ingress-policy.js';
@@ -366,6 +367,7 @@ async function dispatchOperation({auth,db},req,b,delegated=null){
  if(action==='academic-document-revoke')return academicDocuments.revoke(db,b,u);
  if(action==='eja-modular-exam')return modularExamAction(db,b,u);
  if(action==='eja-modular-materials')return modularMaterialsAction(db,b,u);
+ if(action==='eja-modular-readiness')return modularReadinessAction(db,b,u);
  if(action==='course-save')return saveCourseConfiguration(db,b,u);
  if(action==='class-save')return saveClass(db,{...b,id:b.id?validId(b.id):undefined,courseId:validId(b.courseId)},u);
  if(action==='academic-entry-migrate')return academicIngress.migrate(db,(Array.isArray(b.studentIds)?b.studentIds:[]).map(validId),u);
