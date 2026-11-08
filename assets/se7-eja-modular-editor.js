@@ -20,7 +20,23 @@ for(const [label,operation] of [['Importar avaliação existente','import'],['Ca
 return;
 }
 body.append(node('p',(exam.published?'Publicada':'Rascunho')+' — '+exam.questions.length+' de 10 questões'));
+const preview=node('div');preview.className='space-y-3';body.append(preview);
+const editToggle=button('Editar questões',()=>{preview.hidden=true;container.hidden=false;editToggle.hidden=true;viewToggle.hidden=false;});
+const viewToggle=button('Visualizar como aluno',()=>{preview.hidden=false;container.hidden=true;editToggle.hidden=false;viewToggle.hidden=true;});
+body.append(editToggle,viewToggle);
 const container=node('div');container.id='container-questoes-admin-eja-modular';body.append(container);
+const previewQuestion=(q,i)=>{
+ const section=node('fieldset');section.className='p-4 rounded-xl border border-slate-700 bg-slate-800/60 space-y-3 my-3';
+ section.append(node('strong','Questão '+(i+1)+' de 10'));
+ const heading=node('div',q.enunciado||'Enunciado ainda não cadastrado');heading.style.cssText='white-space:pre-wrap;line-height:1.6;text-align:justify';section.append(heading);
+ if(q.imagem){const img=node('img');img.src=q.imagem;img.alt='Imagem da questão';img.style.cssText='max-width:220px;max-height:180px;object-fit:contain;cursor:zoom-in';img.onclick=()=>{const zoom=node('dialog');zoom.style.cssText='padding:18px;max-width:95vw';const large=node('img');large.src=q.imagem;large.style.cssText='max-width:90vw;max-height:75vh;object-fit:contain';zoom.append(large,button('Fechar',()=>zoom.close()));zoom.onclose=()=>zoom.remove();document.body.append(zoom);zoom.showModal();};section.append(img);}
+ (q.opcoes||['','','','','']).forEach((option,j)=>{const label=node('label');label.style.cssText='display:flex;gap:10px;padding:10px;border:1px solid #475569;border-radius:10px;margin:6px 0';const radio=node('input');radio.type='radio';radio.name='modular-preview-'+i;radio.value=String(j);const span=node('span',String.fromCharCode(65+j)+') '+(option||'Alternativa não preenchida'));label.append(radio,span);section.append(label);});
+ return section;
+};
+preview.append(node('p','Prévia do aluno — simulação sem envio de respostas ou registro de notas.'));
+for(let i=0;i<10;i++)preview.append(previewQuestion(exam.questions[i]||{},i));
+if(exam.published){editToggle.hidden=true;viewToggle.hidden=true;}else{container.hidden=true;viewToggle.hidden=true;}
+
 for(let i=0;i<10;i++){
 const q=exam.questions[i]||{};
 const card=node('section');card.className='questao-card bg-white dark:bg-slate-800 p-4 rounded-xl border my-3 space-y-2';

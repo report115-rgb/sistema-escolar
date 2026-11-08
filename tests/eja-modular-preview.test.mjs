@@ -1,0 +1,2 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';import {createRequire} from 'node:module';const require=createRequire(import.meta.url);const vm=require('node:vm');
+test('editor modular oferece prévia separada do modo edição',()=>{const src=readFileSync(new URL('../assets/se7-eja-modular-editor.js',import.meta.url),'utf8');assert.match(src,/Visualizar como aluno/);assert.match(src,/Editar questões/);assert.match(src,/Prévia do aluno/);new vm.Script(src);});
