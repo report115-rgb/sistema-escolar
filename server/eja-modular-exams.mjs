@@ -12,6 +12,17 @@ export function validateModularQuestion(q){
  if(q.imagem!==undefined&&q.imagem!==''&&!(typeof q.imagem==='string'&&/^data:image\/jpeg;base64,[A-Za-z0-9+/=]{1,55000}$/.test(q.imagem)))fail('Imagem inválida.');
  return {enunciado:q.enunciado.trim(),opcoes:q.opcoes.map(x=>x.trim()),correta:q.correta,imagem:q.imagem||''};
 }
+export function validateModularDraftQuestion(q){
+ if(!q||typeof q!=='object'||Array.isArray(q))fail('Questão inválida.');
+ const enunciado=String(q.enunciado||'').trim();
+ const opcoes=Array.isArray(q.opcoes)?q.opcoes:[];
+ if(enunciado.length>6000||opcoes.length!==5||opcoes.some(x=>typeof x!=='string'||x.length>3000))fail('Questão ou alternativas inválidas.');
+ const correta=Number(q.correta);
+ if(!Number.isInteger(correta)||correta<0||correta>4)fail('Gabarito inválido.');
+ const imagem=q.imagem||'';
+ if(typeof imagem!=='string'||imagem&&!/^data:image\/jpeg;base64,[A-Za-z0-9+/=]{1,55000}$/.test(imagem))fail('Imagem inválida.');
+ return {enunciado,opcoes:opcoes.map(x=>x.trim()),correta,imagem};
+}
 export function importSingleExamQuestions(config,{subjectId,subjectName}={}){
  if(!subjectId&&!subjectName)fail('Informe a disciplina.');
  const groups=config?.provasPorDisciplina;

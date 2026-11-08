@@ -34,8 +34,8 @@ container.append(card);
 }
 const read=()=>[...container.children].map(card=>({enunciado:card.querySelector('.q-enunciado').value.trim(),opcoes:Array.from({length:5},(_,j)=>card.querySelector('.q-opt-'+j).value.trim()),correta:Number(card.querySelector('.q-correta').value),imagem:card.querySelector('.eja-img-control').dataset.image||''}));
 if(!exam.published){
-body.append(button('Salvar rascunho',async()=>{try{const questions=read();while(questions.length&&!questions[questions.length-1].enunciado)questions.pop();await call('save',{questions});await render();}catch(e){error(e);}}));
-body.append(button('Publicar 10 questões',async()=>{try{await call('save',{questions:read()});if(!confirm('Publicar e bloquear edição?'))return;await call('publish');await render();}catch(e){error(e);}}));
+body.append(button('Salvar rascunho',async()=>{try{const questions=read();await call('save',{questions});await render();}catch(e){error(e);}}));
+body.append(button('Publicar 10 questões',async()=>{try{if(!confirm('Publicar e bloquear edição?'))return;await call('save',{questions:read()});await call('publish');await render();}catch(e){error(e);}}));
 }
 }catch(e){error(e);}
 }

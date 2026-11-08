@@ -1,5 +1,5 @@
 import {validId} from './security.mjs';
-import {importSingleExamQuestions,newModularExam,prepareModularExam,validateModularQuestion} from './eja-modular-exams.mjs';
+import {importSingleExamQuestions,newModularExam,prepareModularExam,validateModularDraftQuestion} from './eja-modular-exams.mjs';
 const fail=(status,message)=>{throw Object.assign(Error(message),{status});};
 export async function modularExamAction(db,b,u){
  if(u.role!=='master')fail(403,'Acesso restrito ao master.');
@@ -19,12 +19,20 @@ export async function modularExamAction(db,b,u){
   return {exam:value};
  }
  if(b.operation==='save'||b.operation==='publish'){
-  const doc=await ref.get();if(!doc.exists)fail(404,'Avaliação não encontrada.');
-  if(doc.data().published)fail(409,'A avaliação publicada está bloqueada para edição.');
-  const questions=b.operation==='save'?(Array.isArray(b.questions)&&b.questions.length<=10?b.questions.map(validateModularQuestion):fail(400,'Máximo de dez questões.')):prepareModularExam(doc.data()).questions;
-  const patch={questions,updatedAt:new Date().toISOString()};
-  if(b.operation==='publish')Object.assign(patch,{published:true,publishedAt:patch.updatedAt});
-  await ref.update(patch);return {exam:{...doc.data(),...patch}};
+  return db.runTransaction(async tx=>{
+   const doc=await tx.get(ref);if(!doc.exists)fail(404,'Avaliação não encontrada.');
+   const old=doc.data();if(old.published)fail(409,'Avaliação publicada está bloqueada.');
+   const now=new Date().toISOString();
+   if(b.operation==='save'){
+    if(!Array.isArray(b.questions)||b.questions.length>10)fail(400,'Máximo de dez questões.');
+    const questions=b.questions.map(validateModularDraftQuestion);
+    const patch={questions,updatedAt:now};tx.update(ref,patch);return {exam:{...old,...patch}};
+   }
+   const prepared=prepareModularExam(old);
+   const patch={questions:prepared.questions,published:true,publishedAt:now,updatedAt:now};
+   tx.update(ref,patch);return {exam:{...old,...patch}};
+  });
  }
+
  fail(400,'Operação inválida.');
 }
