@@ -24,9 +24,16 @@ export async function modularStudentSnapshotAction(db,b,u){
  if(!access.active)return {active:false,reason:access.reason,subjects:[],progress:0};
  const plan=modularCyclePlan({subjects:course.subjects,months:access.activation.months,firstPaymentConfirmedDate:access.activation.firstPaymentConfirmedDate});
  const today=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Belem',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
- const subjects=plan.map(p=>({subjectId:p.subjectId,cycle:p.cycle,releaseDate:p.contentReleaseDate,lessons:p.lessons.map(l=>({...l,scheduled:today>=l.releaseDate})),examEarliestDate:p.examEarliestDate,examOpenAt:p.examOpenAt,examCloseAt:p.examCloseAt,examTimeZone:p.examTimeZone,examWindow:modularExamWindow(p),available:today>=p.contentReleaseDate,examDateReached:modularExamWindow(p).open,status:today<p.contentReleaseDate?'scheduled':modularExamWindow(p).expired?'exam_expired':modularExamWindow(p).notYetOpen?'studying':'requirements_pending'}));
- // Não retornar materiais, gabaritos ou resultados sem validação individual de liberação.
- return {active:true,months:access.activation.months,firstPaymentConfirmedDate:access.activation.firstPaymentConfirmedDate,subjects,progress:0,progressVerified:false,activitiesEnabled:false};
+ const attemptDocs=await Promise.all(plan.map(p=>db.collection('se7EjaModularAttempts').doc(validId(u.studentId)+'_'+courseId+'_'+p.subjectId).get()));
+ const subjects=plan.map((p,i)=>{
+  const window=modularExamWindow(p),a=attemptDocs[i].exists?attemptDocs[i].data():null;
+  const trusted=a&&a.studentId===u.studentId&&a.courseId===courseId&&a.subjectId===p.subjectId?a:null;
+  const ended=trusted?.status==='completed'||trusted?.status==='expired';
+  const status=ended?(trusted.approved?'approved':trusted.status==='expired'?'exam_expired':'not_approved'):trusted?.status==='in_progress'?(window.expired?'exam_expired':'in_progress'):today<p.contentReleaseDate?'scheduled':window.expired?'exam_expired':window.notYetOpen?'studying':'available';
+  return {subjectId:p.subjectId,cycle:p.cycle,releaseDate:p.contentReleaseDate,lessons:p.lessons.map(l=>({...l,scheduled:today>=l.releaseDate})),examEarliestDate:p.examEarliestDate,examOpenAt:p.examOpenAt,examCloseAt:p.examCloseAt,examTimeZone:p.examTimeZone,examWindow:window,available:today>=p.contentReleaseDate,examDateReached:window.open,status,submittedCount:Object.keys(trusted?.answers||{}).length,grade:ended?trusted.grade:null,approved:ended?trusted.approved:null,examCompleted:ended};
+ });
+ const completed=subjects.filter(s=>s.examCompleted).length,approved=subjects.filter(s=>s.approved===true).length;
+ return {active:true,months:access.activation.months,firstPaymentConfirmedDate:access.activation.firstPaymentConfirmedDate,subjects,progress:Math.round(completed/subjects.length*100),progressVerified:true,completed,approved,total:subjects.length,activitiesEnabled:true};
 }
 
 export async function modularStudentMaterialsAction(db,b,u){
