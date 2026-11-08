@@ -1,7 +1,7 @@
 import {validId} from './security.mjs';
 import {modularCyclePlan} from './eja-modular-cycle.mjs';
 const fail=(status,message)=>{throw Object.assign(Error(message),{status});};
-const iso=v=>typeof v==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(v);
+const iso=v=>typeof v==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(v)&&!Number.isNaN(Date.parse(v+'T12:00:00Z'))&&new Date(v+'T12:00:00Z').toISOString().slice(0,10)===v;
 export function studentModularAccess(student,course){
  if(course?.nivel!=='Supletivo'||course?.ejaMode!=='modular'||course?.ejaStage!=='medio')fail(409,'Curso não é EJA Modular do Ensino Médio.');
  if(!student||student.courseId!==course.id)fail(403,'Matrícula não vinculada ao curso.');
@@ -24,7 +24,7 @@ export async function modularStudentSnapshotAction(db,b,u){
  if(!access.active)return {active:false,reason:access.reason,subjects:[],progress:0};
  const plan=modularCyclePlan({subjects:course.subjects,months:access.activation.months,firstPaymentConfirmedDate:access.activation.firstPaymentConfirmedDate});
  const today=new Date().toISOString().slice(0,10);
- const subjects=plan.map(p=>({subjectId:p.subjectId,releaseDate:p.contentReleaseDate,lessons:p.lessons,examEarliestDate:p.examEarliestDate,available:today>=p.contentReleaseDate}));
+ const subjects=plan.map(p=>({subjectId:p.subjectId,cycle:p.cycle,releaseDate:p.contentReleaseDate,lessons:p.lessons.map(l=>({...l,scheduled:today>=l.releaseDate})),examEarliestDate:p.examEarliestDate,available:today>=p.contentReleaseDate,examDateReached:today>=p.examEarliestDate,status:today<p.contentReleaseDate?'scheduled':today<p.examEarliestDate?'studying':'requirements_pending'}));
  // Não retornar materiais, gabaritos ou resultados sem validação individual de liberação.
- return {active:true,months:access.activation.months,firstPaymentConfirmedDate:access.activation.firstPaymentConfirmedDate,subjects,progress:0,progressVerified:false};
+ return {active:true,months:access.activation.months,firstPaymentConfirmedDate:access.activation.firstPaymentConfirmedDate,subjects,progress:0,progressVerified:false,activitiesEnabled:false};
 }
