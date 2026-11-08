@@ -41,10 +41,13 @@ export async function modularStudentExamAction(db,b,u){
   if(operation==='submit'){
    if(!Number.isInteger(b.index)||b.index<0||b.index>=10||!Number.isInteger(b.answer)||b.answer<0||b.answer>4)fail(400,'Resposta inválida.');
    if(Object.prototype.hasOwnProperty.call(answers,String(b.index)))fail(409,'Questão já enviada. Não é permitido alterar a resposta registrada.');
+   // A janela é conferida novamente imediatamente antes da gravação.
+   if(!modularExamWindow(discipline,new Date()).open)return result={window:modularExamWindow(discipline,new Date()),status:'expired',answers,submittedCount:Object.keys(answers).length,questions:[]};
    attempt.answers={...answers,[String(b.index)]:b.answer};
    attempt.updatedAt=new Date().toISOString();
   }
   if(operation==='finish'){
+   if(!modularExamWindow(discipline,new Date()).open)return result={window:modularExamWindow(discipline,new Date()),status:'expired',answers:attempt.answers,submittedCount:Object.keys(attempt.answers).length,questions:[]};
    if(Object.keys(attempt.answers).length!==10)fail(409,'Envie as dez respostas antes de finalizar.');
    const grade=gradeModularExam(questions,attempt.answers);
    Object.assign(attempt,grade,{status:'completed',closedAt:new Date().toISOString()});
