@@ -3194,6 +3194,7 @@ async function excluirColaborador(id) {
                                 <span class="text-gray-500">Valores e parcelamento configurados em cada turma.</span>
                             </div>
                             <div class="flex gap-2 shrink-0">
+                                ${c.nivel==='Supletivo'&&c.ejaMode==='modular'?'<button onclick="se7AbrirAvaliacaoModular(\''+c.id+'\')" class="px-3 py-1 bg-indigo-600 text-white rounded">Avaliações</button>':''}
                                 <button onclick="editarCurso('${c.id}')" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded font-semibold shadow flex items-center gap-1"><i class="fa-solid fa-pen"></i> Editar</button>
                                 <button onclick="excluirCurso('${c.id}')" class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded font-semibold shadow flex items-center gap-1"><i class="fa-solid fa-trash"></i> Excluir</button>
                             </div>
@@ -5752,5 +5753,6 @@ function escutarRegistrosPontoManual() {
 <script src="/assets/se7-payroll-receipt.js"></script>
 <link rel="stylesheet" href="/assets/se7-annual-statements.css"><script src="/assets/se7-annual-statements.js?v=institucional-20261019"></script><link rel="stylesheet" href="/assets/se7-workforce-sheet.css?v=1"><script type="module" src="/assets/se7-workforce.js?v=schedule-4"></script>
 <link rel="stylesheet" href="/assets/se7-internships.css?v=institucional-20261019"><script src="/assets/se7-internship-pdf.js?v=inscricoes-organizadas-20261022"></script><script src="/assets/se7-preceptor-contract-pdf.js?v=institucional-20261019"></script><script src="/assets/se7-internships.js?v=declaracao-preceptor-20261022-1"></script>
+<script src="/assets/se7-eja-modular-editor.js?v=1"></script>
 </body>
 </html>
