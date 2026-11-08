@@ -5,7 +5,7 @@ export function modularActivationCandidate({payment,invoice,link,student,course}
  if(!link||link.type!=='eja-modular-first-payment'||link.studentId!==student?.id||link.invoiceId!==invoice?.id)return null;
  if(!student||!course||student.courseId!==course.id||course.nivel!=='Supletivo'||course.ejaMode!=='modular'||course.ejaStage!=='medio')return null;
  if(![3,6,9].includes(link.months)||!paid.has(payment?.status)||payment.deleted||payment.refunded||payment.chargeback)return null;
- if(invoice.asaasPaymentId!==payment.id||!paid.has(invoice.asaasStatus)||invoice.asaasReview||invoice.partialRefund)return null;
+ if(invoice.paymentId!==payment.id||invoice.state!=='linked'||invoice.partialRefund)return null;
  const date=payment.paymentDate||payment.clientPaymentDate;
  if(typeof date!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(date)||Number.isNaN(Date.parse(date+'T12:00:00Z')))return null;
  return {confirmed:true,source:'asaas-webhook-confirmed',paymentId:payment.id,months:link.months,firstPaymentConfirmedDate:date};
@@ -18,10 +18,10 @@ export async function modularPaymentWebhook(db,payload){
  const link=linkDoc.data();
  if(!link||link.type!=='eja-modular-first-payment'||link.paymentId!==paymentId)return false;
  const sid=validId(link.studentId),invoiceId=validId(link.invoiceId),courseId=validId(link.courseId);
- const [studentDoc,courseDoc,invoiceDoc]=await Promise.all([db.collection('students').doc(sid).get(),db.collection('courses').doc(courseId).get(),db.collection('se7AsaasInvoices').doc(invoiceId).get()]);
- if(!studentDoc.exists||!courseDoc.exists||!invoiceDoc.exists)return false;
+ const [studentDoc,courseDoc,invoiceDoc,reverseDoc]=await Promise.all([db.collection('students').doc(sid).get(),db.collection('courses').doc(courseId).get(),db.collection('se7AsaasInvoices').doc(invoiceId).get(),db.collection('se7AsaasPayments').doc(paymentId).get()]);
+ if(!studentDoc.exists||!courseDoc.exists||!invoiceDoc.exists||!reverseDoc.exists||reverseDoc.data().studentId!==sid||reverseDoc.data().invoiceId!==invoiceId||reverseDoc.data().superseded)return false;
  const student={...studentDoc.data(),id:sid},course={...courseDoc.data(),id:courseId},invoice={...invoiceDoc.data(),id:invoiceId};
- if(student.courseId!==courseId)return false;
+ if(student.courseId!==courseId||invoice.studentId!==sid||invoice.amountCents!==link.firstInstallmentCents)return false;
  const candidate=modularActivationCandidate({payment:payload.payment,invoice,link,student,course});
  if(!candidate)return false;
  await db.runTransaction(async tx=>{

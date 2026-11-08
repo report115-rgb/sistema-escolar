@@ -50,6 +50,7 @@ import {modularMaterialsAction} from '../server/eja-modular-materials.mjs';
 import {modularReadinessAction} from '../server/eja-modular-readiness.mjs';
 import {modularStudentSnapshotAction} from '../server/eja-modular-student.mjs';
 import {modularTuitionAction} from '../server/eja-modular-tuition.mjs';
+import {modularBindFirstPayment} from '../server/eja-modular-finance-link.mjs';
 import {saveClass} from '../server/class-registration.mjs';
 import * as academicIngress from '../server/academic-ingress.mjs';
 import {today as enrollmentToday,planEntry,canAttend} from '../assets/se7-ingress-policy.js';
@@ -371,6 +372,7 @@ async function dispatchOperation({auth,db},req,b,delegated=null){
  if(action==='eja-modular-materials')return modularMaterialsAction(db,b,u);
  if(action==='eja-modular-readiness')return modularReadinessAction(db,b,u);
  if(action==='eja-modular-tuition')return modularTuitionAction(db,b,u);
+ if(action==='eja-modular-bind-first-payment')return modularBindFirstPayment(db,b,u);
  if(action==='eja-modular-student-snapshot')return modularStudentSnapshotAction(db,b,u);
  if(action==='course-save')return saveCourseConfiguration(db,b,u);
  if(action==='class-save')return saveClass(db,{...b,id:b.id?validId(b.id):undefined,courseId:validId(b.courseId)},u);
