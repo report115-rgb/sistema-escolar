@@ -467,6 +467,13 @@ body.se7-legacy-portal #se7-student-internship-card{display:none!important}
                             <option value="">Carregando cursos disponíveis...</option>
                         </select>
                     </div>
+                    <div id="mat-eja-modular-duration-box" hidden class="rounded-xl border border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-slate-800 p-3 space-y-2">
+                        <label for="mat-eja-modular-duration" class="block text-[11px] font-bold uppercase text-blue-700 dark:text-blue-300">Duração do EJA Modular *</label>
+                        <select id="mat-eja-modular-duration" class="w-full px-4 py-2.5 rounded-xl border border-blue-300 dark:border-blue-700 dark:bg-slate-900 text-sm">
+                            <option value="">Selecione a duração</option><option value="3">3 meses</option><option value="6">6 meses</option><option value="9">9 meses</option>
+                        </select>
+                        <p class="text-xs text-slate-600 dark:text-slate-300">A duração escolhida definirá o cronograma individual de disciplinas no AVA.</p>
+                    </div>
                     <div>
                         <label class="block text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Crie sua Senha de Acesso *</label>
                         <input type="password" id="mat-senha" placeholder="Mínimo 8 caracteres" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm focus:ring-2 focus:ring-emerald-600 focus:outline-none">
@@ -1029,7 +1036,9 @@ let cancelarIdentidadeAluno = null;
             });
         }
 
-        async function carregarCursosNoSelect(){const el=document.getElementById('mat-curso-select');try{const d=await SE7.api('catalog',{},false);const ps=document.getElementById('mat-polo-select');ps.replaceChildren(new Option('Selecione o polo',''));for(const p of d.polos||[])ps.add(new Option(p.name+' — '+p.city+'/'+p.state,p.id));el.innerHTML='<option value="">Selecione um curso</option>';for(const c of d.courses){const o=document.createElement('option');o.value=c.id;o.textContent=c.name;el.appendChild(o);}}catch(e){el.innerHTML='<option value="">Não foi possível carregar</option>';}}
+        function atualizarDuracaoMatriculaEja(){const course=document.getElementById('mat-curso-select'),box=document.getElementById('mat-eja-modular-duration-box'),select=document.getElementById('mat-eja-modular-duration');if(!course||!box||!select)return;const modular=course.selectedOptions[0]?.dataset.ejaMode==='modular';box.hidden=!modular;select.required=modular;if(!modular)select.value='';}
+        document.getElementById('mat-curso-select')?.addEventListener('change',atualizarDuracaoMatriculaEja);
+        async function carregarCursosNoSelect(){const el=document.getElementById('mat-curso-select');try{const d=await SE7.api('catalog',{},false);const ps=document.getElementById('mat-polo-select');ps.replaceChildren(new Option('Selecione o polo',''));for(const p of d.polos||[])ps.add(new Option(p.name+' — '+p.city+'/'+p.state,p.id));el.innerHTML='<option value="">Selecione um curso</option>';for(const c of d.courses){const o=document.createElement('option');o.value=c.id;o.textContent=c.name;o.dataset.ejaMode=c.ejaMode||'';el.appendChild(o);}atualizarDuracaoMatriculaEja();}catch(e){el.innerHTML='<option value="">Não foi possível carregar</option>';}}
 
         let ultimoCepPreenchido = '';
         let versaoConsultaCep = 0;
