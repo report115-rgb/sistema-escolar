@@ -12,3 +12,5 @@ test('alteração de valor de parcela é rejeitada',()=>{const p=buildModularFin
 test('alteração de vencimento é rejeitada',()=>{const p=buildModularFinanceSchedule({months:3,totalCents:30000,firstDueDate:'2026-01-31'});p.installments[1].dueDate='2026-02-27';assert.throws(()=>validateModularFinancePlan(p));});
 test('parcela ausente é rejeitada',()=>{const p=buildModularFinanceSchedule({months:3,totalCents:30000,firstDueDate:'2026-11-08'});p.installments.pop();assert.throws(()=>validateModularFinancePlan(p));});
 test('numeração adulterada é rejeitada',()=>{const p=buildModularFinanceSchedule({months:3,totalCents:30000,firstDueDate:'2026-11-08'});p.installments[0].number=2;assert.throws(()=>validateModularFinancePlan(p));});
+
+test('estado de cobrança desconhecido é rejeitado',()=>{const p=buildModularFinanceSchedule({months:3,totalCents:30000,firstDueDate:'2026-11-08'});p.billingCreated='sim';assert.throws(()=>validateModularFinancePlan(p));});

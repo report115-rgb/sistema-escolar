@@ -1,5 +1,6 @@
 import {validId} from './security.mjs';
 import {modularInstallments} from './eja-modular-plan.mjs';
+import {validateModularFinancePlan} from './eja-modular-finance-plan.mjs';
 const fail=(status,message)=>{throw Object.assign(Error(message),{status});};
 export async function modularBindFirstPayment(db,b,u){
  if(u.role!=='master')fail(403,'Acesso restrito ao Master.');
@@ -20,6 +21,7 @@ export async function modularBindFirstPayment(db,b,u){
  if(!planDoc.exists)fail(409,'Salve o plano financeiro do aluno antes de vincular a primeira cobrança.');
  const plan=planDoc.data();
  if(plan.studentId!==studentId||plan.courseId!==courseId||plan.months!==months||plan.totalCents!==tuition.data().totalCents||plan.firstPaymentLinked)fail(409,'Plano financeiro divergente ou já vinculado.');
+ validateModularFinancePlan(plan);
  const installments=modularInstallments(plan.totalCents,months);
  if(plan.firstInstallmentCents!==installments[0]||plan.installments?.length!==months||plan.installments.some((p,i)=>p.number!==i+1||p.amountCents!==installments[i]))fail(409,'Plano financeiro inconsistente.');
  if(!invoice.exists||invoice.data().studentId!==studentId||invoice.data().state!=='linked'||invoice.data().superseded||invoice.data().partialRefund||!invoice.data().paymentId)fail(409,'Fatura não vinculada ao Asaas para este aluno.');
@@ -36,6 +38,7 @@ export async function modularBindFirstPayment(db,b,u){
   if(!inv.exists||inv.data().paymentId!==paymentId||inv.data().state!=='linked'||inv.data().superseded||inv.data().partialRefund||inv.data().studentId!==studentId||inv.data().amountCents!==installments[0]||inv.data().dueDate!==plan.firstDueDate||!paymentMap.exists||paymentMap.data().invoiceId!==invoiceId||paymentMap.data().studentId!==studentId)fail(409,'Vínculo Asaas alterado durante a operação.');
   if(!p.exists||p.data().version!==plan.version||p.data().firstPaymentLinked||p.data().firstPaymentId||p.data().firstInvoiceId)fail(409,'Plano alterado ou cobrança já vinculada.');
   if(old.exists)fail(409,'Pagamento já possui vínculo modular. Consulte o plano financeiro.');
+  validateModularFinancePlan(p.data());
   tx.create(linkRef,record);
   tx.update(planRef,{firstPaymentLinked:true,firstPaymentId:paymentId,firstInvoiceId:invoiceId,linkedAt:new Date().toISOString()});
  });

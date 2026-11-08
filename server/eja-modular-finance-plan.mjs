@@ -16,8 +16,9 @@ export function buildModularFinanceSchedule({totalCents,months,firstDueDate}){
  return {months,totalCents,firstDueDate,installments,installmentCount:months,firstInstallmentCents:amounts[0],lastDueDate:dueDates.at(-1),billingCreated:false};
 }
 export function validateModularFinancePlan(plan){
- if(!plan||typeof plan!=='object')fail(409,'Plano financeiro inexistente.');
+ if(!plan||typeof plan!=='object'||Array.isArray(plan))fail(409,'Plano financeiro inexistente.');
  const expected=buildModularFinanceSchedule({totalCents:plan.totalCents,months:plan.months,firstDueDate:plan.firstDueDate});
+ if(plan.billingCreated!==false&&plan.billingCreated!==true)fail(409,'Estado de cobrança inválido.');
  if(plan.installmentCount!==expected.installmentCount||plan.firstInstallmentCents!==expected.firstInstallmentCents||plan.lastDueDate!==expected.lastDueDate||!Array.isArray(plan.installments)||plan.installments.length!==expected.installments.length)fail(409,'Plano financeiro inconsistente.');
  for(let i=0;i<expected.installments.length;i++){
   const a=plan.installments[i],b=expected.installments[i];
