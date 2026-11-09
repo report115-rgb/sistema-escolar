@@ -27,38 +27,66 @@ window.se7GestaoModularDiagnostico=async function(courseId){
  }catch(error){area.replaceChildren();const p=document.createElement('p');p.textContent='Não foi possível verificar: '+error.message;area.append(p);}
 };
 window.se7GestaoModularFinanceiro=async function(courseId){
- const dialog=document.createElement('dialog');dialog.className='eja-modal-prova';dialog.style.cssText='padding:22px;max-height:90dvh;overflow:auto;width:min(95vw,680px)';
- const title=document.createElement('h3');title.className='font-bold text-lg mb-2';title.textContent='Valores e mensalidades — EJA Modular';dialog.append(title);
- const note=document.createElement('p');note.className='text-xs mb-4';note.textContent='Defina o valor total do curso. O sistema calcula as mensalidades de 3, 6 e 9 meses. A configuração não cria cobranças e não altera contratos existentes.';dialog.append(note);
- const label=document.createElement('label');label.className='block text-sm font-semibold';label.textContent='Valor total do curso (R$)';const input=document.createElement('input');input.type='text';input.inputMode='decimal';input.placeholder='Ex.: 1800,00';input.className='block w-full p-3 mt-2 rounded-lg border dark:bg-slate-800';label.append(input);dialog.append(label);
- const preview=document.createElement('div');preview.className='my-4 space-y-2';dialog.append(preview);
- const msg=document.createElement('p');msg.className='text-xs my-3';dialog.append(msg);
- const feedback=document.createElement('p');feedback.setAttribute('role','status');feedback.setAttribute('aria-live','polite');feedback.className='text-sm font-semibold my-2';dialog.append(feedback);
- const actions=document.createElement('div');actions.className='flex flex-wrap justify-end gap-3 pt-3 border-t border-slate-600';
- const save=document.createElement('button');save.type='button';save.className='px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow transition disabled:opacity-50';save.textContent='Salvar valores';actions.append(save);
- const close=document.createElement('button');close.type='button';close.className='px-5 py-2.5 rounded-xl border border-slate-500 text-white font-semibold hover:bg-slate-700 transition';close.textContent='Fechar';close.onclick=()=>dialog.close();actions.append(close);dialog.append(actions);
- dialog.onclose=()=>dialog.remove();document.body.append(dialog);dialog.showModal();
- const money=cents=>(cents/100).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
- const parse=()=>{const raw=input.value.trim().replace(/^R\$\s*/,'').replace(/\./g,'').replace(',','.');if(!/^\d+(?:\.\d{1,2})?$/.test(raw))return null;const cents=Math.round(Number(raw)*100);return Number.isSafeInteger(cents)&&cents>0&&cents<=100000000?cents:null;};
- const show=()=>{preview.replaceChildren();const cents=parse();save.disabled=!cents;save.style.opacity=cents?'1':'.5';if(!cents){msg.textContent='Informe um valor total válido para calcular as mensalidades.';return;}msg.textContent='';[3,6,9].forEach(months=>{const base=Math.floor(cents/months),extra=cents%months;const row=document.createElement('p');row.className='rounded-lg border dark:border-slate-600 p-3 text-sm';row.textContent=months+' meses: '+(extra?extra+' parcela(s) de '+money(base+1)+' e '+(months-extra)+' de '+money(base):months+' parcelas de '+money(base))+' — Total '+money(cents);preview.append(row);});};
- input.oninput=()=>{feedback.textContent='';show();};try{const data=await SE7.api('eja-modular-tuition',{operation:'read',courseId});if(data.totalCents!==null)input.value=(data.totalCents/100).toFixed(2).replace('.',',');show();}catch(e){msg.textContent='Erro ao consultar valores: '+e.message;}
- let saving=false;
- save.onclick=async()=>{
-  const cents=parse();if(!cents||saving)return;
-  saving=true;save.disabled=true;save.textContent='Salvando...';feedback.textContent='Aguarde, salvando valores...';
-  try{
-   const result=await Promise.race([
-    SE7.api('eja-modular-tuition',{operation:'save',courseId,totalCents:cents}),
-    new Promise((_,reject)=>setTimeout(()=>reject(Error('A solicitação demorou mais de 25 segundos. Confira os valores antes de tentar novamente.')),25000))
-   ]);
-   if(result?.totalCents!==cents)throw Error('O servidor não confirmou o valor informado.');
-   feedback.textContent='Valores salvos com sucesso!';
-   feedback.className='text-sm font-semibold my-2 text-emerald-400';
-  }catch(e){
-   feedback.textContent='Não foi possível confirmar o salvamento: '+(e.message||'Erro desconhecido');
-   feedback.className='text-sm font-semibold my-2 text-rose-400';
-  }finally{saving=false;save.textContent='Salvar valores';show();}
+ const money=c=>(c/100).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+ const formatDate=s=>s?s.split('-').reverse().join('/'):'Prazo indeterminado';
+ const modal=document.createElement('dialog');modal.className='eja-modal-prova';modal.style.cssText='padding:22px;max-height:90dvh;overflow:auto;width:min(95vw,760px)';
+ const title=document.createElement('h3');title.className='font-bold text-lg mb-2';title.textContent='Valores configurados — EJA Modular';modal.append(title);
+ const description=document.createElement('p');description.className='text-sm mb-4';description.textContent='Planos de preço por período. Os valores contratados anteriormente não são alterados.';modal.append(description);
+ const status=document.createElement('p');status.className='text-sm my-3';status.setAttribute('role','status');status.setAttribute('aria-live','polite');modal.append(status);
+ const list=document.createElement('div');list.className='space-y-3 mb-4';modal.append(list);
+ const editor=document.createElement('form');editor.className='space-y-3 border-t border-slate-600 pt-4';editor.hidden=true;
+ const heading=document.createElement('h4');heading.className='font-bold';editor.append(heading);
+ const field=(label,type)=>{const wrap=document.createElement('label');wrap.className='block text-sm font-semibold';wrap.textContent=label;const input=document.createElement('input');input.type=type;input.required=true;input.className='block w-full p-3 mt-2 rounded-lg border dark:bg-slate-800';wrap.append(input);editor.append(wrap);return input;};
+ const amount=field('Valor total do curso (R$)','text');amount.inputMode='decimal';amount.placeholder='Ex.: 1800,00';
+ const start=field('Data de início','date');
+ const end=field('Data de fim','date');
+ const unlimited=document.createElement('label');unlimited.className='flex items-center gap-2 text-sm';const check=document.createElement('input');check.type='checkbox';unlimited.append(check,document.createTextNode('Prazo indeterminado (sem data de fim)'));editor.append(unlimited);
+ check.onchange=()=>{end.disabled=check.checked;end.required=!check.checked;if(check.checked)end.value='';};
+ const preview=document.createElement('div');preview.className='space-y-2';editor.append(preview);
+ const feedback=document.createElement('p');feedback.className='text-sm';feedback.setAttribute('role','status');editor.append(feedback);
+ const buttons=document.createElement('div');buttons.className='flex justify-end gap-3';
+ const save=document.createElement('button');save.type='submit';save.className='px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold';save.textContent='Salvar plano';buttons.append(save);
+ const cancel=document.createElement('button');cancel.type='button';cancel.className='px-5 py-2.5 rounded-xl border border-slate-500';cancel.textContent='Cancelar';cancel.onclick=()=>{editor.hidden=true;feedback.textContent='';};buttons.append(cancel);editor.append(buttons);modal.append(editor);
+ const footer=document.createElement('div');footer.className='flex justify-end gap-3 border-t border-slate-600 pt-3';
+ const add=document.createElement('button');add.type='button';add.className='px-5 py-2.5 rounded-xl bg-blue-600 text-white font-semibold';add.textContent='Configurar novo valor';footer.append(add);
+ const close=document.createElement('button');close.type='button';close.className='px-5 py-2.5 rounded-xl border border-slate-500';close.textContent='Fechar';close.onclick=()=>modal.close();footer.append(close);modal.append(footer);
+ let plans=[],editing=null,legacy=null,busy=false;
+ const parse=()=>{const raw=amount.value.trim().replace(/^R\$\s*/,'').replace(/\./g,'').replace(',','.');if(!/^\d+(?:\.\d{1,2})?$/.test(raw))return null;const n=Math.round(Number(raw)*100);return Number.isSafeInteger(n)&&n>0&&n<=100000000?n:null;};
+ const recalc=()=>{preview.replaceChildren();const cents=parse();if(!cents)return;for(const months of [3,6,9]){const p=document.createElement('p');p.className='rounded-lg border border-slate-600 p-3 text-sm';const base=Math.floor(cents/months),extra=cents%months;p.textContent=months+' meses: '+(extra?extra+' parcela(s) de '+money(base+1)+' e '+(months-extra)+' de '+money(base):months+' parcelas de '+money(base));preview.append(p);}};
+ amount.oninput=recalc;
+ const edit=p=>{editing=p?.id||null;heading.textContent=editing?'Editar plano financeiro':'Configurar novo valor';amount.value=p?(p.totalCents/100).toFixed(2).replace('.',','):'';start.value=p?.startDate||new Date().toISOString().slice(0,10);end.value=p?.endDate||'';check.checked=p?!p.endDate:false;check.onchange();editor.hidden=false;feedback.textContent='';recalc();editor.scrollIntoView({block:'nearest',behavior:'smooth'});};
+ const render=()=>{
+  list.replaceChildren();
+  if(legacy!=null&&!plans.length){const p=document.createElement('p');p.className='rounded-lg border border-amber-500/50 p-3 text-sm';p.textContent='Valor anteriormente configurado: '+money(legacy)+'. Cadastre sua vigência para utilizá-lo como plano por período.';list.append(p);}
+  if(!plans.length){const p=document.createElement('p');p.textContent='Nenhum plano com período cadastrado.';list.append(p);}
+  for(const p of plans){
+   const card=document.createElement('div');card.className='rounded-xl border border-slate-600 p-4 flex flex-wrap items-center justify-between gap-3';
+   const info=document.createElement('div');info.className='space-y-1';const name=document.createElement('strong');name.textContent=money(p.totalCents);info.append(name);
+   const period=document.createElement('p');period.className='text-xs';period.textContent=formatDate(p.startDate)+' até '+formatDate(p.endDate);info.append(period);
+   const date=new Date().toISOString().slice(0,10),tag=document.createElement('small');tag.textContent=date<p.startDate?'Programado':p.endDate&&date>p.endDate?'Encerrado':'Vigente';info.append(tag);card.append(info);
+   const button=document.createElement('button');button.type='button';button.className='px-4 py-2 rounded-lg border border-slate-500';button.textContent='Editar';button.onclick=()=>edit(p);card.append(button);list.append(card);
+  }
  };
+ add.onclick=()=>edit(legacy!=null&&!plans.length?{totalCents:legacy,startDate:new Date().toISOString().slice(0,10),endDate:null}:null);
+ editor.onsubmit=async e=>{
+  e.preventDefault();if(busy)return;
+  const cents=parse(),startDate=start.value,endDate=check.checked?null:end.value;
+  if(!cents||!startDate||(!check.checked&&!endDate)||endDate&&endDate<startDate){feedback.textContent='Informe valor e datas válidos.';return;}
+  const conflict=plans.find(p=>p.id!==editing&&startDate<=(p.endDate||'9999-12-31')&&p.startDate<=(endDate||'9999-12-31'));
+  if(conflict){feedback.textContent='Essa data já pertence a outro plano. Deseja editar o plano existente?';if(confirm('Essa data já pertence ao plano '+money(conflict.totalCents)+' ('+formatDate(conflict.startDate)+' até '+formatDate(conflict.endDate)+'). Deseja editar?'))edit(conflict);return;}
+  busy=true;save.disabled=true;save.textContent='Salvando...';feedback.textContent='Aguarde, salvando plano...';
+  try{
+   const result=await SE7.api('eja-modular-tuition',{operation:'save-plan',courseId,planId:editing,totalCents:cents,startDate,endDate});
+   if(!result?.saved)throw Error('O servidor não confirmou o salvamento.');
+   const refreshed=await SE7.api('eja-modular-tuition',{operation:'read',courseId});
+   plans=refreshed.pricePlans||[];legacy=refreshed.totalCents;render();editor.hidden=true;status.textContent='Valores salvos com sucesso!';
+  }catch(err){feedback.textContent='Não foi possível salvar: '+(err.message||'Erro desconhecido');}
+  finally{busy=false;save.disabled=false;save.textContent='Salvar plano';}
+ };
+ modal.onclose=()=>modal.remove();document.body.append(modal);modal.showModal();
+ status.textContent='Carregando valores...';
+ try{const data=await SE7.api('eja-modular-tuition',{operation:'read',courseId});plans=data.pricePlans||[];legacy=data.totalCents;render();status.textContent='';}
+ catch(err){status.textContent='Não foi possível carregar os valores: '+err.message;add.disabled=true;}
 };
 window.se7GestaoModularPlanoFinanceiro=function(courseId){
  const dlg=document.createElement('dialog');dlg.className='eja-modal-prova';dlg.style.cssText='padding:22px;max-height:90dvh;overflow:auto;width:min(95vw,720px)';
@@ -228,8 +256,8 @@ const close=btn('Fechar',()=>dialog.close());close.className+=' mt-3';dialog.app
   const list=element('div');list.id='se7-modular-disciplines';list.className='grid gap-3';ava.append(list);
   const config=panels.config;
   const settingsCard=element('div');settingsCard.className='rounded-xl border border-slate-600 bg-slate-800/50 p-5 flex flex-wrap items-center justify-between gap-4';
-  const info=element('div');info.append(element('h4','Valores e mensalidades'),element('p','Defina o valor total e confira o cálculo automático para 3, 6 e 9 meses.'));settingsCard.append(info);
-  settingsCard.append(action('Configurar valores',()=>{const c=sync();if(c)window.se7GestaoModularFinanceiro(c.id);else alert('Cadastre o curso EJA Modular Ensino Médio em Cursos.');}));
+  const info=element('div');info.append(element('h4','Valores e mensalidades'),element('p','Gerencie planos financeiros por período, promoções e mensalidades de 3, 6 e 9 meses.'));settingsCard.append(info);
+  settingsCard.append(action('Valores configurados',()=>{const c=sync();if(c)window.se7GestaoModularFinanceiro(c.id);else alert('Cadastre o curso EJA Modular Ensino Médio em Cursos.');}));
   config.append(settingsCard);
   section.insertBefore(tabs,select.parentElement);
   for(const id of ['students','ava','config'])section.insertBefore(panels[id],select.parentElement);
