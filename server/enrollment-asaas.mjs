@@ -15,6 +15,7 @@ export function newInstallments(course,now=new Date()){
 }
 export async function markNew(db,id){await db.collection('se7EnrollmentCandidates').doc(id).set({version:1,createdAt:new Date().toISOString()});}
 export async function start(db,id,u){
+ const transition=await db.collection('se7EjaFinancialTransitions').doc(id).get();if(transition.exists&&transition.data().billingAuthorized!==true)return {enabled:false,state:'awaiting_review',message:'Mudança de modalidade: revisão financeira obrigatória antes de emitir novas cobranças.'};
  if(!['master','secretaria','financeiro'].includes(u.role))fail(403,'Acesso restrito.');
  if(!enabled())return {enabled:false};
  const managed=await db.collection('se7EjaContracts').doc(id).get();if(managed.exists)return {enabled:false,ejaManaged:true};
@@ -32,6 +33,7 @@ export async function retry(db,id,u){
 }
 export async function list(db,u){if(!['master','financeiro'].includes(u.role))fail(403,'Acesso restrito.');if(!enabled())return {jobs:[]};const [r,review]=await Promise.all([db.collection('se7EnrollmentBilling').where('state','==','pending').limit(10).get(),db.collection('se7EnrollmentBilling').where('state','==','review').limit(10).get()]);return {jobs:r.docs.map(d=>d.id),reviews:review.docs.map(d=>({studentId:d.id,message:d.data().message||'Confira no financeiro.'}))};}
 export async function step(db,id,u){
+ const transition=await db.collection('se7EjaFinancialTransitions').doc(id).get();if(transition.exists&&transition.data().billingAuthorized!==true)fail(409,'Revisão financeira pendente: emissão de cobranças bloqueada.');
  if(!['master','secretaria','financeiro'].includes(u.role)||!enabled())fail(403,'Automação desativada ou acesso restrito.');
  const ref=jobRef(db,id),nonce=randomUUID();let job;
  await db.runTransaction(async tx=>{const s=await tx.get(ref);if(!s.exists)fail(404,'Integração não iniciada.');job=s.data();if(job.state!=='pending')return;if(job.leaseUntil>Date.now())fail(409,'Integração já está em processamento.');tx.update(ref,{lease:nonce,leaseUntil:Date.now()+120000});});
