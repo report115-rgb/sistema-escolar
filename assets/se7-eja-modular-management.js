@@ -106,64 +106,6 @@ const close=btn('Fechar',()=>dialog.close());close.className+=' mt-3';dialog.app
 })();
 
 
-/* Organização pedagógica do EJA Modular: AVA por disciplina e Configurações. */
-(function(){
- const byId=id=>document.getElementById(id);
- const el=(tag,label)=>{const n=document.createElement(tag);if(label!==undefined)n.textContent=label;return n;};
- const btn=(label,action)=>{const n=el('button',label);n.type='button';n.className='px-4 py-2 rounded-lg bg-blue-700 hover:bg-blue-600 text-white text-sm font-semibold';n.onclick=action;return n;};
- const currentCourse=()=>typeof courses==='undefined'?null:courses.find(c=>c.nivel==='Supletivo'&&c.ejaMode==='modular'&&c.ejaStage==='medio')||null;
- function initialize(){
-  const root=byId('subeja-modular'),select=byId('se7-gestao-modular-curso');
-  if(!root||!select||byId('se7-modular-inner-tabs'))return;
-  const section=root.querySelector('section');if(!section)return;
-  const oldActions=section.querySelector('div.flex.flex-wrap.gap-2');
-  if(oldActions)oldActions.style.setProperty('display','none','important');
-  select.parentElement.style.display='none';
-  const legacyNote=byId('se7-gestao-modular-aviso');if(legacyNote)legacyNote.style.display='none';
-  const heading=section.querySelector('h4');if(heading)heading.textContent='EJA Modular';
-  const description=section.querySelector('h4 + p');if(description)description.textContent='Organize materiais e avaliações no AVA ou ajuste os parâmetros em Configurações.';
-  const tabs=el('div');tabs.id='se7-modular-inner-tabs';tabs.className='flex flex-wrap gap-2 border-b border-slate-600 pb-3';tabs.setAttribute('role','tablist');tabs.setAttribute('aria-label','Áreas do EJA Modular');
-  const avaTab=btn('AVA',()=>activate('ava')),configTab=btn('Configurações',()=>activate('config'));
-  avaTab.setAttribute('role','tab');configTab.setAttribute('role','tab');tabs.append(avaTab,configTab);
-  const ava=el('div');ava.id='se7-modular-ava';ava.className='space-y-3';
-  const config=el('div');config.id='se7-modular-config';config.className='space-y-3';
-  const intro=el('p','Disciplinas do EJA Modular. Clique em uma disciplina para configurar apostila, videoaulas e avaliação.');intro.className='text-sm text-slate-500 dark:text-slate-300';ava.append(intro);
-  const list=el('div');list.id='se7-modular-disciplines';list.className='grid gap-3';ava.append(list);
-  const configActions=el('div');configActions.className='flex flex-wrap gap-2';
-  [['Plano financeiro do aluno','plano-financeiro'],['Valores e mensalidades','financeiro'],['Verificar preparação','diagnostico'],['Simular AVA','simulador']].forEach(([label,type])=>configActions.append(btn(label,()=>window.se7GestaoModularAbrir(type))));
-  config.append(el('p','Parâmetros administrativos, condições financeiras e ferramentas de conferência do EJA Modular.'),configActions);
-  section.insertBefore(tabs,select.parentElement);
-  section.insertBefore(ava,select.parentElement.nextSibling);
-  section.insertBefore(config,ava.nextSibling);
-  function activate(which){const on=which==='ava';ava.hidden=!on;config.hidden=on;avaTab.setAttribute('aria-selected',String(on));configTab.setAttribute('aria-selected',String(!on));for(const [tab,active] of [[avaTab,on],[configTab,!on]]){tab.classList.toggle('bg-blue-700',active);tab.classList.toggle('bg-slate-700',!active);}if(on)render();}
-  function render(){
-   list.replaceChildren();const course=currentCourse();
-   if(!course){list.append(el('p','Selecione um curso EJA Modular para visualizar as disciplinas.'));return;}
-   const subjects=Array.isArray(course.subjects)?course.subjects:[];
-   if(!subjects.length){list.append(el('p','Nenhuma disciplina vinculada a este curso. Cadastre as disciplinas em Sistema > Disciplinas e vincule-as ao curso.'));return;}
-   subjects.forEach((subject,i)=>{
-    const card=el('details');card.className='rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 p-4';
-    const summary=el('summary',(subject.name||subject.nome||'Disciplina '+(i+1)));summary.className='cursor-pointer font-semibold';card.append(summary);
-    const help=el('p','Gerencie os links da apostila e das videoaulas no cadastro de materiais. A prova é editada no cadastro de avaliações da disciplina.');help.className='text-xs text-slate-500 dark:text-slate-300 my-3';card.append(help);
-    const actions=el('div');actions.className='flex flex-wrap gap-2';
-    actions.append(btn('Apostila e videoaulas',()=>window.se7GestaoModularAbrir('materiais')));
-    actions.append(btn('Editar prova',()=>{
-      window.se7GestaoModularAbrir('avaliacoes');
-      const subjectId=String(subject.id||'');
-      if(subjectId){const timer=setInterval(()=>{const dialogs=[...document.querySelectorAll('dialog[open]')];const dialog=dialogs.find(d=>d.querySelector('select')?.options?.length>1&&d.textContent.includes('Avaliações EJA Modular'));const field=dialog?.querySelector('select');if(field){clearInterval(timer);if([...field.options].some(o=>o.value===subjectId)){field.value=subjectId;field.dispatchEvent(new Event('change'));}}},50);setTimeout(()=>clearInterval(timer),1200);}
-    }));
-    card.append(actions);list.append(card);
-   });
-  }
-  select.addEventListener('change',render);
-  const previous=window.se7GestaoModularAtualizar;
-  if(typeof previous==='function')window.se7GestaoModularAtualizar=function(...args){const result=previous.apply(this,args);render();return result;};
-  activate('ava');
- }
- if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initialize,{once:true});else initialize();
-})();
-
-
 /* AVA administrativo: visualização por disciplina, sem modificar os dados dos alunos. */
 (function(){
  const element=(tag,text)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;return n;};
@@ -236,24 +178,66 @@ const close=btn('Fechar',()=>dialog.close());close.className+=' mt-3';dialog.app
   dialog.onclose=()=>dialog.remove();document.body.append(dialog);dialog.showModal();load();
  };
  function setup(){
-  const list=document.getElementById('se7-modular-disciplines');if(!list||list.dataset.avaUnified)return;
-  list.dataset.avaUnified='1';
-  const render=()=>{
-   list.replaceChildren();const c=course();
-   if(!c){list.append(element('p','Cadastre o EJA Modular Ensino Médio e suas disciplinas para visualizar o AVA.'));return;}
-   const subjects=Array.isArray(c.subjects)?c.subjects:[];
-   if(!subjects.length){list.append(element('p','Nenhuma disciplina vinculada ao curso. Configure-as em Sistema > Disciplinas.'));return;}
-   subjects.forEach((s,i)=>{
-    const button=action('',()=>window.se7ModularAvaModal(s.id));
-    button.className='w-full text-left flex items-center justify-between gap-3 rounded-xl border border-slate-600 bg-slate-800 text-white p-4 hover:bg-slate-700';
-    const left=element('span');left.className='flex flex-col gap-1';const name=element('strong',s.name||s.nome||'Disciplina '+(i+1));left.append(name);
-    const subtitle=element('small','Apostila • 3 videoaulas • Avaliação');subtitle.className='text-slate-300';left.append(subtitle);
-    const chevron=element('span','›');chevron.className='text-xl';button.append(left,chevron);list.append(button);
-   });
+  const root=document.getElementById('subeja-modular'),select=document.getElementById('se7-gestao-modular-curso');
+  if(!root||!select||document.getElementById('se7-modular-inner-tabs'))return;
+  const section=select.closest('section')||root.querySelector('section');if(!section)return;
+  const courseNow=()=>course();
+  const synchronize=()=>{
+   const c=courseNow();
+   if(c&&select.value!==String(c.id)){
+    if(![...select.options].some(o=>o.value===String(c.id)))select.add(new Option(c.name||'EJA Modular',c.id));
+    select.value=String(c.id);
+   }
+   return c;
   };
-  const previous=window.se7GestaoModularAtualizar;
-  if(typeof previous==='function')window.se7GestaoModularAtualizar=function(...args){const result=previous.apply(this,args);render();return result;};
-  render();
+  const originalUpdate=window.se7GestaoModularAtualizar;
+  if(typeof originalUpdate==='function')window.se7GestaoModularAtualizar=function(...args){const result=originalUpdate.apply(this,args);synchronize();render();return result;};
+  const originalOpen=window.se7GestaoModularAbrir;
+  if(typeof originalOpen==='function')window.se7GestaoModularAbrir=function(type){synchronize();return originalOpen(type);};
+  const originalDiagnostico=window.se7GestaoModularDiagnostico;
+  if(typeof originalDiagnostico==='function')window.se7GestaoModularDiagnostico=function(id){synchronize();return originalDiagnostico(id);};
+  const oldButtons=section.querySelector('div.flex.flex-wrap.gap-2');
+  if(oldButtons)oldButtons.style.setProperty('display','none','important');
+  select.parentElement.style.setProperty('display','none','important');
+  const note=document.getElementById('se7-gestao-modular-aviso');
+  if(note){note.style.display='none';}
+  const tabs=element('div');tabs.id='se7-modular-inner-tabs';tabs.className='flex flex-wrap gap-2 border-b border-slate-600 pb-3 mb-4';tabs.setAttribute('role','tablist');
+  const avaTab=action('AVA',()=>activate('ava')),configTab=action('Configurações',()=>activate('config'));
+  for(const tab of [avaTab,configTab]){tab.setAttribute('role','tab');tab.className='px-4 py-3 text-sm font-semibold rounded-t-lg';}
+  tabs.append(avaTab,configTab);
+  const ava=element('div');ava.id='se7-modular-ava';ava.className='space-y-3';
+  const list=element('div');list.id='se7-modular-disciplines';list.className='grid gap-3';
+  ava.append(element('p','Disciplinas do EJA Modular. Clique para configurar apostila, videoaulas e avaliação.'),list);
+  const config=element('div');config.id='se7-modular-config';config.className='space-y-3';
+  config.append(element('p','Parâmetros administrativos e ferramentas de conferência do EJA Modular.'));
+  const actions=element('div');actions.className='flex flex-wrap gap-2';
+  [['Plano financeiro do aluno','plano-financeiro'],['Valores e mensalidades','financeiro'],['Verificar preparação','diagnostico'],['Simular AVA','simulador']].forEach(([label,type])=>actions.append(action(label,()=>window.se7GestaoModularAbrir(type))));
+  config.append(actions);
+  section.insertBefore(tabs,select.parentElement);
+  section.insertBefore(ava,select.parentElement);
+  section.insertBefore(config,select.parentElement);
+  function activate(which){
+   const isAva=which==='ava';ava.hidden=!isAva;config.hidden=isAva;
+   for(const [tab,active] of [[avaTab,isAva],[configTab,!isAva]]){
+    tab.setAttribute('aria-selected',String(active));tab.classList.toggle('bg-blue-700',active);tab.classList.toggle('text-white',active);
+   }
+   synchronize();if(isAva)render();
+  }
+  function render(){
+   synchronize();list.replaceChildren();const c=courseNow();
+   if(!c){list.append(element('p','Nenhum curso EJA Modular Ensino Médio cadastrado.'));return;}
+   const subjects=Array.isArray(c.subjects)?c.subjects:[];
+   if(!subjects.length){list.append(element('p','Nenhuma disciplina vinculada. Cadastre as disciplinas em Sistema > Disciplinas.'));return;}
+   subjects.forEach((subject,i)=>{
+    const card=action('',()=>window.se7ModularAvaModal(subject.id));
+    card.className='w-full text-left flex items-center justify-between gap-3 rounded-xl border border-slate-600 bg-slate-800 text-white p-4 hover:bg-slate-700';
+    const left=element('span');left.className='flex flex-col gap-1';
+    left.append(element('strong',subject.name||subject.nome||'Disciplina '+(i+1)));
+    const subtitle=element('small','Apostila • 3 videoaulas • Avaliação');subtitle.className='text-slate-300';left.append(subtitle);
+    card.append(left,element('span','›'));list.append(card);
+   });
+  }
+  activate('ava');
  }
- if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(setup,0));else setTimeout(setup,0);
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setup,{once:true});else setup();
 })();
