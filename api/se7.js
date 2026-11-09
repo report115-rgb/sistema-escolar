@@ -386,6 +386,7 @@ async function dispatchOperation({auth,db},req,b,delegated=null){
  if(action==='eja-modular-student-exam')return modularStudentExamAction(db,b,u);
  if(action==='course-save')return saveCourseConfiguration(db,b,u);
  if(action==='class-save')return saveClass(db,{...b,id:b.id?validId(b.id):undefined,courseId:validId(b.courseId)},u);
+ if(action==='class-online-ensure')return saveClass(db,{courseId:validId(b.courseId),poloId:validId(b.poloId),autoOnline:true},u);
  if(action==='academic-entry-migrate')return academicIngress.migrate(db,(Array.isArray(b.studentIds)?b.studentIds:[]).map(validId),u);
  if(action==='academic-entry-plan')return academicIngress.refresh(db,validId(b.studentId),u,b.enrollmentDate);
  if(action.startsWith('enrollment-asaas-')){if(!['master','secretaria','financeiro'].includes(u.role))fail(403,'Acesso restrito.');if(action==='enrollment-asaas-list')return enrollmentAsaas.list(db,u);const id=validId(b.studentId);if(action==='enrollment-asaas-start')return enrollmentAsaas.start(db,id,u);if(action==='enrollment-asaas-step')return enrollmentAsaas.step(db,id,u);if(action==='enrollment-asaas-status')return enrollmentAsaas.status(db,id);if(action==='enrollment-asaas-retry')return enrollmentAsaas.retry(db,id,u);fail(400,'Operação inválida.');}
