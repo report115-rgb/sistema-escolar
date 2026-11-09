@@ -33,7 +33,7 @@ export async function modularReadinessAction(db,b,u){
  if(!Array.isArray(subjects)||subjects.length>200)fail(409,'Disciplinas inválidas.');
  const ids=new Set();
  const rows=await Promise.all(subjects.map(async subject=>{
-  const id=validId(subject.id);if(ids.has(id))fail(409,'Há disciplinas com identificadores duplicados.');ids.add(id);
+  const id=validId(String(subject.id??''));if(ids.has(id))fail(409,'Há disciplinas com identificadores duplicados.');ids.add(id);
   const key=courseId+'_'+id;
   const [m,e]=await Promise.all([db.collection('se7EjaModularMaterials').doc(key).get(),db.collection('se7EjaModularExams').doc(key).get()]);
   return inspectModularSubject(subject,m.exists?m.data():null,e.exists?e.data():null);

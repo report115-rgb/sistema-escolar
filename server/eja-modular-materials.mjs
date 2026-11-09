@@ -10,7 +10,7 @@ export function validateModularMaterials(input){
 }
 export async function modularMaterialsAction(db,b,u){
  if(u.role!=='master')fail(403,'Acesso restrito ao master.');
- const courseId=validId(b.courseId),subjectId=validId(b.subjectId);
+ const courseId=validId(b.courseId),subjectId=validId(String(b.subjectId??''));
  const course=await db.collection('courses').doc(courseId).get();
  if(!course.exists||course.data().nivel!=='Supletivo'||course.data().ejaMode!=='modular'||course.data().ejaStage!=='medio')fail(409,'Curso modular inválido.');
  const subject=(course.data().subjects||[]).find(s=>String(s.id)===subjectId);
