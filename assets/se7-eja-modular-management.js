@@ -252,8 +252,6 @@ const close=btn('Fechar',()=>dialog.close());close.className+=' mt-3';dialog.app
    });
   };
   select?.addEventListener('change',render);
-  const observer=new MutationObserver(()=>{if(list.children.length&&list.querySelector('details'))render();});
-  observer.observe(list,{childList:true});
   render();
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(setup,0));else setTimeout(setup,0);
