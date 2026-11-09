@@ -29,11 +29,11 @@ window.se7GestaoModularDiagnostico=async function(courseId){
 window.se7GestaoModularFinanceiro=async function(courseId){
  const money=c=>(c/100).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
  const formatDate=s=>s?s.split('-').reverse().join('/'):'Prazo indeterminado';
- const modal=document.createElement('dialog');modal.className='eja-modal-prova';modal.style.cssText='padding:22px;max-height:90dvh;overflow:auto;width:min(95vw,760px)';
+ const modal=document.createElement('dialog');modal.className='eja-modal-prova';modal.style.cssText='padding:26px;max-height:90dvh;overflow:auto;width:min(95vw,760px);border-radius:18px';
  const title=document.createElement('h3');title.className='font-bold text-lg mb-2';title.textContent='Valores configurados — EJA Modular';modal.append(title);
  const description=document.createElement('p');description.className='text-sm mb-4';description.textContent='Planos de preço por período. Os valores contratados anteriormente não são alterados.';modal.append(description);
  const status=document.createElement('p');status.className='text-sm my-3';status.setAttribute('role','status');status.setAttribute('aria-live','polite');modal.append(status);
- const list=document.createElement('div');list.className='space-y-3 mb-4';modal.append(list);
+ const list=document.createElement('div');list.className='space-y-3 mb-2';modal.append(list);
  const editor=document.createElement('form');editor.className='space-y-3 border-t border-slate-600 pt-4';editor.hidden=true;
  const heading=document.createElement('h4');heading.className='font-bold';editor.append(heading);
  const field=(label,type)=>{const wrap=document.createElement('label');wrap.className='block text-sm font-semibold';wrap.textContent=label;const input=document.createElement('input');input.type=type;input.required=true;input.className='block w-full p-3 mt-2 rounded-lg border dark:bg-slate-800';wrap.append(input);editor.append(wrap);return input;};
@@ -47,7 +47,7 @@ window.se7GestaoModularFinanceiro=async function(courseId){
  const buttons=document.createElement('div');buttons.className='flex justify-end gap-3';
  const save=document.createElement('button');save.type='submit';save.className='px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold';save.textContent='Salvar plano';buttons.append(save);
  const cancel=document.createElement('button');cancel.type='button';cancel.className='px-5 py-2.5 rounded-xl border border-slate-500';cancel.textContent='Cancelar';cancel.onclick=()=>{editor.hidden=true;feedback.textContent='';};buttons.append(cancel);editor.append(buttons);modal.append(editor);
- const footer=document.createElement('div');footer.className='flex justify-end gap-3 border-t border-slate-600 pt-3';
+ const footer=document.createElement('div');footer.className='flex flex-wrap justify-end items-center gap-3 mt-5 pt-1';
  const add=document.createElement('button');add.type='button';add.className='px-5 py-2.5 rounded-xl bg-blue-600 text-white font-semibold';add.textContent='Configurar novo valor';footer.append(add);
  const close=document.createElement('button');close.type='button';close.className='px-5 py-2.5 rounded-xl border border-slate-500';close.textContent='Fechar';close.onclick=()=>modal.close();footer.append(close);modal.append(footer);
  let plans=[],editing=null,legacy=null,busy=false;
