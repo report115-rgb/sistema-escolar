@@ -160,3 +160,101 @@ const close=btn('Fechar',()=>dialog.close());close.className+=' mt-3';dialog.app
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initialize,{once:true});else initialize();
 })();
+
+
+/* AVA administrativo: visualização por disciplina, sem modificar os dados dos alunos. */
+(function(){
+ const element=(tag,text)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;return n;};
+ const action=(label,fn)=>{const n=element('button',label);n.type='button';n.className='px-3 py-2 rounded-lg bg-blue-700 hover:bg-blue-600 text-white text-xs font-semibold';n.onclick=fn;return n;};
+ const course=()=>{const id=document.getElementById('se7-gestao-modular-curso')?.value;return typeof courses==='undefined'?null:courses.find(c=>String(c.id)===String(id)&&c.ejaMode==='modular');};
+ const openEditor=(kind,subjectId)=>{
+  const c=course();if(!c)return;
+  if(kind==='exam')window.se7AbrirAvaliacaoModular(c.id);else window.se7AbrirMateriaisModulares(c.id);
+  let attempts=0;
+  const timer=setInterval(()=>{
+   const dialogs=[...document.querySelectorAll('dialog[open]')];
+   const dialog=dialogs.find(d=>d.textContent.includes(kind==='exam'?'Avaliações EJA Modular':'Conteúdo pedagógico'));
+   const select=dialog?.querySelector('select');
+   if(select&&[...select.options].some(o=>String(o.value)===String(subjectId))){
+    clearInterval(timer);select.value=String(subjectId);select.dispatchEvent(new Event('change'));
+   }else if(++attempts>=20)clearInterval(timer);
+  },50);
+ };
+ window.se7ModularAvaModal=function(subjectId){
+  const c=course(),s=c?.subjects?.find(x=>String(x.id)===String(subjectId));if(!s)return;
+  const dialog=element('dialog');dialog.className='eja-modal-prova';dialog.style.cssText='width:min(95vw,800px);max-height:90dvh;overflow:auto;padding:20px';
+  const header=element('div');header.className='flex justify-between items-center gap-3 mb-4';
+  const heading=element('h3',s.name||s.nome||'Disciplina');heading.className='text-lg font-bold';header.append(heading,action('Fechar',()=>dialog.close()));dialog.append(header);
+  const note=element('p','Visualização do AVA da disciplina. Edite os links abaixo; a disponibilização ao aluno respeita as regras de matrícula e liberação.');note.className='text-xs text-slate-300 mb-4';dialog.append(note);
+  const body=element('div');body.className='space-y-3';dialog.append(body);
+  const status=element('p');status.className='text-xs mt-3';dialog.append(status);
+  const fields=[];
+  const field=(label,value,placeholder)=>{
+   const wrap=element('label');wrap.className='block text-sm font-semibold';
+   wrap.append(element('span',label));const input=element('input');input.type='url';input.value=value||'';input.placeholder=placeholder;input.className='w-full mt-1 p-3 rounded-lg border border-slate-600 bg-slate-900 text-white';wrap.append(input);body.append(wrap);return input;
+  };
+  const load=async()=>{
+   body.replaceChildren();status.textContent='Carregando materiais e avaliação...';
+   try{
+    const [materialsResult,examResult]=await Promise.all([
+     SE7.api('eja-modular-materials',{operation:'read',courseId:c.id,subjectId:s.id}),
+     SE7.api('eja-modular-exam',{operation:'read',courseId:c.id,subjectId:s.id})
+    ]);
+    if(!dialog.open)return;
+    const materials=materialsResult.materials||{},lessons=materials.lessons||[];
+    const pdf=field('Apostila PDF',materials.apostilaUrl,'https://drive.google.com/...');
+    const urls=[0,1,2].map(i=>field('Videoaula '+(i+1),lessons[i]?.url,'https://drive.google.com/...'));
+    const save=action('Salvar apostila e videoaulas',async()=>{
+     save.disabled=true;status.textContent='Salvando materiais...';
+     try{
+      const payload={...materials,apostilaUrl:pdf.value.trim(),lessons:urls.map((u,i)=>({title:lessons[i]?.title||'Videoaula '+(i+1),url:u.value.trim()}))};
+      await SE7.api('eja-modular-materials',{operation:'save',courseId:c.id,subjectId:s.id,materials:payload});
+      status.textContent='Materiais salvos com sucesso.';
+     }catch(e){status.textContent='Não foi possível salvar: '+e.message;}finally{save.disabled=false;}
+    });
+    body.append(save);
+    const line=element('div');line.className='border-t border-slate-600 pt-4 mt-4 space-y-3';
+    const exam=examResult.exam;
+    line.append(element('h4','Avaliação'));
+    line.append(element('p',exam?(exam.published?'Avaliação publicada — edição bloqueada.':'Avaliação em rascunho — disponível para edição.'):'Nenhuma avaliação cadastrada para esta disciplina.'));
+    const buttons=element('div');buttons.className='flex flex-wrap gap-2';
+    buttons.append(action(exam?'Visualizar / editar avaliação':'Cadastrar avaliação',()=>openEditor('exam',s.id)));
+    if(!exam){
+     const importButton=action('Resgatar da Prova Única',async()=>{
+      importButton.disabled=true;status.textContent='Procurando avaliação correspondente na Prova Única...';
+      try{
+       await SE7.api('eja-modular-exam',{operation:'import',courseId:c.id,subjectId:s.id});
+       status.textContent='Avaliação copiada sem alterar a Prova Única. Abra o editor para completar as 10 questões.';
+       await load();
+      }catch(e){status.textContent='Não foi possível importar: '+e.message;importButton.disabled=false;}
+     });buttons.append(importButton);
+    }
+    line.append(buttons);body.append(line);status.textContent='';
+   }catch(e){status.textContent='Falha ao carregar a disciplina: '+e.message;}
+  };
+  dialog.onclose=()=>dialog.remove();document.body.append(dialog);dialog.showModal();load();
+ };
+ function setup(){
+  const list=document.getElementById('se7-modular-disciplines');if(!list||list.dataset.avaUnified)return;
+  list.dataset.avaUnified='1';
+  const select=document.getElementById('se7-gestao-modular-curso');
+  const render=()=>{
+   list.replaceChildren();const c=course();
+   if(!c){list.append(element('p','Selecione o curso para visualizar suas disciplinas.'));return;}
+   const subjects=Array.isArray(c.subjects)?c.subjects:[];
+   if(!subjects.length){list.append(element('p','Nenhuma disciplina vinculada ao curso. Configure-as em Sistema > Disciplinas.'));return;}
+   subjects.forEach((s,i)=>{
+    const button=action('',()=>window.se7ModularAvaModal(s.id));
+    button.className='w-full text-left flex items-center justify-between gap-3 rounded-xl border border-slate-600 bg-slate-800 text-white p-4 hover:bg-slate-700';
+    const left=element('span');left.className='flex flex-col gap-1';const name=element('strong',s.name||s.nome||'Disciplina '+(i+1));left.append(name);
+    const subtitle=element('small','Apostila • 3 videoaulas • Avaliação');subtitle.className='text-slate-300';left.append(subtitle);
+    const chevron=element('span','›');chevron.className='text-xl';button.append(left,chevron);list.append(button);
+   });
+  };
+  select?.addEventListener('change',render);
+  const observer=new MutationObserver(()=>{if(list.children.length&&list.querySelector('details'))render();});
+  observer.observe(list,{childList:true});
+  render();
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(setup,0));else setTimeout(setup,0);
+})();
