@@ -278,18 +278,57 @@ const close=btn('Fechar',()=>dialog.close());close.className+=' mt-3';dialog.app
    }
    sync();if(id==='students')renderStudents();if(id==='ava')renderSubjects();
   }
+  let avaLoadSequence=0;
   function renderSubjects(){
-   sync();list.replaceChildren();const c=current();
+   sync();list.replaceChildren();const c=current(),sequence=++avaLoadSequence;
    if(!c){list.append(element('p','Cadastre o EJA Modular Ensino Médio em Cursos.'));return;}
    const subjects=Array.isArray(c.subjects)?c.subjects:[];
    if(!subjects.length){list.append(element('p','Nenhuma disciplina vinculada. Cadastre em Sistema > Disciplinas.'));return;}
+   if(!document.getElementById('se7-modular-ava-status-style')){
+    const style=document.createElement('style');style.id='se7-modular-ava-status-style';
+    style.textContent='@keyframes se7ModularHourglass{0%,42%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}@keyframes se7ModularPulse{0%,100%{opacity:1}50%{opacity:.48}}.se7-modular-hourglass{display:inline-block;animation:se7ModularHourglass 2s ease-in-out infinite}.se7-modular-pulse{animation:se7ModularPulse 2s ease-in-out infinite}@media(prefers-reduced-motion:reduce){.se7-modular-hourglass,.se7-modular-pulse{animation:none}}';
+    document.head.append(style);
+   }
+   const cardRows=new Map();
+   const pill=(label,ok)=>{const node=element('span',(ok?'✓ ':'○ ')+label);node.className='inline-flex items-center rounded-md px-2 py-1 text-xs '+(ok?'bg-blue-900/60 text-sky-300 border border-sky-700/60':'bg-slate-700/60 text-slate-300 border border-slate-600');return node;};
+   const display=(row,data)=>{
+    row.badges.replaceChildren();
+    const audit=Array.isArray(data?.audit)?data.audit:[];
+    const ok=id=>audit.some(rule=>rule.id===id&&rule.ok===true);
+    const pdf=ok('pdf-link')&&ok('pdf-https')&&ok('pdf-size');
+    const videos=[1,2,3].every(i=>ok('lesson-'+i+'-title')&&ok('lesson-'+i+'-link'))&&ok('lessons-count');
+    const exam=['exam-record','exam-published','exam-count','exam-choices','exam-answer-keys'].every(ok);
+    row.badges.append(pill('Apostila',pdf),pill('3 videoaulas',videos),pill('Avaliação',exam));
+    const started=audit.some(rule=>['syllabus','pdf-link','lesson-1-link','lesson-2-link','lesson-3-link','exam-record'].includes(rule.id)&&rule.ok);
+    const complete=data?.ready===true;
+    row.state.replaceChildren();
+    const icon=element('span',complete?'✓':started?'⌛':'✕');
+    icon.setAttribute('aria-hidden','true');
+    const text=element('span',complete?'Configurada':started?'Em preparação':'Não configurada');
+    row.state.className='inline-flex items-center gap-2 text-xs font-semibold '+(complete?'text-emerald-400':started?'text-amber-300':'text-rose-300');
+    if(!complete){icon.className=started?'se7-modular-hourglass':'se7-modular-pulse';text.className='se7-modular-pulse';}
+    row.state.append(icon,text);
+   };
    subjects.forEach((subject,i)=>{
     const card=action('',()=>window.se7ModularAvaModal(subject.id));
-    card.className='w-full text-left flex items-center justify-between gap-3 rounded-xl border border-slate-600 bg-slate-800 text-white p-4 hover:bg-slate-700';
-    const left=element('span');left.className='flex flex-col gap-1';
+    card.className='w-full text-left flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-600 bg-slate-800 text-white p-4 hover:bg-slate-700';
+    const left=element('span');left.className='flex flex-col gap-2';
     left.append(element('strong',subject.name||subject.nome||'Disciplina '+(i+1)));
-    const subtitle=element('small','Apostila • 3 videoaulas • Avaliação');subtitle.className='text-slate-300';left.append(subtitle);
-    card.append(left,element('span','›'));list.append(card);
+    const badges=element('span');badges.className='flex flex-wrap gap-2';
+    badges.append(element('small','Verificando configuração...'));left.append(badges);
+    const right=element('span');right.className='flex items-center gap-3';
+    const state=element('span','Verificando...');state.className='text-xs text-slate-400';
+    right.append(state,element('span','›'));card.append(left,right);list.append(card);
+    cardRows.set(String(subject.id),{badges,state});
+   });
+   SE7.api('eja-modular-readiness',{courseId:c.id}).then(result=>{
+    if(sequence!==avaLoadSequence||current()?.id!==c.id)return;
+    const data=new Map((result.subjects||[]).map(item=>[String(item.subjectId),item]));
+    for(const [id,row]of cardRows){const subject=data.get(id);if(subject)display(row,subject);else row.state.textContent='Status indisponível';}
+   }).catch(err=>{
+    if(sequence!==avaLoadSequence)return;
+    for(const row of cardRows){row.badges.replaceChildren();row.badges.append(element('small','Não foi possível verificar'));row.state.textContent='Status indisponível';}
+    console.warn('EJA Modular: falha ao consultar preparação',err);
    });
   }
   function renderStudents(){
