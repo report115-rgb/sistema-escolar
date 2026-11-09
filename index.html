@@ -4922,16 +4922,28 @@ function updateLogoPreview(src) {
             const nav=document.getElementById('se7-eja-unique-tabs');if(!nav||nav.dataset.ready)return;
             nav.dataset.ready='1';
             const names=[['subeja-alunos','Alunos EJA'],['subeja-apostila','Apostila PDF'],['subeja-prova','Prova Única — Avaliações']];
-            document.querySelectorAll('#tab-gestao-eja .subeja-content').forEach(panel=>{
-                if(panel.id==='subeja-modular'||names.some(x=>x[0]===panel.id))return;
-                const name=panel.id.toLowerCase();
-                if(name.includes('finance')||name.includes('condic'))names.push([panel.id,'Condições financeiras']);
-                else if(name.includes('monitor')||name.includes('avaliac'))names.push([panel.id,'Monitoramento de avaliações']);
-            });
+            // Os painéis financeiros e de monitoramento são criados dinamicamente
+            // por se7-eja-admin.js; manter seus handlers originais de carregamento.
+            names.push(['subeja-financeiro','Condições financeiras'],['subeja-monitor','Monitoramento de avaliações']);
             names.forEach(([id,label])=>{
                 const button=document.createElement('button');button.type='button';button.textContent=label;
                 button.className='px-3 py-2 rounded-lg text-xs font-semibold border border-slate-600 hover:bg-slate-700';
-                button.onclick=()=>{nav.querySelectorAll('button').forEach(b=>b.classList.remove('bg-blue-700','text-white'));button.classList.add('bg-blue-700','text-white');openSubTabEJA({currentTarget:document.querySelector('#se7-eja-tabs .subtab-eja-btn')},id);};
+                button.onclick=()=>{
+                    const legacy=document.querySelector('#se7-eja-tabs .subtab-eja-btn[aria-controls="'+id+'"]');
+                    if((id==='subeja-financeiro'||id==='subeja-monitor')&&legacy){
+                        legacy.click(); // Carrega os dados pelo fluxo original, sem duplicar os formulários.
+                    }else{
+                        const target=document.getElementById(id);
+                        if(!target)return;
+                        openSubTabEJA({currentTarget:document.querySelector('#se7-eja-tabs .subtab-eja-btn')},id);
+                    }
+                    nav.querySelectorAll('button').forEach(b=>b.classList.remove('bg-blue-700','text-white'));
+                    button.classList.add('bg-blue-700','text-white');
+                    document.querySelectorAll('#se7-eja-tabs .subtab-eja-btn').forEach((b,i)=>{
+                        b.classList.toggle('active',i===0);
+                        b.setAttribute('aria-selected',String(i===0));
+                    });
+                };
                 nav.append(button);
             });
         }
