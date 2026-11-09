@@ -612,6 +612,11 @@
         <!-- ========================================== -->
         <div id="tab-gestao-eja" class="tab-content space-y-4" style="display: none;">
             <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-md p-6 border border-gray-200 dark:border-slate-700 space-y-6">
+                <style>
+/* Gestão EJA: apenas Prova Única e EJA Modular na navegação principal.
+   Botões legados adicionados por scripts permanecem acessíveis na navegação interna. */
+#se7-eja-tabs > .subtab-eja-btn:nth-child(n+3) { display: none !important; }
+</style>
                 <div id="se7-eja-tabs" class="se7-eja-tabs flex gap-2" role="tablist" aria-label="Gestão EJA">
 <button class="subtab-eja-btn active px-5 py-3 rounded-xl text-sm font-semibold bg-emerald-600 text-white" role="tab" aria-controls="subeja-alunos" aria-selected="true" onclick="se7GestaoEjaGrupo('unica')">Prova Única</button>
 <button class="subtab-eja-btn px-5 py-3 rounded-xl text-sm font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300" role="tab" aria-controls="subeja-modular" aria-selected="false" onclick="se7GestaoEjaGrupo('modular')">EJA Modular</button></div>
