@@ -2,9 +2,9 @@
 const el=(tag,text)=>{const e=document.createElement(tag);if(text!==undefined)e.textContent=text;return e;};
 const styles={card:'bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 p-4 space-y-3',button:'px-4 py-2 rounded-xl bg-blue-700 text-white text-sm font-semibold',muted:'text-xs text-slate-500 dark:text-slate-400',row:'flex items-center justify-between gap-3'};
 
-function examPanel(detail,subject,info){
+function examPanel(detail,subject,info,preview){
  const area=el('section');area.className='space-y-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700';detail.append(area);
- const start=el('button','Consultar / realizar avaliação');start.type='button';start.className=styles.button;area.append(start);
+ const start=el('button',preview?'Visualizar avaliação (teste)':'Consultar / realizar avaliação');start.type='button';start.className=styles.button;area.append(start);
  const state=el('p','A prova abre às 08h e encerra no prazo informado, sem tolerância. Apenas respostas enviadas são registradas.');state.className=styles.muted;area.append(state);
  let timer=null,attempt=null,busy=false,closed=false;
  const call=(operation,extra={})=>SE7.api('eja-modular-student-exam',{subjectId:String(subject.id),operation,...extra});
@@ -38,16 +38,33 @@ function examPanel(detail,subject,info){
   finish.onclick=async()=>{if(busy||closed)return;if(Object.keys(attempt.answers||{}).length!==10){state.textContent='Envie todas as dez respostas para finalizar. O prazo continua correndo.';return;}if(!confirm('Finalizar definitivamente esta avaliação?'))return;busy=true;finish.disabled=true;state.textContent='Aguarde, salvando avaliação...';try{renderAttempt(await call('finish'));}catch(e){state.textContent=e?.message||'Falha ao finalizar. Confira o prazo e tente novamente.';finish.disabled=false;}finally{busy=false;}};
   refresh();timer=setInterval(refresh,1000);
  };
+ if(preview){
+  start.onclick=()=>{
+   area.querySelectorAll('[data-exam-preview]').forEach(n=>n.remove());
+   const block=el('div');block.dataset.examPreview='true';block.className='space-y-3';
+   if(!preview.exam?.published){block.append(el('p','Avaliação ainda não publicada.'));area.append(block);return;}
+   (preview.exam.questions||[]).forEach((q,i)=>{
+    const card=el('div');card.className='p-3 rounded-lg border border-slate-200 dark:border-slate-700 space-y-2';
+    card.append(el('strong',(i+1)+'. '+String(q.enunciado||'')));
+    if(q.imagem){const img=el('img');img.src=q.imagem;img.alt='Imagem da questão';img.className='max-w-full rounded-lg';card.append(img);}
+    (q.opcoes||[]).forEach((option,j)=>{const line=el('label');line.className='flex gap-2 text-sm';const radio=el('input');radio.type='radio';radio.name='preview-'+String(subject.id)+'-'+i;radio.value=String(j);line.append(radio,el('span',String(option)));card.append(line);});
+    block.append(card);
+   });
+   block.append(el('p','Teste: nenhuma resposta será registrada.'));area.append(block);
+  };
+  return {stop};
+ }
  start.onclick=async()=>{start.disabled=true;state.textContent='Consultando avaliação...';try{renderAttempt(await call('read'));}catch(e){state.textContent=e?.message||'Não foi possível abrir a avaliação.';}finally{if(!closed&&attempt?.status!=='completed'&&attempt?.status!=='expired')start.disabled=false;}};
  return {stop};
 }
 
-function render(course,student){
+function render(course,student,preview=null){
  const home=document.getElementById('tab-home');if(!home)return;
  let root=document.getElementById('se7-modular-ava');if(!root){root=el('section');root.id='se7-modular-ava';root.className='space-y-3 my-4';home.prepend(root);}
  root.replaceChildren();
- const snapshotRequest=SE7.api('eja-modular-student-snapshot',{courseId:course.id});
+ const snapshotRequest=preview?Promise.resolve({active:true,subjects:(preview.plan||[]).map(p=>({...p,available:true,status:'studying',submittedCount:0,grade:null,apostilaAccessed:false,completedLessons:[]})),progress:0,completed:0,total:(preview.plan||[]).length,approved:0}):SE7.api('eja-modular-student-snapshot',{courseId:course.id});
  root.append(el('h2','Minhas disciplinas — EJA Modular'));
+ if(preview){const banner=el('p','AMBIENTE DE TESTE MASTER · Nenhuma operação será registrada');banner.className='rounded-xl bg-amber-100 text-amber-900 p-3 text-xs font-bold';root.append(banner);}
  const note=el('p','As aulas e avaliações serão liberadas após a confirmação do pagamento inicial e a ativação do cronograma acadêmico.');note.className=styles.muted;root.append(note);
  const subjects=Array.isArray(course?.subjects)?course.subjects:[];
  snapshotRequest.then(data=>{if(!root.isConnected)return;if(!data.active){note.textContent=data.reason||'Aguardando ativação acadêmica.';root.querySelectorAll('article button').forEach(button=>button.disabled=true);return;}note.textContent='Cronograma acadêmico confirmado. Consulte as datas de cada disciplina. Acesse os materiais e as avaliações de cada disciplina conforme as datas de liberação.';overall.textContent='Progresso das avaliações: '+(data.progress||0)+'% · '+(data.completed||0)+'/'+(data.total||0)+' encerradas · '+(data.approved||0)+' aprovadas';const byId=new Map(data.subjects.map(s=>[String(s.subjectId),s]));root.querySelectorAll('[data-modular-subject-id]').forEach(card=>{const plan=byId.get(card.dataset.modularSubjectId);if(!plan)return;const status=card.querySelector('[data-modular-status]');if(status)status.textContent=plan.status==='approved'?'Aprovada · Nota '+plan.grade:plan.status==='not_approved'?'Não aprovada · Nota '+plan.grade:plan.status==='in_progress'?'Prova iniciada · '+plan.submittedCount+'/10 enviadas':plan.status==='exam_expired'?'Prazo da prova encerrado':plan.available?'Disciplina liberada':'Liberação em '+plan.releaseDate;const progress=card.querySelector('[data-modular-progress]');if(progress)progress.textContent='Apostila: '+(plan.apostilaAccessed?'acessada':'pendente')+' · Videoaulas concluídas: '+(plan.completedLessons?.length||0)+'/3 · Respostas: '+(plan.submittedCount||0)+'/10'+(plan.grade!==null?' · Nota: '+plan.grade:'');
@@ -65,8 +82,8 @@ function render(course,student){
   const list=[['Apostila PDF','Aguardando liberação'],['Videoaula 1','Aguardando liberação'],['Videoaula 2','Aguardando liberação'],['Videoaula 3','Aguardando liberação'],['Avaliação final','Aguardando liberação']];
   list.forEach(([name,state])=>{const row=el('div');row.className=styles.row;const label=el('span',name);label.className='text-sm';const value=el('span',state);value.className=styles.muted;row.append(label,value);detail.append(row);});
   const info=el('p','A avaliação respeita rigorosamente as datas e horários exibidos.');info.className=styles.muted;detail.append(info);
-  const materialsButton=el('button','Consultar materiais liberados');materialsButton.type='button';materialsButton.className=styles.button;materialsButton.onclick=async()=>{materialsButton.disabled=true;info.textContent='Consultando materiais...';try{const data=await SE7.api('eja-modular-student-materials',{subjectId:String(subject.id)});const links=el('div');links.className='space-y-2';const addLink=(name,url,activity,lesson)=>{if(!url)return;const a=el('a',name);a.href=url;a.target='_blank';a.rel='noopener noreferrer';a.className='block text-blue-600 underline';a.addEventListener('click',()=>{SE7.api('eja-modular-student-activity',{subjectId:String(subject.id),activity,lesson}).catch(()=>{info.textContent='O material foi aberto, mas o registro de acesso falhou. Consulte novamente.';});});links.append(a);if(activity==='video'){const done=el('button','Marcar videoaula '+lesson+' como concluída');done.type='button';done.className=styles.button;done.onclick=async()=>{done.disabled=true;try{await SE7.api('eja-modular-student-activity',{subjectId:String(subject.id),activity,lesson});done.textContent='Videoaula '+lesson+' concluída';}catch(e){info.textContent=e?.message||'Falha ao registrar conclusão.';done.disabled=false;}};links.append(done);}};addLink('Abrir apostila PDF',data.apostilaUrl,'apostila');for(const lesson of data.lessons||[])addLink('Abrir videoaula '+lesson.number+' — '+lesson.title,lesson.url,'video',lesson.number);detail.append(links);materialsButton.remove();info.textContent='Somente materiais com data de liberação alcançada estão disponíveis.';}catch(e){info.textContent=e?.message||'Materiais indisponíveis. Tente novamente.';materialsButton.disabled=false;}};detail.append(materialsButton);
-  examPanel(detail,subject,info);
+  const materialsButton=el('button',preview?'Consultar materiais cadastrados':'Consultar materiais liberados');materialsButton.type='button';materialsButton.className=styles.button;materialsButton.onclick=async()=>{materialsButton.disabled=true;info.textContent='Consultando materiais...';try{const data=preview?preview.subjects.find(s=>String(s.subjectId)===String(subject.id))?.materials:await SE7.api('eja-modular-student-materials',{subjectId:String(subject.id)});if(!data)throw Error('Materiais ainda não cadastrados.');const links=el('div');links.className='space-y-2';const addLink=(name,url,activity,lesson)=>{if(!url)return;const a=el('a',name);a.href=url;a.target='_blank';a.rel='noopener noreferrer';a.className='block text-blue-600 underline';a.addEventListener('click',()=>{if(preview)return;SE7.api('eja-modular-student-activity',{subjectId:String(subject.id),activity,lesson}).catch(()=>{info.textContent='O material foi aberto, mas o registro de acesso falhou. Consulte novamente.';});});links.append(a);if(activity==='video'&&!preview){const done=el('button','Marcar videoaula '+lesson+' como concluída');done.type='button';done.className=styles.button;done.onclick=async()=>{done.disabled=true;try{await SE7.api('eja-modular-student-activity',{subjectId:String(subject.id),activity,lesson});done.textContent='Videoaula '+lesson+' concluída';}catch(e){info.textContent=e?.message||'Falha ao registrar conclusão.';done.disabled=false;}};links.append(done);}};addLink('Abrir apostila PDF',data.apostilaUrl,'apostila');for(const lesson of data.lessons||[])addLink('Abrir videoaula '+lesson.number+' — '+lesson.title,lesson.url,'video',lesson.number);detail.append(links);materialsButton.remove();info.textContent=preview?'Materiais cadastrados. Nenhum acesso será registrado.':'Somente materiais com data de liberação alcançada estão disponíveis.';}catch(e){info.textContent=e?.message||'Materiais indisponíveis. Tente novamente.';materialsButton.disabled=false;}};detail.append(materialsButton);
+  examPanel(detail,subject,info,preview?.subjects?.find(s=>String(s.subjectId)===String(subject.id))||null);
   button.onclick=()=>{const opening=detail.hidden;root.querySelectorAll('article > div[data-modular-detail]').forEach(d=>{d.hidden=true;const b=d.parentElement.querySelector('button');if(b){b.textContent='Abrir disciplina';b.setAttribute('aria-expanded','false');}});detail.hidden=!opening;button.textContent=opening?'Fechar disciplina':'Abrir disciplina';button.setAttribute('aria-expanded',String(opening));};
   detail.dataset.modularDetail='true';card.append(button,detail);root.append(card);
  });

@@ -50,6 +50,7 @@ import {modularAcademicMonitorAction} from '../server/eja-modular-monitor.mjs';
 import {modularStudentExamAction} from '../server/eja-modular-attempt.mjs';
 import {modularMaterialsAction} from '../server/eja-modular-materials.mjs';
 import {modularReadinessAction,modularEnrollmentGate} from '../server/eja-modular-readiness.mjs';
+import {modularMasterPreview} from '../server/eja-modular-master-preview.mjs';
 import {modularStudentSnapshotAction,modularStudentMaterialsAction,modularStudentActivityAction} from '../server/eja-modular-student.mjs';
 import {modularTuitionAction} from '../server/eja-modular-tuition.mjs';
 import {modularBindFirstPayment} from '../server/eja-modular-finance-link.mjs';
@@ -374,6 +375,7 @@ async function dispatchOperation({auth,db},req,b,delegated=null){
  if(action==='eja-modular-exam')return modularExamAction(db,b,u);
  if(action==='eja-modular-materials')return modularMaterialsAction(db,b,u);
  if(action==='eja-modular-readiness')return modularReadinessAction(db,b,u);
+ if(action==='eja-modular-master-preview')return modularMasterPreview(db,b,u);
  if(action==='eja-modular-academic-monitor')return modularAcademicMonitorAction(db,b,u);
  if(action==='eja-modular-tuition')return modularTuitionAction(db,b,u);
  if(action==='eja-modular-bind-first-payment')return modularBindFirstPayment(db,b,u);
