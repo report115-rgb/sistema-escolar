@@ -33,15 +33,32 @@ window.se7GestaoModularFinanceiro=async function(courseId){
  const label=document.createElement('label');label.className='block text-sm font-semibold';label.textContent='Valor total do curso (R$)';const input=document.createElement('input');input.type='text';input.inputMode='decimal';input.placeholder='Ex.: 1800,00';input.className='block w-full p-3 mt-2 rounded-lg border dark:bg-slate-800';label.append(input);dialog.append(label);
  const preview=document.createElement('div');preview.className='my-4 space-y-2';dialog.append(preview);
  const msg=document.createElement('p');msg.className='text-xs my-3';dialog.append(msg);
+ const feedback=document.createElement('p');feedback.setAttribute('role','status');feedback.setAttribute('aria-live','polite');feedback.className='text-sm font-semibold my-2';dialog.append(feedback);
  const actions=document.createElement('div');actions.className='flex flex-wrap justify-end gap-3 pt-3 border-t border-slate-600';
  const save=document.createElement('button');save.type='button';save.className='px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow transition disabled:opacity-50';save.textContent='Salvar valores';actions.append(save);
  const close=document.createElement('button');close.type='button';close.className='px-5 py-2.5 rounded-xl border border-slate-500 text-white font-semibold hover:bg-slate-700 transition';close.textContent='Fechar';close.onclick=()=>dialog.close();actions.append(close);dialog.append(actions);
  dialog.onclose=()=>dialog.remove();document.body.append(dialog);dialog.showModal();
  const money=cents=>(cents/100).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
  const parse=()=>{const raw=input.value.trim().replace(/^R\$\s*/,'').replace(/\./g,'').replace(',','.');if(!/^\d+(?:\.\d{1,2})?$/.test(raw))return null;const cents=Math.round(Number(raw)*100);return Number.isSafeInteger(cents)&&cents>0&&cents<=100000000?cents:null;};
- const show=()=>{preview.replaceChildren();const cents=parse();save.disabled=!cents;save.style.opacity=cents?'1':'.5';if(!cents){msg.textContent='Informe um valor total válido para calcular as mensalidades.';return;}msg.textContent='Prévia calculada. Diferenças de centavos são distribuídas entre as primeiras parcelas.';[3,6,9].forEach(months=>{const base=Math.floor(cents/months),extra=cents%months;const row=document.createElement('p');row.className='rounded-lg border dark:border-slate-600 p-3 text-sm';row.textContent=months+' meses: '+(extra?extra+' parcela(s) de '+money(base+1)+' e '+(months-extra)+' de '+money(base):months+' parcelas de '+money(base))+' — Total '+money(cents);preview.append(row);});};
- input.oninput=show;try{const data=await SE7.api('eja-modular-tuition',{operation:'read',courseId});if(data.totalCents!==null)input.value=(data.totalCents/100).toFixed(2).replace('.',',');show();}catch(e){msg.textContent='Erro ao consultar valores: '+e.message;}
- save.onclick=async()=>{const cents=parse();if(!cents)return;save.disabled=true;try{await SE7.api('eja-modular-tuition',{operation:'save',courseId,totalCents:cents});msg.textContent='Valor total salvo. As mensalidades foram recalculadas para 3, 6 e 9 meses.';}catch(e){msg.textContent='Não foi possível salvar: '+e.message;}finally{show();}};
+ const show=()=>{preview.replaceChildren();const cents=parse();save.disabled=!cents;save.style.opacity=cents?'1':'.5';if(!cents){msg.textContent='Informe um valor total válido para calcular as mensalidades.';return;}msg.textContent='';[3,6,9].forEach(months=>{const base=Math.floor(cents/months),extra=cents%months;const row=document.createElement('p');row.className='rounded-lg border dark:border-slate-600 p-3 text-sm';row.textContent=months+' meses: '+(extra?extra+' parcela(s) de '+money(base+1)+' e '+(months-extra)+' de '+money(base):months+' parcelas de '+money(base))+' — Total '+money(cents);preview.append(row);});};
+ input.oninput=()=>{feedback.textContent='';show();};try{const data=await SE7.api('eja-modular-tuition',{operation:'read',courseId});if(data.totalCents!==null)input.value=(data.totalCents/100).toFixed(2).replace('.',',');show();}catch(e){msg.textContent='Erro ao consultar valores: '+e.message;}
+ let saving=false;
+ save.onclick=async()=>{
+  const cents=parse();if(!cents||saving)return;
+  saving=true;save.disabled=true;save.textContent='Salvando...';feedback.textContent='Aguarde, salvando valores...';
+  try{
+   const result=await Promise.race([
+    SE7.api('eja-modular-tuition',{operation:'save',courseId,totalCents:cents}),
+    new Promise((_,reject)=>setTimeout(()=>reject(Error('A solicitação demorou mais de 25 segundos. Confira os valores antes de tentar novamente.')),25000))
+   ]);
+   if(result?.totalCents!==cents)throw Error('O servidor não confirmou o valor informado.');
+   feedback.textContent='Valores salvos com sucesso!';
+   feedback.className='text-sm font-semibold my-2 text-emerald-400';
+  }catch(e){
+   feedback.textContent='Não foi possível confirmar o salvamento: '+(e.message||'Erro desconhecido');
+   feedback.className='text-sm font-semibold my-2 text-rose-400';
+  }finally{saving=false;save.textContent='Salvar valores';show();}
+ };
 };
 window.se7GestaoModularPlanoFinanceiro=function(courseId){
  const dlg=document.createElement('dialog');dlg.className='eja-modal-prova';dlg.style.cssText='padding:22px;max-height:90dvh;overflow:auto;width:min(95vw,720px)';
