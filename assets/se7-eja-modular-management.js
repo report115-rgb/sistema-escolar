@@ -111,13 +111,15 @@ const close=btn('Fechar',()=>dialog.close());close.className+=' mt-3';dialog.app
  const byId=id=>document.getElementById(id);
  const el=(tag,label)=>{const n=document.createElement(tag);if(label!==undefined)n.textContent=label;return n;};
  const btn=(label,action)=>{const n=el('button',label);n.type='button';n.className='px-4 py-2 rounded-lg bg-blue-700 hover:bg-blue-600 text-white text-sm font-semibold';n.onclick=action;return n;};
- const currentCourse=()=>{const id=byId('se7-gestao-modular-curso')?.value;return typeof courses==='undefined'?null:courses.find(c=>String(c.id)===String(id)&&c.ejaMode==='modular');};
+ const currentCourse=()=>typeof courses==='undefined'?null:courses.find(c=>c.nivel==='Supletivo'&&c.ejaMode==='modular'&&c.ejaStage==='medio')||null;
  function initialize(){
   const root=byId('subeja-modular'),select=byId('se7-gestao-modular-curso');
   if(!root||!select||byId('se7-modular-inner-tabs'))return;
   const section=root.querySelector('section');if(!section)return;
   const oldActions=section.querySelector('div.flex.flex-wrap.gap-2');
-  if(oldActions)oldActions.hidden=true;
+  if(oldActions)oldActions.style.setProperty('display','none','important');
+  select.parentElement.style.display='none';
+  const legacyNote=byId('se7-gestao-modular-aviso');if(legacyNote)legacyNote.style.display='none';
   const heading=section.querySelector('h4');if(heading)heading.textContent='EJA Modular';
   const description=section.querySelector('h4 + p');if(description)description.textContent='Organize materiais e avaliações no AVA ou ajuste os parâmetros em Configurações.';
   const tabs=el('div');tabs.id='se7-modular-inner-tabs';tabs.className='flex flex-wrap gap-2 border-b border-slate-600 pb-3';tabs.setAttribute('role','tablist');tabs.setAttribute('aria-label','Áreas do EJA Modular');
@@ -166,7 +168,7 @@ const close=btn('Fechar',()=>dialog.close());close.className+=' mt-3';dialog.app
 (function(){
  const element=(tag,text)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;return n;};
  const action=(label,fn)=>{const n=element('button',label);n.type='button';n.className='px-3 py-2 rounded-lg bg-blue-700 hover:bg-blue-600 text-white text-xs font-semibold';n.onclick=fn;return n;};
- const course=()=>{const id=document.getElementById('se7-gestao-modular-curso')?.value;return typeof courses==='undefined'?null:courses.find(c=>String(c.id)===String(id)&&c.ejaMode==='modular');};
+ const course=()=>typeof courses==='undefined'?null:courses.find(c=>c.nivel==='Supletivo'&&c.ejaMode==='modular'&&c.ejaStage==='medio')||null;
  const openEditor=(kind,subjectId)=>{
   const c=course();if(!c)return;
   if(kind==='exam')window.se7AbrirAvaliacaoModular(c.id);else window.se7AbrirMateriaisModulares(c.id);
@@ -237,10 +239,9 @@ const close=btn('Fechar',()=>dialog.close());close.className+=' mt-3';dialog.app
  function setup(){
   const list=document.getElementById('se7-modular-disciplines');if(!list||list.dataset.avaUnified)return;
   list.dataset.avaUnified='1';
-  const select=document.getElementById('se7-gestao-modular-curso');
   const render=()=>{
    list.replaceChildren();const c=course();
-   if(!c){list.append(element('p','Selecione o curso para visualizar suas disciplinas.'));return;}
+   if(!c){list.append(element('p','Cadastre o EJA Modular Ensino Médio e suas disciplinas para visualizar o AVA.'));return;}
    const subjects=Array.isArray(c.subjects)?c.subjects:[];
    if(!subjects.length){list.append(element('p','Nenhuma disciplina vinculada ao curso. Configure-as em Sistema > Disciplinas.'));return;}
    subjects.forEach((s,i)=>{
@@ -251,7 +252,8 @@ const close=btn('Fechar',()=>dialog.close());close.className+=' mt-3';dialog.app
     const chevron=element('span','›');chevron.className='text-xl';button.append(left,chevron);list.append(button);
    });
   };
-  select?.addEventListener('change',render);
+  const previous=window.se7GestaoModularAtualizar;
+  if(typeof previous==='function')window.se7GestaoModularAtualizar=function(...args){const result=previous.apply(this,args);render();return result;};
   render();
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(setup,0));else setTimeout(setup,0);
