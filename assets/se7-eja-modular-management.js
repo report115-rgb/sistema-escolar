@@ -57,7 +57,15 @@ window.se7GestaoModularFinanceiro=async function(courseId){
  const edit=p=>{editing=p?.id||null;heading.textContent=editing?'Editar plano financeiro':'Configurar novo valor';amount.value=p?(p.totalCents/100).toFixed(2).replace('.',','):'';start.value=p?.startDate||new Date().toISOString().slice(0,10);end.value=p?.endDate||'';check.checked=p?!p.endDate:false;check.onchange();editor.hidden=false;feedback.textContent='';recalc();editor.scrollIntoView({block:'nearest',behavior:'smooth'});};
  const render=()=>{
   list.replaceChildren();
-  if(legacy!=null&&!plans.length){const p=document.createElement('p');p.className='rounded-lg border border-amber-500/50 p-3 text-sm';p.textContent='Valor anteriormente configurado: '+money(legacy)+'. Cadastre sua vigência para utilizá-lo como plano por período.';list.append(p);}
+  if(legacy!=null&&!plans.length){
+   const card=document.createElement('div');card.className='rounded-xl border border-slate-600 p-4 flex flex-wrap items-center justify-between gap-3';
+   const info=document.createElement('div');info.className='space-y-1';
+   const value=document.createElement('strong');value.textContent=money(legacy);info.append(value);
+   const note=document.createElement('p');note.className='text-xs';note.textContent='Valor configurado anteriormente • Defina o período de vigência';info.append(note);card.append(info);
+   const button=document.createElement('button');button.type='button';button.className='px-4 py-2 rounded-lg border border-slate-500';button.textContent='Editar';
+   button.onclick=()=>edit({totalCents:legacy,startDate:new Date().toISOString().slice(0,10),endDate:null});
+   card.append(button);list.append(card);
+  }
   if(!plans.length){const p=document.createElement('p');p.textContent='Nenhum plano com período cadastrado.';list.append(p);}
   for(const p of plans){
    const card=document.createElement('div');card.className='rounded-xl border border-slate-600 p-4 flex flex-wrap items-center justify-between gap-3';
@@ -67,7 +75,7 @@ window.se7GestaoModularFinanceiro=async function(courseId){
    const button=document.createElement('button');button.type='button';button.className='px-4 py-2 rounded-lg border border-slate-500';button.textContent='Editar';button.onclick=()=>edit(p);card.append(button);list.append(card);
   }
  };
- add.onclick=()=>edit(legacy!=null&&!plans.length?{totalCents:legacy,startDate:new Date().toISOString().slice(0,10),endDate:null}:null);
+ add.onclick=()=>edit(null);
  editor.onsubmit=async e=>{
   e.preventDefault();if(busy)return;
   const cents=parse(),startDate=start.value,endDate=check.checked?null:end.value;
