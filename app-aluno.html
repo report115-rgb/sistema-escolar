@@ -288,7 +288,7 @@ body.se7-legacy-portal #se7-student-internship-card{display:none!important}
                 
                 <button type="button" class="student-login-choice" onclick="mudarTelaComTransicao('welcome-screen','login-screen')">Já sou aluno</button>
                 <button type="button" class="student-login-choice student-login-choice-secondary" onclick="irParaTelaMatriculaSuave()">Quero me matricular</button>
-                <button type="button" class="student-login-choice student-login-choice-secondary" onclick="SE7MasterTest.open()">Ambiente de Teste · Master</button>
+
             </div>
         </div>
         <div id="student-welcome-developer-footer" class="student-login-footer">Sistema SE7 de Gestão Acadêmica<br><span data-se7-version="aluno">v1.7.31</span> • Portal do Aluno</div>
@@ -2372,44 +2372,6 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
     }
 </script>
 <script src="/assets/se7-eja-modular-ava.js?v=2"></script>
-<script>
-window.SE7MasterTest=(()=>{
- let active=false,busy=false;
- async function open(){
-  if(active||busy)return;busy=true;
-  const overlay=document.createElement('div');overlay.id='se7-master-test-overlay';overlay.style.cssText='position:fixed;inset:0;z-index:99999;overflow:auto;background:#08182d;color:#fff;padding:24px';
-  const panel=document.createElement('div');panel.style.cssText='max-width:840px;margin:2vh auto;padding:24px;background:#102640;border:1px solid #315b91;border-radius:18px';
-  const heading=document.createElement('h2');heading.textContent='Ambiente de Teste — EJA Modular';heading.style.cssText='font-size:20px;font-weight:700;margin-bottom:14px';panel.append(heading);
-  const note=document.createElement('p');note.textContent='Acesso exclusivo Master. Sem registros acadêmicos ou cobranças.';note.style.marginBottom='14px';panel.append(note);
-  const form=document.createElement('form');form.style.cssText='display:grid;gap:12px';
-  const email=document.createElement('input');email.type='email';email.required=true;email.placeholder='E-mail Master';email.autocomplete='username';
-  const password=document.createElement('input');password.type='password';password.required=true;password.placeholder='Senha Master';password.autocomplete='current-password';
-  for(const field of [email,password])field.style.cssText='padding:12px;border-radius:9px;background:#fff;color:#111;width:100%';
-  const submit=document.createElement('button');submit.type='submit';submit.textContent='Entrar no teste';submit.style.cssText='padding:12px;background:#1762d4;border-radius:10px;font-weight:700';
-  const close=document.createElement('button');close.type='button';close.textContent='Encerrar teste';close.style.cssText='padding:12px;border:1px solid #6688aa;border-radius:10px';
-  const status=document.createElement('p');status.setAttribute('role','status');form.append(email,password,submit,close,status);panel.append(form);overlay.append(panel);document.body.append(overlay);
-  let marker=null,home=null;
-  const exit=()=>{if(home&&marker?.parentNode){home.querySelector('#se7-modular-ava')?.remove();marker.parentNode.insertBefore(home,marker);marker.remove();}active=false;overlay.remove();firebase.auth().signOut().catch(()=>{});};
-  close.onclick=exit;
-  form.onsubmit=async e=>{
-   e.preventDefault();submit.disabled=true;status.textContent='Validando acesso Master...';
-   try{
-    await SE7.staffLogin(email.value,password.value);
-    const session=await SE7.api('session');if(session.role!=='master')throw Error('Acesso permitido somente ao Master.');
-    const data=await SE7.api('eja-modular-master-preview',{operation:'read'});
-    home=document.getElementById('tab-home');if(!home)throw Error('AVA do aluno não encontrado.');
-    marker=document.createComment('se7-master-test-home');home.parentNode.insertBefore(marker,home);
-    panel.append(home);home.style.display='block';home.classList.remove('hidden');
-    window.SE7ModularAVA.render(data.course,null,data);
-    active=true;form.remove();note.textContent='AMBIENTE DE TESTE MASTER — AVA real, sem registros acadêmicos.';
-    const toolbar=document.createElement('div');toolbar.style.cssText='display:flex;justify-content:flex-end;margin:12px 0';toolbar.append(close);panel.insertBefore(toolbar,home);
-   }catch(err){status.textContent='Não foi possível abrir o teste: '+(err.message||'Erro desconhecido');}
-   finally{submit.disabled=false;}
-  };
-  busy=false;
- }
- return {open};
-})();
-</script>
+
 </body>
 </html>
