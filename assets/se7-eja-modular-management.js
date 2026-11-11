@@ -269,6 +269,7 @@ const close=btn('Fechar',()=>dialog.close());close.className+=' mt-3';dialog.app
    }
    sync();if(id==='students')renderStudents();if(id==='ava')renderSubjects();
   }
+  const readinessCache=new Map();async function se7ReadinessCached(courseId){const item=readinessCache.get(courseId);if(item&&Date.now()-item.at<120000)return item.promise;const promise=SE7.api('eja-modular-readiness',{courseId});readinessCache.set(courseId,{at:Date.now(),promise});try{return await promise;}catch(e){readinessCache.delete(courseId);throw e;}}
   let avaLoadSequence=0;
   function renderSubjects(){
    sync();list.replaceChildren();const c=current(),sequence=++avaLoadSequence;
@@ -312,7 +313,7 @@ const close=btn('Fechar',()=>dialog.close());close.className+=' mt-3';dialog.app
     right.append(state);card.append(left,right);list.append(card);
     cardRows.set(String(subject.id),{badges,state,subjectId:subject.id});
    });
-   SE7.api('eja-modular-readiness',{courseId:c.id}).then(result=>{
+   se7ReadinessCached(c.id).then(result=>{
     if(sequence!==avaLoadSequence||current()?.id!==c.id)return;
     const data=new Map((result.subjects||[]).map(item=>[String(item.subjectId),item]));
     for(const [id,row]of cardRows){const subject=data.get(id);if(subject)display(row,subject);else row.state.textContent='Status indisponível';}
@@ -322,7 +323,7 @@ const close=btn('Fechar',()=>dialog.close());close.className+=' mt-3';dialog.app
     console.warn('EJA Modular: falha ao consultar preparação',err);
    });
   }
-  document.addEventListener('se7-modular-materials-saved',()=>{if(!panels.ava.hidden)renderSubjects();});
+  document.addEventListener('se7-modular-materials-saved',()=>{readinessCache.clear();if(!panels.ava.hidden)renderSubjects();});
   function renderStudents(){
    tbody.replaceChildren();const c=current();
    const items=(typeof students==='undefined'?[]:students).filter(s=>String(s.courseId)===String(c?.id)).sort((a,b)=>String(a.fullname||'').localeCompare(String(b.fullname||''),'pt-BR'));
