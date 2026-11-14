@@ -3959,6 +3959,7 @@ function carregarDatasCalendarioParaFrequencia(){const classId=document.getEleme
         classId
     };
 
+    const modularMonths=Number(document.getElementById('student-eja-modular-duration')?.value||0);if(selectedCourse?.ejaMode==='modular'&&[3,6,9].includes(modularMonths))studentData.ejaModularDurationMonths=modularMonths;
     if (editId) {
         // Se houver uma nova foto capturada na edição, adicionamos ao objeto de atualização.
         // Se NÃO houver, omitimos a propriedade para o Firebase PRESERVAR a foto antiga que já está lá.

@@ -627,6 +627,7 @@ body.se7-modular-online-portal #se7-row-dias-aula,body.se7-modular-online-portal
 <label class="flex items-start gap-2 py-2 text-xs"><input type="checkbox" id="portal-whatsapp-opt-in" onchange="alterarAutorizacaoWhatsAppAluno(this)" class="mt-1"><span>Receber avisos de matrícula e provas da instituição pelo WhatsApp. Para interromper, desmarque ou responda PARAR.</span></label>
                     <p class="flex justify-between gap-3 items-start border-b border-slate-100 dark:border-slate-800 pb-1.5"><strong class="text-slate-500 dark:text-slate-400 shrink-0">Endereço:</strong> <span id="info-endereco" class="font-semibold text-right min-w-0 max-w-[200px] break-words">---</span></p>
                     <p class="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5"><strong class="text-slate-500 dark:text-slate-400">Curso:</strong> <span id="info-curso-completo" class="font-semibold text-right max-w-[200px] truncate">---</span></p>
+                    <p id="se7-row-modular-duration" style="display:none" class="flex justify-between border-b border-slate-100 dark:border-slate-800 py-1.5"><strong class="text-slate-500 dark:text-slate-400">Duração:</strong><span id="info-modular-duration" class="font-semibold">Não informada</span></p>
                     <p class="flex justify-between pt-0.5"><strong class="text-slate-500 dark:text-slate-400">Turma:</strong> <span id="info-turma" class="font-semibold">---</span></p>
 <p id="se7-row-dias-aula" class="flex justify-between gap-3 border-b border-slate-100 dark:border-slate-800 py-1.5"><strong class="text-slate-500 dark:text-slate-400">Dia de aula:</strong><span id="info-dias-aula" class="font-semibold text-right">---</span></p>
 <p id="se7-row-horario-aula" class="flex justify-between gap-3 border-b border-slate-100 dark:border-slate-800 py-1.5"><strong class="text-slate-500 dark:text-slate-400">Horário de aula:</strong><span id="info-horario-aula" class="font-semibold text-right">---</span></p>
@@ -1697,7 +1698,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
                         void verificarTodasPendencias().catch(e=>console.warn('Consulta de pendências pendente:',e));
 
                         document.getElementById('header-aluno-curso').textContent = curso.name;
-                        document.getElementById('info-curso-completo').textContent = curso.name;
+                        document.getElementById('info-curso-completo').textContent = curso.ejaMode==='modular'&&curso.modularDelivery!=='presencial'?'EJA Ensino Médio — Modular EAD':curso.name;const durationRow=document.getElementById('se7-row-modular-duration');if(durationRow){const isEad=curso.ejaMode==='modular'&&curso.modularDelivery!=='presencial';durationRow.style.display=isEad?'flex':'none';if(isEad){const duration=Number(alunoLogado.ejaModularDurationMonths||alunoLogado.modularDurationMonths||0);document.getElementById('info-modular-duration').textContent=[3,6,9].includes(duration)?duration+' meses':'Não informada';}}
                         document.getElementById('total-disciplinas-num').textContent = curso.subjects ? curso.subjects.length : 0;
 
                         const gradesList = document.getElementById('grades-list');
@@ -1766,7 +1767,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
                     const turmaDoc = await db.collection("classes").doc(alunoLogado.classId).get({source:'server'});
                     if(turmaDoc.exists) {
                         const turmaData = turmaDoc.data();
-                        document.getElementById('info-turma').textContent=turmaData.name||'A definir';const detalhes=SE7ClassFormat.classDetails(turmaData);document.getElementById('info-dias-aula').textContent=detalhes.days;document.getElementById('info-horario-aula').textContent=detalhes.hours;document.getElementById('info-etapa-curso').textContent=legadoAtivo()?'Concluído':(window.se7CalendarCourse?.ejaMode==='modular'&&window.se7CalendarCourse?.modularDelivery!=='presencial'?se7SemestreIngressoModular(alunoLogado,turmaData):detalhes.semester);
+                        document.getElementById('info-turma').textContent=window.se7CalendarCourse?.ejaMode==='modular'&&window.se7CalendarCourse?.modularDelivery!=='presencial'?'Turma EAD — Ensino Médio':turmaData.name||'A definir';const detalhes=SE7ClassFormat.classDetails(turmaData);document.getElementById('info-dias-aula').textContent=detalhes.days;document.getElementById('info-horario-aula').textContent=detalhes.hours;document.getElementById('info-etapa-curso').textContent=legadoAtivo()?'Concluído':(window.se7CalendarCourse?.ejaMode==='modular'&&window.se7CalendarCourse?.modularDelivery!=='presencial'?se7SemestreIngressoModular(alunoLogado,turmaData):detalhes.semester);
 
                         const calSnap = await db.collection("academicCalendars").where("classId", "==", alunoLogado.classId).get({source:'server'});
                         eventosCalendarioCache = [];
@@ -2081,7 +2082,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
             });
         }
 
-        function se7SemestreIngressoModular(aluno,turma){const value=aluno?.academicEntry?.semester||aluno?.entrySemester||turma?.entrySemester||aluno?.semester;const str=String(value||'').trim();if(/^20\d{2}\s*[\/-]\s*[12]$/.test(str))return str.replace(/\s/g,'').replace('-','/');const raw=aluno?.enrollmentDate||aluno?.academicEntry?.enrollmentDate;const match=String(raw||'').match(/^(20\d{2})-(\d{2})-\d{2}/);if(match){const month=Number(match[2]);if(month>=1&&month<=12)return match[1]+'/'+(month<=6?'1':'2');}return 'Não informado';}
+        function se7SemestreIngressoModular(aluno,turma){const value=aluno?.academicEntry?.semester||aluno?.entrySemester||turma?.entrySemester||aluno?.semester;const str=String(value||'').trim();if(/^20\d{2}\s*[\/-]\s*[12]$/.test(str))return str.replace(/\s/g,'').replace('-','/');const raw=aluno?.enrollmentDate||aluno?.academicEntry?.enrollmentDate||aluno?.enrollmentRegisteredAt||aluno?.createdAt;const text=raw?.toDate?raw.toDate().toISOString():String(raw||'');const match=text.match(/^(20\d{2})-(\d{2})-\d{2}/)||text.match(/^\d{2}\/(\d{2})\/(20\d{2})/);if(match){const month=Number(match[2]);const year=match[1].length===4?match[1]:match[2]&&match[3];if(month>=1&&month<=12&&year)return year+'/'+(month<=6?'1':'2');}return 'Não informado';}
         function adaptarPainelPorModalidadeCurso(cursoObj) {
             window.SE7EjaAvatar?.configure(cursoObj);
             isAlunoEJA = cursoObj && (/^(eja|supletivo)$/i.test(String(cursoObj.nivel||'').trim()) || /^eja$/i.test(String(cursoObj.sigla||'').trim()) || /eja|supletivo/i.test(cursoObj.name||''));
