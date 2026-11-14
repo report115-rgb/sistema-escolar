@@ -59,7 +59,7 @@ function examPanel(detail,subject,info,preview){
 }
 
 function render(course,student,preview=null){
- const home=document.getElementById('tab-home');if(!home)return;
+ const home=document.getElementById('tab-ava');if(!home)return;
  let root=document.getElementById('se7-modular-ava');if(!root){root=el('section');root.id='se7-modular-ava';root.className='space-y-3 my-4';home.prepend(root);}
  root.replaceChildren();
  const snapshotRequest=preview?Promise.resolve({active:true,subjects:(preview.plan||[]).map(p=>({...p,available:true,status:'studying',submittedCount:0,grade:null,apostilaAccessed:false,completedLessons:[]})),progress:0,completed:0,total:(preview.plan||[]).length,approved:0}):SE7.api('eja-modular-student-snapshot',{courseId:course.id});

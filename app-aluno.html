@@ -583,6 +583,7 @@ body.se7-legacy-portal #se7-student-internship-card{display:none!important}
         <!-- Conteúdo das Abas (Área que rola no meio) -->
         <div class="flex-1 overflow-y-auto p-4 space-y-4 pb-24">
             
+            <div id="tab-ava" class="space-y-4 tab-pane" style="display:none"></div>
             <!-- ABA 1: INÍCIO -->
             <div id="tab-home" class="space-y-4 tab-pane se7-tab-ativa"><div id="se7-legacy-home-intro" class="hidden bg-gradient-to-r from-indigo-600 to-blue-600 text-white p-4 rounded-2xl shadow-lg flex items-center justify-between gap-3"><div><span class="text-[10px] uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-full font-bold">Portal do Aluno</span><h3 class="font-bold text-base mt-1">Meu Portal</h3><p class="text-xs text-blue-100 mt-0.5">Consulte seus dados cadastrais, informações financeiras e documentos.</p></div><div class="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center text-2xl shrink-0"><i class="fa-solid fa-user-graduate" aria-hidden="true"></i></div></div>
                 <div id="banner-padrao-home" class="bg-gradient-to-r from-indigo-600 to-blue-600 text-white p-4 rounded-2xl shadow-lg flex items-center justify-between">
@@ -801,6 +802,7 @@ body.se7-legacy-portal #se7-student-internship-card{display:none!important}
             <button onclick="mudarAba('calendario')" id="nav-calendario" class="flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition">
                 <i class="fa-solid fa-calendar-days text-base mb-0.5"></i> Aulas
             </button>
+            <button onclick="mudarAba('ava')" id="nav-ava" style="display:none" class="flex flex-col items-center text-slate-400 dark:text-slate-500 text-[10px] font-bold transition"><i class="fa-solid fa-book-open text-base mb-0.5"></i> AVA</button>
         </nav>
     </div>
 
@@ -1549,11 +1551,11 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
 
         async function mudarAba(aba) {
             const targetTab = document.getElementById(`tab-${aba}`);
-            if (!targetTab || alunoLogado?.portalMustChangePassword || (legadoAtivo()&&!['home','financeiro','documentos','diploma-eja'].includes(aba))) return;
+            if (!targetTab || alunoLogado?.portalMustChangePassword || (legadoAtivo()&&!['home','financeiro','documentos','diploma-eja','ava'].includes(aba)) || (aba==='ava'&&!document.body.classList.contains('se7-modular-portal'))) return;
             if(abaPortalAtual!==aba){abaPortalAtual=aba;void registrarEventoPortal('tab',aba);}
             window.SE7FinanceNotices?.navigation(aba);
 
-            ['home', 'financeiro', 'notas', 'frequencia', 'documentos', 'calendario', 'diploma-eja'].forEach(a => {
+            ['home', 'financeiro', 'notas', 'frequencia', 'documentos', 'calendario', 'diploma-eja', 'ava'].forEach(a => {
                 const elTab = document.getElementById(`tab-${a}`);
                 const elNav = document.getElementById(`nav-${a}`);
                 if (elTab) { elTab.classList.toggle('se7-tab-ativa',a===aba); elTab.style.display=(a===aba)?'block':'none'; }
@@ -2085,9 +2087,11 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
             window.cursoAtualEJA = isAlunoEJA;
             const navDiploma=document.getElementById('nav-diploma-eja');
             if(navDiploma)navDiploma.style.display=isAlunoEJA?'flex':'none';
-            if(cursoObj?.ejaMode==='modular'){
+            const modular=cursoObj?.ejaMode==='modular';document.body.classList.toggle('se7-modular-portal',!!modular);for(const id of ['nav-frequencia','nav-calendario','nav-ava']){const item=document.getElementById(id);if(item)item.style.display=modular?(id==='nav-ava'?'flex':'none'):(id==='nav-ava'?'none':'flex');}
+            if(modular){
                 const banner=document.getElementById('banner-padrao-home')||document.getElementById('bloco-acoes-eja');
                 if(banner){banner.replaceChildren();banner.hidden=true;}
+                const actions=document.getElementById('bloco-acoes-eja');if(actions){actions.hidden=true;actions.replaceChildren();}
                 window.SE7ModularAVA?.render(cursoObj,alunoLogado);
                 return;
             }
