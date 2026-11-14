@@ -4980,7 +4980,7 @@ function renderizarAlunosEJAAdmin() {
  const tbody=document.getElementById('tabela-alunos-eja');if(!tbody)return;
  const thead=tbody.closest('table')?.querySelector('thead');
  if(thead)thead.innerHTML='<tr class="border-b border-slate-700 text-slate-400"><th class="p-3">Matrícula</th><th class="p-3">Aluno</th><th class="p-3">Turma</th><th class="p-3">Situação</th><th class="p-3 text-right">Ações</th></tr>';
- const alunos=students.filter(se7EhAlunoEJA).sort((a,b)=>String(a.fullname||'').localeCompare(String(b.fullname||''),'pt-BR'));
+ const alunos=students.filter(s=>{const curso=courses.find(c=>String(c.id)===String(s.courseId));return curso?.ejaMode==='prova-unica';}).sort((a,b)=>String(a.fullname||'').localeCompare(String(b.fullname||''),'pt-BR'));
  tbody.replaceChildren();
  if(!alunos.length){tbody.innerHTML='<tr><td colspan="5" class="p-4 text-center text-slate-400">Nenhum aluno EJA matriculado.</td></tr>';return;}
  alunos.forEach(s=>{
