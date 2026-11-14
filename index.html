@@ -5716,7 +5716,7 @@ function renderizarHistoricoPontoManual() {
     for(const [id,name]of [...docentes].sort((a,b)=>a[1].localeCompare(b[1],'pt-BR')))filter.add(new Option(name,id));
     if(selected==='*'||docentes.has(selected))filter.value=selected;
     if(!filter.value){container.replaceChildren();return;}
-    const registros=[...registrosPontoManual].filter(([id,r])=>filter.value==='*'||(r.professorId||'nome:'+String(r.professorNome||'Sem identificação'))===filter.value).sort(([ia,a],[ib,b])=>(a.data||'9999-12-31').localeCompare(b.data||'9999-12-31')||(a.entrada||'').localeCompare(b.entrada||'')||(a.professorNome||'').localeCompare(b.professorNome||'','pt-BR')||ia.localeCompare(ib));
+    const registros=[...registrosPontoManual].filter(([id,r])=>filter.value==='*'||(r.professorId||'nome:'+String(r.professorNome||'Sem identificação'))===filter.value).sort(([ia,a],[ib,b])=>(b.data||'0000-00-00').localeCompare(a.data||'0000-00-00')||(b.entrada||'').localeCompare(a.entrada||'')||(a.professorNome||'').localeCompare(b.professorNome||'','pt-BR')||ia.localeCompare(ib));
     container.replaceChildren();
     if(!registros.length){const p=document.createElement('p');p.className='text-sm text-gray-500';p.textContent=filter.value!=='*'?'Nenhum horário registrado para este professor.':'Nenhum horário manual registrado ainda.';container.append(p);return;}
     const groups=new Map();for(const item of registros){const month=/^\d{4}-\d{2}-\d{2}$/.test(item[1].data||'')?item[1].data.slice(0,7):'sem-data';if(!groups.has(month))groups.set(month,[]);groups.get(month).push(item);}
