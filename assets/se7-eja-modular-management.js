@@ -246,9 +246,9 @@ const close=btn('Fechar',()=>dialog.close());close.className+=' mt-3';dialog.app
   const studentsPanel=panels.students;
   studentsPanel.append(element('h4','Alunos EJA Modular'));
   const studentWrap=element('div');studentWrap.className='overflow-x-auto rounded-xl border border-slate-600';
-  const studentTable=element('table');studentTable.className='w-full text-left text-xs';
+  const studentTable=element('table');studentTable.className='w-full text-left text-xs table-fixed';
   const thead=element('thead');const headrow=element('tr');
-  for(const label of ['Matrícula','Aluno','Turma','Situação','Ações']){const th=element('th',label);th.className='p-3 border-b border-slate-600';headrow.append(th);}
+  for(const [index,label] of ['Matrícula','Aluno','Turma','Situação','Ações'].entries()){const th=element('th',label);th.className='p-3 border-b border-slate-600'+(index===4?' text-right':'');if(index===0)th.style.width='16%';if(index===1)th.style.width='29%';if(index===2)th.style.width='25%';if(index===3)th.style.width='13%';if(index===4)th.style.width='17%';headrow.append(th);}
   thead.append(headrow);studentTable.append(thead);
   const tbody=element('tbody');tbody.id='se7-modular-students';studentTable.append(tbody);studentWrap.append(studentTable);studentsPanel.append(studentWrap);
   const ava=panels.ava;ava.append(element('p','Disciplinas do EJA Modular. Clique para configurar apostila, videoaulas e avaliação.'));
@@ -331,9 +331,14 @@ const close=btn('Fechar',()=>dialog.close());close.className+=' mt-3';dialog.app
    items.forEach(s=>{
     const tr=element('tr');tr.className='border-b border-slate-700';
     const cls=(typeof classes==='undefined'?[]:classes).find(x=>String(x.id)===String(s.classId));
-    for(const val of [s.code||'—',s.fullname||'Aluno',cls?.name||'Sem turma',s.status||'Ativo']){
-     const td=element('td',val);td.className='p-3';tr.append(td);
-    }
+    for(const val of [s.code||'—',s.fullname||'Aluno',cls?.name||'Sem turma']){const td=element('td',val);td.className='p-3';tr.append(td);}
+    const statusCell=element('td');statusCell.className='p-3';
+    const statusText=String(s.status||'Ativo').trim();const normalized=statusText.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+    const statusLabels={ativo:'Ativo',ativa:'Ativo',cancelado:'Cancelado',cancelada:'Cancelado',transferido:'Transferido',transferida:'Transferido',concluido:'Concluído',concluida:'Concluído',inativo:'Inativo',inativa:'Inativo'};
+    const statusBadge=element('span');statusBadge.className='se7-status-unico inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-semibold '+(normalized.startsWith('ativ')?'bg-emerald-100':normalized.startsWith('concluid')?'bg-blue-100':normalized.startsWith('cancelad')?'bg-red-100':'bg-slate-200');
+    statusBadge.style.color=typeof se7CorTextoMatricula==='function'?se7CorTextoMatricula(statusText):'#3b82f6';
+    const dot=element('span');dot.setAttribute('aria-hidden','true');dot.style.cssText='display:inline-block;width:8px;height:8px;min-width:8px;border-radius:50%;background-color:'+(typeof se7CorPontoMatricula==='function'?se7CorPontoMatricula(statusText):'#3b82f6');
+    statusBadge.append(dot,document.createTextNode(statusLabels[normalized]||statusText));statusCell.append(statusBadge);tr.append(statusCell);
     const td=element('td');td.className='p-3 text-right whitespace-nowrap';
     if(window.SE7PortalPreview?.allowed()){
      const portal=action('Ver portal',()=>{const target=document.createElement('button');target.dataset.previewStudent=String(s.id);document.body.append(target);target.click();target.remove();});
