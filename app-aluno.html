@@ -247,6 +247,7 @@ body.se7-legacy-portal #nav-notas,body.se7-legacy-portal #nav-frequencia,body.se
 body.se7-legacy-portal #tab-notas,body.se7-legacy-portal #tab-frequencia,body.se7-legacy-portal #tab-calendario,
 body.se7-legacy-portal #banner-padrao-home,body.se7-legacy-portal #container-btn-carteirinha,
 body.se7-legacy-portal #se7-student-internship-card{display:none!important}
+body.se7-modular-online-portal #se7-row-dias-aula,body.se7-modular-online-portal #se7-row-horario-aula{display:none!important}body.se7-modular-online-portal #se7-student-materials{display:none!important}
 </style>
 </head>
 <body class="se7-suite bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans antialiased h-screen overflow-hidden flex flex-col transition-colors duration-200">
@@ -627,8 +628,8 @@ body.se7-legacy-portal #se7-student-internship-card{display:none!important}
                     <p class="flex justify-between gap-3 items-start border-b border-slate-100 dark:border-slate-800 pb-1.5"><strong class="text-slate-500 dark:text-slate-400 shrink-0">Endereço:</strong> <span id="info-endereco" class="font-semibold text-right min-w-0 max-w-[200px] break-words">---</span></p>
                     <p class="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5"><strong class="text-slate-500 dark:text-slate-400">Curso:</strong> <span id="info-curso-completo" class="font-semibold text-right max-w-[200px] truncate">---</span></p>
                     <p class="flex justify-between pt-0.5"><strong class="text-slate-500 dark:text-slate-400">Turma:</strong> <span id="info-turma" class="font-semibold">---</span></p>
-<p class="flex justify-between gap-3 border-b border-slate-100 dark:border-slate-800 py-1.5"><strong class="text-slate-500 dark:text-slate-400">Dia de aula:</strong><span id="info-dias-aula" class="font-semibold text-right">---</span></p>
-<p class="flex justify-between gap-3 border-b border-slate-100 dark:border-slate-800 py-1.5"><strong class="text-slate-500 dark:text-slate-400">Horário de aula:</strong><span id="info-horario-aula" class="font-semibold text-right">---</span></p>
+<p id="se7-row-dias-aula" class="flex justify-between gap-3 border-b border-slate-100 dark:border-slate-800 py-1.5"><strong class="text-slate-500 dark:text-slate-400">Dia de aula:</strong><span id="info-dias-aula" class="font-semibold text-right">---</span></p>
+<p id="se7-row-horario-aula" class="flex justify-between gap-3 border-b border-slate-100 dark:border-slate-800 py-1.5"><strong class="text-slate-500 dark:text-slate-400">Horário de aula:</strong><span id="info-horario-aula" class="font-semibold text-right">---</span></p>
 <p class="flex justify-between gap-3 border-b border-slate-100 dark:border-slate-800 py-1.5"><strong class="text-slate-500 dark:text-slate-400">Semestre atual:</strong><span id="info-etapa-curso" class="font-semibold text-right">---</span></p>
 
                 </div>
@@ -1765,7 +1766,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
                     const turmaDoc = await db.collection("classes").doc(alunoLogado.classId).get({source:'server'});
                     if(turmaDoc.exists) {
                         const turmaData = turmaDoc.data();
-                        document.getElementById('info-turma').textContent=turmaData.name||'A definir';const detalhes=SE7ClassFormat.classDetails(turmaData);document.getElementById('info-dias-aula').textContent=detalhes.days;document.getElementById('info-horario-aula').textContent=detalhes.hours;document.getElementById('info-etapa-curso').textContent=legadoAtivo()?'Concluído':detalhes.semester;
+                        document.getElementById('info-turma').textContent=turmaData.name||'A definir';const detalhes=SE7ClassFormat.classDetails(turmaData);document.getElementById('info-dias-aula').textContent=detalhes.days;document.getElementById('info-horario-aula').textContent=detalhes.hours;document.getElementById('info-etapa-curso').textContent=legadoAtivo()?'Concluído':(window.se7CalendarCourse?.ejaMode==='modular'&&window.se7CalendarCourse?.modularDelivery!=='presencial'?se7SemestreIngressoModular(alunoLogado,turmaData):detalhes.semester);
 
                         const calSnap = await db.collection("academicCalendars").where("classId", "==", alunoLogado.classId).get({source:'server'});
                         eventosCalendarioCache = [];
@@ -1777,7 +1778,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
                             if (ev.semestre) semestresDisponiveis.add(ev.semestre);
                         });
 
-                        window.SE7AttendanceRules?.applyPortal(alunoLogado,window.se7CalendarCourse,eventosCalendarioCache);window.SE7Materials?.studentMount();
+                        window.SE7AttendanceRules?.applyPortal(alunoLogado,window.se7CalendarCourse,eventosCalendarioCache);if(window.se7CalendarCourse?.ejaMode==='modular'&&window.se7CalendarCourse?.modularDelivery!=='presencial'){document.getElementById('se7-student-materials')?.remove();}else window.SE7Materials?.studentMount();
                         const selectSemestre = document.getElementById('select-filtro-semestre');
                         const valorAtualSelect = selectSemestre.value;
                         selectSemestre.innerHTML = `<option value="">Todos os Semestres</option>`;
@@ -2080,6 +2081,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
             });
         }
 
+        function se7SemestreIngressoModular(aluno,turma){const value=aluno?.academicEntry?.semester||aluno?.entrySemester||turma?.entrySemester||aluno?.semester;const str=String(value||'').trim();if(/^20\d{2}\s*[\/-]\s*[12]$/.test(str))return str.replace(/\s/g,'').replace('-','/');const raw=aluno?.enrollmentDate||aluno?.academicEntry?.enrollmentDate;const match=String(raw||'').match(/^(20\d{2})-(\d{2})-\d{2}/);if(match){const month=Number(match[2]);if(month>=1&&month<=12)return match[1]+'/'+(month<=6?'1':'2');}return 'Não informado';}
         function adaptarPainelPorModalidadeCurso(cursoObj) {
             window.SE7EjaAvatar?.configure(cursoObj);
             isAlunoEJA = cursoObj && (/^(eja|supletivo)$/i.test(String(cursoObj.nivel||'').trim()) || /^eja$/i.test(String(cursoObj.sigla||'').trim()) || /eja|supletivo/i.test(cursoObj.name||''));
@@ -2087,8 +2089,9 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
             window.cursoAtualEJA = isAlunoEJA;
             const navDiploma=document.getElementById('nav-diploma-eja');
             if(navDiploma)navDiploma.style.display=isAlunoEJA?'flex':'none';
-            const modular=cursoObj?.ejaMode==='modular';document.body.classList.toggle('se7-modular-portal',!!modular);for(const id of ['nav-frequencia','nav-calendario','nav-ava']){const item=document.getElementById(id);if(item)item.style.display=modular?(id==='nav-ava'?'flex':'none'):(id==='nav-ava'?'none':'flex');}
+            const modular=cursoObj?.ejaMode==='modular',modularOnline=modular&&cursoObj.modularDelivery!=='presencial';document.body.classList.toggle('se7-modular-portal',!!modular);document.body.classList.toggle('se7-modular-online-portal',!!modularOnline);for(const id of ['nav-frequencia','nav-calendario','nav-ava']){const item=document.getElementById(id);if(item)item.style.display=modular?(id==='nav-ava'?'flex':'none'):(id==='nav-ava'?'none':'flex');}
             if(modular){
+                if(modularOnline)document.getElementById('se7-student-materials')?.remove();
                 const banner=document.getElementById('banner-padrao-home')||document.getElementById('bloco-acoes-eja');
                 if(banner){banner.replaceChildren();banner.hidden=true;}
                 const actions=document.getElementById('bloco-acoes-eja');if(actions){actions.hidden=true;actions.replaceChildren();}
