@@ -4166,7 +4166,8 @@ function limparFiltrosAlunos(){
  const polo=document.getElementById('filtro-alunos-polo'),turma=document.getElementById('filtro-alunos-turma');
  if(polo)polo.value='';atualizarFiltroTurmasAlunos();if(turma)turma.value='';filtrosAlunosAplicados={polo:'',turma:''};fecharFiltrosAlunos();renderGestionStudentsTableGroup(false);
 }
-function se7EhAlunoEJA(s){const c=(typeof courses==='undefined'?[]:courses).find(c=>String(c.id)===String(s.courseId));return !!c&&c.ejaMode==='prova-unica';}
+function se7EhAlunoEJA(s){const c=(typeof courses==='undefined'?[]:courses).find(c=>String(c.id)===String(s.courseId));return !!c&&(c.ejaMode==='prova-unica'||c.ejaMode==='modular'||String(c.nivel||'').toLowerCase()==='supletivo'||String(c.sigla||'').toUpperCase()==='EJA'||/\bEJA\b|SUPLETIVO/i.test(String(c.name||'')));}
+function se7EhAlunoTecnico(s){const c=(typeof courses==='undefined'?[]:courses).find(c=>String(c.id)===String(s.courseId));return !!c&&!se7EhAlunoEJA(s)&&(String(c.nivel||'').toLowerCase().includes('técnico')||String(c.nivel||'').toLowerCase().includes('tecnico')||/\bT[EÉ]CNIC[OA]\b/i.test(String(c.name||'')));}
 function renderGestionStudentsTable(){renderGestionStudentsTableGroup(false);renderGestionStudentsTableGroup(true);}
         // Evita o ponto decorativo legado dos badges: somente o ponto explícito permanece.
 function se7CorTextoMatricula(status){return se7CorPontoMatricula(status);}
@@ -4188,7 +4189,7 @@ function renderGestionStudentsTableGroup(inactive=false) {
     const isFinanceiro = sessaoAtual.perfil === 'financeiro';
     
     const ativos = students
-        .filter(s => !!s.id && !se7EhAlunoEJA(s) && (inactive?!/^ativ[oa]$/i.test(String(s.status||'Ativo').trim()):/^ativ[oa]$/i.test(String(s.status||'Ativo').trim())))
+        .filter(s => !!s.id && se7EhAlunoTecnico(s) && (inactive?!/^ativ[oa]$/i.test(String(s.status||'Ativo').trim()):/^ativ[oa]$/i.test(String(s.status||'Ativo').trim())))
         .sort((a, b) => String(a.fullname||'').localeCompare(String(b.fullname||''),'pt-BR'));
 
     // LÓGICA DE FILTRAGEM PELA LUPA (NOME, CPF OU MATRÍCULA)
@@ -4199,7 +4200,7 @@ function renderGestionStudentsTableGroup(inactive=false) {
         const termo = inputBusca.value.toLowerCase().trim();
         const termoLimpo = termo.replace(/[^\d]/g, '');
 
-        alunosFiltrados = ativos.filter(s => {
+        alunosFiltrados = alunosFiltrados.filter(s => {
             const nomeAluno = s.fullname ? s.fullname.toLowerCase() : "";
             const cpfAluno = s.cpf ? s.cpf.toLowerCase() : "";
             const cpfLimpoAluno = s.cpf ? s.cpf.replace(/[^\d]/g, '') : "";
@@ -4212,7 +4213,7 @@ function renderGestionStudentsTableGroup(inactive=false) {
         });
     }
 
-    if(counter)counter.textContent=inactive?`Total: ${ativos.length} matrícula(s) inativa(s)`:`Total de alunos técnicos: ${students.filter(s=>!!s.id&&!se7EhAlunoEJA(s)).length} aluno(s)`;
+    if(counter)counter.textContent=inactive?`Total: ${ativos.length} matrícula(s) inativa(s)`:`Total de alunos técnicos: ${students.filter(s=>!!s.id&&se7EhAlunoTecnico(s)).length} aluno(s)`;
     if(!inactive){const label=document.getElementById('total-alunos-filtrados');const filtered=alunosFiltrados.length!==ativos.length||!!inputBusca?.value.trim()||!!filtrosAlunosAplicados.polo||!!filtrosAlunosAplicados.turma;if(label){label.hidden=!filtered;label.textContent=filtered?`${alunosFiltrados.length} aluno(s) exibido(s)`:'';}}
     
     if(alunosFiltrados.length === 0) {
