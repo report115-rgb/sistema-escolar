@@ -1698,7 +1698,8 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
                         void verificarTodasPendencias().catch(e=>console.warn('Consulta de pendências pendente:',e));
 
                         document.getElementById('header-aluno-curso').textContent = curso.name;
-                        document.getElementById('info-curso-completo').textContent = curso.ejaMode==='modular'&&curso.modularDelivery!=='presencial'?'EJA Ensino Médio — Modular EAD':curso.name;const durationRow=document.getElementById('se7-row-modular-duration');if(durationRow){const isEad=curso.ejaMode==='modular'&&curso.modularDelivery!=='presencial';durationRow.style.display=isEad?'flex':'none';if(isEad){const duration=Number(alunoLogado.ejaModularDurationMonths||alunoLogado.modularDurationMonths||0);document.getElementById('info-modular-duration').textContent=[3,6,9].includes(duration)?duration+' meses':'Não informada';}}
+                        if(curso.ejaMode==='modular'){const semesterField=document.getElementById('info-etapa-curso');if(semesterField)semesterField.textContent=se7SemestreIngressoModular(alunoLogado,null);}
+                        document.getElementById('info-curso-completo').textContent = curso.ejaMode==='modular'&&curso.modularDelivery!=='presencial'?'EJA Ensino Médio — Modular EAD':curso.name;const durationRow=document.getElementById('se7-row-modular-duration');if(durationRow){const isEad=curso.ejaMode==='modular'&&curso.modularDelivery!=='presencial';durationRow.style.display=isEad?'flex':'none';if(isEad){const duration=Number(alunoLogado.ejaModularDurationMonths||alunoLogado.modularDurationMonths||alunoLogado.academicEntry?.modularDurationMonths||0);document.getElementById('info-modular-duration').textContent=[3,6,9].includes(duration)?duration+' meses':'Não informada';}}
                         document.getElementById('total-disciplinas-num').textContent = curso.subjects ? curso.subjects.length : 0;
 
                         const gradesList = document.getElementById('grades-list');
@@ -2082,7 +2083,16 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
             });
         }
 
-        function se7SemestreIngressoModular(aluno,turma){const value=aluno?.academicEntry?.semester||aluno?.entrySemester||turma?.entrySemester||aluno?.semester;const str=String(value||'').trim();if(/^20\d{2}\s*[\/-]\s*[12]$/.test(str))return str.replace(/\s/g,'').replace('-','/');const raw=aluno?.enrollmentDate||aluno?.academicEntry?.enrollmentDate||aluno?.enrollmentRegisteredAt||aluno?.createdAt;const text=raw?.toDate?raw.toDate().toISOString():String(raw||'');const match=text.match(/^(20\d{2})-(\d{2})-\d{2}/)||text.match(/^\d{2}\/(\d{2})\/(20\d{2})/);if(match){const month=Number(match[2]);const year=match[1].length===4?match[1]:match[2]&&match[3];if(month>=1&&month<=12&&year)return year+'/'+(month<=6?'1':'2');}return 'Não informado';}
+        function se7SemestreIngressoModular(aluno,turma){
+ const value=aluno?.academicEntry?.semester||aluno?.entrySemester||turma?.entrySemester||aluno?.semester;
+ const str=String(value||'').trim();if(/^20\d{2}\s*[\/-]\s*[12]$/.test(str))return str.replace(/\s/g,'').replace('-','/');
+ const raw=aluno?.enrollmentDate||aluno?.academicEntry?.enrollmentDate||aluno?.enrollmentRegisteredAt||aluno?.createdAt;
+ const date=raw?.toDate?raw.toDate():raw?.seconds?new Date(raw.seconds*1000):null;
+ const text=date?date.toISOString():String(raw||'');let year,month;
+ let match=text.match(/^(20\d{2})-(\d{2})-\d{2}/);if(match){year=Number(match[1]);month=Number(match[2]);}
+ else{match=text.match(/^\d{2}\/(\d{2})\/(20\d{2})/);if(match){month=Number(match[1]);year=Number(match[2]);}}
+ if(year&&month>=1&&month<=12)return year+'/'+(month<=6?'1':'2');return 'Não informado';
+}
         function adaptarPainelPorModalidadeCurso(cursoObj) {
             window.SE7EjaAvatar?.configure(cursoObj);
             isAlunoEJA = cursoObj && (/^(eja|supletivo)$/i.test(String(cursoObj.nivel||'').trim()) || /^eja$/i.test(String(cursoObj.sigla||'').trim()) || /eja|supletivo/i.test(cursoObj.name||''));
@@ -2094,7 +2104,7 @@ async function salvarNovaSenhaPortal(){if(window.SE7Preview?.active){alert('Modo
             if(modular){
                 if(modularOnline)document.getElementById('se7-student-materials')?.remove();
                 const banner=document.getElementById('banner-padrao-home')||document.getElementById('bloco-acoes-eja');
-                if(banner){banner.replaceChildren();banner.hidden=false;banner.className='bg-gradient-to-r from-blue-700 to-blue-600 text-white p-4 rounded-2xl shadow-lg flex items-center justify-between gap-3';const copy=document.createElement('div');const eyebrow=document.createElement('span');eyebrow.className='text-[10px] uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-full font-bold';eyebrow.textContent='Portal do Aluno';const heading=document.createElement('h4');heading.className='font-bold text-base mt-1';heading.textContent='EJA Ensino Médio — Modular EAD';const desc=document.createElement('p');desc.className='text-xs text-blue-100 mt-0.5';desc.textContent='Seus estudos, documentos e progresso em um só lugar.';copy.append(eyebrow,heading,desc);const symbol=document.createElement('div');symbol.className='w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center text-2xl shrink-0';const icon=document.createElement('i');icon.className='fa-solid fa-graduation-cap';icon.setAttribute('aria-hidden','true');symbol.append(icon);banner.append(copy,symbol);}
+                if(banner){banner.replaceChildren();banner.hidden=false;banner.className='bg-blue-700 dark:bg-blue-800 border border-blue-600 dark:border-blue-700 text-white p-4 rounded-2xl shadow-lg flex items-center justify-between gap-3';const copy=document.createElement('div');const eyebrow=document.createElement('span');eyebrow.className='text-[10px] uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-full font-bold';eyebrow.textContent='Portal do Aluno';const heading=document.createElement('h4');heading.className='font-bold text-base mt-1';heading.textContent='EJA Ensino Médio — Modular EAD';const desc=document.createElement('p');desc.className='text-xs text-blue-100 mt-0.5';desc.textContent='Seus estudos, documentos e progresso em um só lugar.';copy.append(eyebrow,heading,desc);const symbol=document.createElement('div');symbol.className='w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center text-2xl shrink-0';const icon=document.createElement('i');icon.className='fa-solid fa-graduation-cap';icon.setAttribute('aria-hidden','true');symbol.append(icon);banner.append(copy,symbol);}
                 const actions=document.getElementById('bloco-acoes-eja');if(actions){actions.hidden=true;actions.replaceChildren();}
                 window.SE7ModularAVA?.render(cursoObj,alunoLogado);
                 return;

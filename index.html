@@ -4078,6 +4078,7 @@ function carregarDatasCalendarioParaFrequencia(){const classId=document.getEleme
     filterTurmasByCourse();
     
     document.getElementById('input-student-class').value = aluno.classId || '';
+    const durationSelect=document.getElementById('student-eja-modular-duration');if(durationSelect){const months=Number(aluno.ejaModularDurationMonths||aluno.modularDurationMonths||aluno.academicEntry?.modularDurationMonths||0);durationSelect.value=[3,6,9].includes(months)?String(months):'';}
 
     // Recupera a foto persistida no documento do aluno e atualiza a prévia real.
     redefinirFotoCadastroAluno(aluno.fotoAluno || '');
