@@ -4823,7 +4823,7 @@ function renderFinanceStudentSelect(){const select=document.getElementById('fin-
                 if(el) {
                     const currentVal = el.value;
                     el.innerHTML = '<option value="">Selecione o curso...</option>';
-                    courses.filter(c=>id!=='input-subject-course-select'||SE7SubjectKind.supports(c)).forEach(c => el.insertAdjacentHTML('beforeend', `<option value="${c.id}">${c.name}</option>`));
+                    courses.filter(c=>id!=='input-subject-course-select'||SE7SubjectKind.supports(c)).forEach(c => el.add(new Option(id==='input-student-course'?se7EjaCourseLabel(c):c.name,c.id)));
                     if(currentVal) el.value = currentVal;
                 }
             });

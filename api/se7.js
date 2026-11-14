@@ -187,7 +187,7 @@ async function dispatchOperation({auth,db},req,b,delegated=null){
  if(['payroll-save','payroll-reverse'].includes(action))return dispatchPayment(db,b,u);
  if(action.startsWith('payroll-receipt-'))return dispatchReceipt(db,b,u);
  if(action==='student-avatar-save')return saveStudentAvatar(db,b,u);
- if(action.startsWith('eja-')&&!action.startsWith('eja-modular-')&&!['eja-certificate-upload','eja-certificate-file-get','eja-certificate-status','eja-certificate-readiness'].includes(action))return eja.dispatch(db,b,u);
+ if(action.startsWith('eja-')&&!action.startsWith('eja-modular-')&&!['eja-certificate-upload','eja-certificate-file-get','eja-certificate-status','eja-certificate-readiness','eja-financial-transition-open','eja-financial-transition-review','eja-financial-transition-note'].includes(action))return eja.dispatch(db,b,u);
  if(['attendance-justification-save','attendance-justification-get','attendance-justification-list','attendance-justification-decide'].includes(action))return attendanceJustification(polos.scopedDatabase(db,u),b,u);
  if(action==='lesson-realization-save')return saveLessonRealization(db,b,u);
  if(action.startsWith('census-'))return schoolCensus(db,b,u);
